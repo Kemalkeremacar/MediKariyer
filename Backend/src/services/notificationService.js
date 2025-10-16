@@ -1,0 +1,930 @@
+/**
+ * @file notificationService.js
+ * @description Bildirim servisi - Tüm kullanıcılar (doktor, hastane, admin) için bildirim yönetimi.
+ * Bu servis, iş ilanı başvuruları ve durum değişiklikleri için ortak bildirim sistemi sağlar.
+ * 
+ * Ana İşlevler:
+ * - Bildirim alma ve listeleme (tüm kullanıcılar için)
+ * - Bildirim durumu yönetimi (okundu/okunmadı)
+ * - Bildirim gönderme (sadece admin)
+ * - Role-based bildirim gönderme (doktor/hastane için otomatik)
+ * - Bildirim istatistikleri ve raporlama
+ * - Filtreleme ve sayfalama
+ * 
+ * Servis Ayrımı Mantığı:
+ * - Bu servis TÜM kullanıcılar için ortak bildirim işlemleri yapar
+ * - Doktorlar: Bildirimleri alır (başvuru durumu, ilan güncellemeleri)
+ * - Hastaneler: Bildirimleri alır (yeni başvuru, başvuru geri çekme)
+ * - Adminler: Bildirimleri hem alır hem gönderir (sistem duyuruları)
+ * 
+ * Bildirim Türleri:
+ * - application_status_update: Başvuru durumu değişikliği
+ * - new_application: Yeni başvuru bildirimi
+ * - job_status_update: İlan durumu değişikliği
+ * - system_announcement: Sistem duyurusu
+ * - application_withdrawal: Başvuru geri çekme
+ * 
+ * Veritabanı Tabloları:
+ * - notifications: Bildirim bilgileri
+ * - users: Kullanıcı bilgileri (foreign key)
+ * - applications: Başvuru bilgileri
+ * - jobs: İş ilanı bilgileri
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
+'use strict';
+
+// ============================================================================
+// DIŞ BAĞIMLILIKLAR
+// ============================================================================
+
+const db = require('../config/dbConfig').db;
+const { AppError } = require('../utils/errorHandler');
+const logger = require('../utils/logger');
+const { PAGINATION } = require('../config/appConstants');
+
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/**
+ * @typedef {object} Notification
+ * @property {number} id - Bildirim benzersiz kimliği
+ * @property {number} user_id - Hedef kullanıcı kimliği
+ * @property {string} type - Bildirim türü (info, warning, success, error)
+ * @property {string} title - Bildirim başlığı
+ * @property {string} body - Bildirim içeriği
+ * @property {string} [data_json] - JSON formatında ek veriler
+ * @property {string} [channel] - Bildirim kanalı (inapp, email, push)
+ * @property {Date} [read_at] - Okunma tarihi (null = okunmamış)
+ * @property {Date} created_at - Oluşturulma tarihi
+ * @property {object} [data] - Parse edilmiş JSON verisi (sanal alan)
+ */
+
+/**
+ * @typedef {object} NotificationFilters
+ * @property {boolean} [isRead] - Okunma durumu filtresi
+ * @property {string} [type] - Bildirim türü filtresi
+ * @property {number} [page=1] - Sayfa numarası
+ * @property {number} [limit=PAGINATION.DEFAULT_LIMIT] - Sayfa başına kayıt sayısı
+ */
+
+/**
+ * @typedef {object} NotificationStats
+ * @property {number} total - Toplam bildirim sayısı
+ * @property {number} unread - Okunmamış bildirim sayısı
+ * @property {Array<{type: string, count: number}>} by_type - Tür bazında sayılar
+ */
+
+/**
+ * Kullanıcının okunmamış bildirimlerini getirir
+ * @description Kullanıcının okunmamış bildirimlerini limit ile getirir
+ * @param {number} userId - Kullanıcının ID'si
+ * @param {number} [limit=10] - Getirilecek bildirim sayısı
+ * @returns {Promise<Array>} Okunmamış bildirimler listesi
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const unreadNotifications = await getUnreadNotifications(123, 5);
+ * console.log(`${unreadNotifications.length} okunmamış bildirim var`);
+ */
+const getUnreadNotifications = async (userId, limit = 10) => {
+  const notifications = await db('notifications')
+    .where({ user_id: userId })
+    .whereNull('read_at')
+    .select('id', 'title', 'body', 'created_at', 'type', 'data_json')
+    .orderBy('created_at', 'desc')
+    .limit(limit);
+
+  // data_json alanlarını parse et
+  return notifications.map(notification => {
+    if (notification.data_json) {
+      try {
+        notification.data = JSON.parse(notification.data_json);
+      } catch (error) {
+        logger.warn('Notification data_json parse error:', error);
+        notification.data = null;
+      }
+    }
+    return notification;
+  });
+};
+
+// ============================================================================
+// BİLDİRİM GETİRME FONKSİYONLARI
+// ============================================================================
+
+/**
+ * Kullanıcının bildirimlerini getirir (filtreleme ve sayfalama ile)
+ * @description Kullanıcının tüm bildirimlerini filtreleme seçenekleri ile birlikte getirir
+ * @param {number} userId - Kullanıcının ID'si
+ * @param {NotificationFilters} [options] - Filtreleme ve sayfalama seçenekleri
+ * @returns {Promise<Object>} Bildirimler ve sayfalama bilgisi
+ * @returns {Promise<Object.data>} Bildirim dizisi
+ * @returns {Promise<Object.pagination>} Sayfalama bilgisi
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const result = await getNotificationsByUser(123, { 
+ *   isRead: false, 
+ *   type: 'info', 
+ *   page: 1, 
+ *   limit: 10 
+ * });
+ * console.log(`${result.data.length} bildirim bulundu`);
+ */
+const getNotificationsByUser = async (userId, options = {}) => {
+  const { isRead, type, page = 1, limit = PAGINATION.DEFAULT_LIMIT } = options;
+  
+  let query = db('notifications')
+    .where('user_id', userId)
+    .orderBy('created_at', 'desc');
+
+  if (isRead !== undefined) {
+    if (isRead) {
+      query = query.whereNotNull('read_at');
+    } else {
+      query = query.whereNull('read_at');
+    }
+  }
+
+  if (type) {
+    query = query.where('type', type);
+  }
+
+  const offset = (page - 1) * limit;
+  
+  // Count sorgusunu ayrı yap
+  const countQuery = db('notifications').where('user_id', userId);
+  
+  if (isRead !== undefined) {
+    if (isRead) {
+      countQuery.whereNotNull('read_at');
+    } else {
+      countQuery.whereNull('read_at');
+    }
+  }
+  
+  if (type) countQuery.where('type', type);
+  
+  const [{ count }] = await countQuery.count('* as count');
+  const notifications = await query.limit(limit).offset(offset);
+  
+  // data_json alanlarını parse et
+  const processedNotifications = notifications.map(notification => {
+    if (notification.data_json) {
+      try {
+        notification.data = JSON.parse(notification.data_json);
+      } catch (error) {
+        logger.warn('Notification data_json parse error:', error);
+        notification.data = null;
+      }
+    }
+    return notification;
+  });
+  
+  return {
+    data: processedNotifications,
+    pagination: {
+      current_page: parseInt(page),
+      per_page: parseInt(limit),
+      total: parseInt(count),
+      total_pages: Math.ceil(count / limit)
+    }
+  };
+};
+
+/**
+ * Okunmamış bildirim sayısını getirir
+ * @description Kullanıcının okunmamış bildirim sayısını döndürür
+ * @param {number} userId - Kullanıcının ID'si
+ * @returns {Promise<number>} Okunmamış bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const unreadCount = await getUnreadCount(123);
+ * console.log(`${unreadCount} okunmamış bildirim var`);
+ */
+const getUnreadCount = async (userId) => {
+  const [{ count }] = await db('notifications')
+    .where('user_id', userId)
+    .whereNull('read_at')
+    .count('* as count');
+  
+  return parseInt(count);
+};
+
+/**
+ * Tek bir bildirimi getirir
+ * @description Belirtilen ID'ye sahip bildirimi getirir ve JSON verisini parse eder
+ * @param {number} id - Bildirim ID'si
+ * @returns {Promise<Notification|null>} Bildirim bilgileri veya null
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const notification = await getNotificationById(456);
+ * if (notification) {
+ *   console.log(`Bildirim: ${notification.title}`);
+ * }
+ */
+const getNotificationById = async (id) => {
+  const notification = await db('notifications').where('id', id).first();
+  
+  if (!notification) return null;
+  
+  // data_json'u parse et
+  if (notification.data_json) {
+    try {
+      notification.data = JSON.parse(notification.data_json);
+    } catch (error) {
+      logger.warn('Notification data_json parse error:', error);
+      notification.data = null;
+    }
+  }
+  
+  return notification;
+};
+
+// ============================================================================
+// BİLDİRİM DURUMU YÖNETİMİ
+// ============================================================================
+
+/**
+ * Bildirimi okundu olarak işaretler
+ * @description Belirtilen bildirimi kullanıcı için okundu olarak işaretler
+ * @param {number} notificationId - Bildirim ID'si
+ * @param {number} userId - Kullanıcının ID'si
+ * @returns {Promise<Notification|null>} Güncellenmiş bildirim veya null
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const updatedNotification = await markAsRead(456, 123);
+ * if (updatedNotification) {
+ *   console.log('Bildirim okundu olarak işaretlendi');
+ * }
+ */
+const markAsRead = async (notificationId, userId) => {
+  const updated = await db('notifications')
+    .where('id', notificationId)
+    .where('user_id', userId)
+    .update({
+      read_at: db.fn.now()
+    });
+  
+  if (updated === 0) return null;
+  
+  return await getNotificationById(notificationId);
+};
+
+/**
+ * Birden fazla bildirimi okundu olarak işaretler
+ * @description Belirtilen ID'lerdeki bildirimleri toplu olarak okundu işaretler
+ * @param {Array<number>} notificationIds - Bildirim ID'leri dizisi
+ * @param {number} userId - Kullanıcının ID'si
+ * @returns {Promise<Object>} Güncellenen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const result = await markMultipleAsRead([456, 789, 101], 123);
+ * console.log(`${result.count} bildirim okundu olarak işaretlendi`);
+ */
+const markMultipleAsRead = async (notificationIds, userId) => {
+  if (!notificationIds || notificationIds.length === 0) {
+    return { count: 0 };
+  }
+
+  const updated = await db('notifications')
+    .whereIn('id', notificationIds)
+    .where('user_id', userId)
+    .update({
+      read_at: db.fn.now()
+    });
+  
+  return { count: updated };
+};
+
+/**
+ * Tüm bildirimleri okundu olarak işaretler
+ * @description Kullanıcının tüm okunmamış bildirimlerini okundu olarak işaretler
+ * @param {number} userId - Kullanıcının ID'si
+ * @returns {Promise<Object>} Güncellenen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const result = await markAllAsRead(123);
+ * console.log(`${result.count} bildirim okundu olarak işaretlendi`);
+ */
+const markAllAsRead = async (userId) => {
+  const updated = await db('notifications')
+    .where('user_id', userId)
+    .whereNull('read_at')
+    .update({
+      read_at: db.fn.now()
+    });
+  
+  return { count: updated };
+};
+
+// ============================================================================
+// BİLDİRİM SİLME İŞLEMLERİ
+// ============================================================================
+
+/**
+ * Bildirimi siler
+ * @description Kullanıcının belirtilen bildirimini siler
+ * @param {number} notificationId - Bildirim ID'si
+ * @param {number} userId - Kullanıcının ID'si
+ * @returns {Promise<boolean>} Silme işleminin başarı durumu
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const deleted = await deleteNotification(456, 123);
+ * if (deleted) {
+ *   console.log('Bildirim başarıyla silindi');
+ * }
+ */
+const deleteNotification = async (notificationId, userId) => {
+  const deleted = await db('notifications')
+    .where('id', notificationId)
+    .where('user_id', userId)
+    .del();
+  
+  return deleted > 0;
+};
+
+/**
+ * Okunmuş bildirimleri temizler
+ * @description Kullanıcının tüm okunmuş bildirimlerini siler
+ * @param {number} userId - Kullanıcının ID'si
+ * @returns {Promise<Object>} Silinen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const result = await clearReadNotifications(123);
+ * console.log(`${result.count} okunmuş bildirim temizlendi`);
+ */
+const clearReadNotifications = async (userId) => {
+  const deleted = await db('notifications')
+    .where('user_id', userId)
+    .whereNotNull('read_at')
+    .del();
+  
+  return { count: deleted };
+};
+
+// ============================================================================
+// BİLDİRİM GÖNDERME İŞLEMLERİ
+// ============================================================================
+
+/**
+ * Yeni bildirim gönderir
+ * @description Belirtilen kullanıcıya yeni bildirim gönderir
+ * @param {Object} notificationData - Bildirim verileri
+ * @param {number} notificationData.user_id - Hedef kullanıcı ID'si
+ * @param {string} notificationData.type - Bildirim türü (info, warning, success, error)
+ * @param {string} notificationData.title - Bildirim başlığı
+ * @param {string} notificationData.body - Bildirim içeriği
+ * @param {Object} [notificationData.data] - Ek JSON verisi
+ * @param {string} [notificationData.channel='inapp'] - Bildirim kanalı
+ * @returns {Promise<Notification>} Oluşturulan bildirim bilgileri
+ * @throws {AppError} Kullanıcı bulunamazsa veya veritabanı hatası durumunda
+ * 
+ * @example
+ * const notification = await sendNotification({
+ *   user_id: 123,
+ *   type: 'success',
+ *   title: 'Başvurunuz Onaylandı',
+ *   body: 'İş başvurunuz başarıyla onaylandı.',
+ *   data: { application_id: 456 }
+ * });
+ */
+const sendNotification = async (notificationData) => {
+  const { user_id, type, title, body, data, channel = 'inapp' } = notificationData;
+  
+  // Kullanıcının varlığını kontrol et
+  const user = await db('users').where('id', user_id).first();
+  if (!user) {
+    throw new AppError('Kullanıcı bulunamadı', 404);
+  }
+  
+  const [id] = await db('notifications').insert({
+    user_id,
+    type: type || 'info',
+    title,
+    body,
+    data_json: data ? JSON.stringify(data) : null,
+    channel,
+    read_at: null,
+    created_at: db.fn.now()
+  });
+  
+  return await getNotificationById(id);
+};
+
+/**
+ * Toplu bildirim gönderir (admin için)
+ * @description Birden fazla kullanıcıya aynı bildirimi gönderir
+ * @param {Array<number>} userIds - Hedef kullanıcı ID'leri dizisi
+ * @param {Object} notificationData - Bildirim verileri
+ * @param {string} notificationData.type - Bildirim türü
+ * @param {string} notificationData.title - Bildirim başlığı
+ * @param {string} notificationData.body - Bildirim içeriği
+ * @param {Object} [notificationData.data] - Ek JSON verisi
+ * @returns {Promise<Object>} Gönderilen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const result = await sendBulkNotification([123, 456, 789], {
+ *   type: 'info',
+ *   title: 'Sistem Bakımı',
+ *   body: 'Sistem bakımı nedeniyle hizmet kesintisi olacaktır.'
+ * });
+ * console.log(`${result.sent_count} kullanıcıya bildirim gönderildi`);
+ */
+const sendBulkNotification = async (userIds, notificationData) => {
+  if (!userIds || userIds.length === 0) {
+    return { sent_count: 0 };
+  }
+
+  const { type, title, body, data, channel = 'inapp' } = notificationData;
+  
+  const notifications = userIds.map(userId => ({
+    user_id: userId,
+    type: type || 'info',
+    title,
+    body,
+    data_json: data ? JSON.stringify(data) : null,
+    channel,
+    read_at: null,
+    created_at: db.fn.now()
+  }));
+  
+  await db('notifications').insert(notifications);
+  return { sent_count: userIds.length };
+};
+
+/**
+ * Sistem genelinde bildirim gönderir
+ * @description Belirtilen role sahip tüm kullanıcılara bildirim gönderir
+ * @param {Object} notificationData - Bildirim verileri
+ * @param {string} notificationData.type - Bildirim türü
+ * @param {string} notificationData.title - Bildirim başlığı
+ * @param {string} notificationData.body - Bildirim içeriği
+ * @param {string} [notificationData.targetRole] - Hedef rol (doctor, hospital, admin, all)
+ * @param {Object} [notificationData.data] - Ek JSON verisi
+ * @returns {Promise<Object>} Gönderilen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const result = await sendSystemNotification({
+ *   type: 'info',
+ *   title: 'Sistem Güncellemesi',
+ *   body: 'Sistem güncellemesi yapılmıştır.',
+ *   targetRole: 'doctor'
+ * });
+ */
+const sendSystemNotification = async (notificationData) => {
+  const { type, title, body, targetRole, data, channel = 'inapp' } = notificationData;
+
+  let query = db('users').select('id').where({ is_approved: true, is_active: true });
+
+  if (targetRole && targetRole !== 'all') {
+    query.where('role', targetRole);
+  }
+
+  const users = await query;
+  const userIds = users.map(u => u.id);
+
+  if (userIds.length === 0) return { sent_count: 0 };
+
+  return await sendBulkNotification(userIds, { type, title, body, data, channel });
+};
+
+// ============================================================================
+// DOKTOR VE HASTANE BİLDİRİMLERİ
+// ============================================================================
+
+/**
+ * Doktor için başvuru durumu bildirimi gönderir
+ * @description Doktorun başvurusu onaylandığında, reddedildiğinde veya durumu değiştiğinde bildirim gönderir
+ * @param {number} doctorUserId - Doktorun user ID'si
+ * @param {string} status - Başvuru durumu (accepted, rejected, pending)
+ * @param {Object} applicationData - Başvuru bilgileri
+ * @param {number} applicationData.application_id - Başvuru ID'si
+ * @param {string} applicationData.job_title - İş ilanı başlığı
+ * @param {string} applicationData.hospital_name - Hastane adı
+ * @returns {Promise<Object>} Gönderilen bildirim bilgisi
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendDoctorNotification(123, 'accepted', {
+ *   application_id: 456,
+ *   job_title: 'Kardiyoloji Uzmanı',
+ *   hospital_name: 'Ankara Hastanesi'
+ * });
+ */
+const sendDoctorNotification = async (doctorUserId, status, applicationData) => {
+  let notificationTitle = '';
+  let notificationBody = '';
+  let notificationType = 'info';
+
+  switch (status) {
+    case 'accepted':
+      notificationTitle = 'Başvurunuz Onaylandı';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz onaylandı.`;
+      notificationType = 'success';
+      break;
+    case 'rejected':
+      notificationTitle = 'Başvurunuz Reddedildi';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz reddedildi.`;
+      notificationType = 'warning';
+      break;
+    case 'pending':
+      notificationTitle = 'Başvuru Durumu Güncellendi';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz inceleme aşamasına alındı.`;
+      notificationType = 'info';
+      break;
+    default:
+      notificationTitle = 'Başvuru Durumu Değişti';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvuru durumunuz güncellendi.`;
+      notificationType = 'info';
+  }
+
+  return await sendNotification({
+    user_id: doctorUserId,
+    type: notificationType,
+    title: notificationTitle,
+    body: notificationBody,
+    data: {
+      application_id: applicationData.application_id,
+      job_title: applicationData.job_title,
+      hospital_name: applicationData.hospital_name,
+      status: status
+    }
+  });
+};
+
+/**
+ * Doktor için iş ilanı durumu bildirimi gönderir
+ * @description Doktorun başvurduğu iş ilanının durumu değiştiğinde bildirim gönderir
+ * @param {number} doctorUserId - Doktorun user ID'si
+ * @param {string} jobStatus - İş ilanı durumu (closed, archived, active)
+ * @param {Object} jobData - İş ilanı bilgileri
+ * @param {number} jobData.job_id - İş ilanı ID'si
+ * @param {string} jobData.job_title - İş ilanı başlığı
+ * @param {string} jobData.hospital_name - Hastane adı
+ * @returns {Promise<Object>} Gönderilen bildirim bilgisi
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendDoctorJobStatusNotification(123, 'Pasif', {
+ *   job_id: 789,
+ *   job_title: 'Kardiyoloji Uzmanı',
+ *   hospital_name: 'Ankara Hastanesi'
+ * });
+ */
+const sendDoctorJobStatusNotification = async (doctorUserId, jobStatus, jobData) => {
+  let notificationTitle = '';
+  let notificationBody = '';
+  let notificationType = 'info';
+
+  switch (jobStatus) {
+    case 'Pasif':
+      notificationTitle = 'İlan Kapatıldı';
+      notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan kapatıldı.`;
+      notificationType = 'warning';
+      break;
+    case 'archived':
+      notificationTitle = 'İlan Arşivlendi';
+      notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan arşivlendi.`;
+      notificationType = 'warning';
+      break;
+    case 'Aktif':
+      notificationTitle = 'İlan Aktifleştirildi';
+      notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan tekrar aktifleştirildi.`;
+      notificationType = 'info';
+      break;
+    default:
+      notificationTitle = 'İlan Durumu Değişti';
+      notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan durumu güncellendi.`;
+      notificationType = 'info';
+  }
+
+  return await sendNotification({
+    user_id: doctorUserId,
+    type: notificationType,
+    title: notificationTitle,
+    body: notificationBody,
+    data: {
+      job_id: jobData.job_id,
+      job_title: jobData.job_title,
+      hospital_name: jobData.hospital_name,
+      status: jobStatus
+    }
+  });
+};
+
+/**
+ * Hastane için yeni başvuru bildirimi gönderir
+ * @description Hastaneye yeni bir başvuru geldiğinde bildirim gönderir
+ * @param {number} hospitalUserId - Hastanenin user ID'si
+ * @param {Object} applicationData - Başvuru bilgileri
+ * @param {number} applicationData.application_id - Başvuru ID'si
+ * @param {string} applicationData.job_title - İş ilanı başlığı
+ * @param {string} applicationData.doctor_name - Doktor adı
+ * @returns {Promise<Object>} Gönderilen bildirim bilgisi
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendHospitalNotification(456, {
+ *   application_id: 789,
+ *   job_title: 'Kardiyoloji Uzmanı',
+ *   doctor_name: 'Dr. Ahmet Yılmaz'
+ * });
+ */
+const sendHospitalNotification = async (hospitalUserId, applicationData) => {
+  return await sendNotification({
+    user_id: hospitalUserId,
+    type: 'info',
+    title: 'Yeni Başvuru Aldınız',
+    body: `${applicationData.job_title} pozisyonu için ${applicationData.doctor_name} doktorundan yeni bir başvuru aldınız.`,
+    data: {
+      application_id: applicationData.application_id,
+      job_title: applicationData.job_title,
+      doctor_name: applicationData.doctor_name
+    }
+  });
+};
+
+/**
+ * Hastane için başvuru geri çekme bildirimi gönderir
+ * @description Doktor başvurusunu geri çektiğinde hastaneye bildirim gönderir
+ * @param {number} hospitalUserId - Hastanenin user ID'si
+ * @param {Object} applicationData - Başvuru bilgileri
+ * @param {number} applicationData.application_id - Başvuru ID'si
+ * @param {string} applicationData.job_title - İş ilanı başlığı
+ * @param {string} applicationData.doctor_name - Doktor adı
+ * @param {string} [applicationData.reason] - Geri çekme sebebi
+ * @returns {Promise<Object>} Gönderilen bildirim bilgisi
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendHospitalWithdrawalNotification(456, {
+ *   application_id: 789,
+ *   job_title: 'Kardiyoloji Uzmanı',
+ *   doctor_name: 'Dr. Ahmet Yılmaz',
+ *   reason: 'Başka bir iş buldum'
+ * });
+ */
+const sendHospitalWithdrawalNotification = async (hospitalUserId, applicationData) => {
+  return await sendNotification({
+    user_id: hospitalUserId,
+    type: 'warning',
+    title: 'Başvuru Geri Çekildi',
+    body: `${applicationData.doctor_name} doktoru ${applicationData.job_title} pozisyonu için başvurusunu geri çekti.`,
+    data: {
+      application_id: applicationData.application_id,
+      job_title: applicationData.job_title,
+      doctor_name: applicationData.doctor_name,
+      reason: applicationData.reason || 'Belirtilmedi'
+    }
+  });
+};
+
+/**
+ * Admin için bildirim gönderir
+ * @description Admin tüm kullanıcılara veya belirli role sahip kullanıcılara bildirim gönderir
+ * @param {Object} notificationData - Bildirim verileri
+ * @param {string} notificationData.type - Bildirim türü (info, warning, success, error)
+ * @param {string} notificationData.title - Bildirim başlığı
+ * @param {string} notificationData.body - Bildirim içeriği
+ * @param {string} [notificationData.targetRole] - Hedef rol (doctor, hospital, all)
+ * @param {Object} [notificationData.data] - Ek veriler
+ * @returns {Promise<Object>} Gönderilen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendAdminNotification({
+ *   type: 'info',
+ *   title: 'Sistem Bakımı',
+ *   body: 'Sistem bakımı yapılacaktır.',
+ *   targetRole: 'all'
+ * });
+ */
+const sendAdminNotification = async (notificationData) => {
+  return await sendSystemNotification(notificationData);
+};
+
+
+// ============================================================================
+// İSTATİSTİK VE RAPORLAMA
+// ============================================================================
+
+/**
+ * Bildirim istatistiklerini getirir
+ * @description Sistem geneli bildirim istatistiklerini döndürür
+ * @returns {Promise<NotificationStats>} Bildirim istatistikleri
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const stats = await getNotificationStats();
+ * console.log(`Toplam: ${stats.total}, Okunmamış: ${stats.unread}`);
+ */
+const getNotificationStats = async () => {
+  const [total, unread, byType] = await Promise.all([
+    db('notifications').count('* as count').first(),
+    db('notifications').whereNull('read_at').count('* as count').first(),
+    db('notifications').select('type').count('* as count').groupBy('type')
+  ]);
+  
+  return {
+    total: parseInt(total.count),
+    unread: parseInt(unread.count),
+    by_type: byType.map(item => ({
+      type: item.type,
+      count: parseInt(item.count)
+    }))
+  };
+};
+
+/**
+ * Kullanıcı bazında bildirim istatistiklerini getirir
+ * @description Belirtilen kullanıcının bildirim istatistiklerini döndürür
+ * @param {number} userId - Kullanıcının ID'si
+ * @returns {Promise<Object>} Kullanıcı bildirim istatistikleri
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * const userStats = await getUserNotificationStats(123);
+ * console.log(`Kullanıcının ${userStats.total} bildirimi var`);
+ */
+const getUserNotificationStats = async (userId) => {
+  const [total, unread, byType] = await Promise.all([
+    db('notifications').where('user_id', userId).count('* as count').first(),
+    db('notifications').where('user_id', userId).whereNull('read_at').count('* as count').first(),
+    db('notifications').where('user_id', userId).select('type').count('* as count').groupBy('type')
+  ]);
+  
+  return {
+    total: parseInt(total.count),
+    unread: parseInt(unread.count),
+    by_type: byType.map(item => ({
+      type: item.type,
+      count: parseInt(item.count)
+    }))
+  };
+};
+
+// ============================================================================
+// ADMIN FONKSİYONLARI
+// ============================================================================
+
+/**
+ * Admin için bildirimleri getirir
+ * @description Sadece admin kullanıcısına gelen bildirimleri filtreleme ve sayfalama seçenekleriyle getirir
+ * @param {Object} [filters] - Filtreleme seçenekleri
+ * @param {string} [filters.type] - Bildirim türü filtresi
+ * @param {boolean} [filters.is_read] - Okunma durumu filtresi
+ * @param {Date} [filters.startDate] - Başlangıç tarihi filtresi
+ * @param {Date} [filters.endDate] - Bitiş tarihi filtresi
+ * @param {number} [filters.page=1] - Sayfa numarası
+ * @param {number} [filters.limit=PAGINATION.DEFAULT_LIMIT] - Sayfa başına kayıt sayısı
+ * @returns {Promise<Object>} Bildirimler ve sayfalama bilgisi
+ * @throws {AppError} Admin kullanıcısı bulunamazsa veya veritabanı hatası durumunda
+ * 
+ * @example
+ * const result = await getAllNotificationsForAdmin({
+ *   type: 'warning',
+ *   is_read: false,
+ *   page: 1,
+ *   limit: 20
+ * });
+ */
+const getAllNotificationsForAdmin = async (filters = {}) => {
+  const { type, is_read, page = 1, limit = PAGINATION.DEFAULT_LIMIT, startDate, endDate } = filters;
+
+  // Admin kullanıcısını bul (role = 'admin' olan kullanıcı)
+  const adminUser = await db('users').where('role', 'admin').first();
+  if (!adminUser) {
+    throw new AppError('Admin kullanıcısı bulunamadı', 404);
+  }
+
+  let query = db('notifications')
+    .join('users', 'notifications.user_id', 'users.id')
+    .select(
+      'notifications.*',
+      'users.email as user_email',
+      'users.role as user_role'
+    )
+    .where('notifications.user_id', adminUser.id) // Sadece admin'e gelen bildirimler
+    .orderBy('notifications.created_at', 'desc');
+
+  if (type) query.where('notifications.type', type);
+  if (is_read !== undefined) {
+    if (is_read) {
+      query.whereNotNull('notifications.read_at');
+    } else {
+      query.whereNull('notifications.read_at');
+    }
+  }
+  if (startDate) query.where('notifications.created_at', '>=', startDate);
+  if (endDate) query.where('notifications.created_at', '<=', endDate);
+
+  const offset = (page - 1) * limit;
+  
+  // Count sorgusunu ayrı yap
+  const countQuery = db('notifications')
+    .join('users', 'notifications.user_id', 'users.id')
+    .where('notifications.user_id', adminUser.id); // Sadece admin'e gelen bildirimler
+    
+  if (type) countQuery.where('notifications.type', type);
+  if (is_read !== undefined) {
+    if (is_read) {
+      countQuery.whereNotNull('notifications.read_at');
+    } else {
+      countQuery.whereNull('notifications.read_at');
+    }
+  }
+  if (startDate) countQuery.where('notifications.created_at', '>=', startDate);
+  if (endDate) countQuery.where('notifications.created_at', '<=', endDate);
+
+  const [{ count }] = await countQuery.count('* as count');
+  const notifications = await query.limit(limit).offset(offset);
+
+  // data_json alanlarını parse et ve is_read field'ını ekle
+  const processedNotifications = notifications.map(notification => {
+    if (notification.data_json) {
+      try {
+        notification.data = JSON.parse(notification.data_json);
+      } catch (error) {
+        logger.warn('Notification data_json parse error:', error);
+        notification.data = null;
+      }
+    }
+    
+    // is_read field'ını ekle (read_at null değilse true)
+    notification.is_read = notification.read_at !== null;
+    
+    return notification;
+  });
+
+  return {
+    data: processedNotifications,
+    pagination: {
+      current_page: parseInt(page),
+      per_page: parseInt(limit),
+      total: parseInt(count),
+      total_pages: Math.ceil(count / limit)
+    }
+  };
+};
+
+// ============================================================================
+// YARDIMCI FONKSİYONLAR
+// ============================================================================
+
+
+// ============================================================================
+// MODULE EXPORTS
+// ============================================================================
+
+/**
+ * NotificationService modülü
+ * Tüm bildirim işlemleri için gerekli fonksiyonları export eder
+ */
+module.exports = {
+  // Bildirim getirme fonksiyonları
+  getNotificationsByUser,
+  getUnreadCount,
+  getUnreadNotifications,
+  getNotificationById,
+  
+  // Bildirim durumu yönetimi
+  markAsRead,
+  markMultipleAsRead,
+  markAllAsRead,
+  
+  // Bildirim silme işlemleri
+  deleteNotification,
+  clearReadNotifications,
+  
+  // Bildirim gönderme işlemleri
+  sendNotification,
+  sendBulkNotification,
+  sendSystemNotification,
+  
+  // Role-based bildirim gönderme
+  sendDoctorNotification,
+  sendHospitalNotification,
+  sendAdminNotification,
+  
+  // İstatistik ve raporlama
+  getNotificationStats,
+  getUserNotificationStats,
+  
+  // Admin fonksiyonları
+  getAllNotificationsForAdmin
+};
