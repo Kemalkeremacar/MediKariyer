@@ -110,15 +110,35 @@ const createRefreshTokenRecord = async (userId, refreshToken, userAgent, ip) => 
 
 /**
  * Verilen bir refresh token'ın geçerli olup olmadığını veritabanındaki hash ile karşılaştırarak doğrular.
+ * ⚠️ PERFORMANCE FIX: JWT'yi decode edip user_id'yi alarak sadece o kullanıcının token'larını kontrol eder.
  * @param {string} refreshToken - Doğrulanacak olan refresh token
  * @returns {Promise<object|null>} Token geçerliyse veritabanı kaydı, değilse null
  */
 const verifyRefreshTokenRecord = async (refreshToken) => {
   try {
+    // JWT token'ı decode et (signature doğrulaması yapmadan sadece payload'u al)
+    let userId;
+    try {
+      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+      userId = decoded.userId;
+    } catch (error) {
+      // Token decode edilemezse veya expire olduysa null döndür
+      logger.warn('Refresh token decode failed:', error.message);
+      return null;
+    }
+
+    if (!userId) {
+      logger.warn('Refresh token does not contain userId');
+      return null;
+    }
+
+    // Sadece bu kullanıcının aktif token'larını getir
     const tokenRecords = await db('refresh_tokens')
+      .where('user_id', userId)
       .where('expires_at', '>', new Date())
       .whereNull('revoked_at');
 
+    // Kullanıcının token'larını bcrypt ile kontrol et (genelde 1-3 token olur, tüm database değil!)
     for (const record of tokenRecords) {
       const isValid = await bcrypt.compare(refreshToken, record.token_hash);
       if (isValid) {
@@ -212,6 +232,14 @@ const cleanupExpiredTokens = async () => {
 
 // ==================== ÖZEL TOKEN İŞLEMLERİ ====================
 
+/**
+ * Refresh token'ı hash'ler (bcrypt ile)
+ * @param {string} refreshToken - Hash'lenecek refresh token
+ * @returns {string} Hash'lenmiş token
+ */
+const hashRefreshToken = (refreshToken) => {
+  return bcrypt.hashSync(refreshToken, 10);
+};
 
 /**
  * E-posta doğrulama işlemleri için kriptografik olarak güvenli, rastgele bir token oluşturur.
@@ -238,5 +266,6 @@ module.exports = {
   cleanupExpiredTokens,
   
   // Özel Token İşlemleri
+  hashRefreshToken,
   generateEmailVerificationToken
 };

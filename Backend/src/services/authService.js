@@ -27,6 +27,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/dbConfig').db;
 const { AppError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
+const jwtUtils = require('../utils/jwtUtils');
 
 // ==================== TYPE DEFINITIONS ====================
 /**
@@ -188,7 +189,8 @@ const createHospitalProfile = async (userId, { institution_name, city, address, 
 // ==================== REFRESH TOKEN FUNCTIONS ====================
 
 /**
- * Refresh token'ı veritabanında arar
+ * Refresh token'ı veritabanında arar (DEPRECATED - jwtUtils.verifyRefreshTokenRecord kullanın)
+ * @deprecated Bu fonksiyon bcrypt compare yapmadığı için kullanılmamalı
  * @description Verilen token hash'ini refresh_tokens tablosunda arar ve geçerliliğini kontrol eder
  * @param {string} token - Aranacak token hash'i
  * @returns {Promise<object|null>} Token kaydı bulunursa obje, bulunamazsa null
@@ -200,6 +202,8 @@ const createHospitalProfile = async (userId, { institution_name, city, address, 
  * }
  */
 const findRefreshToken = async (token) => {
+  // ⚠️ BU FONKSİYON YANLIŞ! BCRYPT COMPARE YAPMIYOR!
+  // jwtUtils.verifyRefreshTokenRecord kullanın
   return db('refresh_tokens')
     .where('token_hash', token)
     .where('expires_at', '>', db.fn.now())
@@ -283,7 +287,7 @@ const loginUnified = async (email, password) => {
  * @throws {AppError} Geçersiz token, kullanıcı bulunamadı veya hesap durumu
  * 
  * Güvenlik Kontrolleri:
- * - Token'ın varlığı ve süresi kontrol edilir
+ * - Token'ın varlığı ve süresi kontrol edilir (bcrypt compare ile)
  * - Kullanıcının varlığı kontrol edilir
  * - Admin olmayan kullanıcılar için is_active kontrolü yapılır
  * - Admin olmayan kullanıcılar için is_approved kontrolü yapılır
@@ -293,7 +297,8 @@ const loginUnified = async (email, password) => {
  * // Token geçerli, yeni access token oluşturulabilir
  */
 const validateRefreshToken = async (refreshToken) => {
-  const tokenRecord = await findRefreshToken(refreshToken);
+  // ✅ FIX: jwtUtils.verifyRefreshTokenRecord kullan (bcrypt compare yapıyor)
+  const tokenRecord = await jwtUtils.verifyRefreshTokenRecord(refreshToken);
   if (!tokenRecord) throw new AppError('Geçersiz refresh token', 401);
 
   const user = await db('users')
@@ -680,9 +685,8 @@ const registerHospital = async (registrationData) => {
 const refreshToken = async (refreshToken) => {
   const { user, tokenRecord } = await validateRefreshToken(refreshToken);
 
-  // JWT utils'i import et
-  const jwtUtils = require('../utils/jwtUtils');
-const { DEFAULT_SYSTEM_SETTINGS } = require('../config/appConstants');
+  // jwtUtils artık dosya başında import edildi
+  const { DEFAULT_SYSTEM_SETTINGS } = require('../config/appConstants');
   
   // Yeni access token oluştur
   const accessToken = jwtUtils.generateAccessToken({

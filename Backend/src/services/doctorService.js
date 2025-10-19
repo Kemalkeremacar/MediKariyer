@@ -1276,99 +1276,58 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
   // Sayfalama hesaplamaları
   const offset = (page - 1) * limit;
 
-  // Base query - sadece applications tablosundan başlayalım
-  let applicationsQuery = db('applications')
-    .select('*')
-    .where('doctor_profile_id', doctorProfileId);
+  // Optimized query - Tüm JOIN'leri tek sorguda yap (N+1 query problemini çözer)
+  let query = db('applications as a')
+    .select(
+      'a.*',
+      'a.applied_at as created_at', // Frontend uyumluluğu için
+      'ast.name as status_name',
+      'ast.name as status', // Frontend uyumluluğu için
+      'j.title as job_title',
+      'j.description as job_description',
+      'j.city_id as job_city_id',
+      'j.specialty_id',
+      'c.name as job_city',
+      'hp.institution_name as hospital_name',
+      's.name as specialty_name'
+    )
+    .leftJoin('application_statuses as ast', 'a.status_id', 'ast.id')
+    .leftJoin('jobs as j', 'a.job_id', 'j.id')
+    .leftJoin('cities as c', 'j.city_id', 'c.id')
+    .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+    .where('a.doctor_profile_id', doctorProfileId);
 
   // Status filtresi
   if (status) {
     const statusId = await resolveApplicationStatusId(status);
     if (statusId) {
-      applicationsQuery = applicationsQuery.where('status_id', statusId);
+      query = query.where('a.status_id', statusId);
     }
   }
 
-  // Tüm applications'ı çekelim
-  const allApplications = await applicationsQuery.orderBy('applied_at', 'desc');
+  // Toplam sayı için count query (aynı filtreleri kullan)
+  let countQuery = db('applications as a')
+    .where('a.doctor_profile_id', doctorProfileId);
 
-  // Sayfalama
-  const total = allApplications.length;
-  const paginatedApplications = allApplications.slice(offset, offset + limit);
+  if (status) {
+    const statusId = await resolveApplicationStatusId(status);
+    if (statusId) {
+      countQuery = countQuery.where('a.status_id', statusId);
+    }
+  }
 
-  // Her application için ek bilgileri çekelim
-  const enrichedApplications = await Promise.all(
-    paginatedApplications.map(async (app) => {
-      const enrichedApp = { ...app };
+  const totalResult = await countQuery.count('* as total').first();
+  const total = parseInt(totalResult.total);
 
-      // Job bilgilerini çekelim
-      if (app.job_id) {
-        const jobs = await db('jobs')
-          .select(['title', 'description', 'city_id', 'specialty_id', 'hospital_id'])
-          .where('id', app.job_id);
-        
-        if (jobs && jobs.length > 0) {
-          const job = jobs[0];
-          enrichedApp.job_title = job.title;
-          enrichedApp.job_description = job.description;
-          enrichedApp.job_city_id = job.city_id;
-
-          // City bilgisini almak için cities tablosuna join yapalım
-          if (job.city_id) {
-            const cities = await db('cities')
-              .select('name')
-              .where('id', job.city_id);
-            
-            if (cities && cities.length > 0) {
-              enrichedApp.job_city = cities[0].name;
-            }
-          }
-
-          // Hospital bilgilerini çekelim
-          if (job.hospital_id) {
-            const hospitals = await db('hospital_profiles')
-              .select('institution_name')
-              .where('id', job.hospital_id);
-            
-            if (hospitals && hospitals.length > 0) {
-              enrichedApp.hospital_name = hospitals[0].institution_name;
-            }
-          }
-
-          // Specialty bilgisini çekelim
-          if (job.specialty_id) {
-            const specialties = await db('specialties')
-              .select('name')
-              .where('id', job.specialty_id);
-            
-            if (specialties && specialties.length > 0) {
-              enrichedApp.specialty_name = specialties[0].name;
-            }
-          }
-        }
-      }
-
-      // Status bilgisini çekelim
-      if (app.status_id) {
-        const statuses = await db('application_statuses')
-          .select('name')
-          .where('id', app.status_id);
-        
-        if (statuses && statuses.length > 0) {
-          enrichedApp.status_name = statuses[0].name;
-          enrichedApp.status = statuses[0].name; // Frontend için
-        }
-      }
-
-      // Frontend için created_at'i applied_at olarak ayarlayalım
-      enrichedApp.created_at = enrichedApp.applied_at;
-
-      return enrichedApp;
-    })
-  );
+  // SQL seviyesinde sayfalama - 100k veri için kritik!
+  const applications = await query
+    .orderBy('a.applied_at', 'desc')
+    .limit(limit)
+    .offset(offset);
 
   return {
-    applications: enrichedApplications,
+    applications,
     pagination: {
       current_page: page,
       per_page: limit,
@@ -1870,11 +1829,12 @@ const getJobs = async (filters = {}) => {
   const totalResult = await countQuery.count('* as total').first();
   const total = parseInt(totalResult.total);
 
-  // Tüm verileri çekelim (limit/offset SQL Server'da sorun çıkarıyor)
-  const allJobs = await query.orderBy('j.created_at', 'desc');
-  
-  // JavaScript'te sayfalama yapalım
-  const jobs = allJobs.slice(offset, offset + limit);
+  // SQL seviyesinde sayfalama (100k veri için kritik!)
+  // Knex, SQL Server için OFFSET/FETCH sözdizimini otomatik kullanır
+  const jobs = await query
+    .orderBy('j.created_at', 'desc')
+    .limit(limit)
+    .offset(offset);
 
   return {
     jobs,

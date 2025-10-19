@@ -110,7 +110,7 @@ const createContactMessage = async (messageData) => {
  * Tüm iletişim mesajlarını sıralama ve sayfalama seçenekleriyle getirir.
  * @param {object} [filters={}] - Sıralama ve sayfalama parametreleri.
  * @param {number} [filters.page=1] - Sayfa numarası.
- * @param {number} [filters.limit=100] - Sayfa başına mesaj sayısı.
+ * @param {number} [filters.limit=20] - Sayfa başına mesaj sayısı.
  * @param {string} [filters.sort_by='created_at'] - Sıralama sütunu.
  * @param {'asc' | 'desc'} [filters.sort_order='desc'] - Sıralama yönü.
  * @returns {Promise<{data: ContactMessage[], pagination: Pagination}>} Mesaj listesi ve sayfalama bilgileri.
@@ -118,7 +118,7 @@ const createContactMessage = async (messageData) => {
 const getContactMessages = async (filters = {}) => {
   const {
     page = 1,
-    limit = 100,
+    limit = 20,
     sort_by = 'created_at',
     sort_order = 'desc'
   } = filters;
