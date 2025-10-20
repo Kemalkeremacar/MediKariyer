@@ -210,15 +210,12 @@ const getCompleteProfile = async (userId) => {
  * });
  */
 const updatePersonalInfo = async (userId, personalInfo) => {
-  console.log('🔍 updatePersonalInfo called:', { userId, personalInfo });
-  
   // validatedData'dan gelen değerleri doğrudan kullan
   const updateData = {
     ...personalInfo,
     updated_at: db.fn.now()
   };
   
-  console.log('📝 Updating with data:', updateData);
   await db('doctor_profiles').where('user_id', userId).update(updateData);
   
   // Güncellenmiş profili specialty, subspecialty ve şehir isimleriyle birlikte döndür

@@ -987,13 +987,6 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
     if (profile?.profile && !initialProfileLoaded.current) {
       const profileData = profile.profile;
       
-      console.log('📥 Profile data received (initial load):', {
-        birth_place_id: profileData.birth_place_id,
-        residence_city_id: profileData.residence_city_id,
-        birth_place_name: profileData.birth_place_name,
-        residence_city_name: profileData.residence_city_name
-      });
-      
       // Doğum tarihi formatını düzelt (ISO string'den YYYY-MM-DD'ye)
       let formattedDob = '';
       if (profileData.dob) {
@@ -1017,11 +1010,6 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
       });
       setSelectedSpecialtyId(profileData.specialty_id || null);
       initialProfileLoaded.current = true;
-      
-      console.log('📝 FormData initialized with city IDs:', {
-        birth_place_id: profileData.birth_place_id?.toString() || '',
-        residence_city_id: profileData.residence_city_id?.toString() || ''
-      });
     }
   }, [profile]);
 
@@ -1029,8 +1017,6 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
     e.preventDefault();
     
     try {
-      console.log('🔍 Form submitted with formData:', formData);
-      
       // ID'leri integer'a çevir - boş string kontrolü ekle
       const dataToValidate = {
         ...formData,
@@ -1040,12 +1026,8 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
         residence_city_id: formData.residence_city_id && formData.residence_city_id !== '' ? parseInt(formData.residence_city_id) : null
       };
       
-      console.log('📝 Data to validate:', dataToValidate);
-      
       // Zod validation kullan
       const validatedData = doctorPersonalInfoSchema.parse(dataToValidate);
-      
-      console.log('✅ Validated data:', validatedData);
       
       // Güncellemeyi yap ve bekle
       await onUpdate(validatedData);
@@ -1185,15 +1167,10 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
           </label>
           <select
             value={formData.birth_place_id}
-            onChange={(e) => {
-              console.log('🏙️ Birth place changed:', e.target.value);
-              console.log('Current formData.birth_place_id:', formData.birth_place_id);
-              setFormData({ ...formData, birth_place_id: e.target.value });
-            }}
+            onChange={(e) => setFormData({ ...formData, birth_place_id: e.target.value })}
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
           >
             <option value="" className="bg-slate-800 text-white">Şehir seçin</option>
-            {cities.length > 0 && console.log('🌍 Cities available:', cities.length, 'First city:', cities[0])}
             {cities.map(city => (
               <option key={city.value} value={city.value.toString()} className="bg-slate-800 text-white">
                 {city.label}
@@ -1207,10 +1184,7 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
           </label>
           <select
             value={formData.residence_city_id}
-            onChange={(e) => {
-              console.log('🏠 Residence city changed:', e.target.value);
-              setFormData({ ...formData, residence_city_id: e.target.value });
-            }}
+            onChange={(e) => setFormData({ ...formData, residence_city_id: e.target.value })}
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
           >
             <option value="" className="bg-slate-800 text-white">Şehir seçin</option>
