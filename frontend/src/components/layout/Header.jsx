@@ -109,9 +109,17 @@ const Header = () => {
               onClick={handleLogoClick}
               className="flex items-center space-x-3 group cursor-pointer"
             >
-              {/* Logo Icon - 4 Parametre Planına Göre */}
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <span className="text-white font-bold text-lg">M</span>
+              {/* Logo Icon - Hastane için kendi logosu, diğerleri için varsayılan */}
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+                {user?.role === 'hospital' && user?.profile?.logo ? (
+                  <img 
+                    src={user.profile.logo} 
+                    alt="Hastane Logosu" 
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-lg">M</span>
+                )}
               </div>
               {/* Logo Text - 4 Parametre Planına Göre */}
               <span className="text-2xl font-bold text-white">

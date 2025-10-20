@@ -91,15 +91,15 @@ const {
  * }
  */
 const updateProfile = catchAsync(async (req, res) => {
-  const { first_name, last_name, dob, birth_place, residence_city, phone, title, specialty_id, subspecialty_id, profile_photo } = req.body;
+  const { first_name, last_name, dob, birth_place_id, residence_city_id, phone, title, specialty_id, subspecialty_id, profile_photo } = req.body;
   const userId = req.user.id;
 
   const updatedProfile = await doctorService.updatePersonalInfo(userId, {
     first_name,
     last_name,
     dob,
-    birth_place,
-    residence_city,
+    birth_place_id,
+    residence_city_id,
     phone,
     title,
     specialty_id,
@@ -228,8 +228,10 @@ const getEducations = catchAsync(async (req, res) => {
  * @access Private (Doctor)
  * @middleware authMiddleware, requireRole('doctor'), validate(doctorEducationSchema)
  * @param {Object} req.body - Eğitim bilgileri
- * @param {string} req.body.degree_type - Derece türü (Lisans, Yüksek Lisans, Doktora vb.)
- * @param {string} req.body.institution_name - Kurum adı
+ * @param {string} req.body.education_type - Eğitim türü (Lisans, Yüksek Lisans, Doktora vb.)
+ * @param {string} req.body.education_institution - Eğitim kurumu adı
+ * @param {string} [req.body.certificate_name] - Sertifika adı
+ * @param {number} [req.body.certificate_year] - Sertifika yılı (YYYY formatında)
  * @param {string} req.body.field - Alan adı
  * @param {number} req.body.graduation_year - Mezuniyet yılı
  * @returns {Object} Eklenen eğitim kaydı
@@ -240,10 +242,12 @@ const getEducations = catchAsync(async (req, res) => {
  * @example
  * POST /api/doctor/educations
  * {
- *   "degree_type": "Tıp Fakültesi",
- *   "institution_name": "İstanbul Üniversitesi",
+ *   "education_type": "Tıp Fakültesi",
+ *   "education_institution": "İstanbul Üniversitesi",
  *   "field": "Tıp",
- *   "graduation_year": 2015
+ *   "graduation_year": 2015,
+ *   "certificate_name": "Tıp Doktoru Diploması",
+ *   "certificate_year": 2015
  * }
  */
 const addEducation = catchAsync(async (req, res) => {
@@ -260,6 +264,10 @@ const addEducation = catchAsync(async (req, res) => {
  * @middleware authMiddleware, requireRole('doctor'), validate(doctorEducationSchema)
  * @param {string} req.params.id - Güncellenecek eğitim kaydının ID'si
  * @param {Object} req.body - Güncellenecek eğitim bilgileri
+ * @param {string} [req.body.education_type] - Eğitim türü
+ * @param {string} [req.body.education_institution] - Eğitim kurumu adı
+ * @param {string} [req.body.certificate_name] - Sertifika adı
+ * @param {number} [req.body.certificate_year] - Sertifika yılı
  * @returns {Object} Güncellenmiş eğitim kaydı
  * @throws {AppError} 400 - Geçersiz veri formatı
  * @throws {AppError} 404 - Eğitim kaydı bulunamadı
@@ -268,8 +276,10 @@ const addEducation = catchAsync(async (req, res) => {
  * @example
  * PATCH /api/doctor/educations/123
  * {
- *   "degree_type": "Uzmanlık",
- *   "institution_name": "Ankara Üniversitesi"
+ *   "education_type": "Uzmanlık",
+ *   "education_institution": "Ankara Üniversitesi",
+ *   "certificate_name": "Kardiyoloji Uzmanlık Belgesi",
+ *   "certificate_year": 2020
  * }
  */
 const updateEducation = catchAsync(async (req, res) => {

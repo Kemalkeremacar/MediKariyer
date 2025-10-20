@@ -162,18 +162,32 @@ const UserDetailPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-6">
                   {/* Profil Fotoğrafı - Doktorlar için gerçek fotoğraf, diğerleri için icon */}
+                  {/* Doktor için profil fotoğrafı, Hastane için logo */}
                   {(user.data?.user?.role || user.role) === 'doctor' && (user.data?.user?.profile?.profile_photo || user.profile?.profile_photo) ? (
                     <div className="h-32 w-32 rounded-full overflow-hidden bg-gray-200 border-4 border-indigo-100 shadow-xl flex-shrink-0">
                       <img 
                         src={user.data?.user?.profile?.profile_photo || user.profile?.profile_photo} 
-                        alt="Profil" 
+                        alt="Profil Fotoğrafı" 
                         className="w-full h-full object-cover"
                         onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=No+Image'; }}
                       />
                     </div>
+                  ) : (user.data?.user?.role || user.role) === 'hospital' && (user.data?.user?.profile?.logo || user.profile?.logo) ? (
+                    <div className="h-32 w-32 rounded-xl overflow-hidden bg-gray-200 border-4 border-green-100 shadow-xl flex-shrink-0">
+                      <img 
+                        src={user.data?.user?.profile?.logo || user.profile?.logo} 
+                        alt="Hastane Logosu" 
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo'; }}
+                      />
+                    </div>
                   ) : (
-                    <div className="h-32 w-32 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0 shadow-xl">
-                      <User className="h-16 w-16 text-white" />
+                    <div className={`h-32 w-32 ${(user.data?.user?.role || user.role) === 'hospital' ? 'rounded-xl' : 'rounded-full'} bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-xl`}>
+                      {(user.data?.user?.role || user.role) === 'hospital' ? (
+                        <Building className="h-16 w-16 text-white" />
+                      ) : (
+                        <User className="h-16 w-16 text-white" />
+                      )}
                     </div>
                   )}
                   <div>
@@ -423,7 +437,7 @@ const UserDetailPage = () => {
                             <Building className="h-5 w-5 text-indigo-600 mt-0.5" />
                             <div>
                               <p className="text-sm text-gray-600">Hastane Adı</p>
-                              <p className="font-semibold text-gray-900">{user.data?.user?.profile?.name || user.profile?.name || '-'}</p>
+                              <p className="font-semibold text-gray-900">{user.data?.user?.profile?.institution_name || user.profile?.institution_name || '-'}</p>
                             </div>
                           </div>
                           
@@ -436,14 +450,7 @@ const UserDetailPage = () => {
                             </div>
                           </div>
                           
-                          {/* Hastane Türü */}
-                          <div className="flex items-start gap-3">
-                            <Building className="h-5 w-5 text-indigo-600 mt-0.5" />
-                            <div>
-                              <p className="text-sm text-gray-600">Hastane Türü</p>
-                              <p className="font-semibold text-gray-900">{user.data?.user?.profile?.type || user.profile?.type || 'Belirtilmemiş'}</p>
-                            </div>
-                          </div>
+                          {/* Hastane Türü alanı kaldırıldı - schema.sql'de yok */}
                           
                           {/* Şehir */}
                           <div className="flex items-start gap-3">
@@ -480,10 +487,41 @@ const UserDetailPage = () => {
                               <p className="font-semibold text-gray-900">{user.data?.user?.profile?.website || user.profile?.website || 'Belirtilmemiş'}</p>
                             </div>
                           </div>
+                          
+                          {/* Logo */}
+                          {(user.data?.user?.profile?.logo || user.profile?.logo) && (
+                            <div className="flex items-start gap-3 md:col-span-2">
+                              <Building className="h-5 w-5 text-indigo-600 mt-0.5" />
+                              <div>
+                                <p className="text-sm text-gray-600 mb-2">Logo / Fotoğraf</p>
+                                <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-100 border-2 border-indigo-200">
+                                  <img 
+                                    src={user.data?.user?.profile?.logo || user.profile?.logo} 
+                                    alt="Hastane Logosu" 
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo'; }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
                   </div>
+                  
+                  {/* Hastane Hakkında Bilgisi */}
+                  {(user.data?.user?.role || user.role) === 'hospital' && (user.data?.user?.profile?.about || user.profile?.about) && (
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-xl p-6">
+                      <h4 className="text-md font-semibold text-gray-900 mb-4 flex items-center">
+                        <FileText className="h-5 w-5 mr-2 text-green-600" />
+                        Hakkında
+                      </h4>
+                      <p className="text-gray-700 whitespace-pre-line">
+                        {user.data?.user?.profile?.about || user.profile?.about}
+                      </p>
+                    </div>
+                  )}
                   
                   {/* Doktor için ek bilgiler */}
                   {(user.data?.user?.role || user.role) === 'doctor' && (

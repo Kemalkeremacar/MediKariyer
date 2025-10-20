@@ -217,27 +217,14 @@ const getLanguages = async () => {
  */
 const getCertificateTypes = async () => {
   try {
-    logger.debug('Fetching certificate types from database');
+    logger.debug('getCertificateTypes called - returning empty array (certificate_types table removed)');
     
-    const certificateTypes = await db('certificate_types')
-      .select('id', 'name', 'description', 'is_required')
-      .orderBy('is_required', 'desc')
-      .orderBy('name', 'asc');
-    
-    // DİĞER seçeneğini en alta taşı
-    const otherIndex = certificateTypes.findIndex(type => 
-      type.name === 'DİĞER' || type.name === 'Diğer'
-    );
-    
-    if (otherIndex !== -1) {
-      const otherType = certificateTypes.splice(otherIndex, 1)[0];
-      certificateTypes.push(otherType);
-    }
-    
-    logger.debug(`Found ${certificateTypes.length} certificate types`);
-    return certificateTypes;
+    // NOT: certificate_types tablosu kaldırıldı
+    // Artık sertifika adları certificate_name olarak string saklanıyor
+    // Geriye dönük uyumluluk için boş array döndür
+    return [];
   } catch (error) {
-    logger.error('Error fetching certificate types:', error);
+    logger.error('Error in getCertificateTypes:', error);
     throw new AppError('Sertifika türleri getirilirken hata oluştu', 500);
   }
 };

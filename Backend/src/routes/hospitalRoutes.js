@@ -79,8 +79,6 @@ const {
   hospitalProfileSchema, 
   jobSchema, 
   applicationStatusSchema,
-  departmentSchema,
-  contactSchema,
   applicationsQuerySchema
 } = require('../validators/hospitalSchemas');
 const { 
@@ -232,60 +230,10 @@ router.put(
 );
 
 // ============================================================================
-// DEPARTMAN YÖNETİMİ ROUTE'LARI
+// DEPARTMAN VE İLETİŞİM YÖNETİMİ KALDIRILDI
 // ============================================================================
-
-// Hastane departmanlarını getir
-// GET /me/hospital/departments
-router.get('/departments', hospitalController.getDepartments);
-
-// Hastane departmanı ekle
-// POST /me/hospital/departments
-router.post(
-  '/departments', 
-  validate(departmentSchema, 'body'), 
-  hospitalController.addDepartment
-);
-
-// Hastane departmanını güncelle
-// PUT /me/hospital/departments/:departmentId
-router.put(
-  '/departments/:departmentId', 
-  validate(departmentSchema, 'body'), 
-  hospitalController.updateDepartment
-);
-
-// Hastane departmanını sil
-// DELETE /me/hospital/departments/:departmentId
-router.delete('/departments/:departmentId', hospitalController.deleteDepartment);
-
-// ============================================================================
-// İLETİŞİM BİLGİSİ YÖNETİMİ ROUTE'LARI
-// ============================================================================
-
-// Hastane iletişim bilgilerini getir
-// GET /me/hospital/contacts
-router.get('/contacts', hospitalController.getContacts);
-
-// Hastane iletişim bilgisi ekle
-// POST /me/hospital/contacts
-router.post(
-  '/contacts', 
-  validate(contactSchema, 'body'), 
-  hospitalController.addContact
-);
-
-// Hastane iletişim bilgisi güncelle
-// PUT /me/hospital/contacts/:contactId
-router.put(
-  '/contacts/:contactId', 
-  validate(contactSchema, 'body'), 
-  hospitalController.updateContact
-);
-
-// Hastane iletişim bilgisi sil
-// DELETE /me/hospital/contacts/:contactId
-router.delete('/contacts/:contactId', hospitalController.deleteContact);
+// Department ve Contact tabloları kaldırıldı.
+// İletişim bilgileri artık hospital_profiles tablosunda tutuluyor (phone, email, address).
 
 // ============================================================================
 // DASHBOARD ROUTE'LARI

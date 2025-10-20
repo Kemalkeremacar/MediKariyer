@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FiUser, FiHome, FiMail, FiLock, FiPhone, FiArrowLeft, FiCheck, FiCamera, FiUpload } from 'react-icons/fi';
+import { FiUser, FiHome, FiMail, FiLock, FiPhone, FiMapPin, FiArrowLeft, FiCheck, FiCamera, FiUpload, FiImage } from 'react-icons/fi';
 import { useRegisterDoctor, useRegisterHospital } from '../api/useAuth';
 import { showToast } from '@/utils/toastUtils';
 import useAuthStore from '../../../store/authStore';
@@ -15,7 +15,7 @@ const RegisterPage = () => {
   const { isAuthenticated } = useAuthStore();
 
   // Lookup verileri
-  const { data: { specialties, subspecialties } } = useLookup();
+  const { data: { specialties, subspecialties, cities } } = useLookup();
 
   // URL parametresinden user type'ı al
   const urlUserType = searchParams.get('type');
@@ -33,11 +33,12 @@ const RegisterPage = () => {
     profile_photo: '',
     // Hospital fields
     institution_name: '',
-    city: '',
+    city_id: '',
     address: '',
     phone: '',
     website: '',
     about: '',
+    logo: '',
   });
   const [photoPreview, setPhotoPreview] = useState(null);
   const [errorModal, setErrorModal] = useState({ show: false, message: '', description: '' });
@@ -109,6 +110,31 @@ const RegisterPage = () => {
     handlePhotoUpload(e);
   };
 
+  // Logo yükleme
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Dosya boyutu kontrolü (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error('Logo boyutu 5MB\'dan küçük olmalıdır');
+      return;
+    }
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      showToast.error('Sadece resim dosyaları yüklenebilir');
+      return;
+    }
+
+    // Preview oluştur
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, logo: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const clearForm = () => {
     setFormData({
       email: '',
@@ -121,11 +147,12 @@ const RegisterPage = () => {
       subspecialty_id: '',
       profile_photo: '',
       institution_name: '',
-      city: '',
+      city_id: '',
       address: '',
       phone: '',
       website: '',
       about: '',
+      logo: '',
     });
     setPhotoPreview(null);
   };
@@ -152,6 +179,9 @@ const RegisterPage = () => {
           email: formData.email,
           password: formData.password,
           institution_name: formData.institution_name,
+          city_id: parseInt(formData.city_id),
+          phone: formData.phone,
+          logo: formData.logo,
         });
         registerHospitalMutation.mutate(validatedData);
       }
@@ -442,25 +472,95 @@ const RegisterPage = () => {
 
             {/* Hospital Fields */}
             {userType === 'hospital' && (
-              <div>
-                <label className="modern-form-label">
-                  Kurum Adı *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiHome className="h-5 w-5 text-blue-600" />
+              <>
+                <div>
+                  <label className="modern-form-label">
+                    Sağlık Kuruluşu Adı *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FiHome className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <input
+                      type="text"
+                      name="institution_name"
+                      placeholder="Sağlık Kuruluşu Adı"
+                      value={formData.institution_name}
+                      onChange={handleInputChange}
+                      className="modern-form-input pl-10"
+                      required
+                    />
                   </div>
-                  <input
-                    type="text"
-                    name="institution_name"
-                    placeholder="Sağlık Kuruluşu adı"
-                    value={formData.institution_name}
-                    onChange={handleInputChange}
-                    className="modern-form-input pl-10"
-                    required
-                  />
                 </div>
-              </div>
+
+                <div>
+                  <label className="modern-form-label">
+                    Şehir *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FiMapPin className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <select
+                      name="city_id"
+                      value={formData.city_id}
+                      onChange={handleInputChange}
+                      className="modern-form-input pl-10 appearance-none"
+                      required
+                    >
+                      <option value="">Şehir Seçiniz</option>
+                      {cities.map(city => (
+                        <option key={city.value} value={city.value}>
+                          {city.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="modern-form-label">
+                    Telefon *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FiPhone className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      placeholder="Telefon Numarası"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="modern-form-input pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="modern-form-label">
+                    Logo / Fotoğraf *
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <FiImage className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <input
+                      type="file"
+                      name="logo"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="modern-form-input pl-10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      required
+                    />
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    JPG, PNG veya GIF formatında logo yükleyiniz
+                  </p>
+                </div>
+
+              </>
             )}
 
 

@@ -174,11 +174,10 @@ const getUserDetails = async (id) => {
         .where('dex.doctor_profile_id', profile?.id || 0)
         .select('dex.*', 's.name as specialty_name', 'ss.name as subspecialty_name'),
       
-      // Sertifika bilgileri - certificate_type lookup (custom_name öncelikli)
+      // Sertifika bilgileri
       db('doctor_certificates as dc')
-        .leftJoin('certificate_types as ct', 'dc.certificate_type_id', 'ct.id')
         .where('dc.doctor_profile_id', profile?.id || 0)
-        .select('dc.*', 'ct.name as certificate_type_name'),
+        .select('dc.*'),
       
       // Dil bilgileri - language ve level lookup
       db('doctor_languages as dl')
@@ -201,16 +200,24 @@ const getUserDetails = async (id) => {
       }
     };
   } else if (user.role === 'hospital') {
-    const profile = await db('hospital_profiles').where('user_id', id).first();
-    
-    // Hastane için ek bilgileri getir
-    const [departments, contacts] = await Promise.all([
-      db('hospital_departments').where('hospital_id', profile?.id || 0),
-      db('hospital_contacts').where('hospital_id', profile?.id || 0)
-    ]);
-    
-    return { 
-      ...user, 
+    // Profil verilerini users ve cities ile zenginleştir
+    const profile = await db('hospital_profiles as hp')
+      .leftJoin('users as u', 'hp.user_id', 'u.id')
+      .leftJoin('cities as c', 'hp.city_id', 'c.id')
+      .where('hp.user_id', id)
+      .select(
+        'hp.*',
+        'u.email',
+        db.raw('ISNULL(c.name, \'\') as city')
+      )
+      .first();
+
+    // Departman/İletişim tabloları bu şemada yok; boş dizi döndür
+    const departments = [];
+    const contacts = [];
+
+    return {
+      ...user,
       profile: {
         ...profile,
         departments,
@@ -252,6 +259,7 @@ const getAllJobs = async (filters = {}) => {
     .join('job_statuses as js', 'j.status_id', 'js.id')
     .join('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
+    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarını gösterme
     .select(
       'j.*', 
       'hp.institution_name', 
@@ -288,7 +296,8 @@ const getAllJobs = async (filters = {}) => {
   // Count sorgusunu ayrı yap
   const countQuery = db('jobs as j')
     .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
-    .leftJoin('cities as c', 'j.city_id', 'c.id');
+    .leftJoin('cities as c', 'j.city_id', 'c.id')
+    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarını sayma
   
   // Genel arama sorgusu
   if (search) {
@@ -319,12 +328,13 @@ const getAllJobs = async (filters = {}) => {
     .limit(limit)
     .offset(offset);
 
-  // Başvuru sayılarını ekle (liste için)
+  // Başvuru sayılarını ekle (liste için - silinmiş ve geri çekilen başvurular hariç)
   if (jobs.length > 0) {
     const jobIds = jobs.map(job => job.id);
     const applicationCounts = await db('applications')
       .whereIn('job_id', jobIds)
       .where('status_id', '!=', 5) // Geri çekilen başvuruları sayma
+      .whereNull('deleted_at') // Soft delete: Silinmiş başvuruları sayma
       .select('job_id', db.raw('COUNT(id) as application_count'))
       .groupBy('job_id');
 
@@ -359,6 +369,7 @@ const getJobDetails = async (jobId) => {
     .join('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .where('j.id', jobId)
+    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanını gösterme
     .select(
       'j.*',
       'hp.institution_name',
@@ -387,10 +398,11 @@ const getJobDetails = async (jobId) => {
     min_experience_years: job.min_experience_years
   });
   
-  // Başvuru sayısını al (Geri çekilenler hariç)
+  // Başvuru sayısını al (Geri çekilenler ve silinmişler hariç)
   const [{ count }] = await db('applications')
     .where('job_id', jobId)
     .where('status_id', '!=', 5) // Geri çekilen başvuruları sayma
+    .whereNull('deleted_at') // Soft delete: Silinmiş başvuruları sayma
     .count('* as count');
     
   return { ...job, application_count: parseInt(count) || 0 };
@@ -421,12 +433,15 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
     .join('jobs', 'applications.job_id', 'jobs.id')
     .join('doctor_profiles', 'applications.doctor_profile_id', 'doctor_profiles.id')
     .join('hospital_profiles', 'jobs.hospital_id', 'hospital_profiles.id')
+    .leftJoin('cities as residence_city', 'doctor_profiles.residence_city_id', 'residence_city.id')
+    .whereNull('applications.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+    .whereNull('jobs.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
     .select(
       'applications.*',
       'jobs.title as job_title',
       'doctor_profiles.first_name',
       'doctor_profiles.last_name',
-      'doctor_profiles.residence_city',
+      'residence_city.name as residence_city',
       'hospital_profiles.institution_name'
     );
 
@@ -462,7 +477,9 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
   const countQuery = db('applications')
     .join('jobs', 'applications.job_id', 'jobs.id')
     .join('doctor_profiles', 'applications.doctor_profile_id', 'doctor_profiles.id')
-    .join('hospital_profiles', 'jobs.hospital_id', 'hospital_profiles.id');
+    .join('hospital_profiles', 'jobs.hospital_id', 'hospital_profiles.id')
+    .whereNull('applications.deleted_at') // Soft delete: Silinmiş başvuruları sayma
+    .whereNull('jobs.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
 
   if (search) {
     countQuery.where(function () {
@@ -582,18 +599,83 @@ const updateUserStatus = async (userId, isActive, reason = null) => {
 const deleteUser = async (userId) => {
   const trx = await db.transaction();
   try {
-    // Önce kullanıcının profilini sil
+    // Önce kullanıcının profilini kontrol et
     const user = await trx('users').where('id', userId).first();
     if (!user) {
       await trx.rollback();
       throw new AppError('Kullanıcı bulunamadı', 404);
     }
 
-    // Profil tablolarını sil
-    if (user.role === 'doctor') {
-      await trx('doctor_profiles').where('user_id', userId).del();
-    } else if (user.role === 'hospital') {
-      await trx('hospital_profiles').where('user_id', userId).del();
+    // Hastane ise, önce ilişkili verileri soft delete yap
+    if (user.role === 'hospital') {
+      // Hastane profilini bul
+      const profile = await trx('hospital_profiles').where('user_id', userId).first();
+      
+      if (profile) {
+        // TÜM iş ilanlarını al (silinmiş olanlar dahil)
+        const jobIds = await trx('jobs')
+          .where('hospital_id', profile.id)
+          .pluck('id');
+        
+        if (jobIds.length > 0) {
+          // Aktif iş ilanlarını soft delete
+          await trx('jobs')
+            .where('hospital_id', profile.id)
+            .whereNull('deleted_at')
+            .update({ 
+              deleted_at: trx.fn.now(),
+              updated_at: trx.fn.now()
+            });
+          
+          // TÜM ilanlara yapılan başvuruları soft delete (silinmiş olanlar dahil)
+          await trx('applications')
+            .whereIn('job_id', jobIds)
+            .whereNull('deleted_at')
+            .update({ 
+              deleted_at: trx.fn.now(),
+              updated_at: trx.fn.now()
+            });
+          
+          // Artık TÜM iş ilanlarını hard delete (FK constraint çözümü)
+          await trx('jobs')
+            .where('hospital_id', profile.id)
+            .del();
+        }
+        
+        // Hastane profilini sil
+        await trx('hospital_profiles').where('user_id', userId).del();
+      }
+    } else if (user.role === 'doctor') {
+      // Doktor profilini bul
+      const profile = await trx('doctor_profiles').where('user_id', userId).first();
+      
+      if (profile) {
+        // Doktorun başvurularını soft delete
+        await trx('applications')
+          .where('doctor_profile_id', profile.id)
+          .whereNull('deleted_at')
+          .update({ 
+            deleted_at: trx.fn.now(),
+            updated_at: trx.fn.now()
+          });
+        
+        // Doktor eğitim bilgilerini soft delete (eğer deleted_at kolonu varsa)
+        await trx('doctor_educations')
+          .where('doctor_profile_id', profile.id)
+          .whereNull('deleted_at')
+          .update({ deleted_at: trx.fn.now() })
+          .catch(() => {}); // Hata varsa devam et
+        
+        // Doktor deneyim bilgilerini soft delete
+        await trx('doctor_experiences')
+          .where('doctor_profile_id', profile.id)
+          .whereNull('deleted_at')
+          .update({ deleted_at: trx.fn.now() })
+          .catch(() => {}); // Hata varsa devam et
+        
+        // Doktor profilini sil
+        await trx('doctor_profiles').where('user_id', userId).del();
+      }
     }
 
     // Refresh token'ları sil
@@ -606,6 +688,7 @@ const deleteUser = async (userId) => {
     return true;
   } catch (error) {
     await trx.rollback();
+    logger.error('Delete user error:', error);
     throw error;
   }
 };
@@ -727,6 +810,8 @@ const getApplicationDetails = async (applicationId) => {
     .join('users as u', 'dp.user_id', 'u.id')
     .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .join('application_statuses as ast', 'a.status_id', 'ast.id')
+    .leftJoin('cities as residence_city', 'dp.residence_city_id', 'residence_city.id')
+    .leftJoin('cities as birth_place', 'dp.birth_place_id', 'birth_place.id')
     .where('a.id', applicationId)
     .select(
       'a.*',
@@ -736,8 +821,9 @@ const getApplicationDetails = async (applicationId) => {
       'dp.first_name',
       'dp.last_name',
       'dp.phone',
-      'dp.residence_city',
       'dp.profile_photo',
+      'residence_city.name as residence_city',
+      'birth_place.name as birth_place',
       'u.id as user_id',
       'u.email',
       'hp.institution_name',
@@ -842,7 +928,7 @@ const getDashboardData = async (query = {}) => {
   try {
     const { period = 'month', startDate, endDate } = query;
     
-    // Temel istatistikler
+    // Temel istatistikler (soft delete hariç)
     const [
       totalUsers,
       totalDoctors,
@@ -854,8 +940,8 @@ const getDashboardData = async (query = {}) => {
       db.raw('SELECT COUNT(*) as count FROM users WHERE is_active = 1 AND role != ?', ['admin']),
       db.raw('SELECT COUNT(*) as count FROM users WHERE role = ? AND is_active = 1', ['doctor']),
       db.raw('SELECT COUNT(*) as count FROM users WHERE role = ? AND is_active = 1', ['hospital']),
-      db.raw('SELECT COUNT(*) as count FROM jobs'),
-      db.raw('SELECT COUNT(*) as count FROM applications'),
+      db.raw('SELECT COUNT(*) as count FROM jobs WHERE deleted_at IS NULL'),
+      db.raw('SELECT COUNT(*) as count FROM applications WHERE deleted_at IS NULL'),
       db.raw('SELECT COUNT(*) as count FROM users WHERE is_approved = 0 AND is_active = 1 AND role != ?', ['admin'])
     ]);
 

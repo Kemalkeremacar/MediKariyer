@@ -26,9 +26,9 @@ import {
   MapPin, Calendar, Users, Clock, CheckCircle, X, 
   AlertCircle, Target, Building, ArrowRight, RefreshCw
 } from 'lucide-react';
-import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useDeleteHospitalJob } from '../api/useHospital';
+import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useDeleteHospitalJob, useHospitalProfile } from '../api/useHospital';
 import { useJobStatuses } from '@/hooks/useLookup';
-import TransitionWrapper, { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
+import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 
@@ -47,6 +47,8 @@ const HospitalJobs = () => {
     error: jobsError,
     refetch: refetchJobs
   } = useHospitalJobs({ ...pagination, status: statusFilter });
+  
+  const { data: profileData } = useHospitalProfile();
   
   const { data: jobStatuses, isLoading: jobStatusesLoading } = useJobStatuses();
   
@@ -100,16 +102,14 @@ const HospitalJobs = () => {
   if (jobsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <TransitionWrapper>
-          <div className="space-y-8 p-6">
-            <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <SkeletonLoader key={i} className="h-64 bg-white/10 rounded-2xl" />
-              ))}
-            </div>
+        <div className="space-y-8 p-6">
+          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <SkeletonLoader key={i} className="h-64 bg-white/10 rounded-2xl" />
+            ))}
           </div>
-        </TransitionWrapper>
+        </div>
       </div>
     );
   }
@@ -118,45 +118,63 @@ const HospitalJobs = () => {
   if (jobsError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <TransitionWrapper>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-              <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">İş İlanları Yüklenemedi</h2>
-              <p className="text-gray-300 mb-6">{jobsError.message || 'Bir hata oluştu'}</p>
-              <button 
-                onClick={() => refetchJobs()} 
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Yeniden Dene
-              </button>
-            </div>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-4">İş İlanları Yüklenemedi</h2>
+            <p className="text-gray-300 mb-6">{jobsError.message || 'Bir hata oluştu'}</p>
+            <button 
+              onClick={() => refetchJobs()} 
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Yeniden Dene
+            </button>
           </div>
-        </TransitionWrapper>
+        </div>
       </div>
     );
   }
 
+  // Profil verilerini al
+  const profile = profileData?.data?.profile;
+  const institutionName = profile?.institution_name || 'Hastaneniz';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      <TransitionWrapper>
-        <div className="space-y-8 p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">İş İlanları</h1>
-              <p className="text-gray-300 mt-2">İş ilanlarınızı yönetin ve yeni ilanlar oluşturun</p>
+      <div className="space-y-8 p-6">
+          {/* Hero Section */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
             </div>
-            <div className="flex items-center gap-4">
-              <Link
-                to="/hospital/jobs/new"
-                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
-              >
-                <Plus className="w-5 h-5" />
-                Yeni İlan
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+            
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                {/* Metin ve Buton */}
+                <div className="flex-1 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div className="flex-1">
+                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">İş İlanları</h1>
+                    <h2 className="text-xl md:text-2xl font-semibold text-blue-400 mb-4">
+                      İlan Yönetimi ve Yayınlama
+                    </h2>
+                    <p className="text-gray-300 text-base md:text-lg leading-relaxed">
+                      İş ilanlarınızı oluşturun, yönetin ve nitelikli doktorlara ulaşın.
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 w-full md:w-auto">
+                    <Link
+                      to="/hospital/jobs/new"
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Yeni İlan Oluştur
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -363,7 +381,6 @@ const HospitalJobs = () => {
             </div>
           )}
         </div>
-      </TransitionWrapper>
     </div>
   );
 };

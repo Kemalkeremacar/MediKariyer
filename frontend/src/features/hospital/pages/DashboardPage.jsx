@@ -22,7 +22,7 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  ArrowRight, Briefcase, Activity, Target, RefreshCw, Building
+  ArrowRight, Briefcase, Activity, Target, RefreshCw, User
 } from 'lucide-react';
 import { useHospitalDashboard, useHospitalProfile } from '../api/useHospital';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -117,22 +117,40 @@ const HospitalDashboard = () => {
             
             <div className="relative z-10">
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                <div className="flex-1">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Hoş Geldiniz</h1>
-                  <h2 className="text-xl md:text-2xl font-semibold text-blue-400 mb-4">{institutionName}</h2>
-                  <p className="text-gray-300 text-base md:text-lg leading-relaxed">
-                    İş ilanlarınızı yönetin, başvuruları değerlendirin ve en iyi doktorları keşfedin.
-                  </p>
-                </div>
-                <div className="flex-shrink-0 w-full md:w-auto">
-                  <Link
-                    to="/hospital/profile"
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
-                  >
-                    <Building className="w-5 h-5" />
-                    Profili Düzenle
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                {/* Logo - Sol Taraf */}
+                {profile?.logo && (
+                  <div className="flex-shrink-0">
+                    <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-blue-400/30 shadow-lg">
+                      <img 
+                        src={profile.logo} 
+                        alt={institutionName}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Metin ve Buton - Sağ Taraf */}
+                <div className="flex-1 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div className="flex-1">
+                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{institutionName}</h1>
+                    <h2 className="text-xl md:text-2xl font-semibold text-blue-400 mb-4">
+                      İşe Alım ve Başvuru Yönetimi
+                    </h2>
+                    <p className="text-gray-300 text-base md:text-lg leading-relaxed">
+                      İş ilanlarınızı yönetin, başvuruları değerlendirin ve en iyi doktorları keşfedin.
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 w-full md:w-auto">
+                    <Link
+                      to="/hospital/profile"
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
+                    >
+                      <User className="w-5 h-5" />
+                      Profil Yönetimi
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -199,13 +217,7 @@ const HospitalDashboard = () => {
                       <Activity className="w-10 h-10 text-white" />
                     </div>
                     <p className="text-gray-300 text-lg mb-4">Henüz başvuru bulunmuyor</p>
-                    <Link
-                      to="/hospital/jobs"
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
-                    >
-                      İş İlanı Oluşturun
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                    <p className="text-gray-400 text-sm">İş ilanı oluşturarak başvuru almaya başlayın</p>
                   </div>
                 )}
               </div>
@@ -265,13 +277,7 @@ const HospitalDashboard = () => {
                       <Briefcase className="w-10 h-10 text-white" />
                     </div>
                     <p className="text-gray-300 text-lg mb-4">Henüz iş ilanı oluşturmadınız</p>
-                    <Link
-                      to="/hospital/jobs"
-                      className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-pink-700 transition-all duration-300 inline-flex items-center gap-2 group"
-                    >
-                      İş İlanı Oluşturun
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
+                    <p className="text-gray-400 text-sm">İş İlanları sayfasından yeni ilan ekleyebilirsiniz</p>
                   </div>
                 )}
               </div>
@@ -279,7 +285,7 @@ const HospitalDashboard = () => {
           </div>
         </div>
       </div>
-    );
+  );
 };
 
 export default HospitalDashboard;

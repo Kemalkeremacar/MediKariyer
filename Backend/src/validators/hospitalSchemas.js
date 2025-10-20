@@ -76,31 +76,32 @@ const hospitalProfileSchema = Joi.object({
       'any.required': 'Kurum adı zorunludur'
     }),
 
-  city: Joi.string()
-    .min(2)
-    .max(100)
+  city_id: Joi.number()
+    .integer()
+    .positive()
     .required()
     .messages({
-      'string.empty': 'Şehir boş olamaz',
-      'string.min': 'Şehir en az 2 karakter olmalıdır',
-      'string.max': 'Şehir en fazla 100 karakter olabilir',
-      'any.required': 'Şehir zorunludur'
+      'number.base': 'Şehir ID\'si sayı olmalıdır',
+      'number.integer': 'Şehir ID\'si tam sayı olmalıdır',
+      'number.positive': 'Şehir ID\'si pozitif olmalıdır',
+      'any.required': 'Şehir seçimi zorunludur'
     }),
 
   address: Joi.string()
     .max(500)
-    .required()
+    .allow('', null)
     .messages({
-      'string.empty': 'Adres boş olamaz',
-      'string.max': 'Adres en fazla 500 karakter olabilir',
-      'any.required': 'Adres zorunludur'
+      'string.max': 'Adres en fazla 500 karakter olabilir'
     }),
 
   phone: Joi.string()
-    .pattern(/^[\+]?[0-9\s\-\(\)]{10,20}$/)
-    .allow('')
+    .min(3)
+    .max(20)
+    .required()
     .messages({
-      'string.pattern.base': 'Geçerli bir telefon numarası giriniz'
+      'string.min': 'Telefon numarası zorunludur',
+      'string.max': 'Telefon numarası en fazla 20 karakter olabilir',
+      'any.required': 'Telefon numarası zorunludur'
     }),
 
   email: Joi.string()
@@ -122,6 +123,13 @@ const hospitalProfileSchema = Joi.object({
     .allow('')
     .messages({
       'string.max': 'Hakkında bölümü en fazla 2000 karakter olabilir'
+    }),
+
+  logo: Joi.string()
+    .required()
+    .messages({
+      'string.empty': 'Logo boş olamaz',
+      'any.required': 'Logo zorunludur'
     })
 });
 
@@ -152,24 +160,33 @@ const jobSchema = Joi.object({
       'any.required': 'Uzmanlık alanı zorunludur'
     }),
 
+  subspecialty_id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': 'Yan dal uzmanlığı ID sayı olmalıdır',
+      'number.integer': 'Yan dal uzmanlığı ID tam sayı olmalıdır',
+      'number.positive': 'Yan dal uzmanlığı ID pozitif olmalıdır',
+      'any.required': 'Yan dal uzmanlığı zorunludur'
+    }),
+
   city_id: Joi.number()
     .integer()
     .positive()
-    .allow(null)
+    .required()
     .messages({
       'number.base': 'Şehir ID\'si sayı olmalıdır',
       'number.integer': 'Şehir ID\'si tam sayı olmalıdır',
-      'number.positive': 'Şehir ID\'si pozitif olmalıdır'
+      'number.positive': 'Şehir ID\'si pozitif olmalıdır',
+      'any.required': 'Şehir seçimi zorunludur'
     }),
 
   employment_type: Joi.string()
-    .min(2)
-    .max(100)
+    .valid("Tam Zamanlı", "Yarı Zamanlı", "Nöbet Usulü")
     .required()
     .messages({
-      'string.empty': 'İstihdam türü boş olamaz',
-      'string.min': 'İstihdam türü en az 2 karakter olmalıdır',
-      'string.max': 'İstihdam türü en fazla 100 karakter olabilir',
+      'any.only': 'İstihdam türü "Tam Zamanlı", "Yarı Zamanlı" veya "Nöbet Usulü" olmalıdır',
       'any.required': 'İstihdam türü zorunludur'
     }),
 
@@ -186,12 +203,12 @@ const jobSchema = Joi.object({
     }),
 
   description: Joi.string()
-    .min(50)
+    .min(10)
     .max(5000)
     .required()
     .messages({
       'string.empty': 'İş tanımı boş olamaz',
-      'string.min': 'İş tanımı en az 50 karakter olmalıdır',
+      'string.min': 'İş tanımı en az 10 karakter olmalıdır',
       'string.max': 'İş tanımı en fazla 5000 karakter olabilir',
       'any.required': 'İş tanımı zorunludur'
     }),
@@ -244,46 +261,10 @@ const applicationStatusSchema = Joi.object({
 });
 
 // ============================================================================
-// DEPARTMAN VALIDATION SCHEMAS
+// DEPARTMAN VE İLETİŞİM ŞEMALARI KALDIRILDI
 // ============================================================================
-const departmentSchema = Joi.object({
-  department_name: Joi.string()
-    .min(2)
-    .max(255)
-    .required()
-    .messages({
-      'string.empty': 'Departman adı boş olamaz',
-      'string.min': 'Departman adı en az 2 karakter olmalıdır',
-      'string.max': 'Departman adı en fazla 255 karakter olabilir',
-      'any.required': 'Departman adı zorunludur'
-    }),
-
-  description: Joi.string()
-    .max(500)
-    .allow('')
-    .messages({
-      'string.max': 'Departman açıklaması en fazla 500 karakter olabilir'
-    })
-});
-
-// ============================================================================
-// İLETİŞİM BİLGİSİ VALIDATION SCHEMAS
-// ============================================================================
-const contactSchema = Joi.object({
-  phone: Joi.string()
-    .pattern(/^[\+]?[0-9\s\-\(\)]{10,20}$/)
-    .allow('')
-    .messages({
-      'string.pattern.base': 'Geçerli bir telefon numarası giriniz'
-    }),
-
-  email: Joi.string()
-    .email()
-    .allow('')
-    .messages({
-      'string.email': 'Geçerli bir email adresi giriniz'
-    })
-});
+// Bu şemalar artık kullanılmıyor çünkü departmanlar ve iletişim bilgileri
+// ayrı tablolarda değil, hospital_profiles tablosunda tek satırda tutuluyor
 
 // ============================================================================
 // QUERY PARAMETRELERİ VALIDATION SCHEMAS
@@ -409,12 +390,6 @@ module.exports = {
   
   // Başvuru durumu validation
   applicationStatusSchema,
-  
-  // Departman validation
-  departmentSchema,
-  
-  // İletişim bilgisi validation
-  contactSchema,
   
   // Query parametreleri validation
   applicationsQuerySchema

@@ -140,9 +140,9 @@ const registerDoctor = catchAsync(async (req, res) => {
  * @param {string} req.body.email - Hastanenin e-posta adresi
  * @param {string} req.body.password - Hastanenin şifresi
  * @param {string} req.body.institution_name - Kurum adı
- * @param {string} req.body.city - Şehir
- * @param {string} req.body.address - Adres
- * @param {string} [req.body.phone] - Telefon numarası
+ * @param {number} req.body.city_id - Şehir ID'si
+ * @param {string} req.body.phone - Telefon numarası
+ * @param {string} [req.body.address] - Adres
  * @param {string} [req.body.website] - Web sitesi URL'si
  * @param {string} [req.body.about] - Kurum hakkında bilgi
  * @param {object} res - Express response objesi
@@ -155,17 +155,21 @@ const registerDoctor = catchAsync(async (req, res) => {
  *   "email": "hospital@example.com",
  *   "password": "Password123!",
  *   "institution_name": "Acıbadem Hastanesi",
- *   "city": "İstanbul",
+ *   "city_id": 1,
+ *   "phone": "+905551234567",
  *   "address": "Kadıköy Mahallesi, Acıbadem Caddesi No:1"
  * }
  */
 const registerHospital = catchAsync(async (req, res) => {
-  const { email, password, institution_name } = req.body;
+  const { email, password, institution_name, city_id, phone, address, website, about, logo } = req.body;
 
   logger.info(`Hospital registration request received`, { 
     email, 
     hasPassword: !!password, 
-    institution_name
+    institution_name,
+    city_id,
+    phone,
+    hasLogo: !!logo
   });
 
   try {
@@ -173,7 +177,13 @@ const registerHospital = catchAsync(async (req, res) => {
     const result = await authService.registerHospital({
       email,
       password,
-      institution_name
+      institution_name,
+      city_id,
+      phone,
+      address,
+      website,
+      about,
+      logo
     });
 
     logger.info(`New hospital registered successfully: ${email}`);
@@ -254,7 +264,8 @@ const loginUnified = catchAsync(async (req, res) => {
       email: user.email, 
       role: user.role, 
       is_approved: user.is_approved,
-      is_active: user.is_active
+      is_active: user.is_active,
+      profile: user.profile
     },
     tokens: { accessToken, refreshToken }
   });

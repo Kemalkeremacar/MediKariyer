@@ -69,17 +69,19 @@ const notificationService = require('./notificationService');
  */
 const getProfile = async (userId) => {
   try {
-    // hospital_profiles ve users tablolarını join ederek tam profil bilgisini getir
-    const profile = await db('hospital_profiles')
-      .join('users', 'hospital_profiles.user_id', 'users.id')
+    // hospital_profiles, users ve cities tablolarını join ederek tam profil bilgisini getir
+    const profile = await db('hospital_profiles as hp')
+      .join('users as u', 'hp.user_id', 'u.id')
+      .leftJoin('cities as c', 'hp.city_id', 'c.id')
       .select(
-        'hospital_profiles.*',           // Hastane profil bilgileri
-        'users.email',                   // Kullanıcı email'i
-        'users.is_active',               // Kullanıcı aktiflik durumu
-        'users.is_approved',              // Admin onay durumu
-        'users.created_at as user_created_at'  // Kullanıcı oluşturulma tarihi
+        'hp.*',                          // Hastane profil bilgileri (hp.email burada)
+        'c.name as city',                // Şehir adı (cities tablosundan)
+        'u.email as user_email',         // Çakışmayı önlemek için alias
+        'u.is_active',                   // Kullanıcı aktiflik durumu
+        'u.is_approved',                 // Admin onay durumu
+        'u.created_at as user_created_at'  // Kullanıcı oluşturulma tarihi
       )
-      .where('hospital_profiles.user_id', userId)
+      .where('hp.user_id', userId)
       .first();
 
     // Profil bulunamazsa hata fırlat
@@ -98,13 +100,13 @@ const getProfile = async (userId) => {
  * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
  * @param {Object} profileData - Güncellenecek profil verileri
  * @param {string} profileData.institution_name - Kurum adı
- * @param {string} profileData.city - Şehir
- * @param {string} profileData.address - Adres
+ * @param {number} profileData.city_id - Şehir ID (cities tablosundan FK)
+ * @param {string} [profileData.address] - Adres (opsiyonel)
  * @param {string} [profileData.phone] - Telefon numarası
- * @param {string} [profileData.email] - E-posta adresi
- * @param {string} [profileData.website] - Web sitesi URL'si
- * @param {string} [profileData.about] - Kurum hakkında bilgi
- * @param {string} [profileData.logo] - Sağlık kuruluşu logosu
+ * @param {string} [profileData.email] - E-posta adresi (genelde users.email'den gelir, değiştirilemez)
+ * @param {string} [profileData.website] - Web sitesi URL'si (opsiyonel)
+ * @param {string} [profileData.about] - Kurum hakkında bilgi (opsiyonel)
+ * @param {string} [profileData.logo] - Sağlık kuruluşu logosu (opsiyonel)
  * @returns {Promise<Object>} Güncellenmiş hastane profil bilgileri
  * @throws {AppError} 404 - Hastane profili bulunamadı
  * @throws {Error} Veritabanı hatası durumunda
@@ -112,7 +114,7 @@ const getProfile = async (userId) => {
  * @example
  * const updatedProfile = await updateProfile(123, { 
  *   institution_name: "Yeni Sağlık Kuruluşu Adı",
- *   city: "Ankara",
+ *   city_id: 34,
  *   address: "Yeni Adres",
  *   logo: "/uploads/logo.png"
  * });
@@ -168,19 +170,19 @@ const getProfileCompletion = async (userId) => {
     if (!profile) return { percentage: 0, completedFields: 0, totalFields: 0, missingFields: [] };
 
     const fields = [
-      { key: 'institution_name', name: 'Kurum Adı', value: profile.institution_name },
-      { key: 'city', name: 'Şehir', value: profile.city },
-      { key: 'address', name: 'Adres', value: profile.address },
-      { key: 'phone', name: 'Telefon', value: profile.phone },
-      { key: 'email', name: 'E-posta', value: profile.email },
-      { key: 'website', name: 'Web Sitesi', value: profile.website },
-      { key: 'about', name: 'Hakkında', value: profile.about },
-      { key: 'logo', name: 'Logo', value: profile.logo }
+      { key: 'institution_name', name: 'Kurum Adı', value: profile.institution_name, required: true },
+      { key: 'city', name: 'Şehir', value: profile.city, required: true },
+      { key: 'phone', name: 'Telefon', value: profile.phone, required: true },
+      { key: 'address', name: 'Adres', value: profile.address, required: false },
+      { key: 'email', name: 'E-posta', value: profile.email, required: false },
+      { key: 'website', name: 'Web Sitesi', value: profile.website, required: false },
+      { key: 'about', name: 'Hakkında', value: profile.about, required: false },
+      { key: 'logo', name: 'Logo', value: profile.logo, required: true }
     ];
 
+    // Dolu field'ları say (logo dahil)
     const completedFields = fields.filter(field => {
       if (!field.value) return false;
-      // String olmayan değerleri string'e çevir
       const value = typeof field.value === 'string' ? field.value : String(field.value);
       return value.trim() !== '';
     }).length;
@@ -188,18 +190,28 @@ const getProfileCompletion = async (userId) => {
     const totalFields = fields.length;
     const percentage = Math.round((completedFields / totalFields) * 100);
     
+    // Eksik field'ları bul (sadece boş olanlar)
     const missingFields = fields.filter(field => {
       if (!field.value) return true;
-      // String olmayan değerleri string'e çevir
       const value = typeof field.value === 'string' ? field.value : String(field.value);
       return value.trim() === '';
     }).map(field => field.name);
+
+    // Zorunlu field'ların durumu
+    const requiredFields = fields.filter(f => f.required);
+    const completedRequiredFields = requiredFields.filter(field => {
+      if (!field.value) return false;
+      const value = typeof field.value === 'string' ? field.value : String(field.value);
+      return value.trim() !== '';
+    }).length;
 
     return {
       percentage,
       completedFields,
       totalFields,
-      missingFields
+      missingFields,
+      requiredCompleted: completedRequiredFields,
+      requiredTotal: requiredFields.length
     };
   } catch (error) {
     logger.error('Get hospital profile completion error:', error);
@@ -622,12 +634,13 @@ const getJobs = async (userId, params = {}) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // Base query - hastane kendi ilanlarının hepsini görür (Aktif, Pasif, Silinmiş)
+    // Base query - hastane kendi ilanlarının hepsini görür (Aktif, Pasif) - Silinmiş olanlar hariç
     let query = db('jobs as j')
       .join('job_statuses as js', 'j.status_id', 'js.id')
       .join('specialties as s', 'j.specialty_id', 's.id')
       .leftJoin('cities as c', 'j.city_id', 'c.id')
       .where('j.hospital_id', hospitalProfile.id)
+      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarını gösterme
       .select(
         'j.*',
         'js.name as status',
@@ -666,11 +679,13 @@ const getJobs = async (userId, params = {}) => {
       .offset(offset)
       .limit(limit);
 
-    // Application count'ları ayrı query ile al
+    // Application count'ları ayrı query ile al (silinmiş başvurular hariç)
     if (jobs.length > 0) {
       const jobIds = jobs.map(job => job.id);
       const applicationCounts = await db('applications as a')
         .whereIn('a.job_id', jobIds)
+        .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
+        .where('a.status_id', '!=', 5) // Geri çekilmiş başvuruları sayma
         .select('a.job_id', db.raw('COUNT(a.id) as application_count'))
         .groupBy('a.job_id');
 
@@ -685,7 +700,8 @@ const getJobs = async (userId, params = {}) => {
     const totalQuery = db('jobs as j')
       .join('job_statuses as js', 'j.status_id', 'js.id')
       .join('specialties as s', 'j.specialty_id', 's.id')
-      .where('j.hospital_id', hospitalProfile.id);
+      .where('j.hospital_id', hospitalProfile.id)
+      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarını sayma
 
     if (status) {
       totalQuery.where('js.name', status);
@@ -756,7 +772,8 @@ const createJob = async (userId, jobData) => {
       updated_at: db.fn.now()
     };
 
-    const [jobId] = await db('jobs').insert(insertData);
+    const result = await db('jobs').insert(insertData).returning('id');
+    const jobId = result[0].id;
 
     logger.info(`Job created with ID: ${jobId}, status_id: 1 (Aktif)`);
 
@@ -765,8 +782,9 @@ const createJob = async (userId, jobData) => {
       .join('job_statuses as js', 'j.status_id', 'js.id')
       .join('specialties as s', 'j.specialty_id', 's.id')
       .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
       .where('j.id', jobId)
-      .select('j.*', 'js.name as status', 's.name as specialty', 'c.name as city')
+      .select('j.*', 'js.name as status', 's.name as specialty', 'c.name as city', 'ss.name as subspecialty_name')
       .first();
 
     if (!job) {
@@ -949,12 +967,14 @@ const getJobById = async (userId, jobId) => {
       .join('job_statuses as js', 'j.status_id', 'js.id')
       .join('specialties as s', 'j.specialty_id', 's.id')
       .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
       .where({ 'j.id': jobId, 'j.hospital_id': hospitalProfile.id })
       .select(
         'j.*',
         'js.name as status',
         's.name as specialty',
-        'c.name as city'
+        'c.name as city',
+        'ss.name as subspecialty_name'
       )
       .first();
 
@@ -1012,12 +1032,12 @@ const deleteJob = async (userId, jobId) => {
       throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
     }
 
-    // Soft delete yap (status_id = 3 = deleted)
-    // Not: job_statuses tablosunda 3 = 'Silinmiş' olmalı
+    // Soft delete yap (deleted_at kolonu set et)
     const deleted = await db('jobs')
       .where('id', jobId)
+      .whereNull('deleted_at') // Zaten silinmemiş kayıtlar
       .update({
-        status_id: 3, // deleted (job_statuses tablosunda 3 = Silinmiş)
+        deleted_at: db.fn.now(),
         updated_at: db.fn.now()
       });
 
@@ -1065,7 +1085,7 @@ const getApplications = async (userId, jobId, params = {}) => {
       throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
     }
 
-    // Base query - "Geri Çekildi" (status_id=5) başvurularını gösterme
+    // Base query - "Geri Çekildi" (status_id=5) ve silinmiş başvuruları gösterme
     let query = db('applications as a')
       .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
       .join('users as u', 'dp.user_id', 'u.id')
@@ -1073,6 +1093,8 @@ const getApplications = async (userId, jobId, params = {}) => {
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('a.job_id', jobId)
       .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
+      .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
         'a.*',
         'dp.first_name',
@@ -1100,7 +1122,11 @@ const getApplications = async (userId, jobId, params = {}) => {
     // Toplam sayı
     const totalQuery = db('applications as a')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
-      .where('a.job_id', jobId);
+      .join('jobs as j', 'a.job_id', 'j.id')
+      .where('a.job_id', jobId)
+      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları sayma
+      .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
+      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
 
     if (status) {
       totalQuery.where('ast.name', status);
@@ -1156,7 +1182,7 @@ const getAllApplications = async (userId, params = {}) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // Base query - "Geri Çekildi" (status_id=5) başvurularını gösterme
+    // Base query - "Geri Çekildi" (status_id=5) ve silinmiş başvuruları gösterme
     let query = db('applications as a')
       .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
       .join('users as u', 'dp.user_id', 'u.id')
@@ -1164,6 +1190,8 @@ const getAllApplications = async (userId, params = {}) => {
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('j.hospital_id', hospitalProfile.id)
       .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
+      .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
         'a.*',
         'dp.first_name',
@@ -1211,12 +1239,14 @@ const getAllApplications = async (userId, params = {}) => {
       .limit(limit)
       .offset(offset);
 
-    // Toplam sayı - Geri çekilen başvurular hariç
+    // Toplam sayı - Geri çekilen ve silinmiş başvurular hariç
     const totalQuery = db('applications as a')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('j.hospital_id', hospitalProfile.id)
-      .where('a.status_id', '!=', 5); // Geri çekilen başvuruları gösterme
+      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
+      .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
 
     if (status) {
       totalQuery.where('ast.name', status);
@@ -1422,6 +1452,7 @@ const getRecentJobs = async (userId, limit = 5) => {
       .join('specialties as s', 'j.specialty_id', 's.id')
       .leftJoin('cities as c', 'j.city_id', 'c.id')
       .where('j.hospital_id', hospitalProfile.id)
+      .whereNull('j.deleted_at') // Silinmemiş ilanları getir
       .select(
         'j.id',
         'j.title',
@@ -1636,15 +1667,11 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
       )
       .orderBy('dex.start_date', 'desc');
 
-    // Sertifika bilgilerini getir - Sertifika türü ile join
+    // Sertifika bilgilerini getir
     const certificates = await db('doctor_certificates as dc')
-      .leftJoin('certificate_types as ct', 'dc.certificate_type_id', 'ct.id')
       .where('dc.doctor_profile_id', doctorProfileId)
-      .select(
-        'dc.*',
-        'ct.name as certificate_type_name'
-      )
-      .orderBy('dc.issued_at', 'desc');
+      .select('dc.*')
+      .orderBy('dc.certificate_year', 'desc');
 
     // Dil bilgilerini getir - Dil ve seviye ile join
     const languages = await db('doctor_languages as dl')
@@ -1680,17 +1707,9 @@ module.exports = {
   updateProfile,
   getProfileCompletion,
   
-  // Departman yönetimi
-  getDepartments,
-  addDepartment,
-  updateDepartment,
-  deleteDepartment,
-  
-  // İletişim bilgisi yönetimi
-  getContacts,
-  addContact,
-  updateContact,
-  deleteContact,
+  // Departman ve İletişim yönetimi kaldırıldı
+  // Department ve Contact tabloları artık kullanılmıyor
+  // İletişim bilgileri hospital_profiles tablosunda tutuluyor
   
   // İş ilanı yönetimi (jobService'den taşındı)
   getJobs,

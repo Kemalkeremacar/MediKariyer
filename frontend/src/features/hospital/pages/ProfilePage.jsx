@@ -23,26 +23,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   Building, Save, Plus, Edit3, Trash2, Phone, Mail, 
   MapPin, Globe, Info, Users, Briefcase, AlertCircle,
-  CheckCircle, X, Calendar, User, ArrowLeft, Camera, Upload
+  CheckCircle, X, Calendar, User, ArrowLeft, Camera, Upload, ArrowRight
 } from 'lucide-react';
 import { 
-  hospitalProfileUpdateSchema,
-  hospitalDepartmentSchema,
-  hospitalContactSchema
+  hospitalProfileUpdateSchema
 } from '@config/validation.js';
 import { 
   useHospitalProfile, 
   useUpdateHospitalProfile, 
-  useHospitalProfileCompletion,
-  useHospitalDepartments, 
-  useCreateHospitalDepartment, 
-  useUpdateHospitalDepartment, 
-  useDeleteHospitalDepartment,
-  useHospitalContacts, 
-  useCreateHospitalContact, 
-  useUpdateHospitalContact, 
-  useDeleteHospitalContact 
+  useHospitalProfileCompletion
 } from '../api/useHospital';
+import { useLookup } from '@/hooks/useLookup';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 
@@ -50,24 +41,16 @@ const HospitalProfile = () => {
   // API hook'ları
   const { data: profileData, isLoading: profileLoading, error: profileError } = useHospitalProfile();
   const { data: completionData, isLoading: completionLoading } = useHospitalProfileCompletion();
-  const { data: departmentsData, isLoading: departmentsLoading } = useHospitalDepartments();
-  const { data: contactsData, isLoading: contactsLoading } = useHospitalContacts();
+  const { data: { cities } } = useLookup();
 
   // Mutation hook'ları
   const updateProfileMutation = useUpdateHospitalProfile();
-  const createDepartmentMutation = useCreateHospitalDepartment();
-  const updateDepartmentMutation = useUpdateHospitalDepartment();
-  const deleteDepartmentMutation = useDeleteHospitalDepartment();
-  const createContactMutation = useCreateHospitalContact();
-  const updateContactMutation = useUpdateHospitalContact();
-  const deleteContactMutation = useDeleteHospitalContact();
 
   // State management
-  const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     institution_name: '',
-    city: '',
+    city_id: '',
     address: '',
     phone: '',
     email: '',
@@ -76,11 +59,6 @@ const HospitalProfile = () => {
     logo: ''
   });
 
-  // Department ve Contact state'leri
-  const [editingDepartment, setEditingDepartment] = useState(null);
-  const [editingContact, setEditingContact] = useState(null);
-  const [newDepartment, setNewDepartment] = useState({ department_name: '', description: '' });
-  const [newContact, setNewContact] = useState({ contact_type: '', contact_value: '', description: '' });
   const [logoPreview, setLogoPreview] = useState(null);
 
   // Logo yükleme handler'ı
@@ -115,7 +93,7 @@ const HospitalProfile = () => {
       const profile = profileData.data.profile;
       setFormData({
         institution_name: profile.institution_name || '',
-        city: profile.city || '',
+        city_id: profile.city_id || '',
         address: profile.address || '',
         phone: profile.phone || '',
         email: profile.email || '',
@@ -130,7 +108,7 @@ const HospitalProfile = () => {
   }, [profileData]);
 
   // Loading state
-  if (profileLoading || departmentsLoading || contactsLoading) {
+  if (profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
         <div className="space-y-8 p-6">
@@ -162,8 +140,6 @@ const HospitalProfile = () => {
   // Veri parsing
   const profile = profileData?.data?.profile;
   const completion = completionData?.data?.completion;
-  const departments = departmentsData?.data?.departments || [];
-  const contacts = contactsData?.data?.contacts || [];
 
   // Form handlers
   const handleInputChange = (e) => {
@@ -175,7 +151,11 @@ const HospitalProfile = () => {
     e.preventDefault();
     try {
       // Zod validation kullan
-      const validatedData = hospitalProfileUpdateSchema.parse(formData);
+      const sendData = {
+        ...formData,
+        city_id: formData.city_id ? parseInt(formData.city_id) : undefined
+      };
+      const validatedData = hospitalProfileUpdateSchema.parse(sendData);
       await updateProfileMutation.mutateAsync(validatedData);
       setIsEditing(false);
     } catch (error) {
@@ -189,176 +169,63 @@ const HospitalProfile = () => {
     }
   };
 
-  // Department handlers
-  const handleCreateDepartment = async () => {
-    if (!newDepartment.department_name.trim()) {
-      showToast.error('Departman adı gereklidir');
-      return;
-    }
-    
-    try {
-      // Zod validation kullan
-      const validatedData = hospitalDepartmentSchema.parse(newDepartment);
-      await createDepartmentMutation.mutateAsync(validatedData);
-      setNewDepartment({ department_name: '', description: '' });
-    } catch (error) {
-      if (error.errors) {
-        // Zod validation hatası
-        const firstError = error.errors[0];
-        showToast.error(firstError.message);
-      } else {
-        console.error('Departman oluşturma hatası:', error);
-      }
-    }
-  };
-
-  const handleUpdateDepartment = async (departmentId, data) => {
-    try {
-      // Zod validation kullan
-      const validatedData = hospitalDepartmentSchema.parse(data);
-      await updateDepartmentMutation.mutateAsync({ departmentId, departmentData: validatedData });
-      setEditingDepartment(null);
-    } catch (error) {
-      if (error.errors) {
-        // Zod validation hatası
-        const firstError = error.errors[0];
-        showToast.error(firstError.message);
-      } else {
-        console.error('Departman güncelleme hatası:', error);
-      }
-    }
-  };
-
-  const handleDeleteDepartment = async (departmentId) => {
-    if (window.confirm('Bu departmanı silmek istediğinizden emin misiniz?')) {
-      try {
-        await deleteDepartmentMutation.mutateAsync(departmentId);
-      } catch (error) {
-        console.error('Departman silme hatası:', error);
-      }
-    }
-  };
-
-  // Contact handlers
-  const handleCreateContact = async () => {
-    if (!newContact.contact_type.trim() || !newContact.contact_value.trim()) {
-      showToast.error('İletişim türü ve değeri gereklidir');
-      return;
-    }
-    try {
-      // Zod validation kullan
-      const validatedData = hospitalContactSchema.parse(newContact);
-      await createContactMutation.mutateAsync(validatedData);
-      setNewContact({ contact_type: '', contact_value: '', description: '' });
-    } catch (error) {
-      if (error.errors) {
-        // Zod validation hatası
-        const firstError = error.errors[0];
-        showToast.error(firstError.message);
-      } else {
-        console.error('İletişim bilgisi oluşturma hatası:', error);
-      }
-    }
-  };
-
-  const handleUpdateContact = async (contactId, data) => {
-    try {
-      // Zod validation kullan
-      const validatedData = hospitalContactSchema.parse(data);
-      await updateContactMutation.mutateAsync({ contactId, contactData: validatedData });
-      setEditingContact(null);
-    } catch (error) {
-      if (error.errors) {
-        // Zod validation hatası
-        const firstError = error.errors[0];
-        showToast.error(firstError.message);
-      } else {
-        console.error('İletişim bilgisi güncelleme hatası:', error);
-      }
-    }
-  };
-
-  const handleDeleteContact = async (contactId) => {
-    if (window.confirm('Bu iletişim bilgisini silmek istediğinizden emin misiniz?')) {
-      try {
-        await deleteContactMutation.mutateAsync(contactId);
-      } catch (error) {
-        console.error('İletişim bilgisi silme hatası:', error);
-      }
-    }
-  };
-
-  const tabs = [
-    { id: 'profile', label: 'Temel Bilgiler', icon: Building },
-    { id: 'departments', label: 'Departmanlar', icon: Users },
-    { id: 'contacts', label: 'İletişim', icon: Phone }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       <div className="space-y-8 p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Hastane Profili</h1>
-              <p className="text-gray-300 mt-2">Profil bilgilerinizi yönetin ve güncelleyin</p>
+          {/* Hero Section */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-20">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
             </div>
-            <div className="flex items-center gap-4">
-              {/* Profil Tamamlanma Göstergesi */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{completion?.percentage || 0}%</div>
-                  <div className="text-xs text-gray-300">Tamamlanma</div>
+            
+            <div className="relative z-10">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                {/* Metin - Sol */}
+                <div className="flex-1">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Profil Yönetimi</h1>
+                  <h2 className="text-xl md:text-2xl font-semibold text-blue-400 mb-4">
+                    Kurum Bilgilerini Düzenle
+                  </h2>
+                  <p className="text-gray-300 text-base md:text-lg leading-relaxed">
+                    Kurum profilinizi güncelleyin ve bilgilerinizi yönetin.
+                  </p>
+                </div>
+                
+                {/* Profil Tamamlanma Göstergesi - Sağ */}
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{completion?.percentage || 0}%</div>
+                    <div className="text-xs text-gray-300">Tamamlanma</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Sidebar - Tab Navigation */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-6">
-              <nav className="space-y-2">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-300 ${
-                        activeTab === tab.id
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                          : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </nav>
-
-              {/* Profil Durumu */}
-              <div className="mt-8 p-4 bg-white/5 rounded-2xl border border-white/10">
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Profil Durumu</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-400">Tamamlanan Alanlar</span>
-                    <span className="text-white">{completion?.completedFields || 0}/{completion?.totalFields || 0}</span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-blue-400 to-purple-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${completion?.percentage || 0}%` }}
-                    ></div>
-                  </div>
+          <div className="max-w-5xl mx-auto">
+            {/* Profil Tamamlanma Göstergesi */}
+            <div className="mb-6 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <h3 className="text-sm font-medium text-gray-300 mb-3">Profil Durumu</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-400">Tamamlanan Alanlar</span>
+                  <span className="text-white">{completion?.completedFields || 0}/{completion?.totalFields || 0}</span>
+                </div>
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-blue-400 to-purple-400 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${completion?.percentage || 0}%` }}
+                  ></div>
                 </div>
               </div>
             </div>
 
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Temel Bilgiler Tab */}
-              {activeTab === 'profile' && (
+            <div className="space-y-6">
+              {/* Temel Bilgiler */}
+              <div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-8">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-white">Temel Bilgiler</h2>
@@ -412,20 +279,25 @@ const HospitalProfile = () => {
                         <label className="block text-sm font-medium text-gray-300 mb-2">
                           Şehir *
                         </label>
-                        <input
-                          type="text"
-                          name="city"
-                          value={formData.city}
+                        <select
+                          name="city_id"
+                          value={formData.city_id}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
-                          placeholder="Şehir girin"
-                        />
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50 appearance-none"
+                        >
+                          <option value="">Şehir Seçiniz</option>
+                          {cities.map(city => (
+                            <option key={city.value} value={city.value} className="bg-gray-800">
+                              {city.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                          Adres *
+                          Adres
                         </label>
                         <textarea
                           name="address"
@@ -433,7 +305,7 @@ const HospitalProfile = () => {
                           onChange={handleInputChange}
                           disabled={!isEditing}
                           rows={3}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50 resize-none"
                           placeholder="Tam adres girin"
                         />
                       </div>
@@ -453,20 +325,18 @@ const HospitalProfile = () => {
                         />
                       </div>
 
+                      {/* E-posta (kayıt sırasında girilen) - sadece görüntüleme (input yerine text) */}
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                          E-posta *
+                          E-posta
                         </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
-                          placeholder="E-posta adresi"
-                        />
+                        <div className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-300 select-text">
+                          {formData.email || '-'}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">Üyelikte girilen e‑posta; değiştirilemez.</p>
                       </div>
+
+                      {/* E-posta form alanı kaldırıldı; header'da gösteriliyor */}
 
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -514,7 +384,7 @@ const HospitalProfile = () => {
                           {/* Logo Yükleme Butonları */}
                           {isEditing && (
                             <div className="flex-1 space-y-2">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="grid grid-cols-1 gap-2">
                                 {/* Dosya Yükle */}
                                 <label className="cursor-pointer">
                                   <div className="border-2 border-dashed border-white/20 rounded-lg p-3 hover:border-blue-500 hover:bg-white/5 transition-all duration-300 text-center">
@@ -524,21 +394,6 @@ const HospitalProfile = () => {
                                   <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={handleLogoUpload}
-                                    className="hidden"
-                                  />
-                                </label>
-                                
-                                {/* Kamera ile Çek */}
-                                <label className="cursor-pointer">
-                                  <div className="border-2 border-dashed border-white/20 rounded-lg p-3 hover:border-blue-500 hover:bg-white/5 transition-all duration-300 text-center">
-                                    <Camera className="w-6 h-6 mx-auto mb-1 text-blue-400" />
-                                    <span className="text-xs text-gray-300">Fotoğraf Çek</span>
-                                  </div>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    capture="environment"
                                     onChange={handleLogoUpload}
                                     className="hidden"
                                   />
@@ -562,194 +417,14 @@ const HospitalProfile = () => {
                           onChange={handleInputChange}
                           disabled={!isEditing}
                           rows={4}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50 resize-none"
                           placeholder="Hastane hakkında bilgi yazın"
                         />
                       </div>
                     </div>
                   </form>
                 </div>
-              )}
-
-              {/* Departmanlar Tab */}
-              {activeTab === 'departments' && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white">Departmanlar</h2>
-                    <button
-                      onClick={handleCreateDepartment}
-                      disabled={createDepartmentMutation.isPending}
-                      className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-4 py-2 rounded-xl hover:bg-blue-500/30 transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
-                    >
-                      <Plus className="w-4 h-4" />
-                      {createDepartmentMutation.isPending ? 'Ekleniyor...' : 'Departman Ekle'}
-                    </button>
-                  </div>
-
-                  {/* Yeni Departman Formu */}
-                  <div className="bg-white/5 rounded-2xl p-6 mb-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-white mb-4">Yeni Departman</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="Departman Adı"
-                          value={newDepartment.department_name}
-                          onChange={(e) => setNewDepartment(prev => ({ ...prev, department_name: e.target.value }))}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <textarea
-                          placeholder="Açıklama"
-                          value={newDepartment.description}
-                          onChange={(e) => setNewDepartment(prev => ({ ...prev, description: e.target.value }))}
-                          rows={2}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Departman Listesi */}
-                  <div className="space-y-4">
-                    {departments.map((department) => (
-                      <div key={department.id} className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white">{department.department_name}</h3>
-                            {department.description && (
-                              <p className="text-sm text-gray-400 mt-2">{department.description}</p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setEditingDepartment(department.id)}
-                              className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-2 rounded-lg hover:bg-blue-500/30 transition-all duration-300"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteDepartment(department.id)}
-                              className="bg-red-500/20 text-red-300 border border-red-500/30 px-3 py-2 rounded-lg hover:bg-red-500/30 transition-all duration-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {departments.length === 0 && (
-                      <div className="text-center py-12">
-                        <Users className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                        <p className="text-gray-400">Henüz departman eklenmemiş</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* İletişim Tab */}
-              {activeTab === 'contacts' && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white">İletişim Bilgileri</h2>
-                    <button
-                      onClick={handleCreateContact}
-                      disabled={createContactMutation.isPending}
-                      className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-4 py-2 rounded-xl hover:bg-blue-500/30 transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
-                    >
-                      <Plus className="w-4 h-4" />
-                      {createContactMutation.isPending ? 'Ekleniyor...' : 'İletişim Ekle'}
-                    </button>
-                  </div>
-
-                  {/* Yeni İletişim Formu */}
-                  <div className="bg-white/5 rounded-2xl p-6 mb-6 border border-white/10">
-                    <h3 className="text-lg font-semibold text-white mb-4">Yeni İletişim Bilgisi</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <select
-                          value={newContact.contact_type}
-                          onChange={(e) => setNewContact(prev => ({ ...prev, contact_type: e.target.value }))}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        >
-                          <option value="">İletişim Türü Seçin</option>
-                          <option value="phone">Telefon</option>
-                          <option value="email">E-posta</option>
-                          <option value="fax">Faks</option>
-                          <option value="emergency">Acil</option>
-                        </select>
-                      </div>
-                      <div>
-                        <input
-                          type="text"
-                          placeholder="İletişim Değeri"
-                          value={newContact.contact_value}
-                          onChange={(e) => setNewContact(prev => ({ ...prev, contact_value: e.target.value }))}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <input
-                          type="text"
-                          placeholder="Açıklama (opsiyonel)"
-                          value={newContact.description}
-                          onChange={(e) => setNewContact(prev => ({ ...prev, description: e.target.value }))}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* İletişim Listesi */}
-                  <div className="space-y-4">
-                    {contacts.map((contact) => (
-                      <div key={contact.id} className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                              {contact.contact_type === 'phone' && <Phone className="w-6 h-6 text-white" />}
-                              {contact.contact_type === 'email' && <Mail className="w-6 h-6 text-white" />}
-                              {contact.contact_type === 'fax' && <Phone className="w-6 h-6 text-white" />}
-                              {contact.contact_type === 'emergency' && <AlertCircle className="w-6 h-6 text-white" />}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-white capitalize">{contact.contact_type}</p>
-                              <p className="text-gray-300">{contact.contact_value}</p>
-                              {contact.description && (
-                                <p className="text-sm text-gray-400">{contact.description}</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => setEditingContact(contact.id)}
-                              className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-2 rounded-lg hover:bg-blue-500/30 transition-all duration-300"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteContact(contact.id)}
-                              className="bg-red-500/20 text-red-300 border border-red-500/30 px-3 py-2 rounded-lg hover:bg-red-500/30 transition-all duration-300"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    {contacts.length === 0 && (
-                      <div className="text-center py-12">
-                        <Phone className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                        <p className="text-gray-400">Henüz ek iletişim bilgisi eklenmemiş</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

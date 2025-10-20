@@ -90,11 +90,17 @@ const authenticateToken = async (req, res, next) => {
       throw new AppError('Geçersiz token', 401);
     }
 
+    // Bazı eski token'larda payload 'id' ya da 'sub' alanında olabilir
+    const userId = decoded.userId ?? decoded.id ?? decoded.sub;
+    if (!userId) {
+      throw new AppError('Geçersiz token payload', 401);
+    }
+
     // 4. Kullanıcıyı veritabanından getirme
     // Token payload'ına güvenmek yerine, kullanıcının en güncel durumunu kontrol etmek için
     // her istekte veritabanı sorgusu yapılır. Bu, güvenliği artırır.
     const user = await db('users')
-      .where('id', decoded.userId)
+      .where('id', userId)
       .first();
 
     if (!user) {

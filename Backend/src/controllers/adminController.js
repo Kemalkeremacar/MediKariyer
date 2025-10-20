@@ -59,6 +59,17 @@ const getUsers = catchAsync(async (req, res) => {
 const getUserDetails = catchAsync(async (req, res) => {
   const user = await adminService.getUserDetails(req.params.id);
   if (!user) throw new AppError('Kullanıcı bulunamadı', 404);
+  
+  // Debug: Logo kontrolü
+  if (user.role === 'hospital') {
+    logger.info('Hospital user details - Full Profile:', { 
+      userId: user.id,
+      profileKeys: user.profile ? Object.keys(user.profile) : [],
+      hasLogo: !!user.profile?.logo,
+      logo: user.profile?.logo ? user.profile.logo.substring(0, 50) + '...' : null
+    });
+  }
+  
   return sendSuccess(res, 'Kullanıcı detayları getirildi', { user });
 });
 

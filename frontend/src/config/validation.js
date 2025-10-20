@@ -123,7 +123,10 @@ export const registerDoctorSchema = z.object({
 export const registerHospitalSchema = z.object({
   email: emailSchema,
   password: z.string().min(3, 'Şifre en az 3 karakter olmalıdır').max(128, 'Şifre en fazla 128 karakter olabilir'),
-  institution_name: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir')
+  institution_name: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
+  city_id: z.number().int().positive('Şehir seçimi zorunludur'),
+  phone: z.string().min(3, 'Telefon numarası zorunludur'),
+  logo: z.string().min(1, 'Logo yüklenmesi zorunludur')
 });
 
 /**
@@ -171,8 +174,8 @@ export const doctorPersonalInfoSchema = z.object({
     const date = new Date(val);
     return date <= new Date();
   }, 'Doğum tarihi bugünden önce olmalıdır').or(z.literal('')),
-  birth_place: z.string().min(2, 'Doğum yeri en az 2 karakter olmalıdır').max(100, 'Doğum yeri en fazla 100 karakter olabilir').optional().or(z.literal('')),
-  residence_city: z.string().min(2, 'İkamet yeri en az 2 karakter olmalıdır').max(100, 'İkamet yeri en fazla 100 karakter olabilir').optional().or(z.literal('')),
+  birth_place_id: z.number().int().positive().optional().nullable(),
+  residence_city_id: z.number().int().positive().optional().nullable(),
   phone: phoneSchema.optional().or(z.literal(''))
 });
 
@@ -182,11 +185,14 @@ export const doctorPersonalInfoSchema = z.object({
  */
 export const doctorEducationSchema = z.object({
   education_type_id: idSchema,
-  institution_name: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
+  education_institution: z.string().min(2, 'Eğitim kurumu adı en az 2 karakter olmalıdır').max(255, 'Eğitim kurumu adı en fazla 255 karakter olabilir'),
   field: z.string().min(2, 'Alan adı en az 2 karakter olmalıdır').max(255, 'Alan adı en fazla 255 karakter olabilir'),
   graduation_year: z.number().int().min(1950, 'Mezuniyet yılı 1950\'den küçük olamaz').max(new Date().getFullYear() + 5, 'Mezuniyet yılı gelecek yıldan büyük olamaz'),
-  // Not: Derece türü sadece eğitim türü "DİĞER" ise doldurulmalı; diğer durumlarda boş string gelebilir
-  degree_type: z.string().min(2, 'Derece türü en az 2 karakter olmalıdır').max(100, 'Derece türü en fazla 100 karakter olabilir').optional().or(z.literal(''))
+  // Not: Eğitim türü sadece eğitim türü "DİĞER" ise doldurulmalı; diğer durumlarda boş string gelebilir
+  education_type: z.string().min(2, 'Eğitim türü en az 2 karakter olmalıdır').max(100, 'Eğitim türü en fazla 100 karakter olabilir').optional().or(z.literal('')),
+  // Sertifika bilgileri (opsiyonel - elle yazılır)
+  certificate_name: z.string().min(2, 'Sertifika türü en az 2 karakter olmalıdır').max(255, 'Sertifika türü en fazla 255 karakter olabilir').optional().nullable().or(z.literal('')),
+  certificate_year: z.number().int().min(1950, 'Sertifika yılı 1950\'den küçük olamaz').max(new Date().getFullYear(), 'Sertifika yılı bugünden büyük olamaz').optional().nullable()
 });
 
 /**
@@ -208,17 +214,19 @@ export const doctorExperienceSchema = z.object({
 
 /**
  * Doctor Certificate Schema - Backend doctorCertificateSchema ile tam uyumlu
- * @description Doktor sertifika formu validasyonu
- * certificate_type_id zorunlu, custom_name optional (DİĞER seçilirse zorunlu), institution ve issued_at zorunlu
+ * @description Doktor sertifika formu validasyonu (elle yazılan tür + yıl)
  */
 export const doctorCertificateSchema = z.object({
-  certificate_type_id: idSchema,
-  custom_name: z.string().min(2, 'Sertifika adı en az 2 karakter olmalıdır').max(255, 'Sertifika adı en fazla 255 karakter olabilir').optional().or(z.literal('')),
-  institution: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
-  issued_at: z.string().refine((val) => {
-    const date = new Date(val);
-    return date <= new Date();
-  }, 'Alınış tarihi bugünden önce olmalıdır')
+  certificate_name: z.string()
+    .min(2, 'Sertifika türü en az 2 karakter olmalıdır')
+    .max(255, 'Sertifika türü en fazla 255 karakter olabilir'),
+  institution: z.string()
+    .min(2, 'Kurum adı en az 2 karakter olmalıdır')
+    .max(255, 'Kurum adı en fazla 255 karakter olabilir'),
+  certificate_year: z.number()
+    .int('Sertifika yılı geçerli bir sayı olmalıdır')
+    .min(1950, 'Sertifika yılı 1950\'den küçük olamaz')
+    .max(new Date().getFullYear(), 'Sertifika yılı bugünden büyük olamaz')
 });
 
 /**
@@ -247,17 +255,16 @@ export const profileUpdateNotificationSchema = z.object({
  */
 export const hospitalProfileUpdateSchema = z.object({
   institution_name: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
-  city: z.string().min(2, 'Şehir en az 2 karakter olmalıdır').max(100, 'Şehir en fazla 100 karakter olabilir'),
+  city_id: z.number().int().positive('Şehir seçimi zorunludur'),
   address: z.string().max(500, 'Adres en fazla 500 karakter olabilir').optional(),
   contact_person: z.string().min(2, 'İletişim kişisi en az 2 karakter olmalıdır').max(100, 'İletişim kişisi en fazla 100 karakter olabilir').optional(),
-  phone: z.string().regex(/^[\+]?[0-9\s\-\(\)]{10,20}$/, 'Geçerli bir telefon numarası giriniz').optional(),
-  email: z.string().email('Geçerli bir email adresi giriniz').optional(),
+  phone: z.string().min(3, 'Telefon numarası zorunludur').max(20, 'Telefon numarası en fazla 20 karakter olabilir'),
   website: z.string().url('Geçerli bir website adresi giriniz').optional(),
   about: z.string().max(2000, 'Hakkında bölümü en fazla 2000 karakter olabilir').optional(),
   logo: z.string().refine(
     (val) => val.startsWith('data:image/') || val.startsWith('http'),
     'Geçerli bir logo formatı giriniz'
-  ).optional()
+  )
 });
 
 /**
@@ -287,10 +294,13 @@ export const hospitalContactSchema = z.object({
 export const jobSchema = z.object({
   title: z.string().min(5, 'İş ilanı başlığı en az 5 karakter olmalıdır').max(255, 'İş ilanı başlığı en fazla 255 karakter olabilir'),
   specialty_id: idSchema,
-  city_id: idSchema.nullable().optional(),
-  employment_type: z.string().min(2, 'İstihdam türü en az 2 karakter olmalıdır').max(100, 'İstihdam türü en fazla 100 karakter olabilir'),
+  subspecialty_id: idSchema,
+  city_id: idSchema,
+  employment_type: z.enum(['Tam Zamanlı', 'Yarı Zamanlı', 'Nöbet Usulü'], {
+    errorMap: () => ({ message: 'İstihdam türü "Tam Zamanlı", "Yarı Zamanlı" veya "Nöbet Usulü" olmalıdır' })
+  }),
   min_experience_years: z.number().int().min(0, 'Minimum deneyim yılı 0\'dan küçük olamaz').max(50, 'Minimum deneyim yılı 50\'den büyük olamaz').nullable().optional(),
-  description: z.string().min(50, 'İş tanımı en az 50 karakter olmalıdır').max(5000, 'İş tanımı en fazla 5000 karakter olabilir'),
+  description: z.string().min(10, 'İş tanımı en az 10 karakter olmalıdır').max(5000, 'İş tanımı en fazla 5000 karakter olabilir'),
   // status_id sadece güncelleme için geçerli (oluşturmada backend otomatik 1 yapar)
   // 1=Aktif, 2=Pasif, 3=Silinmiş (geri getirebilmek için 3 de kabul edilmeli)
   status_id: z.number().int().positive()

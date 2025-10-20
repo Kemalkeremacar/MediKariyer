@@ -138,262 +138,10 @@ const getProfileCompletion = catchAsync(async (req, res, next) => {
 });
 
 // ============================================================================
-// DEPARTMAN YÖNETİMİ CONTROLLER'LARI
+// DEPARTMAN VE İLETİŞİM YÖNETİMİ KALDIRILDI
 // ============================================================================
-
-/**
- * Hastane departmanlarını getirir
- * @description Hastanenin tüm departmanlarını getirir
- * @route GET /api/hospital/departments
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital')
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 200 - Departmanlar listesi
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * GET /api/hospital/departments
- * Authorization: Bearer <jwt_token>
- * 
- * @since 1.0.0
- */
-const getDepartments = catchAsync(async (req, res, next) => {
-  const departments = await hospitalService.getDepartments(req.user.id);
-  logger.info(`Hospital departments retrieved for user ${req.user.id}`);
-  sendSuccess(res, 'Departmanlar başarıyla getirildi', { departments }, 200);
-});
-
-/**
- * Hastane departmanı ekler
- * @description Hastaneye yeni departman ekler
- * @route POST /api/hospital/departments
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital'), validate(hospitalDepartmentSchema, 'body')
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.body - Departman verileri
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 201 - Oluşturulan departman bilgileri
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * POST /api/hospital/departments
- * Authorization: Bearer <jwt_token>
- * {
- *   "department_name": "Kardiyoloji",
- *   "description": "Kalp ve damar hastalıkları"
- * }
- * 
- * @since 1.0.0
- */
-const addDepartment = catchAsync(async (req, res, next) => {
-  const department = await hospitalService.addDepartment(req.user.id, req.body);
-  logger.info(`Hospital department added for user ${req.user.id}`);
-  sendSuccess(res, 'Departman başarıyla eklendi', { department }, 201);
-});
-
-/**
- * Hastane departmanını günceller
- * @description Mevcut departman bilgilerini günceller
- * @route PUT /api/hospital/departments/:departmentId
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital'), validate(hospitalDepartmentSchema, 'body')
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.params.departmentId - Departman ID'si
- * @param {Object} req.body - Güncellenecek departman verileri
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 200 - Güncellenmiş departman bilgileri
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 404 - Departman bulunamadı
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * PUT /api/hospital/departments/123
- * Authorization: Bearer <jwt_token>
- * {
- *   "department_name": "Güncellenmiş Kardiyoloji"
- * }
- * 
- * @since 1.0.0
- */
-const updateDepartment = catchAsync(async (req, res, next) => {
-  const department = await hospitalService.updateDepartment(req.user.id, req.params.departmentId, req.body);
-  logger.info(`Hospital department updated for user ${req.user.id}`);
-  sendSuccess(res, 'Departman başarıyla güncellendi', { department }, 200);
-});
-
-/**
- * Hastane departmanını siler
- * @description Departmanı siler
- * @route DELETE /api/hospital/departments/:departmentId
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital')
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.params.departmentId - Departman ID'si
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 200 - Silme işleminin başarı durumu
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 404 - Departman bulunamadı
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * DELETE /api/hospital/departments/123
- * Authorization: Bearer <jwt_token>
- * 
- * @since 1.0.0
- */
-const deleteDepartment = catchAsync(async (req, res, next) => {
-  const deleted = await hospitalService.deleteDepartment(req.user.id, req.params.departmentId);
-  logger.info(`Hospital department deleted for user ${req.user.id}`);
-  sendSuccess(res, 'Departman başarıyla silindi', { deleted }, 200);
-});
-
-// ============================================================================
-// İLETİŞİM BİLGİSİ YÖNETİMİ CONTROLLER'LARI
-// ============================================================================
-
-/**
- * Hastane iletişim bilgilerini getirir
- * @description Hastanenin tüm ek iletişim bilgilerini getirir
- * @route GET /api/hospital/contacts
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital')
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 200 - İletişim bilgileri listesi
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * GET /api/hospital/contacts
- * Authorization: Bearer <jwt_token>
- * 
- * @since 1.0.0
- */
-const getContacts = catchAsync(async (req, res, next) => {
-  const contacts = await hospitalService.getContacts(req.user.id);
-  logger.info(`Hospital contacts retrieved for user ${req.user.id}`);
-  sendSuccess(res, 'İletişim bilgileri başarıyla getirildi', { contacts }, 200);
-});
-
-/**
- * Hastane ek iletişim bilgisi ekler
- * @description Hastaneye yeni iletişim bilgisi ekler
- * @route POST /api/hospital/contacts
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital'), validate(hospitalContactSchema, 'body')
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.body - İletişim verileri
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 201 - Oluşturulan iletişim bilgileri
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * POST /api/hospital/contacts
- * Authorization: Bearer <jwt_token>
- * {
- *   "phone": "+905551234567",
- *   "email": "info@hastane.com"
- * }
- * 
- * @since 1.0.0
- */
-const addContact = catchAsync(async (req, res, next) => {
-  const contact = await hospitalService.addContact(req.user.id, req.body);
-  logger.info(`Hospital contact added for user ${req.user.id}`);
-  sendSuccess(res, 'İletişim bilgisi başarıyla eklendi', { contact }, 201);
-});
-
-/**
- * Hastane ek iletişim bilgisi günceller
- * @description Mevcut iletişim bilgisini günceller
- * @route PUT /api/hospital/contacts/:contactId
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital'), validate(hospitalContactSchema, 'body')
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.params.contactId - İletişim ID'si
- * @param {Object} req.body - Güncellenecek iletişim verileri
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 200 - Güncellenmiş iletişim bilgileri
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 404 - İletişim bilgisi bulunamadı
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * PUT /api/hospital/contacts/123
- * Authorization: Bearer <jwt_token>
- * {
- *   "phone": "+905559876543"
- * }
- * 
- * @since 1.0.0
- */
-const updateContact = catchAsync(async (req, res, next) => {
-  const contact = await hospitalService.updateContact(req.user.id, req.params.contactId, req.body);
-  logger.info(`Hospital contact updated for user ${req.user.id}`);
-  sendSuccess(res, 'İletişim bilgisi başarıyla güncellendi', { contact }, 200);
-});
-
-/**
- * Hastane ek iletişim bilgisi siler
- * @description İletişim bilgisini siler
- * @route DELETE /api/hospital/contacts/:contactId
- * @access Private (Hospital)
- * @middleware authMiddleware, requireRole('hospital')
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.params.contactId - İletişim ID'si
- * @param {Object} res - Express response object
- * @param {Function} next - Express next function
- * 
- * @returns {Object} 200 - Silme işleminin başarı durumu
- * @returns {Object} 401 - Unauthorized
- * @returns {Object} 403 - Forbidden (role check failed)
- * @returns {Object} 404 - İletişim bilgisi bulunamadı
- * @returns {Object} 500 - Sunucu hatası
- * 
- * @example
- * DELETE /api/hospital/contacts/123
- * Authorization: Bearer <jwt_token>
- * 
- * @since 1.0.0
- */
-const deleteContact = catchAsync(async (req, res, next) => {
-  const deleted = await hospitalService.deleteContact(req.user.id, req.params.contactId);
-  logger.info(`Hospital contact deleted for user ${req.user.id}`);
-  sendSuccess(res, 'İletişim bilgisi başarıyla silindi', { deleted }, 200);
-});
+// Bu fonksiyonlar artık hospital_profiles tablosunda tek satırda tutuluyor
+// Departmanlar ve iletişim bilgileri ayrı tablolarda değil, ana profil içinde
 
 // ============================================================================
 // İŞ İLANI YÖNETİMİ CONTROLLER'LARI (hospitalService içinde)
@@ -441,6 +189,13 @@ const getJobs = catchAsync(async (req, res, next) => {
  * 
  * @param {Object} req - Express request object
  * @param {Object} req.body - İş ilanı verileri
+ * @param {string} req.body.title - İş ilanı başlığı
+ * @param {number} req.body.specialty_id - Uzmanlık ID'si
+ * @param {number} [req.body.subspecialty_id] - Yan dal uzmanlığı ID'si
+ * @param {string} req.body.employment_type - İstihdam türü ("Tam Zamanlı", "Yarı Zamanlı", "Nöbet Usulü")
+ * @param {string} req.body.description - İş ilanı açıklaması
+ * @param {number} [req.body.min_experience_years] - Minimum deneyim yılı
+ * @param {number} [req.body.city_id] - Şehir ID'si
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  * 
@@ -455,9 +210,11 @@ const getJobs = catchAsync(async (req, res, next) => {
  * {
  *   "title": "Kardiyoloji Uzmanı",
  *   "specialty_id": 1,
- *   "city": "İstanbul",
+ *   "subspecialty_id": 5,
  *   "employment_type": "Tam Zamanlı",
- *   "description": "Deneyimli kardiyoloji uzmanı aranıyor"
+ *   "description": "Deneyimli kardiyoloji uzmanı aranıyor",
+ *   "min_experience_years": 3,
+ *   "city_id": 1
  * }
  * 
  * @since 2.0.0
@@ -792,18 +549,6 @@ module.exports = {
   getProfile,
   updateProfile,
   getProfileCompletion,
-  
-  // Departman yönetimi
-  getDepartments,
-  addDepartment,
-  updateDepartment,
-  deleteDepartment,
-  
-  // İletişim bilgisi yönetimi
-  getContacts,
-  addContact,
-  updateContact,
-  deleteContact,
   
   // İş ilanı yönetimi (hospitalService içinde)
   getJobs,

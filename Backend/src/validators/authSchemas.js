@@ -138,10 +138,12 @@ const passwordSchema = Joi.string()
  * "05551234567" ❌ (+90 eksik)
  */
 const phoneSchema = Joi.string()
-  .pattern(VALIDATION.PHONE_REGEX)
+  .min(3)
+  .max(20)
   .required()
   .messages({
-    'string.pattern.base': 'Geçerli bir Türkiye telefon numarası giriniz (örn: +905551234567)',
+    'string.min': 'Telefon numarası zorunludur',
+    'string.max': 'Telefon numarası en fazla 20 karakter olabilir',
     'any.required': 'Telefon numarası zorunludur'
   });
 // ==================== END BASE VALIDATION SCHEMAS ====================
@@ -310,11 +312,11 @@ const registerDoctorSchema = Joi.object({
  * - email: E-posta adresi (emailSchema ile validasyon)
  * - password: Şifre (test için minimum 3 karakter)
  * - institution_name: Kurum adı
- * - city: Şehir
- * - address: Adres
+ * - city_id: Şehir ID'si
+ * - phone: Telefon numarası
  * 
  * Opsiyonel Alanlar:
- * - phone: Telefon numarası
+ * - address: Adres
  * - website: Web sitesi URL'si
  * - about: Kurum hakkında bilgi
  * 
@@ -323,7 +325,8 @@ const registerDoctorSchema = Joi.object({
  *   "email": "hospital@example.com",
  *   "password": "Password123!",
  *   "institution_name": "Acıbadem Hastanesi",
- *   "city": "İstanbul",
+ *   "city_id": 1,
+ *   "phone": "+905551234567",
  *   "address": "Kadıköy Mahallesi, Acıbadem Caddesi No:1"
  * }
  */
@@ -346,6 +349,45 @@ const registerHospitalSchema = Joi.object({
       'string.min': 'Kurum adı en az 2 karakter olmalıdır',
       'string.max': 'Kurum adı en fazla 255 karakter olabilir',
       'any.required': 'Kurum adı zorunludur'
+    }),
+  city_id: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': 'Şehir ID\'si sayı olmalıdır',
+      'number.integer': 'Şehir ID\'si tam sayı olmalıdır',
+      'number.positive': 'Şehir ID\'si pozitif olmalıdır',
+      'any.required': 'Şehir seçimi zorunludur'
+    }),
+  phone: phoneSchema,
+  address: Joi.string()
+    .max(500)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Adres en fazla 500 karakter olabilir'
+    }),
+  website: Joi.string()
+    .uri()
+    .optional()
+    .allow('')
+    .messages({
+      'string.uri': 'Geçerli bir website adresi giriniz'
+    }),
+  about: Joi.string()
+    .max(2000)
+    .optional()
+    .allow('')
+    .messages({
+      'string.max': 'Hakkında bölümü en fazla 2000 karakter olabilir'
+    }),
+  logo: Joi.string()
+    .min(1)
+    .required()
+    .messages({
+      'string.min': 'Logo yüklenmesi zorunludur',
+      'any.required': 'Logo zorunludur'
     })
 });
 

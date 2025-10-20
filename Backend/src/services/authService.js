@@ -65,12 +65,13 @@ const jwtUtils = require('../utils/jwtUtils');
  * @property {number} id - Profil ID'si (Primary Key)
  * @property {number} user_id - Kullanıcı ID'si (Foreign Key to users.id)
  * @property {string} institution_name - Kurum adı (zorunlu)
- * @property {string} city - Şehir (zorunlu)
+ * @property {number} city_id - Şehir ID (cities tablosundan FK) (zorunlu)
  * @property {string} address - Adres (zorunlu)
  * @property {string} [phone] - Telefon numarası (opsiyonel)
  * @property {string} [email] - Kurum e-posta adresi (opsiyonel)
  * @property {string} [website] - Web sitesi URL'si (opsiyonel)
  * @property {string} [about] - Kurum hakkında bilgi (opsiyonel)
+ * @property {string} [logo] - Logo URL'si (opsiyonel)
  * @property {Date} created_at - Profil oluşturulma tarihi
  * @property {Date} updated_at - Profil güncellenme tarihi
  */
@@ -148,7 +149,7 @@ const createDoctorProfile = async (userId, { first_name, last_name, title, speci
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {object} profileData - Profil bilgileri
  * @param {string} profileData.institution_name - Kurum adı (zorunlu)
- * @param {string} profileData.city - Şehir (zorunlu)
+ * @param {number} profileData.city_id - Şehir ID (cities tablosundan FK) (zorunlu)
  * @param {string} profileData.address - Adres (zorunlu)
  * @param {string} [profileData.phone] - Telefon numarası (opsiyonel)
  * @param {string} [profileData.email] - Kurum e-posta adresi (opsiyonel)
@@ -160,7 +161,7 @@ const createDoctorProfile = async (userId, { first_name, last_name, title, speci
  * @example
  * const profileId = await createHospitalProfile(123, {
  *   institution_name: 'Acıbadem Hastanesi',
- *   city: 'İstanbul',
+ *   city_id: 34,
  *   address: 'Kadıköy Mahallesi, Acıbadem Caddesi No:1',
  *   phone: '+905551234567',
  *   email: 'info@acibadem.com',
@@ -168,16 +169,17 @@ const createDoctorProfile = async (userId, { first_name, last_name, title, speci
  *   about: 'Modern sağlık hizmetleri sunan hastane'
  * });
  */
-const createHospitalProfile = async (userId, { institution_name, city, address, phone, email, website, about }) => {
+const createHospitalProfile = async (userId, { institution_name, city_id, address, phone, email, website, about, logo }) => {
   const [profileId] = await db('hospital_profiles').insert({
     user_id: userId,
     institution_name,
-    city,
+    city_id,
     address,
     phone,
     email,
     website,
     about,
+    logo,
     created_at: db.fn.now(),
     updated_at: db.fn.now()
   });
@@ -273,7 +275,15 @@ const loginUnified = async (email, password) => {
   
   // validateCredentials zaten onay kontrolü yapıyor, tekrar yapmaya gerek yok
   const loginInfo = await updateLastLogin(user.id);
-  return { ...user, isFirstLogin: loginInfo.isFirstLogin };
+  
+  // Profil bilgilerini de getir
+  const profile = await getUserProfile(user.id);
+  
+  return { 
+    ...user, 
+    isFirstLogin: loginInfo.isFirstLogin,
+    profile: profile 
+  };
 };
 // ==================== END CREDENTIALS & LOGIN FUNCTIONS ====================
 
@@ -586,15 +596,18 @@ const registerDoctor = async (registrationData) => {
 /**
  * Hastane kayıt işlemi
  * @description Yeni hastane kullanıcısı kaydı yapar ve hospital_profiles tablosunda profil oluşturur
+ * users tablosuna sadece temel bilgiler (email, password, role) kaydedilir.
+ * Tüm profil bilgileri hospital_profiles tablosuna kaydedilir.
+ * 
  * @param {Object} registrationData - Kayıt verileri
  * @param {string} registrationData.email - E-posta adresi
  * @param {string} registrationData.password - Şifre (plain text)
  * @param {string} registrationData.institution_name - Kurum adı
- * @param {string} registrationData.city - Şehir
- * @param {string} registrationData.address - Adres
- * @param {string} [registrationData.phone] - Telefon numarası
- * @param {string} [registrationData.website] - Web sitesi URL'si
- * @param {string} [registrationData.about] - Kurum hakkında bilgi
+ * @param {number} registrationData.city_id - Şehir ID (cities tablosu foreign key)
+ * @param {string} registrationData.phone - Telefon numarası
+ * @param {string} [registrationData.address] - Adres (opsiyonel)
+ * @param {string} [registrationData.website] - Web sitesi URL'si (opsiyonel)
+ * @param {string} [registrationData.about] - Kurum hakkında bilgi (opsiyonel)
  * @returns {Promise<{user: User, profile: HospitalProfile}>} Oluşturulan kullanıcı ve profil bilgileri
  * @throws {AppError} E-posta zaten kayıtlıysa veya veritabanı hatası
  * 
@@ -603,12 +616,13 @@ const registerDoctor = async (registrationData) => {
  *   email: 'hospital@example.com',
  *   password: 'password123',
  *   institution_name: 'Acıbadem Hastanesi',
- *   city: 'İstanbul',
+ *   city_id: 34,
+ *   phone: '+90 212 555 0123',
  *   address: 'Kadıköy Mahallesi, Acıbadem Caddesi No:1'
  * });
  */
 const registerHospital = async (registrationData) => {
-  const { email, password, institution_name } = registrationData;
+  const { email, password, institution_name, city_id, phone, address, website, about, logo } = registrationData;
 
   // E-posta kontrolü
   if (await isEmailRegistered(email)) {
@@ -621,7 +635,7 @@ const registerHospital = async (registrationData) => {
   // Transaction ile güvenli kayıt
   const trx = await db.transaction();
   try {
-    // Kullanıcı hesabı oluştur
+    // Kullanıcı hesabı oluştur (sadece temel bilgiler)
     await trx('users').insert({
       email,
       password_hash,
@@ -636,16 +650,17 @@ const registerHospital = async (registrationData) => {
     const user = await trx('users').where('email', email).first();
     const userId = user.id;
 
-    // Hastane profili oluştur (tüm gelen verilerle)
+    // Hastane profili oluştur (address, website, about opsiyonel - kayıtta girilmez)
     await trx('hospital_profiles').insert({
       user_id: userId,
       institution_name,
-      city: null,
-      address: null,
-      phone: null,
+      city_id: city_id,
+      address: address || null, // Kayıtta girilmez, profilde doldurulur
+      phone: phone,
       email: email, // Kurum email'i için users tablosundaki email'i kullan
-      website: null,
-      about: null,
+      website: website || null, // Kayıtta girilmez, profilde doldurulur
+      about: about || null, // Kayıtta girilmez, profilde doldurulur
+      logo: logo, // Logo zorunlu
       created_at: trx.fn.now(),
       updated_at: trx.fn.now()
     });
@@ -695,28 +710,39 @@ const refreshToken = async (refreshToken) => {
     role: user.role
   });
 
-  // Yeni refresh token oluştur
-  const newRefreshToken = jwtUtils.generateRefreshToken();
-  const newRefreshTokenHash = jwtUtils.hashRefreshToken(newRefreshToken);
-
-  // Eski refresh token'ı sil, yenisini ekle
-  // Refresh token süresini appConstants'tan al
-  const refreshTokenExpiry = DEFAULT_SYSTEM_SETTINGS.refresh_token_expiry || '7d';
+  // Refresh token rotation - sadece gerektiğinde yeni token oluştur
+  let newRefreshToken = refreshToken; // Varsayılan olarak aynı token'ı kullan
   
-  // Süreyi parse et (7d -> 7 gün)
-  const days = parseInt(refreshTokenExpiry.replace('d', ''));
-  const expiryTime = days * 24 * 60 * 60 * 1000; // milisaniye cinsinden
+  // Token rotation kontrolü - sadece token'ın yarısı geçmişse yeni token oluştur
+  const tokenAge = Date.now() - new Date(tokenRecord.created_at).getTime();
+  const tokenMaxAge = 7 * 24 * 60 * 60 * 1000; // 7 gün
   
-  await db.transaction(async (trx) => {
-    await trx('refresh_tokens').where('id', tokenRecord.id).del();
-    
-    await trx('refresh_tokens').insert({
-      user_id: user.id,
-      token_hash: newRefreshTokenHash,
-      expires_at: new Date(Date.now() + expiryTime),
-      created_at: new Date()
+  if (tokenAge > tokenMaxAge / 2) {
+    // Token'ın yarısı geçmişse yeni refresh token oluştur
+    newRefreshToken = jwtUtils.generateRefreshToken({
+      id: user.id,
+      email: user.email,
+      role: user.role
     });
-  });
+    
+    const newRefreshTokenHash = jwtUtils.hashRefreshToken(newRefreshToken);
+    
+    // Refresh token süresini appConstants'tan al
+    const refreshTokenExpiry = DEFAULT_SYSTEM_SETTINGS.refresh_token_expiry || '7d';
+    const days = parseInt(refreshTokenExpiry.replace('d', ''));
+    const expiryTime = days * 24 * 60 * 60 * 1000;
+    
+    await db.transaction(async (trx) => {
+      await trx('refresh_tokens').where('id', tokenRecord.id).del();
+      
+      await trx('refresh_tokens').insert({
+        user_id: user.id,
+        token_hash: newRefreshTokenHash,
+        expires_at: new Date(Date.now() + expiryTime),
+        created_at: new Date()
+      });
+    });
+  }
 
   return {
     accessToken,

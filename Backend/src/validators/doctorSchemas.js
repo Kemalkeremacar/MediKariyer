@@ -106,13 +106,11 @@ const doctorPersonalInfoSchema = Joi.object({
     'date.base': 'Geçerli bir doğum tarihi giriniz',
     'date.max': 'Doğum tarihi bugünden önce olmalıdır'
   }),
-  birth_place: Joi.string().min(2).max(100).optional().allow('', null).messages({
-    'string.min': 'Doğum yeri en az 2 karakter olmalıdır',
-    'string.max': 'Doğum yeri en fazla 100 karakter olabilir'
+  birth_place_id: Joi.number().integer().positive().optional().allow(null).messages({
+    'number.base': 'Doğum yeri şehir ID sayısal olmalıdır'
   }),
-  residence_city: Joi.string().min(2).max(100).optional().allow('', null).messages({
-    'string.min': 'Şehir adı en az 2 karakter olmalıdır',
-    'string.max': 'Şehir adı en fazla 100 karakter olabilir'
+  residence_city_id: Joi.number().integer().positive().optional().allow(null).messages({
+    'number.base': 'İkamet şehri ID sayısal olmalıdır'
   }),
   phone: phoneSchema.optional().allow('', null).messages({
     'string.pattern.base': 'Geçerli bir telefon numarası giriniz'
@@ -133,7 +131,10 @@ const doctorPersonalInfoSchema = Joi.object({
  * Doktor eğitim bilgileri validasyon şeması
  * @description Doktorun eğitim bilgilerini (üniversite, uzmanlık vb.) doğrular
  * @param {number} education_type_id - Eğitim türü ID'si (lookup tablosundan)
- * @param {string} institution_name - Kurum adı (zorunlu, 2-255 karakter)
+ * @param {string} education_institution - Eğitim kurumu (zorunlu, 2-255 karakter)
+ * @param {string} education_type - Eğitim türü (zorunlu, 2-100 karakter)
+ * @param {string} [certificate_name] - Sertifika türü/adı (opsiyonel, elle yazılır, 2-255 karakter)
+ * @param {number} [certificate_year] - Sertifika yılı (opsiyonel, sadece yıl olarak girilir, 1950-şimdi arası)
  * @param {string} field - Alan adı (zorunlu, 2-255 karakter)
  * @param {number} graduation_year - Mezuniyet yılı (zorunlu, 1950-2030 arası)
  * @returns {Object} Joi validasyon şeması
@@ -141,7 +142,10 @@ const doctorPersonalInfoSchema = Joi.object({
  * @example
  * const { error, value } = doctorEducationSchema.validate({
  *   education_type_id: 1,
- *   institution_name: 'İstanbul Üniversitesi',
+ *   education_institution: 'İstanbul Üniversitesi',
+ *   education_type: 'Tıp Fakültesi',
+ *   certificate_name: 'Tıp Doktoru Diploması',
+ *   certificate_year: 2015,
  *   field: 'Tıp',
  *   graduation_year: 2015
  * });
@@ -153,10 +157,10 @@ const doctorEducationSchema = Joi.object({
     'number.positive': 'Eğitim türü ID\'si pozitif olmalıdır',
     'any.required': 'Eğitim türü zorunludur'
   }),
-  institution_name: Joi.string().min(2).max(255).required().messages({
-    'string.min': 'Kurum adı en az 2 karakter olmalıdır',
-    'string.max': 'Kurum adı en fazla 255 karakter olabilir',
-    'any.required': 'Kurum adı zorunludur'
+  education_institution: Joi.string().min(2).max(255).required().messages({
+    'string.min': 'Eğitim kurumu adı en az 2 karakter olmalıdır',
+    'string.max': 'Eğitim kurumu adı en fazla 255 karakter olabilir',
+    'any.required': 'Eğitim kurumu adı zorunludur'
   }),
   field: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Alan adı en az 2 karakter olmalıdır',
@@ -169,10 +173,19 @@ const doctorEducationSchema = Joi.object({
     'number.max': 'Mezuniyet yılı gelecek yıldan büyük olamaz',
     'any.required': 'Mezuniyet yılı zorunludur'
   }),
-  // Not: "Derece türü" sadece eğitim türü "DİĞER" ise zorunlu olabilir; diğer durumlarda boş string/nul gelebilir
-  degree_type: Joi.string().min(2).max(100).optional().allow('', null).messages({
-    'string.min': 'Derece türü en az 2 karakter olmalıdır',
-    'string.max': 'Derece türü en fazla 100 karakter olabilir'
+  // Not: "DİĞER" seçilirse education_type zorunlu; kontrol service katmanında yapılır
+  education_type: Joi.string().min(2).max(100).optional().allow('', null).messages({
+    'string.min': 'Eğitim türü en az 2 karakter olmalıdır',
+    'string.max': 'Eğitim türü en fazla 100 karakter olabilir'
+  }),
+  certificate_name: Joi.string().min(2).max(255).optional().allow('', null).messages({
+    'string.min': 'Sertifika türü en az 2 karakter olmalıdır',
+    'string.max': 'Sertifika türü en fazla 255 karakter olabilir'
+  }),
+  certificate_year: Joi.number().integer().min(1950).max(new Date().getFullYear()).optional().allow(null).messages({
+    'number.base': 'Geçerli bir sertifika yılı giriniz',
+    'number.min': 'Sertifika yılı 1950\'den küçük olamaz',
+    'number.max': 'Sertifika yılı bugünden büyük olamaz'
   })
 });
 
@@ -251,42 +264,29 @@ const doctorExperienceSchema = Joi.object({
 
 /**
  * Doktor sertifika bilgileri validasyon şeması
- * @description Doktorun sertifika bilgilerini doğrular
- * @param {string} [title] - Sertifika adı (opsiyonel, 2-255 karakter)
- * @param {string} institution - Kurum adı (zorunlu, 2-255 karakter)
- * @param {Date} issued_at - Alınış tarihi (zorunlu)
- * @returns {Object} Joi validasyon şeması
- * 
- * @example
- * const { error, value } = doctorCertificateSchema.validate({
- *   title: 'ACLS Sertifikası',
- *   institution: 'İstanbul Üniversitesi',
- *   issued_at: '2023-01-01'
- * });
+ * @description Sertifika türü (elle), kurum ve yıl doğrulaması
+ * @param {string} certificate_name - Sertifika türü/adı (2-255)
+ * @param {string} institution - Kurum adı (2-255)
+ * @param {number} certificate_year - Yıl (1950 - now)
  */
 const doctorCertificateSchema = Joi.object({
-  certificate_type_id: Joi.number().integer().positive().required().messages({
-    'number.base': 'Sertifika türü seçilmelidir',
-    'number.positive': 'Geçersiz sertifika türü',
+  certificate_name: Joi.string().min(2).max(255).required().messages({
+    'string.min': 'Sertifika türü en az 2 karakter olmalıdır',
+    'string.max': 'Sertifika türü en fazla 255 karakter olabilir',
     'any.required': 'Sertifika türü zorunludur'
-  }),
-  custom_name: Joi.string().min(2).max(255).allow('', null).optional().messages({
-    'string.min': 'Sertifika adı en az 2 karakter olmalıdır',
-    'string.max': 'Sertifika adı en fazla 255 karakter olabilir'
   }),
   institution: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Kurum adı en az 2 karakter olmalıdır',
     'string.max': 'Kurum adı en fazla 255 karakter olabilir',
     'any.required': 'Kurum adı zorunludur'
   }),
-  issued_at: dateSchema.max('now').required().messages({
-    'date.max': 'Alınış tarihi bugünden önce olmalıdır',
-    'any.required': 'Alınış tarihi zorunludur'
+  certificate_year: Joi.number().integer().min(1950).max(new Date().getFullYear()).required().messages({
+    'number.base': 'Sertifika yılı sayı olmalıdır',
+    'number.integer': 'Sertifika yılı tam sayı olmalıdır',
+    'number.min': 'Sertifika yılı 1950\'den küçük olamaz',
+    'number.max': 'Sertifika yılı bugünden büyük olamaz',
+    'any.required': 'Sertifika yılı zorunludur'
   })
-}).custom((value, helpers) => {
-  // Eğer certificate_type "DİĞER" ise custom_name zorunlu
-  // Bu kontrolü backend service'de yapacağız çünkü burada certificate_type name'e erişemiyoruz
-  return value;
 });
 
 // ============================================================================

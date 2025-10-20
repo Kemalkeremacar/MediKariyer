@@ -243,16 +243,16 @@ export const useRegisterHospital = () => {
   const { showSuccess, showError } = useUiStore();
 
   return useMutation({
-    mutationFn: async ({ email, password, institution_name, city, address, phone, website, about }) => {
+    mutationFn: async ({ email, password, institution_name, city_id, phone, logo }) => {
       logger.info('Hospital registration started', { email });
       
       // Frontend validasyonu
       const validation = validateHospitalRegister({ 
-        email, password, institution_name, city, address, phone, website, about 
+        email, password, institution_name, city_id, phone, logo 
       });
       if (!validation.isValid) {
         logger.error('Hospital validation failed', { 
-          data: { email, institution_name, city, address },
+          data: { email, institution_name, city_id },
           errors: validation.errors 
         });
         const errorMessage = (validation.errors && validation.errors[0]?.message) || 'Form doğrulama hatası';
@@ -263,11 +263,9 @@ export const useRegisterHospital = () => {
         email,
         password,
         institution_name,
-        city,
-        address,
+        city_id,
         phone,
-        website,
-        about
+        logo
       });
       
       const result = response.data;

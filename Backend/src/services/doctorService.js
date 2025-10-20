@@ -136,10 +136,26 @@ const getProfile = async (userId) => {
     subspecialty_name = subspecialty?.name;
   }
   
+  // Şehir isimlerini getir
+  let birth_place_name = null;
+  let residence_city_name = null;
+  
+  if (profile.birth_place_id) {
+    const birthCity = await db('cities').where('id', profile.birth_place_id).first();
+    birth_place_name = birthCity?.name;
+  }
+  
+  if (profile.residence_city_id) {
+    const residenceCity = await db('cities').where('id', profile.residence_city_id).first();
+    residence_city_name = residenceCity?.name;
+  }
+  
   return {
     ...profile,
     specialty_name,
-    subspecialty_name
+    subspecialty_name,
+    birth_place_name,
+    residence_city_name
   };
 };
 
@@ -164,7 +180,7 @@ const getCompleteProfile = async (userId) => {
   const [educations, experiences, certificates, languages] = await Promise.all([
     db('doctor_educations').where('doctor_profile_id', profile.id).orderBy('graduation_year', 'desc'),
     db('doctor_experiences').where('doctor_profile_id', profile.id).orderBy('start_date', 'desc'),
-    db('doctor_certificates').where('doctor_profile_id', profile.id).orderBy('issued_at', 'desc'),
+    db('doctor_certificates').where('doctor_profile_id', profile.id).orderBy('certificate_year', 'desc'),
     db('doctor_languages').where('doctor_profile_id', profile.id).orderBy('level_id', 'desc')
   ]);
 
@@ -194,9 +210,18 @@ const getCompleteProfile = async (userId) => {
  * });
  */
 const updatePersonalInfo = async (userId, personalInfo) => {
-  await db('doctor_profiles').where('user_id', userId).update({ ...personalInfo, updated_at: db.fn.now() });
+  console.log('🔍 updatePersonalInfo called:', { userId, personalInfo });
   
-  // Güncellenmiş profili specialty ve subspecialty isimleriyle birlikte döndür
+  // validatedData'dan gelen değerleri doğrudan kullan
+  const updateData = {
+    ...personalInfo,
+    updated_at: db.fn.now()
+  };
+  
+  console.log('📝 Updating with data:', updateData);
+  await db('doctor_profiles').where('user_id', userId).update(updateData);
+  
+  // Güncellenmiş profili specialty, subspecialty ve şehir isimleriyle birlikte döndür
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   
   if (!profile) return null;
@@ -215,10 +240,26 @@ const updatePersonalInfo = async (userId, personalInfo) => {
     subspecialty_name = subspecialty?.name;
   }
   
+  // Şehir isimlerini getir
+  let birth_place_name = null;
+  let residence_city_name = null;
+  
+  if (profile.birth_place_id) {
+    const birthCity = await db('cities').where('id', profile.birth_place_id).first();
+    birth_place_name = birthCity?.name;
+  }
+  
+  if (profile.residence_city_id) {
+    const residenceCity = await db('cities').where('id', profile.residence_city_id).first();
+    residence_city_name = residenceCity?.name;
+  }
+  
   return {
     ...profile,
     specialty_name,
-    subspecialty_name
+    subspecialty_name,
+    birth_place_name,
+    residence_city_name
   };
 };
 
@@ -233,8 +274,10 @@ const updatePersonalInfo = async (userId, personalInfo) => {
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {Object} educationData - Eğitim bilgileri
  * @param {number} educationData.education_type_id - Eğitim türü ID'si (lookup tablosundan)
- * @param {string} [educationData.degree_type] - Derece türü (DİĞER seçildiğinde manuel giriş)
- * @param {string} educationData.institution_name - Kurum adı
+ * @param {string} [educationData.education_type] - Eğitim türü (DİĞER seçildiğinde manuel giriş)
+ * @param {string} educationData.education_institution - Eğitim kurumu
+ * @param {string} [educationData.certificate_name] - Sertifika türü (opsiyonel, elle yazılır)
+ * @param {number} [educationData.certificate_year] - Sertifika yılı (opsiyonel, sadece yıl)
  * @param {string} educationData.field - Alan adı
  * @param {number} educationData.graduation_year - Mezuniyet yılı
  * @returns {Promise<Object>} Eklenen eğitim kaydı
@@ -243,7 +286,10 @@ const updatePersonalInfo = async (userId, personalInfo) => {
  * @example
  * const education = await addEducation(123, {
  *   education_type_id: 1,
- *   institution_name: 'İstanbul Üniversitesi',
+ *   education_institution: 'İstanbul Üniversitesi',
+ *   education_type: 'Tıp Fakültesi',
+ *   certificate_name: 'Tıp Doktoru Diploması',
+ *   certificate_year: 2015,
  *   field: 'Tıp',
  *   graduation_year: 2015
  * });
@@ -252,30 +298,32 @@ const addEducation = async (userId, educationData) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) throw new AppError('Profil bulunamadı', 404);
   
-  // Eğer education_type_id varsa, eğitim türünü kontrol et
+  // Education Type kontrolü ve "DİĞER" kuralı
+  const eduType = await db('doctor_education_types')
+    .where('id', educationData.education_type_id)
+    .first();
+  if (!eduType) {
+    throw new AppError('Geçersiz eğitim türü', 400);
+  }
+  const normalizedEduType = (eduType.name || '').toLowerCase().replace(/i̇/g, 'i');
+  const isOtherEduType = normalizedEduType.includes('diğer') || normalizedEduType.includes('diger') || normalizedEduType.includes('other');
+  if (isOtherEduType) {
+    if (!educationData.education_type || educationData.education_type.trim() === '') {
+      throw new AppError('DİĞER seçildiğinde eğitim türü zorunludur', 400);
+    }
+  }
+
   let insertData = {
     doctor_profile_id: profile.id,
     education_type_id: educationData.education_type_id,
-    institution_name: educationData.institution_name,
+    education_institution: educationData.education_institution,
     field: educationData.field,
     graduation_year: educationData.graduation_year,
+    education_type: isOtherEduType ? educationData.education_type : null,
+    certificate_name: educationData.certificate_name,
+    certificate_year: educationData.certificate_year,
     created_at: db.fn.now()
   };
-
-  // Eğer education_type_id varsa, eğitim türünü kontrol et
-  if (educationData.education_type_id) {
-    const educationType = await db('doctor_education_types')
-      .where('id', educationData.education_type_id)
-      .first();
-    
-    // Eğer eğitim türü "DİĞER" ise ve degree_type alanı doluysa, degree_type'ı ekle
-    if (educationType && educationType.name === 'DİĞER' && educationData.degree_type) {
-      insertData.degree_type = educationData.degree_type;
-    } else if (educationData.degree_type) {
-      // Eğer DİĞER değilse ama degree_type gelmişse yine de ekle (esneklik için)
-      insertData.degree_type = educationData.degree_type;
-    }
-  }
   
   const result = await db('doctor_educations')
     .insert(insertData)
@@ -307,38 +355,41 @@ const addEducation = async (userId, educationData) => {
  * @example
  * const updatedEducation = await updateEducation(123, 456, {
  *   education_type_id: 2,
- *   institution_name: 'Ankara Üniversitesi'
+ *   education_institution: 'Ankara Üniversitesi',
+ *   education_type: 'Uzmanlık',
+ *   certificate_name: 'Kardiyoloji Uzmanlık Belgesi',
+ *   certificate_year: 2020
  * });
  */
 const updateEducation = async (userId, educationId, educationData) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) throw new AppError('Profil bulunamadı', 404);
   
+  // Education Type kontrolü ve "DİĞER" kuralı
+  const eduType = await db('doctor_education_types')
+    .where('id', educationData.education_type_id)
+    .first();
+  if (!eduType) {
+    throw new AppError('Geçersiz eğitim türü', 400);
+  }
+  const normalizedEduType = (eduType.name || '').toLowerCase().replace(/i̇/g, 'i');
+  const isOtherEduType = normalizedEduType.includes('diğer') || normalizedEduType.includes('diger') || normalizedEduType.includes('other');
+  if (isOtherEduType) {
+    if (!educationData.education_type || educationData.education_type.trim() === '') {
+      throw new AppError('DİĞER seçildiğinde eğitim türü zorunludur', 400);
+    }
+  }
+
   // Güncelleme verisini hazırla
   let updateData = {
     education_type_id: educationData.education_type_id,
-    institution_name: educationData.institution_name,
+    education_institution: educationData.education_institution,
     field: educationData.field,
-    graduation_year: educationData.graduation_year
+    graduation_year: educationData.graduation_year,
+    education_type: isOtherEduType ? educationData.education_type : null,
+    certificate_name: educationData.certificate_name,
+    certificate_year: educationData.certificate_year
   };
-
-  // Eğer education_type_id varsa, eğitim türünü kontrol et
-  if (educationData.education_type_id) {
-    const educationType = await db('doctor_education_types')
-      .where('id', educationData.education_type_id)
-      .first();
-    
-    // Eğer eğitim türü "DİĞER" ise ve degree_type alanı doluysa, degree_type'ı ekle
-    if (educationType && educationType.name === 'DİĞER' && educationData.degree_type) {
-      updateData.degree_type = educationData.degree_type;
-    } else if (educationData.degree_type) {
-      // Eğer DİĞER değilse ama degree_type gelmişse yine de ekle (esneklik için)
-      updateData.degree_type = educationData.degree_type;
-    } else {
-      // Eğer DİĞER değilse ve degree_type gelmemişse, degree_type'ı null yap
-      updateData.degree_type = null;
-    }
-  }
   
   const updated = await db('doctor_educations')
     .where({ id: educationId, doctor_profile_id: profile.id })
@@ -359,8 +410,8 @@ const updateEducation = async (userId, educationId, educationData) => {
 };
 
 /**
- * Doktor eğitim bilgisini siler
- * @description Doktorun belirtilen eğitim kaydını siler
+ * Doktor eğitim bilgisini siler (Soft Delete)
+ * @description Doktorun belirtilen eğitim kaydını soft delete ile siler (deleted_at set edilir)
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {number} educationId - Silinecek eğitim kaydının ID'si
  * @returns {Promise<boolean>} Silme işleminin başarı durumu
@@ -376,7 +427,12 @@ const deleteEducation = async (userId, educationId) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) throw new AppError('Profil bulunamadı', 404);
   
-  const deleted = await db('doctor_educations').where({ id: educationId, doctor_profile_id: profile.id }).del();
+  // Soft delete: deleted_at kolonunu set et
+  const deleted = await db('doctor_educations')
+    .where({ id: educationId, doctor_profile_id: profile.id })
+    .whereNull('deleted_at') // Zaten silinmemiş kayıtlar
+    .update({ deleted_at: db.fn.now() });
+  
   return deleted > 0;
 };
 
@@ -428,7 +484,8 @@ const addExperience = async (userId, experienceData) => {
     end_date: experienceData.is_current ? null : (experienceData.end_date || null),
     is_current: experienceData.is_current || false,
     description: experienceData.description || null,
-    created_at: db.fn.now()
+    created_at: db.fn.now(),
+    updated_at: db.fn.now()
   };
   
   const result = await db('doctor_experiences')
@@ -473,7 +530,8 @@ const updateExperience = async (userId, experienceId, experienceData) => {
     subspecialty_id: experienceData.subspecialty_id || null,
     start_date: experienceData.start_date,
     is_current: experienceData.is_current || false,
-    description: experienceData.description || null
+    description: experienceData.description || null,
+    updated_at: db.fn.now()
   };
   
   // is_current = true ise end_date = NULL olmalı
@@ -503,8 +561,8 @@ const updateExperience = async (userId, experienceId, experienceData) => {
 };
 
 /**
- * Doktor deneyim bilgisini siler
- * @description Doktorun belirtilen deneyim kaydını siler
+ * Doktor deneyim bilgisini siler (Soft Delete)
+ * @description Doktorun belirtilen deneyim kaydını soft delete ile siler (deleted_at set edilir)
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {number} experienceId - Silinecek deneyim kaydının ID'si
  * @returns {Promise<boolean>} Silme işleminin başarı durumu
@@ -514,7 +572,12 @@ const deleteExperience = async (userId, experienceId) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) throw new AppError('Profil bulunamadı', 404);
   
-  const deleted = await db('doctor_experiences').where({ id: experienceId, doctor_profile_id: profile.id }).del();
+  // Soft delete: deleted_at kolonunu set et
+  const deleted = await db('doctor_experiences')
+    .where({ id: experienceId, doctor_profile_id: profile.id })
+    .whereNull('deleted_at') // Zaten silinmemiş kayıtlar
+    .update({ deleted_at: db.fn.now() });
+  
   return deleted > 0;
 };
 
@@ -527,66 +590,43 @@ const deleteExperience = async (userId, experienceId) => {
  * @description Doktorun sertifika ve kurs bilgilerini doctor_certificates tablosuna ekler
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {Object} certificateData - Sertifika bilgileri
- * @param {number} [certificateData.certificate_type_id] - Sertifika türü ID'si (certificate_types tablosundan)
- * @param {string} [certificateData.custom_name] - Özel sertifika adı (DİĞER seçildiğinde zorunlu)
+ * @param {string} certificateData.certificate_name - Sertifika türü/adı
  * @param {string} certificateData.institution - Veren kurum adı
- * @param {Date} certificateData.issued_at - Veriliş tarihi
- * @returns {Promise<Object>} Eklenen sertifika kaydı (certificate_type ismi ile)
+ * @param {number} certificateData.certificate_year - Sertifika yılı (INT)
+ * @returns {Promise<Object>} Eklenen sertifika kaydı
  * @throws {AppError} Profil bulunamadığında veya veritabanı hatası durumunda
  * 
- * @note certificate_type_id = 'DİĞER' ise custom_name zorunludur
+ * @note Lookup kaldırıldı; tür metin olarak saklanır
  * 
  * @example
  * const certificate = await addCertificate(123, {
- *   certificate_type_id: 5,
+ *   certificate_name: 'ACLS',
  *   institution: 'Türk Tabipleri Birliği',
- *   issued_at: new Date('2021-06-15')
+ *   certificate_year: 2021
  * });
  */
 const addCertificate = async (userId, certificateData) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) throw new AppError('Profil bulunamadı', 404);
   
-  // certificate_type_id zorunlu
-  if (!certificateData.certificate_type_id) {
-    throw new AppError('Sertifika türü seçilmelidir', 400);
+  if (!certificateData.certificate_name) {
+    throw new AppError('Sertifika türü zorunludur', 400);
   }
   
-  // Sertifika türünü kontrol et
-  const certificateType = await db('certificate_types')
-    .where('id', certificateData.certificate_type_id)
-    .first();
+  // Lookup kullanılmıyor
   
-  if (!certificateType) {
-    throw new AppError('Geçersiz sertifika türü', 400);
-  }
-  
-  // Eğer "DİĞER", "Diğer" veya "Other" seçilmişse custom_name zorunlu (case-insensitive)
-  const normalizedName = certificateType.name.toLowerCase().replace(/i̇/g, 'i');
-  const isOtherType = normalizedName.includes('diğer') || 
-                      normalizedName.includes('diger') ||
-                      normalizedName.includes('other');
-  
-  if (isOtherType) {
-    if (!certificateData.custom_name || certificateData.custom_name.trim() === '') {
-      throw new AppError('DİĞER seçildiğinde sertifika adı zorunludur', 400);
-    }
-  }
+  const isOtherType = false;
   
   let insertData = {
     doctor_profile_id: profile.id,
-    certificate_type_id: certificateData.certificate_type_id,
+    certificate_name: certificateData.certificate_name,
     institution: certificateData.institution,
-    issued_at: certificateData.issued_at,
-    created_at: db.fn.now()
+    certificate_year: certificateData.certificate_year,
+    created_at: db.fn.now(),
+    updated_at: db.fn.now()
   };
 
-  // Eğer "DİĞER" seçilmişse custom_name'i ekle, değilse null
-  if (isOtherType) {
-    insertData.custom_name = certificateData.custom_name;
-  } else {
-    insertData.custom_name = null;
-  }
+  // custom_name kaldırıldı
   
   const result = await db('doctor_certificates')
     .insert(insertData)
@@ -596,12 +636,7 @@ const addCertificate = async (userId, certificateData) => {
   
   // Join ile tam veriyi döndür
   return await db('doctor_certificates as dc')
-    .leftJoin('certificate_types as ct', 'dc.certificate_type_id', 'ct.id')
-    .select(
-      'dc.*',
-      'ct.name as certificate_type_name',
-      'ct.description as certificate_type_description'
-    )
+    .select('dc.*')
     .where('dc.id', id)
     .first();
 };
@@ -626,45 +661,18 @@ const updateCertificate = async (userId, certificateId, certificateData) => {
   const certificate = await db('doctor_certificates').where({ id: certificateId, doctor_profile_id: profile.id }).first();
   if (!certificate) return null;
 
-  // certificate_type_id zorunlu
-  if (!certificateData.certificate_type_id) {
-    throw new AppError('Sertifika türü seçilmelidir', 400);
-  }
-  
-  // Sertifika türünü kontrol et
-  const certificateType = await db('certificate_types')
-    .where('id', certificateData.certificate_type_id)
-    .first();
-  
-  if (!certificateType) {
-    throw new AppError('Geçersiz sertifika türü', 400);
-  }
-  
-  // Eğer "DİĞER", "Diğer" veya "Other" seçilmişse custom_name zorunlu (case-insensitive)
-  const normalizedName = certificateType.name.toLowerCase().replace(/i̇/g, 'i');
-  const isOtherType = normalizedName.includes('diğer') || 
-                      normalizedName.includes('diger') ||
-                      normalizedName.includes('other');
-  
-  if (isOtherType) {
-    if (!certificateData.custom_name || certificateData.custom_name.trim() === '') {
-      throw new AppError('DİĞER seçildiğinde sertifika adı zorunludur', 400);
-    }
+  // certificate_name zorunlu
+  if (!certificateData.certificate_name) {
+    throw new AppError('Sertifika adı zorunludur', 400);
   }
 
   // Güncelleme verisini hazırla
   let updateData = {
-    certificate_type_id: certificateData.certificate_type_id,
+    certificate_name: certificateData.certificate_name,
     institution: certificateData.institution,
-    issued_at: certificateData.issued_at
+    certificate_year: certificateData.certificate_year,
+    updated_at: db.fn.now()
   };
-
-  // Eğer "DİĞER" seçilmişse custom_name'i ekle, değilse null
-  if (isOtherType) {
-    updateData.custom_name = certificateData.custom_name;
-  } else {
-    updateData.custom_name = null;
-  }
 
   await db('doctor_certificates')
     .where({ id: certificateId, doctor_profile_id: profile.id })
@@ -672,12 +680,7 @@ const updateCertificate = async (userId, certificateId, certificateData) => {
   
   // Join ile tam veriyi döndür
   return await db('doctor_certificates as dc')
-    .leftJoin('certificate_types as ct', 'dc.certificate_type_id', 'ct.id')
-    .select(
-      'dc.*',
-      'ct.name as certificate_type_name',
-      'ct.description as certificate_type_description'
-    )
+    .select('dc.*')
     .where('dc.id', certificateId)
     .first();
 };
@@ -735,7 +738,8 @@ const addLanguage = async (userId, languageData) => {
     doctor_profile_id: profile.id,
     language_id: languageData.language_id,
     level_id: languageData.level_id,
-    created_at: db.fn.now()
+    created_at: db.fn.now(),
+    updated_at: db.fn.now()
   };
   
   const result = await db('doctor_languages')
@@ -778,7 +782,8 @@ const updateLanguage = async (userId, languageId, languageData) => {
   // Güncelleme verisini hazırla
   const updateData = {
     language_id: languageData.language_id,
-    level_id: languageData.level_id
+    level_id: languageData.level_id,
+    updated_at: db.fn.now()
   };
   
   const updated = await db('doctor_languages')
@@ -867,20 +872,20 @@ const getProfileCompletion = async (userId) => {
     specialty_id: profile.specialty_id,
     dob: profile.dob,
     phone: profile.phone,
-    birth_place: profile.birth_place,
-    residence_city: profile.residence_city
+    birth_place_id: profile.birth_place_id,
+    residence_city_id: profile.residence_city_id
   });
 
   // Kişisel bilgiler - 8 alan (title, specialty_id zorunlu alanlar dahil)
   const personalFields = [
-    'first_name',    // Zorunlu
-    'last_name',     // Zorunlu
-    'title',         // Zorunlu (RegisterPage'de zorunlu)
-    'specialty_id',  // Zorunlu (RegisterPage'de zorunlu)
-    'dob',          // İsteğe bağlı ama önemli
-    'phone',        // İsteğe bağlı ama önemli
-    'birth_place',  // İsteğe bağlı
-    'residence_city' // İsteğe bağlı
+    'first_name',        // Zorunlu
+    'last_name',         // Zorunlu
+    'title',             // Zorunlu (RegisterPage'de zorunlu)
+    'specialty_id',      // Zorunlu (RegisterPage'de zorunlu)
+    'dob',              // İsteğe bağlı ama önemli
+    'phone',            // İsteğe bağlı ama önemli
+    'birth_place_id',   // İsteğe bağlı (cities tablosundan ID)
+    'residence_city_id' // İsteğe bağlı (cities tablosundan ID)
   ];
   
   const missingFields = [];
@@ -1013,6 +1018,7 @@ const getEducations = async (userId) => {
       'det.description as education_type_description'
     )
     .where('de.doctor_profile_id', profile.id)
+    .whereNull('de.deleted_at') // Soft delete: Sadece silinmemiş kayıtları getir
     .orderBy('de.graduation_year', 'desc');
 };
 
@@ -1040,6 +1046,7 @@ const getExperiences = async (userId) => {
       'ss.name as subspecialty_name'
     )
     .where('de.doctor_profile_id', profile.id)
+    .whereNull('de.deleted_at') // Soft delete: Sadece silinmemiş kayıtları getir
     .orderBy('de.start_date', 'desc');
 };
 
@@ -1059,14 +1066,9 @@ const getCertificates = async (userId) => {
   if (!profile) return [];
   
   return await db('doctor_certificates as dc')
-    .leftJoin('certificate_types as ct', 'dc.certificate_type_id', 'ct.id')
-    .select(
-      'dc.*',
-      'ct.name as certificate_type_name',
-      'ct.description as certificate_type_description'
-    )
+    .select('dc.*')
     .where('dc.doctor_profile_id', profile.id)
-    .orderBy('dc.issued_at', 'desc');
+    .orderBy('dc.certificate_year', 'desc');
 };
 
 /**
@@ -1414,11 +1416,16 @@ const getApplicationById = async (applicationId, doctorProfileId = null) => {
 
       // Hospital bilgilerini çekelim
       if (job.hospital_id) {
-        const hospitals = await db('hospital_profiles')
+        const hospitals = await db('hospital_profiles as hp')
           .select([
-            'institution_name', 'city', 'address', 'phone', 'email'
+            'hp.institution_name',
+            'c.name as city',
+            'hp.address',
+            'hp.phone',
+            'hp.email'
           ])
-          .where('id', job.hospital_id);
+          .leftJoin('cities as c', 'hp.city_id', 'c.id')
+          .where('hp.id', job.hospital_id);
         
         if (hospitals && hospitals.length > 0) {
           const hospital = hospitals[0];
@@ -1748,21 +1755,25 @@ const getJobs = async (filters = {}) => {
   // Sayfalama hesaplamaları
   const offset = (page - 1) * limit;
 
-  // Base query - sadece aktif ilanlar (status_id = 1)
+  // Base query - sadece aktif ilanlar (status_id = 1) ve silinmemiş ilanlar
   let query = db('jobs as j')
     .select([
       'j.*',
       'hp.institution_name as hospital_name',
-      'hp.city as hospital_city',
+      'hc.name as hospital_city',
       'c.name as city',
       's.name as specialty_name',
+      'ss.name as subspecialty_name',
       'js.name as status_name'
     ])
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .leftJoin('cities as hc', 'hp.city_id', 'hc.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
-    .where('j.status_id', 1); // Sadece aktif ilanları getir (ID bazlı, daha güvenilir)
+    .where('j.status_id', 1) // Sadece aktif ilanları getir
+    .whereNull('j.deleted_at'); // Silinmemiş ilanları getir
 
   // Filtreleme
   if (specialty) {
@@ -1797,7 +1808,8 @@ const getJobs = async (filters = {}) => {
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
-    .where('j.status_id', 1); // Sadece aktif ilanları getir (ID bazlı, daha güvenilir)
+    .where('j.status_id', 1) // Sadece aktif ilanları getir
+    .whereNull('j.deleted_at'); // Silinmemiş ilanları getir
 
   // Filtreleme - count query için de aynı filtreler
   if (specialty) {
@@ -1860,10 +1872,12 @@ const getJobs = async (filters = {}) => {
  * const job = await getJobById(123);
  */
 const getJobById = async (id) => {
-  // Önce sadece jobs tablosundan veri çekelim
+  // Önce sadece jobs tablosundan veri çekelim - aktif ve silinmemiş ilanlar
   const jobs = await db('jobs')
     .select('*')
-    .where('id', id);
+    .where('id', id)
+    .where('status_id', 1) // Sadece aktif ilanlar
+    .whereNull('deleted_at'); // Silinmemiş ilanlar
 
   if (!jobs || jobs.length === 0) {
     throw new AppError('İş ilanı bulunamadı', 404);
@@ -1873,17 +1887,18 @@ const getJobById = async (id) => {
 
   // Eğer hospital_id varsa hospital bilgilerini çekelim
   if (job.hospital_id) {
-    const hospitals = await db('hospital_profiles')
+    const hospitals = await db('hospital_profiles as hp')
       .select([
-        'institution_name as hospital_name',
-        'city as hospital_city',
-        'address as hospital_address',
-        'phone as hospital_phone',
-        'email as hospital_email',
-        'website as hospital_website',
-        'about as hospital_about'
+        'hp.institution_name as hospital_name',
+        'c.name as hospital_city',
+        'hp.address as hospital_address',
+        'hp.phone as hospital_phone',
+        'hp.email as hospital_email',
+        'hp.website as hospital_website',
+        'hp.about as hospital_about'
       ])
-      .where('id', job.hospital_id);
+      .leftJoin('cities as c', 'hp.city_id', 'c.id')
+      .where('hp.id', job.hospital_id);
     
     if (hospitals && hospitals.length > 0) {
       Object.assign(job, hospitals[0]);
@@ -1898,6 +1913,17 @@ const getJobById = async (id) => {
     
     if (specialties && specialties.length > 0) {
       job.specialty_name = specialties[0].specialty_name;
+    }
+  }
+
+  // Eğer subspecialty_id varsa subspecialty bilgisini çekelim
+  if (job.subspecialty_id) {
+    const subspecialties = await db('subspecialties')
+      .select('name as subspecialty_name')
+      .where('id', job.subspecialty_id);
+    
+    if (subspecialties && subspecialties.length > 0) {
+      job.subspecialty_name = subspecialties[0].subspecialty_name;
     }
   }
 
@@ -1933,14 +1959,16 @@ const getDoctorRecentJobs = async (doctorProfileId, limit = 5) => {
     .select([
       'j.*',
       'hp.institution_name as hospital_name',
-      'hp.city as hospital_city',
+      'c.name as hospital_city',
       's.name as specialty_name',
       'js.name as status_name'
     ])
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .leftJoin('cities as c', 'hp.city_id', 'c.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
     .where('js.name', 'Aktif') // Sadece aktif ilanları getir
+    .whereNull('j.deleted_at') // Silinmemiş ilanları getir
     .orderBy('j.created_at', 'desc');
     
   // JavaScript'te limit uygulayalım

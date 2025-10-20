@@ -13,7 +13,7 @@
  * - Profil tamamlanma durumu
  */
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   User, GraduationCap, Briefcase, Award, Globe,
   Plus, Edit, Trash2, Save, X, CheckCircle,
@@ -77,7 +77,7 @@ const DoctorProfile = () => {
   const languages = lookupData.languages || [];
   const specialties = lookupData.specialties || [];
   const allSubspecialties = lookupData.subspecialties || [];
-  const certificateTypes = lookupData.certificateTypes || [];
+  // certificateTypes kaldırıldı (sertifika türü elle yazılıyor)
   
   // Seçilen branşa göre yan dalları filtrele (RegisterPage mantığı)
   const filteredSubspecialties = useMemo(() => {
@@ -157,10 +157,12 @@ const DoctorProfile = () => {
     if (type === 'education') {
       normalized = {
         ...normalized,
-        institution_name: toStr(item.institution_name),
+        education_institution: toStr(item.education_institution),
         field: toStr(item.field),
         graduation_year: item.graduation_year || '',
-        degree_type: item.degree_type ?? ''
+        education_type: item.education_type ?? '',
+        certificate_name: toStr(item.certificate_name),
+        certificate_year: item.certificate_year || ''
       };
     } else if (type === 'experience') {
       normalized = {
@@ -177,10 +179,9 @@ const DoctorProfile = () => {
     } else if (type === 'certificate') {
       normalized = {
         ...normalized,
-        certificate_type_id: item.certificate_type_id || '',
-        custom_name: item.custom_name ?? '',
+        certificate_name: toStr(item.certificate_name),
         institution: toStr(item.institution),
-        issued_at: toDateInput(item.issued_at)
+        certificate_year: item.certificate_year || ''
       };
     } else if (type === 'language') {
       normalized = {
@@ -258,6 +259,11 @@ const DoctorProfile = () => {
         data.graduation_year = parseInt(data.graduation_year);
       }
       
+      // Sertifika yılını sayıya çevir
+      if (data.certificate_year && typeof data.certificate_year === 'string') {
+        data.certificate_year = parseInt(data.certificate_year);
+      }
+      
       // Education type ID'yi sayıya çevir
       if (data.education_type_id && typeof data.education_type_id === 'string') {
         data.education_type_id = parseInt(data.education_type_id);
@@ -286,9 +292,9 @@ const DoctorProfile = () => {
         data.end_date = null;
       }
       
-      // Certificate type ID'yi sayıya çevir
-      if (data.certificate_type_id && typeof data.certificate_type_id === 'string') {
-        data.certificate_type_id = parseInt(data.certificate_type_id);
+      // Sertifika yılı string ise sayıya çevir
+      if (data.certificate_year && typeof data.certificate_year === 'string') {
+        data.certificate_year = parseInt(data.certificate_year);
       }
       
       // Language ID'yi sayıya çevir
@@ -305,9 +311,9 @@ const DoctorProfile = () => {
       let validatedData;
       switch (type) {
         case 'education':
-          // education_type_id DİĞER değilse degree_type boş string olarak gönderilsin
-          if (data.degree_type === null || data.degree_type === undefined) {
-            data.degree_type = '';
+          // education_type_id DİĞER değilse education_type boş string olarak gönderilsin
+          if (data.education_type === null || data.education_type === undefined) {
+            data.education_type = '';
           }
           validatedData = doctorEducationSchema.parse(data);
           break;
@@ -621,7 +627,7 @@ const DoctorProfile = () => {
               educationTypes={educationTypes}
               specialties={specialties}
               filteredSubspecialties={filteredSubspecialties}
-              certificateTypes={certificateTypes}
+              
               languageLevels={languageLevels}
               languages={languages}
               selectedSpecialtyId={selectedSpecialtyId}
@@ -953,8 +959,8 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
     specialty_id: '',
     subspecialty_id: '',
     dob: '',
-    birth_place: '',
-    residence_city: '',
+    birth_place_id: '',
+    residence_city_id: '',
     phone: '',
     email: '',
   });
@@ -974,10 +980,19 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
     return allSubspecialties.filter(sub => sub.specialty_id === parseInt(selectedSpecialtyId));
   }, [selectedSpecialtyId, allSubspecialties]);
 
-  // Profil verisi geldiğinde formData'yı güncelle
+  // Profil verisi geldiğinde formData'yı güncelle - SADECE İLK YÜKLEMEDE
+  const initialProfileLoaded = useRef(false);
+  
   useEffect(() => {
-    if (profile?.profile) {
+    if (profile?.profile && !initialProfileLoaded.current) {
       const profileData = profile.profile;
+      
+      console.log('📥 Profile data received (initial load):', {
+        birth_place_id: profileData.birth_place_id,
+        residence_city_id: profileData.residence_city_id,
+        birth_place_name: profileData.birth_place_name,
+        residence_city_name: profileData.residence_city_name
+      });
       
       // Doğum tarihi formatını düzelt (ISO string'den YYYY-MM-DD'ye)
       let formattedDob = '';
@@ -988,20 +1003,25 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
         }
       }
       
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
         first_name: profileData.first_name || '',
         last_name: profileData.last_name || '',
         title: profileData.title || 'Dr.',
         specialty_id: profileData.specialty_id || '',
         subspecialty_id: profileData.subspecialty_id || '',
         dob: formattedDob,
-        birth_place: profileData.birth_place || '',
-        residence_city: profileData.residence_city || '',
+        birth_place_id: profileData.birth_place_id?.toString() || '',
+        residence_city_id: profileData.residence_city_id?.toString() || '',
         phone: profileData.phone || '',
         email: profileData.email || '',
-      }));
+      });
       setSelectedSpecialtyId(profileData.specialty_id || null);
+      initialProfileLoaded.current = true;
+      
+      console.log('📝 FormData initialized with city IDs:', {
+        birth_place_id: profileData.birth_place_id?.toString() || '',
+        residence_city_id: profileData.residence_city_id?.toString() || ''
+      });
     }
   }, [profile]);
 
@@ -1009,15 +1029,23 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
     e.preventDefault();
     
     try {
-      // ID'leri integer'a çevir
+      console.log('🔍 Form submitted with formData:', formData);
+      
+      // ID'leri integer'a çevir - boş string kontrolü ekle
       const dataToValidate = {
         ...formData,
         specialty_id: formData.specialty_id ? parseInt(formData.specialty_id) : undefined,
-        subspecialty_id: formData.subspecialty_id ? parseInt(formData.subspecialty_id) : null
+        subspecialty_id: formData.subspecialty_id ? parseInt(formData.subspecialty_id) : null,
+        birth_place_id: formData.birth_place_id && formData.birth_place_id !== '' ? parseInt(formData.birth_place_id) : null,
+        residence_city_id: formData.residence_city_id && formData.residence_city_id !== '' ? parseInt(formData.residence_city_id) : null
       };
+      
+      console.log('📝 Data to validate:', dataToValidate);
       
       // Zod validation kullan
       const validatedData = doctorPersonalInfoSchema.parse(dataToValidate);
+      
+      console.log('✅ Validated data:', validatedData);
       
       // Güncellemeyi yap ve bekle
       await onUpdate(validatedData);
@@ -1156,13 +1184,18 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             Doğum Yeri
           </label>
           <select
-            value={formData.birth_place}
-            onChange={(e) => setFormData({ ...formData, birth_place: e.target.value })}
+            value={formData.birth_place_id}
+            onChange={(e) => {
+              console.log('🏙️ Birth place changed:', e.target.value);
+              console.log('Current formData.birth_place_id:', formData.birth_place_id);
+              setFormData({ ...formData, birth_place_id: e.target.value });
+            }}
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
           >
             <option value="" className="bg-slate-800 text-white">Şehir seçin</option>
+            {cities.length > 0 && console.log('🌍 Cities available:', cities.length, 'First city:', cities[0])}
             {cities.map(city => (
-              <option key={city.value} value={city.label} className="bg-slate-800 text-white">
+              <option key={city.value} value={city.value.toString()} className="bg-slate-800 text-white">
                 {city.label}
               </option>
             ))}
@@ -1173,13 +1206,16 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             İkamet Yeri
           </label>
           <select
-            value={formData.residence_city}
-            onChange={(e) => setFormData({ ...formData, residence_city: e.target.value })}
+            value={formData.residence_city_id}
+            onChange={(e) => {
+              console.log('🏠 Residence city changed:', e.target.value);
+              setFormData({ ...formData, residence_city_id: e.target.value });
+            }}
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
           >
             <option value="" className="bg-slate-800 text-white">Şehir seçin</option>
             {cities.map(city => (
-              <option key={city.value} value={city.label} className="bg-slate-800 text-white">
+              <option key={city.value} value={city.value.toString()} className="bg-slate-800 text-white">
                 {city.label}
               </option>
             ))}
@@ -1260,10 +1296,16 @@ const EducationTab = ({ educations, isLoading, onAdd, onEdit, onDelete, educatio
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h4 className="font-semibold text-white text-lg">
-                  {education.education_type_name || education.degree_type || 'Eğitim'}
+                  {education.education_type_name || education.education_type || 'Eğitim'}
                 </h4>
-                <p className="text-gray-300 mt-1">{education.institution_name}</p>
+                <p className="text-gray-300 mt-1">{education.education_institution}</p>
                 <p className="text-gray-400 text-sm mt-2">{education.field} • {education.graduation_year}</p>
+                {education.certificate_name && (
+                  <p className="text-gray-400 text-sm mt-1">
+                    Sertifika Türü: {education.certificate_name}
+                    {education.certificate_year && ` (${education.certificate_year})`}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -1427,25 +1469,15 @@ const CertificateTab = ({ certificates, isLoading, onAdd, onEdit, onDelete }) =>
       <div className="space-y-4">
         {certificates?.map((certificate) => (
           <div key={certificate.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
-            <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  {certificate.certificate_type_name && !['Diğer','DİĞER','diger','other','Other'].includes((certificate.certificate_type_name || '').trim()) && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-                      {certificate.certificate_type_name}
-                    </span>
-                  )}
-                  {certificate.custom_name && (
-                    <h4 className="font-semibold text-white text-lg">{certificate.custom_name}</h4>
-                  )}
-                  {!certificate.custom_name && !certificate.certificate_type_name && (
-                    <h4 className="font-semibold text-white text-lg">Sertifika</h4>
-                  )}
+                  <h4 className="font-semibold text-white text-lg">{certificate.certificate_name || 'Sertifika'}</h4>
                 </div>
                 <p className="text-gray-300 mt-2">{certificate.institution}</p>
-                <p className="text-gray-400 text-sm mt-2">
-                  Alınış Tarihi: {new Date(certificate.issued_at).toLocaleDateString('tr-TR')}
-                </p>
+                {certificate.certificate_year && (
+                  <p className="text-gray-400 text-sm mt-2">Yıl: {certificate.certificate_year}</p>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -1537,16 +1569,18 @@ const LanguageTab = ({ languages, isLoading, onAdd, onEdit, onDelete }) => {
 };
 
 // Form Modal Component
-const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoading, educationTypes = [], specialties = [], filteredSubspecialties = [], certificateTypes = [], languageLevels = [], languages = [], selectedSpecialtyId, setSelectedSpecialtyId }) => {
+const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoading, educationTypes = [], specialties = [], filteredSubspecialties = [], languageLevels = [], languages = [], selectedSpecialtyId, setSelectedSpecialtyId }) => {
 
   const getFormFields = () => {
     switch (type) {
       case 'education':
         const fields = [
           { name: 'education_type_id', label: 'Derece Türü', type: 'select', required: true, options: educationTypes },
-          { name: 'institution_name', label: 'Kurum Adı', type: 'text', required: true, placeholder: 'Örn: İstanbul Üniversitesi' },
+          { name: 'education_institution', label: 'Eğitim Kurumu', type: 'text', required: true, placeholder: 'Örn: İstanbul Üniversitesi' },
           { name: 'field', label: 'Alan', type: 'text', required: true, placeholder: 'Örn: Tıp' },
           { name: 'graduation_year', label: 'Mezuniyet Yılı', type: 'number', required: true, placeholder: 'Örn: 2007', min: 1950, max: new Date().getFullYear() + 5 },
+          { name: 'certificate_name', label: 'Sertifika Türü', type: 'text', required: false, placeholder: 'Örn: Tıp Doktoru Diploması' },
+          { name: 'certificate_year', label: 'Sertifika Yılı', type: 'number', required: false, placeholder: 'Örn: 2007', min: 1950, max: new Date().getFullYear() },
         ];
 
         // Eğer "DİĞER" seçilmişse derece türü alanını ekle
@@ -1556,7 +1590,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
         
         if (selectedEducationType && (selectedEducationType.value === 'DİĞER' || selectedEducationType.name === 'DİĞER' || selectedEducationType.label === 'DİĞER')) {
           fields.splice(1, 0, { 
-            name: 'degree_type', 
+            name: 'education_type', 
             label: 'Derece Türü', 
             type: 'text', 
             required: true, 
@@ -1582,39 +1616,10 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
           { name: 'description', label: 'Açıklama', type: 'textarea', required: false, placeholder: 'İş tanımı ve sorumluluklar...' },
         ];
       case 'certificate':
-        // Sadece "DİĞER" seçildiğinde custom_name göster
-        // Hem string hem number karşılaştırması yap
-        const selectedCertType = certificateTypes.find(ct => 
-          ct.value == data.certificate_type_id || 
-          ct.id == data.certificate_type_id
-        );
-        
-        // Backend'den gelen name alanını kontrol et (label veya name olabilir)
-        const certTypeName = selectedCertType?.label || selectedCertType?.name || '';
-        const normalizedCertName = certTypeName.toLowerCase().replace(/i̇/g, 'i');
-        const showCustomName = normalizedCertName.includes('diğer') || 
-                               normalizedCertName.includes('diger') ||
-                               normalizedCertName.includes('other');
-        
         return [
-          { name: 'certificate_type_id', label: 'Sertifika Türü', type: 'select', required: true, options: certificateTypes, onChange: (value) => {
-            // Eğer DİĞER değilse custom_name'i temizle
-            const certType = certificateTypes.find(ct => ct.value == value || ct.id == value);
-            const typeName = certType?.label || certType?.name || '';
-            const normalizedTypeName = typeName.toLowerCase().replace(/i̇/g, 'i');
-            const isOther = normalizedTypeName.includes('diğer') || 
-                           normalizedTypeName.includes('diger') ||
-                           normalizedTypeName.includes('other');
-            
-            const newData = { ...data, certificate_type_id: value };
-            if (!isOther) {
-              newData.custom_name = '';
-            }
-            onChange(newData);
-          }},
-          ...(showCustomName ? [{ name: 'custom_name', label: 'Sertifika Adı', type: 'text', required: true, placeholder: 'Örn: Özel sertifika adı yazın' }] : []),
+          { name: 'certificate_name', label: 'Sertifika Türü', type: 'text', required: true, placeholder: 'Örn: İleri Yaşam Desteği' },
           { name: 'institution', label: 'Kurum', type: 'text', required: true, placeholder: 'Örn: Amerikan Kalp Derneği' },
-          { name: 'issued_at', label: 'Alınış Tarihi', type: 'date', required: true },
+          { name: 'certificate_year', label: 'Sertifika Yılı', type: 'number', required: true, min: 1950, max: new Date().getFullYear(), placeholder: 'Örn: 2021' },
         ];
       case 'language':
         return [

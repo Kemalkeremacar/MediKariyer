@@ -41,12 +41,14 @@ const JobCreatePage = () => {
   } = useLookup();
   
   const specialties = lookupData?.specialties || [];
+  const subspecialties = lookupData?.subspecialties || [];
   const cities = lookupData?.cities || [];
 
   // Form state
   const [formData, setFormData] = useState({
     title: '',
     specialty_id: '',
+    subspecialty_id: '',
     city_id: '',
     employment_type: '',
     min_experience_years: '',
@@ -80,7 +82,8 @@ const JobCreatePage = () => {
       const submitData = {
         title: formData.title,
         specialty_id: parseInt(formData.specialty_id),
-        city_id: formData.city_id ? parseInt(formData.city_id) : null,
+        subspecialty_id: parseInt(formData.subspecialty_id),
+        city_id: parseInt(formData.city_id),
         employment_type: formData.employment_type,
         min_experience_years: formData.min_experience_years ? parseInt(formData.min_experience_years) : null,
         description: formData.description
@@ -201,23 +204,58 @@ const JobCreatePage = () => {
                   )}
                 </div>
 
+                {/* Subspecialty */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Yan Dal Uzmanlığı *
+                  </label>
+                  <select
+                    value={formData.subspecialty_id}
+                    onChange={(e) => handleInputChange('subspecialty_id', e.target.value)}
+                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
+                      errors.subspecialty_id ? 'border-red-500' : 'border-white/20'
+                    }`}
+                  >
+                    <option value="" className="bg-slate-800">Yan Dal Uzmanlığı Seçin</option>
+                    {subspecialties.map((subspecialty) => (
+                      <option key={subspecialty.value} value={subspecialty.value} className="bg-slate-800">
+                        {subspecialty.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.subspecialty_id && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.subspecialty_id}
+                    </p>
+                  )}
+                </div>
+
                 {/* City */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Şehir
+                    Şehir *
                   </label>
                   <select
                     value={formData.city_id}
                     onChange={(e) => handleInputChange('city_id', e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300"
+                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
+                      errors.city_id ? 'border-red-500' : 'border-white/20'
+                    }`}
                   >
-                    <option value="" className="bg-slate-800">Şehir Seçin (Opsiyonel)</option>
+                    <option value="" className="bg-slate-800">Şehir Seçin</option>
                     {cities.map((city) => (
                       <option key={city.value} value={city.value} className="bg-slate-800">
                         {city.label}
                       </option>
                     ))}
                   </select>
+                  {errors.city_id && (
+                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.city_id}
+                    </p>
+                  )}
                 </div>
 
                 {/* Employment Type */}
@@ -235,8 +273,7 @@ const JobCreatePage = () => {
                     <option value="" className="bg-slate-800">İstihdam Türü Seçin</option>
                     <option value="Tam Zamanlı" className="bg-slate-800">Tam Zamanlı</option>
                     <option value="Yarı Zamanlı" className="bg-slate-800">Yarı Zamanlı</option>
-                    <option value="Proje Bazlı" className="bg-slate-800">Proje Bazlı</option>
-                    <option value="Stajyer" className="bg-slate-800">Stajyer</option>
+                    <option value="Nöbet Usulü" className="bg-slate-800">Nöbet Usulü</option>
                   </select>
                   {errors.employment_type && (
                     <p className="text-red-400 text-sm mt-1 flex items-center gap-1">

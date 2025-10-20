@@ -53,20 +53,21 @@ export const useTokenRefresh = () => {
 
     try {
       logger.info('Attempting automatic token refresh');
-      const result = await apiRequest.post(ENDPOINTS.AUTH.REFRESH, { refreshToken });
-      
-      if (result.success) {
+      const response = await apiRequest.post(ENDPOINTS.AUTH.REFRESH, { refreshToken });
+      const result = response.data;
+
+      if (result && result.success && result.data) {
         updateTokens({
           accessToken: result.data.accessToken,
           refreshToken: result.data.refreshToken || refreshToken
         });
         logger.info('Token refresh successful');
         return true;
-      } else {
-        logger.error('Token refresh failed', result.message);
-        clearAuthState();
-        return false;
       }
+
+      logger.error('Token refresh failed', result?.message);
+      clearAuthState();
+      return false;
     } catch (error) {
       logger.captureError(error, 'Token Refresh');
       clearAuthState();
@@ -93,8 +94,8 @@ export const useTokenRefresh = () => {
       const currentTime = Date.now() / 1000;
       const timeUntilExpiry = payload.exp - currentTime;
       
-      // Token'ın süresi dolmadan 2 dakika önce yenile
-      const refreshTime = Math.max(0, (timeUntilExpiry - 120) * 1000); // 2 dakika önce
+      // Token'ın süresi dolmadan 10 dakika önce yenile (daha az sık yenileme)
+      const refreshTime = Math.max(0, (timeUntilExpiry - 600) * 1000); // 10 dakika önce
       
       logger.debug(`Token refresh scheduled in ${Math.round(refreshTime / 1000)} seconds`);
       
