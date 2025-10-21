@@ -182,6 +182,7 @@ export const doctorPersonalInfoSchema = z.object({
 /**
  * Doctor Education Schema - Backend doctorEducationSchema ile tam uyumlu
  * @description Doktor eğitim formu validasyonu
+ * @note Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme olduğu için burada bulunmaz.
  */
 export const doctorEducationSchema = z.object({
   education_type_id: idSchema,
@@ -189,10 +190,7 @@ export const doctorEducationSchema = z.object({
   field: z.string().min(2, 'Alan adı en az 2 karakter olmalıdır').max(255, 'Alan adı en fazla 255 karakter olabilir'),
   graduation_year: z.number().int().min(1950, 'Mezuniyet yılı 1950\'den küçük olamaz').max(new Date().getFullYear() + 5, 'Mezuniyet yılı gelecek yıldan büyük olamaz'),
   // Not: Eğitim türü sadece eğitim türü "DİĞER" ise doldurulmalı; diğer durumlarda boş string gelebilir
-  education_type: z.string().min(2, 'Eğitim türü en az 2 karakter olmalıdır').max(100, 'Eğitim türü en fazla 100 karakter olabilir').optional().or(z.literal('')),
-  // Sertifika bilgileri (opsiyonel - elle yazılır)
-  certificate_name: z.string().min(2, 'Sertifika türü en az 2 karakter olmalıdır').max(255, 'Sertifika türü en fazla 255 karakter olabilir').optional().nullable().or(z.literal('')),
-  certificate_year: z.number().int().min(1950, 'Sertifika yılı 1950\'den küçük olamaz').max(new Date().getFullYear(), 'Sertifika yılı bugünden büyük olamaz').optional().nullable()
+  education_type: z.string().min(2, 'Eğitim türü en az 2 karakter olmalıdır').max(100, 'Eğitim türü en fazla 100 karakter olabilir').optional().or(z.literal(''))
 });
 
 /**
@@ -201,7 +199,7 @@ export const doctorEducationSchema = z.object({
  */
 export const doctorExperienceSchema = z.object({
   organization: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
-  role_title: z.string().min(2, 'Pozisyon adı en az 2 karakter olmalıdır').max(255, 'Pozisyon adı en fazla 255 karakter olabilir'),
+  role_title: z.string().min(2, 'Ünvan en az 2 karakter olmalıdır').max(255, 'Ünvan en fazla 255 karakter olabilir'),
   specialty_id: idSchema,
   // Yan dal boş olabilir: null veya empty-string kabul edelim, backend'e null gönderelim
   subspecialty_id: idSchema.optional().nullable().or(z.literal('')),
@@ -210,6 +208,21 @@ export const doctorExperienceSchema = z.object({
   end_date: dateSchema.optional().nullable(),
   is_current: z.boolean().default(false),
   description: z.string().max(1000, 'Açıklama en fazla 1000 karakter olabilir').optional().nullable()
+}).refine((data) => {
+  // is_current=true ise end_date boş olmalı
+  if (data.is_current && data.end_date) {
+    return false;
+  }
+  // is_current=false ve end_date varsa, end_date > start_date olmalı
+  if (!data.is_current && data.end_date && data.start_date) {
+    const start = new Date(data.start_date);
+    const end = new Date(data.end_date);
+    return end > start;
+  }
+  return true;
+}, {
+  message: 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır',
+  path: ['end_date']
 });
 
 /**

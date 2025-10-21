@@ -176,12 +176,12 @@ const getCompleteProfile = async (userId) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) return null;
 
-  // Paralel olarak tüm ilişkili verileri al
+  // Paralel olarak tüm ilişkili verileri al (Soft delete kontrolü ile)
   const [educations, experiences, certificates, languages] = await Promise.all([
-    db('doctor_educations').where('doctor_profile_id', profile.id).orderBy('graduation_year', 'desc'),
-    db('doctor_experiences').where('doctor_profile_id', profile.id).orderBy('start_date', 'desc'),
-    db('doctor_certificates').where('doctor_profile_id', profile.id).orderBy('certificate_year', 'desc'),
-    db('doctor_languages').where('doctor_profile_id', profile.id).orderBy('level_id', 'desc')
+    db('doctor_educations').where('doctor_profile_id', profile.id).whereNull('deleted_at').orderBy('graduation_year', 'desc'),
+    db('doctor_experiences').where('doctor_profile_id', profile.id).whereNull('deleted_at').orderBy('start_date', 'desc'),
+    db('doctor_certificates').where('doctor_profile_id', profile.id).whereNull('deleted_at').orderBy('certificate_year', 'desc'),
+    db('doctor_languages').where('doctor_profile_id', profile.id).whereNull('deleted_at').orderBy('level_id', 'desc')
   ]);
 
   return { ...profile, educations, experiences, certificates, languages };
@@ -271,22 +271,20 @@ const updatePersonalInfo = async (userId, personalInfo) => {
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {Object} educationData - Eğitim bilgileri
  * @param {number} educationData.education_type_id - Eğitim türü ID'si (lookup tablosundan)
- * @param {string} [educationData.education_type] - Eğitim türü (DİĞER seçildiğinde manuel giriş)
+ * @param {string} [educationData.education_type] - Eğitim türü (sadece "DİĞER" seçildiğinde manuel giriş)
  * @param {string} educationData.education_institution - Eğitim kurumu
- * @param {string} [educationData.certificate_name] - Sertifika türü (opsiyonel, elle yazılır)
- * @param {number} [educationData.certificate_year] - Sertifika yılı (opsiyonel, sadece yıl)
  * @param {string} educationData.field - Alan adı
  * @param {number} educationData.graduation_year - Mezuniyet yılı
  * @returns {Promise<Object>} Eklenen eğitim kaydı
  * @throws {AppError} Profil bulunamadığında veya veritabanı hatası durumunda
  * 
+ * @note Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme olduğu için burada bulunmaz.
+ * 
  * @example
  * const education = await addEducation(123, {
  *   education_type_id: 1,
  *   education_institution: 'İstanbul Üniversitesi',
- *   education_type: 'Tıp Fakültesi',
- *   certificate_name: 'Tıp Doktoru Diploması',
- *   certificate_year: 2015,
+ *   education_type: 'Tıp Fakültesi', // Sadece "DİĞER" seçilirse gerekli
  *   field: 'Tıp',
  *   graduation_year: 2015
  * });
@@ -317,9 +315,8 @@ const addEducation = async (userId, educationData) => {
     field: educationData.field,
     graduation_year: educationData.graduation_year,
     education_type: isOtherEduType ? educationData.education_type : null,
-    certificate_name: educationData.certificate_name,
-    certificate_year: educationData.certificate_year,
     created_at: db.fn.now()
+    // updated_at NULL kalacak - sadece güncelleme yapılınca dolacak
   };
   
   const result = await db('doctor_educations')
@@ -349,13 +346,15 @@ const addEducation = async (userId, educationData) => {
  * @returns {Promise<Object|null>} Güncellenmiş eğitim kaydı veya null
  * @throws {AppError} Profil bulunamadığında veya veritabanı hatası durumunda
  * 
+ * @note Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme olduğu için burada bulunmaz.
+ * 
  * @example
  * const updatedEducation = await updateEducation(123, 456, {
  *   education_type_id: 2,
  *   education_institution: 'Ankara Üniversitesi',
- *   education_type: 'Uzmanlık',
- *   certificate_name: 'Kardiyoloji Uzmanlık Belgesi',
- *   certificate_year: 2020
+ *   education_type: 'Uzmanlık', // Sadece "DİĞER" seçilirse gerekli
+ *   field: 'Kardiyoloji',
+ *   graduation_year: 2020
  * });
  */
 const updateEducation = async (userId, educationId, educationData) => {
@@ -384,8 +383,7 @@ const updateEducation = async (userId, educationId, educationData) => {
     field: educationData.field,
     graduation_year: educationData.graduation_year,
     education_type: isOtherEduType ? educationData.education_type : null,
-    certificate_name: educationData.certificate_name,
-    certificate_year: educationData.certificate_year
+    updated_at: db.fn.now()
   };
   
   const updated = await db('doctor_educations')
@@ -443,7 +441,7 @@ const deleteEducation = async (userId, educationId) => {
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {Object} experienceData - Deneyim bilgileri
  * @param {string} experienceData.organization - Kurum adı
- * @param {string} experienceData.role_title - Pozisyon adı
+ * @param {string} experienceData.role_title - Ünvan (Uzman Doktor, Başhekim, vb.)
  * @param {number} experienceData.specialty_id - Uzmanlık alanı ID'si (specialties tablosundan)
  * @param {number} [experienceData.subspecialty_id] - Yan dal uzmanlık ID'si (subspecialties tablosundan, optional)
  * @param {Date} experienceData.start_date - Başlangıç tarihi (zorunlu)
@@ -481,8 +479,8 @@ const addExperience = async (userId, experienceData) => {
     end_date: experienceData.is_current ? null : (experienceData.end_date || null),
     is_current: experienceData.is_current || false,
     description: experienceData.description || null,
-    created_at: db.fn.now(),
-    updated_at: db.fn.now()
+    created_at: db.fn.now()
+    // updated_at NULL kalacak - sadece güncelleme yapılınca dolacak
   };
   
   const result = await db('doctor_experiences')
@@ -619,8 +617,8 @@ const addCertificate = async (userId, certificateData) => {
     certificate_name: certificateData.certificate_name,
     institution: certificateData.institution,
     certificate_year: certificateData.certificate_year,
-    created_at: db.fn.now(),
-    updated_at: db.fn.now()
+    created_at: db.fn.now()
+    // updated_at NULL kalacak - sadece güncelleme yapılınca dolacak
   };
 
   // custom_name kaldırıldı
@@ -683,26 +681,22 @@ const updateCertificate = async (userId, certificateId, certificateData) => {
 };
 
 /**
- * Doktor sertifika bilgisini siler
- * @description Doktorun belirtilen sertifika kaydını ve varsa dosyasını siler
+ * Doktor sertifika bilgisini siler (Soft Delete)
+ * @description Doktorun belirtilen sertifika kaydını soft delete ile siler (deleted_at set edilir)
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {number} certificateId - Silinecek sertifika kaydının ID'si
  * @returns {Promise<boolean>} Silme işleminin başarı durumu
  * @throws {AppError} Profil bulunamadığında veya veritabanı hatası durumunda
- * 
- * @note Schema'ya göre file_path kolonu kullanılır, file_url değil
  */
 const deleteCertificate = async (userId, certificateId) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) throw new AppError('Profil bulunamadı', 404);
   
-  const certificate = await db('doctor_certificates').where({ id: certificateId, doctor_profile_id: profile.id }).first();
-  if (!certificate) return false;
-
-  // Schema'da sadece sertifika bilgileri (title, institution, issued_at) saklanıyor
-  // Dosya yönetimi ayrı bir sistem ile yapılmalı (S3, Azure Blob vb.)
+  const deleted = await db('doctor_certificates')
+    .where({ id: certificateId, doctor_profile_id: profile.id })
+    .whereNull('deleted_at')
+    .update({ deleted_at: db.fn.now() });
   
-  const deleted = await db('doctor_certificates').where({ id: certificateId, doctor_profile_id: profile.id }).del();
   return deleted > 0;
 };
 
@@ -735,8 +729,8 @@ const addLanguage = async (userId, languageData) => {
     doctor_profile_id: profile.id,
     language_id: languageData.language_id,
     level_id: languageData.level_id,
-    created_at: db.fn.now(),
-    updated_at: db.fn.now()
+    created_at: db.fn.now()
+    // updated_at NULL kalacak - sadece güncelleme yapılınca dolacak
   };
   
   const result = await db('doctor_languages')
@@ -806,8 +800,8 @@ const updateLanguage = async (userId, languageId, languageData) => {
 };
 
 /**
- * Doktor dil bilgisini siler
- * @description Doktorun belirtilen dil kaydını siler
+ * Doktor dil bilgisini siler (Soft Delete)
+ * @description Doktorun belirtilen dil kaydını soft delete ile siler (deleted_at set edilir)
  * @param {number} userId - Kullanıcının ID'si (users.id)
  * @param {number} languageId - Silinecek dil kaydının ID'si
  * @returns {Promise<boolean>} Silme işleminin başarı durumu
@@ -817,7 +811,11 @@ const deleteLanguage = async (userId, languageId) => {
   const profile = await db('doctor_profiles').where('user_id', userId).first();
   if (!profile) throw new AppError('Profil bulunamadı', 404);
   
-  const deleted = await db('doctor_languages').where({ id: languageId, doctor_profile_id: profile.id }).del();
+  const deleted = await db('doctor_languages')
+    .where({ id: languageId, doctor_profile_id: profile.id })
+    .whereNull('deleted_at')
+    .update({ deleted_at: db.fn.now() });
+  
   return deleted > 0;
 };
 
@@ -893,12 +891,12 @@ const getProfileCompletion = async (userId) => {
     return isCompleted;
   }).length;
 
-  // Eğitim/Deneyim/Sertifika/Dil sayılarını al
+  // Eğitim/Deneyim/Sertifika/Dil sayılarını al (Soft delete kontrolü ile)
   const counts = await Promise.all([
-    db('doctor_educations').where('doctor_profile_id', profile.id).count('* as count').first(),
-    db('doctor_experiences').where('doctor_profile_id', profile.id).count('* as count').first(),
-    db('doctor_certificates').where('doctor_profile_id', profile.id).count('* as count').first(),
-    db('doctor_languages').where('doctor_profile_id', profile.id).count('* as count').first()
+    db('doctor_educations').where('doctor_profile_id', profile.id).whereNull('deleted_at').count('* as count').first(),
+    db('doctor_experiences').where('doctor_profile_id', profile.id).whereNull('deleted_at').count('* as count').first(),
+    db('doctor_certificates').where('doctor_profile_id', profile.id).whereNull('deleted_at').count('* as count').first(),
+    db('doctor_languages').where('doctor_profile_id', profile.id).whereNull('deleted_at').count('* as count').first()
   ]);
 
   const educationCount = parseInt(counts[0].count);
@@ -1065,6 +1063,7 @@ const getCertificates = async (userId) => {
   return await db('doctor_certificates as dc')
     .select('dc.*')
     .where('dc.doctor_profile_id', profile.id)
+    .whereNull('dc.deleted_at') // Soft delete: Sadece silinmemiş kayıtları getir
     .orderBy('dc.certificate_year', 'desc');
 };
 
@@ -1095,6 +1094,7 @@ const getLanguages = async (userId) => {
       'dl.created_at'
     )
     .where('dl.doctor_profile_id', profile.id)
+    .whereNull('dl.deleted_at') // Soft delete: Sadece silinmemiş kayıtları getir
     .orderBy('ll.name', 'desc');
 };
 
@@ -1295,7 +1295,10 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
-    .where('a.doctor_profile_id', doctorProfileId);
+    .where('a.doctor_profile_id', doctorProfileId)
+    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+    .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
+    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
 
   // Status filtresi
   if (status) {
@@ -1307,7 +1310,11 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
 
   // Toplam sayı için count query (aynı filtreleri kullan)
   let countQuery = db('applications as a')
-    .where('a.doctor_profile_id', doctorProfileId);
+    .leftJoin('jobs as j', 'a.job_id', 'j.id')
+    .where('a.doctor_profile_id', doctorProfileId)
+    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
+    .where('a.status_id', '!=', 5) // Geri çekilen başvuruları sayma
+    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
 
   if (status) {
     const statusId = await resolveApplicationStatusId(status);
@@ -1661,62 +1668,26 @@ const getDoctorApplicationStats = async (doctorProfileId) => {
  * const recentApplications = await getDoctorRecentApplications(123, 5);
  */
 const getDoctorRecentApplications = async (doctorProfileId, limit = 5) => {
-  // Önce sadece applications tablosundan veri çekelim
-  const applications = await db('applications')
-    .select('*')
-    .where('doctor_profile_id', doctorProfileId)
-    .orderBy('applied_at', 'desc');
-
-  // JavaScript'te limit uygulayalım
-  const limitedApplications = applications.slice(0, limit);
-
-  // Her application için ek bilgileri çekelim
-  const enrichedApplications = await Promise.all(
-    limitedApplications.map(async (app) => {
-      const enrichedApp = { ...app };
-
-      // Job bilgilerini çekelim
-      if (app.job_id) {
-        const jobs = await db('jobs')
-          .select(['title', 'hospital_id'])
-          .where('id', app.job_id);
-        
-        if (jobs && jobs.length > 0) {
-          const job = jobs[0];
-          enrichedApp.job_title = job.title;
-
-          // Hospital bilgilerini çekelim
-          if (job.hospital_id) {
-            const hospitals = await db('hospital_profiles')
-              .select('institution_name')
-              .where('id', job.hospital_id);
-            
-            if (hospitals && hospitals.length > 0) {
-              enrichedApp.hospital_name = hospitals[0].institution_name;
-            }
-          }
-        }
-      }
-
-      // Status bilgisini çekelim
-      if (app.status_id) {
-        const statuses = await db('application_statuses')
-          .select('name')
-          .where('id', app.status_id);
-        
-        if (statuses && statuses.length > 0) {
-          enrichedApp.status = statuses[0].name;
-        }
-      }
-
-      // Frontend için created_at'i applied_at olarak ayarlayalım
-      enrichedApp.created_at = enrichedApp.applied_at;
-
-      return enrichedApp;
-    })
-  );
+  // Optimized query - Soft delete ve geri çekilen başvurular kontrolü ile
+  const applications = await db('applications as a')
+    .select([
+      'a.*',
+      'a.applied_at as created_at',
+      'ast.name as status',
+      'j.title as job_title',
+      'hp.institution_name as hospital_name'
+    ])
+    .leftJoin('application_statuses as ast', 'a.status_id', 'ast.id')
+    .leftJoin('jobs as j', 'a.job_id', 'j.id')
+    .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .where('a.doctor_profile_id', doctorProfileId)
+    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+    .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
+    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+    .orderBy('a.applied_at', 'desc')
+    .limit(limit);
     
-  return enrichedApplications;
+  return applications;
 };
 
 // ============================================================================

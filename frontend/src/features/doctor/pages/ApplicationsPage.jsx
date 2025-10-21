@@ -460,7 +460,7 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Pozisyon</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">İlan Başlığı</label>
                     <p className="text-white font-medium">{applicationDetail?.title || application.job_title}</p>
                   </div>
                   <div>

@@ -126,8 +126,8 @@ const createDoctorProfile = async (userId, { first_name, last_name, title, speci
     specialty_id,
     subspecialty_id: subspecialty_id || null,
     profile_photo,
-    created_at: dbInstance.fn.now(),
-    updated_at: dbInstance.fn.now()
+    created_at: dbInstance.fn.now()
+    // updated_at NULL kalacak - sadece profil güncellendiğinde dolacak
   };
 
   logger.info(`Inserting doctor profile with data:`, insertData);
@@ -180,8 +180,8 @@ const createHospitalProfile = async (userId, { institution_name, city_id, addres
     website,
     about,
     logo,
-    created_at: db.fn.now(),
-    updated_at: db.fn.now()
+    created_at: db.fn.now()
+    // updated_at NULL kalacak - sadece profil güncellendiğinde dolacak
   });
 
   return profileId;

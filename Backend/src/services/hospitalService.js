@@ -1400,13 +1400,16 @@ const getRecentApplications = async (userId, limit = 5) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // Son başvuruları getir
+    // Son başvuruları getir - Soft delete ve geri çekilen başvurular kontrolü ile
     const applications = await db('applications as a')
       .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
       .join('users as u', 'dp.user_id', 'u.id')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('j.hospital_id', hospitalProfile.id)
+      .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
+      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
         'a.id',
         'a.applied_at',
@@ -1645,10 +1648,11 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
       throw new AppError('Doktor profili bulunamadı', 404);
     }
 
-    // Eğitim bilgilerini getir - Eğitim türü ile join
+    // Doktor için ek bilgileri getir - lookup tablolarıyla JOIN (Soft delete kontrolü ile)
     const educations = await db('doctor_educations as de')
       .leftJoin('doctor_education_types as det', 'de.education_type_id', 'det.id')
       .where('de.doctor_profile_id', doctorProfileId)
+      .whereNull('de.deleted_at')
       .select(
         'de.*',
         'det.name as education_type_name'
@@ -1660,6 +1664,7 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
       .leftJoin('specialties as s', 'dex.specialty_id', 's.id')
       .leftJoin('subspecialties as ss', 'dex.subspecialty_id', 'ss.id')
       .where('dex.doctor_profile_id', doctorProfileId)
+      .whereNull('dex.deleted_at')
       .select(
         'dex.*',
         's.name as specialty_name',
@@ -1670,14 +1675,16 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
     // Sertifika bilgilerini getir
     const certificates = await db('doctor_certificates as dc')
       .where('dc.doctor_profile_id', doctorProfileId)
+      .whereNull('dc.deleted_at')
       .select('dc.*')
       .orderBy('dc.certificate_year', 'desc');
 
     // Dil bilgilerini getir - Dil ve seviye ile join
     const languages = await db('doctor_languages as dl')
       .join('languages as l', 'dl.language_id', 'l.id')
-      .join('language_levels as ll', 'dl.level_id', 'll.id')
+      .join('language_levels as ll', 'dl.level_id', 'l.id')
       .where('dl.doctor_profile_id', doctorProfileId)
+      .whereNull('dl.deleted_at')
       .select(
         'dl.*',
         'l.name as language_name',

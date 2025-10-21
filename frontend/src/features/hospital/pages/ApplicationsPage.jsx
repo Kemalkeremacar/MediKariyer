@@ -694,9 +694,6 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
                       )}
                     </div>
                     <p className="text-gray-300 text-sm mb-1">{exp.organization}</p>
-                    {exp.department && (
-                      <p className="text-gray-400 text-xs mb-1">Departman: {exp.department}</p>
-                    )}
                     {exp.specialty_name && (
                       <p className="text-gray-400 text-xs mb-1">
                         Uzmanlık: {exp.specialty_name}
@@ -723,25 +720,30 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
             <div className="bg-white/5 rounded-2xl p-4 mb-6">
               <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                 <Award className="w-5 h-5 text-yellow-400" />
-                Sertifikalar
+                Sertifikalar ve Kurslar
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {certificates.map((cert, idx) => (
-                  <div key={idx} className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="text-white font-semibold">
-                        {cert.custom_name || cert.certificate_type_name || 'Sertifika'}
-                      </p>
-                      {cert.certificate_type_name && !cert.custom_name && (
-                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded text-xs">
-                          {cert.certificate_type_name}
-                        </span>
-                      )}
+                  <div key={idx} className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 rounded-xl p-4 border border-yellow-500/30 hover:border-yellow-500/50 transition-all">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <Award className="w-5 h-5 text-yellow-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">
+                          {cert.certificate_name || 'Sertifika'}
+                        </h4>
+                        <p className="text-gray-300 text-xs mb-1 flex items-center gap-1">
+                          <span className="text-yellow-400">📍</span>
+                          {cert.institution}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-300 rounded text-xs font-medium">
+                            {cert.certificate_year}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-gray-300 text-sm mb-1">{cert.institution}</p>
-                    <p className="text-gray-400 text-xs">
-                      Tarih: {new Date(cert.issued_at).toLocaleDateString('tr-TR')}
-                    </p>
                   </div>
                 ))}
               </div>

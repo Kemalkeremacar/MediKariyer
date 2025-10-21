@@ -160,9 +160,7 @@ const DoctorProfile = () => {
         education_institution: toStr(item.education_institution),
         field: toStr(item.field),
         graduation_year: item.graduation_year || '',
-        education_type: item.education_type ?? '',
-        certificate_name: toStr(item.certificate_name),
-        certificate_year: item.certificate_year || ''
+        education_type: item.education_type ?? ''
       };
     } else if (type === 'experience') {
       normalized = {
@@ -292,11 +290,6 @@ const DoctorProfile = () => {
         data.end_date = null;
       }
       
-      // Sertifika yılı string ise sayıya çevir
-      if (data.certificate_year && typeof data.certificate_year === 'string') {
-        data.certificate_year = parseInt(data.certificate_year);
-      }
-      
       // Language ID'yi sayıya çevir
       if (data.language_id && typeof data.language_id === 'string') {
         data.language_id = parseInt(data.language_id);
@@ -376,7 +369,15 @@ const DoctorProfile = () => {
         showToast.error(firstError.message);
       } else {
         console.error('Form submit error:', error);
-        showToast.error('İşlem başarısız: ' + (error.response?.data?.message || error.message));
+        // Backend validation hatası - details array'i kontrol et
+        const backendDetails = error.response?.data?.details;
+        if (backendDetails && backendDetails.length > 0) {
+          // İlk validation hatasını göster
+          showToast.error(backendDetails[0].message);
+        } else {
+          // Genel hata mesajı
+          showToast.error('İşlem başarısız: ' + (error.response?.data?.message || error.message));
+        }
       }
     }
   };
@@ -1274,12 +1275,6 @@ const EducationTab = ({ educations, isLoading, onAdd, onEdit, onDelete, educatio
                 </h4>
                 <p className="text-gray-300 mt-1">{education.education_institution}</p>
                 <p className="text-gray-400 text-sm mt-2">{education.field} • {education.graduation_year}</p>
-                {education.certificate_name && (
-                  <p className="text-gray-400 text-sm mt-1">
-                    Sertifika Türü: {education.certificate_name}
-                    {education.certificate_year && ` (${education.certificate_year})`}
-                  </p>
-                )}
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -1552,9 +1547,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
           { name: 'education_type_id', label: 'Derece Türü', type: 'select', required: true, options: educationTypes },
           { name: 'education_institution', label: 'Eğitim Kurumu', type: 'text', required: true, placeholder: 'Örn: İstanbul Üniversitesi' },
           { name: 'field', label: 'Alan', type: 'text', required: true, placeholder: 'Örn: Tıp' },
-          { name: 'graduation_year', label: 'Mezuniyet Yılı', type: 'number', required: true, placeholder: 'Örn: 2007', min: 1950, max: new Date().getFullYear() + 5 },
-          { name: 'certificate_name', label: 'Sertifika Türü', type: 'text', required: false, placeholder: 'Örn: Tıp Doktoru Diploması' },
-          { name: 'certificate_year', label: 'Sertifika Yılı', type: 'number', required: false, placeholder: 'Örn: 2007', min: 1950, max: new Date().getFullYear() },
+          { name: 'graduation_year', label: 'Mezuniyet Yılı', type: 'number', required: true, placeholder: 'Örn: 2007', min: 1950, max: new Date().getFullYear() + 5 }
         ];
 
         // Eğer "DİĞER" seçilmişse derece türü alanını ekle
@@ -1576,7 +1569,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
       case 'experience':
         return [
           { name: 'organization', label: 'Kurum', type: 'text', required: true },
-          { name: 'role_title', label: 'Pozisyon', type: 'text', required: true },
+          { name: 'role_title', label: 'Ünvan', type: 'text', required: true },
           { name: 'specialty_id', label: 'Uzmanlık Alanı', type: 'select', required: true, options: specialties, onChange: (value) => {
             setSelectedSpecialtyId(value ? parseInt(value) : null);
             // Hem specialty_id'yi güncelle hem de subspecialty'yi sıfırla
@@ -1585,14 +1578,14 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
           }},
           { name: 'subspecialty_id', label: 'Yan Dal Uzmanlığı', type: 'select', required: false, options: filteredSubspecialties, disabled: !data.specialty_id || filteredSubspecialties.length === 0 },
           { name: 'start_date', label: 'Başlangıç Tarihi', type: 'date', required: true },
-          { name: 'end_date', label: 'Bitiş Tarihi', type: 'date', required: false, disabled: data.is_current },
+          { name: 'end_date', label: 'Bitiş Tarihi', type: 'date', required: false, disabled: data.is_current, min: data.start_date || undefined },
           { name: 'is_current', label: 'Halen Çalışıyor', type: 'checkbox', required: false },
           { name: 'description', label: 'Açıklama', type: 'textarea', required: false, placeholder: 'İş tanımı ve sorumluluklar...' },
         ];
       case 'certificate':
         return [
           { name: 'certificate_name', label: 'Sertifika Türü', type: 'text', required: true, placeholder: 'Örn: İleri Yaşam Desteği' },
-          { name: 'institution', label: 'Kurum', type: 'text', required: true, placeholder: 'Örn: Amerikan Kalp Derneği' },
+          { name: 'institution', label: 'Kurum', type: 'text', required: true, placeholder: 'Örn: Türk Tabipleri Birliği' },
           { name: 'certificate_year', label: 'Sertifika Yılı', type: 'number', required: true, min: 1950, max: new Date().getFullYear(), placeholder: 'Örn: 2021' },
         ];
       case 'language':
@@ -1705,6 +1698,8 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                   placeholder={field.placeholder || ''}
                   required={field.required}
                   disabled={field.disabled || false}
+                  min={field.min || undefined}
+                  max={field.max || undefined}
                 />
               )}
             </div>

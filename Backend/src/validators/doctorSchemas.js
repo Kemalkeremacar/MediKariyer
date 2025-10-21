@@ -132,20 +132,18 @@ const doctorPersonalInfoSchema = Joi.object({
  * @description Doktorun eğitim bilgilerini (üniversite, uzmanlık vb.) doğrular
  * @param {number} education_type_id - Eğitim türü ID'si (lookup tablosundan)
  * @param {string} education_institution - Eğitim kurumu (zorunlu, 2-255 karakter)
- * @param {string} education_type - Eğitim türü (zorunlu, 2-100 karakter)
- * @param {string} [certificate_name] - Sertifika türü/adı (opsiyonel, elle yazılır, 2-255 karakter)
- * @param {number} [certificate_year] - Sertifika yılı (opsiyonel, sadece yıl olarak girilir, 1950-şimdi arası)
+ * @param {string} education_type - Eğitim türü (opsiyonel, "DİĞER" seçilirse elle yazılır, 2-100 karakter)
  * @param {string} field - Alan adı (zorunlu, 2-255 karakter)
  * @param {number} graduation_year - Mezuniyet yılı (zorunlu, 1950-2030 arası)
  * @returns {Object} Joi validasyon şeması
+ * 
+ * @note Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme olduğu için burada bulunmaz.
  * 
  * @example
  * const { error, value } = doctorEducationSchema.validate({
  *   education_type_id: 1,
  *   education_institution: 'İstanbul Üniversitesi',
- *   education_type: 'Tıp Fakültesi',
- *   certificate_name: 'Tıp Doktoru Diploması',
- *   certificate_year: 2015,
+ *   education_type: 'Tıp Fakültesi', // Sadece "DİĞER" seçilirse zorunlu
  *   field: 'Tıp',
  *   graduation_year: 2015
  * });
@@ -177,15 +175,6 @@ const doctorEducationSchema = Joi.object({
   education_type: Joi.string().min(2).max(100).optional().allow('', null).messages({
     'string.min': 'Eğitim türü en az 2 karakter olmalıdır',
     'string.max': 'Eğitim türü en fazla 100 karakter olabilir'
-  }),
-  certificate_name: Joi.string().min(2).max(255).optional().allow('', null).messages({
-    'string.min': 'Sertifika türü en az 2 karakter olmalıdır',
-    'string.max': 'Sertifika türü en fazla 255 karakter olabilir'
-  }),
-  certificate_year: Joi.number().integer().min(1950).max(new Date().getFullYear()).optional().allow(null).messages({
-    'number.base': 'Geçerli bir sertifika yılı giriniz',
-    'number.min': 'Sertifika yılı 1950\'den küçük olamaz',
-    'number.max': 'Sertifika yılı bugünden büyük olamaz'
   })
 });
 
@@ -197,7 +186,7 @@ const doctorEducationSchema = Joi.object({
  * Doktor deneyim bilgileri validasyon şeması
  * @description Doktorun iş deneyimlerini doğrular
  * @param {string} organization - Kurum adı (zorunlu, 2-255 karakter)
- * @param {string} role_title - Pozisyon adı (zorunlu, 2-255 karakter)
+ * @param {string} role_title - Ünvan (zorunlu, 2-255 karakter)
  * @param {Date} start_date - Başlangıç tarihi (zorunlu)
  * @param {Date} [end_date] - Bitiş tarihi (opsiyonel, NULL olabilir)
  * @param {boolean} [is_current] - Hala çalışıyor mu (opsiyonel, default: false)
@@ -222,9 +211,9 @@ const doctorExperienceSchema = Joi.object({
     'any.required': 'Kurum adı zorunludur'
   }),
   role_title: Joi.string().min(2).max(255).required().messages({
-    'string.min': 'Pozisyon adı en az 2 karakter olmalıdır',
-    'string.max': 'Pozisyon adı en fazla 255 karakter olabilir',
-    'any.required': 'Pozisyon adı zorunludur'
+    'string.min': 'Ünvan en az 2 karakter olmalıdır',
+    'string.max': 'Ünvan en fazla 255 karakter olabilir',
+    'any.required': 'Ünvan zorunludur'
   }),
   specialty_id: Joi.number().integer().positive().required().messages({
     'number.base': 'Uzmanlık alanı seçilmelidir',

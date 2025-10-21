@@ -159,12 +159,13 @@ const getUserDetails = async (id) => {
       subspecialty_name = subspecialty?.name;
     }
     
-    // Doktor için ek bilgileri getir - lookup tablolarıyla JOIN
+    // Doktor için ek bilgileri getir - lookup tablolarıyla JOIN (Soft delete kontrolü ile)
     const [educations, experiences, certificates, languages] = await Promise.all([
       // Eğitim bilgileri - education_type lookup
       db('doctor_educations as de')
         .leftJoin('doctor_education_types as det', 'de.education_type_id', 'det.id')
         .where('de.doctor_profile_id', profile?.id || 0)
+        .whereNull('de.deleted_at')
         .select('de.*', 'det.name as education_type_name'),
       
       // Deneyim bilgileri - specialty ve subspecialty lookup
@@ -172,11 +173,13 @@ const getUserDetails = async (id) => {
         .leftJoin('specialties as s', 'dex.specialty_id', 's.id')
         .leftJoin('subspecialties as ss', 'dex.subspecialty_id', 'ss.id')
         .where('dex.doctor_profile_id', profile?.id || 0)
+        .whereNull('dex.deleted_at')
         .select('dex.*', 's.name as specialty_name', 'ss.name as subspecialty_name'),
       
       // Sertifika bilgileri
       db('doctor_certificates as dc')
         .where('dc.doctor_profile_id', profile?.id || 0)
+        .whereNull('dc.deleted_at')
         .select('dc.*'),
       
       // Dil bilgileri - language ve level lookup
@@ -184,6 +187,7 @@ const getUserDetails = async (id) => {
         .leftJoin('languages as l', 'dl.language_id', 'l.id')
         .leftJoin('language_levels as ll', 'dl.level_id', 'll.id')
         .where('dl.doctor_profile_id', profile?.id || 0)
+        .whereNull('dl.deleted_at')
         .select('dl.*', 'l.name as language_name', 'll.name as level_name')
     ]);
     
@@ -659,21 +663,32 @@ const deleteUser = async (userId) => {
             updated_at: trx.fn.now()
           });
         
-        // Doktor eğitim bilgilerini soft delete (eğer deleted_at kolonu varsa)
+        // Doktor alt tablolarını soft delete
         await trx('doctor_educations')
           .where('doctor_profile_id', profile.id)
           .whereNull('deleted_at')
           .update({ deleted_at: trx.fn.now() })
           .catch(() => {}); // Hata varsa devam et
         
-        // Doktor deneyim bilgilerini soft delete
         await trx('doctor_experiences')
           .where('doctor_profile_id', profile.id)
           .whereNull('deleted_at')
           .update({ deleted_at: trx.fn.now() })
           .catch(() => {}); // Hata varsa devam et
         
-        // Doktor profilini sil
+        await trx('doctor_certificates')
+          .where('doctor_profile_id', profile.id)
+          .whereNull('deleted_at')
+          .update({ deleted_at: trx.fn.now() })
+          .catch(() => {}); // Hata varsa devam et
+        
+        await trx('doctor_languages')
+          .where('doctor_profile_id', profile.id)
+          .whereNull('deleted_at')
+          .update({ deleted_at: trx.fn.now() })
+          .catch(() => {}); // Hata varsa devam et
+        
+        // Doktor profilini sil (CASCADE ile alt tablolar da silinir)
         await trx('doctor_profiles').where('user_id', userId).del();
       }
     }

@@ -228,10 +228,9 @@ const getEducations = catchAsync(async (req, res) => {
  * @access Private (Doctor)
  * @middleware authMiddleware, requireRole('doctor'), validate(doctorEducationSchema)
  * @param {Object} req.body - Eğitim bilgileri
- * @param {string} req.body.education_type - Eğitim türü (Lisans, Yüksek Lisans, Doktora vb.)
+ * @param {number} req.body.education_type_id - Eğitim türü ID'si (lookup tablosundan)
+ * @param {string} [req.body.education_type] - Eğitim türü (sadece "DİĞER" seçilirse manuel giriş)
  * @param {string} req.body.education_institution - Eğitim kurumu adı
- * @param {string} [req.body.certificate_name] - Sertifika adı
- * @param {number} [req.body.certificate_year] - Sertifika yılı (YYYY formatında)
  * @param {string} req.body.field - Alan adı
  * @param {number} req.body.graduation_year - Mezuniyet yılı
  * @returns {Object} Eklenen eğitim kaydı
@@ -239,15 +238,16 @@ const getEducations = catchAsync(async (req, res) => {
  * @throws {AppError} 404 - Profil bulunamadı
  * @throws {AppError} 500 - Sunucu hatası
  * 
+ * @note Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme olduğu için burada bulunmaz.
+ * 
  * @example
  * POST /api/doctor/educations
  * {
- *   "education_type": "Tıp Fakültesi",
+ *   "education_type_id": 1,
  *   "education_institution": "İstanbul Üniversitesi",
+ *   "education_type": "Tıp Fakültesi", // Sadece "DİĞER" seçilirse gerekli
  *   "field": "Tıp",
- *   "graduation_year": 2015,
- *   "certificate_name": "Tıp Doktoru Diploması",
- *   "certificate_year": 2015
+ *   "graduation_year": 2015
  * }
  */
 const addEducation = catchAsync(async (req, res) => {
@@ -264,22 +264,26 @@ const addEducation = catchAsync(async (req, res) => {
  * @middleware authMiddleware, requireRole('doctor'), validate(doctorEducationSchema)
  * @param {string} req.params.id - Güncellenecek eğitim kaydının ID'si
  * @param {Object} req.body - Güncellenecek eğitim bilgileri
- * @param {string} [req.body.education_type] - Eğitim türü
+ * @param {number} [req.body.education_type_id] - Eğitim türü ID'si
+ * @param {string} [req.body.education_type] - Eğitim türü (sadece "DİĞER" seçilirse manuel giriş)
  * @param {string} [req.body.education_institution] - Eğitim kurumu adı
- * @param {string} [req.body.certificate_name] - Sertifika adı
- * @param {number} [req.body.certificate_year] - Sertifika yılı
+ * @param {string} [req.body.field] - Alan adı
+ * @param {number} [req.body.graduation_year] - Mezuniyet yılı
  * @returns {Object} Güncellenmiş eğitim kaydı
  * @throws {AppError} 400 - Geçersiz veri formatı
  * @throws {AppError} 404 - Eğitim kaydı bulunamadı
  * @throws {AppError} 500 - Sunucu hatası
  * 
+ * @note Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme olduğu için burada bulunmaz.
+ * 
  * @example
  * PATCH /api/doctor/educations/123
  * {
- *   "education_type": "Uzmanlık",
+ *   "education_type_id": 2,
  *   "education_institution": "Ankara Üniversitesi",
- *   "certificate_name": "Kardiyoloji Uzmanlık Belgesi",
- *   "certificate_year": 2020
+ *   "education_type": "Uzmanlık", // Sadece "DİĞER" seçilirse gerekli
+ *   "field": "Kardiyoloji",
+ *   "graduation_year": 2020
  * }
  */
 const updateEducation = catchAsync(async (req, res) => {
@@ -339,7 +343,7 @@ const getExperiences = catchAsync(async (req, res) => {
  * @middleware authMiddleware, requireRole('doctor'), validate(doctorExperienceSchema)
  * @param {Object} req.body - Deneyim bilgileri
  * @param {string} req.body.organization - Kurum adı
- * @param {string} req.body.role_title - Pozisyon adı
+ * @param {string} req.body.role_title - Ünvan (Uzman Doktor, Başhekim, vb.)
  * @param {string} [req.body.department] - Departman adı
  * @param {Date} req.body.start_date - Başlangıç tarihi
  * @param {Date} [req.body.end_date] - Bitiş tarihi
@@ -442,9 +446,9 @@ const getCertificates = catchAsync(async (req, res) => {
  * @access Private (Doctor)
  * @middleware authMiddleware, requireRole('doctor'), validate(doctorCertificateSchema)
  * @param {Object} req.body - Sertifika bilgileri
- * @param {string} [req.body.title] - Sertifika adı (opsiyonel)
- * @param {string} req.body.institution - Kurum adı
- * @param {Date} req.body.issued_at - Alınış tarihi
+ * @param {string} req.body.certificate_name - Sertifika türü/adı (zorunlu)
+ * @param {string} req.body.institution - Veren kurum adı (zorunlu)
+ * @param {number} req.body.certificate_year - Sertifika yılı (zorunlu)
  * @returns {Object} Eklenen sertifika kaydı
  * @throws {AppError} 400 - Geçersiz veri formatı
  * @throws {AppError} 404 - Profil bulunamadı
@@ -453,9 +457,9 @@ const getCertificates = catchAsync(async (req, res) => {
  * @example
  * POST /api/doctor/certificates
  * {
- *   "title": "ACLS",
- *   "institution": "Amerikan Kalp Derneği",
- *   "issued_at": "2023-01-01"
+ *   "certificate_name": "İleri Yaşam Desteği (ACLS)",
+ *   "institution": "Türk Tabipleri Birliği",
+ *   "certificate_year": 2023
  * }
  */
 const addCertificate = catchAsync(async (req, res) => {
@@ -476,9 +480,9 @@ const addCertificate = catchAsync(async (req, res) => {
  * @middleware authMiddleware, requireRole('doctor'), validate(doctorCertificateSchema)
  * @param {string} req.params.id - Güncellenecek sertifika kaydının ID'si
  * @param {Object} req.body - Güncellenecek sertifika bilgileri
- * @param {string} [req.body.title] - Sertifika adı (opsiyonel)
- * @param {string} [req.body.institution] - Kurum adı
- * @param {Date} [req.body.issued_at] - Alınış tarihi
+ * @param {string} [req.body.certificate_name] - Sertifika türü/adı
+ * @param {string} [req.body.institution] - Veren kurum adı
+ * @param {number} [req.body.certificate_year] - Sertifika yılı
  * @returns {Object} Güncellenmiş sertifika kaydı
  * @throws {AppError} 400 - Geçersiz veri formatı
  * @throws {AppError} 404 - Sertifika kaydı bulunamadı
@@ -487,9 +491,9 @@ const addCertificate = catchAsync(async (req, res) => {
  * @example
  * PATCH /api/doctor/certificates/123
  * {
- *   "title": "BLS Sertifikası",
+ *   "certificate_name": "Temel Yaşam Desteği (BLS)",
  *   "institution": "Türk Kardiyoloji Derneği",
- *   "issued_at": "2024-01-01"
+ *   "certificate_year": 2024
  * }
  */
 const updateCertificate = catchAsync(async (req, res) => {
@@ -504,8 +508,8 @@ const updateCertificate = catchAsync(async (req, res) => {
 });
 
 /**
- * Doktor sertifika bilgisini siler
- * @description Doktorun belirtilen sertifika kaydını siler
+ * Doktor sertifika bilgisini siler (Soft Delete)
+ * @description Doktorun belirtilen sertifika kaydını soft delete ile siler (deleted_at set edilir)
  * @route DELETE /api/doctor/certificates/:id
  * @access Private (Doctor)
  * @middleware authMiddleware, requireRole('doctor')
@@ -602,8 +606,8 @@ const updateLanguage = catchAsync(async (req, res) => {
 });
 
 /**
- * Doktor dil bilgisini siler
- * @description Doktorun belirtilen dil kaydını siler
+ * Doktor dil bilgisini siler (Soft Delete)
+ * @description Doktorun belirtilen dil kaydını soft delete ile siler (deleted_at set edilir)
  * @route DELETE /api/doctor/languages/:id
  * @access Private (Doctor)
  * @middleware authMiddleware, requireRole('doctor')

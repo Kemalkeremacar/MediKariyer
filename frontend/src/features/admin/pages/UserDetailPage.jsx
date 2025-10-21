@@ -578,7 +578,7 @@ const UserDetailPage = () => {
                                     <div className="mt-2 space-y-1">
                                       {experience.role_title && (
                                         <p className="text-sm text-gray-700">
-                                          <span className="font-medium text-green-700">Pozisyon:</span> {experience.role_title}
+                                          <span className="font-medium text-green-700">Ünvan:</span> {experience.role_title}
                                         </p>
                                       )}
                                       {experience.specialty_name && (
@@ -618,22 +618,26 @@ const UserDetailPage = () => {
                             <Award className="h-5 w-5 mr-2 text-amber-600" />
                             Sertifika ve Kurslar
                           </h4>
-                          <div className="space-y-3">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {(user.data?.user?.profile?.certificates || user.profile?.certificates || []).map((certificate, index) => (
-                              <div key={index} className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 p-4 rounded-lg">
+                              <div key={index} className="bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 p-4 rounded-xl hover:shadow-md transition-shadow">
                                 <div className="flex items-start gap-3">
-                                  <div className="p-2 bg-amber-100 rounded-lg">
+                                  <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
                                     <Award className="h-5 w-5 text-amber-600" />
                                   </div>
-                                  <div className="flex-1">
-                                    <p className="font-semibold text-gray-900 text-lg">
-                                      {certificate.custom_name || certificate.certificate_type_name || 'Sertifika'}
+                                  <div className="flex-1 min-w-0">
+                                    <h5 className="font-semibold text-gray-900 text-base mb-2 line-clamp-2">
+                                      {certificate.certificate_name || 'Sertifika'}
+                                    </h5>
+                                    <p className="text-sm text-gray-700 mb-1 flex items-center gap-1">
+                                      <span className="text-amber-600">📍</span>
+                                      <span className="font-medium">Kurum:</span> {certificate.institution}
                                     </p>
-                                    {certificate.issued_at && (
-                                      <p className="text-xs text-gray-600 mt-1">
-                                        Alınış Tarihi: {new Date(certificate.issued_at).toLocaleDateString('tr-TR', { year: 'numeric', month: 'long' })}
-                                      </p>
-                                    )}
+                                    <div className="mt-2">
+                                      <span className="inline-flex items-center px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md text-xs font-semibold">
+                                        📅 {certificate.certificate_year}
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>

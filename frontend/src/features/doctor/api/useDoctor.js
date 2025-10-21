@@ -507,6 +507,10 @@ export const useWithdrawApplication = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries(['doctor', 'applications']);
+      qc.invalidateQueries(['doctor', 'dashboard']); // Dashboard'u güncelle
+      qc.invalidateQueries(['hospital', 'applications']); // Hastane başvurular sayfası
+      qc.invalidateQueries(['hospital', 'dashboard']); // Hastane dashboard
+      qc.invalidateQueries(['admin', 'applications']); // Admin başvurular sayfası
       showToast.success('Başvuru geri çekildi');
     },
     onError: (err) => {
@@ -524,6 +528,10 @@ export const useDeleteApplication = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries(['doctor', 'applications']);
+      qc.invalidateQueries(['doctor', 'dashboard']); // Dashboard'u güncelle
+      qc.invalidateQueries(['hospital', 'applications']); // Hastane başvurular sayfası
+      qc.invalidateQueries(['hospital', 'dashboard']); // Hastane dashboard
+      qc.invalidateQueries(['admin', 'applications']); // Admin başvurular sayfası
       showToast.success('Başvuru kalıcı olarak silindi');
     },
     onError: (err) => {
@@ -541,6 +549,10 @@ export const useReapplyToJob = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries(['doctor', 'applications']);
+      qc.invalidateQueries(['doctor', 'dashboard']); // Dashboard'u güncelle
+      qc.invalidateQueries(['hospital', 'applications']); // Hastane başvurular sayfası
+      qc.invalidateQueries(['hospital', 'dashboard']); // Hastane dashboard
+      qc.invalidateQueries(['admin', 'applications']); // Admin başvurular sayfası
       showToast.success('Başvuru başarıyla yeniden yapıldı');
     },
     onError: (err) => {
