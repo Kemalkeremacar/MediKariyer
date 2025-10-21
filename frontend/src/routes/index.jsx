@@ -66,6 +66,7 @@ import AdminApplicationDetailPage from '@/features/admin/pages/ApplicationDetail
 import AdminNotificationsPage from '@/features/admin/pages/AdminNotificationsPage';
 import AdminContactMessagesPage from '@/features/admin/pages/ContactMessagesPage';
 import PhotoApprovalsPage from '@/features/admin/pages/PhotoApprovalsPage';
+import AdminLogsPage from '@/features/admin/pages/LogsPage';
 
 // ============================================================================
 // DOCTOR PAGES - Doktor paneli sayfaları (Lazy loaded)
@@ -553,6 +554,20 @@ const AppRoutes = () => {
                 <AuthGuard>
                   <RoleGuard allowedRoles={['admin']}>
                     <PhotoApprovalsPage />
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+          
+          {/* Admin Log Görüntüleme */}
+          <Route
+            path="admin/logs"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['admin']}>
+                    <AdminLogsPage />
                   </RoleGuard>
                 </AuthGuard>
               </ErrorBoundary>

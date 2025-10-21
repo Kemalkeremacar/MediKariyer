@@ -8,6 +8,7 @@ const adminRoutes = require('./adminRoutes');
 const notificationRoutes = require('./notificationRoutes');
 const contactRoutes = require('./contactRoutes');
 const lookupRoutes = require('./lookupRoutes');
+const logRoutes = require('./logRoutes');
 
 const router = express.Router();
 
@@ -37,6 +38,7 @@ router.get('/', (req, res) => {
       notifications: '/api/notifications',
       contact: '/api/contact',
       users: '/api/users',
+      logs: '/api/logs',
     },
     documentation: '/api/docs',
     timestamp: new Date().toISOString()
@@ -51,5 +53,6 @@ router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/contact', contactRoutes);
 router.use('/lookup', lookupRoutes);
+router.use('/logs', logRoutes);
 
 module.exports = router;

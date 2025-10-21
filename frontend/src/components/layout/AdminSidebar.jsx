@@ -79,7 +79,13 @@ const AdminSidebar = () => {
       icon: FiMail,
       color: 'from-teal-500 to-teal-600'
     },
-    
+    {
+      name: 'Sistem Logları',
+      href: '/admin/logs',
+      current: currentPath === '/admin/logs',
+      icon: FiActivity,
+      color: 'from-red-500 to-red-600'
+    }
   ];
 
   return (

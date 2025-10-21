@@ -22,6 +22,7 @@
 const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
+const DatabaseTransport = require('./databaseTransport');
 
 // Log seviyeleri
 const levels = {
@@ -92,6 +93,23 @@ if (process.env.NODE_ENV === 'production') {
       maxSize: process.env.LOG_MAX_SIZE || '20m',
       maxFiles: process.env.LOG_MAX_FILES || '14d',
       zippedArchive: true
+    })
+  );
+}
+
+// Database transport ekle (error ve warn logları için)
+// Production'da default olarak aktif, development'ta kapalı
+const enableDbLogging = process.env.ENABLE_DB_LOGGING !== undefined 
+  ? process.env.ENABLE_DB_LOGGING === 'true'
+  : process.env.NODE_ENV === 'production';
+
+if (enableDbLogging) {
+  transports.push(
+    new DatabaseTransport({
+      level: process.env.DB_LOG_LEVEL || 'warn', // Sadece warn ve error logları
+      category: 'application',
+      batchSize: 10,
+      flushInterval: 5000
     })
   );
 }

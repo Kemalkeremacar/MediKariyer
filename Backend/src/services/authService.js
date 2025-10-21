@@ -28,6 +28,7 @@ const db = require('../config/dbConfig').db;
 const { AppError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 const jwtUtils = require('../utils/jwtUtils');
+const LogService = require('./logService');
 
 // ==================== TYPE DEFINITIONS ====================
 /**
@@ -269,9 +270,21 @@ const validateCredentials = async (email, password) => {
  * const user = await loginUnified('doctor@example.com', 'password123');
  * logger.info('İlk giriş:', user.isFirstLogin); // İlk giriş mi?
  */
-const loginUnified = async (email, password) => {
+const loginUnified = async (email, password, req = null) => {
   const user = await validateCredentials(email, password);
-  if (!user) throw new AppError('Geçersiz email veya şifre', 401);
+  if (!user) {
+    // Başarısız giriş denemesini logla
+    LogService.createSecurityLog({
+      eventType: 'login_failed',
+      severity: 'medium',
+      message: `Başarısız giriş denemesi: ${email}`,
+      email: email,
+      ipAddress: req?.ip || null,
+      userAgent: req?.get('user-agent') || null
+    }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
+    
+    throw new AppError('Geçersiz email veya şifre', 401);
+  }
   
   // validateCredentials zaten onay kontrolü yapıyor, tekrar yapmaya gerek yok
   const loginInfo = await updateLastLogin(user.id);

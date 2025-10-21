@@ -31,6 +31,7 @@
 // ==================== DEPENDENCIES ====================
 const bcrypt = require('bcryptjs');
 const authService = require('../services/authService');
+const LogService = require('../services/logService');
 const { db } = require('../config/dbConfig');
 const { generateAccessToken, generateRefreshToken, createRefreshTokenRecord, revokeRefreshTokenByValue, revokeAllUserTokens } = require('../utils/jwtUtils');
 const { sendSuccess, sendCreated } = require('../utils/response');
@@ -102,6 +103,35 @@ const registerDoctor = catchAsync(async (req, res) => {
     });
 
     logger.info(`New doctor registered successfully: ${email}`);
+
+    // Audit log kaydet
+    await LogService.createAuditLog({
+      actorId: result.user.id,
+      actorRole: result.user.role,
+      action: 'user.register',
+      resourceType: 'doctor',
+      resourceId: result.profile.id,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      metadata: { 
+        email: result.user.email,
+        first_name: result.profile.first_name,
+        last_name: result.profile.last_name,
+        specialty_id
+      }
+    }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+
+    // Security log kaydet
+    await LogService.createSecurityLog({
+      eventType: 'user_registered',
+      severity: 'low',
+      message: `Yeni doktor kaydı: ${result.profile.first_name} ${result.profile.last_name}`,
+      userId: result.user.id,
+      email: result.user.email,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      metadata: { role: 'doctor', specialty_id }
+    }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
 
     return sendCreated(res, 'Doktor kaydı başarılı, admin onayı bekleniyor.', {
       user: { 
@@ -188,6 +218,34 @@ const registerHospital = catchAsync(async (req, res) => {
 
     logger.info(`New hospital registered successfully: ${email}`);
 
+    // Audit log kaydet
+    await LogService.createAuditLog({
+      actorId: result.user.id,
+      actorRole: result.user.role,
+      action: 'user.register',
+      resourceType: 'hospital',
+      resourceId: result.profile.id,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      metadata: { 
+        email: result.user.email,
+        institution_name: result.profile.institution_name,
+        city_id
+      }
+    }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+
+    // Security log kaydet
+    await LogService.createSecurityLog({
+      eventType: 'user_registered',
+      severity: 'low',
+      message: `Yeni hastane kaydı: ${result.profile.institution_name}`,
+      userId: result.user.id,
+      email: result.user.email,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      metadata: { role: 'hospital', city_id }
+    }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
+
     return sendCreated(res, 'Hastane kaydı başarılı, admin onayı bekleniyor.', {
       user: { 
         id: result.user.id, 
@@ -246,8 +304,8 @@ const registerHospital = catchAsync(async (req, res) => {
 const loginUnified = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   
-  // Kimlik bilgilerini doğrula
-  const user = await authService.loginUnified(email, password);
+  // Kimlik bilgilerini doğrula (req nesnesini geç - failed login logging için)
+  const user = await authService.loginUnified(email, password, req);
 
   // Token'ları oluştur
   const accessToken = generateAccessToken({ userId: user.id, role: user.role, isApproved: user.is_approved });
@@ -257,6 +315,30 @@ const loginUnified = catchAsync(async (req, res) => {
   await createRefreshTokenRecord(user.id, refreshToken, req.get('User-Agent'), req.ip);
 
   logger.info(`User logged in: ${email} (${user.role})`);
+
+  // Audit log kaydet
+  await LogService.createAuditLog({
+    actorId: user.id,
+    actorRole: user.role,
+    action: 'user.login',
+    resourceType: 'user',
+    resourceId: user.id,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { approved: user.is_approved, active: user.is_active }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+
+  // Security log kaydet (başarılı giriş)
+  await LogService.createSecurityLog({
+    eventType: 'login_success',
+    severity: 'low',
+    message: `Kullanıcı başarıyla giriş yaptı: ${email}`,
+    userId: user.id,
+    email: email,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { role: user.role }
+  }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
 
   return sendSuccess(res, 'Giriş başarılı', {
     user: { 
@@ -329,6 +411,19 @@ const logout = catchAsync(async (req, res) => {
   // AuthService ile çıkış işlemi (tek cihaz)
   await authService.logout(refreshToken);
 
+  // Audit log kaydet (eğer req.user varsa - authMiddleware'den geçtiyse)
+  if (req.user) {
+    await LogService.createAuditLog({
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      action: 'user.logout',
+      resourceType: 'user',
+      resourceId: req.user.id,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent')
+    }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+  }
+
   return sendSuccess(res, 'Çıkış yapıldı');
 });
 
@@ -348,6 +443,30 @@ const logout = catchAsync(async (req, res) => {
 const logoutAll = catchAsync(async (req, res) => {
   // AuthService ile tüm cihazlardan çıkış işlemi
   await authService.logoutAll(req.user.id);
+
+  logger.info(`User logged out from all devices: ${req.user.email}`);
+
+  // Audit log kaydet
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    action: 'user.logout_all',
+    resourceType: 'user',
+    resourceId: req.user.id,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent')
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+
+  // Security log kaydet (güvenlik nedeniyle tüm cihazlardan çıkış)
+  await LogService.createSecurityLog({
+    eventType: 'logout_all_devices',
+    severity: 'medium',
+    message: `Kullanıcı tüm cihazlardan çıkış yaptı: ${req.user.email}`,
+    userId: req.user.id,
+    email: req.user.email,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent')
+  }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
   
   return sendSuccess(res, 'Tüm cihazlardan çıkış yapıldı');
 });
