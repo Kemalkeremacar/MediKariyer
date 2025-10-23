@@ -998,8 +998,77 @@ const getJobById = async (userId, jobId) => {
 };
 
 /**
+ * Hastane iş ilanı durumunu günceller
+ * @description İş ilanının durumunu (Aktif/Pasif) günceller
+ * @param {number} userId - Hastane kullanıcı ID'si
+ * @param {number} jobId - İş ilanı ID'si
+ * @param {number} statusId - Yeni durum ID'si (1: Aktif, 2: Pasif)
+ * @param {string} reason - Durum değişikliği nedeni
+ * @returns {Promise<Object>} Güncellenmiş iş ilanı
+ * @throws {AppError} İlan bulunamadığında veya sahiplik yetkisi yoksa
+ */
+const updateJobStatus = async (userId, jobId, statusId, reason) => {
+  try {
+    // Hastane profil ID'sini al
+    const hospitalProfile = await db('hospital_profiles')
+      .where('user_id', userId)
+      .select('id')
+      .first();
+
+    if (!hospitalProfile) {
+      throw new AppError('Hastane profili bulunamadı', 404);
+    }
+
+    // İş ilanının sahipliğini kontrol et
+    const existingJob = await db('jobs')
+      .where({ id: jobId, hospital_id: hospitalProfile.id })
+      .first();
+
+    if (!existingJob) {
+      throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
+    }
+
+    // Eski durumu kaydet
+    const oldStatus = existingJob.status_id;
+    
+    // İş ilanı durumunu güncelle
+    await db('jobs')
+      .where('id', jobId)
+      .update({
+        status_id: statusId,
+        updated_at: db.fn.now()
+      });
+
+    // Güncellenmiş iş ilanını getir
+    const job = await db('jobs as j')
+      .join('job_statuses as js', 'j.status_id', 'js.id')
+      .join('specialties as s', 'j.specialty_id', 's.id')
+      .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .where('j.id', jobId)
+      .select('j.*', 'js.name as status', 's.name as specialty', 'c.name as city')
+      .first();
+
+    // İlan durumu değiştiyse bildirim gönder
+    if (statusId !== oldStatus) {
+      try {
+        const oldStatusName = await db('job_statuses').where('id', oldStatus).select('name').first();
+        await sendJobStatusChangeNotification(jobId, job.status, oldStatusName?.name || 'unknown');
+      } catch (notificationError) {
+        logger.warn('Job status change notification failed:', notificationError);
+      }
+    }
+
+    logger.info(`Job status updated: ${jobId} from ${oldStatus} to ${statusId} by user ${userId}`);
+    return job;
+  } catch (error) {
+    logger.error('Update hospital job status error:', error);
+    throw error;
+  }
+};
+
+/**
  * Hastane iş ilanını siler
- * @description İş ilanını soft delete yapar (status_id = 3 = deleted)
+ * @description İş ilanını soft delete yapar (status_id = 2 = pasif)
  * @param {number} userId - Hastane kullanıcı ID'si
  * @param {number} jobId - İş ilanı ID'si
  * @returns {Promise<boolean>} Silme işleminin başarı durumu
@@ -1085,16 +1154,17 @@ const getApplications = async (userId, jobId, params = {}) => {
       throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
     }
 
-    // Base query - "Geri Çekildi" (status_id=5) ve silinmiş başvuruları gösterme
+    // Base query - Silinmiş başvuruları gösterme
     let query = db('applications as a')
       .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
       .join('users as u', 'dp.user_id', 'u.id')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
+      .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
       .where('a.job_id', jobId)
-      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+      .where('u.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
       .select(
         'a.*',
         'dp.first_name',
@@ -1104,7 +1174,9 @@ const getApplications = async (userId, jobId, params = {}) => {
         'dp.specialty_id',
         'u.email',
         'ast.name as status',
-        'j.title as job_title'
+        'j.title as job_title',
+        'j.status_id as job_status_id',
+        'js.name as job_status'
       );
 
     // Filtreler
@@ -1119,14 +1191,45 @@ const getApplications = async (userId, jobId, params = {}) => {
       .limit(limit)
       .offset(offset);
 
+    // Debug: İş ilanı durumunu kontrol et
+    if (applications.length > 0) {
+      // JavaScript'te fallback hesaplama
+      applications.forEach(app => {
+        if (!app.job_status && app.job_status_id) {
+          app.job_status_fallback = app.job_status_id === 1 ? 'Aktif' : 
+                                   app.job_status_id === 2 ? 'Pasif' : 'Bilinmiyor';
+        }
+      });
+      
+      console.log('🔍 Backend Job Status Debug:', {
+        jobId: jobId,
+        firstApplication: {
+          job_title: applications[0].job_title,
+          job_status_id: applications[0].job_status_id,
+          job_status: applications[0].job_status,
+          job_status_fallback: applications[0].job_status_fallback,
+          allFields: Object.keys(applications[0])
+        }
+      });
+      
+      // SQL sorgusunu da logla
+      console.log('🔍 SQL Query Debug:', {
+        jobId: jobId,
+        query: query.toString()
+      });
+    }
+
     // Toplam sayı
     const totalQuery = db('applications as a')
+      .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
+      .join('users as u', 'dp.user_id', 'u.id')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('a.job_id', jobId)
       .where('a.status_id', '!=', 5) // Geri çekilen başvuruları sayma
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+      .where('u.is_active', true); // Pasifleştirilmiş doktorların başvurularını sayma
 
     if (status) {
       totalQuery.where('ast.name', status);
@@ -1182,16 +1285,17 @@ const getAllApplications = async (userId, params = {}) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // Base query - "Geri Çekildi" (status_id=5) ve silinmiş başvuruları gösterme
+    // Base query - Silinmiş başvuruları gösterme
     let query = db('applications as a')
       .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
       .join('users as u', 'dp.user_id', 'u.id')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
+      .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
       .where('j.hospital_id', hospitalProfile.id)
-      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+      .where('u.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
       .select(
         'a.*',
         'dp.first_name',
@@ -1202,7 +1306,9 @@ const getAllApplications = async (userId, params = {}) => {
         'u.email',
         'ast.name as status',
         'j.title as job_title',
-        'j.id as job_id'
+        'j.id as job_id',
+        'j.status_id as job_status_id',
+        'js.name as job_status'
       );
 
     // Filtreler
@@ -1239,12 +1345,11 @@ const getAllApplications = async (userId, params = {}) => {
       .limit(limit)
       .offset(offset);
 
-    // Toplam sayı - Geri çekilen ve silinmiş başvurular hariç
+    // Toplam sayı - Silinmiş başvurular hariç
     const totalQuery = db('applications as a')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('j.hospital_id', hospitalProfile.id)
-      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
 
@@ -1318,12 +1423,18 @@ const updateApplicationStatus = async (userId, applicationId, statusId, notes = 
     // Başvurunun sahipliğini kontrol et
     const application = await db('applications as a')
       .join('jobs as j', 'a.job_id', 'j.id')
+      .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .where({ 'a.id': applicationId, 'j.hospital_id': hospitalProfile.id })
-      .select('a.*', 'j.title as job_title', 'j.hospital_id')
+      .select('a.*', 'j.title as job_title', 'j.hospital_id', 'ast.name as current_status')
       .first();
 
     if (!application) {
       throw new AppError('Başvuru bulunamadı veya yetkiniz yok', 404);
+    }
+
+    // Geri çekilen başvurular için durum değişikliği yapılamaz
+    if (application.current_status === 'Geri Çekildi') {
+      throw new AppError('Geri çekilen başvurular için durum değişikliği yapılamaz', 400);
     }
 
     // Başvuru durumunu güncelle (direkt status_id kullan - string desteği kaldırıldı)
@@ -1682,7 +1793,7 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
     // Dil bilgilerini getir - Dil ve seviye ile join
     const languages = await db('doctor_languages as dl')
       .join('languages as l', 'dl.language_id', 'l.id')
-      .join('language_levels as ll', 'dl.level_id', 'l.id')
+      .join('language_levels as ll', 'dl.level_id', 'll.id')
       .where('dl.doctor_profile_id', doctorProfileId)
       .whereNull('dl.deleted_at')
       .select(
@@ -1723,6 +1834,7 @@ module.exports = {
   getJobById,
   createJob,
   updateJob,
+  updateJobStatus,
   deleteJob,
   
   // Başvuru yönetimi (applicationService'den taşındı)

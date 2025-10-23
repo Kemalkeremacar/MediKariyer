@@ -205,6 +205,31 @@ export const useUpdateHospitalJob = () => {
 };
 
 /**
+ * Hastane iş ilanı durumunu günceller
+ * Backend: PATCH /api/hospital/jobs/:jobId/status
+ * hospitalService.updateJobStatus() ile uyumlu
+ */
+export const useUpdateHospitalJobStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ jobId, status_id, reason }) => {
+      const endpoint = buildEndpoint(`${ENDPOINTS.HOSPITAL.JOBS}/:jobId/status`, { jobId });
+      return apiRequest.patch(endpoint, { status_id, reason });
+    },
+    onSuccess: (response, variables) => {
+      queryClient.setQueryData(['hospital', 'job', variables.jobId], response);
+      queryClient.invalidateQueries(['hospital', 'jobs']);
+      queryClient.invalidateQueries(['hospital', 'dashboard']);
+      queryClient.invalidateQueries(['hospital', 'applications']); // Başvuru sayfasını güncelle
+      showToast.success('İş ilanı durumu başarıyla güncellendi');
+    },
+    onError: (err) => {
+      showToast.error(err.message || 'İş ilanı durumu güncellenemedi');
+    },
+  });
+};
+
+/**
  * Hastane iş ilanını siler
  * Backend: DELETE /api/hospital/jobs/:jobId
  * hospitalService.deleteJob() ile uyumlu
@@ -546,6 +571,7 @@ const useHospital = {
   useHospitalJobById,
   useCreateHospitalJob,
   useUpdateHospitalJob,
+  useUpdateHospitalJobStatus,
   useDeleteHospitalJob,
   
   // Applications

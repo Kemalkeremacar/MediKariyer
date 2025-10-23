@@ -475,8 +475,8 @@ const DoctorProfile = () => {
                               'specialty_id': 'Uzmanlık',
                               'dob': 'Doğum Tarihi',
                               'phone': 'Telefon',
-                              'birth_place': 'Doğum Yeri',
-                              'residence_city': 'İkamet Şehri'
+                              'birth_place_id': 'Doğum Yeri',
+                              'residence_city_id': 'İkamet Yeri'
                             };
                             return (
                               <span

@@ -122,11 +122,18 @@ router.patch('/users/:id/approval', validate(adminSchemas.userIdParamSchema, 'pa
 router.patch('/users/:id/status', validate(adminSchemas.userIdParamSchema, 'params'), validate(adminSchemas.userStatusUpdateSchema, 'body'), adminController.updateUserStatus);
 
 /**
- * @route   DELETE /api/admin/users/:id
- * @desc    Kullanıcıyı sil
+ * @route   PATCH /api/admin/users/:id/deactivate
+ * @desc    Kullanıcıyı pasifleştir (Soft delete)
  * @access  Özel (Admin)
  */
-router.delete('/users/:id', validate(adminSchemas.userIdParamSchema, 'params'), adminController.deleteUser);
+router.patch('/users/:id/deactivate', validate(adminSchemas.userIdParamSchema, 'params'), adminController.deactivateUser);
+
+/**
+ * @route   PATCH /api/admin/users/:id/activate
+ * @desc    Kullanıcıyı aktifleştir
+ * @access  Özel (Admin)
+ */
+router.patch('/users/:id/activate', validate(adminSchemas.userIdParamSchema, 'params'), adminController.activateUser);
 
 
 // ============================================================================

@@ -674,24 +674,6 @@ router.delete('/applications/:id',
   doctorController.deleteApplication
 );
 
-/**
- * @route   POST /api/doctor/applications/:id/reapply
- * @desc    Doktorlar için geri çekilen başvuruya yeniden başvuru yap
- * @access  Özel (Doktor)
- * @middleware authMiddleware, requireRole(['doctor']), validate(applicationIdParamSchema, 'params')
- * @param   {number} req.params.id - Başvuru kimliği
- * @param   {Object} req.body - Yeniden başvuru verileri
- * @param   {string} [req.body.coverLetter] - Yeni ön yazı
- * @returns {Object} Yeni başvuru
- * @example
- * POST /api/doctor/applications/123/reapply
- * Body: { coverLetter: "Yeni ön yazı" }
- */
-router.post('/applications/:id/reapply',
-  validate(applicationIdParamSchema, 'params'),
-  doctorController.reapplyToJob
-);
-
 // ============================================================================
 // İŞ İLANI ROUTE'LARI (jobService'den taşındı)
 // ============================================================================

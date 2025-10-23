@@ -78,13 +78,12 @@ const { validate } = require('../middleware/validationMiddleware');
 const { 
   hospitalProfileSchema, 
   jobSchema, 
+  jobStatusUpdateSchema,
+  jobIdParamSchema,
+  jobStatusChangeSchema,
   applicationStatusSchema,
   applicationsQuerySchema
 } = require('../validators/hospitalSchemas');
-const { 
-  jobIdParamSchema,
-  jobStatusChangeSchema
-} = require('../validators/doctorSchemas');
 
 // ============================================================================
 // MIDDLEWARE STACK - TÜM HASTANE ROUTE'LARI İÇİN
@@ -204,6 +203,14 @@ router.put(
 // İş ilanını sil
 // DELETE /me/hospital/jobs/:jobId
 router.delete('/jobs/:jobId', hospitalController.deleteJob);
+
+// İş ilanı durumunu güncelle
+// PATCH /me/hospital/jobs/:jobId/status
+router.patch('/jobs/:jobId/status', 
+  validate(jobIdParamSchema, 'params'),
+  validate(jobStatusUpdateSchema, 'body'),
+  hospitalController.updateJobStatus
+);
 
 // İş ilanı başvurularını getir
 // GET /me/hospital/jobs/:jobId/applications

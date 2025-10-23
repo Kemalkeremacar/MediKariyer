@@ -16,7 +16,6 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Trash2,
   Edit,
   Save,
   X,
@@ -36,7 +35,7 @@ import {
   Award,
   Languages
 } from 'lucide-react';
-import { useUserById, useUpdateUserStatus, useUpdateUserApproval, useDeleteUser } from '../api/useAdmin';
+import { useUserById, useUpdateUserStatus, useUpdateUserApproval } from '../api/useAdmin';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 
@@ -44,14 +43,12 @@ const UserDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const { data: user, isLoading, error, refetch } = useUserById(id);
   
   // Debug logging - removed for production
   const updateUserStatus = useUpdateUserStatus();
   const updateUserApproval = useUpdateUserApproval();
-  const deleteUser = useDeleteUser();
 
   // Fotoğraf onay fonksiyonu kaldırıldı
   // İlk kayıt: Admin kullanıcıyı onaylarken fotoğrafı görür, uygunsuzsa kullanıcıyı reddeder
@@ -93,30 +90,6 @@ const UserDetailPage = () => {
     }
   };
 
-  const handleDeleteUser = () => {
-    const isMutating = updateUserStatus.isPending || updateUserApproval.isPending || deleteUser.isPending;
-    if (isMutating) {
-      showToast.warning('İşlem devam ediyor, lütfen bekleyin...');
-      return;
-    }
-
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = () => {
-    setShowDeleteModal(false);
-    
-    deleteUser.mutate(id, {
-      onSuccess: () => {
-        showToast.success(`${user?.data?.user?.email || user?.email} kullanıcısı silindi`);
-        navigate('/admin/users');
-      },
-      onError: (error) => {
-        console.error('Silme hatası:', error);
-        showToast.error(`Kullanıcı silinirken hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
-      }
-    });
-  };
 
   const getRoleBadge = (role) => {
     const colors = {
@@ -234,14 +207,6 @@ const UserDetailPage = () => {
                     <span>{(user.data?.user?.is_active || user.is_active) ? 'Pasifleştir' : 'Aktifleştir'}</span>
                   </button>
                   
-                  <button
-                    onClick={handleDeleteUser}
-                    disabled={deleteUser.isPending}
-                    className="admin-btn admin-btn-danger flex items-center space-x-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>Sil</span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -735,36 +700,6 @@ const UserDetailPage = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <div className="flex items-center mb-4">
-                <AlertTriangle className="h-6 w-6 text-red-500 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">Kullanıcıyı Sil</h3>
-              </div>
-              <p className="text-gray-600 mb-6">
-                <strong>{user.data?.user?.email || user.email}</strong> kullanıcısını silmek istediğinizden emin misiniz? 
-                Bu işlem geri alınamaz.
-              </p>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="admin-btn admin-btn-outline"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={deleteUser.isPending}
-                  className="admin-btn admin-btn-danger"
-                >
-                  {deleteUser.isPending ? 'Siliniyor...' : 'Sil'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
   );
 };

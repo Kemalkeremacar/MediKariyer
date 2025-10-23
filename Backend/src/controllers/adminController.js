@@ -133,20 +133,36 @@ const updateUserStatus = catchAsync(async (req, res) => {
 });
 
 /**
- * Kullanıcıyı tamamen siler
- * İlişkili tüm verileri de siler
+ * Kullanıcıyı pasifleştirir (Soft delete)
+ * Kullanıcı giriş yapamaz, verileri görünmez ama silinmez
  * 
- * @route DELETE /api/admin/users/:id
+ * @route PATCH /api/admin/users/:id/deactivate
  * @access Private (Admin)
- * @param {number} req.params.id - Silinecek kullanıcı ID'si
+ * @param {number} req.params.id - Pasifleştirilecek kullanıcı ID'si
  * @returns {Object} Başarı mesajı
  */
-const deleteUser = catchAsync(async (req, res) => {
-  const result = await adminService.deleteUser(req.params.id);
+const deactivateUser = catchAsync(async (req, res) => {
+  const result = await adminService.deactivateUser(req.params.id);
   if (!result) throw new AppError('Kullanıcı bulunamadı', 404);
 
-  logger.info(`User deleted: ${req.params.id} by ${req.user.email}`);
-  return sendSuccess(res, 'Kullanıcı silindi');
+  logger.info(`User deactivated: ${req.params.id} by ${req.user.email}`);
+  return sendSuccess(res, 'Kullanıcı pasifleştirildi');
+});
+
+/**
+ * Kullanıcıyı yeniden aktifleştirir
+ * 
+ * @route PATCH /api/admin/users/:id/activate
+ * @access Private (Admin)
+ * @param {number} req.params.id - Aktifleştirilecek kullanıcı ID'si
+ * @returns {Object} Başarı mesajı
+ */
+const activateUser = catchAsync(async (req, res) => {
+  const result = await adminService.activateUser(req.params.id);
+  if (!result) throw new AppError('Kullanıcı bulunamadı', 404);
+
+  logger.info(`User activated: ${req.params.id} by ${req.user.email}`);
+  return sendSuccess(res, 'Kullanıcı aktifleştirildi');
 });
 
 
@@ -454,7 +470,8 @@ module.exports = {
   getUserDetails,
   updateUserApproval,
   updateUserStatus,
-  deleteUser,
+  deactivateUser,
+  activateUser,
   getAllJobs,
   getJobById,
   updateJob,

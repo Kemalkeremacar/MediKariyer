@@ -13,14 +13,14 @@
  * - Glassmorphism dark theme
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, Building, MapPin, Calendar, Clock, 
   CheckCircle, XCircle, AlertCircle, Eye, Filter,
   Search, ChevronRight, ExternalLink, X, Trash2,
   TrendingUp, Users, Briefcase, ArrowRight
 } from 'lucide-react';
-import { useMyApplications, useApplicationDetail, useWithdrawApplication, useDeleteApplication, useReapplyToJob } from '../api/useDoctor.js';
+import { useMyApplications, useApplicationDetail, useWithdrawApplication, useDeleteApplication } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
@@ -42,7 +42,6 @@ const DoctorApplicationsPage = () => {
   const { data: applicationDetail, isLoading: detailLoading } = useApplicationDetail(selectedApplication?.id);
   const withdrawMutation = useWithdrawApplication();
   const deleteMutation = useDeleteApplication();
-  const reapplyMutation = useReapplyToJob();
 
   const applications = applicationsData?.applications || [];
   const pagination = applicationsData?.pagination || {};
@@ -93,31 +92,9 @@ const DoctorApplicationsPage = () => {
     }
   };
 
-  const handleReapply = async (application) => {
-    const confirmed = await showToast.confirm({
-      title: "Yeniden Başvuru Yap",
-      message: "Bu ilana yeniden başvuru yapmak istediğinizden emin misiniz? Mevcut başvuru silinip yeni başvuru oluşturulacak.",
-      type: "info",
-      confirmText: "Yeniden Başvuru Yap",
-      cancelText: "İptal",
-    });
-    
-    if (!confirmed) return;
-
-    try {
-      await reapplyMutation.mutateAsync({ 
-        applicationId: application.id, 
-        coverLetter: '' 
-      });
-      showToast.success('Başvuru başarıyla yeniden yapıldı');
-    } catch (error) {
-      showToast.error('Yeniden başvuru yapılamadı');
-    }
-  };
 
   const isWithdrawing = withdrawMutation.isLoading;
   const isDeleting = deleteMutation.isLoading;
-  const isReapplying = reapplyMutation.isLoading;
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -315,23 +292,14 @@ const DoctorApplicationsPage = () => {
 
                       {application.status === 'Geri Çekildi' && (
                         <button
-                          onClick={() => handleReapply(application)}
-                          disabled={isReapplying}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm md:text-base"
+                          onClick={() => handleDelete(application.id)}
+                          disabled={isDeleting}
+                          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm md:text-base"
                         >
-                          <ArrowRight className="w-4 h-4" />
-                          {isReapplying ? 'Yeniden Başvuruluyor...' : 'Yeniden Başvur'}
+                          <Trash2 className="w-4 h-4" />
+                          Sil
                         </button>
                       )}
-
-                      <button
-                        onClick={() => handleDelete(application.id)}
-                        disabled={isDeleting}
-                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm md:text-base"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Sil
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -417,6 +385,21 @@ const DoctorApplicationsPage = () => {
 const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onClose, onWithdraw }) => {
   if (!application) return null;
 
+  // Viewport pozisyonu için scroll pozisyonunu koru
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
   const getStatusText = (status) => {
     switch (status) {
       case 'Başvuruldu':
@@ -435,28 +418,43 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-slate-800 rounded-2xl border border-white/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">Başvuru Detayı</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
-          </div>
-
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="p-8">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Başvuru Detayı</h2>
+                  <p className="text-gray-300 text-sm">
+                    {application.job_title} - {application.hospital_name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
+              >
+                <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
+              </button>
             </div>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
           ) : (
             <div className="space-y-6">
               {/* İş İlanı Bilgileri */}
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <h3 className="text-lg font-semibold text-white mb-4">İş İlanı Detayları</h3>
+              <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-6 border border-blue-500/30">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-blue-400" />
+                  İş İlanı Detayları
+                </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <div>
@@ -526,8 +524,11 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
               )}
 
               {/* Başvuru Bilgileri */}
-              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                <h3 className="text-lg font-semibold text-white mb-4">Başvuru Bilgileri</h3>
+              <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl p-6 border border-green-500/30">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-green-400" />
+                  Başvuru Bilgileri
+                </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -550,9 +551,17 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
 
                 {applicationDetail?.notes && (
                   <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Notlar</label>
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <p className="text-gray-300 whitespace-pre-wrap">{applicationDetail.notes}</p>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Hastane Notu</label>
+                    <div className="bg-gradient-to-r from-orange-900/20 to-red-900/20 rounded-lg p-4 border border-orange-500/30">
+                      <div className="flex items-start gap-2">
+                        <div className="w-6 h-6 bg-orange-500/20 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <FileText className="w-3 h-3 text-orange-300" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="text-xs text-orange-300 font-medium block mb-1">Hastane Notu:</span>
+                          <p className="text-gray-200 whitespace-pre-wrap">{applicationDetail.notes}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -568,17 +577,18 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
                 </div>
               )}
 
-              <div className="flex justify-end space-x-4 pt-4">
+              {/* Butonlar */}
+              <div className="flex items-center gap-4 pt-4 border-t border-white/10">
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 text-gray-300 hover:text-white transition-colors"
+                  className="flex-1 bg-white/10 border border-white/20 text-white px-6 py-4 rounded-2xl hover:bg-white/20 transition-all duration-300 font-medium"
                 >
                   Kapat
                 </button>
                 {application.status === 'Başvuruldu' && onWithdraw && (
                   <button
                     onClick={onWithdraw}
-                    className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-2 rounded-xl flex items-center gap-2 transition-all duration-300"
+                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-2xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
                     Başvuruyu Geri Çek
@@ -587,6 +597,7 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

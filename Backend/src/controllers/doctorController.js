@@ -843,33 +843,6 @@ const deleteApplication = catchAsync(async (req, res) => {
 });
 
 /**
- * Doktorlar için geri çekilen başvuruya yeniden başvuru yap
- * @description Geri çekilen başvuruyu silip yeni başvuru oluşturur.
- * @param {Object} req - Express request nesnesi
- * @param {Object} res - Express response nesnesi
- * @returns {Promise<void>} Yeni başvuru
- * 
- * @example
- * POST /api/doctor/applications/123/reapply
- * Body: { coverLetter: "Yeni ön yazı" }
- */
-const reapplyToJob = catchAsync(async (req, res) => {
-  const userId = req.user.id;
-  const { id } = req.params;
-  const { coverLetter } = req.body;
-  
-  // Doktor profilini al
-  const profile = await doctorService.getProfile(userId);
-  if (!profile) {
-    throw new AppError('Profil bulunamadı', 404);
-  }
-  
-  const application = await doctorService.reapplyToJob(id, profile.id, coverLetter);
-  
-  return sendSuccess(res, 'Başvuru başarıyla yeniden yapıldı', application);
-});
-
-/**
  * Doktorlar için iş ilanlarını getir
  * @description Doktorlar için aktif iş ilanlarını filtreleme ve arama ile getirir.
  * @param {Object} req - Express request nesnesi
@@ -1043,7 +1016,6 @@ module.exports = {
   getApplicationById,
   withdrawApplication,
   deleteApplication,
-  reapplyToJob,
   
   // İş ilanı fonksiyonları (jobService'den taşındı)
   getJobs,

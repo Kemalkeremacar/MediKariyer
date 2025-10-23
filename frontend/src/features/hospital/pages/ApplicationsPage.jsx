@@ -24,13 +24,13 @@
  * @since 2024
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   FileText, Search, Filter, User, MapPin, Calendar, 
   CheckCircle, X, Clock, Eye, AlertCircle, ArrowRight, 
   RefreshCw, Phone, Mail, Briefcase, Target, Building,
-  UserCheck, GraduationCap, Award, Languages, ExternalLink
+  UserCheck, GraduationCap, Award, Languages, ExternalLink, Settings
 } from 'lucide-react';
 import { useHospitalApplications, useUpdateApplicationStatus, useHospitalDoctorProfileDetail, useHospitalProfile } from '../api/useHospital';
 import { useApplicationStatuses } from '@/hooks/useLookup';
@@ -50,6 +50,11 @@ const HospitalApplications = () => {
   });
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
+  
+  // Modal states - sayfa seviyesinde
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showCoverLetterModal, setShowCoverLetterModal] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
 
   // API hook'ları
   const { 
@@ -120,6 +125,17 @@ const HospitalApplications = () => {
   const handleViewDoctorProfile = (doctorProfileId) => {
     setSelectedDoctorId(doctorProfileId);
     setShowDoctorModal(true);
+  };
+
+  // Modal açma fonksiyonları
+  const handleOpenStatusModal = (application) => {
+    setSelectedApplication(application);
+    setShowStatusModal(true);
+  };
+
+  const handleOpenCoverLetterModal = (application) => {
+    setSelectedApplication(application);
+    setShowCoverLetterModal(true);
   };
 
   // İş ilanı detayına yönlendirme
@@ -285,6 +301,8 @@ const HospitalApplications = () => {
                     onStatusChange={handleStatusChange}
                     onViewProfile={handleViewDoctorProfile}
                     onJobClick={handleJobClick}
+                    onOpenStatusModal={handleOpenStatusModal}
+                    onOpenCoverLetterModal={handleOpenCoverLetterModal}
                   />
                 </StaggeredAnimation>
               ))}
@@ -356,6 +374,39 @@ const HospitalApplications = () => {
             }}
           />
         )}
+
+        {/* Başvuru Durumu Modal */}
+        {showStatusModal && selectedApplication && (
+          <ApplicationStatusModal
+            application={selectedApplication}
+            statusOptions={statusOptions}
+            onClose={() => {
+              setShowStatusModal(false);
+              setSelectedApplication(null);
+            }}
+            onStatusUpdate={(statusId, notes) => {
+              handleStatusChange(selectedApplication.id, statusId, notes);
+              setShowStatusModal(false);
+              setSelectedApplication(null);
+            }}
+            onNoteOnlyUpdate={(notes) => {
+              handleStatusChange(selectedApplication.id, selectedApplication.status_id, notes);
+              setShowStatusModal(false);
+              setSelectedApplication(null);
+            }}
+          />
+        )}
+
+        {/* Doktor Ön Yazısı Modal */}
+        {showCoverLetterModal && selectedApplication && (
+          <CoverLetterModal
+            application={selectedApplication}
+            onClose={() => {
+              setShowCoverLetterModal(false);
+              setSelectedApplication(null);
+            }}
+          />
+        )}
       </div>
   );
 };
@@ -366,7 +417,8 @@ const StatusBadge = ({ status_id, statusName }) => {
     1: { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', label: 'Başvuruldu', icon: Clock },
     2: { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30', label: 'İnceleniyor', icon: Eye },
     3: { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', label: 'Kabul Edildi', icon: CheckCircle },
-    4: { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', label: 'Reddedildi', icon: X }
+    4: { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', label: 'Reddedildi', icon: X },
+    5: { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', label: 'Geri Çekildi', icon: AlertCircle }
   };
 
   const config = statusConfig[status_id] || statusConfig[1];
@@ -381,7 +433,7 @@ const StatusBadge = ({ status_id, statusName }) => {
 };
 
 // Application Card Component
-const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewProfile, onJobClick }) => {
+const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewProfile, onJobClick, onOpenStatusModal, onOpenCoverLetterModal }) => {
   const [selectedStatus, setSelectedStatus] = useState(application.status_id?.toString() || '1');
   const [notes, setNotes] = useState(application.notes || '');
   const [showNotes, setShowNotes] = useState(false);
@@ -395,15 +447,22 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
     setShowNotes(false);
   };
 
+  const handleModalStatusUpdate = (newStatus, newNotes) => {
+    onStatusChange(application.id, newStatus, newNotes);
+    setShowStatusModal(false);
+  };
+
+  const handleNoteOnlyUpdate = (newNotes) => {
+    onStatusChange(application.id, application.status_id?.toString(), newNotes);
+    setShowStatusModal(false);
+  };
+
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Doktor Bilgileri - 4 kolon */}
         <div className="lg:col-span-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-              {application.first_name?.[0]}{application.last_name?.[0]}
-            </div>
+          <div className="flex items-start">
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-bold text-white mb-1">
                 {application.first_name} {application.last_name}
@@ -435,6 +494,26 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
             <div>
               <span className="text-gray-400 text-xs block mb-1">İş İlanı</span>
               <p className="text-white font-medium mb-2">{application.job_title}</p>
+              
+              {/* İş İlanı Durumu */}
+              <div className="mb-2">
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  (() => {
+                    const status = application.job_status || application.job_status_fallback;
+                    if (status === 'Aktif') return 'bg-green-500/20 text-green-300 border border-green-500/30';
+                    if (status === 'Pasif') return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+                    return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+                  })()
+                }`}>
+                  {(() => {
+                    const status = application.job_status || application.job_status_fallback;
+                    if (status === 'Aktif') return '🟢 Aktif';
+                    if (status === 'Pasif') return '🟠 Pasif';
+                    return `❓ ${status || 'Bilinmiyor'}`;
+                  })()}
+                </span>
+              </div>
+              
               <button
                 onClick={() => onJobClick(application.job_id)}
                 className="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
@@ -443,30 +522,217 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
                 İlana Git
               </button>
             </div>
-            <div>
-              <span className="text-gray-400 text-xs">Başvuru Tarihi</span>
-              <p className="text-gray-300 text-sm">
-                {new Date(application.applied_at).toLocaleDateString('tr-TR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </p>
-            </div>
           </div>
         </div>
 
         {/* Durum Yönetimi - 5 kolon */}
         <div className="lg:col-span-5">
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-medium text-gray-300">
               Başvuru Durumu
             </label>
-            <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onOpenCoverLetterModal(application)}
+                  className="bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 text-green-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
+                >
+                  <FileText className="w-3 h-3" />
+                  Doktor Ön Yazısı
+                </button>
+                {application.status_id !== 5 && (
+                  <button
+                    onClick={() => onOpenStatusModal(application)}
+                    className="bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center gap-2"
+                  >
+                    <Settings className="w-3 h-3" />
+                    Durum Yönet
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {/* Mevcut Durum Gösterimi */}
+            <div className="flex items-center">
+              <StatusBadge status_id={application.status_id} statusName={application.status} />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  );
+};
+
+// Doktor Ön Yazısı Modal Component
+const CoverLetterModal = ({ application, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="p-8">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Doktor Ön Yazısı</h2>
+                  <p className="text-gray-300 text-sm">
+                    {application.first_name} {application.last_name} - {application.job_title}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
+              >
+                <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
+              </button>
+            </div>
+
+            {/* Başvuru Bilgileri */}
+            <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl p-6 mb-6 border border-green-500/30">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-green-400" />
+                Başvuru Bilgileri
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <span className="text-xs text-gray-400 block">Başvuru Tarihi</span>
+                  <span className="text-sm text-gray-300">
+                    {new Date(application.applied_at).toLocaleDateString('tr-TR')}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-400 block">Güncelleme Tarihi</span>
+                  <span className="text-sm text-gray-300">
+                    {new Date(application.updated_at).toLocaleDateString('tr-TR')}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Doktor Ön Yazısı İçeriği */}
+            {application.cover_letter ? (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-green-400" />
+                  Ön Yazı İçeriği
+                </h3>
+                <div className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 rounded-2xl p-6 border border-green-500/30">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
+                      <FileText className="w-4 h-4 text-green-300" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-gray-200 leading-relaxed whitespace-pre-wrap text-sm">
+                        {application.cover_letter}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-8">
+                <div className="bg-gradient-to-r from-gray-900/30 to-slate-900/30 rounded-2xl p-8 border border-gray-500/30 text-center">
+                  <div className="w-16 h-16 bg-gray-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-300 mb-2">Ön Yazı Bulunamadı</h3>
+                  <p className="text-gray-400 text-sm">
+                    Bu başvuru için doktor ön yazısı eklenmemiş.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Kapat Butonu */}
+            <div className="flex justify-end pt-4 border-t border-white/10">
+              <button
+                onClick={onClose}
+                className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-all duration-300 font-medium"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Başvuru Durumu Modal Component
+const ApplicationStatusModal = ({ application, statusOptions, onClose, onStatusUpdate, onNoteOnlyUpdate }) => {
+  const [selectedStatus, setSelectedStatus] = useState(application.status_id?.toString() || '1');
+  const [notes, setNotes] = useState(application.notes || '');
+
+  const handleStatusUpdate = () => {
+    onStatusUpdate(selectedStatus, notes);
+  };
+
+  const handleNoteOnlyUpdate = () => {
+    onNoteOnlyUpdate(notes);
+  };
+
+  const isStatusChanged = parseInt(selectedStatus) !== application.status_id;
+  const isNotesChanged = notes !== (application.notes || '');
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="p-8">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <Settings className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">Başvuru Durumu Yönetimi</h2>
+              <p className="text-gray-300 text-sm">
+                {application.first_name} {application.last_name} - {application.job_title}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
+          >
+            <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
+          </button>
+        </div>
+
+        {/* Mevcut Durum */}
+        <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-4 mb-4 border border-blue-500/30">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-blue-400" />
+            Mevcut Durum
+          </h3>
+          <div className="flex items-center justify-between">
+            <StatusBadge status_id={application.status_id} statusName={application.status} />
+            <div className="text-right">
+              <span className="text-xs text-gray-400 block">Son Güncelleme</span>
+              <span className="text-sm text-gray-300">
+                {new Date(application.updated_at).toLocaleDateString('tr-TR')}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Durum Seçimi */}
+        <div className="mb-4">
+          <label className="block text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <Target className="w-5 h-5 text-green-400" />
+            Yeni Durum
+          </label>
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 hover:bg-white/15"
               >
                 {statusOptions.map((status) => (
                   <option key={status.value} value={status.value} className="bg-slate-800">
@@ -474,42 +740,73 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
                   </option>
                 ))}
               </select>
-              <button
-                onClick={handleStatusUpdate}
-                disabled={parseInt(selectedStatus) === application.status_id}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 ${
-                  parseInt(selectedStatus) === application.status_id
-                    ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30'
-                }`}
-              >
-                Güncelle
-              </button>
             </div>
 
-            {/* Notes Toggle */}
-            <button
-              onClick={() => setShowNotes(!showNotes)}
-              className="text-gray-400 hover:text-white text-xs flex items-center gap-1"
-            >
-              {showNotes ? '▼' : '▶'} Not Ekle
-            </button>
-            
-            {showNotes && (
+        {/* Not Alanı */}
+        <div className="mb-4">
+          <label className="block text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-orange-400" />
+            Hastane Notu
+          </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Değerlendirme notları (opsiyonel)..."
-                rows={2}
-                className="mt-2 w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-blue-500 resize-none"
-              />
-            )}
+            placeholder="Değerlendirme notları ekleyin..."
+            rows={4}
+            className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 hover:bg-white/15"
+          />
+        </div>
 
-            {/* Current Status Badge */}
-            <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
-              <span className="text-xs text-gray-400">Mevcut Durum:</span>
-              <StatusBadge status_id={application.status_id} statusName={application.status} />
+        {/* Mevcut Not Gösterimi */}
+        {application.notes && (
+          <div className="mb-8">
+            <label className="block text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-yellow-400" />
+              Mevcut Not
+            </label>
+            <div className="bg-gradient-to-r from-orange-900/30 to-red-900/30 rounded-2xl p-6 border border-orange-500/30">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
+                  <FileText className="w-4 h-4 text-orange-300" />
             </div>
+                <div className="flex-1">
+                  <span className="text-sm text-orange-300 font-medium block mb-2">Hastane Notu:</span>
+                  <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{application.notes}</p>
+          </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Butonlar */}
+        <div className="flex items-center gap-4 pt-4 border-t border-white/10">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-white/10 border border-white/20 text-white px-6 py-4 rounded-2xl hover:bg-white/20 transition-all duration-300 font-medium"
+          >
+            İptal
+          </button>
+          
+          {/* Sadece Not Güncelle */}
+          {!isStatusChanged && isNotesChanged && (
+            <button
+              onClick={handleNoteOnlyUpdate}
+              className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium shadow-lg"
+            >
+              Notu Güncelle
+            </button>
+          )}
+          
+          {/* Durum ve Not Güncelle */}
+          {isStatusChanged && (
+            <button
+              onClick={handleStatusUpdate}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-4 rounded-2xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg"
+            >
+              Durum ve Notu Güncelle
+            </button>
+          )}
+        </div>
           </div>
         </div>
       </div>
@@ -523,10 +820,12 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-8">
+            <div className="flex items-center justify-center py-12">
+              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
           </div>
         </div>
       </div>
@@ -541,25 +840,28 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
 
   if (!profile) {
     return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 p-8 text-center">
-          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">Profil Bulunamadı</h3>
-          <button
-            onClick={onClose}
-            className="mt-4 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-2 rounded-xl hover:bg-blue-500/30"
-          >
-            Kapat
-          </button>
+      <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="bg-slate-800/95 rounded-3xl border border-white/20 p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Profil Bulunamadı</h3>
+            <button
+              onClick={onClose}
+              className="mt-4 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-2 rounded-xl hover:bg-blue-500/30"
+            >
+              Kapat
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-      <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-8">
+    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="p-8">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -653,22 +955,37 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
                 <GraduationCap className="w-5 h-5 text-green-400" />
                 Eğitim Bilgileri
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {educations.map((edu, idx) => (
-                  <div key={idx} className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="text-white font-semibold">{edu.institution_name}</p>
+                  <div key={idx} className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 rounded-xl p-4 border border-green-500/30 hover:border-green-500/50 transition-all">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <GraduationCap className="w-5 h-5 text-green-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">
+                          {edu.institution_name}
+                        </h4>
+                        <p className="text-gray-300 text-xs mb-1 line-clamp-2">
+                          {edu.field}
+                        </p>
+                        {edu.degree_type && (
+                          <p className="text-gray-400 text-xs mb-2">
+                            {edu.degree_type}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="px-2 py-0.5 bg-green-500/20 text-green-300 rounded text-xs font-medium">
+                            {edu.graduation_year}
+                          </span>
                       {edu.education_type_name && (
-                        <span className="px-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs">
+                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs font-medium">
                           {edu.education_type_name}
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-300 text-sm mb-1">{edu.field}</p>
-                    {edu.degree_type && (
-                      <p className="text-gray-400 text-xs mb-1">{edu.degree_type}</p>
-                    )}
-                    <p className="text-gray-400 text-xs">Mezuniyet: {edu.graduation_year}</p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -682,33 +999,46 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
                 <Briefcase className="w-5 h-5 text-purple-400" />
                 İş Deneyimi
               </h3>
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                 {experiences.map((exp, idx) => (
-                  <div key={idx} className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div key={idx} className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 rounded-xl p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <Briefcase className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-2">
-                      <p className="text-white font-semibold">{exp.role_title}</p>
+                          <h4 className="text-white font-semibold text-sm line-clamp-2">
+                            {exp.role_title}
+                          </h4>
                       {exp.is_current && (
-                        <span className="px-2 py-1 bg-green-500/20 text-green-300 rounded text-xs">
+                            <span className="px-2 py-0.5 bg-green-500/20 text-green-300 rounded text-xs font-medium ml-2 flex-shrink-0">
                           Devam Ediyor
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-300 text-sm mb-1">{exp.organization}</p>
+                        <p className="text-gray-300 text-xs mb-1 line-clamp-2">
+                          {exp.organization}
+                        </p>
                     {exp.specialty_name && (
-                      <p className="text-gray-400 text-xs mb-1">
+                          <p className="text-gray-400 text-xs mb-2">
                         Uzmanlık: {exp.specialty_name}
                         {exp.subspecialty_name && ` - ${exp.subspecialty_name}`}
                       </p>
                     )}
-                    <p className="text-gray-400 text-xs">
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-medium">
                       {new Date(exp.start_date).toLocaleDateString('tr-TR')} - 
                       {exp.is_current ? ' Devam Ediyor' : (exp.end_date ? new Date(exp.end_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş')}
-                    </p>
+                          </span>
+                        </div>
                     {exp.description && (
-                      <p className="text-gray-300 text-sm mt-2 pt-2 border-t border-white/10">
+                          <p className="text-gray-300 text-xs mt-2 pt-2 border-t border-white/10 line-clamp-3">
                         {exp.description}
                       </p>
                     )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -752,16 +1082,33 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
 
           {/* Dil Bilgileri */}
           {languages.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4">
+            <div className="bg-white/5 rounded-2xl p-4 mb-6">
               <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
                 <Languages className="w-5 h-5 text-cyan-400" />
                 Dil Bilgileri
               </h3>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {languages.map((lang, idx) => (
-                  <span key={idx} className="px-3 py-1 bg-white/10 rounded-full text-sm text-white">
-                    {lang.language_name} - {lang.level_name}
+                  <div key={idx} className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 rounded-xl p-4 border border-cyan-500/30 hover:border-cyan-500/50 transition-all">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                        <Languages className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-white font-semibold text-sm mb-1">
+                          {lang.language_name}
+                        </h4>
+                        <p className="text-gray-300 text-xs mb-2">
+                          Seviye: {lang.level_name}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 rounded text-xs font-medium">
+                            {lang.level_name}
                   </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -775,6 +1122,7 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
             >
               Kapat
             </button>
+          </div>
           </div>
         </div>
       </div>

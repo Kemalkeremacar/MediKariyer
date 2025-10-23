@@ -261,6 +261,44 @@ const updateJob = catchAsync(async (req, res, next) => {
 });
 
 /**
+ * Hastane iş ilanı durumunu günceller
+ * @description İş ilanının durumunu (Aktif/Pasif) günceller
+ * @route PATCH /api/hospital/jobs/:jobId/status
+ * @access Private (Hospital)
+ * @middleware authMiddleware, requireRole('hospital')
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} req.params.jobId - İş ilanı ID'si
+ * @param {Object} req.body.status_id - Yeni durum ID'si (1: Aktif, 2: Pasif)
+ * @param {Object} req.body.reason - Durum değişikliği nedeni
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ * 
+ * @returns {Object} 200 - Durum başarıyla güncellendi
+ * @returns {Object} 401 - Unauthorized
+ * @returns {Object} 403 - Forbidden (role check failed)
+ * @returns {Object} 404 - İş ilanı bulunamadı
+ * @returns {Object} 500 - Sunucu hatası
+ * 
+ * @example
+ * PATCH /api/hospital/jobs/123/status
+ * Authorization: Bearer <jwt_token>
+ * {
+ *   "status_id": 2,
+ *   "reason": "İlan geçici olarak durduruldu"
+ * }
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+const updateJobStatus = catchAsync(async (req, res, next) => {
+  const result = await hospitalService.updateJobStatus(req.user.id, req.params.jobId, req.body.status_id, req.body.reason);
+  logger.info(`Hospital job status updated for user ${req.user.id}, job ${req.params.jobId}, status: ${req.body.status_id}`);
+  sendSuccess(res, 'İş ilanı durumu başarıyla güncellendi', { job: result }, 200);
+});
+
+/**
  * Hastane iş ilanını getirir (tek ilan)
  * @description Belirli bir iş ilanının detaylarını getirir
  * @route GET /api/hospital/jobs/:jobId
@@ -555,6 +593,7 @@ module.exports = {
   getJobById,
   createJob,
   updateJob,
+  updateJobStatus,
   deleteJob,
   
   // Başvuru yönetimi (hospitalService içinde)

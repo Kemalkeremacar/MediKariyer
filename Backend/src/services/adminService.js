@@ -260,10 +260,12 @@ const getAllJobs = async (filters = {}) => {
 
   let query = db('jobs as j')
     .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .join('job_statuses as js', 'j.status_id', 'js.id')
     .join('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarını gösterme
+    .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
     .select(
       'j.*', 
       'hp.institution_name', 
@@ -300,8 +302,10 @@ const getAllJobs = async (filters = {}) => {
   // Count sorgusunu ayrı yap
   const countQuery = db('jobs as j')
     .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
-    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarını sayma
+    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarını sayma
+    .where('hospital_users.is_active', true); // Pasifleştirilmiş hastanelerin iş ilanlarını sayma
   
   // Genel arama sorgusu
   if (search) {
@@ -372,6 +376,7 @@ const getJobDetails = async (jobId) => {
     .join('job_statuses as js', 'j.status_id', 'js.id')
     .join('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
+    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .where('j.id', jobId)
     .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanını gösterme
     .select(
@@ -380,7 +385,8 @@ const getJobDetails = async (jobId) => {
       'hp.phone',
       'js.name as status',
       's.name as specialty',
-      'c.name as city'
+      'c.name as city',
+      'ss.name as subspecialty_name'
     )
     .first();
 
@@ -437,9 +443,13 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
     .join('jobs', 'applications.job_id', 'jobs.id')
     .join('doctor_profiles', 'applications.doctor_profile_id', 'doctor_profiles.id')
     .join('hospital_profiles', 'jobs.hospital_id', 'hospital_profiles.id')
+    .join('users as doctor_users', 'doctor_profiles.user_id', 'doctor_users.id')
+    .join('users as hospital_users', 'hospital_profiles.user_id', 'hospital_users.id')
     .leftJoin('cities as residence_city', 'doctor_profiles.residence_city_id', 'residence_city.id')
     .whereNull('applications.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
     .whereNull('jobs.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+    .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
+    .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
     .select(
       'applications.*',
       'jobs.title as job_title',
@@ -482,8 +492,12 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
     .join('jobs', 'applications.job_id', 'jobs.id')
     .join('doctor_profiles', 'applications.doctor_profile_id', 'doctor_profiles.id')
     .join('hospital_profiles', 'jobs.hospital_id', 'hospital_profiles.id')
+    .join('users as doctor_users', 'doctor_profiles.user_id', 'doctor_users.id')
+    .join('users as hospital_users', 'hospital_profiles.user_id', 'hospital_users.id')
     .whereNull('applications.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-    .whereNull('jobs.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+    .whereNull('jobs.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+    .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını sayma
+    .where('hospital_users.is_active', true); // Pasifleştirilmiş hastanelerin iş ilanlarını sayma
 
   if (search) {
     countQuery.where(function () {
@@ -592,118 +606,66 @@ const updateUserStatus = async (userId, isActive, reason = null) => {
 // Duplicate fonksiyon kaldırıldı - updateUserApproval kullanılmalı
 
 /**
- * Kullanıcıyı tamamen siler (Hard delete)
- * İlişkili tüm verileri (profil, token'lar) da siler
- * Transaction ile güvenli silme işlemi
+ * Kullanıcıyı pasifleştirir (Soft delete)
+ * Kullanıcı giriş yapamaz, verileri görünmez ama silinmez
  * 
- * @param {number} userId - Silinecek kullanıcı ID'si
+ * @param {number} userId - Pasifleştirilecek kullanıcı ID'si
  * @returns {boolean} İşlem başarılıysa true
  * @throws {AppError} Kullanıcı bulunamazsa
  */
-const deleteUser = async (userId) => {
-  const trx = await db.transaction();
+const deactivateUser = async (userId) => {
   try {
     // Önce kullanıcının profilini kontrol et
-    const user = await trx('users').where('id', userId).first();
+    const user = await db('users').where('id', userId).first();
     if (!user) {
-      await trx.rollback();
       throw new AppError('Kullanıcı bulunamadı', 404);
     }
 
-    // Hastane ise, önce ilişkili verileri soft delete yap
-    if (user.role === 'hospital') {
-      // Hastane profilini bul
-      const profile = await trx('hospital_profiles').where('user_id', userId).first();
-      
-      if (profile) {
-        // TÜM iş ilanlarını al (silinmiş olanlar dahil)
-        const jobIds = await trx('jobs')
-          .where('hospital_id', profile.id)
-          .pluck('id');
-        
-        if (jobIds.length > 0) {
-          // Aktif iş ilanlarını soft delete
-          await trx('jobs')
-            .where('hospital_id', profile.id)
-            .whereNull('deleted_at')
-            .update({ 
-              deleted_at: trx.fn.now(),
-              updated_at: trx.fn.now()
-            });
-          
-          // TÜM ilanlara yapılan başvuruları soft delete (silinmiş olanlar dahil)
-          await trx('applications')
-            .whereIn('job_id', jobIds)
-            .whereNull('deleted_at')
-            .update({ 
-              deleted_at: trx.fn.now(),
-              updated_at: trx.fn.now()
-            });
-          
-          // Artık TÜM iş ilanlarını hard delete (FK constraint çözümü)
-          await trx('jobs')
-            .where('hospital_id', profile.id)
-            .del();
-        }
-        
-        // Hastane profilini sil
-        await trx('hospital_profiles').where('user_id', userId).del();
-      }
-    } else if (user.role === 'doctor') {
-      // Doktor profilini bul
-      const profile = await trx('doctor_profiles').where('user_id', userId).first();
-      
-      if (profile) {
-        // Doktorun başvurularını soft delete
-        await trx('applications')
-          .where('doctor_profile_id', profile.id)
-          .whereNull('deleted_at')
-          .update({ 
-            deleted_at: trx.fn.now(),
-            updated_at: trx.fn.now()
-          });
-        
-        // Doktor alt tablolarını soft delete
-        await trx('doctor_educations')
-          .where('doctor_profile_id', profile.id)
-          .whereNull('deleted_at')
-          .update({ deleted_at: trx.fn.now() })
-          .catch(() => {}); // Hata varsa devam et
-        
-        await trx('doctor_experiences')
-          .where('doctor_profile_id', profile.id)
-          .whereNull('deleted_at')
-          .update({ deleted_at: trx.fn.now() })
-          .catch(() => {}); // Hata varsa devam et
-        
-        await trx('doctor_certificates')
-          .where('doctor_profile_id', profile.id)
-          .whereNull('deleted_at')
-          .update({ deleted_at: trx.fn.now() })
-          .catch(() => {}); // Hata varsa devam et
-        
-        await trx('doctor_languages')
-          .where('doctor_profile_id', profile.id)
-          .whereNull('deleted_at')
-          .update({ deleted_at: trx.fn.now() })
-          .catch(() => {}); // Hata varsa devam et
-        
-        // Doktor profilini sil (CASCADE ile alt tablolar da silinir)
-        await trx('doctor_profiles').where('user_id', userId).del();
-      }
+    // Admin hesabını koru
+    if (user.role === 'admin') {
+      throw new AppError('Admin hesabı pasifleştirilemez', 403);
     }
 
-    // Refresh token'ları sil
-    await trx('refresh_tokens').where('user_id', userId).del();
+    // Kullanıcıyı pasifleştir
+    await db('users').where('id', userId).update({
+      is_active: false,
+      updated_at: db.fn.now()
+    });
 
-    // Kullanıcıyı sil
-    await trx('users').where('id', userId).del();
+    // Refresh token'ları temizle (güvenlik için)
+    await db('refresh_tokens').where('user_id', userId).del();
 
-    await trx.commit();
     return true;
   } catch (error) {
-    await trx.rollback();
-    logger.error('Delete user error:', error);
+    logger.error('Deactivate user error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Kullanıcıyı yeniden aktifleştirir
+ * 
+ * @param {number} userId - Aktifleştirilecek kullanıcı ID'si
+ * @returns {boolean} İşlem başarılıysa true
+ * @throws {AppError} Kullanıcı bulunamazsa
+ */
+const activateUser = async (userId) => {
+  try {
+    // Önce kullanıcının profilini kontrol et
+    const user = await db('users').where('id', userId).first();
+    if (!user) {
+      throw new AppError('Kullanıcı bulunamadı', 404);
+    }
+
+    // Kullanıcıyı aktifleştir
+    await db('users').where('id', userId).update({
+      is_active: true,
+      updated_at: db.fn.now()
+    });
+
+    return true;
+  } catch (error) {
+    logger.error('Activate user error:', error);
     throw error;
   }
 };
@@ -819,17 +781,25 @@ const deleteJob = async (jobId) => {
  * @returns {Object|null} Başvuru detayları
  */
 const getApplicationDetails = async (applicationId) => {
+  console.log('🔍 Admin getApplicationDetails - Application ID:', applicationId);
+  
   const application = await db('applications as a')
     .join('jobs as j', 'a.job_id', 'j.id')
     .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
-    .join('users as u', 'dp.user_id', 'u.id')
+    .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
     .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .join('application_statuses as ast', 'a.status_id', 'ast.id')
     .leftJoin('cities as residence_city', 'dp.residence_city_id', 'residence_city.id')
     .leftJoin('cities as birth_place', 'dp.birth_place_id', 'birth_place.id')
     .where('a.id', applicationId)
+    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+    .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
+    .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
     .select(
       'a.*',
+      'a.doctor_profile_id',
       'j.id as job_id',
       'j.title as job_title',
       'j.description as job_description',
@@ -839,12 +809,21 @@ const getApplicationDetails = async (applicationId) => {
       'dp.profile_photo',
       'residence_city.name as residence_city',
       'birth_place.name as birth_place',
-      'u.id as user_id',
-      'u.email',
+      'doctor_users.id as user_id',
+      'doctor_users.email',
       'hp.institution_name',
       'ast.name as status'
     )
     .first();
+
+  console.log('📋 Admin getApplicationDetails - Result:', application ? 'Found' : 'Not Found');
+  if (!application) {
+    console.log('❌ Application not found - Possible reasons:');
+    console.log('   - Application ID does not exist');
+    console.log('   - Application is soft deleted');
+    console.log('   - Doctor is deactivated (is_active = false)');
+    console.log('   - Hospital is deactivated (is_active = false)');
+  }
 
   return application;
 };
@@ -1191,7 +1170,8 @@ module.exports = {
   getUserDetails,
   updateUserApproval,
   updateUserStatus,
-  deleteUser,
+  deactivateUser,
+  activateUser,
   getAllJobs,
   getJobDetails,
   updateJob,

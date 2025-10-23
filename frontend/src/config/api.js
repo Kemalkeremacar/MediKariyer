@@ -64,7 +64,6 @@ export const ENDPOINTS = {
     APPLICATION_DETAIL: '/doctor/applications/:id', // GET/PATCH/DELETE - Başvuru detayı/güncelleme/silme
     APPLICATION_WITHDRAW: '/doctor/applications/:id/withdraw', // POST - Başvuru geri çekme
     APPLICATION_DELETE: '/doctor/applications/:id', // DELETE - Başvuru silme
-    APPLICATION_REAPPLY: '/doctor/applications/:id/reapply', // POST - Başvuru yeniden gönderme
     
     // Dashboard ve istatistikler
     DASHBOARD: '/doctor/dashboard', // GET - Doktor dashboard verileri

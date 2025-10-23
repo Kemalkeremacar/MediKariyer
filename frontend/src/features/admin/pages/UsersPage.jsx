@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useUsers, useUpdateUserStatus, useUpdateUserApproval, useDeleteUser } from '../api/useAdmin';
+import { useUsers, useUpdateUserStatus, useUpdateUserApproval } from '../api/useAdmin';
 import { showToast } from '@/utils/toastUtils';
 import { 
   Users, 
@@ -13,7 +13,6 @@ import {
   XCircle, 
   UserCheck, 
   UserX,
-  Trash2,
   Filter,
   Search,
   X,
@@ -52,10 +51,9 @@ const UsersPage = () => {
   const { data: usersData, isLoading, error, refetch } = useUsers(filters);
   const updateUserStatus = useUpdateUserStatus();
   const updateUserApproval = useUpdateUserApproval();
-  const deleteUser = useDeleteUser();
 
   // Loading state'i mutation'lardan al
-  const isProcessing = updateUserStatus.isPending || updateUserApproval.isPending || deleteUser.isPending;
+  const isProcessing = updateUserStatus.isPending || updateUserApproval.isPending;
 
 
   const users = Array.isArray(usersData?.data?.data) ? usersData.data.data : 
@@ -101,36 +99,6 @@ const UsersPage = () => {
     }
   };
 
-  const handleDeleteUser = async (userId, userEmail) => {
-    // Çok hızlı tıklamaları engelle
-    if (isProcessing) {
-      showToast.warning('İşlem devam ediyor, lütfen bekleyin...');
-      return;
-    }
-
-    const confirmed = await showToast.confirm(
-      'Kullanıcıyı Sil',
-      `${userEmail} kullanıcısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      {
-        confirmText: 'Sil',
-        cancelText: 'İptal',
-        type: 'danger'
-      }
-    );
-
-    if (confirmed) {
-      deleteUser.mutate(userId, {
-        onSuccess: (data) => {
-          showToast.success(`${userEmail} kullanıcısı silindi`);
-          refetch();
-        },
-        onError: (error) => {
-          console.error('Silme hatası:', error);
-          showToast.error(`Kullanıcı silinirken hata oluştu: ${error.message || 'Bilinmeyen hata'}`);
-        }
-      });
-    }
-  };
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({

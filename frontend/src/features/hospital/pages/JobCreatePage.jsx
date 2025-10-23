@@ -59,10 +59,19 @@ const JobCreatePage = () => {
 
   // Form handlers
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Uzmanlık alanı değiştiğinde yan dal uzmanlığını sıfırla
+      if (field === 'specialty_id') {
+        newData.subspecialty_id = '';
+      }
+      
+      return newData;
+    });
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -82,7 +91,7 @@ const JobCreatePage = () => {
       const submitData = {
         title: formData.title,
         specialty_id: parseInt(formData.specialty_id),
-        subspecialty_id: parseInt(formData.subspecialty_id),
+        subspecialty_id: formData.subspecialty_id ? parseInt(formData.subspecialty_id) : null,
         city_id: parseInt(formData.city_id),
         employment_type: formData.employment_type,
         min_experience_years: formData.min_experience_years ? parseInt(formData.min_experience_years) : null,
@@ -207,7 +216,7 @@ const JobCreatePage = () => {
                 {/* Subspecialty */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Yan Dal Uzmanlığı *
+                    Yan Dal Uzmanlığı
                   </label>
                   <select
                     value={formData.subspecialty_id}
@@ -215,13 +224,23 @@ const JobCreatePage = () => {
                     className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
                       errors.subspecialty_id ? 'border-red-500' : 'border-white/20'
                     }`}
+                    disabled={!formData.specialty_id || !subspecialties.some(sub => sub.specialty_id === parseInt(formData.specialty_id))}
                   >
-                    <option value="" className="bg-slate-800">Yan Dal Uzmanlığı Seçin</option>
-                    {subspecialties.map((subspecialty) => (
-                      <option key={subspecialty.value} value={subspecialty.value} className="bg-slate-800">
-                        {subspecialty.label}
-                      </option>
-                    ))}
+                    <option value="" className="bg-slate-800">
+                      {!formData.specialty_id 
+                        ? 'Önce Uzmanlık Alanı Seçin'
+                        : !subspecialties.some(sub => sub.specialty_id === parseInt(formData.specialty_id))
+                        ? 'Bu uzmanlık alanında yan dal yok'
+                        : 'Yan Dal Uzmanlığı Seçin (Opsiyonel)'
+                      }
+                    </option>
+                    {subspecialties
+                      .filter(subspecialty => subspecialty.specialty_id === parseInt(formData.specialty_id))
+                      .map((subspecialty) => (
+                        <option key={subspecialty.value} value={subspecialty.value} className="bg-slate-800">
+                          {subspecialty.label}
+                        </option>
+                      ))}
                   </select>
                   {errors.subspecialty_id && (
                     <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
@@ -286,7 +305,7 @@ const JobCreatePage = () => {
                 {/* Min Experience Years */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Minimum Deneyim (Yıl)
+                    Minimum Deneyim (Yıl) - Opsiyonel
                   </label>
                   <input
                     type="number"
@@ -295,7 +314,7 @@ const JobCreatePage = () => {
                     value={formData.min_experience_years}
                     onChange={(e) => handleInputChange('min_experience_years', e.target.value)}
                     className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300"
-                    placeholder="Örn: 2"
+                    placeholder="Örn: 2 (Boş bırakılabilir)"
                   />
                 </div>
               </div>
@@ -346,6 +365,9 @@ const JobCreatePage = () => {
                       {errors.description}
                     </p>
                   )}
+                  <p className="text-gray-400 text-sm mt-2">
+                    En az 10 karakter olmalıdır
+                  </p>
                 </div>
               </div>
             </div>

@@ -212,7 +212,7 @@ const DoctorDashboard = () => {
                             <div className="flex items-center gap-4 mt-3">
                               <div className="flex items-center gap-1 text-sm text-gray-400">
                                 <MapPin className="w-4 h-4" />
-                                {job.hospital_city}
+                                {job.city}
                               </div>
                               <div className="flex items-center gap-1 text-sm text-gray-400">
                                 <Calendar className="w-4 h-4" />

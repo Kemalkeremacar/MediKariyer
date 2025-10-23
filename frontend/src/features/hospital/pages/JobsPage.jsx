@@ -30,6 +30,8 @@ import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useDeleteH
 import { useJobStatuses } from '@/hooks/useLookup';
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import ConfirmationModal from '../../../components/ui/ConfirmationModal';
+import useUiStore from '../../../store/uiStore';
 import { showToast } from '@/utils/toastUtils';
 
 const HospitalJobs = () => {
@@ -39,6 +41,9 @@ const HospitalJobs = () => {
     page: 1,
     limit: 20
   });
+
+  // UI Store
+  const { openModal } = useUiStore();
 
   // API hook'ları
   const { 
@@ -55,8 +60,7 @@ const HospitalJobs = () => {
   // Fallback: Eğer jobStatuses lookup'tan gelmezse manuel tanımla (Taslak kaldırıldı)
   const statusOptions = jobStatuses?.length > 0 ? jobStatuses : [
     { value: 1, label: 'Aktif', name: 'Aktif' },
-    { value: 2, label: 'Pasif', name: 'Pasif' },
-    { value: 3, label: 'Silinmiş', name: 'Silinmiş' }
+    { value: 2, label: 'Pasif', name: 'Pasif' }
   ];
 
   const createJobMutation = useCreateHospitalJob();
@@ -68,13 +72,25 @@ const HospitalJobs = () => {
   const paginationData = jobsData?.data?.pagination || {};
 
   // Job actions
-  const handleDeleteJob = async (jobId, jobTitle) => {
-    if (window.confirm(`"${jobTitle}" iş ilanını silmek istediğinizden emin misiniz?`)) {
-      try {
-        await deleteJobMutation.mutateAsync(jobId);
-      } catch (error) {
-        console.error('İş ilanı silme hatası:', error);
-      }
+  const handleDeleteJob = (jobId, jobTitle) => {
+    openModal('confirmation', {
+      title: 'İş İlanını Sil',
+      message: `"${jobTitle}" iş ilanını kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve ilanla ilgili tüm başvurular da silinecektir.`,
+      confirmText: 'Sil',
+      cancelText: 'İptal',
+      onConfirm: () => confirmDeleteJob(jobId),
+      onCancel: () => {},
+      type: 'danger'
+    });
+  };
+
+  const confirmDeleteJob = async (jobId) => {
+    try {
+      await deleteJobMutation.mutateAsync(jobId);
+      showToast.success('İş ilanı başarıyla silindi');
+    } catch (error) {
+      console.error('İş ilanı silme hatası:', error);
+      showToast.error('İş ilanı silinirken hata oluştu');
     }
   };
 
@@ -84,8 +100,7 @@ const HospitalJobs = () => {
     // Database'deki status name'lere göre mapping (Taslak kaldırıldı)
     const statusConfig = {
       'Aktif': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: '✓' },
-      'Pasif': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: '⏸' },
-      'Silinmiş': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: '✕' }
+      'Pasif': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: '⏸' }
     };
 
     const config = statusConfig[status] || statusConfig['Pasif'];
@@ -381,6 +396,9 @@ const HospitalJobs = () => {
             </div>
           )}
         </div>
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal />
     </div>
   );
 };

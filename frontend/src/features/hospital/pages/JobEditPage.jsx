@@ -26,7 +26,6 @@ import {
 } from 'lucide-react';
 import { useHospitalJobById, useUpdateHospitalJob } from '../api/useHospital';
 import { useLookup } from '@/hooks/useLookup';
-import { useJobStatuses } from '@/hooks/useLookup';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
@@ -50,27 +49,10 @@ const JobEditPage = () => {
     loading: lookupLoading
   } = useLookup();
   
-  const { data: jobStatuses, isLoading: jobStatusesLoading } = useJobStatuses();
-  
   const specialties = lookupData?.specialties || [];
   const subspecialties = lookupData?.subspecialties || [];
   const cities = lookupData?.cities || [];
   
-  // Fallback: Eğer jobStatuses lookup'tan gelmezse manuel tanımla
-  const allStatuses = jobStatuses?.length > 0 ? jobStatuses : [
-    { value: 1, label: 'Aktif', name: 'Aktif' },
-    { value: 2, label: 'Pasif', name: 'Pasif' },
-    { value: 3, label: 'Silinmiş', name: 'Silinmiş' }
-  ];
-  
-  // Sadece düzenlenebilir statuslar
-  // - Normal ilanlar için: Aktif ve Pasif
-  // - Silinmiş ilanlar için: Aktif, Pasif ve Silinmiş (geri getirebilmek için)
-  const currentJob = jobData?.data?.job;
-  const statusOptions = currentJob?.status_id === 3 
-    ? allStatuses.filter(status => [1, 2, 3].includes(status.value)) // Silinmiş ilanlarda 3 seçenek
-    : allStatuses.filter(status => [1, 2].includes(status.value));   // Normal ilanlarda 2 seçenek
-
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -79,8 +61,7 @@ const JobEditPage = () => {
     city_id: '',
     employment_type: '',
     min_experience_years: '',
-    description: '',
-    status_id: ''
+    description: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -97,8 +78,7 @@ const JobEditPage = () => {
         city_id: job.city_id?.toString() || '',
         employment_type: job.employment_type || '',
         min_experience_years: job.min_experience_years?.toString() || '',
-        description: job.description || '',
-        status_id: job.status_id?.toString() || '1'
+        description: job.description || ''
       });
       setIsInitialized(true);
     }
@@ -106,10 +86,19 @@ const JobEditPage = () => {
 
   // Form handlers
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Uzmanlık alanı değiştiğinde yan dal uzmanlığını sıfırla
+      if (field === 'specialty_id') {
+        newData.subspecialty_id = '';
+      }
+      
+      return newData;
+    });
     
     // Clear error when user starts typing
     if (errors[field]) {
@@ -128,12 +117,11 @@ const JobEditPage = () => {
       const submitData = {
         title: formData.title,
         specialty_id: parseInt(formData.specialty_id),
-        subspecialty_id: parseInt(formData.subspecialty_id),
+        subspecialty_id: formData.subspecialty_id ? parseInt(formData.subspecialty_id) : null,
         city_id: parseInt(formData.city_id),
         employment_type: formData.employment_type,
         min_experience_years: formData.min_experience_years ? parseInt(formData.min_experience_years) : null,
-        description: formData.description,
-        status_id: parseInt(formData.status_id)
+        description: formData.description
       };
 
       // Zod validation kullan
@@ -163,7 +151,7 @@ const JobEditPage = () => {
   };
 
   // Loading state
-  if (jobLoading || lookupLoading.isLoading || jobStatusesLoading) {
+  if (jobLoading || lookupLoading.isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
         <TransitionWrapper>
@@ -206,15 +194,17 @@ const JobEditPage = () => {
         <div className="max-w-4xl mx-auto p-6">
           {/* Header */}
           <div className="mb-8">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-4"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Geri Dön
-            </button>
-            <h1 className="text-3xl font-bold text-white mb-2">İş İlanını Düzenle</h1>
-            <p className="text-gray-300">İş ilanı bilgilerini güncelleyin</p>
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={handleCancel}
+                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors bg-white/5 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10 hover:bg-white/10"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Geri Dön
+              </button>
+              <div></div>
+            </div>
+            <h1 className="text-3xl font-bold text-white text-center">İş İlanını Düzenle</h1>
           </div>
 
           {/* Form */}
@@ -281,7 +271,7 @@ const JobEditPage = () => {
                 {/* Subspecialty */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Yan Dal Uzmanlığı *
+                    Yan Dal Uzmanlığı
                   </label>
                   <select
                     value={formData.subspecialty_id}
@@ -289,13 +279,23 @@ const JobEditPage = () => {
                     className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
                       errors.subspecialty_id ? 'border-red-500' : 'border-white/20'
                     }`}
+                    disabled={!formData.specialty_id || !subspecialties.some(sub => sub.specialty_id === parseInt(formData.specialty_id))}
                   >
-                    <option value="" className="bg-slate-800">Yan Dal Uzmanlığı Seçin</option>
-                    {subspecialties.map((subspecialty) => (
-                      <option key={subspecialty.value} value={subspecialty.value} className="bg-slate-800">
-                        {subspecialty.label}
-                      </option>
-                    ))}
+                    <option value="" className="bg-slate-800">
+                      {!formData.specialty_id 
+                        ? 'Önce Uzmanlık Alanı Seçin'
+                        : !subspecialties.some(sub => sub.specialty_id === parseInt(formData.specialty_id))
+                        ? 'Bu uzmanlık alanında yan dal yok'
+                        : 'Yan Dal Uzmanlığı Seçin (Opsiyonel)'
+                      }
+                    </option>
+                    {subspecialties
+                      .filter(subspecialty => subspecialty.specialty_id === parseInt(formData.specialty_id))
+                      .map((subspecialty) => (
+                        <option key={subspecialty.value} value={subspecialty.value} className="bg-slate-800">
+                          {subspecialty.label}
+                        </option>
+                      ))}
                   </select>
                   {errors.subspecialty_id && (
                     <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
@@ -360,7 +360,7 @@ const JobEditPage = () => {
                 {/* Min Experience */}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Minimum Deneyim Yılı
+                    Minimum Deneyim Yılı - Opsiyonel
                   </label>
                   <input
                     type="number"
@@ -369,56 +369,8 @@ const JobEditPage = () => {
                     value={formData.min_experience_years}
                     onChange={(e) => handleInputChange('min_experience_years', e.target.value)}
                     className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300"
-                    placeholder="Örn: 3"
+                    placeholder="Örn: 3 (Boş bırakılabilir)"
                   />
-                </div>
-
-                {/* Status - İlan Durumu Değiştirme */}
-                <div className="lg:col-span-2">
-                  <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-xl p-4">
-                    <label className="block text-sm font-medium text-purple-300 mb-3 flex items-center gap-2">
-                      <Building className="w-4 h-4" />
-                      İlan Durumu Yönetimi *
-                    </label>
-                    <select
-                      value={formData.status_id}
-                      onChange={(e) => handleInputChange('status_id', e.target.value)}
-                      className={`w-full px-4 py-3 bg-white/10 border rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 backdrop-blur-sm transition-all duration-300 font-medium ${
-                        errors.status_id ? 'border-red-500' : 'border-purple-500/30'
-                      }`}
-                    >
-                      <option value="" className="bg-slate-800">Durum Seçin</option>
-                      {statusOptions.map((status) => (
-                        <option key={status.value} value={status.value} className="bg-slate-800">
-                          {status.label}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.status_id && (
-                      <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.status_id}
-                      </p>
-                    )}
-                    <div className="mt-3 space-y-2">
-                      <p className="text-xs text-purple-200/80">
-                        <span className="font-semibold">🟢 Aktif:</span> İlan doktorlar tarafından görüntülenir ve başvuru alır
-                      </p>
-                      <p className="text-xs text-purple-200/80">
-                        <span className="font-semibold">🟠 Pasif:</span> İlan durdurulmuştur, sadece siz görebilirsiniz, doktorlar göremez
-                      </p>
-                      {currentJob?.status_id === 3 && (
-                        <p className="text-xs text-green-300/80 bg-green-500/10 rounded-lg p-2">
-                          <span className="font-semibold">✨ İlanı Geri Getir:</span> Bu ilan silinmiş durumda. 
-                          İlanı "Aktif" veya "Pasif" yaparak geri getirebilirsiniz.
-                        </p>
-                      )}
-                      <p className="text-xs text-red-300/70 mt-3 pt-2 border-t border-purple-500/20">
-                        💡 <span className="font-semibold">İlanı Silmek İçin:</span> Detay sayfasındaki "Sil" butonunu kullanın. 
-                        Silinen ilanlar "Silinmiş" durumuna geçer ve istediğiniz zaman geri getirebilirsiniz.
-                      </p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -451,9 +403,7 @@ const JobEditPage = () => {
                     {errors.description}
                   </p>
                 )}
-                <p className="text-gray-400 text-sm mt-2">
-                  En az 50 karakter olmalıdır
-                </p>
+              
               </div>
             </div>
 

@@ -196,20 +196,6 @@ export function useUpdateUserStatus() {
   });
 }
 
-/**
- * Kullanıcı siler - Backend: deleteUser
- * @returns {Object} React Query mutation
- */
-export function useDeleteUser() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (userId) => apiRequest.delete(buildEndpoint(ENDPOINTS.ADMIN.USER_DELETE, { id: userId })),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.USERS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
-    },
-  });
-}
 
 // ============================================================================
 // İŞ İLANI YÖNETİMİ - Backend adminService.js ile uyumlu

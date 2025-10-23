@@ -163,12 +163,12 @@ const jobSchema = Joi.object({
   subspecialty_id: Joi.number()
     .integer()
     .positive()
-    .required()
+    .optional()
+    .allow(null, '')
     .messages({
       'number.base': 'Yan dal uzmanlığı ID sayı olmalıdır',
       'number.integer': 'Yan dal uzmanlığı ID tam sayı olmalıdır',
-      'number.positive': 'Yan dal uzmanlığı ID pozitif olmalıdır',
-      'any.required': 'Yan dal uzmanlığı zorunludur'
+      'number.positive': 'Yan dal uzmanlığı ID pozitif olmalıdır'
     }),
 
   city_id: Joi.number()
@@ -194,7 +194,8 @@ const jobSchema = Joi.object({
     .integer()
     .min(0)
     .max(50)
-    .allow(null)
+    .optional()
+    .allow(null, '')
     .messages({
       'number.base': 'Minimum deneyim yılı sayı olmalıdır',
       'number.integer': 'Minimum deneyim yılı tam sayı olmalıdır',
@@ -216,17 +217,43 @@ const jobSchema = Joi.object({
   // status_id sadece güncelleme için geçerli (oluşturmada otomatik Aktif)
   // 1=Aktif: Doktorlar görür ve başvuru yapar
   // 2=Pasif: Sadece hastane görür, doktorlar görmez
-  // 3=Silinmiş: Silme butonu ile ayarlanır, hastane isterse geri getirebilir (1 veya 2 yaparak)
   status_id: Joi.number()
     .integer()
     .positive()
-    .valid(1, 2, 3) // 1=Aktif, 2=Pasif, 3=Silinmiş (geri getirebilmek için 3 de kabul edilmeli)
+    .valid(1, 2) // 1=Aktif, 2=Pasif
     .optional()
     .messages({
       'number.base': 'İlan durumu sayı olmalıdır',
       'number.integer': 'İlan durumu tam sayı olmalıdır',
       'number.positive': 'İlan durumu pozitif olmalıdır',
-      'any.only': 'Geçersiz ilan durumu. Sadece Aktif (1), Pasif (2) veya Silinmiş (3) olabilir.'
+      'any.only': 'Geçersiz ilan durumu. Sadece Aktif (1) veya Pasif (2) olabilir.'
+    })
+});
+
+/**
+ * İş ilanı durumu güncelleme şeması
+ * @description Hospital tarafından iş ilanı durumu güncellenirken kullanılacak veri doğrulaması
+ */
+const jobStatusUpdateSchema = Joi.object({
+  status_id: Joi.number()
+    .integer()
+    .positive()
+    .valid(1, 2) // 1=Aktif, 2=Pasif
+    .required()
+    .messages({
+      'number.base': 'Durum ID\'si sayı olmalıdır',
+      'number.integer': 'Durum ID\'si tam sayı olmalıdır',
+      'number.positive': 'Durum ID\'si pozitif olmalıdır',
+      'any.only': 'Geçersiz durum. Sadece Aktif (1) veya Pasif (2) olabilir.',
+      'any.required': 'Durum ID\'si gereklidir'
+    }),
+  reason: Joi.string()
+    .min(5)
+    .max(500)
+    .optional()
+    .messages({
+      'string.min': 'Neden en az 5 karakter olmalıdır',
+      'string.max': 'Neden en fazla 500 karakter olabilir'
     })
 });
 
@@ -377,6 +404,50 @@ const applicationsQuerySchema = Joi.object({
     })
 });
 
+/**
+ * Job ID Parameter Schema
+ * @description URL parametresi olarak gelen job ID'si için validation
+ */
+const jobIdParamSchema = Joi.object({
+  jobId: Joi.number()
+    .integer()
+    .positive()
+    .required()
+    .messages({
+      'number.base': 'İş ilanı ID\'si sayı olmalıdır',
+      'number.integer': 'İş ilanı ID\'si tam sayı olmalıdır',
+      'number.positive': 'İş ilanı ID\'si pozitif olmalıdır',
+      'any.required': 'İş ilanı ID\'si zorunludur'
+    })
+});
+
+/**
+ * Job Status Change Notification Schema
+ * @description İlan durumu değişikliği bildirimi için validation
+ */
+const jobStatusChangeSchema = Joi.object({
+  newStatus: Joi.string()
+    .min(2)
+    .max(50)
+    .required()
+    .messages({
+      'string.base': 'Yeni durum metin olmalıdır',
+      'string.min': 'Yeni durum en az 2 karakter olmalıdır',
+      'string.max': 'Yeni durum en fazla 50 karakter olabilir',
+      'any.required': 'Yeni durum gereklidir'
+    }),
+  oldStatus: Joi.string()
+    .min(2)
+    .max(50)
+    .required()
+    .messages({
+      'string.base': 'Eski durum metin olmalıdır',
+      'string.min': 'Eski durum en az 2 karakter olmalıdır',
+      'string.max': 'Eski durum en fazla 50 karakter olabilir',
+      'any.required': 'Eski durum gereklidir'
+    })
+});
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -387,6 +458,9 @@ module.exports = {
   
   // İş ilanı validation
   jobSchema,
+  jobStatusUpdateSchema,
+  jobIdParamSchema,
+  jobStatusChangeSchema,
   
   // Başvuru durumu validation
   applicationStatusSchema,

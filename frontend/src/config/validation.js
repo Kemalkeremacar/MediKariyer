@@ -307,7 +307,7 @@ export const hospitalContactSchema = z.object({
 export const jobSchema = z.object({
   title: z.string().min(5, 'İş ilanı başlığı en az 5 karakter olmalıdır').max(255, 'İş ilanı başlığı en fazla 255 karakter olabilir'),
   specialty_id: idSchema,
-  subspecialty_id: idSchema,
+  subspecialty_id: idSchema.optional().nullable().or(z.literal('')),
   city_id: idSchema,
   employment_type: z.enum(['Tam Zamanlı', 'Yarı Zamanlı', 'Nöbet Usulü'], {
     errorMap: () => ({ message: 'İstihdam türü "Tam Zamanlı", "Yarı Zamanlı" veya "Nöbet Usulü" olmalıdır' })
@@ -315,9 +315,9 @@ export const jobSchema = z.object({
   min_experience_years: z.number().int().min(0, 'Minimum deneyim yılı 0\'dan küçük olamaz').max(50, 'Minimum deneyim yılı 50\'den büyük olamaz').nullable().optional(),
   description: z.string().min(10, 'İş tanımı en az 10 karakter olmalıdır').max(5000, 'İş tanımı en fazla 5000 karakter olabilir'),
   // status_id sadece güncelleme için geçerli (oluşturmada backend otomatik 1 yapar)
-  // 1=Aktif, 2=Pasif, 3=Silinmiş (geri getirebilmek için 3 de kabul edilmeli)
+  // 1=Aktif, 2=Pasif
   status_id: z.number().int().positive()
-    .refine((val) => [1, 2, 3].includes(val), 'Sadece Aktif (1), Pasif (2) veya Silinmiş (3) seçilebilir')
+    .refine((val) => [1, 2].includes(val), 'Sadece Aktif (1) veya Pasif (2) seçilebilir')
     .optional()
 });
 

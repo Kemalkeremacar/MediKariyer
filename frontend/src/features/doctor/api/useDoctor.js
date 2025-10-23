@@ -540,26 +540,6 @@ export const useDeleteApplication = () => {
   });
 };
 
-export const useReapplyToJob = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ applicationId, coverLetter }) => {
-      const endpoint = buildEndpoint(ENDPOINTS.DOCTOR.APPLICATION_REAPPLY, { id: applicationId });
-      return apiRequest.post(endpoint, { coverLetter });
-    },
-    onSuccess: () => {
-      qc.invalidateQueries(['doctor', 'applications']);
-      qc.invalidateQueries(['doctor', 'dashboard']); // Dashboard'u güncelle
-      qc.invalidateQueries(['hospital', 'applications']); // Hastane başvurular sayfası
-      qc.invalidateQueries(['hospital', 'dashboard']); // Hastane dashboard
-      qc.invalidateQueries(['admin', 'applications']); // Admin başvurular sayfası
-      showToast.success('Başvuru başarıyla yeniden yapıldı');
-    },
-    onError: (err) => {
-      showToast.error(err.message || 'Yeniden başvuru yapılamadı');
-    },
-  });
-};
 
 // ============================================================================
 // FOTOĞRAF ONAY SİSTEMİ HOOKS
@@ -674,7 +654,6 @@ export default {
   useApplicationDetail,
   useWithdrawApplication,
   useDeleteApplication,
-  useReapplyToJob,
   
   // Fotoğraf onay sistemi
   useRequestPhotoChange,

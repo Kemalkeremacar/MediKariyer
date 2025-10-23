@@ -138,91 +138,64 @@ const ConfirmationModal = () => {
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 overflow-y-auto"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-      aria-describedby="modal-description"
-    >
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
-        onClick={handleBackdropClick}
-      />
-      
-      {/* Modal Container */}
+    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
-        <div 
-          ref={modalRef}
-          className={`
-            relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 
-            shadow-2xl transition-all duration-300 w-full ${modalSize}
-            animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4
-          `}
-        >
-          {/* Close Button */}
-          <button
-            onClick={handleCancel}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full p-1"
-            aria-label="Modalı kapat"
-          >
-            <X className="h-6 w-6" />
-          </button>
-
-          {/* Content */}
-          <div className="px-8 py-12 text-center">
-            {/* Icon */}
-            <div className="flex justify-center mb-6">
-              {destructive ? destructiveStyles.icon : icon}
-            </div>
-
-            {/* Title */}
-            <h3 
-              id="modal-title"
-              className="text-2xl font-bold text-gray-900 dark:text-white mb-4"
+        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="p-8">
+            {/* Close Button */}
+            <button
+              onClick={handleCancel}
+              className="absolute top-4 right-4 text-gray-400 hover:text-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full p-1"
+              aria-label="Modalı kapat"
             >
-              {title}
-            </h3>
+              <X className="h-6 w-6" />
+            </button>
 
-            {/* Message */}
-            <p 
-              id="modal-description"
-              className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed"
-            >
-              {message}
-            </p>
+            {/* Content */}
+            <div className="text-center">
+              {/* Icon */}
+              <div className="flex justify-center mb-6">
+                {destructive ? destructiveStyles.icon : icon}
+              </div>
 
-            {/* Buttons */}
-            <div className="flex space-x-4 justify-center">
-              {/* Cancel Button */}
-              <button
-                ref={cancelButtonRef}
-                onClick={handleCancel}
-                className={`
-                  px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 
-                  shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none 
-                  focus:ring-2 focus:ring-offset-2 ${buttonStyles.cancel}
-                `}
-                aria-label="İşlemi iptal et"
+              {/* Title */}
+              <h3 
+                id="modal-title"
+                className="text-2xl font-bold text-white mb-4"
               >
-                {cancelText}
-              </button>
+                {title}
+              </h3>
 
-              {/* Confirm Button */}
-              <button
-                ref={confirmButtonRef}
-                onClick={handleConfirm}
-                className={`
-                  px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 
-                  shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none 
-                  focus:ring-2 focus:ring-offset-2 
-                  ${destructive ? destructiveStyles.confirmButton : buttonStyles.confirm}
-                `}
-                aria-label="İşlemi onayla"
+              {/* Message */}
+              <p 
+                id="modal-description"
+                className="text-lg text-gray-300 mb-8 leading-relaxed"
               >
-                {confirmText}
-              </button>
+                {message}
+              </p>
+
+              {/* Buttons */}
+              <div className="flex space-x-4 justify-center">
+                {/* Cancel Button */}
+                <button
+                  ref={cancelButtonRef}
+                  onClick={handleCancel}
+                  className="px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 bg-white/10 border border-white/20 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  aria-label="İşlemi iptal et"
+                >
+                  {cancelText}
+                </button>
+
+                {/* Confirm Button */}
+                <button
+                  ref={confirmButtonRef}
+                  onClick={handleConfirm}
+                  className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${destructive ? destructiveStyles.confirmButton : buttonStyles.confirm}`}
+                  aria-label="İşlemi onayla"
+                >
+                  {confirmText}
+                </button>
+              </div>
             </div>
           </div>
         </div>

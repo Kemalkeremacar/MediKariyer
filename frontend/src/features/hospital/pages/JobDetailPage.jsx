@@ -18,14 +18,16 @@
  */
 
 import React from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
-  Briefcase, Edit3, Trash2, Users, MapPin, Calendar, 
-  Clock, Target, AlertCircle, ArrowLeft, CheckCircle, Building
+  Briefcase, Edit3, Users, MapPin, Calendar, 
+  Target, AlertCircle, ArrowLeft, Building, CheckCircle, Clock, Settings
 } from 'lucide-react';
-import { useHospitalJobById, useDeleteHospitalJob } from '../api/useHospital';
+import { useHospitalJobById, useUpdateHospitalJobStatus } from '../api/useHospital';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import ConfirmationModal from '../../../components/ui/ConfirmationModal';
+import useUiStore from '../../../store/uiStore';
 import { showToast } from '@/utils/toastUtils';
 
 const JobDetailPage = () => {
@@ -40,34 +42,56 @@ const JobDetailPage = () => {
     refetch: refetchJob
   } = useHospitalJobById(jobId);
 
-  const deleteJobMutation = useDeleteHospitalJob();
+  const updateStatusMutation = useUpdateHospitalJobStatus();
+
+  // UI Store
+  const { openModal } = useUiStore();
 
   // Veri parsing
   const job = jobData?.data?.job || null;
-  
-  // Debug: Başvuru sayısını kontrol et
-  console.log('🔍 Job Data:', jobData);
-  console.log('📊 Application Count:', job?.application_count);
 
-  // Job actions
-  const handleDeleteJob = async () => {
-    if (window.confirm(`"${job.title}" iş ilanını silmek istediğinizden emin misiniz?`)) {
-      try {
-        await deleteJobMutation.mutateAsync(jobId);
-        showToast.success('İş ilanı başarıyla silindi');
-        navigate('/hospital/jobs');
-      } catch (error) {
-        console.error('İş ilanı silme hatası:', error);
-      }
+  // Status update handler
+  const handleStatusChange = (statusId) => {
+    const statusNames = { 1: 'Aktif', 2: 'Pasif' };
+    const isActivating = statusId === 1;
+    
+    openModal('confirmation', {
+      title: 'İlan Durumu Değiştir',
+      message: isActivating 
+        ? "Bu ilanı aktif yapmak istediğinizden emin misiniz? Aktif ilanlar doktorlar tarafından görülebilir ve başvuru yapılabilir."
+        : "Bu ilanı pasif yapmak istediğinizden emin misiniz? Pasif ilanlar doktorlar tarafından görülemez ve başvuru yapılamaz.",
+      confirmText: isActivating ? "Aktif Yap" : "Pasif Yap",
+      cancelText: "İptal",
+      onConfirm: () => confirmStatusChange(statusId),
+      onCancel: cancelStatusChange,
+      type: isActivating ? 'success' : 'warning'
+    });
+  };
+
+  const confirmStatusChange = async (statusId) => {
+    const statusNames = { 1: 'Aktif', 2: 'Pasif' };
+    
+    try {
+      await updateStatusMutation.mutateAsync({
+        jobId: jobId,
+        status_id: statusId,
+        reason: 'Hastane tarafından güncellendi'
+      });
+      refetchJob();
+    } catch (error) {
+      console.error('Status update error:', error);
     }
+  };
+
+  const cancelStatusChange = () => {
+    // Modal otomatik kapanacak
   };
 
   // Status badge component (Taslak kaldırıldı)
   const StatusBadge = ({ status }) => {
     const statusConfig = {
       'Aktif': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: CheckCircle },
-      'Pasif': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: Clock },
-      'Silinmiş': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: AlertCircle }
+      'Pasif': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: Clock }
     };
 
     const config = statusConfig[status] || statusConfig['Pasif'];
@@ -168,14 +192,6 @@ const JobDetailPage = () => {
                 <Edit3 className="w-4 h-4" />
                 Düzenle
               </Link>
-              <button
-                onClick={handleDeleteJob}
-                className="bg-red-500/20 text-red-300 border border-red-500/30 px-4 py-3 rounded-xl hover:bg-red-500/30 transition-all duration-300 inline-flex items-center gap-2"
-                disabled={deleteJobMutation.isLoading}
-              >
-                <Trash2 className="w-4 h-4" />
-                Sil
-              </button>
             </div>
           </div>
 
@@ -206,6 +222,9 @@ const JobDetailPage = () => {
                   <span className="text-gray-400 text-sm">Uzmanlık Alanı</span>
                 </div>
                 <p className="text-white font-medium text-lg">{job.specialty}</p>
+                {job.subspecialty_name && (
+                  <p className="text-blue-300 text-sm mt-1">Yan Dal: {job.subspecialty_name}</p>
+                )}
               </div>
 
               {/* Şehir */}
@@ -274,6 +293,67 @@ const JobDetailPage = () => {
               <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{job.description}</p>
             </div>
 
+            {/* İlan Durumu Yönetimi */}
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white">İlan Durumu Yönetimi</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Mevcut Durum */}
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <StatusBadge status={job?.status} />
+                    <span className="text-gray-300">Mevcut Durum</span>
+                  </div>
+                </div>
+
+                {/* Durum Değiştirme Butonları */}
+                <div className="flex items-center gap-4">
+                  {job?.status === 'Aktif' ? (
+                    <button
+                      onClick={() => handleStatusChange(2)}
+                      disabled={updateStatusMutation.isPending}
+                      className="bg-orange-500/20 text-orange-300 border border-orange-500/30 px-6 py-3 rounded-xl hover:bg-orange-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Clock className="w-5 h-5" />
+                      Pasif Yap
+                    </button>
+                  ) : job?.status === 'Pasif' ? (
+                    <button
+                      onClick={() => handleStatusChange(1)}
+                      disabled={updateStatusMutation.isPending}
+                      className="bg-green-500/20 text-green-300 border border-green-500/30 px-6 py-3 rounded-xl hover:bg-green-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                      Aktif Yap
+                    </button>
+                  ) : (
+                    <div className="text-gray-400 text-sm">
+                      Durum bilgisi yükleniyor...
+                    </div>
+                  )}
+                </div>
+
+                {/* Bilgilendirme */}
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-blue-300 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-blue-200">
+                      <p className="font-medium mb-1">Durum Değişikliği Hakkında:</p>
+                      <ul className="space-y-1 text-blue-300">
+                        <li>• <strong>Aktif:</strong> Doktorlar bu ilanı görebilir ve başvuru yapabilir</li>
+                        <li>• <strong>Pasif:</strong> Doktorlar bu ilanı göremez ve başvuru yapamaz</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-white/10">
               <Link
@@ -293,6 +373,9 @@ const JobDetailPage = () => {
           </div>
         </div>
       </TransitionWrapper>
+
+      {/* Status Change Confirmation Modal */}
+      <ConfirmationModal />
     </div>
   );
 };

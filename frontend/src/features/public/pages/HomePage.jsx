@@ -1,10 +1,32 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiUsers, FiShield, FiTrendingUp, FiCheckCircle, FiPlay, FiHeart } from 'react-icons/fi';
 import { ROUTE_CONFIG } from '@config/routes.js';
+import { useAuthStore } from '@/store/authStore';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuthStore();
+
+  // Eğer kullanıcı giriş yapmışsa, rolüne göre dashboard'a yönlendir
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      switch (user.role) {
+        case 'admin':
+          navigate(ROUTE_CONFIG.ADMIN.DASHBOARD, { replace: true });
+          break;
+        case 'doctor':
+          navigate(ROUTE_CONFIG.DOCTOR.DASHBOARD, { replace: true });
+          break;
+        case 'hospital':
+          navigate(ROUTE_CONFIG.HOSPITAL.DASHBOARD, { replace: true });
+          break;
+        default:
+          // Bilinmeyen rol için login sayfasına yönlendir
+          navigate(ROUTE_CONFIG.PUBLIC.LOGIN, { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleRegisterClick = () => {
     navigate(ROUTE_CONFIG.PUBLIC.REGISTER);
