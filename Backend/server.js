@@ -31,8 +31,8 @@ const { startTokenCleanupScheduler } = require('./src/utils/tokenCleanup'); // T
 // Yeni bir Express uygulaması oluşturulur.
 const app = express();
 
-// Sunucunun çalışacağı port. .env dosyasından alınır, eğer tanımlı değilse varsayılan olarak 5000 kullanılır.
-const PORT = process.env.PORT || 5000;
+// Sunucunun çalışacağı port. .env dosyasından alınır, eğer tanımlı değilse varsayılan olarak 3000 kullanılır.
+const PORT = process.env.PORT || 3000;
 
 // Not: Temel güvenlik middleware'leri (Helmet, CORS, Rate Limiting) expressLoader içinde yönetilmektedir.
 
@@ -43,17 +43,17 @@ let server; // Server değişkenini dışarıda tanımla
 
 const startServer = async () => {
   try {
-        // Veritabanı bağlantısını test et
-        await testConnection();
-        logger.info('✅ Veritabanı bağlantısı başarıyla kuruldu.');
+        // Veritabanı bağlantısını test et (3 retry ile)
+        const dbConnected = await testConnection();
+        if (!dbConnected) {
+            logger.warn('⚠️ Veritabanı bağlantısı başlangıçta kurulamadı, ancak sunucu başlatılıyor...');
+        }
 
     // Express uygulamasını yapılandır
     expressLoader(app);
-    logger.info('✅ Express yükleyicisi başarıyla başlatıldı.');
 
     // Token temizleme sistemini başlat
     startTokenCleanupScheduler();
-    logger.info('✅ Token temizleme sistemi başlatıldı.');
 
     // Sunucuyu başlat
     server = app.listen(PORT, () => {

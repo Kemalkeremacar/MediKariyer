@@ -15,13 +15,13 @@ const CORS_OPTIONS = {
   origin: function (origin, callback) {
     // İzin verilen kaynakların (frontend adresleri) listesi. .env dosyasından okunur.
     const allowedOrigins = [
-      process.env.CORS_ORIGIN || 'http://localhost:3000',
+      process.env.CORS_ORIGIN || 'http://localhost:5000',
+      'http://localhost:5000', // Frontend - Vite dev server
       'http://localhost:3000',
-      'http://localhost:5000', // Frontend Vite dev server
-      'http://127.0.0.1:3000',
       'http://127.0.0.1:5000',
+      'http://127.0.0.1:3000',
       'http://192.168.1.198:5000', // Network IP - Frontend
-      'http://192.168.1.198:3000'  // Network IP - Backend (eğer gerekirse)
+      'http://192.168.1.198:3000'  // Network IP - Backend
     ];
     
     // Kaynağı olmayan isteklere (mobil uygulamalar, Postman gibi araçlar) izin ver.

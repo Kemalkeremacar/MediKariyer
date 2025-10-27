@@ -15,28 +15,43 @@ const logger = require('../utils/logger'); // Loglama sistemi
 // Hangi ortamda (development, production vb.) çalışıldığını belirle.
 const environment = process.env.NODE_ENV || 'development';
 
-// Doğrudan veritabanı yapılandırması
+// Veritabanı bağlantı yapılandırması - Basit ve direkt yaklaşım
+const serverName = process.env.DB_HOST || 'localhost';
+const databaseName = process.env.DB_NAME || 'MEDIKARIYER';
+const instanceName = process.env.DB_INSTANCE || null;
+
+// Server adını oluştur (instance varsa ekle)
+const finalServer = instanceName ? `${serverName}\\${instanceName}` : serverName;
+
 const config = {
   client: 'mssql',
   connection: {
-    server: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'MEDIKARIYER',
+    server: finalServer,
+    database: databaseName,
     user: process.env.DB_USER || 'sa',
     password: process.env.DB_PASSWORD,
-    port: parseInt(process.env.DB_PORT) || 1433,
     options: {
-      encrypt: process.env.DB_ENCRYPT === 'true',
-      trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true',
-      instanceName: process.env.DB_INSTANCE,
+      encrypt: false,  // Named Pipes için false
+      trustServerCertificate: true,
       enableArithAbort: true,
-      requestTimeout: 30000,
-      connectionTimeout: 30000
+      requestTimeout: 60000,
+      connectionTimeout: 60000,
+      useUTC: true
     }
   },
   pool: environment === 'production' 
     ? { min: 5, max: 20 }
     : { min: 2, max: 10 }
 };
+
+// Debug: Bağlantı bilgilerini logla
+console.log('🔌 Veritabanı bağlantı bilgileri:', {
+  server: finalServer,
+  database: databaseName,
+  user: config.connection.user,
+  instanceName: instanceName || 'none',
+  encrypt: config.connection.options.encrypt
+});
 
 // Knex.js veritabanı bağlantı nesnesini oluştur.
 const db = knex(config);
@@ -47,17 +62,34 @@ const db = knex(config);
  * @returns {Promise<boolean>} Bağlantı başarılıysa true, değilse false döner.
  */
 const testConnection = async () => {
-  try {
-    // Veritabanına basit bir sorgu göndererek bağlantıyı kontrol et.
-    // 'SELECT 1' sorgusu genellikle bu amaçla kullanılır çünkü sunucuya minimum yük bindirir.
-    await db.raw('SELECT 1');
-    logger.info('✅ Veritabanı bağlantısı başarıyla kuruldu.');
-    return true;
-  } catch (error) {
-    // Bağlantı hatası durumunda konsola detaylı bir hata mesajı yazdır.
-    logger.error('❌ Veritabanı bağlantısı kurulamadı:', error.message);
-    return false;
+  const maxRetries = 3;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Veritabanına basit bir sorgu göndererek bağlantıyı kontrol et.
+      // 'SELECT 1' sorgusu genellikle bu amaçla kullanılır çünkü sunucuya minimum yük bindirir.
+      await db.raw('SELECT 1');
+      logger.info('✅ Veritabanı bağlantısı başarıyla kuruldu.');
+      return true;
+    } catch (error) {
+      // Sadece tüm denemeler başarısız olduğunda hata göster
+      if (attempt === maxRetries) {
+        logger.error('❌ Veritabanı bağlantısı kurulamadı:', error);
+        logger.error('📌 Bağlantı detayları:', {
+          server: process.env.DB_HOST,
+          port: process.env.DB_PORT,
+          database: process.env.DB_NAME,
+          user: process.env.DB_USER,
+          instance: process.env.DB_INSTANCE
+        });
+        return false;
+      }
+      // Retry yapılacak, kısa bekle (connection pool initialization için)
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
   }
+  
+  return false;
 };
 
 /**
