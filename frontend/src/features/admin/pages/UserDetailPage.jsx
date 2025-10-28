@@ -380,7 +380,7 @@ const UserDetailPage = () => {
                             <MapPin className="h-5 w-5 text-indigo-600 mt-0.5" />
                             <div>
                               <p className="text-sm text-gray-600">Doğum Yeri</p>
-                              <p className="font-semibold text-gray-900">{user.data?.user?.profile?.birth_place || user.profile?.birth_place || 'Belirtilmemiş'}</p>
+                              <p className="font-semibold text-gray-900">{user.data?.user?.profile?.birth_place_name || user.profile?.birth_place_name || 'Belirtilmemiş'}</p>
                             </div>
                           </div>
                           
@@ -389,7 +389,7 @@ const UserDetailPage = () => {
                             <MapPin className="h-5 w-5 text-indigo-600 mt-0.5" />
                             <div>
                               <p className="text-sm text-gray-600">İkamet Şehri</p>
-                              <p className="font-semibold text-gray-900">{user.data?.user?.profile?.residence_city || user.profile?.residence_city || 'Belirtilmemiş'}</p>
+                              <p className="font-semibold text-gray-900">{user.data?.user?.profile?.residence_city_name || user.profile?.residence_city_name || 'Belirtilmemiş'}</p>
                             </div>
                           </div>
                         </>

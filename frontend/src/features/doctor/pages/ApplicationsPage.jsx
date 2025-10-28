@@ -235,11 +235,11 @@ const DoctorApplicationsPage = () => {
                           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 text-sm md:text-base">
                             <div className="flex items-center gap-2">
                               <Building className="w-4 h-4" />
-                              <span>{application.hospital}</span>
+                              <span>{application.hospital_name || 'Hastane adı yok'}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <MapPin className="w-4 h-4" />
-                              <span>{application.city}</span>
+                              <span>{application.job_city || 'Şehir belirtilmemiş'}</span>
                             </div>
                           </div>
                         </div>
@@ -276,10 +276,11 @@ const DoctorApplicationsPage = () => {
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                       >
                         <Eye className="w-4 h-4" />
-                        Detay
+                        Başvuru Detayı
                       </button>
                       
-                      {application.status === 'Başvuruldu' && (
+                      {/* Geri çekme: Sadece geri çekilmemiş başvurularda */}
+                      {application.status_id !== 5 && application.status !== 'Geri Çekildi' && (
                         <button
                           onClick={() => handleWithdraw(application.id)}
                           disabled={isWithdrawing}
@@ -287,17 +288,6 @@ const DoctorApplicationsPage = () => {
                         >
                           <X className="w-4 h-4" />
                           Geri Çek
-                        </button>
-                      )}
-
-                      {application.status === 'Geri Çekildi' && (
-                        <button
-                          onClick={() => handleDelete(application.id)}
-                          disabled={isDeleting}
-                          className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm md:text-base"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Sil
                         </button>
                       )}
                     </div>
@@ -402,14 +392,14 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'Başvuruldu':
-        return 'Başvuruldu';
+      case 'Beklemede':
+        return 'Beklemede';
       case 'İnceleniyor':
         return 'İnceleniyor';
       case 'Kabul Edildi':
         return 'Kabul Edildi';
-      case 'Reddedildi':
-        return 'Reddedildi';
+      case 'Red Edildi':
+        return 'Red Edildi';
       case 'Geri Çekildi':
         return 'Geri Çekildi';
       default:

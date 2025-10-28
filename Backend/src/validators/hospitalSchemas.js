@@ -238,13 +238,12 @@ const jobStatusUpdateSchema = Joi.object({
   status_id: Joi.number()
     .integer()
     .positive()
-    .valid(1, 2) // 1=Aktif, 2=Pasif
     .required()
     .messages({
       'number.base': 'Durum ID\'si sayı olmalıdır',
       'number.integer': 'Durum ID\'si tam sayı olmalıdır',
       'number.positive': 'Durum ID\'si pozitif olmalıdır',
-      'any.only': 'Geçersiz durum. Sadece Aktif (1) veya Pasif (2) olabilir.',
+      'any.only': 'Geçersiz durum.',
       'any.required': 'Durum ID\'si gereklidir'
     }),
   reason: Joi.string()

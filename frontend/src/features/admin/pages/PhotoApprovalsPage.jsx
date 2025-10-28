@@ -22,6 +22,7 @@ import {
 import { usePhotoRequests, useReviewPhotoRequest } from '../api/useAdmin';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import ConfirmationModal from '@/components/ui/ConfirmationModal';
 
 const PhotoApprovalsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('pending');
@@ -298,21 +299,28 @@ const PhotoApprovalsPage = () => {
 
         {/* Modal */}
         {showModal && selectedRequest && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="admin-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="admin-card-header">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-900">Fotoğraf Talebi Detayı</h2>
-                  <button
-                    onClick={closeModal}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    <XCircle className="w-6 h-6" />
-                  </button>
-                </div>
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200"
+            onClick={closeModal}
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          >
+            <div 
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header - Sabit */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h2 className="text-2xl font-bold text-gray-900">Fotoğraf Talebi Detayı</h2>
+                <button
+                  onClick={closeModal}
+                  className="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                >
+                  <XCircle className="w-6 h-6" />
+                </button>
               </div>
 
-              <div className="admin-card-body space-y-6">
+              {/* Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-6 space-y-6">
                 {/* Doctor Info */}
                 <div className="admin-card">
                   <div className="admin-card-body">
@@ -344,15 +352,15 @@ const PhotoApprovalsPage = () => {
                 <div className="admin-card">
                   <div className="admin-card-body">
                     <h3 className="font-semibold text-gray-900 mb-4">Fotoğraf Karşılaştırması</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">Eski Fotoğraf (Talep Anındaki)</h4>
-                        <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100">
+                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-lg">
                           {selectedRequest.old_photo ? (
                             <img
                               src={selectedRequest.old_photo}
                               alt="Talep anındaki fotoğraf"
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -363,11 +371,11 @@ const PhotoApprovalsPage = () => {
                       </div>
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">Yeni Fotoğraf</h4>
-                        <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100">
+                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-lg">
                           <img
                             src={selectedRequest.file_url}
                             alt="Yeni fotoğraf"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                       </div>
@@ -375,10 +383,10 @@ const PhotoApprovalsPage = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Reject Reason Input */}
                 {selectedRequest.status === 'pending' && (
-                  <div className="space-y-4">
-                    <div>
+                  <div className="admin-card">
+                    <div className="admin-card-body">
                       <label className="admin-form-label">
                         Red Nedeni (Reddetmek için)
                       </label>
@@ -389,25 +397,9 @@ const PhotoApprovalsPage = () => {
                         className="admin-form-textarea"
                         rows={3}
                       />
-                    </div>
-
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleApprove(selectedRequest.id)}
-                        disabled={reviewPhotoRequestMutation.isPending}
-                        className="admin-btn admin-btn-success flex-1"
-                      >
-                        <CheckCircle className="w-5 h-5" />
-                        Onayla
-                      </button>
-                      <button
-                        onClick={() => handleReject(selectedRequest.id)}
-                        disabled={reviewPhotoRequestMutation.isPending || !rejectReason.trim()}
-                        className="admin-btn admin-btn-danger flex-1"
-                      >
-                        <XCircle className="w-5 h-5" />
-                        Reddet
-                      </button>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {rejectReason.length > 0 ? `${rejectReason.length} karakter` : 'Reddetmek için neden yazın'}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -425,6 +417,30 @@ const PhotoApprovalsPage = () => {
                   </div>
                 )}
               </div>
+
+              {/* Footer - Sabit (eğer pending ise) */}
+              {selectedRequest.status === 'pending' && (
+                <div className="border-t border-gray-200 bg-gray-50 p-6">
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => handleReject(selectedRequest.id)}
+                      disabled={reviewPhotoRequestMutation.isPending || !rejectReason.trim()}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
+                    >
+                      <XCircle className="w-5 h-5" />
+                      Reddet
+                    </button>
+                    <button
+                      onClick={() => handleApprove(selectedRequest.id)}
+                      disabled={reviewPhotoRequestMutation.isPending}
+                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                      Onayla
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

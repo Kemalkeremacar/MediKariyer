@@ -5,6 +5,7 @@ import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
 import NavbarNotificationBell from '../../features/notifications/components/NavbarNotificationBell';
 import useAuthStore from '../../store/authStore';
+import logoImage from '../../assets/logo.jpg';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -109,17 +110,13 @@ const Header = () => {
               onClick={handleLogoClick}
               className="flex items-center space-x-3 group cursor-pointer"
             >
-              {/* Logo Icon - Hastane için kendi logosu, diğerleri için varsayılan */}
+              {/* Logo Icon - Her zaman varsayılan logo */}
               <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden">
-                {user?.role === 'hospital' && user?.profile?.logo ? (
-                  <img 
-                    src={user.profile.logo} 
-                    alt="Hastane Logosu" 
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                ) : (
-                  <span className="text-white font-bold text-lg">M</span>
-                )}
+                <img 
+                  src={logoImage} 
+                  alt="MediKariyer Logo" 
+                  className="w-full h-full object-cover rounded-xl"
+                />
               </div>
               {/* Logo Text - 4 Parametre Planına Göre */}
               <span className="text-2xl font-bold text-white">

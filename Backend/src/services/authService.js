@@ -289,8 +289,8 @@ const loginUnified = async (email, password, req = null) => {
   // validateCredentials zaten onay kontrolü yapıyor, tekrar yapmaya gerek yok
   const loginInfo = await updateLastLogin(user.id);
   
-  // Profil bilgilerini de getir
-  const profile = await getUserProfile(user.id);
+  // Profil bilgilerini de getir (role parametresi ekli)
+  const profile = await getUserProfile(user.id, user.role);
   
   return { 
     ...user, 

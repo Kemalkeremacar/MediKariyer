@@ -61,7 +61,7 @@ const getSpecialties = async () => {
  * Tüm şehirleri getir
  * 
  * Doktor profillerinde ve hastane profillerinde kullanılan şehirleri döndürür.
- * Alfabetik sıraya göre sıralanır.
+ * İlk 6 şehir (ID 1-6) en üstte, sonra diğerleri alfabetik sıraya göre sıralanır.
  * 
  * @returns {Promise<Array<Object>>} Şehirler listesi
  * @returns {Promise<Array<{id: number, name: string, country: string|null}>>} Şehirler
@@ -69,8 +69,10 @@ const getSpecialties = async () => {
  * @example
  * const cities = await getCities();
  * // [
- * //   { id: 1, name: "İstanbul", country: "Turkey" },
- * //   { id: 2, name: "Ankara", country: "Turkey" }
+ * //   { id: 1, name: "İstanbul (Avrupa)", country: "Turkey" },
+ * //   { id: 2, name: "İstanbul (Anadolu)", country: "Turkey" },
+ * //   { id: 3, name: "Ankara", country: "Turkey" },
+ * //   ...
  * // ]
  * 
  * @throws {AppError} Veritabanı hatası durumunda
@@ -79,12 +81,26 @@ const getCities = async () => {
   try {
     logger.debug('Fetching cities from database');
     
-    const cities = await db('cities')
-      .select('id', 'name', 'country')
-      .orderBy('name', 'asc');
+    // Tüm şehirleri getir
+    const allCities = await db('cities')
+      .select('id', 'name', 'country');
     
-    logger.debug(`Found ${cities.length} cities`);
-    return cities;
+    // İlk 6 şehri (ID 1-6) en üstte, sonra diğerleri alfabetik sırayla
+    const priorityIds = [1, 2, 3, 4, 5, 6];
+    const priorityCities = allCities.filter(city => priorityIds.includes(city.id));
+    const otherCities = allCities.filter(city => !priorityIds.includes(city.id));
+    
+    // Diğer şehirleri alfabetik sırayla sırala
+    otherCities.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+    
+    // Priority listesini koru (ID sırasına göre)
+    priorityCities.sort((a, b) => priorityIds.indexOf(a.id) - priorityIds.indexOf(b.id));
+    
+    // İlk 6 şehri en üstte, sonra diğerleri
+    const sortedCities = [...priorityCities, ...otherCities];
+    
+    logger.debug(`Found ${sortedCities.length} cities`);
+    return sortedCities;
   } catch (error) {
     logger.error('Error fetching cities:', error);
     throw new AppError('Şehirler getirilirken hata oluştu', 500);

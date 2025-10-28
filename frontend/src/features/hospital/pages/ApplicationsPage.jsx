@@ -30,7 +30,8 @@ import {
   FileText, Search, Filter, User, MapPin, Calendar, 
   CheckCircle, X, Clock, Eye, AlertCircle, ArrowRight, 
   RefreshCw, Phone, Mail, Briefcase, Target, Building,
-  UserCheck, GraduationCap, Award, Languages, ExternalLink, Settings
+  UserCheck, GraduationCap, Award, Languages, ExternalLink, Settings,
+  ArrowLeft
 } from 'lucide-react';
 import { useHospitalApplications, useUpdateApplicationStatus, useHospitalDoctorProfileDetail, useHospitalProfile } from '../api/useHospital';
 import { useApplicationStatuses } from '@/hooks/useLookup';
@@ -414,11 +415,11 @@ const HospitalApplications = () => {
 // Status Badge Component (ApplicationCard'dan önce tanımlanmalı)
 const StatusBadge = ({ status_id, statusName }) => {
   const statusConfig = {
-    1: { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', label: 'Başvuruldu', icon: Clock },
+    1: { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', label: 'Beklemede', icon: Clock },
     2: { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30', label: 'İnceleniyor', icon: Eye },
     3: { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', label: 'Kabul Edildi', icon: CheckCircle },
-    4: { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', label: 'Reddedildi', icon: X },
-    5: { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', label: 'Geri Çekildi', icon: AlertCircle }
+    4: { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', label: 'Red Edildi', icon: X },
+    5: { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', label: 'Geri Çekildi', icon: ArrowLeft }
   };
 
   const config = statusConfig[status_id] || statusConfig[1];
@@ -493,7 +494,22 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
           <div className="space-y-3">
             <div>
               <span className="text-gray-400 text-xs block mb-1">İş İlanı</span>
-              <p className="text-white font-medium mb-2">{application.job_title}</p>
+              <p className="text-white font-medium mb-1">{application.job_title}</p>
+              {/* Şehir ve Minimum Deneyim */}
+              <div className="text-gray-300 text-xs mb-2 flex items-center gap-3">
+                {application.job_city && (
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="w-3 h-3" />
+                    {application.job_city}
+                  </span>
+                )}
+                {typeof application.min_experience_years !== 'undefined' && application.min_experience_years !== null && (
+                  <span className="inline-flex items-center gap-1">
+                    <Briefcase className="w-3 h-3" />
+                    Min. Deneyim: {application.min_experience_years} yıl
+                  </span>
+                )}
+              </div>
               
               {/* İş İlanı Durumu */}
               <div className="mb-2">
@@ -921,16 +937,16 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
                   <p className="text-white">{new Date(profile.dob).toLocaleDateString('tr-TR')}</p>
                 </div>
               )}
-              {profile.birth_place && (
+              {profile.birth_place_name && (
                 <div>
                   <span className="text-gray-400 text-sm">Doğum Yeri</span>
-                  <p className="text-white">{profile.birth_place}</p>
+                  <p className="text-white">{profile.birth_place_name}</p>
                 </div>
               )}
-              {profile.residence_city && (
+              {profile.residence_city_name && (
                 <div>
                   <span className="text-gray-400 text-sm">İkamet Şehri</span>
-                  <p className="text-white">{profile.residence_city}</p>
+                  <p className="text-white">{profile.residence_city_name}</p>
                 </div>
               )}
               {profile.specialty_name && (

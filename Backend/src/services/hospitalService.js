@@ -1161,6 +1161,8 @@ const getApplications = async (userId, jobId, params = {}) => {
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
       .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
+      .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('specialties as s', 'j.specialty_id', 's.id')
       .where('a.job_id', jobId)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
@@ -1175,6 +1177,10 @@ const getApplications = async (userId, jobId, params = {}) => {
         'u.email',
         'ast.name as status',
         'j.title as job_title',
+        'j.min_experience_years',
+        'j.employment_type',
+        'c.name as job_city',
+        's.name as specialty_name',
         'j.status_id as job_status_id',
         'js.name as job_status'
       );
@@ -1292,6 +1298,8 @@ const getAllApplications = async (userId, params = {}) => {
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
       .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
+      .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('specialties as s', 'j.specialty_id', 's.id')
       .where('j.hospital_id', hospitalProfile.id)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
@@ -1307,6 +1315,10 @@ const getAllApplications = async (userId, params = {}) => {
         'ast.name as status',
         'j.title as job_title',
         'j.id as job_id',
+        'j.min_experience_years',
+        'j.employment_type',
+        'c.name as job_city',
+        's.name as specialty_name',
         'j.status_id as job_status_id',
         'js.name as job_status'
       );
@@ -1626,13 +1638,17 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
       .join('users as u', 'dp.user_id', 'u.id')
       .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
       .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
+      .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
+      .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
       .select(
         'dp.id',
         'dp.first_name',
         'dp.last_name',
         'dp.dob',
-        'dp.birth_place',
-        'dp.residence_city',
+        'dp.birth_place_id',
+        'dp.residence_city_id',
+        'bp.name as birth_place_name',
+        'rc.name as residence_city_name',
         'dp.phone',
         'dp.title',
         'dp.work_type',
@@ -1663,9 +1679,9 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
       query = query.where('dp.specialty_id', specialty);
     }
 
-    // Şehir filtresi
+    // Şehir filtresi - residence_city_id ile
     if (city) {
-      query = query.where('dp.residence_city', 'like', `%${city}%`);
+      query = query.where('dp.residence_city_id', city);
     }
 
     // Sayfalama
@@ -1693,7 +1709,7 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
     }
 
     if (city) {
-      totalQuery = totalQuery.where('dp.residence_city', 'like', `%${city}%`);
+      totalQuery = totalQuery.where('dp.residence_city_id', city);
     }
 
     const totalResult = await totalQuery.count('dp.id as count').first();

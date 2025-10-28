@@ -64,17 +64,6 @@ const hospitalController = require('../controllers/hospitalController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { requireRole } = require('../middleware/roleGuard');
 const { validate } = require('../middleware/validationMiddleware');
-
-// Test endpoint'leri - DEBUGGING PURPOSES ONLY
-// router.get('/test', (req, res) => {
-//   console.log('✅ Hospital test endpoint called!');
-//   res.json({ success: true, message: 'Hospital routes çalışıyor', timestamp: new Date().toISOString() });
-// });
-
-// router.get('/test-auth', authMiddleware, requireRole('hospital'), (req, res) => {
-//   console.log('✅ Hospital test endpoint called with middleware!');
-//   res.json({ success: true, message: 'Hospital routes çalışıyor', timestamp: new Date().toISOString(), user: req.user });
-// });
 const { 
   hospitalProfileSchema, 
   jobSchema, 

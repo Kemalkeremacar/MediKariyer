@@ -410,18 +410,36 @@ const sendNotification = async (notificationData) => {
     throw new AppError('Kullanıcı bulunamadı', 404);
   }
   
-  const [id] = await db('notifications').insert({
-    user_id,
-    type: type || 'info',
-    title,
-    body,
-    data_json: data ? JSON.stringify(data) : null,
-    channel,
-    read_at: null,
-    created_at: db.fn.now()
-  });
+  // SQL Server için INSERT sonrası ID'yi almak için raw query kullan
+  const result = await db.raw(
+    `INSERT INTO notifications (user_id, type, title, body, data_json, channel, read_at, created_at)
+     OUTPUT inserted.id, inserted.*
+     VALUES (?, ?, ?, ?, ?, ?, NULL, GETDATE())`,
+    [
+      user_id,
+      type || 'info',
+      title,
+      body,
+      data ? JSON.stringify(data) : null,
+      channel
+    ]
+  );
   
-  return await getNotificationById(id);
+  // SQL Server'dan dönen sonucu al (result üç boyutlu array dönüyor)
+  const records = result[0];
+  const notification = Array.isArray(records) ? records[0] : records;
+  
+  // data_json'u parse et
+  if (notification && notification.data_json) {
+    try {
+      notification.data = JSON.parse(notification.data_json);
+    } catch (error) {
+      logger.warn('Notification data_json parse error:', error);
+      notification.data = null;
+    }
+  }
+  
+  return notification;
 };
 
 /**
@@ -451,18 +469,19 @@ const sendBulkNotification = async (userIds, notificationData) => {
 
   const { type, title, body, data, channel = 'inapp' } = notificationData;
   
-  const notifications = userIds.map(userId => ({
-    user_id: userId,
-    type: type || 'info',
-    title,
-    body,
-    data_json: data ? JSON.stringify(data) : null,
-    channel,
-    read_at: null,
-    created_at: db.fn.now()
-  }));
+  // SQL Server için bulk insert yap
+  const dataJson = data ? JSON.stringify(data) : null;
+  const notificationType = type || 'info';
   
-  await db('notifications').insert(notifications);
+  // Her bir userId için notification insert et
+  for (const userId of userIds) {
+    await db.raw(
+      `INSERT INTO notifications (user_id, type, title, body, data_json, channel, read_at, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, NULL, GETDATE())`,
+      [userId, notificationType, title, body, dataJson, channel]
+    );
+  }
+  
   return { sent_count: userIds.length };
 };
 

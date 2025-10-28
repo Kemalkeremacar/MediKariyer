@@ -117,7 +117,7 @@ class DatabaseTransport extends Transport {
       
       return hasData ? JSON.stringify(metadata) : null;
     } catch (error) {
-      console.error('Metadata serialization error:', error);
+      // Metadata serialization error - silent failure
       return null;
     }
   }
@@ -151,9 +151,7 @@ class DatabaseTransport extends Transport {
       const db = this.getDb();
       await db('logs.application_logs').insert(logsToInsert);
     } catch (error) {
-      // Database error durumunda console'a yaz (infinite loop olmasın)
-      console.error('❌ Database log insert error:', error.message);
-      
+      // Database error durumunda silent failure
       // Critical error ise logları geri queue'ya koy (maksimum 100 log)
       if (this.logQueue.length < 100) {
         this.logQueue.unshift(...logsToInsert.slice(0, 50)); // Sadece ilk 50'yi geri al

@@ -103,70 +103,43 @@ const ApplicationsPage = () => {
   };
 
 
-  const getStatusBadge = (status) => {
-    // Handle both string status names and numeric status_ids based on database values
+  const getStatusBadge = (statusId, statusName) => {
+    // Status ID'ye göre config (database tablosuna göre)
     const statusConfig = {
-      // String-based status names (from backend joins)
-      'applied': { 
-        color: 'bg-yellow-100 text-yellow-800', 
+      1: { // Beklemede
+        color: 'bg-yellow-100 text-yellow-800 border-yellow-300', 
         icon: Clock,
-        text: 'Başvuruldu' 
+        text: 'Beklemede'
       },
-      'under_review': { 
-        color: 'bg-blue-100 text-blue-800', 
+      2: { // İnceleniyor
+        color: 'bg-blue-100 text-blue-800 border-blue-300', 
         icon: Eye,
-        text: 'İnceleme Altında' 
+        text: 'İnceleniyor'
       },
-      'Kabul Edildi': { 
-        color: 'bg-green-100 text-green-800', 
+      3: { // Kabul Edildi
+        color: 'bg-green-100 text-green-800 border-green-300', 
         icon: CheckCircle,
-        text: 'Kabul Edildi' 
+        text: 'Kabul Edildi'
       },
-      'Reddedildi': { 
-        color: 'bg-red-100 text-red-800', 
+      4: { // Red Edildi
+        color: 'bg-red-100 text-red-800 border-red-300', 
         icon: XCircle,
-        text: 'Reddedildi' 
+        text: 'Reddedildi'
       },
-      'Geri Çekildi': { 
-        color: 'bg-gray-100 text-gray-800', 
+      5: { // Geri Çekildi
+        color: 'bg-gray-100 text-gray-800 border-gray-300', 
         icon: ArrowLeft,
-        text: 'Geri Çekildi' 
-      },
-      // Numeric status_ids (based on database screenshot)
-      1: { 
-        color: 'bg-yellow-100 text-yellow-800', 
-        icon: Clock,
-        text: 'Başvuruldu' 
-      },
-      2: { 
-        color: 'bg-blue-100 text-blue-800', 
-        icon: Eye,
-        text: 'İnceleniyor' 
-      },
-      3: { 
-        color: 'bg-green-100 text-green-800', 
-        icon: CheckCircle,
-        text: 'Kabul Edildi' 
-      },
-      4: { 
-        color: 'bg-red-100 text-red-800', 
-        icon: XCircle,
-        text: 'Reddedildi' 
-      },
-      5: { 
-        color: 'bg-gray-100 text-gray-800', 
-        icon: ArrowLeft,
-        text: 'Geri Çekildi' 
+        text: 'Geri Çekildi'
       }
     };
 
-    const config = statusConfig[status] || statusConfig[1]; // Default to 'applied'
+    const config = statusConfig[statusId] || statusConfig[1]; // Default to 'Beklemede'
     const IconComponent = config.icon;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${config.color}`}>
         <IconComponent className="w-3 h-3 mr-1" />
-        {config.text}
+        {statusName || config.text}
       </span>
     );
   };
@@ -281,7 +254,7 @@ const ApplicationsPage = () => {
                             {application.first_name} {application.last_name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {application.residence_city}
+                            {application.residence_city_name}
                           </div>
                         </div>
                       </div>
@@ -295,7 +268,7 @@ const ApplicationsPage = () => {
                       </div>
                     </td>
                     <td>
-                      {getStatusBadge(application.status_id)}
+                      {getStatusBadge(application.status_id, application.status)}
                     </td>
                     <td>
                       <div className="flex items-center">

@@ -44,15 +44,6 @@ const config = {
     : { min: 2, max: 10 }
 };
 
-// Debug: Bağlantı bilgilerini logla
-console.log('🔌 Veritabanı bağlantı bilgileri:', {
-  server: finalServer,
-  database: databaseName,
-  user: config.connection.user,
-  instanceName: instanceName || 'none',
-  encrypt: config.connection.options.encrypt
-});
-
 // Knex.js veritabanı bağlantı nesnesini oluştur.
 const db = knex(config);
 

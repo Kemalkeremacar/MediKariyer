@@ -1208,12 +1208,14 @@ const createApplication = async (doctorProfileId, data) => {
     }
   }
 
-  // Aynı doktorun aynı ilana daha önce başvurup başvurmadığını kontrol et
+  // Aynı doktorun aynı ilana daha önce aktif başvuru yapıp yapmadığını kontrol et
+  // (Geri çekilmiş başvuruları hariç tut - status_id = 5)
   const existingApplications = await db('applications')
     .where({
       doctor_profile_id: doctorProfileId,
       job_id: jobId
-    });
+    })
+    .where('status_id', '!=', 5); // Geri çekilmiş başvuruları hariç tut
   
   const existingApplication = existingApplications[0];
 
@@ -1221,22 +1223,15 @@ const createApplication = async (doctorProfileId, data) => {
     throw new AppError('Bu ilana daha önce başvuru yapılmış', 400);
   }
 
-  // "Başvuruldu" durumunu al
-  const pendingStatuses = await db('application_statuses')
-    .where('name', 'Başvuruldu');
-  
-  const pendingStatus = pendingStatuses[0];
-
-  if (!pendingStatus) {
-    throw new AppError('application_statuses.name="Başvuruldu" bulunamadı', 500);
-  }
+  // Başlangıç durumu: Beklemede (application_statuses.id = 1)
+  const pendingStatusId = 1;
 
   // Başvuru oluştur - SQL Server için OUTPUT clause kullan
   const insertedApplications = await db('applications')
     .insert({
       job_id: jobId,
       doctor_profile_id: doctorProfileId,
-      status_id: pendingStatus.id,
+      status_id: pendingStatusId,
       cover_letter: coverLetter || null,  // Doktor ön yazısı
       notes: null  // Hastane notu için ayrı alan
     })
@@ -1391,87 +1386,72 @@ const getApplicationById = async (applicationId, doctorProfileId = null) => {
       throw new AppError('Bu başvuruya erişim yetkiniz yok', 403);
     }
 
-    // Job bilgilerini çekelim
+    // Job bilgilerini çekelim - Tek query ile lookup tablolarıyla birlikte
     if (application.job_id) {
-      const jobs = await db('jobs')
-        .select([
-          'id', 'title', 'description', 'city_id', 'employment_type',
-          'min_experience_years', 'created_at', 'updated_at', 'hospital_id', 'specialty_id'
-        ])
-        .where('id', application.job_id);
+      const job = await db('jobs as j')
+        .leftJoin('cities as c', 'j.city_id', 'c.id')
+        .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+        .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
+        .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+        .leftJoin('cities as hp_city', 'hp.city_id', 'hp_city.id')
+        .select(
+          'j.id',
+          'j.title',
+          'j.description',
+          'j.city_id',
+          'j.employment_type',
+          'j.min_experience_years',
+          'j.created_at',
+          'j.updated_at',
+          'j.hospital_id',
+          'j.specialty_id',
+          'j.subspecialty_id',
+          'c.name as city',
+          's.name as specialty_name',
+          'ss.name as subspecialty_name',
+          'hp.institution_name as hospital_name',
+          'hp.city_id as hospital_city_id',
+          'hp_city.name as hospital_city',
+          'hp.address as hospital_address',
+          'hp.phone as hospital_phone',
+          'hp.email as hospital_email'
+        )
+        .where('j.id', application.job_id)
+        .first();
     
-      if (jobs && jobs.length > 0) {
-        const job = jobs[0];
+      if (job) {
         Object.assign(application, {
           job_id: job.id,
           title: job.title,
           description: job.description,
           city_id: job.city_id,
+          city: job.city,
           employment_type: job.employment_type,
           min_experience_years: job.min_experience_years,
+          specialty_name: job.specialty_name,
+          subspecialty_name: job.subspecialty_name,
           created_at: job.created_at,
-          updated_at: job.updated_at
+          updated_at: job.updated_at,
+          hospital_name: job.hospital_name,
+          hospital_city: job.hospital_city,
+          hospital_address: job.hospital_address,
+          hospital_phone: job.hospital_phone,
+          hospital_email: job.hospital_email
         });
-
-        // City bilgisini almak için cities tablosuna join yapalım
-        if (job.city_id) {
-          const cities = await db('cities')
-            .select('name')
-            .where('id', job.city_id);
-          
-          if (cities && cities.length > 0) {
-            application.city = cities[0].name;
-          }
-        }
-
-      // Hospital bilgilerini çekelim
-      if (job.hospital_id) {
-        const hospitals = await db('hospital_profiles as hp')
-          .select([
-            'hp.institution_name',
-            'c.name as city',
-            'hp.address',
-            'hp.phone',
-            'hp.email'
-          ])
-          .leftJoin('cities as c', 'hp.city_id', 'c.id')
-          .where('hp.id', job.hospital_id);
-        
-        if (hospitals && hospitals.length > 0) {
-          const hospital = hospitals[0];
-          Object.assign(application, {
-            hospital_name: hospital.institution_name,
-            hospital_city: hospital.city,
-            hospital_address: hospital.address,
-            hospital_phone: hospital.phone,
-            hospital_email: hospital.email
-          });
-        }
-      }
-
-      // Specialty bilgisini çekelim
-      if (job.specialty_id) {
-        const specialties = await db('specialties')
-          .select('name')
-          .where('id', job.specialty_id);
-        
-        if (specialties && specialties.length > 0) {
-          application.specialty_name = specialties[0].name;
-        }
       }
     }
-  }
 
-  // Status bilgisini çekelim
-  if (application.status_id) {
-    const statuses = await db('application_statuses')
-      .select('name')
-      .where('id', application.status_id);
-    
-    if (statuses && statuses.length > 0) {
-      application.status_name = statuses[0].name;
-      application.status = statuses[0].name; // Frontend için
-    }
+    // Status bilgisini çekelim
+    if (application.status_id) {
+      const statuses = await db('application_statuses')
+        .select('name')
+        .where('id', application.status_id)
+        .first();
+      
+      if (statuses) {
+        application.status_name = statuses.name;
+        application.status = statuses.name; // Frontend için
+      }
     }
 
     // Frontend için created_at'i applied_at olarak ayarlayalım
@@ -1519,24 +1499,16 @@ const withdrawApplication = async (applicationId, doctorProfileId, reason = '') 
     throw new AppError('Başvuru bulunamadı', 404);
   }
 
-  // Zaten geri çekilmiş mi kontrol et
-  const withdrawnStatus = await db('application_statuses')
-    .where('name', 'Geri Çekildi')
-    .first();
-
-  if (!withdrawnStatus) {
-    throw new AppError('application_statuses.name="Geri Çekildi" bulunamadı', 500);
-  }
-
-  if (application.status_id === withdrawnStatus.id) {
+  // Zaten geri çekilmiş mi kontrol et (status_id = 5)
+  if (application.status_id === 5) { // 5 = Geri Çekildi
     throw new AppError('Başvuru zaten geri çekilmiş', 400);
   }
 
-  // Başvuruyu geri çek
+  // Başvuruyu geri çek (status_id = 5: Geri Çekildi)
   await db('applications')
     .where('id', applicationId)
     .update({
-      status_id: withdrawnStatus.id,
+      status_id: 5, // Geri Çekildi
       notes: reason ? `${application.notes || ''}\n\nGeri çekme sebebi: ${reason}`.trim() : application.notes
     });
 
@@ -1820,18 +1792,29 @@ const getJobs = async (filters = {}) => {
  * const job = await getJobById(123);
  */
 const getJobById = async (id) => {
-  // Önce sadece jobs tablosundan veri çekelim - aktif ve silinmemiş ilanlar
-  const jobs = await db('jobs')
-    .select('*')
-    .where('id', id)
-    .where('status_id', 1) // Sadece aktif ilanlar
-    .whereNull('deleted_at'); // Silinmemiş ilanlar
+  // Jobs tablosundan verileri lookup tablolarıyla birlikte çekelim
+  const jobs = await db('jobs as j')
+    .leftJoin('cities as c', 'j.city_id', 'c.id')
+    .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
+    .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
+    .select(
+      'j.*',
+      'c.name as city',
+      's.name as specialty_name',
+      'ss.name as subspecialty_name',
+      'js.name as status_name'
+    )
+    .where('j.id', id)
+    .where('j.status_id', 1) // Sadece aktif ilanlar
+    .whereNull('j.deleted_at') // Silinmemiş ilanlar
+    .first();
 
-  if (!jobs || jobs.length === 0) {
+  if (!jobs) {
     throw new AppError('İş ilanı bulunamadı', 404);
   }
 
-  const job = jobs[0];
+  const job = jobs;
 
   // Eğer hospital_id varsa hospital bilgilerini çekelim
   if (job.hospital_id) {
@@ -1846,43 +1829,11 @@ const getJobById = async (id) => {
         'hp.about as hospital_about'
       ])
       .leftJoin('cities as c', 'hp.city_id', 'c.id')
-      .where('hp.id', job.hospital_id);
+      .where('hp.id', job.hospital_id)
+      .first();
     
-    if (hospitals && hospitals.length > 0) {
-      Object.assign(job, hospitals[0]);
-    }
-  }
-
-  // Eğer specialty_id varsa specialty bilgisini çekelim
-  if (job.specialty_id) {
-    const specialties = await db('specialties')
-      .select('name as specialty_name')
-      .where('id', job.specialty_id);
-    
-    if (specialties && specialties.length > 0) {
-      job.specialty_name = specialties[0].specialty_name;
-    }
-  }
-
-  // Eğer subspecialty_id varsa subspecialty bilgisini çekelim
-  if (job.subspecialty_id) {
-    const subspecialties = await db('subspecialties')
-      .select('name as subspecialty_name')
-      .where('id', job.subspecialty_id);
-    
-    if (subspecialties && subspecialties.length > 0) {
-      job.subspecialty_name = subspecialties[0].subspecialty_name;
-    }
-  }
-
-  // Eğer status_id varsa status bilgisini çekelim
-  if (job.status_id) {
-    const statuses = await db('job_statuses')
-      .select('name as status_name')
-      .where('id', job.status_id);
-    
-    if (statuses && statuses.length > 0) {
-      job.status_name = statuses[0].status_name;
+    if (hospitals) {
+      Object.assign(job, hospitals);
     }
   }
 

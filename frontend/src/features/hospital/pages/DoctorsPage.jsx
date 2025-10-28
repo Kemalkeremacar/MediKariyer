@@ -292,10 +292,10 @@ const HospitalDoctors = () => {
                         <span className="text-sm">{formatSpecialties(doctor.specialties)}</span>
                       </div>
                       
-                      {doctor.residence_city && (
+                      {doctor.residence_city_name && (
                         <div className="flex items-center gap-2 text-gray-300">
                           <MapPin className="w-4 h-4 text-green-400" />
-                          <span className="text-sm">{doctor.residence_city}</span>
+                          <span className="text-sm">{doctor.residence_city_name}</span>
                         </div>
                       )}
 

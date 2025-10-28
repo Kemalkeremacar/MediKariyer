@@ -70,7 +70,7 @@ const getSpecialties = async (req, res) => {
  * Tüm şehirleri getir
  * 
  * Doktor profillerinde ve hastane profillerinde kullanılan şehirleri döndürür.
- * Alfabetik sıraya göre sıralanır.
+ * İlk 6 şehir (ID 1-6) en üstte, sonra diğerleri alfabetik sıraya göre sıralanır.
  * 
  * @route GET /api/lookup/cities
  * @access Public
@@ -84,8 +84,10 @@ const getSpecialties = async (req, res) => {
  * Response: {
  *   "success": true,
  *   "data": [
- *     { "id": 1, "name": "İstanbul", "country": "Turkey" },
- *     { "id": 2, "name": "Ankara", "country": "Turkey" }
+ *     { "id": 1, "name": "İstanbul (Avrupa)", "country": "Turkey" },
+ *     { "id": 2, "name": "İstanbul (Anadolu)", "country": "Turkey" },
+ *     { "id": 3, "name": "Ankara", "country": "Turkey" },
+ *     ...
  *   ],
  *   "message": "Şehirler başarıyla getirildi"
  * }

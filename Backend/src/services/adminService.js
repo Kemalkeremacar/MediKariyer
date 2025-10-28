@@ -143,21 +143,24 @@ const getUserDetails = async (id) => {
   
   // Role'e göre profil bilgilerini getir
   if (user.role === 'doctor') {
-    const profile = await db('doctor_profiles').where('user_id', id).first();
+    // Profil bilgilerini şehir isimleriyle birlikte getir
+    const profile = await db('doctor_profiles as dp')
+      .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
+      .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
+      .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
+      .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
+      .where('dp.user_id', id)
+      .select(
+        'dp.*',
+        'bp.name as birth_place_name',
+        'rc.name as residence_city_name',
+        's.name as specialty_name',
+        'ss.name as subspecialty_name'
+      )
+      .first();
     
-    // Profil için specialty ve subspecialty isimlerini getir
-    let specialty_name = null;
-    let subspecialty_name = null;
-    
-    if (profile?.specialty_id) {
-      const specialty = await db('specialties').where('id', profile.specialty_id).first();
-      specialty_name = specialty?.name;
-    }
-    
-    if (profile?.subspecialty_id) {
-      const subspecialty = await db('subspecialties').where('id', profile.subspecialty_id).first();
-      subspecialty_name = subspecialty?.name;
-    }
+    let specialty_name = profile?.specialty_name;
+    let subspecialty_name = profile?.subspecialty_name;
     
     // Doktor için ek bilgileri getir - lookup tablolarıyla JOIN (Soft delete kontrolü ile)
     const [educations, experiences, certificates, languages] = await Promise.all([
@@ -439,91 +442,99 @@ const getJobDetails = async (jobId) => {
  * @returns {Object} Başvuru listesi ve sayfalama bilgileri
  */
 const getAllApplications = async ({ search, doctor_search, hospital_search, status, job_id, doctor_profile_id, hospital_id, page = 1, limit = 10 } = {}) => {
-  let query = db('applications')
-    .join('jobs', 'applications.job_id', 'jobs.id')
-    .join('doctor_profiles', 'applications.doctor_profile_id', 'doctor_profiles.id')
-    .join('hospital_profiles', 'jobs.hospital_id', 'hospital_profiles.id')
-    .join('users as doctor_users', 'doctor_profiles.user_id', 'doctor_users.id')
-    .join('users as hospital_users', 'hospital_profiles.user_id', 'hospital_users.id')
-    .leftJoin('cities as residence_city', 'doctor_profiles.residence_city_id', 'residence_city.id')
-    .whereNull('applications.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
-    .whereNull('jobs.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+  let query = db('applications as a')
+    .join('jobs as j', 'a.job_id', 'j.id')
+    .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
+    .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
+    .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
+    .join('application_statuses as ast', 'a.status_id', 'ast.id')
+    .leftJoin('cities as residence_city', 'dp.residence_city_id', 'residence_city.id')
+    .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
+    .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
+    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
     .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
     .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
     .select(
-      'applications.*',
-      'jobs.title as job_title',
-      'doctor_profiles.first_name',
-      'doctor_profiles.last_name',
-      'residence_city.name as residence_city',
-      'hospital_profiles.institution_name'
+      'a.*',
+      'j.title as job_title',
+      'j.status_id as job_status_id',
+      'js.name as job_status',
+      's.name as job_specialty',
+      'dp.first_name',
+      'dp.last_name',
+      'dp.specialty_id as doctor_specialty_id',
+      'residence_city.name as residence_city_name',
+      'hp.institution_name',
+      'ast.name as status'
     );
 
   if (search) {
     query.where(function () {
-      this.where('jobs.title', 'like', `%${search}%`)
-        .orWhere('doctor_profiles.first_name', 'like', `%${search}%`)
-        .orWhere('doctor_profiles.last_name', 'like', `%${search}%`)
-        .orWhere('hospital_profiles.institution_name', 'like', `%${search}%`);
+      this.where('j.title', 'like', `%${search}%`)
+        .orWhere('dp.first_name', 'like', `%${search}%`)
+        .orWhere('dp.last_name', 'like', `%${search}%`)
+        .orWhere('hp.institution_name', 'like', `%${search}%`);
     });
   }
   
   // Doktor arama - sadece doktor bilgilerinde
   if (doctor_search) {
     query.where(function () {
-      this.where('doctor_profiles.first_name', 'like', `%${doctor_search}%`)
-        .orWhere('doctor_profiles.last_name', 'like', `%${doctor_search}%`);
+      this.where('dp.first_name', 'like', `%${doctor_search}%`)
+        .orWhere('dp.last_name', 'like', `%${doctor_search}%`);
     });
   }
   
   // Hastane arama - sadece hastane bilgilerinde
   if (hospital_search) {
-    query.where('hospital_profiles.institution_name', 'like', `%${hospital_search}%`);
+    query.where('hp.institution_name', 'like', `%${hospital_search}%`);
   }
-  if (status) query.where('applications.status_id', status);
-  if (job_id) query.where('applications.job_id', job_id);
-  if (doctor_profile_id) query.where('applications.doctor_profile_id', doctor_profile_id);
-  if (hospital_id) query.where('jobs.hospital_id', hospital_id);
+  if (status) query.where('a.status_id', status);
+  if (job_id) query.where('a.job_id', job_id);
+  if (doctor_profile_id) query.where('a.doctor_profile_id', doctor_profile_id);
+  if (hospital_id) query.where('j.hospital_id', hospital_id);
 
   const offset = (page - 1) * limit;
   
   // Count sorgusunu ayrı yap
-  const countQuery = db('applications')
-    .join('jobs', 'applications.job_id', 'jobs.id')
-    .join('doctor_profiles', 'applications.doctor_profile_id', 'doctor_profiles.id')
-    .join('hospital_profiles', 'jobs.hospital_id', 'hospital_profiles.id')
-    .join('users as doctor_users', 'doctor_profiles.user_id', 'doctor_users.id')
-    .join('users as hospital_users', 'hospital_profiles.user_id', 'hospital_users.id')
-    .whereNull('applications.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-    .whereNull('jobs.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+  const countQuery = db('applications as a')
+    .join('jobs as j', 'a.job_id', 'j.id')
+    .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
+    .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
+    .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
+    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
+    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
     .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını sayma
     .where('hospital_users.is_active', true); // Pasifleştirilmiş hastanelerin iş ilanlarını sayma
 
   if (search) {
     countQuery.where(function () {
-      this.where('jobs.title', 'like', `%${search}%`)
-        .orWhere('doctor_profiles.first_name', 'like', `%${search}%`)
-        .orWhere('doctor_profiles.last_name', 'like', `%${search}%`)
-        .orWhere('hospital_profiles.institution_name', 'like', `%${search}%`);
+      this.where('j.title', 'like', `%${search}%`)
+        .orWhere('dp.first_name', 'like', `%${search}%`)
+        .orWhere('dp.last_name', 'like', `%${search}%`)
+        .orWhere('hp.institution_name', 'like', `%${search}%`);
     });
   }
   
   // Doktor arama - sadece doktor bilgilerinde
   if (doctor_search) {
     countQuery.where(function () {
-      this.where('doctor_profiles.first_name', 'like', `%${doctor_search}%`)
-        .orWhere('doctor_profiles.last_name', 'like', `%${doctor_search}%`);
+      this.where('dp.first_name', 'like', `%${doctor_search}%`)
+        .orWhere('dp.last_name', 'like', `%${doctor_search}%`);
     });
   }
   
   // Hastane arama - sadece hastane bilgilerinde
   if (hospital_search) {
-    countQuery.where('hospital_profiles.institution_name', 'like', `%${hospital_search}%`);
+    countQuery.where('hp.institution_name', 'like', `%${hospital_search}%`);
   }
-  if (status) countQuery.where('applications.status_id', status);
-  if (job_id) countQuery.where('applications.job_id', job_id);
-  if (doctor_profile_id) countQuery.where('applications.doctor_profile_id', doctor_profile_id);
-  if (hospital_id) countQuery.where('jobs.hospital_id', hospital_id);
+  if (status) countQuery.where('a.status_id', status);
+  if (job_id) countQuery.where('a.job_id', job_id);
+  if (doctor_profile_id) countQuery.where('a.doctor_profile_id', doctor_profile_id);
+  if (hospital_id) countQuery.where('j.hospital_id', hospital_id);
 
   const [{ count }] = await countQuery.count('* as count');
   const apps = await query.limit(limit).offset(offset);
@@ -807,8 +818,8 @@ const getApplicationDetails = async (applicationId) => {
       'dp.last_name',
       'dp.phone',
       'dp.profile_photo',
-      'residence_city.name as residence_city',
-      'birth_place.name as birth_place',
+      'residence_city.name as residence_city_name',
+      'birth_place.name as birth_place_name',
       'doctor_users.id as user_id',
       'doctor_users.email',
       'hp.institution_name',

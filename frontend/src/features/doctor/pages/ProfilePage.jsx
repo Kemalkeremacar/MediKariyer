@@ -1096,11 +1096,11 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
             required
           >
-            <option value="Dr." className="bg-slate-800">Dr.</option>
-            <option value="Uz. Dr." className="bg-slate-800">Uz. Dr.</option>
-            <option value="Dr. Öğr. Üyesi" className="bg-slate-800">Dr. Öğr. Üyesi</option>
-            <option value="Doç. Dr." className="bg-slate-800">Doç. Dr.</option>
-            <option value="Prof. Dr." className="bg-slate-800">Prof. Dr.</option>
+            <option value="Dr." className="bg-slate-900 text-white">Dr.</option>
+            <option value="Uz. Dr." className="bg-slate-900 text-white">Uz. Dr.</option>
+            <option value="Dr. Öğr. Üyesi" className="bg-slate-900 text-white">Dr. Öğr. Üyesi</option>
+            <option value="Doç. Dr." className="bg-slate-900 text-white">Doç. Dr.</option>
+            <option value="Prof. Dr." className="bg-slate-900 text-white">Prof. Dr.</option>
           </select>
         </div>
         <div>
@@ -1131,9 +1131,9 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
             required
           >
-            <option value="" className="bg-slate-800">Uzmanlık Seçiniz</option>
+            <option value="" className="bg-slate-900 text-white">Uzmanlık Seçiniz</option>
             {specialties.map(specialty => (
-              <option key={specialty.id} value={specialty.id} className="bg-slate-800">
+              <option key={specialty.id} value={specialty.id} className="bg-slate-900 text-white">
                 {specialty.name}
               </option>
             ))}
@@ -1149,9 +1149,9 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={!formData.specialty_id || filteredSubspecialties.length === 0}
           >
-            <option value="" className="bg-slate-800">Yan Dal Seçiniz (Opsiyonel)</option>
+            <option value="" className="bg-slate-900 text-white">Yan Dal Seçiniz (Opsiyonel)</option>
             {filteredSubspecialties.map(subspecialty => (
-              <option key={subspecialty.id} value={subspecialty.id} className="bg-slate-800">
+              <option key={subspecialty.id} value={subspecialty.id} className="bg-slate-900 text-white">
                 {subspecialty.name}
               </option>
             ))}
@@ -1171,9 +1171,9 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             onChange={(e) => setFormData({ ...formData, birth_place_id: e.target.value })}
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
           >
-            <option value="" className="bg-slate-800 text-white">Şehir seçin</option>
+            <option value="" className="bg-slate-900 text-white">Şehir seçin</option>
             {cities.map(city => (
-              <option key={city.value} value={city.value.toString()} className="bg-slate-800 text-white">
+              <option key={city.value} value={city.value.toString()} className="bg-slate-900 text-white">
                 {city.label}
               </option>
             ))}
@@ -1188,9 +1188,9 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             onChange={(e) => setFormData({ ...formData, residence_city_id: e.target.value })}
             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
           >
-            <option value="" className="bg-slate-800 text-white">Şehir seçin</option>
+            <option value="" className="bg-slate-900 text-white">Şehir seçin</option>
             {cities.map(city => (
-              <option key={city.value} value={city.value.toString()} className="bg-slate-800 text-white">
+              <option key={city.value} value={city.value.toString()} className="bg-slate-900 text-white">
                 {city.label}
               </option>
             ))}
@@ -1550,15 +1550,23 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
           { name: 'graduation_year', label: 'Mezuniyet Yılı', type: 'number', required: true, placeholder: 'Örn: 2007', min: 1950, max: new Date().getFullYear() + 5 }
         ];
 
-        // Eğer "DİĞER" seçilmişse derece türü alanını ekle
+        // Eğer "DİĞER" (ID: 4) seçilmişse derece türü alanını ekle
         const selectedEducationType = educationTypes.find(type => 
           type.value == data.education_type_id || type.id == data.education_type_id
         );
         
-        if (selectedEducationType && (selectedEducationType.value === 'DİĞER' || selectedEducationType.name === 'DİĞER' || selectedEducationType.label === 'DİĞER')) {
+        const isOtherType = selectedEducationType && (
+          selectedEducationType.id === 4 || 
+          selectedEducationType.name === 'Diğer' ||
+          selectedEducationType.label === 'Diğer' ||
+          selectedEducationType.name === 'DİĞER' ||
+          selectedEducationType.label === 'DİĞER'
+        );
+        
+        if (isOtherType) {
           fields.splice(1, 0, { 
             name: 'education_type', 
-            label: 'Derece Türü', 
+            label: 'Özel Derece Türü', 
             type: 'text', 
             required: true, 
             placeholder: 'Özel derece türünü yazın' 
@@ -1603,7 +1611,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
 
   return (
     <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-slate-800/95 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-slate-900/95 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b border-white/20 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white">
@@ -1640,12 +1648,12 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                   required={field.required}
                   disabled={field.disabled || false}
                 >
-                  <option value="" className="bg-slate-800">Seçiniz</option>
+                  <option value="" className="bg-slate-900 text-white">Seçiniz</option>
                   {field.options.map((option) => (
                     <option 
                       key={option.value || option.id || option} 
                       value={option.value || option.id || option} 
-                      className="bg-slate-800"
+                      className="bg-slate-900 text-white"
                     >
                       {option.label || option.name || option}
                     </option>
