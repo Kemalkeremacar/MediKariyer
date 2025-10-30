@@ -113,15 +113,28 @@ const DoctorApplicationsPage = () => {
   };
 
   const getStatusText = (status) => {
+    if (typeof status === 'number') {
+      switch (status) {
+        case 1: return 'Başvuruldu';
+        case 2: return 'İnceleniyor';
+        case 3: return 'Kabul Edildi';
+        case 4: return 'Red Edildi';
+        case 5: return 'Geri Çekildi';
+        default: return 'Bilinmiyor';
+      }
+    }
     switch (status) {
       case 'Başvuruldu':
+        return 'Başvuruldu';
+      case 'Beklemede':
         return 'Başvuruldu';
       case 'İnceleniyor':
         return 'İnceleniyor';
       case 'Kabul Edildi':
         return 'Kabul Edildi';
       case 'Reddedildi':
-        return 'Reddedildi';
+      case 'Red Edildi':
+        return 'Red Edildi';
       case 'Geri Çekildi':
         return 'Geri Çekildi';
       default:
@@ -252,13 +265,13 @@ const DoctorApplicationsPage = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium ${
-                            application.status === 'Başvuruldu' ? 'bg-yellow-500/20 text-yellow-300' :
-                            application.status === 'İnceleniyor' ? 'bg-blue-500/20 text-blue-300' :
-                            application.status === 'Kabul Edildi' ? 'bg-green-500/20 text-green-300' :
-                            application.status === 'Reddedildi' ? 'bg-red-500/20 text-red-300' :
+                            (application.status_id === 1 || application.status === 'Başvuruldu') ? 'bg-yellow-500/20 text-yellow-300' :
+                            (application.status_id === 2 || application.status === 'İnceleniyor') ? 'bg-blue-500/20 text-blue-300' :
+                            (application.status_id === 3 || application.status === 'Kabul Edildi') ? 'bg-green-500/20 text-green-300' :
+                            (application.status_id === 4 || application.status === 'Red Edildi' || application.status === 'Reddedildi') ? 'bg-red-500/20 text-red-300' :
                             'bg-gray-500/20 text-gray-300'
                           }`}>
-                            {getStatusText(application.status)}
+                            {getStatusText(application.status_id ?? application.status)}
                           </span>
                         </div>
                       </div>
@@ -289,8 +302,8 @@ const DoctorApplicationsPage = () => {
                         Başvuru Detayı
                       </button>
                       
-                      {/* Geri çekme: Sadece geri çekilmemiş başvurularda */}
-                      {application.status_id !== 5 && application.status !== 'Geri Çekildi' && (
+                      {/* Geri çekme: yalnızca Başvuruldu (id=1) için */}
+                      {(application.status_id === 1 || application.status === 'Başvuruldu') && (
                         <button
                           onClick={() => handleWithdraw(application.id)}
                           disabled={isWithdrawing}

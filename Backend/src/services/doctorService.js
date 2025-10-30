@@ -1986,6 +1986,23 @@ const getMyPhotoRequestStatus = async (userId) => {
 };
 
 /**
+ * Doktorun fotoğraf talep geçmişini getir
+ * @description Doktorun tüm fotoğraf taleplerini (en yeni önce) listeler
+ * @param {number} userId - Kullanıcının ID'si (users.id)
+ * @param {number} [limit=50] - Maksimum kayıt sayısı
+ * @returns {Promise<Array>} Talep geçmişi listesi
+ */
+const getMyPhotoRequestHistory = async (userId, limit = 50) => {
+  const profile = await db('doctor_profiles').where('user_id', userId).first();
+  if (!profile) return [];
+
+  return await db('doctor_profile_photo_requests')
+    .where('doctor_profile_id', profile.id)
+    .orderBy('created_at', 'desc')
+    .limit(limit);
+};
+
+/**
  * Fotoğraf talebini iptal et
  * @description Doktorun bekleyen fotoğraf talebini iptal eder
  * @param {number} userId - Kullanıcının ID'si (users.id)
@@ -2062,5 +2079,6 @@ module.exports = {
   // Fotoğraf onay sistemi
   requestProfilePhotoChange,
   getMyPhotoRequestStatus,
+  getMyPhotoRequestHistory,
   cancelPhotoRequest
 };

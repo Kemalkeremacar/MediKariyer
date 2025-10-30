@@ -540,6 +540,8 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
   if (hospital_id) countQuery.where('j.hospital_id', hospital_id);
 
   const [{ count }] = await countQuery.count('* as count');
+  // MSSQL OFFSET/FETCH için ORDER BY zorunlu
+  query.orderBy([{ column: 'a.applied_at', order: 'desc' }, { column: 'a.id', order: 'desc' }]);
   const apps = await query.limit(limit).offset(offset);
 
   return { 

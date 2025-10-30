@@ -223,10 +223,16 @@ export function useAdminJobs(filters = {}) {
  * @returns {Object} React Query result
  */
 export function useJobById(jobId) {
+  // ID'yi güvenli hale getir ("3,3" gibi değerleri 33'e çevirmek yerine 3'e düşür)
+  const jobIdClean = (() => {
+    if (jobId == null) return jobId;
+    const onlyDigits = String(jobId).match(/\d+/);
+    return onlyDigits ? Number(onlyDigits[0]) : jobId;
+  })();
   return useQuery({
-    queryKey: [QUERY_KEYS.JOB_DETAIL, jobId],
-    queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_DETAIL, { id: jobId })),
-    enabled: !!jobId,
+    queryKey: [QUERY_KEYS.JOB_DETAIL, jobIdClean],
+    queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_DETAIL, { id: jobIdClean })),
+    enabled: !!jobIdClean,
     staleTime: 5 * 60 * 1000, // 5 dakika
   });
 }
@@ -364,7 +370,7 @@ export function useUpdateApplicationStatus() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ applicationId, status_id, reason }) => 
-      apiRequest.patch(buildEndpoint(ENDPOINTS.ADMIN.APPLICATION_STATUS, { id: applicationId }), { 
+      apiRequest.put(buildEndpoint(ENDPOINTS.ADMIN.APPLICATION_STATUS, { id: applicationId }), { 
         status_id, 
         reason 
       }),

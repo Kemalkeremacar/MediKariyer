@@ -681,5 +681,6 @@ export default {
   // Fotoğraf onay sistemi
   useRequestPhotoChange,
   usePhotoRequestStatus,
+  usePhotoRequestHistory,
   useCancelPhotoRequest,
 };

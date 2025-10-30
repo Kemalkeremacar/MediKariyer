@@ -98,8 +98,8 @@ const HospitalDashboard = () => {
   const institutionName = profile?.institution_name || 'Hastaneniz';
   
   // Dashboard verileri
-  const recentApplications = dashboardData?.data?.recent_applications || [];
-  const recentJobs = dashboardData?.data?.recent_jobs || [];
+  const recentApplications = (dashboardData?.data?.recent_applications || []).slice(0, 5);
+  const recentJobs = (dashboardData?.data?.recent_jobs || []).slice(0, 5);
   
   console.log('🎯 Hospital Dashboard Data:', dashboardData);
   console.log('📋 Recent Applications:', recentApplications);

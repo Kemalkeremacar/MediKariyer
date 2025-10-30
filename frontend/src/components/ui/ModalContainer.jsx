@@ -23,12 +23,14 @@ export const ModalContainer = ({
   initialFocusRef,
   anchorY,
   anchorOffset = 16,
-  fullScreenOnMobile = true
+  fullScreenOnMobile = true,
+  stickToAnchor = false
 }) => {
   const modalRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   const labelledById = useRef(`modal-title-${Math.random().toString(36).slice(2)}`);
   const [computedAlign, setComputedAlign] = useState('center');
+  const [modalTopPx, setModalTopPx] = useState(undefined);
 
   // Pozisyon ve görünürlük hesaplama
   useEffect(() => {
@@ -37,16 +39,22 @@ export const ModalContainer = ({
       const initialScroll = window.scrollY || window.pageYOffset;
       let targetScroll = initialScroll;
       if (typeof anchorY === 'number') {
-        // anchorY viewport (clientY). Ekran ortasına gelecek şekilde kaydır, sayfa sınırlarını gözet
         const viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
-        const viewportCenter = viewportHeight / 2;
         const docHeight = Math.max(
           document.body.scrollHeight,
           document.documentElement.scrollHeight
         );
-        const desiredTop = initialScroll + (anchorY - viewportCenter) - anchorOffset;
-        targetScroll = Math.max(0, Math.min(desiredTop, docHeight - viewportHeight));
-        window.scrollTo({ top: targetScroll, behavior: 'auto' });
+        if (stickToAnchor) {
+          // AnchorY sayfa (mutlak) koordinatı olarak beklenir
+          const desiredTop = Math.max(0, Math.min(anchorY - 120, docHeight - viewportHeight));
+          targetScroll = desiredTop;
+          window.scrollTo({ top: desiredTop, behavior: 'auto' });
+        } else {
+          const viewportCenter = viewportHeight / 2;
+          const desiredTop = initialScroll + (anchorY - viewportCenter) - anchorOffset;
+          targetScroll = Math.max(0, Math.min(desiredTop, docHeight - viewportHeight));
+          window.scrollTo({ top: targetScroll, behavior: 'auto' });
+        }
       }
 
       setScrollPosition(targetScroll);
@@ -91,9 +99,27 @@ export const ModalContainer = ({
         const node = modalRef.current;
         if (node) {
           if (typeof anchorY === 'number') {
-            // Anchor varsa modalı ekran ortasında hizala
-            setComputedAlign('center');
-            node.scrollIntoView({ block: 'center', behavior: 'auto' });
+            // Anchor varsa ve stickToAnchor açıksa, üstte hizala; değilse merkezle
+            if (stickToAnchor) {
+              setComputedAlign('top');
+              // Modal yüksekliğini ölç ve görünür alana sığacak şekilde üst boşluğu hesapla
+              const vh = window.innerHeight || document.documentElement.clientHeight;
+              const nodeRect = node.getBoundingClientRect();
+              const nodeH = nodeRect.height;
+              const docHeight = Math.max(
+                document.body.scrollHeight,
+                document.documentElement.scrollHeight
+              );
+              // Hedef üst: anchorY'nin biraz üstü (120px), fakat sayfa sınırlarına ve alt taşmaya göre kısıtla
+              let targetTop = anchorY - 120;
+              targetTop = Math.max(16, targetTop);
+              const maxTop = docHeight - nodeH - 16;
+              if (!Number.isNaN(maxTop)) targetTop = Math.min(targetTop, Math.max(16, maxTop));
+              setModalTopPx(targetTop);
+            } else {
+              setComputedAlign('center');
+              node.scrollIntoView({ block: 'center', behavior: 'auto' });
+            }
           } else {
             const rect = node.getBoundingClientRect();
             const vh = window.innerHeight || document.documentElement.clientHeight;
@@ -166,7 +192,10 @@ export const ModalContainer = ({
         className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full ${sizeConfig[size]} ${containerResponsive} flex flex-col animate-in zoom-in-95 duration-300`}
         style={{ 
           maxHeight,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          marginTop: (stickToAnchor && typeof anchorY === 'number' && typeof modalTopPx === 'number')
+            ? Math.max(16, modalTopPx - scrollPosition)
+            : undefined
         }}
         onClick={(e) => e.stopPropagation()}
       >

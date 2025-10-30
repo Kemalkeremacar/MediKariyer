@@ -897,8 +897,34 @@ const requestPhotoChange = catchAsync(async (req, res) => {
     throw new AppError('Fotoğraf URL\'si gereklidir', 400);
   }
   
-  // Base64 data-url veya HTTP URL kontrolü
-  if (!file_url.startsWith('data:image/') && !file_url.startsWith('http')) {
+  // Base64 data-url veya HTTP URL kontrolü + MIME/boyut doğrulama (5MB)
+  const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+
+  if (file_url.startsWith('data:image/')) {
+    try {
+      const headerEnd = file_url.indexOf(',');
+      const header = file_url.substring(5, headerEnd); // 'image/png;base64' gibi
+      const mime = header.split(';')[0]; // 'image/png'
+      if (!ALLOWED_MIME.includes(mime)) {
+        throw new AppError('Desteklenmeyen görüntü formatı', 400);
+      }
+      const base64 = file_url.substring(headerEnd + 1);
+      const padding = (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
+      const approxBytes = Math.floor((base64.length * 3) / 4) - padding;
+      if (approxBytes > MAX_BYTES) {
+        throw new AppError('Dosya boyutu 5MB\'ı aşamaz', 400);
+      }
+      logger.info('Photo change request (data-url) received', { mime, sizeBytes: approxBytes });
+    } catch (e) {
+      if (e instanceof AppError) throw e;
+      logger.warn('Invalid data-url photo upload', { message: e.message });
+      throw new AppError('Geçersiz fotoğraf verisi', 400);
+    }
+  } else if (file_url.startsWith('http')) {
+    // URL ise yalnızca kabaca uzantı/mime ipucu kontrolü yapılabilir (detay doğrulama storage katmanında yapılmalı)
+    logger.info('Photo change request (http url) received');
+  } else {
     throw new AppError('Geçersiz fotoğraf formatı', 400);
   }
   
@@ -917,9 +943,22 @@ const requestPhotoChange = catchAsync(async (req, res) => {
  * @access Private (Doctor)
  */
 const getPhotoRequestStatus = catchAsync(async (req, res) => {
-  const status = await doctorService.getMyPhotoRequestStatus(req.user.id);
-  
-  sendSuccess(res, 'Fotoğraf talep durumu getirildi', { status });
+  const [status, history] = await Promise.all([
+    doctorService.getMyPhotoRequestStatus(req.user.id),
+    doctorService.getMyPhotoRequestHistory(req.user.id, 50)
+  ]);
+  sendSuccess(res, 'Fotoğraf talep durumu getirildi', { status, history });
+});
+
+/**
+ * Fotoğraf talep geçmişini getir
+ * @description Doktorun fotoğraf talep geçmişini döner
+ * @route GET /api/doctor/profile/photo/history
+ * @access Private (Doctor)
+ */
+const getPhotoRequestHistory = catchAsync(async (req, res) => {
+  const history = await doctorService.getMyPhotoRequestHistory(req.user.id, 50);
+  sendSuccess(res, 'Fotoğraf talep geçmişi getirildi', { history });
 });
 
 /**
@@ -1024,5 +1063,6 @@ module.exports = {
   // Fotoğraf onay sistemi
   requestPhotoChange,
   getPhotoRequestStatus,
+  getPhotoRequestHistory,
   cancelPhotoRequest
 };

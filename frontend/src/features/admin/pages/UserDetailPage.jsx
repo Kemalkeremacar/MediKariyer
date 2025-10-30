@@ -219,8 +219,7 @@ const UserDetailPage = () => {
               <nav className="flex space-x-8 px-6">
                 {[
                   { id: 'overview', label: 'Genel Bakış', icon: Eye },
-                  { id: 'profile', label: 'Profil Detayları', icon: User },
-                  { id: 'activity', label: 'Aktivite', icon: Activity }
+                  { id: 'profile', label: 'Profil', icon: User }
                 ].map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -686,15 +685,7 @@ const UserDetailPage = () => {
                 </div>
               )}
 
-              {activeTab === 'activity' && (
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Son Aktiviteler</h3>
-                  <div className="text-center py-8">
-                    <History className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Aktivite geçmişi yakında eklenecek</p>
-                  </div>
-                </div>
-              )}
+              
 
             </div>
           </div>

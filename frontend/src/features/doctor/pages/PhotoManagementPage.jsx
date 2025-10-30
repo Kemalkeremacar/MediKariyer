@@ -336,7 +336,17 @@ const PhotoManagementPage = () => {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 text-xs text-gray-200">
-                        <span className="font-semibold capitalize">{item.status}</span>
+                        <span className="font-semibold">
+                          {(() => {
+                            switch (item.status) {
+                              case 'approved': return 'Onaylandı';
+                              case 'pending': return 'Onay bekleniyor';
+                              case 'rejected': return 'Reddedildi';
+                              case 'cancelled': return 'İptal edildi';
+                              default: return 'Bilinmiyor';
+                            }
+                          })()}
+                        </span>
                         <span className="text-gray-400">• {item.created_at ? new Date(item.created_at).toLocaleString('tr-TR') : '-'}</span>
                       </div>
                       {item.reason && (

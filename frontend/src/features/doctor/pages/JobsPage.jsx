@@ -326,9 +326,14 @@ const DoctorJobsPage = () => {
           ) : jobs.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {jobs.map((job) => (
+                {jobs
+                  .filter((job) => {
+                    const statusText = (job.status_name || job.status || '').toString().toLowerCase();
+                    return statusText !== 'pasif';
+                  })
+                  .map((job) => (
                   <JobCard key={job.id} job={job} onClick={(e) => handleJobClick(job, e)} />
-                ))}
+                  ))}
               </div>
 
               {/* Sayfalama */}
@@ -655,7 +660,7 @@ const JobDetailModal = ({ job, jobDetail, isLoading, onClose, onApply, anchorY }
 
             {/* İlan Tarihi ve Durum */}
             <div className="bg-gradient-to-r from-gray-900/30 to-slate-900/30 rounded-2xl p-6 border border-gray-500/30 mb-6">
-              <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 text-gray-400 text-sm">
                   <div>
                     İlan Tarihi: {new Date(job.created_at).toLocaleDateString('tr-TR')}
@@ -666,10 +671,10 @@ const JobDetailModal = ({ job, jobDetail, isLoading, onClose, onApply, anchorY }
                     </div>
                   )}
                 </div>
-                <div className="flex items-center text-green-400 text-sm">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                  {job.status_name}
-                </div>
+              <div className={`flex items-center text-sm ${((job.status_name||job.status||'').toString().toLowerCase()==='pasif') ? 'text-red-400' : 'text-green-400'}`}>
+                <div className={`w-2 h-2 rounded-full mr-2 ${((job.status_name||job.status||'').toString().toLowerCase()==='pasif') ? 'bg-red-400' : 'bg-green-400'}`}></div>
+                {job.status_name || job.status}
+              </div>
               </div>
             </div>
 
@@ -683,7 +688,8 @@ const JobDetailModal = ({ job, jobDetail, isLoading, onClose, onApply, anchorY }
               </button>
               <button
                 onClick={onApply}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-4 rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2"
+                disabled={((job.status_name||job.status||'').toString().toLowerCase()==='pasif')}
+                className={`flex-1 px-6 py-4 rounded-2xl transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2 ${((job.status_name||job.status||'').toString().toLowerCase()==='pasif') ? 'bg-white/10 text-gray-400 border border-white/20 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'}`}
               >
                 <Send className="w-4 h-4" />
                 Başvuru Yap

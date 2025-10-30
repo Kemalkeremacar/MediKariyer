@@ -51,8 +51,8 @@ const DoctorDashboard = () => {
   }
 
   // Dashboard verilerini al - data içinde zaten normalizasyon var
-  const recentApplications = dashboardData?.recent_applications || dashboardData?.data?.recent_applications || [];
-  const recentJobs = dashboardData?.recent_jobs || dashboardData?.data?.recent_jobs || [];
+  const recentApplications = (dashboardData?.recent_applications || dashboardData?.data?.recent_applications || []).slice(0, 5);
+  const recentJobs = (dashboardData?.recent_jobs || dashboardData?.data?.recent_jobs || []).slice(0, 5);
   
   console.log('🎯 Doctor Dashboard Data:', dashboardData);
   console.log('📋 Recent Applications:', recentApplications);

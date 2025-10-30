@@ -548,6 +548,14 @@ router.post('/profile/photo', doctorController.requestPhotoChange);
 router.get('/profile/photo/status', doctorController.getPhotoRequestStatus);
 
 /**
+ * @route   GET /api/doctor/profile/photo/history
+ * @desc    Fotoğraf talep geçmişini getir
+ * @access  Özel (Doktor)
+ * @middleware authMiddleware, requireRole(['doctor'])
+ */
+router.get('/profile/photo/history', doctorController.getPhotoRequestHistory);
+
+/**
  * @route   DELETE /api/doctor/profile/photo/request
  * @desc    Fotoğraf talebini iptal et
  * @access  Özel (Doktor)
