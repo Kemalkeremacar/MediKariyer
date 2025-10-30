@@ -26,8 +26,7 @@ import {
 import { useHospitalJobById, useUpdateHospitalJobStatus } from '../api/useHospital';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
-import ConfirmationModal from '../../../components/ui/ConfirmationModal';
-import useUiStore from '../../../store/uiStore';
+// ConfirmationModal global; local import gerekmez
 import { showToast } from '@/utils/toastUtils';
 
 const JobDetailPage = () => {
@@ -44,28 +43,26 @@ const JobDetailPage = () => {
 
   const updateStatusMutation = useUpdateHospitalJobStatus();
 
-  // UI Store
-  const { openModal } = useUiStore();
+  // UI Store kaldırıldı: onaylar showToast.confirm ile yönetilecek
 
   // Veri parsing
   const job = jobData?.data?.job || null;
 
   // Status update handler
-  const handleStatusChange = (statusId) => {
-    const statusNames = { 1: 'Aktif', 2: 'Pasif' };
+  const handleStatusChange = async (statusId) => {
     const isActivating = statusId === 1;
-    
-    openModal('confirmation', {
+    const ok = await showToast.confirm({
       title: 'İlan Durumu Değiştir',
-      message: isActivating 
-        ? "Bu ilanı aktif yapmak istediğinizden emin misiniz? Aktif ilanlar doktorlar tarafından görülebilir ve başvuru yapılabilir."
-        : "Bu ilanı pasif yapmak istediğinizden emin misiniz? Pasif ilanlar doktorlar tarafından görülemez ve başvuru yapılamaz.",
-      confirmText: isActivating ? "Aktif Yap" : "Pasif Yap",
-      cancelText: "İptal",
-      onConfirm: () => confirmStatusChange(statusId),
-      onCancel: cancelStatusChange,
+      message: isActivating
+        ? 'Bu ilanı aktif yapmak istediğinizden emin misiniz? Aktif ilanlar doktorlar tarafından görülebilir ve başvuru yapılabilir.'
+        : 'Bu ilanı pasif yapmak istediğinizden emin misiniz? Pasif ilanlar doktorlar tarafından görülemez ve başvuru yapılamaz.',
+      confirmText: isActivating ? 'Aktif Yap' : 'Pasif Yap',
+      cancelText: 'İptal',
       type: isActivating ? 'success' : 'warning'
     });
+    if (ok) {
+      await confirmStatusChange(statusId);
+    }
   };
 
   const confirmStatusChange = async (statusId) => {
@@ -374,8 +371,7 @@ const JobDetailPage = () => {
         </div>
       </TransitionWrapper>
 
-      {/* Status Change Confirmation Modal */}
-      <ConfirmationModal />
+      {/* ConfirmationModal global olarak App.jsx içinde render ediliyor */}
     </div>
   );
 };

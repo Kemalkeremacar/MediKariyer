@@ -76,6 +76,7 @@ import DoctorDashboard from '@/features/doctor/pages/DashboardPage';
 import DoctorProfile from '@/features/doctor/pages/ProfilePage';
 import DoctorJobsPage from '@/features/doctor/pages/JobsPage';
 import DoctorApplicationsPage from '@/features/doctor/pages/ApplicationsPage';
+import PhotoManagementPage from '@/features/doctor/pages/PhotoManagementPage';
 
 // ============================================================================
 // HOSPITAL PAGES - Hastane paneli sayfaları
@@ -230,6 +231,22 @@ const AppRoutes = () => {
                   <RoleGuard allowedRoles={['doctor']}>
                     <ApprovalGuard>
                       <DoctorApplicationsPage />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          {/* Doktor Fotoğraf Yönetimi */}
+          <Route
+            path="doctor/photo-management"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['doctor']}>
+                    <ApprovalGuard>
+                      <PhotoManagementPage />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>

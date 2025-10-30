@@ -23,6 +23,7 @@ import {
 import { useDoctorJobs, useDoctorJobDetail, useApplyToJob } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 import { useLookup } from '@/hooks/useLookup';
 
 const DoctorJobsPage = () => {
@@ -32,6 +33,7 @@ const DoctorJobsPage = () => {
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [selectedJob, setSelectedJob] = useState(null);
   const [showJobModal, setShowJobModal] = useState(false);
+  const [jobAnchorY, setJobAnchorY] = useState(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [coverLetter, setCoverLetter] = useState('');
@@ -81,7 +83,13 @@ const DoctorJobsPage = () => {
     }
   }, [jobs, searchParams, setSearchParams]);
 
-  const handleJobClick = (job) => {
+  const handleJobClick = (job, e) => {
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setJobAnchorY(rect.top + (window.scrollY || window.pageYOffset));
+    } else {
+      setJobAnchorY(null);
+    }
     setSelectedJob(job);
     setShowJobModal(true);
   };
@@ -319,7 +327,7 @@ const DoctorJobsPage = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {jobs.map((job) => (
-                  <JobCard key={job.id} job={job} onClick={() => handleJobClick(job)} />
+                  <JobCard key={job.id} job={job} onClick={(e) => handleJobClick(job, e)} />
                 ))}
               </div>
 
@@ -409,6 +417,7 @@ const DoctorJobsPage = () => {
                 setSelectedJob(null);
               }}
               onApply={handleApplyClick}
+              anchorY={jobAnchorY}
             />
           )}
 
@@ -493,7 +502,7 @@ const JobCard = ({ job, onClick }) => {
 };
 
 // İş İlanı Detay Modal Component
-const JobDetailModal = ({ job, jobDetail, isLoading, onClose, onApply }) => {
+const JobDetailModal = ({ job, jobDetail, isLoading, onClose, onApply, anchorY }) => {
   if (!job) return null;
 
   // Viewport pozisyonu için scroll pozisyonunu koru
@@ -512,29 +521,11 @@ const JobDetailModal = ({ job, jobDetail, isLoading, onClose, onApply }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Briefcase className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">{job.title}</h2>
-                  <p className="text-gray-300 text-sm">
-                    {job.hospital_name} - {job.city}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
-              >
-                <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
-              </button>
+    <ModalContainer isOpen={true} onClose={onClose} title={job.title} size="xl" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile anchorY={anchorY}>
+          <div className="p-2">
+            <div className="flex items-center gap-3 mb-4 text-gray-600">
+              <Briefcase className="w-5 h-5" />
+              <span>{job.hospital_name} - {job.city}</span>
             </div>
 
             {/* İlan Bilgileri */}
@@ -699,9 +690,7 @@ const JobDetailModal = ({ job, jobDetail, isLoading, onClose, onApply }) => {
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+    </ModalContainer>
   );
 };
 
@@ -725,29 +714,11 @@ const ApplicationModal = ({ job, coverLetter, onCoverLetterChange, onSubmit, onC
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Send className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Başvuru Yap</h2>
-                  <p className="text-gray-300 text-sm">
-                    {job.title} - {job.hospital_name}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
-              >
-                <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
-              </button>
+    <ModalContainer isOpen={true} onClose={onClose} title="Başvuru Yap" size="medium" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+          <div className="p-2">
+            <div className="flex items-center gap-3 mb-4 text-gray-600">
+              <Send className="w-5 h-5" />
+              <span>{job.title} - {job.hospital_name}</span>
             </div>
 
             {/* Form */}
@@ -812,9 +783,7 @@ const ApplicationModal = ({ job, coverLetter, onCoverLetterChange, onSubmit, onC
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+    </ModalContainer>
   );
 };
 

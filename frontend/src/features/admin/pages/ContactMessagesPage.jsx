@@ -13,6 +13,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 
 /**
  * ContactMessagesPage - İletişim mesajları yönetimi sayfası
@@ -21,6 +22,7 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 const ContactMessagesPage = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailAnchorY, setDetailAnchorY] = useState(null);
 
   // Backend hook'ları - basit liste, filtre yok
   const { data: messagesData, isLoading, refetch } = useContactMessages({
@@ -33,7 +35,13 @@ const ContactMessagesPage = () => {
 
   const messages = messagesData?.data?.data || messagesData?.data || [];
 
-  const handleViewMessage = (message) => {
+  const handleViewMessage = (message, e) => {
+    if (e && e.currentTarget) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setDetailAnchorY(rect.top + (window.scrollY || window.pageYOffset));
+    } else {
+      setDetailAnchorY(null);
+    }
     setSelectedMessage(message);
     setShowDetailModal(true);
   };
@@ -134,7 +142,7 @@ const ContactMessagesPage = () => {
                   <div
                     key={message.id}
                     className="admin-card hover:shadow-lg transition-all duration-300 cursor-pointer"
-                    onClick={() => handleViewMessage(message)}
+                    onClick={(e) => handleViewMessage(message, e)}
                   >
                     <div className="admin-card-body">
                       <div className="flex items-start justify-between">
@@ -191,21 +199,18 @@ const ContactMessagesPage = () => {
 
         {/* Message Detail Modal */}
         {showDetailModal && selectedMessage && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="admin-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="admin-card-header">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-900">Mesaj Detayı</h2>
-                  <button
-                    onClick={() => setShowDetailModal(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              <div className="admin-card-body space-y-6">
+          <ModalContainer
+            isOpen={true}
+            onClose={() => setShowDetailModal(false)}
+            title="Mesaj Detayı"
+            size="medium"
+            maxHeight="90vh"
+            closeOnBackdrop={true}
+            align="auto"
+            anchorY={detailAnchorY}
+            fullScreenOnMobile
+          >
+            <div className="space-y-6">
                 {/* Sender Info */}
                 <div className="admin-card">
                   <div className="admin-card-body">
@@ -261,9 +266,8 @@ const ContactMessagesPage = () => {
                     Mesajı Sil
                   </button>
                 </div>
-              </div>
             </div>
-          </div>
+          </ModalContainer>
         )}
       </div>
     </div>

@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, Suspense } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner'; // ✅ sonner kullanıyoruz
 
 // Routes
@@ -33,8 +34,9 @@ import { getToastConfig } from '@config/toast.js'; // ✅ toast ayarlarını ald
 
 function App() {
   // Store hooks
-  const { setTheme, theme } = useUIStore();
+  const { setTheme, theme, closeAllModals } = useUIStore();
   const { initializeFromToken, user, clearStorage } = useAuthStore();
+  const location = useLocation();
 
   // Custom hooks
   useScrollToTop();
@@ -86,6 +88,11 @@ function App() {
       logger.debug('Application cleanup completed');
     };
   }, [setTheme]);
+
+  // Rota değişiminde tüm modalları kapat
+  useEffect(() => {
+    closeAllModals();
+  }, [location.pathname, closeAllModals]);
 
   return (
     <ErrorBoundary>

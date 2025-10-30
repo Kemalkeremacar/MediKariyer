@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useJobById, useDeleteJob, useUpdateJobStatus } from '../api/useAdmin';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 import { showToast } from '@/utils/toastUtils';
 
 const AdminJobDetailPage = () => {
@@ -124,69 +125,52 @@ const AdminJobDetailPage = () => {
     }, []);
 
     return (
-      <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-8">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Edit3 className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold text-white mb-1">İş İlanı Durumunu Değiştir</h2>
-                    <p className="text-gray-300 text-sm">
-                      {job?.title} - {job?.hospital_name}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
-                >
-                  <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
-                </button>
-              </div>
-              
-              {/* Content */}
-              <div className="space-y-6">
-                <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-6 border border-blue-500/30">
-                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-blue-400" />
-                    Durum Seçimi
-                  </h3>
-                  <p className="text-gray-300 mb-6">İş ilanının durumunu seçin:</p>
-                  
-                  <div className="space-y-4">
-                    <button
-                      onClick={() => {
-                        handleStatusChange(1);
-                        setShowEditModal(false);
-                      }}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-2xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 flex items-center justify-center gap-3 font-medium shadow-lg"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      <span>Aktif Yap</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        handleStatusChange(2);
-                        setShowEditModal(false);
-                      }}
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 flex items-center justify-center gap-3 font-medium shadow-lg"
-                    >
-                      <Clock className="w-5 h-5" />
-                      <span>Pasif Yap</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
+      <ModalContainer
+        isOpen={true}
+        onClose={() => setShowEditModal(false)}
+        title="İş İlanı Durumunu Değiştir"
+        size="medium"
+        maxHeight="90vh"
+        closeOnBackdrop={true}
+        align="auto"
+        fullScreenOnMobile
+      >
+        <div className="space-y-6">
+          <div className="text-gray-600 flex items-center gap-2">
+            <Edit3 className="w-4 h-4" />
+            <span>{job?.title} - {job?.hospital_name}</span>
+          </div>
+          <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-6 border border-blue-500/30">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-blue-400" />
+              Durum Seçimi
+            </h3>
+            <p className="text-gray-300 mb-6">İş ilanının durumunu seçin:</p>
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  handleStatusChange(1);
+                  setShowEditModal(false);
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-2xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 flex items-center justify-center gap-3 font-medium shadow-lg"
+              >
+                <CheckCircle className="w-5 h-5" />
+                <span>Aktif Yap</span>
+              </button>
+              <button
+                onClick={() => {
+                  handleStatusChange(2);
+                  setShowEditModal(false);
+                }}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all duration-300 flex items-center justify-center gap-3 font-medium shadow-lg"
+              >
+                <Clock className="w-5 h-5" />
+                <span>Pasif Yap</span>
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </ModalContainer>
     );
   };
 

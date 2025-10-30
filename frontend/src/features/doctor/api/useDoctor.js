@@ -554,8 +554,15 @@ export const useRequestPhotoChange = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (fileUrl) => {
-      const response = await apiRequest.post('/doctor/profile/photo', { file_url: fileUrl });
+    mutationFn: async (file) => {
+      // Backend JSON bekliyor: { file_url: base64String }
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const response = await apiRequest.post('/doctor/profile/photo', { file_url: dataUrl });
       return response.data;
     },
     onSuccess: () => {
@@ -585,6 +592,22 @@ export const usePhotoRequestStatus = () => {
     staleTime: 30 * 1000, // 30 saniye
     cacheTime: 5 * 60 * 1000, // 5 dakika
     retry: 2
+  });
+};
+
+/**
+ * Fotoğraf talep geçmişini getir
+ */
+export const usePhotoRequestHistory = () => {
+  return useQuery({
+    queryKey: ['doctor', 'photo-request-history'],
+    queryFn: async () => {
+      const response = await apiRequest.get('/doctor/profile/photo/history');
+      return response.data;
+    },
+    staleTime: 0,
+    cacheTime: 5 * 60 * 1000,
+    retry: 1
   });
 };
 

@@ -22,7 +22,7 @@ import {
 import { usePhotoRequests, useReviewPhotoRequest } from '../api/useAdmin';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
-import ConfirmationModal from '@/components/ui/ConfirmationModal';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 
 const PhotoApprovalsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('pending');
@@ -91,7 +91,8 @@ const PhotoApprovalsPage = () => {
 
   // Modal aç
   const openModal = (request) => {
-    setSelectedRequest(request);
+    setSelectedRequest(request || null);
+    setRejectReason('');
     setShowModal(true);
   };
 
@@ -298,29 +299,17 @@ const PhotoApprovalsPage = () => {
         </div>
 
         {/* Modal */}
-        {showModal && selectedRequest && (
-          <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200"
-            onClick={closeModal}
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
-          >
-            <div 
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-300"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header - Sabit */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <h2 className="text-2xl font-bold text-gray-900">Fotoğraf Talebi Detayı</h2>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
-                >
-                  <XCircle className="w-6 h-6" />
-                </button>
-              </div>
-
-              {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-6 space-y-6">
+        <ModalContainer
+          isOpen={showModal && Boolean(selectedRequest)}
+          onClose={closeModal}
+          title="Fotoğraf Talebi Detayı"
+          size="large"
+          closeOnBackdrop={true}
+          maxHeight="90vh"
+          align="auto"
+          fullScreenOnMobile
+        >
+          <div className="space-y-6">
                 {/* Doctor Info */}
                 <div className="admin-card">
                   <div className="admin-card-body">
@@ -328,20 +317,20 @@ const PhotoApprovalsPage = () => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-600">Ad Soyad:</span>
-                        <p className="text-gray-900">{selectedRequest.title} {selectedRequest.first_name} {selectedRequest.last_name}</p>
+                        <p className="text-gray-900">{selectedRequest?.title} {selectedRequest?.first_name} {selectedRequest?.last_name}</p>
                       </div>
                       <div>
                         <span className="text-gray-600">E-posta:</span>
-                        <p className="text-gray-900">{selectedRequest.email}</p>
+                        <p className="text-gray-900">{selectedRequest?.email || '-'}</p>
                       </div>
                       <div>
                         <span className="text-gray-600">Talep Tarihi:</span>
-                        <p className="text-gray-900">{new Date(selectedRequest.created_at).toLocaleString('tr-TR')}</p>
+                        <p className="text-gray-900">{selectedRequest?.created_at ? new Date(selectedRequest.created_at).toLocaleString('tr-TR') : '-'}</p>
                       </div>
                       <div>
                         <span className="text-gray-600">Durum:</span>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(selectedRequest.status)}`}>
-                          {getStatusText(selectedRequest.status)}
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(selectedRequest?.status)}`}>
+                          {getStatusText(selectedRequest?.status)}
                         </span>
                       </div>
                     </div>
@@ -356,7 +345,7 @@ const PhotoApprovalsPage = () => {
                       <div>
                         <h4 className="text-sm font-medium text-gray-700 mb-2">Eski Fotoğraf (Talep Anındaki)</h4>
                         <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-lg">
-                          {selectedRequest.old_photo ? (
+                          {selectedRequest?.old_photo ? (
                             <img
                               src={selectedRequest.old_photo}
                               alt="Talep anındaki fotoğraf"
@@ -373,7 +362,7 @@ const PhotoApprovalsPage = () => {
                         <h4 className="text-sm font-medium text-gray-700 mb-2">Yeni Fotoğraf</h4>
                         <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-lg">
                           <img
-                            src={selectedRequest.file_url}
+                            src={selectedRequest?.file_url}
                             alt="Yeni fotoğraf"
                             className="w-full h-full object-contain"
                           />
@@ -384,7 +373,7 @@ const PhotoApprovalsPage = () => {
                 </div>
 
                 {/* Reject Reason Input */}
-                {selectedRequest.status === 'pending' && (
+                {selectedRequest?.status === 'pending' && (
                   <div className="admin-card">
                     <div className="admin-card-body">
                       <label className="admin-form-label">
@@ -405,25 +394,22 @@ const PhotoApprovalsPage = () => {
                 )}
 
                 {/* Rejection Reason Display */}
-                {selectedRequest.status === 'rejected' && selectedRequest.reason && (
+                {selectedRequest?.status === 'rejected' && selectedRequest?.reason && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                     <div className="flex items-start gap-2">
                       <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
                       <div>
                         <h4 className="font-medium text-red-800 mb-1">Red Nedeni</h4>
-                        <p className="text-red-700 text-sm">{selectedRequest.reason}</p>
+                        <p className="text-red-700 text-sm">{selectedRequest?.reason}</p>
                       </div>
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Footer - Sabit (eğer pending ise) */}
-              {selectedRequest.status === 'pending' && (
-                <div className="border-t border-gray-200 bg-gray-50 p-6">
-                  <div className="flex gap-3 justify-end">
+                {/* Footer - Sabit (eğer pending ise) */}
+                {selectedRequest && selectedRequest?.status === 'pending' && (
+                  <div className="flex gap-3 justify-end pt-2">
                     <button
-                      onClick={() => handleReject(selectedRequest.id)}
+                      onClick={() => selectedRequest?.id && handleReject(selectedRequest.id)}
                       disabled={reviewPhotoRequestMutation.isPending || !rejectReason.trim()}
                       className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
                     >
@@ -431,7 +417,7 @@ const PhotoApprovalsPage = () => {
                       Reddet
                     </button>
                     <button
-                      onClick={() => handleApprove(selectedRequest.id)}
+                      onClick={() => selectedRequest?.id && handleApprove(selectedRequest.id)}
                       disabled={reviewPhotoRequestMutation.isPending}
                       className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
                     >
@@ -439,11 +425,9 @@ const PhotoApprovalsPage = () => {
                       Onayla
                     </button>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
           </div>
-        )}
+        </ModalContainer>
       </div>
     </div>
   );

@@ -54,6 +54,8 @@ import {
 import { useLookup } from '../../../hooks/useLookup';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { ModalContainer } from '@/components/ui/ModalContainer';
+import { useNavigate } from 'react-router-dom';
 
 const DoctorProfile = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -61,7 +63,7 @@ const DoctorProfile = () => {
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({});
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState(null);
-  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const navigate = useNavigate();
 
   // Lookup Data Hook - Yeni yapıya göre güncellendi
   const { 
@@ -524,30 +526,11 @@ const DoctorProfile = () => {
             {/* Kişisel Bilgiler Tab */}
             {activeTab === 'personal' && (
               <div className="space-y-8">
-                {/* Profil Fotoğrafı Butonu - Modal Açar */}
+                {/* Profil Fotoğrafı Butonu - Yeni sayfaya yönlendirme */}
                 <ProfilePhotoButton 
                   photoRequestStatus={photoRequestStatus}
-                  onOpenModal={() => setShowPhotoModal(true)}
+                  onOpenModal={() => navigate('/doctor/photo-management')}
                 />
-                
-                {/* Profil Fotoğrafı Modal */}
-                {showPhotoModal && (
-                  <PhotoManagementModal
-                    isOpen={showPhotoModal}
-                    onClose={() => setShowPhotoModal(false)}
-                    profile={profile}
-                    photoRequestStatus={photoRequestStatus}
-                    requestPhotoChangeMutation={requestPhotoChangeMutation}
-                    onCancelPhotoRequest={async () => {
-                      try {
-                        await cancelPhotoRequestMutation.mutateAsync();
-                        showToast.success('Fotoğraf talebi iptal edildi');
-                      } catch (error) {
-                        showToast.error('İptal işlemi başarısız');
-                      }
-                    }}
-                  />
-                )}
                 
                 {/* Kişisel Bilgiler Formu */}
               <PersonalInfoTab 
@@ -644,6 +627,7 @@ const DoctorProfile = () => {
 const PhotoManagementModal = ({ 
   isOpen,
   onClose,
+  anchorY,
   profile,
   photoRequestStatus,
   requestPhotoChangeMutation,
@@ -703,30 +687,8 @@ const PhotoManagementModal = ({
   const hasPendingRequest = pendingRequest?.status === 'pending';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto border border-white/20">
-        {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-purple-600 p-4 flex items-center justify-between border-b border-white/10 z-10">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-white/20 rounded-lg">
-              <Camera className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-white">Profil Fotoğrafı Yönetimi</h2>
-              <p className="text-xs text-blue-100">Admin onayı gerektirir</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
-            title="Kapat"
-          >
-            <X className="w-5 h-5 text-white" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-5 space-y-5">
+    <ModalContainer isOpen={true} onClose={onClose} title="Profil Fotoğrafı Yönetimi" size="large" maxHeight="85vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile anchorY={anchorY}>
+      <div className="space-y-5">
           {/* Fotoğraflar */}
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4">
             {/* Mevcut Fotoğraf */}
@@ -899,9 +861,8 @@ const PhotoManagementModal = ({
           >
             Kapat
           </button>
-        </div>
       </div>
-    </div>
+    </ModalContainer>
   );
 };
 
@@ -932,7 +893,9 @@ const ProfilePhotoButton = ({ photoRequestStatus, onOpenModal }) => {
           </div>
         </div>
         <button
-          onClick={onOpenModal}
+          onClick={(e) => {
+            onOpenModal?.(e.clientY);
+          }}
           className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
         >
           <Camera className="w-5 h-5" />
@@ -1610,23 +1573,9 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
   const fields = getFormFields();
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-slate-900/95 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl max-w-md w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-white/20 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">
-              {isEditing ? 'Düzenle' : 'Yeni Ekle'}
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-300"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="p-6 space-y-6">
+    <ModalContainer isOpen={true} onClose={onClose} title={isEditing ? 'Düzenle' : 'Yeni Ekle'} size="small" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+      <div className="flex-1 overflow-y-auto">
+        <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="p-6 space-y-6">
           {fields.map((field) => (
             <div key={field.name}>
               <label className="block text-sm font-medium text-gray-300 mb-3">
@@ -1712,34 +1661,33 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
               )}
             </div>
           ))}
-          </form>
-        </div>
-        <div className="p-6 border-t border-white/20 flex-shrink-0">
-          <div className="flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-3 text-gray-300 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300"
-            >
-              İptal
-            </button>
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={onSubmit}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl flex items-center gap-3 disabled:opacity-50 transition-all duration-300 shadow-lg"
-            >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <Save className="w-5 h-5" />
-              )}
-              {isEditing ? 'Güncelle' : 'Ekle'}
-            </button>
-          </div>
+        </form>
+      </div>
+      <div className="p-6 pt-0">
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-3 text-gray-700 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300"
+          >
+            İptal
+          </button>
+          <button
+            type="button"
+            disabled={isLoading}
+            onClick={onSubmit}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl flex items-center gap-3 disabled:opacity-50 transition-all duration-300 shadow-lg"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Save className="w-5 h-5" />
+            )}
+            {isEditing ? 'Güncelle' : 'Ekle'}
+          </button>
         </div>
       </div>
-    </div>
+    </ModalContainer>
   );
 };
 

@@ -23,11 +23,13 @@ import {
 import { useMyApplications, useApplicationDetail, useWithdrawApplication, useDeleteApplication } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 
 const DoctorApplicationsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedApplication, setSelectedApplication] = useState(null);
+  const [detailAnchorY, setDetailAnchorY] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -46,7 +48,12 @@ const DoctorApplicationsPage = () => {
   const applications = applicationsData?.applications || [];
   const pagination = applicationsData?.pagination || {};
 
-  const handleApplicationClick = (application) => {
+  const handleApplicationClick = (application, e) => {
+    if (e && typeof e.clientY === 'number') {
+      setDetailAnchorY(e.clientY);
+    } else {
+      setDetailAnchorY(null);
+    }
     setSelectedApplication(application);
     setShowDetailModal(true);
   };
@@ -272,7 +279,10 @@ const DoctorApplicationsPage = () => {
                     
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                       <button
-                        onClick={() => setSelectedApplication(application)}
+                        onClick={(e) => {
+                          setDetailAnchorY(e.clientY);
+                          setSelectedApplication(application);
+                        }}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
                       >
                         <Eye className="w-4 h-4" />
@@ -357,12 +367,15 @@ const DoctorApplicationsPage = () => {
               application={selectedApplication}
               applicationDetail={applicationDetail}
               isLoading={detailLoading}
+              anchorY={detailAnchorY}
               onClose={() => {
                 setSelectedApplication(null);
+                setDetailAnchorY(null);
               }}
               onWithdraw={() => {
                 handleWithdraw(selectedApplication.id);
                 setSelectedApplication(null);
+                setDetailAnchorY(null);
               }}
             />
           )}
@@ -372,23 +385,9 @@ const DoctorApplicationsPage = () => {
 };
 
 // Başvuru Detay Modal Component
-const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onClose, onWithdraw }) => {
+const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onClose, onWithdraw, anchorY }) => {
   if (!application) return null;
 
-  // Viewport pozisyonu için scroll pozisyonunu koru
-  useEffect(() => {
-    const scrollY = window.scrollY;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
-
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
 
   const getStatusText = (status) => {
     switch (status) {
@@ -408,35 +407,27 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <FileText className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Başvuru Detayı</h2>
-                  <p className="text-gray-300 text-sm">
-                    {application.job_title} - {application.hospital_name}
-                  </p>
-                </div>
+    <ModalContainer isOpen={true} onClose={onClose} title="Başvuru Detayı" size="xl" maxHeight="90vh" closeOnBackdrop={true} align="auto" anchorY={anchorY} fullScreenOnMobile>
+      <div className="p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <FileText className="w-6 h-6 text-white" />
               </div>
-              <button
-                onClick={onClose}
-                className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
-              >
-                <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
-              </button>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">Başvuru Detayı</h2>
+                <p className="text-gray-300 text-sm">
+                  {application.job_title} - {application.hospital_name}
+                </p>
+              </div>
             </div>
+          </div>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : (
             <div className="space-y-6">
               {/* İş İlanı Bilgileri */}
@@ -587,10 +578,8 @@ const ApplicationDetailModal = ({ application, applicationDetail, isLoading, onC
               </div>
             </div>
           )}
-          </div>
-        </div>
       </div>
-    </div>
+    </ModalContainer>
   );
 };
 

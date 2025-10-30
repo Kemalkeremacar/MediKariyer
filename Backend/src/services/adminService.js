@@ -107,7 +107,10 @@ const getUsers = async (filters = {}) => {
   if (email_search) countQuery.where('email', 'like', `%${email_search}%`);
   
   const [{ count }] = await countQuery.count('* as count');
-  const users = await query.limit(limit).offset(offset);
+  const users = await query
+    .orderBy('users.created_at', 'desc')
+    .limit(limit)
+    .offset(offset);
   
   // Profil bilgilerini düzenle
   const usersWithProfile = users.map(user => ({

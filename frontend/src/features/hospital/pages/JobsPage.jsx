@@ -30,8 +30,6 @@ import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useDeleteH
 import { useJobStatuses } from '@/hooks/useLookup';
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
-import ConfirmationModal from '../../../components/ui/ConfirmationModal';
-import useUiStore from '../../../store/uiStore';
 import { showToast } from '@/utils/toastUtils';
 
 const HospitalJobs = () => {
@@ -42,8 +40,7 @@ const HospitalJobs = () => {
     limit: 20
   });
 
-  // UI Store
-  const { openModal } = useUiStore();
+  // UI Store kaldırıldı: onaylar showToast.confirm ile yönetilecek
 
   // API hook'ları
   const { 
@@ -72,16 +69,18 @@ const HospitalJobs = () => {
   const paginationData = jobsData?.data?.pagination || {};
 
   // Job actions
-  const handleDeleteJob = (jobId, jobTitle) => {
-    openModal('confirmation', {
+  const handleDeleteJob = async (jobId, jobTitle) => {
+    const ok = await showToast.confirm({
       title: 'İş İlanını Sil',
       message: `"${jobTitle}" iş ilanını kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve ilanla ilgili tüm başvurular da silinecektir.`,
       confirmText: 'Sil',
       cancelText: 'İptal',
-      onConfirm: () => confirmDeleteJob(jobId),
-      onCancel: () => {},
-      type: 'danger'
+      type: 'danger',
+      destructive: true
     });
+    if (ok) {
+      await confirmDeleteJob(jobId);
+    }
   };
 
   const confirmDeleteJob = async (jobId) => {
@@ -397,8 +396,7 @@ const HospitalJobs = () => {
           )}
         </div>
 
-        {/* Confirmation Modal */}
-        <ConfirmationModal />
+        {/* ConfirmationModal global olarak App.jsx içinde render ediliyor */}
     </div>
   );
 };

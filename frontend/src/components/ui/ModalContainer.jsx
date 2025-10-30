@@ -18,21 +18,42 @@ export const ModalContainer = ({
   size = 'medium',
   closeOnBackdrop = true,
   maxHeight = '90vh',
-  showCloseButton = true
+  showCloseButton = true,
+  align = 'auto', 
+  initialFocusRef,
+  anchorY,
+  anchorOffset = 16,
+  fullScreenOnMobile = true
 }) => {
   const modalRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const labelledById = useRef(`modal-title-${Math.random().toString(36).slice(2)}`);
+  const [computedAlign, setComputedAlign] = useState('center');
 
-  // Pozisyon hesaplama
+  // Pozisyon ve görünürlük hesaplama
   useEffect(() => {
     if (isOpen) {
-      // Scroll pozisyonunu kaydet
-      const currentScroll = window.scrollY || window.pageYOffset;
-      setScrollPosition(currentScroll);
+      // Hedefe kaydır ve ardından body'yi kilitle
+      const initialScroll = window.scrollY || window.pageYOffset;
+      let targetScroll = initialScroll;
+      if (typeof anchorY === 'number') {
+        // anchorY viewport (clientY). Ekran ortasına gelecek şekilde kaydır, sayfa sınırlarını gözet
+        const viewportHeight = (window.innerHeight || document.documentElement.clientHeight);
+        const viewportCenter = viewportHeight / 2;
+        const docHeight = Math.max(
+          document.body.scrollHeight,
+          document.documentElement.scrollHeight
+        );
+        const desiredTop = initialScroll + (anchorY - viewportCenter) - anchorOffset;
+        targetScroll = Math.max(0, Math.min(desiredTop, docHeight - viewportHeight));
+        window.scrollTo({ top: targetScroll, behavior: 'auto' });
+      }
+
+      setScrollPosition(targetScroll);
 
       // Body scroll'u kilitle
       document.body.style.position = 'fixed';
-      document.body.style.top = `-${currentScroll}px`;
+      document.body.style.top = `-${targetScroll}px`;
       document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
 
@@ -43,18 +64,61 @@ export const ModalContainer = ({
         }
       };
 
+      const handleKeyTrap = (e) => {
+        if (e.key !== 'Tab') return;
+        const root = modalRef.current;
+        if (!root) return;
+        const focusable = root.querySelectorAll(
+          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          last.focus();
+          e.preventDefault();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          first.focus();
+          e.preventDefault();
+        }
+      };
+
       document.addEventListener('keydown', handleEscape);
+      document.addEventListener('keydown', handleKeyTrap);
+
+      // Modal boyutuna göre hizalama ve görünür alana getirme
+      setTimeout(() => {
+        const node = modalRef.current;
+        if (node) {
+          if (typeof anchorY === 'number') {
+            // Anchor varsa modalı ekran ortasında hizala
+            setComputedAlign('center');
+            node.scrollIntoView({ block: 'center', behavior: 'auto' });
+          } else {
+            const rect = node.getBoundingClientRect();
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+            const willFit = rect.height + 32 <= vh; // padding hesaba kat
+            setComputedAlign(willFit ? 'center' : 'top');
+            const blockPos = willFit ? 'center' : 'start';
+            node.scrollIntoView({ block: blockPos, behavior: 'auto' });
+          }
+        }
+        if (initialFocusRef?.current) {
+          initialFocusRef.current.focus();
+        }
+      }, 0);
 
       return () => {
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.width = '';
         document.body.style.overflow = '';
-        window.scrollTo(0, currentScroll);
+        window.scrollTo(0, targetScroll);
         document.removeEventListener('keydown', handleEscape);
+        document.removeEventListener('keydown', handleKeyTrap);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, anchorY, anchorOffset]);
 
   // Backdrop click handler
   const handleBackdropClick = (e) => {
@@ -73,9 +137,17 @@ export const ModalContainer = ({
     xl: 'max-w-7xl'
   };
 
+  // Wrapper hizalama sınıfı
+  const effectiveAlign = align === 'auto' ? computedAlign : align;
+  const alignClass = effectiveAlign === 'top' ? 'items-start' : 'items-center';
+
+  const containerResponsive = fullScreenOnMobile
+    ? 'md:rounded-2xl md:max-w-[inherit] md:w-full md:h-auto h-screen max-w-none rounded-none'
+    : '';
+
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className={`fixed inset-0 z-[100] flex ${alignClass} justify-center p-4 animate-in fade-in duration-200 bg-black/60 backdrop-blur-sm overflow-y-auto`}
       onClick={handleBackdropClick}
       style={{ 
         position: 'fixed',
@@ -88,7 +160,10 @@ export const ModalContainer = ({
     >
       <div 
         ref={modalRef}
-        className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full ${sizeConfig[size]} flex flex-col animate-in zoom-in-95 duration-300`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? labelledById.current : undefined}
+        className={`bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full ${sizeConfig[size]} ${containerResponsive} flex flex-col animate-in zoom-in-95 duration-300`}
         style={{ 
           maxHeight,
           overflow: 'hidden'
@@ -99,7 +174,7 @@ export const ModalContainer = ({
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-white/10 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 flex-shrink-0">
             {title && (
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+              <h2 id={labelledById.current} className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
                 {title}
               </h2>
             )}
@@ -133,10 +208,15 @@ export const DarkModalContainer = ({
   size = 'medium',
   closeOnBackdrop = true,
   maxHeight = '90vh',
-  showCloseButton = true
+  showCloseButton = true,
+  align = 'auto',
+  initialFocusRef,
+  fullScreenOnMobile = false
 }) => {
   const modalRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const labelledById = useRef(`modal-title-${Math.random().toString(36).slice(2)}`);
+  const [computedAlign, setComputedAlign] = useState('center');
 
   useEffect(() => {
     if (isOpen) {
@@ -155,6 +235,21 @@ export const DarkModalContainer = ({
       };
 
       document.addEventListener('keydown', handleEscape);
+
+      setTimeout(() => {
+        const node = modalRef.current;
+        if (node) {
+          const rect = node.getBoundingClientRect();
+          const vh = window.innerHeight || document.documentElement.clientHeight;
+          const willFit = rect.height + 32 <= vh;
+          setComputedAlign(willFit ? 'center' : 'top');
+          const blockPos = willFit ? 'center' : 'start';
+          node.scrollIntoView({ block: blockPos, behavior: 'auto' });
+        }
+        if (initialFocusRef?.current) {
+          initialFocusRef.current.focus();
+        }
+      }, 0);
 
       return () => {
         document.body.style.position = '';
@@ -182,9 +277,16 @@ export const DarkModalContainer = ({
     xl: 'max-w-7xl'
   };
 
+  const effectiveAlign = align === 'auto' ? computedAlign : align;
+  const alignClass = effectiveAlign === 'top' ? 'items-start' : 'items-center';
+
+  const containerResponsive = fullScreenOnMobile
+    ? 'md:rounded-2xl md:max-w-[inherit] md:w-full md:h-auto h-screen max-w-none rounded-none'
+    : '';
+
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex ${alignClass} justify-center p-4 animate-in fade-in duration-200 overflow-y-auto`}
       onClick={handleBackdropClick}
       style={{ 
         position: 'fixed',
@@ -197,7 +299,10 @@ export const DarkModalContainer = ({
     >
       <div 
         ref={modalRef}
-        className={`bg-slate-800/95 rounded-2xl shadow-2xl w-full ${sizeConfig[size]} flex flex-col animate-in zoom-in-95 duration-300 border border-white/20`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? labelledById.current : undefined}
+        className={`bg-slate-800/95 rounded-2xl shadow-2xl w-full ${sizeConfig[size]} ${containerResponsive} flex flex-col animate-in zoom-in-95 duration-300 border border-white/20`}
         style={{ 
           maxHeight,
           overflow: 'hidden'
@@ -208,7 +313,7 @@ export const DarkModalContainer = ({
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10 bg-gradient-to-r from-slate-800 to-slate-900 flex-shrink-0">
             {title && (
-              <h2 className="text-xl md:text-2xl font-bold text-white">
+              <h2 id={labelledById.current} className="text-xl md:text-2xl font-bold text-white">
                 {title}
               </h2>
             )}

@@ -38,6 +38,7 @@ import { useApplicationStatuses } from '@/hooks/useLookup';
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 
 const HospitalApplications = () => {
   const navigate = useNavigate();
@@ -583,100 +584,90 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
 // Doktor Ön Yazısı Modal Component
 const CoverLetterModal = ({ application, onClose }) => {
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-8">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <FileText className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Doktor Ön Yazısı</h2>
-                  <p className="text-gray-300 text-sm">
-                    {application.first_name} {application.last_name} - {application.job_title}
-                  </p>
-                </div>
+    <ModalContainer isOpen={true} onClose={onClose} title="Doktor Ön Yazısı" size="large" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+      <div className="p-2">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <FileText className="w-6 h-6 text-white" />
               </div>
-              <button
-                onClick={onClose}
-                className="w-10 h-10 bg-white/10 hover:bg-red-500/20 rounded-xl flex items-center justify-center transition-all duration-200 group"
-              >
-                <X className="w-5 h-5 text-gray-400 group-hover:text-red-400" />
-              </button>
-            </div>
-
-            {/* Başvuru Bilgileri */}
-            <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl p-6 mb-6 border border-green-500/30">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-green-400" />
-                Başvuru Bilgileri
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <span className="text-xs text-gray-400 block">Başvuru Tarihi</span>
-                  <span className="text-sm text-gray-300">
-                    {new Date(application.applied_at).toLocaleDateString('tr-TR')}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-400 block">Güncelleme Tarihi</span>
-                  <span className="text-sm text-gray-300">
-                    {new Date(application.updated_at).toLocaleDateString('tr-TR')}
-                  </span>
-                </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">Doktor Ön Yazısı</h2>
+                <p className="text-gray-300 text-sm">
+                  {application.first_name} {application.last_name} - {application.job_title}
+                </p>
               </div>
-            </div>
-
-            {/* Doktor Ön Yazısı İçeriği */}
-            {application.cover_letter ? (
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-green-400" />
-                  Ön Yazı İçeriği
-                </h3>
-                <div className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 rounded-2xl p-6 border border-green-500/30">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
-                      <FileText className="w-4 h-4 text-green-300" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-gray-200 leading-relaxed whitespace-pre-wrap text-sm">
-                        {application.cover_letter}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-8">
-                <div className="bg-gradient-to-r from-gray-900/30 to-slate-900/30 rounded-2xl p-8 border border-gray-500/30 text-center">
-                  <div className="w-16 h-16 bg-gray-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <FileText className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-300 mb-2">Ön Yazı Bulunamadı</h3>
-                  <p className="text-gray-400 text-sm">
-                    Bu başvuru için doktor ön yazısı eklenmemiş.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Kapat Butonu */}
-            <div className="flex justify-end pt-4 border-t border-white/10">
-              <button
-                onClick={onClose}
-                className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-all duration-300 font-medium"
-              >
-                Kapat
-              </button>
             </div>
           </div>
+
+          {/* Başvuru Bilgileri */}
+          <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl p-6 mb-6 border border-green-500/30">
+            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-green-400" />
+              Başvuru Bilgileri
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs text-gray-400 block">Başvuru Tarihi</span>
+                <span className="text-sm text-gray-300">
+                  {new Date(application.applied_at).toLocaleDateString('tr-TR')}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs text-gray-400 block">Güncelleme Tarihi</span>
+                <span className="text-sm text-gray-300">
+                  {new Date(application.updated_at).toLocaleDateString('tr-TR')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Doktor Ön Yazısı İçeriği */}
+          {application.cover_letter ? (
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-green-400" />
+                Ön Yazı İçeriği
+              </h3>
+              <div className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 rounded-2xl p-6 border border-green-500/30">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
+                    <FileText className="w-4 h-4 text-green-300" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-gray-200 leading-relaxed whitespace-pre-wrap text-sm">
+                      {application.cover_letter}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-8">
+              <div className="bg-gradient-to-r from-gray-900/30 to-slate-900/30 rounded-2xl p-8 border border-gray-500/30 text-center">
+                <div className="w-16 h-16 bg-gray-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-300 mb-2">Ön Yazı Bulunamadı</h3>
+                <p className="text-gray-400 text-sm">
+                  Bu başvuru için doktor ön yazısı eklenmemiş.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Kapat Butonu */}
+          <div className="flex justify-end pt-4 border-t border-white/10">
+            <button
+              onClick={onClose}
+              className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-all duration-300 font-medium"
+            >
+              Kapat
+            </button>
+          </div>
         </div>
-      </div>
-    </div>
+      </ModalContainer>
   );
 };
 
@@ -697,18 +688,16 @@ const ApplicationStatusModal = ({ application, statusOptions, onClose, onStatusU
   const isNotesChanged = notes !== (application.notes || '');
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-8">
+    <ModalContainer isOpen={true} onClose={onClose} title="Başvuru Durumu Yönetimi" size="large" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+      <div className="p-2">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
               <Settings className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">Başvuru Durumu Yönetimi</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Başvuru Durumu Yönetimi</h2>
               <p className="text-gray-300 text-sm">
                 {application.first_name} {application.last_name} - {application.job_title}
               </p>
@@ -769,14 +758,14 @@ const ApplicationStatusModal = ({ application, statusOptions, onClose, onStatusU
                 onChange={(e) => setNotes(e.target.value)}
             placeholder="Değerlendirme notları ekleyin..."
             rows={4}
-            className="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 hover:bg-white/15"
+            className="w-full px-4 py-4 bg_WHITE/10 border border_WHITE/20 rounded-2xl text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 hover:bg-white/15"
           />
         </div>
 
         {/* Mevcut Not Gösterimi */}
         {application.notes && (
           <div className="mb-8">
-            <label className="block text-lg font-semibold text-white mb-3 flex items-center gap-2">
+            <label className="block text-lg font-semibold text_white mb-3 flex items-center gap-2">
               <FileText className="w-5 h-5 text-yellow-400" />
               Mevcut Not
             </label>
@@ -824,9 +813,7 @@ const ApplicationStatusModal = ({ application, statusOptions, onClose, onStatusU
           )}
         </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </ModalContainer>
   );
 };
 
@@ -836,15 +823,11 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-8">
-            <div className="flex items-center justify-center py-12">
-              <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-            </div>
-          </div>
+      <ModalContainer isOpen={true} onClose={onClose} title="Doktor Profili" size="xl" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+        <div className="flex items-center justify-center py-12">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
         </div>
-      </div>
+      </ModalContainer>
     );
   }
 
@@ -856,28 +839,24 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
 
   if (!profile) {
     return (
-      <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div className="bg-slate-800/95 rounded-3xl border border-white/20 p-8 text-center">
-            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">Profil Bulunamadı</h3>
-            <button
-              onClick={onClose}
-              className="mt-4 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-2 rounded-xl hover:bg-blue-500/30"
-            >
-              Kapat
-            </button>
-          </div>
+      <ModalContainer isOpen={true} onClose={onClose} title="Doktor Profili" size="large" maxHeight="80vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+        <div className="p-8 text-center">
+          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">Profil Bulunamadı</h3>
+          <button
+            onClick={onClose}
+            className="mt-4 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-2 rounded-xl hover:bg-blue-500/30"
+          >
+            Kapat
+          </button>
         </div>
-      </div>
+      </ModalContainer>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="bg-slate-800/95 rounded-3xl border border-white/20 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-          <div className="p-8">
+    <ModalContainer isOpen={true} onClose={onClose} title="Doktor Profili" size="xl" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+      <div className="p-8">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -888,12 +867,12 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
                   className="w-20 h-20 rounded-full object-cover border-2 border-white/20"
                 />
               ) : (
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text_white font-bold text-2xl">
                   {profile.first_name?.[0]}{profile.last_name?.[0]}
                 </div>
               )}
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">
+                <h2 className="text-2xl font-bold text_white mb-1">
                   {profile.title} {profile.first_name} {profile.last_name}
                 </h2>
                 <p className="text-gray-300 font-medium">{profile.specialty_name || 'Uzmanlık Belirtilmemiş'}</p>
@@ -904,7 +883,7 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="text-gray-400 hover:text_white transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -1140,9 +1119,7 @@ const DoctorProfileModal = ({ doctorId, doctorData, isLoading, onClose }) => {
             </button>
           </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </ModalContainer>
   );
 };
 
