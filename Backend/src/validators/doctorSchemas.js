@@ -411,10 +411,32 @@ const withdrawApplicationSchema = Joi.object({
  */
 const applicationFilterSchema = Joi.object({
   status: Joi.string()
-    .valid('Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Reddedildi', 'Geri Çekildi')
+    .valid('Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Red Edildi', 'Geri Çekildi')
     .optional()
     .messages({
-      'any.only': 'Durum geçerli değerlerden biri olmalıdır: Başvuruldu, İnceleniyor, Kabul Edildi, Reddedildi, Geri Çekildi'
+      'any.only': 'Durum geçerli değerlerden biri olmalıdır: Başvuruldu, İnceleniyor, Kabul Edildi, Red Edildi, Geri Çekildi'
+    }),
+  
+  city: Joi.string()
+    .min(2)
+    .max(50)
+    .optional()
+    .allow('')
+    .messages({
+      'string.min': 'Şehir adı en az 2 karakter olmalıdır',
+      'string.max': 'Şehir adı en fazla 50 karakter olabilir'
+    }),
+  
+  application_date: Joi.date()
+    .iso()
+    .min('1900-01-01')
+    .max('now')
+    .optional()
+    .allow('')
+    .messages({
+      'date.format': 'Başvuru tarihi ISO formatında olmalıdır (YYYY-MM-DD)',
+      'date.min': 'Başvuru tarihi 1900 yılından önce olamaz',
+      'date.max': 'Başvuru tarihi bugünden sonra olamaz'
     }),
     
   page: Joi.number()
@@ -430,13 +452,13 @@ const applicationFilterSchema = Joi.object({
   limit: Joi.number()
     .integer()
     .min(1)
-    .max(100)
+    .max(1000)
     .default(10)
     .messages({
       'number.base': 'Limit sayı olmalıdır',
       'number.integer': 'Limit tam sayı olmalıdır',
       'number.min': 'Limit en az 1 olmalıdır',
-      'number.max': 'Limit en fazla 100 olabilir'
+      'number.max': 'Limit en fazla 1000 olabilir'
     })
 });
 
@@ -494,16 +516,46 @@ const hybridIdSchema = Joi.alternatives().try(
  * }
  */
 const jobSearchSchema = Joi.object({
+  // ID bazlı filtreler
+  city_id: hybridIdSchema.optional(),
+  specialty_id: hybridIdSchema.optional(),
+  subspecialty_id: hybridIdSchema.optional(),
+  hospital_id: hybridIdSchema.optional(),
+  
+  // String bazlı filtreler (geriye dönük uyumluluk için)
   specialty: hybridIdSchema.optional(),
   city: Joi.string().min(2).max(50).allow('').optional().messages({
     'string.min': 'Şehir adı en az 2 karakter olmalıdır',
     'string.max': 'Şehir adı en fazla 50 karakter olabilir'
   }),
   hospital: hybridIdSchema.optional(),
+  
+  // Yeni filtreler
+  employment_type: Joi.string().min(2).max(50).allow('').optional().messages({
+    'string.min': 'İstihdam türü en az 2 karakter olmalıdır',
+    'string.max': 'İstihdam türü en fazla 50 karakter olabilir'
+  }),
+  min_experience_years: Joi.number().integer().min(0).max(50).optional().messages({
+    'number.base': 'Minimum deneyim yılı sayı olmalıdır',
+    'number.integer': 'Minimum deneyim yılı tam sayı olmalıdır',
+    'number.min': 'Minimum deneyim yılı 0\'dan küçük olamaz',
+    'number.max': 'Minimum deneyim yılı 50\'den büyük olamaz'
+  }),
+  start_date: Joi.date().iso().optional().messages({
+    'date.format': 'Başlangıç tarihi ISO formatında olmalıdır (YYYY-MM-DD)'
+  }),
+  end_date: Joi.date().iso().min(Joi.ref('start_date')).optional().messages({
+    'date.format': 'Bitiş tarihi ISO formatında olmalıdır (YYYY-MM-DD)',
+    'date.min': 'Bitiş tarihi başlangıç tarihinden küçük olamaz'
+  }),
+  
+  // Arama
   search: Joi.string().min(2).max(100).allow('').optional().messages({
     'string.min': 'Arama terimi en az 2 karakter olmalıdır',
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
   }),
+  
+  // Sayfalama
   page: Joi.number().integer().min(1).default(1).messages({
     'number.base': 'Sayfa numarası sayı olmalıdır',
     'number.integer': 'Sayfa numarası tam sayı olmalıdır',

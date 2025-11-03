@@ -18,12 +18,12 @@ const DoctorDashboard = () => {
 
   if (dashboardLoading || profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="space-y-8 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
           <SkeletonLoader className="h-12 w-80 bg-white/10" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
-            <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            <SkeletonLoader className="h-96 bg-white/10 rounded-2xl" />
+            <SkeletonLoader className="h-96 bg-white/10 rounded-2xl" />
           </div>
         </div>
       </div>
@@ -33,8 +33,8 @@ const DoctorDashboard = () => {
   // Error handling
   if (dashboardError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-center min-h-screen">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-white mb-4">Dashboard Yüklenemedi</h2>
             <p className="text-gray-300 mb-6">{dashboardError.message || 'Bir hata oluştu'}</p>
@@ -50,13 +50,9 @@ const DoctorDashboard = () => {
     );
   }
 
-  // Dashboard verilerini al - data içinde zaten normalizasyon var
+  // Dashboard verilerini al - max 5 göster
   const recentApplications = (dashboardData?.recent_applications || dashboardData?.data?.recent_applications || []).slice(0, 5);
   const recentJobs = (dashboardData?.recent_jobs || dashboardData?.data?.recent_jobs || []).slice(0, 5);
-  
-  console.log('🎯 Doctor Dashboard Data:', dashboardData);
-  console.log('📋 Recent Applications:', recentApplications);
-  console.log('📋 Recent Jobs:', recentJobs);
   
   // Profil verilerinden isim soyisim ve ünvan al
   // useDoctor hook'u res.data?.data döndürüyor, bu da { profile: {...} } oluyor
@@ -68,10 +64,10 @@ const DoctorDashboard = () => {
   const fullName = `${title} ${firstName} ${lastName}`.trim();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      <div className="space-y-8 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8">
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 mb-8">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-20">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
@@ -117,9 +113,9 @@ const DoctorDashboard = () => {
           </div>
 
           {/* Ana İçerik */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Son Başvurular */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 hover:bg-white/15 transition-all duration-300">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300">
               <div className="p-8 border-b border-white/20">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -139,26 +135,28 @@ const DoctorDashboard = () => {
                 {recentApplications.length > 0 ? (
                   <div className="space-y-4">
                     {recentApplications.map((application) => (
-                      <div key={application.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                      <div key={application.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-default">
                         <div className="flex-1">
                           <h3 className="font-semibold text-white text-lg">{application.job_title}</h3>
                           <p className="text-gray-300 mt-1">{application.hospital_name}</p>
                           <div className="flex items-center gap-4 mt-3">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                               application.status_id === 1 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
+                              application.status_id === 2 ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
                               application.status_id === 3 ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
                               application.status_id === 4 ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
+                              application.status_id === 5 ? 'bg-gray-500/20 text-gray-300 border border-gray-500/30' :
                               'bg-gray-500/20 text-gray-300 border border-gray-500/30'
                             }`}>
                               {application.status_id === 1 ? 'Başvuruldu' :
                                application.status_id === 2 ? 'İnceleniyor' :
                                application.status_id === 3 ? 'Kabul Edildi' :
-                               application.status_id === 4 ? 'Reddedildi' :
+                               application.status_id === 4 ? 'Red Edildi' :
                                application.status_id === 5 ? 'Geri Çekildi' :
-                               application.status}
+                               application.status || 'Bilinmiyor'}
                             </span>
                             <span className="text-xs text-gray-400">
-                              {new Date(application.applied_at).toLocaleDateString('tr-TR')}
+                              {new Date(application.applied_at || application.created_at).toLocaleDateString('tr-TR')}
                             </span>
                           </div>
                         </div>
@@ -184,7 +182,7 @@ const DoctorDashboard = () => {
             </div>
 
             {/* Önerilen İş İlanları */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 hover:bg-white/15 transition-all duration-300">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300">
               <div className="p-8 border-b border-white/20">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -204,7 +202,7 @@ const DoctorDashboard = () => {
                 {recentJobs.length > 0 ? (
                   <div className="space-y-4">
                     {recentJobs.map((job) => (
-                      <div key={job.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 group">
+                      <div key={job.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-default">
                         <div className="flex items-start">
                           <div className="flex-1">
                             <h3 className="font-semibold text-white text-lg">{job.title}</h3>

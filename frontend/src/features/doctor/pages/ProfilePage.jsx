@@ -201,34 +201,32 @@ const DoctorProfile = () => {
     setShowForm(true);
   };
 
-  const handleDeleteItem = async (id, type) => {
-    const confirmed = await showToast.confirm({
-      title: "Öğeyi Sil",
-      message: "Bu öğeyi silmek istediğinizden emin misiniz?",
-      type: "danger",
-      destructive: true,
-      confirmText: "Sil",
-      cancelText: "İptal",
-    });
-    
-    if (!confirmed) return;
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null, type: null });
+
+  const handleDeleteItem = (id, type) => {
+    setDeleteModal({ isOpen: true, id, type });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.id || !deleteModal.type) return;
 
     try {
-      switch (type) {
+      switch (deleteModal.type) {
         case 'education':
-          await deleteEducationMutation.mutateAsync(id);
+          await deleteEducationMutation.mutateAsync(deleteModal.id);
           break;
         case 'experience':
-          await deleteExperienceMutation.mutateAsync(id);
+          await deleteExperienceMutation.mutateAsync(deleteModal.id);
           break;
         case 'certificate':
-          await deleteCertificateMutation.mutateAsync(id);
+          await deleteCertificateMutation.mutateAsync(deleteModal.id);
           break;
         case 'language':
-          await deleteLanguageMutation.mutateAsync(id);
+          await deleteLanguageMutation.mutateAsync(deleteModal.id);
           break;
       }
       showToast.success('Öğe silindi');
+      setDeleteModal({ isOpen: false, id: null, type: null });
     } catch (error) {
       showToast.error('Silme başarısız');
     }
@@ -386,10 +384,10 @@ const DoctorProfile = () => {
 
   if (profileLoading || lookupLoading.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="space-y-8 p-6">
-          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
-          <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl mb-8" />
+          <SkeletonLoader className="h-96 bg-white/10 rounded-2xl" />
         </div>
       </div>
     );
@@ -414,10 +412,10 @@ const DoctorProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      <div className="space-y-8 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8">
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 mb-8">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-20">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
@@ -499,7 +497,7 @@ const DoctorProfile = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
             <div className="border-b border-white/20">
               <nav className="flex flex-wrap gap-2 p-6">
                 {tabs.map((tab) => {
@@ -618,6 +616,20 @@ const DoctorProfile = () => {
               setSelectedSpecialtyId={setSelectedSpecialtyId}
             />
           )}
+
+          {/* Silme Onay Modalı */}
+          <DeleteConfirmationModal
+            isOpen={deleteModal.isOpen}
+            onClose={() => setDeleteModal({ isOpen: false, id: null, type: null })}
+            onConfirm={handleConfirmDelete}
+            isLoading={
+              deleteEducationMutation.isPending ||
+              deleteExperienceMutation.isPending ||
+              deleteCertificateMutation.isPending ||
+              deleteLanguageMutation.isPending
+            }
+            type={deleteModal.type}
+          />
         </div>
       </div>
   );
@@ -627,7 +639,6 @@ const DoctorProfile = () => {
 const PhotoManagementModal = ({ 
   isOpen,
   onClose,
-  anchorY,
   profile,
   photoRequestStatus,
   requestPhotoChangeMutation,
@@ -687,7 +698,7 @@ const PhotoManagementModal = ({
   const hasPendingRequest = pendingRequest?.status === 'pending';
 
   return (
-    <ModalContainer isOpen={true} onClose={onClose} title="Profil Fotoğrafı Yönetimi" size="large" maxHeight="85vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile anchorY={anchorY}>
+    <ModalContainer isOpen={true} onClose={onClose} title="Profil Fotoğrafı Yönetimi" size="large" maxHeight="85vh" closeOnBackdrop={true} align="bottom" fullScreenOnMobile>
       <div className="space-y-5">
           {/* Fotoğraflar */}
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4">
@@ -893,8 +904,8 @@ const ProfilePhotoButton = ({ photoRequestStatus, onOpenModal }) => {
           </div>
         </div>
         <button
-          onClick={(e) => {
-            onOpenModal?.(e.clientY);
+          onClick={() => {
+            onOpenModal?.();
           }}
           className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
         >
@@ -1572,13 +1583,33 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
   // Her render'da hesapla (performans sorunu yok, basit switch-case)
   const fields = getFormFields();
 
+  // Tab başlıklarını al
+  const getTabTitle = () => {
+    switch (type) {
+      case 'education': return 'Eğitim';
+      case 'experience': return 'Deneyim';
+      case 'certificate': return 'Sertifika';
+      case 'language': return 'Dil';
+      default: return '';
+    }
+  };
+
   return (
-    <ModalContainer isOpen={true} onClose={onClose} title={isEditing ? 'Düzenle' : 'Yeni Ekle'} size="small" maxHeight="90vh" closeOnBackdrop={true} align="auto" fullScreenOnMobile>
+    <ModalContainer 
+      isOpen={true} 
+      onClose={onClose} 
+      title={isEditing ? `${getTabTitle()} Düzenle` : `Yeni ${getTabTitle()} Ekle`} 
+      size="medium" 
+      maxHeight="85vh" 
+      closeOnBackdrop={true} 
+      align="bottom" 
+      fullScreenOnMobile={false}
+    >
       <div className="flex-1 overflow-y-auto">
-        <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="p-6 space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="p-4 md:p-6 space-y-5">
           {fields.map((field) => (
-            <div key={field.name}>
-              <label className="block text-sm font-medium text-gray-300 mb-3">
+            <div key={field.name} className="space-y-2">
+              <label className="block text-sm font-medium text-gray-300">
                 {field.label}
                 {field.required && <span className="text-red-400 ml-1">*</span>}
               </label>
@@ -1593,16 +1624,16 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                       onChange({ ...data, [field.name]: e.target.value });
                     }
                   }}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 text-sm"
                   required={field.required}
                   disabled={field.disabled || false}
                 >
-                  <option value="" className="bg-slate-900 text-white">Seçiniz</option>
+                    <option value="" className="bg-slate-800 text-white">Seçiniz</option>
                   {field.options.map((option) => (
                     <option 
                       key={option.value || option.id || option} 
                       value={option.value || option.id || option} 
-                      className="bg-slate-900 text-white"
+                      className="bg-slate-800 text-white"
                     >
                       {option.label || option.name || option}
                     </option>
@@ -1621,15 +1652,15 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                       }
                       onChange(newData);
                     }}
-                    className="w-5 h-5 text-blue-600 bg-white/5 border-white/20 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-blue-600 bg-white/5 border-white/20 rounded focus:ring-blue-500 cursor-pointer"
                   />
-                  <label className="ml-3 text-sm text-gray-300">{field.label}</label>
+                  <label className="ml-2.5 text-sm text-gray-300 cursor-pointer">{field.label}</label>
                 </div>
               ) : field.type === 'textarea' ? (
                 <textarea
                   value={data[field.name] || ''}
                   onChange={(e) => onChange({ ...data, [field.name]: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm min-h-[100px] resize-y"
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm min-h-[100px] resize-y transition-all hover:bg-white/10 text-sm"
                   placeholder={field.placeholder || ''}
                   required={field.required}
                   rows={4}
@@ -1639,7 +1670,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                   type="number"
                   value={data[field.name] || ''}
                   onChange={(e) => onChange({ ...data, [field.name]: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                   placeholder={field.placeholder || ''}
                   required={field.required}
                   min={field.min || undefined}
@@ -1651,7 +1682,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                   type={field.type}
                   value={data[field.name] || ''}
                   onChange={(e) => onChange({ ...data, [field.name]: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder={field.placeholder || ''}
                   required={field.required}
                   disabled={field.disabled || false}
@@ -1663,12 +1694,14 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
           ))}
         </form>
       </div>
-      <div className="p-6 pt-0">
-        <div className="flex justify-end gap-4">
+      
+      {/* Footer Buttons */}
+      <div className="border-t border-white/10 p-4 md:p-6">
+        <div className="flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 text-gray-700 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300"
+            className="px-4 py-2.5 text-sm font-medium text-gray-300 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-200"
           >
             İptal
           </button>
@@ -1676,14 +1709,90 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
             type="button"
             disabled={isLoading}
             onClick={onSubmit}
-            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl flex items-center gap-3 disabled:opacity-50 transition-all duration-300 shadow-lg"
+            className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium shadow-lg"
           >
             {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Kaydediliyor...</span>
+              </>
             ) : (
-              <Save className="w-5 h-5" />
+              <>
+                <Save className="w-4 h-4" />
+                <span>{isEditing ? 'Güncelle' : 'Ekle'}</span>
+              </>
             )}
-            {isEditing ? 'Güncelle' : 'Ekle'}
+          </button>
+        </div>
+      </div>
+    </ModalContainer>
+  );
+};
+
+// Silme Onay Modal Component
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading, type }) => {
+  if (!isOpen) return null;
+
+  const getTypeLabel = () => {
+    switch (type) {
+      case 'education': return 'eğitim bilgisini';
+      case 'experience': return 'deneyim bilgisini';
+      case 'certificate': return 'sertifika bilgisini';
+      case 'language': return 'dil bilgisini';
+      default: return 'bu öğeyi';
+    }
+  };
+
+  return (
+    <ModalContainer
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Öğeyi Sil"
+      size="small"
+      maxHeight="80vh"
+      closeOnBackdrop={true}
+      align="bottom"
+      fullScreenOnMobile={false}
+    >
+      <div className="p-4 md:p-6">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-6 h-6 text-red-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-white mb-2">Emin misiniz?</h3>
+            <p className="text-sm text-gray-300 leading-relaxed">
+              {getTypeLabel()} silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2.5 text-sm font-medium text-gray-300 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-200 disabled:opacity-50"
+          >
+            İptal
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium shadow-lg"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Siliniyor...</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-4 h-4" />
+                <span>Sil</span>
+              </>
+            )}
           </button>
         </div>
       </div>

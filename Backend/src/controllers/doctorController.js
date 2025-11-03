@@ -897,9 +897,9 @@ const requestPhotoChange = catchAsync(async (req, res) => {
     throw new AppError('Fotoğraf URL\'si gereklidir', 400);
   }
   
-  // Base64 data-url veya HTTP URL kontrolü + MIME/boyut doğrulama (5MB)
-  const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+  // Base64 data-url veya HTTP URL kontrolü + MIME/boyut doğrulama (10MB)
+  const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png'];
+  const MAX_BYTES = 10 * 1024 * 1024; // 10MB
 
   if (file_url.startsWith('data:image/')) {
     try {
@@ -907,13 +907,13 @@ const requestPhotoChange = catchAsync(async (req, res) => {
       const header = file_url.substring(5, headerEnd); // 'image/png;base64' gibi
       const mime = header.split(';')[0]; // 'image/png'
       if (!ALLOWED_MIME.includes(mime)) {
-        throw new AppError('Desteklenmeyen görüntü formatı', 400);
+        throw new AppError('Desteklenmeyen görüntü formatı (sadece JPG ve PNG)', 400);
       }
       const base64 = file_url.substring(headerEnd + 1);
       const padding = (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
       const approxBytes = Math.floor((base64.length * 3) / 4) - padding;
       if (approxBytes > MAX_BYTES) {
-        throw new AppError('Dosya boyutu 5MB\'ı aşamaz', 400);
+        throw new AppError('Dosya boyutu 10MB\'ı aşamaz', 400);
       }
       logger.info('Photo change request (data-url) received', { mime, sizeBytes: approxBytes });
     } catch (e) {

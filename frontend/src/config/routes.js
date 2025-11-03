@@ -34,7 +34,9 @@ export const ROUTE_CONFIG = {
     DASHBOARD: '/doctor',
     PROFILE: '/doctor/profile',
     JOBS: '/doctor/jobs',
+    JOB_DETAIL: '/doctor/jobs/:jobId',
     APPLICATIONS: '/doctor/applications',
+    APPLICATION_DETAIL: '/doctor/applications/:applicationId',
   },
   
   // Hospital routes

@@ -75,7 +75,9 @@ import AdminLogsPage from '@/features/admin/pages/LogsPage';
 import DoctorDashboard from '@/features/doctor/pages/DashboardPage';
 import DoctorProfile from '@/features/doctor/pages/ProfilePage';
 import DoctorJobsPage from '@/features/doctor/pages/JobsPage';
+import DoctorJobDetailPage from '@/features/doctor/pages/JobDetailPage';
 import DoctorApplicationsPage from '@/features/doctor/pages/ApplicationsPage';
+import DoctorApplicationDetailPage from '@/features/doctor/pages/ApplicationDetailPage';
 import PhotoManagementPage from '@/features/doctor/pages/PhotoManagementPage';
 
 // ============================================================================
@@ -222,6 +224,22 @@ const AppRoutes = () => {
             }
           />
           
+          {/* Doktor İş İlanı Detayı */}
+          <Route
+            path="doctor/jobs/:jobId"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['doctor']}>
+                    <ApprovalGuard>
+                      <DoctorJobDetailPage />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+          
           {/* Doktor Başvurular */}
           <Route
             path="doctor/applications"
@@ -231,6 +249,22 @@ const AppRoutes = () => {
                   <RoleGuard allowedRoles={['doctor']}>
                     <ApprovalGuard>
                       <DoctorApplicationsPage />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          {/* Doktor Başvuru Detay */}
+          <Route
+            path="doctor/applications/:applicationId"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['doctor']}>
+                    <ApprovalGuard>
+                      <DoctorApplicationDetailPage />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>

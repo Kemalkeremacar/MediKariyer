@@ -5,8 +5,8 @@ import { showToast } from '@/utils/toastUtils';
 import { useDoctorProfile, usePhotoRequestStatus, useRequestPhotoChange, useCancelPhotoRequest } from '../api/useDoctor.js';
 import useAuthStore from '@/store/authStore';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 
 const PhotoManagementPage = () => {
   const navigate = useNavigate();
@@ -21,7 +21,6 @@ const PhotoManagementPage = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState(null);
   const [awaitingApproval, setAwaitingApproval] = useState(false);
-  const [tempHistory, setTempHistory] = useState([]); // pending local entry until backend returns
   const fileInputRef = useRef(null);
   const prevProfilePhotoRef = useRef(profile?.profile_photo || null);
   // Persist pending state across refreshes (key depends on current user)
@@ -30,7 +29,11 @@ const PhotoManagementPage = () => {
   const getHistoryKey = () => `doctor-photo-history-${user?.id || 'anon'}`;
   const [localHistory, setLocalHistory] = useState([]);
 
+  // Sayfa ilk yüklendiğinde localStorage'dan pending request'i yükle
+  // Backend verisi gelene kadar geçici olarak göster
   useEffect(() => {
+    if (!user?.id) return;
+    
     try {
       let saved = localStorage.getItem(getStorageKey());
       // Eski/yanlış anahtar (anon) kalmış olabilir: migrate et
@@ -42,26 +45,21 @@ const PhotoManagementPage = () => {
           saved = legacy;
         }
       }
+      
+      // localStorage'dan pending request'i yükle (backend verisi gelene kadar)
       if (saved) {
         const pending = JSON.parse(saved);
-        if (pending) {
-          // her durumda bekleme durumunu göster
+        if (pending && pending.isPending) {
+          // Backend verisi henüz gelmediyse geçici olarak göster
+          // Backend verisi geldiğinde bu useEffect'teki state güncellenecek
           setAwaitingApproval(true);
-          // varsa önizlemeyi geri yükle
           if (pending.file_url) {
             setPhotoPreview(pending.file_url);
           }
-          setTempHistory([
-            {
-              status: 'pending',
-              reason: '',
-              file_url: pending.file_url || null,
-              created_at: pending.created_at || new Date().toISOString()
-            }
-          ]);
         }
       }
-      // load local history cache
+      
+      // Local history cache'ini yükle
       const savedHistory = localStorage.getItem(getHistoryKey());
       if (savedHistory) {
         const parsed = JSON.parse(savedHistory);
@@ -71,50 +69,135 @@ const PhotoManagementPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  // API şekli farklı olabilir; status ve history'yi akıllıca normalize et
+  // Backend'den gelen veriyi normalize et
+  // Backend formatı: { data: { status: {...}, history: [...] } }
   const raw = photoRequestStatus;
-  if (process.env.NODE_ENV !== 'production') {
-    // Geliştirme amaçlı ham veriyi logla
-    console.debug('Photo request status raw:', raw);
-  }
-  const currentStatus = raw?.status || raw?.data?.status || raw?.current?.status || raw?.data?.data?.status || null;
-  const hasPendingRequest = currentStatus === 'pending' || awaitingApproval;
-  const rawHistory = raw?.history || raw?.data?.history || raw?.data?.requests || raw?.records || raw?.data?.data?.history || [];
+  const rawData = raw?.data || raw;
+  
+  // Status objesi: pending request'i temsil ediyor (veya null)
+  const statusObj = rawData?.status || null;
+  const statusObjStatus = statusObj?.status || null;
+  
+  // History array: tüm geçmiş kayıtlar
+  const rawHistory = rawData?.history || [];
   const historyList = Array.isArray(rawHistory) ? rawHistory.map((h) => ({
+    id: h.id || null, // ID'yi ekle duplicate kontrolü için
     status: h.status || h.state || h.result || 'unknown',
     reason: h.reason || h.message || h.note || '',
     file_url: h.file_url || h.fileUrl || h.url || null,
     created_at: h.created_at || h.createdAt || h.date || h.timestamp || null
   })) : [];
-  // Merge backend history with local cache and persist
+
+  // Backend'den gelen pending request'i tespit et ve state'i güncelle
   useEffect(() => {
+    if (!statusObj) {
+      // Backend'de pending request yok
+      if (statusObjStatus !== 'pending') {
+        // Eğer başka bir durumdaysa (approved/rejected) ve localStorage'da pending varsa temizle
+        try {
+          const saved = localStorage.getItem(getStorageKey());
+          if (saved) {
+            const pending = JSON.parse(saved);
+            // Eğer backend'de approved/rejected durumu varsa ve localStorage'daki pending daha eskiyse temizle
+            if (statusObjStatus === 'approved' || statusObjStatus === 'rejected') {
+              localStorage.removeItem(getStorageKey());
+              setAwaitingApproval(false);
+              setPhotoPreview(null);
+            }
+          }
+        } catch (_) {}
+      }
+      return;
+    }
+
+    // Backend'de pending request var
+    if (statusObjStatus === 'pending') {
+      setAwaitingApproval(true);
+      
+      // Backend'den gelen file_url'i kullan (localStorage'dan değil)
+      if (statusObj.file_url) {
+        setPhotoPreview(statusObj.file_url);
+      }
+      
+      // Pending request'i localStorage'a kaydet (sayfa yenileme için)
+      try {
+        const maybePreview = typeof statusObj.file_url === 'string' && statusObj.file_url.length <= 300000 
+          ? statusObj.file_url 
+          : null;
+        localStorage.setItem(
+          getStorageKey(),
+          JSON.stringify({
+            isPending: true,
+            created_at: statusObj.created_at || new Date().toISOString(),
+            file_url: maybePreview,
+            id: statusObj.id // ID'yi de kaydet duplicate kontrolü için
+          })
+        );
+      } catch (_) {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusObj, statusObjStatus, user?.id]);
+
+  // History'yi backend'den gelen veriyle birleştir ve duplicate'leri önle
+  useEffect(() => {
+    if (!photoRequestStatus) return; // Backend verisi henüz gelmediyse bekle
+    
     try {
-      const keyFn = (item) => `${item.created_at || ''}|${item.status}|${item.file_url || ''}`;
+      // Duplicate kontrolü için unique key: id varsa id kullan, yoksa created_at + status + file_url
+      const keyFn = (item) => {
+        if (item.id) return `id-${item.id}`;
+        return `${item.created_at || ''}|${item.status}|${item.file_url || ''}`;
+      };
+      
       const map = new Map();
-      [...historyList, ...localHistory].forEach((it) => {
+      
+      // Önce backend'den gelen history'yi ekle (birincil kaynak)
+      historyList.forEach((it) => {
         if (!it) return;
         map.set(keyFn(it), it);
       });
+      
+      // Sonra localHistory'yi ekle (cache)
+      localHistory.forEach((it) => {
+        if (!it) return;
+        // Backend'den gelen bir kayıtla aynı değilse ekle
+        const key = keyFn(it);
+        if (!map.has(key)) {
+          map.set(key, it);
+        }
+      });
+      
+      // tempHistory artık kullanılmıyor - backend'den gelen veri birincil kaynak
+      
+      // Sırala ve limit uygula
       const merged = Array.from(map.values())
-        .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+        .sort((a, b) => {
+          const dateA = new Date(a.created_at || 0);
+          const dateB = new Date(b.created_at || 0);
+          return dateB - dateA;
+        })
         .slice(0, 50);
+      
       setLocalHistory(merged);
       localStorage.setItem(getHistoryKey(), JSON.stringify(merged));
     } catch (_) {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyList.length, user?.id]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photoRequestStatus, historyList.length, user?.id]);
 
   // Sağ taraftaki önizleme başlangıçta boş kalmalı; sadece seçim yapılınca dolacak
+
+  // Pending request durumunu kontrol et
+  const hasPendingRequest = statusObjStatus === 'pending' || awaitingApproval;
 
   // On pending request status changes, auto-refresh and reset UI when completed
   useEffect(() => {
     let intervalId;
-    if (currentStatus === 'pending' || awaitingApproval) {
+    if (statusObjStatus === 'pending' || awaitingApproval) {
       // Poll status while pending
       intervalId = setInterval(() => {
         refetchStatus();
       }, 5000);
-    } else if (currentStatus === 'approved' || currentStatus === 'rejected') {
+    } else if (statusObjStatus === 'approved' || statusObjStatus === 'rejected') {
       // Karar verildi: profil ve geçmişi yenile, sağ tarafı sıfırla
       refetchProfile();
       setSelectedFile(null);
@@ -122,14 +205,13 @@ const PhotoManagementPage = () => {
       setIsUploading(false);
       setSubmissionMessage(null);
       setAwaitingApproval(false);
-      setTempHistory([]);
       try { localStorage.removeItem(getStorageKey()); } catch (_) {}
     }
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStatus, awaitingApproval]);
+  }, [statusObjStatus, awaitingApproval]);
 
   // If profile photo has changed (admin approved), force-reset right side
   useEffect(() => {
@@ -139,7 +221,6 @@ const PhotoManagementPage = () => {
       setSelectedFile(null);
       setPhotoPreview(null);
       setAwaitingApproval(false);
-      setTempHistory([]);
       setSubmissionMessage(null);
       try { localStorage.removeItem(getStorageKey()); } catch (_) {}
     }
@@ -150,11 +231,11 @@ const PhotoManagementPage = () => {
     setSelectedFile(null);
     if (!photoFile) return;
     if (!ALLOWED_TYPES.includes(photoFile.type)) {
-      showToast.error('Lütfen JPEG, PNG veya WEBP formatında bir dosya seçiniz.');
+      showToast.error('Lütfen JPG veya PNG formatında bir dosya seçiniz.');
       return;
     }
     if (photoFile.size > MAX_FILE_SIZE) {
-      showToast.error('Dosya boyutu en fazla 5MB olabilir.');
+      showToast.error('Dosya boyutu en fazla 10MB olabilir.');
       return;
     }
     setSelectedFile(photoFile);
@@ -169,30 +250,27 @@ const PhotoManagementPage = () => {
     try {
       await requestPhotoChangeMutation.mutateAsync(selectedFile);
       showToast.success('Fotoğraf talebi gönderildi!');
-      // Seçim ve önizleme korunur; admin kararı gelince resetlenecek
-      // Yerel pending girişi ekle
+      
+      // Pending state'ini ayarla (backend'den veri gelene kadar)
       setAwaitingApproval(true);
-      setTempHistory((prev) => [
-        {
-          status: 'pending',
-          reason: '',
-          file_url: photoPreview,
-          created_at: new Date().toISOString()
-        },
-        ...prev
-      ]);
-      // Persist pending for refresh
+      
+      // Geçici olarak localStorage'a kaydet (backend response gelene kadar)
       try {
-        // Büyük base64 verisini saklamaktan kaçın: küçükse önizlemeyi de yaz
         const maybePreview = typeof photoPreview === 'string' && photoPreview.length <= 300000 ? photoPreview : null;
         localStorage.setItem(
           getStorageKey(),
-          JSON.stringify({ isPending: true, created_at: new Date().toISOString(), file_url: maybePreview })
+          JSON.stringify({ 
+            isPending: true, 
+            created_at: new Date().toISOString(), 
+            file_url: maybePreview 
+          })
         );
       } catch (_) {}
-      // Güncel verileri çek (pending durumu gelsin)
-      refetchStatus();
+      
+      // Backend'den güncel verileri çek (pending durumu ve history güncellenecek)
+      await refetchStatus();
       refetchProfile();
+      
       setSubmissionMessage({ type: 'success', text: 'Değiştirme talebiniz gönderildi. Admin onayı bekleniyor.' });
     } catch (error) {
       showToast.error('Fotoğraf yüklenemedi.');
@@ -207,7 +285,6 @@ const PhotoManagementPage = () => {
       showToast.success('Değişiklik talebiniz iptal edildi.');
       // UI ve yerel durumu hemen senkronize et
       setAwaitingApproval(false);
-      setTempHistory([]);
       setSelectedFile(null);
       setPhotoPreview(null);
       setSubmissionMessage(null);
@@ -310,7 +387,7 @@ const PhotoManagementPage = () => {
                     )}
                   </>
                 )}
-                <p className="text-gray-400 text-xs mt-3 flex items-center gap-1"><Info className="w-4 h-4" /> JPG, PNG ya da WEBP • Maksimum 5MB</p>
+                <p className="text-gray-400 text-xs mt-3 flex items-center gap-1"><Info className="w-4 h-4" /> JPG veya PNG • Maksimum 10MB</p>
                 {submissionMessage && (
                   <div className={`mt-3 w-full text-xs rounded-lg p-3 border ${submissionMessage.type === 'success' ? 'bg-green-500/10 text-green-200 border-green-500/30' : 'bg-red-500/10 text-red-200 border-red-500/30'}`}>
                     {submissionMessage.text}
@@ -325,10 +402,10 @@ const PhotoManagementPage = () => {
           {/* Geçmiş Kayıtlar */}
           <div className="mt-6">
             <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2"><History className="w-4 h-4 text-purple-300" /> Geçmiş Kayıtlar</h3>
-            {(awaitingApproval ? [...tempHistory, ...localHistory] : localHistory).length > 0 ? (
+            {localHistory.length > 0 ? (
               <div className="max-h-56 overflow-y-auto space-y-3 pr-1">
-                {(awaitingApproval ? [...tempHistory, ...localHistory] : localHistory).map((item, idx) => (
-                  <div key={idx} className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-start gap-3">
+                {localHistory.map((item, idx) => (
+                  <div key={item.id || idx} className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-start gap-3">
                     <div className="mt-0.5">
                       {item.status === 'approved' && <CheckCircle className="w-4 h-4 text-green-300" />}
                       {item.status === 'pending' && <Clock className="w-4 h-4 text-yellow-300" />}

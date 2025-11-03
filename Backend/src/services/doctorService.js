@@ -1210,12 +1210,14 @@ const createApplication = async (doctorProfileId, data) => {
 
   // Aynı doktorun aynı ilana daha önce aktif başvuru yapıp yapmadığını kontrol et
   // (Geri çekilmiş başvuruları hariç tut - status_id = 5)
+  // (Soft delete edilmiş başvuruları da hariç tut - deleted_at is null)
   const existingApplications = await db('applications')
     .where({
       doctor_profile_id: doctorProfileId,
       job_id: jobId
     })
-    .where('status_id', '!=', 5); // Geri çekilmiş başvuruları hariç tut
+    .where('status_id', '!=', 5) // Geri çekilmiş başvuruları hariç tut
+    .whereNull('deleted_at'); // Soft delete edilmiş başvuruları hariç tut
   
   const existingApplication = existingApplications[0];
 
@@ -1264,6 +1266,8 @@ const createApplication = async (doctorProfileId, data) => {
 const getMyApplications = async (doctorProfileId, filters = {}) => {
   const {
     status,
+    city,           // Şehir filtresi (iş ilanındaki şehir)
+    application_date, // Başvuru tarihi (tek tarih)
     page = 1,
     limit = 10
   } = filters;
@@ -1306,9 +1310,26 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     }
   }
 
+  // Şehir filtresi (iş ilanındaki şehre göre)
+  if (city) {
+    query = query.where('c.name', 'like', `%${city}%`);
+  }
+
+  // Başvuru tarihi filtresi (tek tarih - o günün tamamını kapsar)
+  if (application_date) {
+    const startOfDay = new Date(application_date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(application_date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    query = query.whereBetween('a.applied_at', [startOfDay, endOfDay]);
+  }
+
   // Toplam sayı için count query (aynı filtreleri kullan)
   let countQuery = db('applications as a')
     .leftJoin('jobs as j', 'a.job_id', 'j.id')
+    .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .where('a.doctor_profile_id', doctorProfileId)
@@ -1322,6 +1343,20 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     if (statusId) {
       countQuery = countQuery.where('a.status_id', statusId);
     }
+  }
+
+  if (city) {
+    countQuery = countQuery.where('c.name', 'like', `%${city}%`);
+  }
+
+  if (application_date) {
+    const startOfDay = new Date(application_date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(application_date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    countQuery = countQuery.whereBetween('a.applied_at', [startOfDay, endOfDay]);
   }
 
   const totalResult = await countQuery.count('* as total').first();
@@ -1660,10 +1695,23 @@ const getDoctorRecentApplications = async (doctorProfileId, limit = 5) => {
  */
 const getJobs = async (filters = {}) => {
   const {
+    // ID bazlı filtreler (öncelikli)
+    city_id,
+    specialty_id,
+    subspecialty_id,
+    hospital_id,
+    // String bazlı filtreler (geriye dönük uyumluluk)
     specialty,
     city,
     hospital,
+    // Yeni filtreler
+    employment_type,
+    min_experience_years,
+    start_date,
+    end_date,
+    // Arama
     search,
+    // Sayfalama
     page = 1,
     limit = 10
   } = filters;
@@ -1693,29 +1741,87 @@ const getJobs = async (filters = {}) => {
     .whereNull('j.deleted_at') // Silinmemiş ilanları getir
     .where('hospital_users.is_active', true); // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
 
-  // Filtreleme
-  if (specialty) {
+  // Filtreleme - ID bazlı (öncelikli)
+  if (city_id) {
+    const cityId = typeof city_id === 'number' ? city_id : parseInt(city_id);
+    if (!isNaN(cityId)) {
+      query = query.where('j.city_id', cityId);
+    }
+  } else if (city) {
+    // String bazlı (geriye dönük uyumluluk)
+    query = query.where('c.name', 'like', `%${city}%`);
+  }
+
+  if (specialty_id) {
+    const specId = typeof specialty_id === 'number' ? specialty_id : parseInt(specialty_id);
+    if (!isNaN(specId)) {
+      query = query.where('j.specialty_id', specId);
+    }
+  } else if (specialty) {
+    // String bazlı (geriye dönük uyumluluk)
     const specialtyId = await resolveSpecialtyId(specialty);
     if (specialtyId) {
       query = query.where('j.specialty_id', specialtyId);
     }
   }
 
-  if (city) {
-    query = query.where('c.name', 'like', `%${city}%`);
+  if (subspecialty_id) {
+    const subSpecId = typeof subspecialty_id === 'number' ? subspecialty_id : parseInt(subspecialty_id);
+    if (!isNaN(subSpecId)) {
+      query = query.where('j.subspecialty_id', subSpecId);
+    }
   }
 
-  if (hospital) {
+  if (hospital_id) {
+    const hospId = typeof hospital_id === 'number' ? hospital_id : parseInt(hospital_id);
+    if (!isNaN(hospId)) {
+      query = query.where('j.hospital_id', hospId);
+    }
+  } else if (hospital) {
+    // String bazlı (geriye dönük uyumluluk)
     const hospitalId = await resolveHospitalId(hospital);
     if (hospitalId) {
       query = query.where('j.hospital_id', hospitalId);
     }
   }
 
+  // Yeni filtreler
+  if (employment_type) {
+    query = query.where('j.employment_type', 'like', `%${employment_type}%`);
+  }
+
+  if (min_experience_years !== undefined && min_experience_years !== null) {
+    const minExp = typeof min_experience_years === 'number' ? min_experience_years : parseInt(min_experience_years);
+    if (!isNaN(minExp)) {
+      // min_experience_years <= girilen değer olan ilanları göster (0 ise tüm ilanlar)
+      if (minExp === 0) {
+        // 0 yıl deneyim = deneyim gereksinimi olmayan veya 0 olan ilanlar
+        query = query.where(function() {
+          this.whereNull('j.min_experience_years')
+              .orWhere('j.min_experience_years', 0)
+              .orWhere('j.min_experience_years', '<=', minExp);
+        });
+      } else {
+        query = query.where('j.min_experience_years', '<=', minExp);
+      }
+    }
+  }
+
+  // Tarih aralığı filtresi
+  if (start_date) {
+    query = query.where('j.created_at', '>=', start_date);
+  }
+  if (end_date) {
+    // end_date'in sonuna 23:59:59 ekleyerek o günü de dahil ediyoruz
+    const endDateWithTime = new Date(end_date);
+    endDateWithTime.setHours(23, 59, 59, 999);
+    query = query.where('j.created_at', '<=', endDateWithTime);
+  }
+
+  // Arama (sadece ilan başlığı ve hastane)
   if (search) {
     query = query.where(function() {
       this.where('j.title', 'like', `%${search}%`)
-          .orWhere('j.description', 'like', `%${search}%`)
           .orWhere('hp.institution_name', 'like', `%${search}%`);
     });
   }
@@ -1725,6 +1831,7 @@ const getJobs = async (filters = {}) => {
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
     .where('j.status_id', 1) // Sadece aktif ilanları getir
@@ -1732,28 +1839,79 @@ const getJobs = async (filters = {}) => {
     .where('hospital_users.is_active', true); // Pasifleştirilmiş hastanelerin iş ilanlarını sayma
 
   // Filtreleme - count query için de aynı filtreler
-  if (specialty) {
+  // ID bazlı (öncelikli)
+  if (city_id) {
+    const cityId = typeof city_id === 'number' ? city_id : parseInt(city_id);
+    if (!isNaN(cityId)) {
+      countQuery.where('j.city_id', cityId);
+    }
+  } else if (city) {
+    countQuery.where('c.name', 'like', `%${city}%`);
+  }
+
+  if (specialty_id) {
+    const specId = typeof specialty_id === 'number' ? specialty_id : parseInt(specialty_id);
+    if (!isNaN(specId)) {
+      countQuery.where('j.specialty_id', specId);
+    }
+  } else if (specialty) {
     const specialtyId = await resolveSpecialtyId(specialty);
     if (specialtyId) {
       countQuery.where('j.specialty_id', specialtyId);
     }
   }
 
-  if (city) {
-    countQuery.where('c.name', 'like', `%${city}%`);
+  if (subspecialty_id) {
+    const subSpecId = typeof subspecialty_id === 'number' ? subspecialty_id : parseInt(subspecialty_id);
+    if (!isNaN(subSpecId)) {
+      countQuery.where('j.subspecialty_id', subSpecId);
+    }
   }
 
-  if (hospital) {
+  if (hospital_id) {
+    const hospId = typeof hospital_id === 'number' ? hospital_id : parseInt(hospital_id);
+    if (!isNaN(hospId)) {
+      countQuery.where('j.hospital_id', hospId);
+    }
+  } else if (hospital) {
     const hospitalId = await resolveHospitalId(hospital);
     if (hospitalId) {
       countQuery.where('j.hospital_id', hospitalId);
     }
   }
 
+  // Yeni filtreler
+  if (employment_type) {
+    countQuery.where('j.employment_type', 'like', `%${employment_type}%`);
+  }
+
+  if (min_experience_years !== undefined && min_experience_years !== null) {
+    const minExp = typeof min_experience_years === 'number' ? min_experience_years : parseInt(min_experience_years);
+    if (!isNaN(minExp)) {
+      if (minExp === 0) {
+        countQuery.where(function() {
+          this.whereNull('j.min_experience_years')
+              .orWhere('j.min_experience_years', 0)
+              .orWhere('j.min_experience_years', '<=', minExp);
+        });
+      } else {
+        countQuery.where('j.min_experience_years', '<=', minExp);
+      }
+    }
+  }
+
+  if (start_date) {
+    countQuery.where('j.created_at', '>=', start_date);
+  }
+  if (end_date) {
+    const endDateWithTime = new Date(end_date);
+    endDateWithTime.setHours(23, 59, 59, 999);
+    countQuery.where('j.created_at', '<=', endDateWithTime);
+  }
+
   if (search) {
     countQuery.where(function() {
       this.where('j.title', 'like', `%${search}%`)
-          .orWhere('j.description', 'like', `%${search}%`)
           .orWhere('hp.institution_name', 'like', `%${search}%`);
     });
   }

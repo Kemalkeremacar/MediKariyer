@@ -438,6 +438,8 @@ export const useDoctorJobs = (params = {}) => {
     select: (res) => res.data?.data,
     staleTime: 30 * 1000, // 30 saniye - İş ilanları daha dinamik
     cacheTime: 2 * 60 * 1000, // 2 dakika cache
+    retry: 1,
+    refetchOnWindowFocus: false
   });
 };
 
@@ -448,7 +450,7 @@ export const useDoctorJobDetail = (jobId) => {
       const endpoint = buildEndpoint(ENDPOINTS.DOCTOR.JOB_DETAIL, { id: jobId });
       return apiRequest.get(endpoint);
     },
-    select: (res) => res.data?.data, // Backend response: { success, message, data: { job } }
+    select: (res) => res.data?.data, // Backend response: { success, message, data: job }
     enabled: !!jobId,
   });
 };
@@ -462,9 +464,9 @@ export const useApplyToJob = () => {
       qc.invalidateQueries(['doctor', 'applications']);
       qc.invalidateQueries(['doctor', 'dashboard']);
       qc.invalidateQueries(['doctor', 'jobs']); // İş ilanları için de invalidate (başvuru durumu değişebilir)
-      showToast.success('Başvuru başarıyla gönderildi');
+      // showToast.success burada kaldırıldı - her sayfa kendi toast mesajını yönetiyor
     },
-    // onError kaldırıldı - JobsPage'de manuel hata yönetimi yapılıyor
+    // onError kaldırıldı - her sayfa kendi hata yönetimini yapıyor
   });
 };
 

@@ -237,11 +237,54 @@ const findRefreshToken = async (token) => {
  * }
  */
 const validateCredentials = async (email, password) => {
+  // Email'i normalize et (trim ve lowercase)
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+  
+  logger.info(`Login attempt: Searching for user with email`, {
+    originalEmail: email,
+    normalizedEmail: normalizedEmail,
+    emailLength: email ? email.length : 0
+  });
+
+  // Case-insensitive email araması için LOWER() kullan
   const user = await db('users')
-    .where('email', email)
+    .whereRaw('LOWER(email) = ?', [normalizedEmail])
     .first();
 
-  if (!user) return null;
+  if (!user) {
+    // Debug: Veritabanında benzer email'leri kontrol et
+    let similarEmails = [];
+    try {
+      const emailPrefix = normalizedEmail.includes('@') 
+        ? normalizedEmail.substring(0, normalizedEmail.indexOf('@'))
+        : normalizedEmail.substring(0, 5);
+      
+      similarEmails = await db('users')
+        .select('email')
+        .whereRaw('LOWER(email) LIKE ?', [`%${emailPrefix}%`])
+        .limit(5);
+    } catch (error) {
+      // Similar emails sorgusu başarısız olsa bile devam et
+      logger.warn('Similar emails query failed', { error: error.message });
+    }
+    
+    logger.warn(`Login attempt: User not found for email`, {
+      originalEmail: email,
+      normalizedEmail: normalizedEmail,
+      similarEmailsFound: similarEmails.length,
+      similarEmails: similarEmails.map(u => u.email)
+    });
+    return null;
+  }
+  
+  logger.info(`Login attempt: User found for email: ${email}`, {
+    userId: user.id,
+    role: user.role,
+    is_approved: user.is_approved,
+    is_active: user.is_active,
+    hasPasswordHash: !!user.password_hash,
+    passwordHashLength: user.password_hash ? user.password_hash.length : 0
+  });
   
   // Admin için is_active kontrolü yapılmaz, diğer kullanıcılar için yapılır
   if (user.role !== 'admin' && !user.is_active) {
@@ -254,8 +297,54 @@ const validateCredentials = async (email, password) => {
     throw new AppError('Hesabınız admin onayını bekliyor. Onaylandıktan sonra giriş yapabilirsiniz.', 403);
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-  return isPasswordValid ? user : null;
+  // Şifre hash kontrolü
+  if (!user.password_hash) {
+    logger.error(`Login attempt: Password hash is missing for user: ${email} (userId: ${user.id})`);
+    return null;
+  }
+
+  // Şifre hash format kontrolü (bcrypt hash'leri $2a$, $2b$ veya $2y$ ile başlar)
+  if (!user.password_hash.startsWith('$2')) {
+    logger.error(`Login attempt: Invalid password hash format for user: ${email} (userId: ${user.id})`, {
+      hashPrefix: user.password_hash.substring(0, 10)
+    });
+    return null;
+  }
+
+  try {
+    // SQL Server'dan gelen hash'in tipini ve encoding'ini kontrol et
+    const hashType = typeof user.password_hash;
+    const hashIsString = typeof user.password_hash === 'string';
+    
+    logger.info(`Login attempt: Password hash details for ${email}`, {
+      userId: user.id,
+      hashType: hashType,
+      hashIsString: hashIsString,
+      hashLength: user.password_hash ? user.password_hash.length : 0,
+      hashFirstChars: user.password_hash ? user.password_hash.substring(0, 20) : 'null',
+      passwordLength: password ? password.length : 0
+    });
+
+    // Hash'i string'e dönüştür (gerekirse)
+    const passwordHashString = String(user.password_hash);
+    
+    const isPasswordValid = await bcrypt.compare(password, passwordHashString);
+    logger.info(`Login attempt: Password validation result for ${email}`, {
+      userId: user.id,
+      isValid: isPasswordValid,
+      hashUsed: passwordHashString.substring(0, 10)
+    });
+    return isPasswordValid ? user : null;
+  } catch (error) {
+    logger.error(`Login attempt: bcrypt.compare error for user: ${email}`, {
+      userId: user.id,
+      error: error.message,
+      errorStack: error.stack,
+      passwordHashType: typeof user.password_hash,
+      passwordHashSample: user.password_hash ? user.password_hash.substring(0, 20) : 'null'
+    });
+    return null;
+  }
 };
 
 /**
@@ -271,8 +360,36 @@ const validateCredentials = async (email, password) => {
  * logger.info('İlk giriş:', user.isFirstLogin); // İlk giriş mi?
  */
 const loginUnified = async (email, password, req = null) => {
-  const user = await validateCredentials(email, password);
+  // Email'i normalize et (trim ve lowercase)
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+  
+  logger.info(`Login attempt started for: ${email}`, {
+    originalEmail: email,
+    normalizedEmail: normalizedEmail,
+    hasPassword: !!password,
+    passwordLength: password ? password.length : 0
+  });
+
+  let user;
+  try {
+    user = await validateCredentials(normalizedEmail, password);
+  } catch (error) {
+    // validateCredentials içinde is_active veya is_approved kontrolü başarısız oldu
+    // Bu durumda hatayı yukarı fırlat
+    logger.warn(`Login attempt failed (account status): ${email}`, {
+      error: error.message,
+      statusCode: error.statusCode
+    });
+    throw error;
+  }
+
   if (!user) {
+    // Kullanıcı bulunamadı veya şifre yanlış
+    logger.warn(`Login attempt failed (invalid credentials): ${email}`, {
+      email: email,
+      ipAddress: req?.ip || null
+    });
+    
     // Başarısız giriş denemesini logla
     LogService.createSecurityLog({
       eventType: 'login_failed',
@@ -411,7 +528,12 @@ const updateLastLogin = async (userId) => {
  * }
  */
 const isEmailRegistered = async (email) => {
-  const user = await db('users').where('email', email).first();
+  // Email'i normalize et (trim ve lowercase)
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+  // Case-insensitive email araması için LOWER() kullan
+  const user = await db('users')
+    .whereRaw('LOWER(email) = ?', [normalizedEmail])
+    .first();
   return !!user;
 };
 
@@ -517,26 +639,33 @@ const cleanupExpiredTokens = async () => {
 const registerDoctor = async (registrationData) => {
   const { email, password, first_name, last_name, title, specialty_id, subspecialty_id, profile_photo } = registrationData;
 
-  logger.info(`Doctor registration started | Data: ${JSON.stringify({ email, title, specialty_id })}`);
+  // Email'i normalize et (trim ve lowercase) - veritabanında tutarlılık için
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+  
+  logger.info(`Doctor registration started | Data: ${JSON.stringify({ originalEmail: email, normalizedEmail, title, specialty_id })}`);
 
   try {
     // E-posta kontrolü
-    const existingUser = await isEmailRegistered(email);
+    const existingUser = await isEmailRegistered(normalizedEmail);
     if (existingUser) {
       throw new AppError('Bu e-posta adresi zaten kayıtlı', 400);
     }
 
     // Şifreyi hash'le
     const password_hash = await bcrypt.hash(password, 12);
-    logger.info(`Password hashed successfully for: ${email}`);
+    logger.info(`Password hashed successfully for: ${email}`, {
+      hashLength: password_hash.length,
+      hashPrefix: password_hash.substring(0, 10),
+      hashValid: password_hash.startsWith('$2')
+    });
 
     // Transaction başlat
     const trx = await db.transaction();
 
     try {
-      // Kullanıcıyı oluştur
+      // Kullanıcıyı oluştur (normalize edilmiş email ile)
       await trx('users').insert({
-        email,
+        email: normalizedEmail,
         password_hash,
         role: 'doctor',
         is_approved: false,
@@ -546,8 +675,16 @@ const registerDoctor = async (registrationData) => {
       });
 
       // Oluşturulan kullanıcının ID'sini al
-      const user = await trx('users').where('email', email).first();
+      const user = await trx('users').where('email', normalizedEmail).first();
       const userId = user.id;
+
+      // Kaydedilen şifre hash'ini kontrol et
+      logger.info(`User created, verifying password hash in database`, {
+        userId: userId,
+        storedHashLength: user.password_hash ? user.password_hash.length : 0,
+        storedHashPrefix: user.password_hash ? user.password_hash.substring(0, 10) : 'null',
+        hashMatches: user.password_hash === password_hash
+      });
 
       logger.info(`User created with ID: ${userId} for email: ${email}`, {
         userId,
@@ -589,9 +726,44 @@ const registerDoctor = async (registrationData) => {
       const createdUser = await db('users').where('id', userId).first();
       const createdProfile = await db('doctor_profiles').where('id', profileId).first();
 
+      // Şifre hash'ini doğrula (kayıt sonrası test)
+      if (createdUser.password_hash) {
+        try {
+          const testPasswordMatch = await bcrypt.compare(password, createdUser.password_hash);
+          logger.info(`Doctor registration: Password verification test for ${email}`, {
+            userId: createdUser.id,
+            passwordMatches: testPasswordMatch,
+            storedHashLength: createdUser.password_hash.length,
+            storedHashPrefix: createdUser.password_hash.substring(0, 10)
+          });
+          
+          if (!testPasswordMatch) {
+            logger.error(`Doctor registration: PASSWORD HASH MISMATCH DETECTED for ${email}!`, {
+              userId: createdUser.id,
+              originalHashPrefix: password_hash.substring(0, 10),
+              storedHashPrefix: createdUser.password_hash.substring(0, 10),
+              hashLengths: {
+                original: password_hash.length,
+                stored: createdUser.password_hash.length
+              }
+            });
+          }
+        } catch (verifyError) {
+          logger.error(`Doctor registration: Password verification test failed for ${email}`, {
+            userId: createdUser.id,
+            error: verifyError.message
+          });
+        }
+      } else {
+        logger.error(`Doctor registration: Password hash is NULL after registration for ${email}`, {
+          userId: createdUser.id
+        });
+      }
+
       logger.info(`Doctor registration completed for: ${email}`, {
         userId: createdUser.id,
-        profileId: createdProfile.id
+        profileId: createdProfile.id,
+        hasPasswordHash: !!createdUser.password_hash
       });
 
       return { user: createdUser, profile: createdProfile };
@@ -637,8 +809,11 @@ const registerDoctor = async (registrationData) => {
 const registerHospital = async (registrationData) => {
   const { email, password, institution_name, city_id, phone, address, website, about, logo } = registrationData;
 
+  // Email'i normalize et (trim ve lowercase) - veritabanında tutarlılık için
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+
   // E-posta kontrolü
-  if (await isEmailRegistered(email)) {
+  if (await isEmailRegistered(normalizedEmail)) {
     throw new AppError('Bu e-posta adresi zaten kayıtlı', 409);
   }
 
@@ -648,9 +823,9 @@ const registerHospital = async (registrationData) => {
   // Transaction ile güvenli kayıt
   const trx = await db.transaction();
   try {
-    // Kullanıcı hesabı oluştur (sadece temel bilgiler)
+    // Kullanıcı hesabı oluştur (normalize edilmiş email ile)
     await trx('users').insert({
-      email,
+      email: normalizedEmail,
       password_hash,
       role: 'hospital',
       is_approved: false, // Admin onayı bekler
@@ -660,7 +835,7 @@ const registerHospital = async (registrationData) => {
     });
 
     // Oluşturulan kullanıcının ID'sini al
-    const user = await trx('users').where('email', email).first();
+    const user = await trx('users').where('email', normalizedEmail).first();
     const userId = user.id;
 
     // Hastane profili oluştur (address, website, about opsiyonel - kayıtta girilmez)
@@ -670,7 +845,7 @@ const registerHospital = async (registrationData) => {
       city_id: city_id,
       address: address || null, // Kayıtta girilmez, profilde doldurulur
       phone: phone,
-      email: email, // Kurum email'i için users tablosundaki email'i kullan
+      email: normalizedEmail, // Kurum email'i için users tablosundaki email'i kullan (normalize edilmiş)
       website: website || null, // Kayıtta girilmez, profilde doldurulur
       about: about || null, // Kayıtta girilmez, profilde doldurulur
       logo: logo, // Logo zorunlu
