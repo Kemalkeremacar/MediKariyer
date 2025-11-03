@@ -1,3 +1,8 @@
+/**
+ * @file ContactMessagesPage.jsx
+ * @description İletişim Mesajları Yönetimi - Kullanıcılardan gelen iletişim formlarını görüntüleme
+ */
+
 import React, { useState } from 'react';
 import { 
   useContactMessages, 

@@ -1,3 +1,8 @@
+/**
+ * @file NotificationsPage.jsx
+ * @description Bildirimler Sayfası - Kullanıcı bildirimlerini görüntüleme ve yönetme
+ */
+
 import React, { useState } from 'react';
 import {
   useNotifications,
@@ -12,10 +17,6 @@ import { Bell, CheckCircle, Filter, Search, Trash2 } from 'lucide-react';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
-/**
- * Notifications Page
- * Kullanıcı bildirimleri sayfası
- */
 const NotificationsPage = () => {
   const [filters, setFilters] = useState({
     isRead: '',

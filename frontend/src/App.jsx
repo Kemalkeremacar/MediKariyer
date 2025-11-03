@@ -1,11 +1,11 @@
 /**
- * App Component - Ana uygulama bileşeni
- * Router ve provider yapılandırması
+ * @file App.jsx
+ * @description Ana uygulama bileşeni - Router ve provider yapılandırması
  */
 
 import React, { useEffect, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Toaster } from 'sonner'; // ✅ sonner kullanıyoruz
+import { Toaster } from 'sonner'; // Toast notification kütüphanesi
 
 // Routes
 import AppRoutes from './routes/index';
@@ -30,7 +30,7 @@ import useAuthStore from './store/authStore';
 
 // Utils
 import logger from './utils/logger';
-import { getToastConfig } from '@config/toast.js'; // ✅ toast ayarlarını aldık
+import { getToastConfig } from '@config/toast.js';
 
 function App() {
   // Store hooks
@@ -38,31 +38,34 @@ function App() {
   const { initializeFromToken, user, clearStorage } = useAuthStore();
   const location = useLocation();
 
-  // Custom hooks
+  // Custom hooks - Sayfa değişiminde scroll to top
   useScrollToTop();
-  useTokenRefresh(); // Automatic token refresh - aktif edildi
-  useSessionTimeout(30); // 30 dakika session timeout - aktif edildi
+  // Otomatik token yenileme
+  useTokenRefresh();
+  // 30 dakika session timeout
+  useSessionTimeout(30);
 
-  // Toast config'i tema göre al
+  // Toast ayarlarını tema göre al
   const toastConfig = getToastConfig(theme);
 
+  // Uygulama başlatma ve global hata yakalama
   useEffect(() => {
-    // Uygulama başlatıldığında log
+    // Başlangıç logu
     logger.info('Application started', {
       userAgent: navigator.userAgent,
       url: window.location.href,
       timestamp: new Date().toISOString(),
-      version: '2.0.0' // Route düzenlemesi sonrası versiyon
+      version: '2.0.0'
     });
 
-    // Initialize auth from stored token
+    // Token'dan auth bilgisini yükle
     initializeFromToken();
 
-    // Initialize theme
+    // Tema ayarını yükle
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
 
-    // Global error handler
+    // Global hata yakalayıcı
     const handleGlobalError = (event) => {
       logger.captureError(event.error, 'Global Error Handler', {
         filename: event.filename,
@@ -72,7 +75,7 @@ function App() {
       });
     };
 
-    // Unhandled promise rejection handler
+    // Promise rejection yakalayıcı
     const handleUnhandledRejection = (event) => {
       logger.captureError(event.reason, 'Unhandled Promise Rejection', {
         route: window.location.pathname
@@ -82,6 +85,7 @@ function App() {
     window.addEventListener('error', handleGlobalError);
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
+    // Cleanup
     return () => {
       window.removeEventListener('error', handleGlobalError);
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
@@ -89,7 +93,7 @@ function App() {
     };
   }, [setTheme]);
 
-  // Rota değişiminde tüm modalları kapat
+  // Rota değişiminde modalları kapat
   useEffect(() => {
     closeAllModals();
   }, [location.pathname, closeAllModals]);

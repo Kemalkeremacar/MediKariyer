@@ -1,7 +1,42 @@
 /**
- * Confirmation Modal Component
- * Gelişmiş onay modalı bileşeni
- * Keyboard support, animasyonlar, dark mode ve erişilebilirlik özellikleri içerir
+ * @file ConfirmationModal.jsx
+ * @description Onay Modal Bileşeni - Gelişmiş kullanıcı onay dialogları için merkezi modal sistemi
+ * 
+ * Bu bileşen, Zustand store üzerinden yönetilen global onay modal sistemini sağlar.
+ * Kullanıcıdan onay gerektiren işlemler için (silme, güncelleme, iptal vb.) kullanılır.
+ * 
+ * Ana Özellikler:
+ * - Global state yönetimi: Zustand store ile merkezi modal kontrolü
+ * - Çoklu tip desteği: danger, success, warning, info
+ * - Keyboard desteği: ESC ile iptal, Enter ile onay
+ * - Animasyonlar: Fade-in/out efektleri
+ * - Dark mode: Glassmorphism dark theme
+ * - Erişilebilirlik: ARIA atributları, focus yönetimi
+ * - Destructive mode: Silme işlemleri için özel vurgu
+ * - Responsive tasarım: Mobil ve desktop uyumlu
+ * - Özelleştirilebilir: Mesaj, başlık, buton metinleri
+ * 
+ * Kullanım:
+ * Zustand store üzerinden modal açılır:
+ * ```jsx
+ * openModal('confirmation', {
+ *   title: 'Silme Onayı',
+ *   message: 'Bu işlemi geri alamazsınız.',
+ *   type: 'danger',
+ *   onConfirm: () => handleDelete(),
+ *   onCancel: () => console.log('İptal')
+ * });
+ * ```
+ * 
+ * Modal Tipleri:
+ * - danger: Kırmızı tema (silme, tehlikeli işlemler)
+ * - success: Yeşil tema (başarılı işlemler)
+ * - warning: Sarı tema (uyarı işlemleri)
+ * - info: Mavi tema (bilgilendirme)
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
 import React, { useEffect, useRef, useCallback } from 'react';
@@ -9,7 +44,9 @@ import { X, AlertTriangle, CheckCircle, Info, AlertCircle } from 'lucide-react';
 import useUiStore from '../../store/uiStore';
 
 /**
- * Icon mapping dictionary
+ * ============================================================================
+ * ICON MAPPING - Modal tipine göre ikon eşleştirmesi
+ * ============================================================================
  */
 const ICONS = {
   danger: <AlertTriangle className="h-16 w-16 text-red-500" />,
@@ -19,7 +56,9 @@ const ICONS = {
 };
 
 /**
- * Button style mapping dictionary
+ * ============================================================================
+ * BUTTON STYLE MAPPING - Modal tipine göre buton stil eşleştirmesi
+ * ============================================================================
  */
 const BUTTON_STYLES = {
   danger: {
@@ -41,7 +80,9 @@ const BUTTON_STYLES = {
 };
 
 /**
- * Modal boyut ayarları
+ * ============================================================================
+ * MODAL BOYUT AYARLARI - Responsive modal genişlik konfigürasyonu
+ * ============================================================================
  */
 const MODAL_SIZES = {
   small: 'max-w-sm',
@@ -51,7 +92,27 @@ const MODAL_SIZES = {
 };
 
 /**
- * ConfirmationModal Component
+ * ============================================================================
+ * CONFIRMATION MODAL COMPONENT
+ * ============================================================================
+ * 
+ * Ana modal bileşeni - Zustand store'dan modal state'ini okur ve render eder
+ * 
+ * State Yönetimi:
+ * - useUiStore hook'u ile global modal state'ine erişir
+ * - Modal açık/kapalı durumu store tarafından kontrol edilir
+ * 
+ * Event Handlers:
+ * - handleConfirm: Onay butonuna tıklandığında çalışır
+ * - handleCancel: İptal butonuna tıklandığında veya ESC tuşuna basıldığında çalışır
+ * 
+ * Keyboard Events:
+ * - ESC: Modal'ı kapatır (handleCancel)
+ * - Enter: Modal'ı onaylar (handleConfirm)
+ * 
+ * Focus Management:
+ * - Modal açıldığında confirm butonuna otomatik focus
+ * - Tab tuşu ile modal içinde focus döngüsü
  */
 const ConfirmationModal = () => {
   const { modals, closeModal } = useUiStore();

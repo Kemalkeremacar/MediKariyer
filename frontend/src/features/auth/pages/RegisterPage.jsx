@@ -1,3 +1,8 @@
+/**
+ * @file RegisterPage.jsx
+ * @description Kayıt Sayfası - Doktor ve Hastane kayıt formu
+ */
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiUser, FiHome, FiMail, FiLock, FiPhone, FiMapPin, FiArrowLeft, FiCheck, FiCamera, FiUpload, FiImage } from 'react-icons/fi';

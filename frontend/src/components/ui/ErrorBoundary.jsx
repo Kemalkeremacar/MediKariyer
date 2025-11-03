@@ -1,14 +1,46 @@
 /**
- * Error Boundary Component
+ * @file ErrorBoundary.jsx
+ * @description Error Boundary Bileşeni - React hata yakalama ve kullanıcı dostu hata gösterimi
  * 
- * React Error Boundary bileşeni - Uygulama hatalarını yakalar ve kullanıcı dostu hata sayfası gösterir
- * Hata durumlarında uygulamanın çökmesini önler
+ * Bu bileşen, React uygulamasında oluşan render hatalarını yakalar ve uygulamanın
+ * tamamen çökmesini önler. Hata durumunda kullanıcıya anlaşılır bir hata ekranı gösterir.
  * 
- * Özellikler:
- * - Hata yakalama ve loglama
- * - Kullanıcı dostu hata mesajları
- * - Sayfa yenileme seçeneği
- * - Glassmorphism dark theme
+ * Ana Özellikler:
+ * - Hata yakalama: Component tree'deki hataları yakalar
+ * - Hata loglama: Console'a hata bilgilerini yazar
+ * - Kullanıcı dostu arayüz: Anlaşılır hata mesajları
+ * - Aksiyon butonları: Sayfa yenileme ve ana sayfaya dönüş
+ * - Development mode: Geliştirme modunda detaylı hata bilgisi
+ * - Production mode: Production modunda genel hata mesajı
+ * - Glassmorphism dark theme: Modern tasarım
+ * - Responsive: Mobil ve desktop uyumlu
+ * 
+ * Kullanım:
+ * ```jsx
+ * <ErrorBoundary>
+ *   <YourComponent />
+ * </ErrorBoundary>
+ * ```
+ * 
+ * Yakalanan Hatalar:
+ * - Render sırasında oluşan hatalar
+ * - Lifecycle method'larında oluşan hatalar
+ * - Constructor'larda oluşan hatalar
+ * 
+ * Yakalanmayan Hatalar:
+ * - Event handler'lardaki hatalar (try-catch kullanılmalı)
+ * - Asenkron kod hataları (Promise reject, setTimeout vb.)
+ * - Server-side rendering hataları
+ * - Error boundary'lerin kendisindeki hatalar
+ * 
+ * React Error Boundary Lifecycle:
+ * 1. getDerivedStateFromError: Hata durumunda state güncellemesi
+ * 2. componentDidCatch: Hata bilgilerini yakalama ve loglama
+ * 3. render: Hata ekranı gösterimi veya normal render
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
 import React from 'react';

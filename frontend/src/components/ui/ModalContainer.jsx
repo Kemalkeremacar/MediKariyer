@@ -1,10 +1,44 @@
 /**
- * Modal Container Component
+ * @file ModalContainer.jsx
+ * @description Modal Container Component - Merkezi modal yönetim bileşeni
  * 
- * Basit ve temiz modal container (Dark theme varsayılan)
- * - Body scroll lock
- * - ESC tuşu ile kapatma
- * - Responsive tasarım
+ * Bu bileşen, uygulama genelinde kullanılan tüm modal'lar için merkezi bir container sağlar.
+ * Dark theme varsayılan olarak ayarlanmıştır ve modern glassmorphism tasarım kullanır.
+ * 
+ * Ana Özellikler:
+ * - Body scroll kilitleme: Modal açıkken arka plan scroll'u engellenir
+ * - ESC tuşu desteği: Klavye ile modal kapatma
+ * - Backdrop click: Arka plana tıklayarak kapatma
+ * - Focus trap: Modal içinde odak yönetimi (Tab tuşu ile)
+ * - Responsive tasarım: Mobil ve desktop uyumlu
+ * - Scroll pozisyon koruma: Modal açılıp kapanırken scroll pozisyonu korunur
+ * - Erişilebilirlik (A11y): ARIA atributları, role="dialog", aria-modal
+ * - Animasyonlar: Fade-in ve zoom-in efektleri
+ * - Hizalama seçenekleri: center, top, bottom (varsayılan: bottom)
+ * - Boyut seçenekleri: small, medium, large, xl (varsayılan: medium)
+ * 
+ * Kullanım Örnekleri:
+ * ```jsx
+ * <ModalContainer
+ *   isOpen={isOpen}
+ *   onClose={handleClose}
+ *   title="Başlık"
+ *   size="medium"
+ *   align="bottom"
+ * >
+ *   <p>Modal içeriği</p>
+ * </ModalContainer>
+ * ```
+ * 
+ * Teknik Detaylar:
+ * - useRef kullanarak scroll pozisyonu kaydedilir (closure sorunu önlenir)
+ * - requestAnimationFrame ile güvenli scroll restore
+ * - Event listener cleanup ile memory leak önlenir
+ * - Portal kullanılmaz, direkt DOM'da render edilir
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
 import React, { useEffect, useRef } from 'react';

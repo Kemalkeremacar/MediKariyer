@@ -1,5 +1,53 @@
 /**
- * Admin Sidebar - Admin sayfaları için sidebar menü
+ * @file AdminSidebar.jsx
+ * @description Admin Sidebar Bileşeni - Admin sayfaları için yan menü
+ * 
+ * Bu bileşen, admin sayfalarında kullanılan yan menü (sidebar) bileşenidir.
+ * Admin kullanıcılarının tüm yönetim sayfalarına hızlı erişim sağlar.
+ * 
+ * Ana Özellikler:
+ * - Sabit genişlik: 256px (w-64) sabit sidebar genişliği
+ * - Aktif sayfa vurgulama: Mevcut sayfa için özel stil
+ * - Icon desteği: Her menü öğesi için özel ikon
+ * - Gradient efektler: Aktif menü öğesi için gradient arka plan
+ * - Hover efektleri: Menü öğeleri için hover animasyonları
+ * - Responsive: Mobil için collapse özelliği (gelecekte eklenecek)
+ * - Glassmorphism: Modern blur efekti
+ * 
+ * Menü Öğeleri:
+ * 1. Dashboard: Genel istatistikler ve özet bilgiler
+ * 2. Kullanıcı Yönetimi: Tüm kullanıcıların yönetimi
+ * 3. Fotoğraf Onayları: Doktor profil fotoğrafı onayları
+ * 4. İş İlanı Yönetimi: Tüm iş ilanlarının yönetimi
+ * 5. Başvurular: Tüm başvuruların görüntülenmesi
+ * 6. Bildirimler: Sistem bildirimlerinin yönetimi
+ * 7. İletişim Mesajları: Gelen iletişim mesajlarının yönetimi
+ * 8. Sistem Logları: Sistem loglarının görüntülenmesi
+ * 
+ * Renk Şemaları:
+ * - Dashboard: Mavi gradient (blue-500 to blue-600)
+ * - Kullanıcı Yönetimi: Yeşil gradient (green-500 to green-600)
+ * - Fotoğraf Onayları: Mor gradient (purple-500 to purple-600)
+ * - İş İlanı Yönetimi: Mor gradient (purple-500 to purple-600)
+ * - Başvurular: Zümrüt gradient (emerald-500 to emerald-600)
+ * - Bildirimler: Amber gradient (amber-500 to amber-600)
+ * - İletişim Mesajları: Teal gradient (teal-500 to teal-600)
+ * - Sistem Logları: Kırmızı gradient (red-500 to red-600)
+ * 
+ * Aktif Menü Öğesi Stilleri:
+ * - Gradient arka plan: from-blue-500/20 to-purple-500/20
+ * - Border: border-blue-500/30
+ * - Shadow: shadow-md shadow-blue-500/10
+ * - Icon background: Menü tipine göre gradient
+ * 
+ * Teknik Detaylar:
+ * - useLocation ile aktif sayfa takibi
+ * - React Router Link ile sayfa yönlendirme
+ * - Lucide React icons kullanımı
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
 import React, { useEffect, useState } from 'react';
@@ -23,12 +71,22 @@ const AdminSidebar = () => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
 
-  // Location değişikliklerini takip et
+  /**
+   * Location değişikliklerini takip et
+   * Aktif sayfa değiştiğinde currentPath state'ini güncelle
+   */
   useEffect(() => {
     setCurrentPath(location.pathname);
   }, [location.pathname]);
 
-  // Menü öğeleri - Türkçeleştirilmiş ve genişletilmiş
+  // ============================================================================
+  // MENU CONFIGURATION - Menü yapılandırması
+  // ============================================================================
+
+  /**
+   * Menü öğeleri konfigürasyonu
+   * Her menü öğesi için: isim, route, aktif durumu, ikon ve renk tanımlanır
+   */
   const menuItems = [
     {
       name: 'Dashboard',

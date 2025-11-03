@@ -1,9 +1,45 @@
+/**
+ * @file Footer.jsx
+ * @description Footer Bileşeni - Uygulama alt bilgi çubuğu
+ * 
+ * Bu bileşen, uygulama genelinde kullanılan alt bilgi çubuğunu sağlar.
+ * İletişim bilgileri, hızlı linkler, sosyal medya linkleri ve telif hakları
+ * bilgilerini içerir.
+ * 
+ * Ana Özellikler:
+ * - Logo ve açıklama: Uygulama logosu ve kısa açıklama
+ * - Sosyal medya linkleri: Facebook, Twitter, LinkedIn, Instagram
+ * - Hızlı linkler: Ana Sayfa, Hakkımızda, İletişim
+ * - İletişim bilgileri: Adres, telefon, e-posta
+ * - Telif hakları: Yıl ve uygulama adı
+ * - Responsive: Grid layout ile mobil uyumlu
+ * - Glassmorphism: Modern blur efekti
+ * 
+ * Layout Yapısı:
+ * - 1 sütun (mobil): Logo, Hızlı Linkler, İletişim (alt alta)
+ * - 2 sütun (tablet): Logo + Hızlı Linkler, İletişim
+ * - 3 sütun (desktop): Logo, Hızlı Linkler, İletişim (yan yana)
+ * 
+ * Kullanım:
+ * Sadece belirli sayfalarda gösterilir (Home, Public sayfalar).
+ * Admin, Doctor, Hospital ve Auth sayfalarında gösterilmez.
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
 import { FiFacebook, FiTwitter, FiLinkedin, FiInstagram, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 
+/**
+ * ============================================================================
+ * FOOTER COMPONENT
+ * ============================================================================
+ */
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 

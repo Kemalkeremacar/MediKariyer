@@ -1,11 +1,13 @@
+/**
+ * @file PendingApprovalPage.jsx
+ * @description Onay Bekleme Sayfası - Admin onayı bekleyen kullanıcılar için bilgilendirme sayfası
+ */
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { Clock, Mail, Phone, AlertCircle } from 'lucide-react';
 
-/**
- * Onay bekleyen kullanıcılar için sayfa
- */
 const PendingApprovalPage = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">

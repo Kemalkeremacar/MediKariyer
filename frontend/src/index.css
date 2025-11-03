@@ -1,13 +1,14 @@
 /**
  * @file index.css
- * @description Ana CSS dosyası - Tailwind CSS ve özel stiller
+ * @description Ana CSS dosyası - Tailwind CSS, global stiller ve utility sınıfları
  */
 
+/* Tailwind CSS direktifleri */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Global scroll fix */
+/* Global scroll düzeltmesi */
 html {
   overflow-x: hidden;
 }
@@ -16,8 +17,7 @@ body {
   overflow-x: hidden;
 }
 
-
-/* Özel CSS değişkenleri */
+/* CSS değişkenleri - Renk paleti ve tema ayarları */
 :root {
   --primary-color: #3b82f6;
   --primary-dark: #1d4ed8;
@@ -43,7 +43,7 @@ body {
   --transition-slow: 500ms ease-in-out;
 }
 
-/* Dark mode değişkenleri */
+/* Dark mode değişkenleri - Sistem temasına göre */
 @media (prefers-color-scheme: dark) {
   :root {
     --background-color: #0f172a;
@@ -54,12 +54,12 @@ body {
   }
 }
 
-/* Base stiller */
+/* Base stiller - Box model */
 * {
   box-sizing: border-box;
 }
 
-/* Mobile optimizasyonları */
+/* Mobile optimizasyonları - Font ve dokunma ayarları */
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -72,7 +72,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Touch optimizasyonları */
+/* Touch optimizasyonları - Mobil cihazlar için */
 @media (hover: none) and (pointer: coarse) {
   .hover\:scale-105:hover {
     transform: none;
@@ -90,10 +90,10 @@ body {
 }
 
 /* ================================================================ */
-/* MODERN HOMEPAGE TASARIMI - ELİTE SAĞLIK PLATFORMU */
+/* MODERN HOMEPAGE TASARIMI */
 /* ================================================================ */
 
-/* Global Text Selection Fix - Cache Bust: 2025-01-25 */
+/* Metin seçilebilirlik - Tüm elementler için */
 html, body, * {
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
@@ -401,10 +401,10 @@ p, h1, h2, h3, h4, h5, h6, div, span, li, td, th {
 }
 
 /* ================================================================ */
-/* RESPONSIVE DESIGN - TÜM SERVERLER VE HOSTLAR İÇİN AYNI DÜZEN */
+/* RESPONSIVE DESIGN - PC ve Mobile görünümleri */
 /* ================================================================ */
 
-/* PC GÖRÜNÜMÜ (Tüm serverlerde aynı) */
+/* PC görünümü - 769px ve üzeri */
 @media (min-width: 769px) {
   /* Font boyutları - Tüm serverlerde aynı */
   .text-2xl {
@@ -523,7 +523,7 @@ p, h1, h2, h3, h4, h5, h6, div, span, li, td, th {
   }
 }
 
-/* MOBILE GÖRÜNÜMÜ (Tüm serverlerde aynı) */
+/* Mobile görünümü - 768px ve altı */
 @media (max-width: 768px) {
   .container {
     padding-left: 1rem;
@@ -1715,11 +1715,11 @@ textarea:-webkit-autofill:active {
   
 }
 
-/* ========================================
-   TOAST STILLERİ - SABİT POZİSYON
-   ======================================== */
+/* ======================================== */
+/* TOAST STILLERİ - Sabit pozisyon */
+/* ======================================== */
 
-/* Sonner Toast Container - Sabit pozisyon */
+/* Sonner Toast Container */
 [data-sonner-toaster] {
   position: fixed !important;
   top: 20px !important;
@@ -1800,10 +1800,10 @@ html, body {
 }
 
 /* ================================================================ */
-/* MODÜLER SAYFA STİLLERİ - TÜM SAYFALAR İÇİN ORTAK */
+/* MODÜLER SAYFA STİLLERİ - Ortak bileşen stilleri */
 /* ================================================================ */
 
-/* Modern Kartlar - Anasayfa Stili - Açık Mavi Arka Plan */
+/* Modern Kartlar */
 .modern-card {
   background: rgba(239, 246, 255, 0.95);
   -webkit-backdrop-filter: blur(10px);

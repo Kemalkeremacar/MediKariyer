@@ -1,6 +1,6 @@
 /**
- * Main Entry Point - Uygulama giriş noktası
- * React DOM render işlemi
+ * @file main.jsx
+ * @description Uygulama giriş noktası - React DOM render işlemi
  */
 
 import React from 'react';
@@ -10,21 +10,21 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import App from './App.jsx';
 
-// React Query client instance with optimized configuration
+// React Query client - API çağrıları için cache ve state yönetimi
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 5 * 60 * 1000, // 5 dakika - veri fresh kalma süresi
+      cacheTime: 10 * 60 * 1000, // 10 dakika - cache'de kalma süresi
       retry: (failureCount, error) => {
-        // Don't retry on auth errors
+        // Auth hatalarında retry yapma
         if (error?.response?.status === 401 || error?.response?.status === 403) {
           return false;
         }
-        return failureCount < 2;
+        return failureCount < 2; // Maksimum 2 retry
       },
-      refetchOnWindowFocus: false,
-      refetchInterval: false,
+      refetchOnWindowFocus: false, // Pencere focus'unda yeniden çekme
+      refetchInterval: false, // Otomatik yenileme kapalı
     },
     mutations: {
       onError: (error) => {
@@ -34,18 +34,18 @@ const queryClient = new QueryClient({
   },
 });
 
-// QueryClient'ı window objesine ekle (auth store için)
+// QueryClient'ı global olarak erişilebilir yap (auth store için)
 if (typeof window !== 'undefined') {
   window.queryClient = queryClient;
 }
 
+// React DOM render
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      {/* 🔑 React Query provider eklendi */}
       <QueryClientProvider client={queryClient}>
         <App />
-        {/* React Query DevTools - sadece development modunda */}
+        {/* DevTools - sadece development modunda görünür */}
         {process.env.NODE_ENV === 'development' && (
           <ReactQueryDevtools initialIsOpen={false} />
         )}

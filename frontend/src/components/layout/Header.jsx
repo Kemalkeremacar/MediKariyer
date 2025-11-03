@@ -1,3 +1,50 @@
+/**
+ * @file Header.jsx
+ * @description Header Bileşeni - Uygulama üst navigasyon çubuğu
+ * 
+ * Bu bileşen, uygulama genelinde kullanılan üst navigasyon çubuğunu sağlar.
+ * Rol bazlı navigasyon menüleri, kullanıcı dropdown menüleri ve responsive
+ * mobil menü yönetimi içerir.
+ * 
+ * Ana Özellikler:
+ * - Rol bazlı navigasyon: Admin, Doktor, Hastane, Guest için farklı menüler
+ * - Logo yönetimi: Tıklanabilir logo ile rol bazlı yönlendirme
+ * - Kullanıcı dropdown: Kullanıcı bilgileri ve hızlı erişim menüsü
+ * - Bildirim sistemi: NavbarNotificationBell entegrasyonu
+ * - Mobil menü: Hamburger menü ile mobil navigasyon
+ * - Responsive: Desktop ve mobil için optimize edilmiş
+ * - Active state: Aktif sayfa vurgulama
+ * - Glassmorphism: Modern blur efekti
+ * 
+ * Navigasyon Yapısı:
+ * - Guest: Ana Sayfa, Hakkımızda, İletişim
+ * - Admin: Dropdown menü (Header'da nav yok, sidebar kullanılır)
+ * - Doctor: Ana Sayfa, Profilim, İş İlanları, Başvurularım
+ * - Hospital: Ana Sayfa, Profilim, İlan Yönetimi, Başvurular
+ * 
+ * Kullanıcı Dropdown Menüleri:
+ * - Admin: Dashboard, Kullanıcı Yönetimi, Fotoğraf Onayları, İş İlanı Yönetimi,
+ *          Başvurular, Bildirimler, İletişim Mesajları
+ * - Doctor: Ana Sayfa, Profilim, İş İlanları, Başvurularım
+ * - Hospital: Ana Sayfa, Profilim, İlan Yönetimi, Başvurular
+ * 
+ * Mobil Menü:
+ * - Tüm navigasyon linkleri
+ * - Kullanıcı bilgileri
+ * - Admin menü (admin ise)
+ * - Çıkış butonu
+ * 
+ * Teknik Detaylar:
+ * - useState ile menü açık/kapalı durumu
+ * - useLocation ile aktif sayfa takibi
+ * - useAuthStore ile kullanıcı bilgileri
+ * - useNavigate ile programatik yönlendirme
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail } from 'lucide-react';
@@ -7,14 +54,25 @@ import NavbarNotificationBell from '../../features/notifications/components/Navb
 import useAuthStore from '../../store/authStore';
 import logoImage from '../../assets/logo.jpg';
 
+/**
+ * ============================================================================
+ * HEADER COMPONENT
+ * ============================================================================
+ */
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
+  // ============================================================================
+  // NAVIGATION CONFIGURATION - Rol bazlı navigasyon yapılandırması
+  // ============================================================================
 
-  // Role bazlı menüler
+  /**
+   * Rol bazlı navigasyon menü öğeleri
+   * Her rol için farklı navigasyon linkleri tanımlanır
+   */
   const navLinksByRole = {
     guest: [
       { to: ROUTE_CONFIG.PUBLIC.HOME, text: 'Ana Sayfa' },
@@ -36,7 +94,10 @@ const Header = () => {
     ],
   };
 
-  // Admin dropdown menü öğeleri - AdminSidebar ile tutarlı
+  /**
+   * Admin dropdown menü öğeleri
+   * AdminSidebar ile tutarlı olacak şekilde yapılandırılmıştır
+   */
   const adminMenuItems = [
     { to: ROUTE_CONFIG.ADMIN.DASHBOARD, text: 'Dashboard', icon: BarChart3 },
     { to: ROUTE_CONFIG.ADMIN.USERS, text: 'Kullanıcı Yönetimi', icon: UserCheck },
@@ -48,9 +109,19 @@ const Header = () => {
   ];
 
 
+  /**
+   * Mevcut kullanıcı rolüne göre navigasyon linklerini al
+   */
   const navLinks = navLinksByRole[user?.role || 'guest'];
 
-  // Logo tıklama handler - kullanıcının rolüne göre yönlendirme
+  // ============================================================================
+  // EVENT HANDLERS - Event handler fonksiyonları
+  // ============================================================================
+
+  /**
+   * Logo tıklama handler
+   * Kullanıcının rolüne göre uygun dashboard'a yönlendirir
+   */
   const handleLogoClick = () => {
     if (user?.role === 'admin') {
       navigate(ROUTE_CONFIG.ADMIN.DASHBOARD);
@@ -63,7 +134,10 @@ const Header = () => {
     }
   };
 
-  // Logout handler
+  /**
+   * Çıkış yapma handler
+   * Kullanıcı çıkış yapar ve ana sayfaya yönlendirilir
+   */
   const handleLogout = () => {
     logout();
     setIsUserMenuOpen(false);
@@ -95,7 +169,10 @@ const Header = () => {
     </NavLink>
   );
 
-  // Tüm roller için aynı header renkleri (doktor renk şeması)
+  /**
+   * Header renk şeması fonksiyonu
+   * Tüm roller için aynı renk şeması kullanılır (doktor renk şeması)
+   */
   const getHeaderColors = () => {
     return 'bg-gradient-to-r from-blue-900/95 via-blue-800/95 to-blue-700/95';
   };

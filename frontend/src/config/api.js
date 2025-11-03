@@ -1,11 +1,47 @@
 /**
- * API Configuration - Backend routes eşleniği
- * Tüm API endpoint'lerinin merkezi tanımı
+ * @file api.js
+ * @description API Configuration - Backend API endpoint tanımları ve utility fonksiyonlar
  * 
- * Backend Uyumluluğu:
- * - adminService.js'deki tüm fonksiyonlarla eşleşir
- * - adminController.js'deki tüm endpoint'lerle uyumlu
- * - adminRoutes.js'deki tüm route'larla uyumlu
+ * Bu dosya, tüm backend API endpoint'lerinin merkezi tanımını içerir. Backend route'larla
+ * birebir uyumlu olacak şekilde tasarlanmıştır. Endpoint'ler rol bazında organize edilmiştir
+ * ve parametreli URL'ler için utility fonksiyonlar sağlar.
+ * 
+ * Ana Özellikler:
+ * - Backend uyumluluk: Backend route'larla birebir eşleşme
+ * - Rol bazlı organizasyon: Auth, Doctor, Hospital, Admin, Lookup, Notifications, Contact
+ * - Parametreli endpoint'ler: :id, :jobId gibi dinamik parametreler
+ * - Utility fonksiyonlar: buildEndpoint, buildQueryString, buildUrl, buildApiUrl
+ * - Tip güvenliği: Sabit string değerleri ile tip güvenliği
+ * - Merkezi yönetim: Tüm endpoint'ler tek yerden yönetilir
+ * 
+ * Backend Uyumluluk:
+ * - adminService.js, doctorService.js, hospitalService.js ile eşleşir
+ * - adminController.js, doctorController.js, hospitalController.js ile uyumlu
+ * - adminRoutes.js, doctorRoutes.js, hospitalRoutes.js ile uyumlu
+ * 
+ * Endpoint Kategorileri:
+ * 1. AUTH: Kimlik doğrulama ve yetkilendirme endpoint'leri
+ * 2. DOCTOR: Doktor profil, eğitim, deneyim, başvuru yönetimi
+ * 3. HOSPITAL: Hastane profil, departman, iş ilanı, başvuru yönetimi
+ * 4. ADMIN: Admin paneli endpoint'leri (kullanıcı, ilan, başvuru yönetimi)
+ * 5. LOOKUP: Lookup tabloları (şehir, uzmanlık, dil, sertifika vb.)
+ * 6. NOTIFICATIONS: Bildirim yönetimi endpoint'leri
+ * 7. CONTACT: İletişim mesajları endpoint'leri
+ * 8. SYSTEM: Sistem sağlık kontrolü ve istatistikleri
+ * 
+ * Kullanım Örnekleri:
+ * ```jsx
+ * import { ENDPOINTS, buildEndpoint, buildApiUrl } from '@config/api';
+ * 
+ * // Basit endpoint
+ * const url = ENDPOINTS.DOCTOR.PROFILE;
+ * 
+ * // Parametreli endpoint
+ * const url = buildEndpoint(ENDPOINTS.DOCTOR.EDUCATION_DETAIL, { id: 123 });
+ * 
+ * // Query parametreli endpoint
+ * const url = buildApiUrl(ENDPOINTS.DOCTOR.JOBS, {}, { page: 1, limit: 10 });
+ * ```
  * 
  * @author MediKariyer Development Team
  * @version 4.0.0
@@ -14,9 +50,38 @@
 
 import { APP_CONFIG } from './app.js';
 
-// Base endpoints
+// ============================================================================
+// API BASE CONFIGURATION
+// ============================================================================
+
+/**
+ * API Base URL - Environment variable'dan veya varsayılan değerden alınır
+ */
+export const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'http://192.168.1.198:3000/api');
+
+/**
+ * API Request Timeout - 30 saniye
+ */
+export const API_TIMEOUT = 30000;
+
+/**
+ * Default HTTP Headers - Tüm API istekleri için varsayılan header'lar
+ */
+export const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json',
+};
+
+// ============================================================================
+// API ENDPOINT DEFINITIONS
+// ============================================================================
+
+/**
+ * Tüm API endpoint tanımları
+ * Backend route'larla birebir uyumlu olacak şekilde organize edilmiştir
+ */
 export const ENDPOINTS = {
-  // Auth endpoints - Backend authRoutes.js ile tam uyumlu
+  // ==================== AUTH ENDPOINTS - Backend authRoutes.js ile tam uyumlu ====================
   AUTH: {
     LOGIN: '/auth/login', // POST /auth/login - authController.loginUnified
     REGISTER_DOCTOR: '/auth/registerDoctor', // POST /auth/registerDoctor - authController.registerDoctor
@@ -31,7 +96,11 @@ export const ENDPOINTS = {
     RESET_PASSWORD: '/auth/reset-password', // POST /auth/reset-password - authController.resetPassword
   },
 
-  // Doctor endpoints (Backend: /api/doctor/*) - Yeni tek servis yapısı
+  // ==================== DOCTOR ENDPOINTS (Backend: /api/doctor/*) ====================
+  /**
+   * Doktor profil, eğitim, deneyim, başvuru ve dashboard endpoint'leri
+   * Backend doctorService.js ve doctorController.js ile uyumlu
+   */
   DOCTOR: {
     // Profil yönetimi
     PROFILE: '/doctor/profile', // GET/PUT - Temel profil bilgileri
@@ -75,7 +144,11 @@ export const ENDPOINTS = {
     PROFILE_SEARCH: '/doctor/profile/search', // GET - Doktor arama
   },
 
-  // Hospital endpoints (Backend: /api/hospital/*) - Backend ile uyumlu
+  // ==================== HOSPITAL ENDPOINTS (Backend: /api/hospital/*) ====================
+  /**
+   * Hastane profil, departman, iş ilanı, başvuru ve dashboard endpoint'leri
+   * Backend hospitalService.js ve hospitalController.js ile uyumlu
+   */
   HOSPITAL: {
     // Profil yönetimi
     PROFILE: '/hospital', // GET/PUT - Temel profil bilgileri
@@ -113,7 +186,11 @@ export const ENDPOINTS = {
     DOCTOR_SEARCH: '/hospital/doctor-search', // GET - Doktor arama
   },
 
-  // Admin endpoints (Backend: /api/admin/*) - Yeni tek servis yapısı
+  // ==================== ADMIN ENDPOINTS (Backend: /api/admin/*) ====================
+  /**
+   * Admin paneli endpoint'leri: Kullanıcı, ilan, başvuru, bildirim yönetimi
+   * Backend adminService.js ve adminController.js ile uyumlu
+   */
   ADMIN: {
     // Kullanıcı yönetimi
     USERS: '/admin/users', // GET/POST - Kullanıcı listesi/oluşturma
@@ -153,7 +230,11 @@ export const ENDPOINTS = {
     CONTACT_STATISTICS: '/admin/contact-messages/stats', // GET - İletişim istatistikleri
   },
 
-  // Lookup endpoints (Backend: /api/lookup/*)
+  // ==================== LOOKUP ENDPOINTS (Backend: /api/lookup/*) ====================
+  /**
+   * Lookup tabloları endpoint'leri: Şehir, uzmanlık, dil, sertifika türleri vb.
+   * Backend lookupService.js ve lookupController.js ile uyumlu
+   */
   LOOKUP: {
     SPECIALTIES: '/lookup/specialties', // GET - Uzmanlık alanları
     SUBSPECIALTIES: '/lookup/subspecialties', // GET - Yan dal alanları
@@ -168,7 +249,11 @@ export const ENDPOINTS = {
     ALL: '/lookup/all', // GET - Tüm lookup verileri
   },
 
-  // Notification endpoints (Backend: /api/notifications/*)
+  // ==================== NOTIFICATION ENDPOINTS (Backend: /api/notifications/*) ====================
+  /**
+   * Bildirim yönetimi endpoint'leri
+   * Backend notificationService.js ve notificationController.js ile uyumlu
+   */
   NOTIFICATIONS: {
     LIST: '/notifications', // GET - Bildirim listesi
     DETAIL: '/notifications/:id', // GET - Bildirim detayı
@@ -179,13 +264,20 @@ export const ENDPOINTS = {
     UNREAD_COUNT: '/notifications/unread-count', // GET - Okunmamış bildirim sayısı
   },
 
-  // Contact endpoints (Backend: /api/contact/*)
+  // ==================== CONTACT ENDPOINTS (Backend: /api/contact/*) ====================
+  /**
+   * İletişim mesajları endpoint'leri
+   * Backend contactService.js ve contactController.js ile uyumlu
+   */
   CONTACT: {
     SEND_MESSAGE: '/contact', // POST - İletişim mesajı gönder (public)
     MESSAGES: '/contact', // POST - İletişim mesajı gönder (public - alias)
   },
 
-  // System endpoints
+  // ==================== SYSTEM ENDPOINTS ====================
+  /**
+   * Sistem sağlık kontrolü ve istatistik endpoint'leri
+   */
   SYSTEM: {
     HEALTH: '/health', // GET - Sistem sağlık kontrolü
     // System endpoints kaldırıldı
@@ -193,19 +285,9 @@ export const ENDPOINTS = {
   },
 };
 
-// API Base URL
-export const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'http://192.168.1.198:3000/api');
-
-// Request timeout
-export const API_TIMEOUT = 30000; // 30 saniye
-
-// Default headers
-export const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-};
-
-// ==================== UTILITY FUNCTIONS ====================
+// ============================================================================
+// UTILITY FUNCTIONS - Endpoint ve URL oluşturma yardımcı fonksiyonları
+// ============================================================================
 
 /**
  * Endpoint'teki parametreleri değerlerle değiştirir

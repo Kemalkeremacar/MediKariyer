@@ -1,3 +1,43 @@
+/**
+ * @file MainLayout.jsx
+ * @description Ana Layout Bileşeni - Uygulama geneli layout yönetimi
+ * 
+ * Bu bileşen, uygulama genelinde kullanılan ana layout yapısını sağlar.
+ * Rol bazlı layout farklılıklarını yönetir ve sayfa tipine göre uygun
+ * layout'u render eder.
+ * 
+ * Ana Özellikler:
+ * - Rol bazlı layout: Admin, Doktor, Hastane, Public için farklı layoutlar
+ * - Sayfa tipi kontrolü: Route path'e göre layout belirleme
+ * - Header yönetimi: Tüm sayfalarda header gösterimi
+ * - Footer yönetimi: Sadece belirli sayfalarda footer gösterimi
+ * - Sidebar yönetimi: Admin sayfalarında sidebar gösterimi
+ * - Gradient arka planlar: Sayfa tipine göre farklı gradient'ler
+ * - Responsive: Mobil ve desktop uyumlu
+ * 
+ * Layout Tipleri:
+ * 1. Admin Layout: Sidebar + Header + Content (Footer yok)
+ * 2. Doctor Layout: Header + Content (Footer yok)
+ * 3. Hospital Layout: Header + Content (Footer yok)
+ * 4. Home Layout: Header + Content + Footer
+ * 5. Auth Layout: Header + Content (Footer yok)
+ * 6. Public Layout: Header + Content + Footer
+ * 
+ * Arka Plan Renk Şemaları:
+ * - Admin: Açık gradient (slate-50, blue-50, indigo-100)
+ * - Doctor/Hospital: Koyu gradient (slate-900, blue-900, indigo-900)
+ * - Home/Public: Açık gradient (white, gray-50, blue-50)
+ * - Auth: Koyu gradient (blue-900, indigo-900, blue-800)
+ * 
+ * Kullanım:
+ * React Router'ın Outlet bileşeni ile sayfa içeriği render edilir.
+ * Layout, route path ve kullanıcı rolüne göre otomatik olarak belirlenir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
@@ -5,7 +45,11 @@ import Footer from './Footer';
 import AdminSidebar from './AdminSidebar';
 import { useAuthStore } from '@/store/authStore';
 
-
+/**
+ * ============================================================================
+ * MAIN LAYOUT COMPONENT
+ * ============================================================================
+ */
 const MainLayout = () => {
   const location = useLocation();
   const { user } = useAuthStore();

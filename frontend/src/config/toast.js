@@ -1,11 +1,53 @@
 /**
- * Toast Configuration
- * Toast ayarları ve konfigürasyonları
+ * @file toast.js
+ * @description Toast Configuration - Bildirim toast ayarları ve konfigürasyonları
+ * 
+ * Bu dosya, uygulama genelinde kullanılan toast (bildirim) bileşeninin
+ * konfigürasyonlarını içerir. Sonner kütüphanesi kullanılarak toast bildirimleri
+ * gösterilir. Light ve dark tema desteği sağlanır.
+ * 
+ * Ana Özellikler:
+ * - Toast pozisyonu: Sağ üst köşe (top-right)
+ * - Rich colors: Daha canlı renkler
+ * - Close button: Kapatma butonu desteği
+ * - Expand: Uzun mesajlarda kutunun genişlemesi
+ * - Duration: Varsayılan 5 saniye gösterim süresi
+ * - Offset: Viewport'un üstünden 20px boşluk
+ * - Visible toasts: Maksimum 5 toast aynı anda görünür
+ * - Glassmorphism: Modern blur efekti
+ * - Fixed position: Sabit pozisyon ile scroll'dan bağımsız
+ * - Theme support: Light ve dark tema desteği
+ * 
+ * Tema Desteği:
+ * - Light mode: Açık arka plan, koyu metin
+ * - Dark mode: Koyu arka plan, açık metin
+ * - Auto mode: Sistem temasına göre otomatik seçim
+ * 
+ * Kullanım:
+ * ```jsx
+ * import { toastConfig, darkToastConfig, getToastConfig } from '@config/toast';
+ * 
+ * // Light tema için
+ * <Toaster {...toastConfig} />
+ * 
+ * // Dark tema için
+ * <Toaster {...darkToastConfig} />
+ * 
+ * // Otomatik tema seçimi
+ * <Toaster {...getToastConfig('auto')} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
 /**
- * Toast konfigürasyonu
- * Sonner Toaster bileşeni için ayarlar
+ * ============================================================================
+ * TOAST CONFIGURATION - Light tema toast ayarları
+ * ============================================================================
+ * 
+ * Sonner Toaster bileşeni için varsayılan (light tema) ayarlar
  */
 export const toastConfig = {
   position: "top-right", // Sağ üst köşeye taşı
@@ -36,7 +78,12 @@ export const toastConfig = {
 };
 
 /**
- * Dark mode için toast konfigürasyonu
+ * ============================================================================
+ * DARK TOAST CONFIGURATION - Dark tema toast ayarları
+ * ============================================================================
+ * 
+ * Dark mode için özelleştirilmiş toast konfigürasyonu
+ * Light tema ayarlarını extend eder ve dark tema stillerini uygular
  */
 export const darkToastConfig = {
   ...toastConfig,
@@ -54,9 +101,26 @@ export const darkToastConfig = {
 };
 
 /**
- * Toast konfigürasyonunu tema göre döndürür
- * @param {string} theme - Tema ('light', 'dark', 'auto')
- * @returns {object} - Toast konfigürasyonu
+ * ============================================================================
+ * TOAST CONFIG HELPER - Tema bazlı toast konfigürasyonu getirme
+ * ============================================================================
+ * 
+ * Belirtilen temaya göre uygun toast konfigürasyonunu döndürür
+ * 
+ * Parametreler:
+ * @param {string} theme - Tema tipi ('light', 'dark', 'auto')
+ *                        - 'light': Açık tema konfigürasyonu
+ *                        - 'dark': Koyu tema konfigürasyonu
+ *                        - 'auto': Sistem temasına göre otomatik seçim (varsayılan)
+ * 
+ * Dönüş:
+ * @returns {object} Toast konfigürasyon objesi
+ * 
+ * Örnek:
+ * ```jsx
+ * const config = getToastConfig('dark');
+ * <Toaster {...config} />
+ * ```
  */
 export const getToastConfig = (theme = 'auto') => {
   if (theme === 'dark') {

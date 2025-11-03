@@ -1,12 +1,54 @@
 /**
  * @file validation.js
- * @description Tüm validation schemas - Backend schemas ile tam uyumlu
- * Zod ile frontend form doğrulama şemaları
+ * @description Validation Schemas - Frontend form doğrulama şemaları
+ * 
+ * Bu dosya, uygulama genelinde kullanılan tüm form doğrulama şemalarını içerir.
+ * Zod kütüphanesi kullanılarak type-safe validasyon şemaları oluşturulmuştur.
+ * Backend Joi şemalarıyla birebir uyumlu olacak şekilde tasarlanmıştır.
+ * 
+ * Ana Özellikler:
+ * - Backend uyumluluk: Backend Joi şemalarıyla birebir eşleşme
+ * - Type safety: Zod ile tip güvenli validasyon
+ * - Tutarlılık: Aynı validasyon kuralları ve hata mesajları
+ * - Field eşleşmesi: Backend field isimleriyle birebir uyumlu
+ * - Transform fonksiyonları: Veri formatlama ve dönüşüm
+ * - Custom refine: Özel validasyon mantıkları
+ * - Error formatting: Kullanıcı dostu hata mesajları
  * 
  * Backend Uyumluluk:
- * - Backend Joi şemalarıyla birebir uyumlu
- * - Aynı validasyon kuralları ve hata mesajları
+ * - Backend validators/*Schemas.js dosyalarıyla uyumlu
+ * - Aynı validasyon kuralları ve sınırlar
+ * - Aynı hata mesajları (Türkçe)
  * - Aynı field isimleri ve yapıları
+ * 
+ * Schema Kategorileri:
+ * 1. BASE SCHEMAS: Email, password, name, phone, id, date (temel şemalar)
+ * 2. AUTH SCHEMAS: Login, register, password change, token refresh
+ * 3. DOCTOR SCHEMAS: Profil, eğitim, deneyim, sertifika, dil
+ * 4. HOSPITAL SCHEMAS: Profil, departman, iletişim
+ * 5. JOB SCHEMAS: İş ilanı, başvuru durumu
+ * 6. CONTACT SCHEMAS: İletişim formu
+ * 
+ * Utility Fonksiyonlar:
+ * - transformLookupData: Lookup verilerini frontend formatına dönüştürür
+ * - formatValidationErrors: Zod hatalarını kullanıcı dostu formata dönüştürür
+ * - validateLogin, validateDoctorRegister, vb.: Validasyon wrapper fonksiyonları
+ * 
+ * Kullanım Örnekleri:
+ * ```jsx
+ * import { loginSchema, registerDoctorSchema } from '@config/validation';
+ * 
+ * // Schema ile validasyon
+ * const result = loginSchema.safeParse(formData);
+ * if (result.success) {
+ *   // Valid data
+ * } else {
+ *   // Validation errors
+ * }
+ * 
+ * // Utility fonksiyon ile
+ * const { isValid, data, errors } = validateLogin(formData);
+ * ```
  * 
  * @author MediKariyer Development Team
  * @version 5.0.0
@@ -15,11 +57,23 @@
 
 import { z } from 'zod';
 
-// ==================== BASE VALIDATION SCHEMAS ====================
+// ============================================================================
+// BASE VALIDATION SCHEMAS - Temel validasyon şemaları
+// ============================================================================
 
 /**
  * Email Schema - Backend emailSchema ile tam uyumlu
- * @description E-posta adresi validasyonu - format, uzunluk, güvenlik kontrolleri
+ * 
+ * E-posta adresi validasyonu için temel şema
+ * Format, uzunluk ve güvenlik kontrolleri içerir
+ * 
+ * Validasyon Kuralları:
+ * - Geçerli e-posta formatı
+ * - Maksimum 255 karakter
+ * - Küçük harfe dönüştürme ve trim
+ * - Ardışık nokta kontrolü
+ * - Başlangıç/bitiş nokta kontrolü
+ * - Spam domain kontrolü (tempmail vb.)
  */
 const emailSchema = z
   .string()
@@ -36,7 +90,15 @@ const emailSchema = z
 
 /**
  * Password Schema - Backend passwordSchema ile tam uyumlu
- * @description Şifre validasyonu - uzunluk, güvenlik kontrolleri
+ * 
+ * Şifre validasyonu için temel şema
+ * Güvenlik kuralları ve uzunluk kontrolleri içerir
+ * 
+ * Validasyon Kuralları:
+ * - Minimum 6 karakter, maksimum 128 karakter
+ * - Boşluk içeremez
+ * - En az 1 büyük harf, 1 küçük harf, 1 rakam, 1 özel karakter
+ * - Aynı karakterin 3 kez tekrarı yasak
  */
 const passwordSchema = z
   .string()
@@ -48,7 +110,14 @@ const passwordSchema = z
 
 /**
  * Name Schema - Backend nameSchema ile tam uyumlu
- * @description İsim validasyonu - uzunluk, karakter kontrolleri
+ * 
+ * İsim validasyonu için temel şema
+ * Türkçe karakter desteği ile uzunluk ve format kontrolleri
+ * 
+ * Validasyon Kuralları:
+ * - Minimum 2 karakter, maksimum 50 karakter
+ * - Sadece harf ve boşluk içerebilir (Türkçe karakterler dahil)
+ * - Trim işlemi ile baş/son boşluk temizleme
  */
 const nameSchema = z
   .string()
@@ -59,7 +128,14 @@ const nameSchema = z
 
 /**
  * Phone Schema - Backend phoneSchema ile tam uyumlu
- * @description Telefon numarası validasyonu - format kontrolleri
+ * 
+ * Türk cep telefonu numarası validasyonu için temel şema
+ * Format kontrolü ve normalizasyon içerir
+ * 
+ * Validasyon Kuralları:
+ * - Türk cep telefonu formatı: 5XXXXXXXXX (0 veya +90 ile başlayabilir)
+ * - +90 ve 0 önekleri otomatik temizlenir
+ * - 10 haneli numara formatı
  */
 const phoneSchema = z
   .string()
@@ -74,21 +150,42 @@ const phoneSchema = z
 
 /**
  * ID Schema - Backend idSchema ile tam uyumlu
- * @description Pozitif tam sayı ID validasyonu
+ * 
+ * Pozitif tam sayı ID validasyonu için temel şema
+ * Veritabanı ID'leri için kullanılır
+ * 
+ * Validasyon Kuralları:
+ * - Pozitif tam sayı olmalıdır
+ * - 0 ve negatif sayılar geçersizdir
  */
 const idSchema = z.number().int().positive('Geçerli bir ID giriniz');
 
 /**
  * Date Schema - Backend dateSchema ile tam uyumlu
- * @description Tarih validasyonu
+ * 
+ * Tarih validasyonu için temel şema
+ * API formatında (YYYY-MM-DD) tarih bekler
+ * 
+ * Validasyon Kuralları:
+ * - YYYY-MM-DD formatında olmalıdır
+ * - Örnek: 2024-01-15
  */
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Geçerli bir tarih formatı giriniz (YYYY-MM-DD)');
 
-// ==================== AUTH VALIDATION SCHEMAS ====================
+// ============================================================================
+// AUTH VALIDATION SCHEMAS - Kimlik doğrulama validasyon şemaları
+// ============================================================================
 
 /**
  * Login Schema - Backend loginSchema ile tam uyumlu
- * @description Giriş formu validasyonu
+ * 
+ * Kullanıcı giriş formu validasyonu
+ * E-posta ve şifre kontrolü içerir
+ * 
+ * Field'lar:
+ * - email: E-posta adresi (emailSchema)
+ * - password: Şifre (min 1 karakter, zorunlu)
+ * - role: Kullanıcı rolü (opsiyonel, admin/doctor/hospital)
  */
 export const loginSchema = z.object({
   email: emailSchema,
@@ -98,7 +195,18 @@ export const loginSchema = z.object({
 
 /**
  * Doctor Registration Schema - Backend registerDoctorSchema ile tam uyumlu
- * @description Doktor kayıt formu validasyonu
+ * 
+ * Doktor kayıt formu validasyonu
+ * Kişisel bilgiler, ünvan, branş ve profil fotoğrafı kontrolü içerir
+ * 
+ * Field'lar:
+ * - email: E-posta adresi
+ * - password: Şifre (min 3, max 128 karakter)
+ * - first_name, last_name: İsim bilgileri
+ * - title: Ünvan (Dr., Uz. Dr., Prof. Dr. vb.)
+ * - specialty_id: Ana dal/branş (zorunlu)
+ * - subspecialty_id: Yan dal (opsiyonel)
+ * - profile_photo: Profil fotoğrafı (base64 veya URL)
  */
 export const registerDoctorSchema = z.object({
   email: emailSchema,
@@ -118,7 +226,17 @@ export const registerDoctorSchema = z.object({
 
 /**
  * Hospital Registration Schema - Backend registerHospitalSchema ile tam uyumlu
- * @description Hastane kayıt formu validasyonu
+ * 
+ * Hastane kayıt formu validasyonu
+ * Kurum bilgileri, şehir, telefon ve logo kontrolü içerir
+ * 
+ * Field'lar:
+ * - email: E-posta adresi
+ * - password: Şifre (min 3, max 128 karakter)
+ * - institution_name: Kurum adı (min 2, max 255 karakter)
+ * - city_id: Şehir seçimi (zorunlu)
+ * - phone: Telefon numarası
+ * - logo: Logo (base64 veya URL, zorunlu)
  */
 export const registerHospitalSchema = z.object({
   email: emailSchema,
@@ -131,7 +249,17 @@ export const registerHospitalSchema = z.object({
 
 /**
  * Change Password Schema - Backend changePasswordSchema ile tam uyumlu
- * @description Şifre değiştirme formu validasyonu
+ * 
+ * Şifre değiştirme formu validasyonu
+ * Mevcut şifre, yeni şifre ve şifre doğrulama kontrolü içerir
+ * 
+ * Field'lar:
+ * - currentPassword: Mevcut şifre (zorunlu)
+ * - newPassword: Yeni şifre (passwordSchema kuralları)
+ * - confirmPassword: Şifre tekrarı (newPassword ile eşleşmeli)
+ * 
+ * Custom Validation:
+ * - Yeni şifre ve tekrar şifre eşleşmeli
  */
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Mevcut şifre zorunludur'),
@@ -144,7 +272,12 @@ export const changePasswordSchema = z.object({
 
 /**
  * Refresh Token Schema - Backend refreshTokenSchema ile tam uyumlu
- * @description Token yenileme formu validasyonu
+ * 
+ * Token yenileme formu validasyonu
+ * Refresh token kontrolü içerir
+ * 
+ * Field'lar:
+ * - refreshToken: Refresh token string (zorunlu, min 1 karakter)
  */
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token zorunludur')
@@ -152,15 +285,32 @@ export const refreshTokenSchema = z.object({
 
 /**
  * Logout Schema - Backend logoutSchema ile tam uyumlu
- * @description Çıkış formu validasyonu
+ * 
+ * Kullanıcı çıkış formu validasyonu
+ * Boş obje bekler (backend uyumluluk için)
  */
 export const logoutSchema = z.object({});
 
-// ==================== DOCTOR VALIDATION SCHEMAS ====================
+// ============================================================================
+// DOCTOR VALIDATION SCHEMAS - Doktor profil ve form validasyon şemaları
+// ============================================================================
 
 /**
  * Doctor Personal Info Schema - Backend doctorPersonalInfoSchema ile tam uyumlu
- * @description Doktor kişisel bilgileri validasyonu
+ * 
+ * Doktor kişisel bilgileri güncelleme formu validasyonu
+ * İsim, ünvan, branş, doğum tarihi, şehir bilgileri kontrolü içerir
+ * 
+ * Field'lar:
+ * - first_name, last_name: İsim bilgileri
+ * - title: Ünvan (opsiyonel)
+ * - specialty_id: Ana dal/branş (zorunlu)
+ * - subspecialty_id: Yan dal (opsiyonel, null olabilir)
+ * - profile_photo: Profil fotoğrafı (opsiyonel)
+ * - dob: Doğum tarihi (opsiyonel, bugünden önce olmalı)
+ * - birth_place_id: Doğum yeri şehir ID (opsiyonel, null olabilir)
+ * - residence_city_id: İkamet şehir ID (opsiyonel, null olabilir)
+ * - phone: Telefon numarası (opsiyonel, phoneSchema)
  */
 export const doctorPersonalInfoSchema = z.object({
   first_name: nameSchema,
@@ -181,8 +331,19 @@ export const doctorPersonalInfoSchema = z.object({
 
 /**
  * Doctor Education Schema - Backend doctorEducationSchema ile tam uyumlu
- * @description Doktor eğitim formu validasyonu
- * @note Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme olduğu için burada bulunmaz.
+ * 
+ * Doktor eğitim bilgileri formu validasyonu
+ * Eğitim türü, kurum, alan ve mezuniyet yılı kontrolü içerir
+ * 
+ * Field'lar:
+ * - education_type_id: Eğitim türü ID (zorunlu)
+ * - education_institution: Eğitim kurumu adı (min 2, max 255 karakter)
+ * - field: Alan adı (min 2, max 255 karakter)
+ * - graduation_year: Mezuniyet yılı (1950 - bugün+5 yıl arası)
+ * - education_type: Eğitim türü açıklama (sadece "DİĞER" için doldurulur)
+ * 
+ * Not: Sertifika bilgileri ayrı bir tablo (doctor_certificates) ve ayrı bir sekme
+ * olduğu için bu şemada bulunmaz.
  */
 export const doctorEducationSchema = z.object({
   education_type_id: idSchema,
@@ -195,7 +356,23 @@ export const doctorEducationSchema = z.object({
 
 /**
  * Doctor Experience Schema - Backend doctorExperienceSchema ile tam uyumlu
- * @description Doktor deneyim formu validasyonu
+ * 
+ * Doktor iş deneyimi formu validasyonu
+ * Kurum, ünvan, branş, tarih aralığı ve açıklama kontrolü içerir
+ * 
+ * Field'lar:
+ * - organization: Kurum adı (min 2, max 255 karakter)
+ * - role_title: Ünvan (min 2, max 255 karakter)
+ * - specialty_id: Ana dal/branş (zorunlu)
+ * - subspecialty_id: Yan dal (opsiyonel, null veya empty string)
+ * - start_date: Başlangıç tarihi (YYYY-MM-DD formatı, zorunlu)
+ * - end_date: Bitiş tarihi (YYYY-MM-DD formatı, is_current=false ise zorunlu)
+ * - is_current: Devam ediyor mu? (boolean, varsayılan: false)
+ * - description: Açıklama (max 1000 karakter, opsiyonel)
+ * 
+ * Custom Validation:
+ * - is_current=true ise end_date boş olmalı
+ * - is_current=false ve end_date varsa, end_date > start_date olmalı
  */
 export const doctorExperienceSchema = z.object({
   organization: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
@@ -227,7 +404,14 @@ export const doctorExperienceSchema = z.object({
 
 /**
  * Doctor Certificate Schema - Backend doctorCertificateSchema ile tam uyumlu
- * @description Doktor sertifika formu validasyonu (elle yazılan tür + yıl)
+ * 
+ * Doktor sertifika bilgileri formu validasyonu
+ * Elle girilen sertifika türü, kurum ve yıl kontrolü içerir
+ * 
+ * Field'lar:
+ * - certificate_name: Sertifika türü adı (min 2, max 255 karakter)
+ * - institution: Sertifika veren kurum adı (min 2, max 255 karakter)
+ * - certificate_year: Sertifika yılı (1950 - bugün arası tam sayı)
  */
 export const doctorCertificateSchema = z.object({
   certificate_name: z.string()
@@ -244,7 +428,13 @@ export const doctorCertificateSchema = z.object({
 
 /**
  * Doctor Language Schema - Backend doctorLanguageSchema ile tam uyumlu
- * @description Doktor dil formu validasyonu
+ * 
+ * Doktor dil bilgileri formu validasyonu
+ * Dil ve seviye kontrolü içerir
+ * 
+ * Field'lar:
+ * - language_id: Dil ID (pozitif tam sayı, zorunlu)
+ * - level_id: Dil seviyesi ID (pozitif tam sayı, zorunlu)
  */
 export const doctorLanguageSchema = z.object({
   language_id: idSchema,
@@ -253,18 +443,38 @@ export const doctorLanguageSchema = z.object({
 
 /**
  * Profile Update Notification Schema - Backend profileUpdateNotificationSchema ile tam uyumlu
- * @description Profil güncelleme bildirimi validasyonu
+ * 
+ * Profil güncelleme bildirimi validasyonu
+ * Güncelleme tipi ve açıklama kontrolü içerir
+ * 
+ * Field'lar:
+ * - updateType: Güncelleme tipi (personal_info, education, experience, certificate, language)
+ * - updateDescription: Güncelleme açıklaması (min 5, max 200 karakter)
  */
 export const profileUpdateNotificationSchema = z.object({
   updateType: z.enum(['personal_info', 'education', 'experience', 'certificate', 'language']),
   updateDescription: z.string().min(5, 'Güncelleme açıklaması en az 5 karakter olmalıdır').max(200, 'Güncelleme açıklaması en fazla 200 karakter olabilir')
 });
 
-// ==================== HOSPITAL VALIDATION SCHEMAS ====================
+// ============================================================================
+// HOSPITAL VALIDATION SCHEMAS - Hastane profil ve form validasyon şemaları
+// ============================================================================
 
 /**
  * Hospital Profile Schema - Backend hospitalProfileSchema ile tam uyumlu
- * @description Hastane profil güncelleme formu validasyonu
+ * 
+ * Hastane profil güncelleme formu validasyonu
+ * Kurum bilgileri, iletişim ve logo kontrolü içerir
+ * 
+ * Field'lar:
+ * - institution_name: Kurum adı (min 2, max 255 karakter)
+ * - city_id: Şehir seçimi (pozitif tam sayı, zorunlu)
+ * - address: Adres (max 500 karakter, opsiyonel)
+ * - contact_person: İletişim kişisi (min 2, max 100 karakter, opsiyonel)
+ * - phone: Telefon numarası (min 3, max 20 karakter)
+ * - website: Website URL (geçerli URL formatı, opsiyonel)
+ * - about: Hakkında metni (max 2000 karakter, opsiyonel)
+ * - logo: Logo (base64 veya URL formatı)
  */
 export const hospitalProfileUpdateSchema = z.object({
   institution_name: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
@@ -282,7 +492,13 @@ export const hospitalProfileUpdateSchema = z.object({
 
 /**
  * Hospital Department Schema - Backend departmentSchema ile tam uyumlu
- * @description Hastane departman formu validasyonu
+ * 
+ * Hastane departman formu validasyonu
+ * Departman adı ve açıklama kontrolü içerir
+ * 
+ * Field'lar:
+ * - department_name: Departman adı (min 2, max 255 karakter)
+ * - description: Departman açıklaması (max 500 karakter, opsiyonel)
  */
 export const hospitalDepartmentSchema = z.object({
   department_name: z.string().min(2, 'Departman adı en az 2 karakter olmalıdır').max(255, 'Departman adı en fazla 255 karakter olabilir'),
@@ -291,18 +507,38 @@ export const hospitalDepartmentSchema = z.object({
 
 /**
  * Hospital Contact Schema - Backend contactSchema ile tam uyumlu
- * @description Hastane iletişim formu validasyonu
+ * 
+ * Hastane iletişim bilgileri formu validasyonu
+ * Telefon ve e-posta kontrolü içerir
+ * 
+ * Field'lar:
+ * - phone: Telefon numarası (regex formatı, 10-20 karakter, opsiyonel)
+ * - email: E-posta adresi (geçerli e-posta formatı, opsiyonel)
  */
 export const hospitalContactSchema = z.object({
   phone: z.string().regex(/^[\+]?[0-9\s\-\(\)]{10,20}$/, 'Geçerli bir telefon numarası giriniz').optional(),
   email: z.string().email('Geçerli bir email adresi giriniz').optional()
 });
 
-// ==================== JOB VALIDATION SCHEMAS ====================
+// ============================================================================
+// JOB VALIDATION SCHEMAS - İş ilanı ve başvuru validasyon şemaları
+// ============================================================================
 
 /**
  * Job Schema - Backend jobSchema ile tam uyumlu
- * @description İş ilanı formu validasyonu
+ * 
+ * İş ilanı oluşturma/güncelleme formu validasyonu
+ * İlan bilgileri, branş, şehir, istihdam türü ve açıklama kontrolü içerir
+ * 
+ * Field'lar:
+ * - title: İş ilanı başlığı (min 5, max 255 karakter)
+ * - specialty_id: Ana dal/branş ID (pozitif tam sayı, zorunlu)
+ * - subspecialty_id: Yan dal ID (opsiyonel, null veya empty string)
+ * - city_id: Şehir ID (pozitif tam sayı, zorunlu)
+ * - employment_type: İstihdam türü ('Tam Zamanlı', 'Yarı Zamanlı', 'Nöbet Usulü')
+ * - min_experience_years: Minimum deneyim yılı (0-50 arası, opsiyonel)
+ * - description: İş tanımı (min 10, max 5000 karakter)
+ * - status_id: İlan durumu (1=Aktif, 2=Pasif, sadece güncellemede kullanılır)
  */
 export const jobSchema = z.object({
   title: z.string().min(5, 'İş ilanı başlığı en az 5 karakter olmalıdır').max(255, 'İş ilanı başlığı en fazla 255 karakter olabilir'),
@@ -323,18 +559,35 @@ export const jobSchema = z.object({
 
 /**
  * Application Status Schema - Backend applicationStatusSchema ile tam uyumlu
- * @description Başvuru durumu güncelleme formu validasyonu
+ * 
+ * Başvuru durumu güncelleme formu validasyonu
+ * Durum ID ve notlar kontrolü içerir
+ * 
+ * Field'lar:
+ * - status: Başvuru durum ID (pozitif tam sayı)
+ * - notes: Notlar/açıklama (max 1000 karakter, opsiyonel)
  */
 export const applicationStatusUpdateSchema = z.object({
   status: idSchema,
   notes: z.string().max(1000, 'Notlar en fazla 1000 karakter olabilir').optional()
 });
 
-// ==================== CONTACT VALIDATION SCHEMAS ====================
+// ============================================================================
+// CONTACT VALIDATION SCHEMAS - İletişim formu validasyon şemaları
+// ============================================================================
 
 /**
  * Contact Schema - Backend contactSchema ile tam uyumlu
- * @description İletişim formu validasyonu
+ * 
+ * İletişim formu validasyonu (public sayfalar için)
+ * İletişim bilgileri, konu ve mesaj kontrolü içerir
+ * 
+ * Field'lar:
+ * - name: Ad Soyad (min 2, max 100 karakter)
+ * - email: E-posta adresi (emailSchema)
+ * - phone: Telefon numarası (regex formatı, 10-20 karakter, opsiyonel)
+ * - subject: Konu (min 5, max 200 karakter, opsiyonel)
+ * - message: Mesaj içeriği (min 10, max 2000 karakter)
  */
 export const contactSchema = z.object({
   name: z.string().min(2, 'Ad Soyad en az 2 karakter olmalıdır').max(100, 'Ad Soyad en fazla 100 karakter olabilir'),
@@ -346,15 +599,33 @@ export const contactSchema = z.object({
 
 /**
  * Contact Message Schema - contactSchema ile aynı
- * @description İletişim mesajı formu validasyonu (legacy uyumluluk için)
+ * 
+ * İletişim mesajı formu validasyonu
+ * Legacy uyumluluk için contactSchema'nın alias'ı
  */
 export const contactMessageSchema = contactSchema;
 
-// ==================== UTILITY FUNCTIONS ====================
+// ============================================================================
+// UTILITY FUNCTIONS - Yardımcı fonksiyonlar
+// ============================================================================
 
 /**
- * Transform lookup data - Backend transformLookupData ile tam uyumlu
- * @description Lookup verilerini frontend formatına dönüştürür
+ * Transform Lookup Data - Backend transformLookupData ile tam uyumlu
+ * 
+ * Lookup verilerini frontend formatına dönüştürür
+ * Backend'den gelen lookup verilerini React component'lerinde kullanılabilir
+ * formata (label, value) dönüştürür
+ * 
+ * Parametreler:
+ * @param {Array|Object} data - Backend'den gelen lookup verisi
+ * 
+ * Dönüş:
+ * @returns {Array|Object} Frontend formatına dönüştürülmüş lookup verisi
+ * 
+ * Format Dönüşümü:
+ * - Her öğeye `label` (name ile aynı) ve `value` (id) eklenir
+ * - Slug oluşturulur (yoksa name'den türetilir)
+ * - Array veya Object formatlarını destekler
  */
 export const transformLookupData = (data) => {
   if (!data) return [];
@@ -405,8 +676,19 @@ export const transformLookupData = (data) => {
 };
 
 /**
- * Format validation errors - Backend formatValidationErrors ile tam uyumlu
- * @description Zod hatalarını kullanıcı dostu formata dönüştürür
+ * Format Validation Errors - Backend formatValidationErrors ile tam uyumlu
+ * 
+ * Zod validation hatalarını kullanıcı dostu formata dönüştürür
+ * Field path'leri ile hata mesajlarını eşleştirir
+ * 
+ * Parametreler:
+ * @param {ZodError} error - Zod validation hatası objesi
+ * 
+ * Dönüş:
+ * @returns {Object} Field path'leri ile hata mesajlarının eşleştirildiği obje
+ * 
+ * Örnek:
+ * { email: 'Geçerli bir e-posta adresi giriniz', password: 'Şifre en az 6 karakter olmalıdır' }
  */
 export const formatValidationErrors = (error) => {
   if (!error || !error.errors) return {};
@@ -421,12 +703,23 @@ export const formatValidationErrors = (error) => {
   return formatted;
 };
 
-// ==================== VALIDATION FUNCTIONS ====================
+// ============================================================================
+// VALIDATION FUNCTIONS - Validasyon wrapper fonksiyonları
+// ============================================================================
 
 /**
- * Login validation function - Backend ile uyumlu
- * @param {Object} data - Login data
- * @returns {Object} Validation result
+ * Login Validation Function - Backend ile uyumlu
+ * 
+ * Login form verilerini validate eder ve sonucu döndürür
+ * 
+ * Parametreler:
+ * @param {Object} data - Login form verileri (email, password, role?)
+ * 
+ * Dönüş:
+ * @returns {Object} Validation sonucu
+ * - isValid: {boolean} Validasyon geçti mi?
+ * - data: {Object|null} Valid veri (isValid=true ise)
+ * - errors: {Array<string>} Hata mesajları (isValid=false ise)
  */
 export const validateLogin = (data) => {
   try {
@@ -442,9 +735,15 @@ export const validateLogin = (data) => {
 };
 
 /**
- * Doctor registration validation function - Backend ile uyumlu
- * @param {Object} data - Doctor registration data
- * @returns {Object} Validation result
+ * Doctor Registration Validation Function - Backend ile uyumlu
+ * 
+ * Doktor kayıt form verilerini validate eder
+ * 
+ * Parametreler:
+ * @param {Object} data - Doktor kayıt form verileri
+ * 
+ * Dönüş:
+ * @returns {Object} Validation sonucu (isValid, data, errors)
  */
 export const validateDoctorRegister = (data) => {
   try {
@@ -460,9 +759,15 @@ export const validateDoctorRegister = (data) => {
 };
 
 /**
- * Hospital registration validation function - Backend ile uyumlu
- * @param {Object} data - Hospital registration data
- * @returns {Object} Validation result
+ * Hospital Registration Validation Function - Backend ile uyumlu
+ * 
+ * Hastane kayıt form verilerini validate eder
+ * 
+ * Parametreler:
+ * @param {Object} data - Hastane kayıt form verileri
+ * 
+ * Dönüş:
+ * @returns {Object} Validation sonucu (isValid, data, errors)
  */
 export const validateHospitalRegister = (data) => {
   try {
@@ -478,9 +783,15 @@ export const validateHospitalRegister = (data) => {
 };
 
 /**
- * Refresh token validation function - Backend ile uyumlu
- * @param {Object} data - Refresh token data
- * @returns {Object} Validation result
+ * Refresh Token Validation Function - Backend ile uyumlu
+ * 
+ * Refresh token verilerini validate eder
+ * 
+ * Parametreler:
+ * @param {Object} data - Refresh token verileri (refreshToken)
+ * 
+ * Dönüş:
+ * @returns {Object} Validation sonucu (isValid, data, errors)
  */
 export const validateRefreshToken = (data) => {
   try {
@@ -496,9 +807,15 @@ export const validateRefreshToken = (data) => {
 };
 
 /**
- * Logout validation function - Backend ile uyumlu
- * @param {Object} data - Logout data
- * @returns {Object} Validation result
+ * Logout Validation Function - Backend ile uyumlu
+ * 
+ * Logout verilerini validate eder (backend uyumluluk için)
+ * 
+ * Parametreler:
+ * @param {Object} data - Logout verileri (genellikle boş obje)
+ * 
+ * Dönüş:
+ * @returns {Object} Validation sonucu (isValid, data, errors)
  */
 export const validateLogout = (data) => {
   try {
@@ -513,7 +830,9 @@ export const validateLogout = (data) => {
   }
 };
 
-// ==================== EXPORT ALL SCHEMAS ====================
+// ============================================================================
+// DEFAULT EXPORT - Tüm şemaları ve fonksiyonları export eder
+// ============================================================================
 
 export default {
   // Auth schemas

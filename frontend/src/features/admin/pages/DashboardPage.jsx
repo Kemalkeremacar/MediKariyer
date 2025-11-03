@@ -1,3 +1,8 @@
+/**
+ * @file DashboardPage.jsx
+ * @description Admin Dashboard - Admin paneli ana sayfası ve istatistikler
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 

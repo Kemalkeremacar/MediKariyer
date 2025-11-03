@@ -1,20 +1,74 @@
 /**
- * Ana Route Dosyası - MediKariyer Uygulaması
+ * @file index.jsx
+ * @description Routes Configuration - Uygulama route tanımları ve yönetimi
  * 
- * Bu dosya tüm uygulama rotalarını tek bir yerde toplar ve yönetir.
- * Backend authMiddleware/roleGuard yapısı ile tam uyumlu çalışır.
+ * Bu dosya, uygulama genelinde kullanılan tüm route'ları tek bir yerde toplar
+ * ve yönetir. React Router ile route yapısını tanımlar ve güvenlik middleware'leri
+ * ile korumalı route'lar oluşturur.
  * 
- * Güvenlik Katmanları:
- * - AuthGuard: JWT token doğrulaması
- * - RoleGuard: Rol bazlı erişim kontrolü (admin, doctor, hospital)
- * - ApprovalGuard: Admin onay durumu kontrolü
+ * Ana Özellikler:
+ * - Merkezi route yönetimi: Tüm route'lar tek dosyada tanımlanır
+ * - Güvenlik katmanları: AuthGuard, RoleGuard, ApprovalGuard ile korumalı route'lar
+ * - Layout yönetimi: MainLayout ile tüm sayfalar için ortak layout
+ * - Error handling: ErrorBoundary ile hata yakalama
+ * - Lazy loading: Sayfa component'leri lazy load edilebilir (gelecekte)
+ * - Route kategorileri: Public, Auth, Admin, Doctor, Hospital, Shared route'ları
+ * 
+ * Güvenlik Katmanları (Sıralama):
+ * 1. ErrorBoundary: Component hatalarını yakalar (en dışta)
+ * 2. AuthGuard: Kimlik doğrulama ve hesap durumu kontrolü
+ * 3. RoleGuard: Rol bazlı erişim kontrolü
+ * 4. ApprovalGuard: Admin onay durumu kontrolü (en içte)
  * 
  * Route Yapısı:
- * - Public Routes: Herkesin erişebileceği sayfalar
- * - Auth Routes: Giriş/kayıt sayfaları (misafir kullanıcılar için)
- * - Admin Routes: Admin paneli sayfaları
- * - Doctor Routes: Doktor paneli sayfaları
- * - Hospital Routes: Hastane paneli sayfaları
+ * - Public Routes: Herkese açık sayfalar (Home, About, Contact)
+ * - Auth Routes: Kimlik doğrulama sayfaları (Login, Register, Pending Approval)
+ * - Admin Routes: Admin paneli sayfaları (Dashboard, Users, Jobs, Applications vb.)
+ * - Doctor Routes: Doktor paneli sayfaları (Dashboard, Profile, Jobs, Applications vb.)
+ * - Hospital Routes: Hastane paneli sayfaları (Dashboard, Profile, Jobs, Applications vb.)
+ * - Shared Routes: Tüm kullanıcılar için ortak sayfalar (Notifications)
+ * - Error Routes: Hata sayfaları (404 Not Found)
+ * 
+ * Backend Uyumluluk:
+ * - Backend authMiddleware.js ile aynı mantık (AuthGuard)
+ * - Backend roleGuard.js ile aynı mantık (RoleGuard)
+ * - Backend authMiddleware.js onay kontrolü ile aynı (ApprovalGuard)
+ * 
+ * Guard Kullanım Mantığı:
+ * - Public routes: Guard yok, herkes erişebilir
+ * - Auth routes: GuestGuard (sadece misafir kullanıcılar)
+ * - Protected routes: AuthGuard + RoleGuard + ApprovalGuard
+ * - Admin routes: AuthGuard + RoleGuard (admin için ApprovalGuard yok)
+ * 
+ * Layout Yapısı:
+ * - Tüm route'lar MainLayout içinde render edilir
+ * - MainLayout Header, Footer ve ana içerik alanını sağlar
+ * - Her sayfa kendi içeriğini MainLayout içinde gösterir
+ * 
+ * Kullanım:
+ * ```jsx
+ * import AppRoutes from '@/routes';
+ * 
+ * function App() {
+ *   return (
+ *     <BrowserRouter>
+ *       <AppRoutes />
+ *     </BrowserRouter>
+ *   );
+ * }
+ * ```
+ * 
+ * Route Parametreleri:
+ * - :jobId: İş ilanı ID'si
+ * - :applicationId: Başvuru ID'si
+ * - :id: Genel ID parametresi (user, job, application için)
+ * 
+ * Not: Route tanımları @config/routes.js dosyasındaki ROUTE_CONFIG ile
+ * eşleşmelidir. Route değişikliklerinde her iki dosya da güncellenmelidir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
 import React from 'react';
@@ -22,40 +76,73 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 
 // ============================================================================
-// LAYOUT VE MİDDLEWARE COMPONENTS
+// IMPORTS - Component ve middleware import'ları
 // ============================================================================
 
-// Ana layout bileşeni
+/**
+ * ============================================================================
+ * LAYOUT VE MİDDLEWARE COMPONENTS - Layout ve güvenlik bileşenleri
+ * ============================================================================
+ */
+
+/**
+ * Ana layout bileşeni
+ * Tüm sayfalar bu layout içinde render edilir
+ */
 import MainLayout from '@/components/layout/MainLayout';
+
+/**
+ * Error Boundary bileşeni
+ * Component hatalarını yakalar ve fallback UI gösterir
+ */
 import ErrorBoundary from '@/middleware/ErrorBoundary';
 
-// Güvenlik middleware bileşenleri
+/**
+ * Güvenlik middleware bileşenleri
+ * - AuthGuard: Kimlik doğrulama ve hesap durumu kontrolü
+ * - GuestGuard: Misafir kullanıcılar için guard (login/register sayfaları)
+ * - RoleGuard: Rol bazlı erişim kontrolü
+ * - ApprovalGuard: Admin onay durumu kontrolü
+ */
 import AuthGuard, { GuestGuard } from '@/middleware/AuthGuard';
 import RoleGuard from '@/middleware/RoleGuard';
 import ApprovalGuard from '@/middleware/ApprovalGuard';
 
-// ============================================================================
-// PUBLIC PAGES - Herkese açık sayfalar
-// ============================================================================
-
+/**
+ * ============================================================================
+ * PUBLIC PAGES - Herkese açık sayfalar
+ * ============================================================================
+ * 
+ * Bu sayfalar herhangi bir kimlik doğrulama veya yetkilendirme gerektirmez
+ * Tüm kullanıcılar (authenticate olanlar ve misafirler) erişebilir
+ */
 import HomePage from '../features/public/pages/HomePage';
 import AboutPage from '../features/public/pages/AboutPage';
 import ContactPage from '../features/public/pages/ContactPage';
 import NotFound from '@/features/public/pages/NotFound';
 
 
-// ============================================================================
-// AUTH PAGES - Kimlik doğrulama sayfaları (Lazy loaded)
-// ============================================================================
-
+/**
+ * ============================================================================
+ * AUTH PAGES - Kimlik doğrulama sayfaları
+ * ============================================================================
+ * 
+ * Bu sayfalar kimlik doğrulama işlemleri için kullanılır
+ * GuestGuard ile korunur (sadece misafir kullanıcılar erişebilir)
+ * Authenticate kullanıcılar dashboard'a yönlendirilir
+ */
 import LoginPage from '@/features/auth/pages/LoginPage';
 import RegisterPage from '@/features/auth/pages/RegisterPage';
 import PendingApprovalPage from '@/features/auth/pages/PendingApprovalPage';
 
-// ============================================================================
-// ADMIN PAGES - Admin paneli sayfaları (Lazy loaded)
-// ============================================================================
-
+/**
+ * ============================================================================
+ * ADMIN PAGES - Admin paneli sayfaları
+ * ============================================================================
+ * 
+ * Bu sayfalar admin rolüne sahip kullanıcılar için tanımlanmıştır
+ * AuthGuard + RoleGuard ile korunur (ApprovalGuard yok, admin için gerekmez)
+ */
 import AdminDashboard from '@/features/admin/pages/DashboardPage';
 import AdminUsersPage from '@/features/admin/pages/UsersPage';
 import AdminUserDetailPage from '@/features/admin/pages/UserDetailPage';
@@ -68,10 +155,15 @@ import AdminContactMessagesPage from '@/features/admin/pages/ContactMessagesPage
 import PhotoApprovalsPage from '@/features/admin/pages/PhotoApprovalsPage';
 import AdminLogsPage from '@/features/admin/pages/LogsPage';
 
-// ============================================================================
-// DOCTOR PAGES - Doktor paneli sayfaları (Lazy loaded)
-// ============================================================================
-
+/**
+ * ============================================================================
+ * DOCTOR PAGES - Doktor paneli sayfaları
+ * ============================================================================
+ * 
+ * Bu sayfalar doctor rolüne sahip kullanıcılar için tanımlanmıştır
+ * AuthGuard + RoleGuard + ApprovalGuard ile korunur
+ * Kullanıcının authenticate, doctor rolünde ve onaylı olması gerekir
+ */
 import DoctorDashboard from '@/features/doctor/pages/DashboardPage';
 import DoctorProfile from '@/features/doctor/pages/ProfilePage';
 import DoctorJobsPage from '@/features/doctor/pages/JobsPage';
@@ -80,10 +172,15 @@ import DoctorApplicationsPage from '@/features/doctor/pages/ApplicationsPage';
 import DoctorApplicationDetailPage from '@/features/doctor/pages/ApplicationDetailPage';
 import PhotoManagementPage from '@/features/doctor/pages/PhotoManagementPage';
 
-// ============================================================================
-// HOSPITAL PAGES - Hastane paneli sayfaları
-// ============================================================================
-
+/**
+ * ============================================================================
+ * HOSPITAL PAGES - Hastane paneli sayfaları
+ * ============================================================================
+ * 
+ * Bu sayfalar hospital rolüne sahip kullanıcılar için tanımlanmıştır
+ * AuthGuard + RoleGuard + ApprovalGuard ile korunur
+ * Kullanıcının authenticate, hospital rolünde ve onaylı olması gerekir
+ */
 import HospitalDashboard from '@/features/hospital/pages/DashboardPage';
 import HospitalProfile from '@/features/hospital/pages/ProfilePage';
 import HospitalJobs from '@/features/hospital/pages/JobsPage';
@@ -95,53 +192,90 @@ import HospitalDoctors from '@/features/hospital/pages/DoctorsPage';
 import HospitalDepartments from '@/features/hospital/pages/DepartmentsPage';
 import HospitalContacts from '@/features/hospital/pages/ContactsPage';
 
-// ============================================================================
-// SHARED PAGES - Ortak kullanılan sayfalar
-// ============================================================================
-
+/**
+ * ============================================================================
+ * SHARED PAGES - Ortak kullanılan sayfalar
+ * ============================================================================
+ * 
+ * Bu sayfalar tüm authenticate ve onaylı kullanıcılar için ortaktır
+ * AuthGuard + ApprovalGuard ile korunur (RoleGuard yok, tüm roller erişebilir)
+ */
 import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
 
-
 // ============================================================================
-// HELPER FUNCTIONS - Yardımcı fonksiyonlar
-// ============================================================================
-
-// Not: SmartHomeRedirect ve RoleBasedRedirect fonksiyonları kaldırıldı
-// Çünkü hiçbir yerde kullanılmıyordu ve gereksizdi.
-
-// ============================================================================
-// ANA ROUTE YAPISI
+// ANA ROUTE YAPISI - Uygulama route tanımları
 // ============================================================================
 
 /**
- * Uygulama Route Yapısı
- * Tüm rotaları ve güvenlik katmanlarını tanımlar
+ * ============================================================================
+ * APP ROUTES COMPONENT - Ana route yapısı
+ * ============================================================================
+ * 
+ * Uygulamanın tüm route'larını tanımlayan ana component
+ * React Router'ın Routes ve Route component'lerini kullanarak
+ * route yapısını oluşturur
+ * 
+ * Yapı:
+ * - En dışta ErrorBoundary (tüm route'lar için hata yakalama)
+ * - Routes içinde MainLayout (tüm sayfalar için ortak layout)
+ * - Route kategorilerine göre organize edilmiş route'lar
+ * - Her protected route için güvenlik middleware'leri
+ * 
+ * Dönüş:
+ * @returns {JSX.Element} Route yapısını içeren React component
+ * 
+ * Not: Route'lar React Router'ın Route component'i ile tanımlanır.
+ * Nested route'lar (children) desteklenir.
  */
 const AppRoutes = () => {
   return (
     <ErrorBoundary>
       <Routes>
-        {/* Ana Layout - Tüm sayfalar bu layout içinde render edilir */}
+        {/* 
+          ======================================================================
+          ANA LAYOUT - Tüm sayfalar bu layout içinde render edilir
+          ======================================================================
+          
+          MainLayout tüm route'lar için ortak layout sağlar:
+          - Header (üst navigasyon)
+          - Footer (alt bilgi)
+          - Ana içerik alanı (children)
+        */}
         <Route path="/" element={<MainLayout />}>
           
-          {/* ================================================================ */}
-          {/* PUBLIC ROUTES - Herkese açık sayfalar */}
-          {/* ================================================================ */}
+          {/* 
+            ====================================================================
+            PUBLIC ROUTES - Herkese açık sayfalar
+            ====================================================================
+            
+            Bu route'lar herhangi bir kimlik doğrulama gerektirmez
+            Tüm kullanıcılar (authenticate olanlar ve misafirler) erişebilir
+            Guard kullanılmaz
+          */}
           
-          {/* Ana sayfa */}
+          {/* Ana sayfa - Index route (/ path'inde gösterilir) */}
           <Route index element={<HomePage />} />
           
-          {/* Hakkımızda */}
+          {/* Hakkımızda sayfası - /about */}
           <Route path="about" element={<AboutPage />} />
           
-          {/* İletişim */}
+          {/* İletişim sayfası - /contact */}
           <Route path="contact" element={<ContactPage />} />
 
-          {/* ================================================================ */}
-          {/* AUTH ROUTES - Kimlik doğrulama sayfaları (misafir kullanıcılar için) */}
-          {/* ================================================================ */}
+          {/* 
+            ====================================================================
+            AUTH ROUTES - Kimlik doğrulama sayfaları (misafir kullanıcılar için)
+            ====================================================================
+            
+            Bu route'lar sadece misafir kullanıcılar (authenticate olmayanlar) için
+            GuestGuard ile korunur. Authenticate kullanıcılar dashboard'a yönlendirilir
+          */}
           
-          {/* Giriş */}
+          {/* 
+            Giriş sayfası - /login
+            GuestGuard: Sadece misafir kullanıcılar erişebilir
+            Authenticate kullanıcılar dashboard'a yönlendirilir
+          */}
           <Route
             path="login"
             element={
@@ -151,7 +285,11 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Kayıt */}
+          {/* 
+            Kayıt sayfası - /register
+            GuestGuard: Sadece misafir kullanıcılar erişebilir
+            Authenticate kullanıcılar dashboard'a yönlendirilir
+          */}
           <Route
             path="register"
             element={
@@ -161,8 +299,11 @@ const AppRoutes = () => {
             }
           />
           
-          
-          {/* Onay bekleme */}
+          {/* 
+            Onay bekleme sayfası - /pending-approval
+            AuthGuard: Authenticate kullanıcılar için
+            Onay bekleyen kullanıcılar için bilgilendirme sayfası
+          */}
           <Route
             path="pending-approval"
             element={
@@ -172,11 +313,24 @@ const AppRoutes = () => {
             }
           />
 
-          {/* ================================================================ */}
-          {/* DOCTOR ROUTES - Doktor paneli sayfaları */}
-          {/* ================================================================ */}
+          {/* 
+            ====================================================================
+            DOCTOR ROUTES - Doktor paneli sayfaları
+            ====================================================================
+            
+            Bu route'lar doctor rolüne sahip ve onaylı kullanıcılar için tanımlanmıştır
+            Guard sırası: ErrorBoundary → AuthGuard → RoleGuard → ApprovalGuard
+            
+            Her route için:
+            - AuthGuard: Kimlik doğrulama ve hesap durumu kontrolü
+            - RoleGuard: Doctor rolü kontrolü
+            - ApprovalGuard: Admin onay durumu kontrolü
+          */}
           
-          {/* Doktor Dashboard */}
+          {/* 
+            Doktor Dashboard - /doctor
+            Ana sayfa: Son başvurular, önerilen iş ilanları
+          */}
           <Route
             path="doctor"
             element={
@@ -192,7 +346,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Doktor Profil */}
+          {/* 
+            Doktor Profil Sayfası - /doctor/profile
+            Kişisel bilgiler, eğitim, deneyim, sertifika, dil yönetimi
+          */}
           <Route
             path="doctor/profile"
             element={
@@ -208,7 +365,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Doktor İş İlanları */}
+          {/* 
+            Doktor İş İlanları Sayfası - /doctor/jobs
+            Aktif iş ilanlarını listeler, filtreleme ve arama yapılabilir
+          */}
           <Route
             path="doctor/jobs"
             element={
@@ -224,7 +384,11 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Doktor İş İlanı Detayı */}
+          {/* 
+            Doktor İş İlanı Detay Sayfası - /doctor/jobs/:jobId
+            İş ilanının detaylı bilgilerini gösterir, başvuru yapılabilir
+            Parametre: jobId (route parametresi)
+          */}
           <Route
             path="doctor/jobs/:jobId"
             element={
@@ -240,7 +404,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Doktor Başvurular */}
+          {/* 
+            Doktor Başvurular Sayfası - /doctor/applications
+            Doktorun yaptığı tüm başvuruları listeler, filtreleme yapılabilir
+          */}
           <Route
             path="doctor/applications"
             element={
@@ -256,7 +423,11 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Doktor Başvuru Detay */}
+          {/* 
+            Doktor Başvuru Detay Sayfası - /doctor/applications/:applicationId
+            Başvurunun detaylı bilgilerini gösterir, geri çekme yapılabilir
+            Parametre: applicationId (route parametresi)
+          */}
           <Route
             path="doctor/applications/:applicationId"
             element={
@@ -272,7 +443,10 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Doktor Fotoğraf Yönetimi */}
+          {/* 
+            Doktor Fotoğraf Yönetimi Sayfası - /doctor/photo-management
+            Profil fotoğrafı değiştirme talepleri ve onay bekleyen fotoğraflar
+          */}
           <Route
             path="doctor/photo-management"
             element={
@@ -288,11 +462,24 @@ const AppRoutes = () => {
             }
           />
 
-          {/* ================================================================ */}
-          {/* HOSPITAL ROUTES - Hastane paneli sayfaları */}
-          {/* ================================================================ */}
+          {/* 
+            ====================================================================
+            HOSPITAL ROUTES - Hastane paneli sayfaları
+            ====================================================================
+            
+            Bu route'lar hospital rolüne sahip ve onaylı kullanıcılar için tanımlanmıştır
+            Guard sırası: ErrorBoundary → AuthGuard → RoleGuard → ApprovalGuard
+            
+            Her route için:
+            - AuthGuard: Kimlik doğrulama ve hesap durumu kontrolü
+            - RoleGuard: Hospital rolü kontrolü
+            - ApprovalGuard: Admin onay durumu kontrolü
+          */}
           
-          {/* Hastane Dashboard */}
+          {/* 
+            Hastane Dashboard - /hospital
+            Ana sayfa: İstatistikler, son başvurular, aktif iş ilanları
+          */}
           <Route
             path="hospital"
             element={
@@ -308,7 +495,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Hastane Profil */}
+          {/* 
+            Hastane Profil Sayfası - /hospital/profile
+            Kurum bilgileri, iletişim bilgileri yönetimi
+          */}
           <Route
             path="hospital/profile"
             element={
@@ -324,7 +514,10 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane İş İlanları */}
+          {/* 
+            Hastane İş İlanları Sayfası - /hospital/jobs
+            Hastanenin oluşturduğu tüm iş ilanlarını listeler
+          */}
           <Route
             path="hospital/jobs"
             element={
@@ -340,7 +533,10 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane Yeni İş İlanı */}
+          {/* 
+            Hastane Yeni İş İlanı Sayfası - /hospital/jobs/new
+            Yeni iş ilanı oluşturma formu
+          */}
           <Route
             path="hospital/jobs/new"
             element={
@@ -356,7 +552,11 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane İş İlanı Detayı */}
+          {/* 
+            Hastane İş İlanı Detay Sayfası - /hospital/jobs/:jobId
+            İş ilanının detaylı bilgilerini gösterir, düzenleme yapılabilir
+            Parametre: jobId (route parametresi)
+          */}
           <Route
             path="hospital/jobs/:jobId"
             element={
@@ -372,7 +572,11 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane İş İlanı Düzenleme */}
+          {/* 
+            Hastane İş İlanı Düzenleme Sayfası - /hospital/jobs/:jobId/edit
+            Mevcut iş ilanını düzenleme formu
+            Parametre: jobId (route parametresi)
+          */}
           <Route
             path="hospital/jobs/:jobId/edit"
             element={
@@ -388,7 +592,10 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane Başvurular */}
+          {/* 
+            Hastane Başvurular Sayfası - /hospital/applications
+            Hastanenin iş ilanlarına yapılan başvuruları listeler
+          */}
           <Route
             path="hospital/applications"
             element={
@@ -404,7 +611,10 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane Doktor Profilleri */}
+          {/* 
+            Hastane Doktor Profilleri Sayfası - /hospital/doctors
+            Sistemdeki doktor profillerini görüntüleme ve arama
+          */}
           <Route
             path="hospital/doctors"
             element={
@@ -420,7 +630,10 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane Departmanlar */}
+          {/* 
+            Hastane Departmanlar Sayfası - /hospital/departments
+            Hastane departmanlarını yönetme (CRUD işlemleri)
+          */}
           <Route
             path="hospital/departments"
             element={
@@ -436,7 +649,10 @@ const AppRoutes = () => {
             }
           />
 
-          {/* Hastane İletişim Bilgileri */}
+          {/* 
+            Hastane İletişim Bilgileri Sayfası - /hospital/contacts
+            Hastane iletişim bilgilerini yönetme (CRUD işlemleri)
+          */}
           <Route
             path="hospital/contacts"
             element={
@@ -452,11 +668,21 @@ const AppRoutes = () => {
             }
           />
 
-          {/* ================================================================ */}
-          {/* SHARED ROUTES - Ortak kullanılan sayfalar */}
-          {/* ================================================================ */}
+          {/* 
+            ====================================================================
+            SHARED ROUTES - Ortak kullanılan sayfalar
+            ====================================================================
+            
+            Bu route'lar tüm authenticate ve onaylı kullanıcılar için ortaktır
+            Guard sırası: ErrorBoundary → AuthGuard → ApprovalGuard
+            RoleGuard yok: Tüm roller (admin, doctor, hospital) erişebilir
+          */}
           
-          {/* Bildirimler (tüm kullanıcılar için) */}
+          {/* 
+            Bildirimler Sayfası - /notifications
+            Tüm kullanıcılar için bildirim görüntüleme ve yönetimi
+            Guard: AuthGuard + ApprovalGuard (RoleGuard yok, tüm roller erişebilir)
+          */}
           <Route
             path="notifications"
             element={
@@ -470,11 +696,23 @@ const AppRoutes = () => {
             }
           />
 
-          {/* ================================================================ */}
-          {/* ADMIN ROUTES - Admin paneli sayfaları */}
-          {/* ================================================================ */}
+          {/* 
+            ====================================================================
+            ADMIN ROUTES - Admin paneli sayfaları
+            ====================================================================
+            
+            Bu route'lar sadece admin rolüne sahip kullanıcılar için tanımlanmıştır
+            Guard sırası: ErrorBoundary → AuthGuard → RoleGuard
+            ApprovalGuard yok: Admin için onay kontrolü yapılmaz (admin otomatik onaylı)
+            
+            Not: Admin route'larında ApprovalGuard kullanılmaz çünkü admin rolü
+            için onay kontrolü gereksizdir (backend ile aynı mantık).
+          */}
           
-          {/* Admin Dashboard */}
+          {/* 
+            Admin Dashboard - /admin
+            Ana sayfa: Sistem istatistikleri, genel bakış
+          */}
           <Route
             path="admin"
             element={
@@ -488,7 +726,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Admin Kullanıcı Yönetimi */}
+          {/* 
+            Admin Kullanıcı Yönetimi Sayfası - /admin/users
+            Tüm kullanıcıları listeler, filtreleme ve arama yapılabilir
+          */}
           <Route
             path="admin/users"
             element={
@@ -502,6 +743,11 @@ const AppRoutes = () => {
             }
           />
           
+          {/* 
+            Admin Kullanıcı Detay Sayfası - /admin/users/:id
+            Kullanıcının detaylı bilgilerini gösterir, onay/aktiflik durumu değiştirilebilir
+            Parametre: id (route parametresi - kullanıcı ID'si)
+          */}
           <Route
             path="admin/users/:id"
             element={
@@ -515,7 +761,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Admin İş İlanı Yönetimi */}
+          {/* 
+            Admin İş İlanı Yönetimi Sayfası - /admin/jobs
+            Tüm iş ilanlarını listeler, filtreleme ve arama yapılabilir
+          */}
           <Route
             path="admin/jobs"
             element={
@@ -529,6 +778,11 @@ const AppRoutes = () => {
             }
           />
           
+          {/* 
+            Admin İş İlanı Detay Sayfası - /admin/jobs/:id
+            İş ilanının detaylı bilgilerini gösterir, durum değiştirilebilir
+            Parametre: id (route parametresi - iş ilanı ID'si)
+          */}
           <Route
             path="admin/jobs/:id"
             element={
@@ -542,7 +796,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Admin Başvuru Yönetimi */}
+          {/* 
+            Admin Başvuru Yönetimi Sayfası - /admin/applications
+            Tüm başvuruları listeler, filtreleme ve arama yapılabilir
+          */}
           <Route
             path="admin/applications"
             element={
@@ -556,6 +813,11 @@ const AppRoutes = () => {
             }
           />
           
+          {/* 
+            Admin Başvuru Detay Sayfası - /admin/applications/:id
+            Başvurunun detaylı bilgilerini gösterir, durum değiştirilebilir
+            Parametre: id (route parametresi - başvuru ID'si)
+          */}
           <Route
             path="admin/applications/:id"
             element={
@@ -569,7 +831,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Admin Bildirim Yönetimi */}
+          {/* 
+            Admin Bildirim Yönetimi Sayfası - /admin/notifications
+            Sistem genelinde tüm bildirimleri yönetir
+          */}
           <Route
             path="admin/notifications"
             element={
@@ -583,7 +848,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Admin İletişim Mesajları */}
+          {/* 
+            Admin İletişim Mesajları Sayfası - /admin/contact-messages
+            Kullanıcılardan gelen iletişim mesajlarını yönetir
+          */}
           <Route
             path="admin/contact-messages"
             element={
@@ -597,7 +865,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Admin Fotoğraf Onayları */}
+          {/* 
+            Admin Fotoğraf Onayları Sayfası - /admin/photo-approvals
+            Doktorların gönderdiği profil fotoğrafı değiştirme taleplerini yönetir
+          */}
           <Route
             path="admin/photo-approvals"
             element={
@@ -611,7 +882,10 @@ const AppRoutes = () => {
             }
           />
           
-          {/* Admin Log Görüntüleme */}
+          {/* 
+            Admin Log Görüntüleme Sayfası - /admin/logs
+            Sistem log'larını görüntüler, filtreleme yapılabilir
+          */}
           <Route
             path="admin/logs"
             element={
@@ -625,11 +899,20 @@ const AppRoutes = () => {
             }
           />
 
-          {/* ================================================================ */}
-          {/* ERROR ROUTES - Hata sayfaları */}
-          {/* ================================================================ */}
+          {/* 
+            ====================================================================
+            ERROR ROUTES - Hata sayfaları
+            ====================================================================
+            
+            Tanımlı olmayan route'lar için fallback sayfa
+            Herhangi bir guard kullanılmaz, tüm kullanıcılar görebilir
+          */}
           
-          {/* 404 - Sayfa bulunamadı */}
+          {/* 
+            404 Not Found Sayfası - * (wildcard route)
+            Tanımlı olmayan tüm route'lar için gösterilir
+            Guard yok: Tüm kullanıcılar görebilir
+          */}
           <Route path="*" element={<NotFound />} />
           
         </Route>

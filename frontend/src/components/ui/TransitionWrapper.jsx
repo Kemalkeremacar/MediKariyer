@@ -1,17 +1,68 @@
 /**
- * TransitionWrapper Component
+ * @file TransitionWrapper.jsx
+ * @description Transition Wrapper Bileşeni - Framer Motion ile animasyon yönetimi
  * 
- * Framer Motion ile sayfa geçişlerini ve animasyonları yöneten wrapper component
+ * Bu bileşen, uygulama genelinde kullanılan sayfa geçişleri ve animasyonlar için
+ * merkezi bir wrapper sağlar. Framer Motion kütüphanesi kullanılarak smooth
+ * animasyonlar ve geçişler sağlar.
+ * 
+ * Ana Özellikler:
+ * - Sayfa geçiş animasyonları: Fade, slide, scale, page
+ * - Staggered animasyonlar: Sıralı element animasyonları
+ * - AnimatePresence desteği: Mount/unmount animasyonları
+ * - Kart animasyonları: Hover efektleri ile kart animasyonları
+ * - Liste animasyonları: Liste öğeleri için sıralı animasyonlar
+ * - Özelleştirilebilir: Delay, duration, easing ayarları
+ * - Performans optimizasyonu: GPU hızlandırmalı animasyonlar
+ * 
+ * Animasyon Tipleri:
+ * - page: Sayfa geçiş animasyonu (fade + slide + scale)
+ * - fade: Sadece opacity animasyonu
+ * - slide: X ekseninde kaydırma animasyonu
+ * - scale: Ölçeklendirme animasyonu
+ * 
+ * Bileşenler:
+ * 1. TransitionWrapper: Ana wrapper bileşeni
+ * 2. StaggeredAnimation: Sıralı animasyon wrapper'ı
+ * 3. AnimatedPage: Sayfa için AnimatePresence wrapper'ı
+ * 4. AnimatedCard: Kart için animasyon wrapper'ı
+ * 5. AnimatedList: Liste için animasyon wrapper'ı
+ * 
+ * Kullanım Örnekleri:
+ * ```jsx
+ * // Sayfa geçişi
+ * <TransitionWrapper variant="page">
+ *   <PageContent />
+ * </TransitionWrapper>
+ * 
+ * // Sıralı animasyon
+ * <StaggeredAnimation staggerDelay={0.1}>
+ *   {items.map(item => <Item key={item.id} />)}
+ * </StaggeredAnimation>
+ * ```
+ * 
+ * Teknik Detaylar:
+ * - Framer Motion variants kullanımı
+ * - React key prop ile animasyon kontrolü
+ * - requestAnimationFrame optimizasyonu
+ * - CSS transform kullanımı (GPU hızlandırma)
  * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2024
  */
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Sayfa geçiş animasyonları
+// ============================================================================
+// ANIMATION VARIANTS - Animasyon varyant tanımlamaları
+// ============================================================================
+
+/**
+ * Sayfa geçiş animasyon varyantları
+ * Fade, slide ve scale kombinasyonu
+ */
 const pageVariants = {
   initial: {
     opacity: 0,
@@ -30,13 +81,22 @@ const pageVariants = {
   }
 };
 
+/**
+ * Sayfa geçiş animasyon ayarları
+ */
 const pageTransition = {
   type: 'tween',
   ease: 'anticipate',
   duration: 0.3
 };
 
-// Staggered animation için variants
+/**
+ * ============================================================================
+ * STAGGERED ANIMATION VARIANTS - Sıralı animasyon varyantları
+ * ============================================================================
+ * 
+ * Liste öğeleri için sıralı animasyon (stagger children)
+ */
 export const staggerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -47,6 +107,10 @@ export const staggerVariants = {
   }
 };
 
+/**
+ * Liste öğesi animasyon varyantları
+ * Her öğe için fade-in ve slide-up animasyonu
+ */
 export const itemVariants = {
   hidden: { 
     opacity: 0, 
@@ -62,7 +126,19 @@ export const itemVariants = {
   }
 };
 
-// Ana TransitionWrapper component'i
+/**
+ * ============================================================================
+ * TRANSITION WRAPPER - Ana animasyon wrapper bileşeni
+ * ============================================================================
+ * 
+ * Sayfa ve içerik geçişleri için kullanılan ana wrapper bileşeni
+ * 
+ * Parametreler:
+ * @param {ReactNode} children - Animasyonlu gösterilecek içerik
+ * @param {string} className - Ek CSS sınıfları
+ * @param {string} variant - Animasyon tipi (page, fade, slide, scale)
+ * @param {number} delay - Animasyon gecikmesi (saniye)
+ */
 const TransitionWrapper = ({ 
   children, 
   className = '', 
@@ -117,7 +193,18 @@ const TransitionWrapper = ({
   );
 };
 
-// StaggeredAnimation component'i
+/**
+ * ============================================================================
+ * STAGGERED ANIMATION - Sıralı animasyon wrapper bileşeni
+ * ============================================================================
+ * 
+ * Çocuk öğeleri sırayla animasyonlu gösteren wrapper
+ * 
+ * Parametreler:
+ * @param {ReactNode} children - Sıralı animasyonlu gösterilecek öğeler
+ * @param {string} className - Ek CSS sınıfları
+ * @param {number} staggerDelay - Öğeler arası animasyon gecikmesi (saniye)
+ */
 export const StaggeredAnimation = ({ 
   children, 
   className = '',
@@ -143,7 +230,18 @@ export const StaggeredAnimation = ({
   );
 };
 
-// AnimatePresence wrapper
+/**
+ * ============================================================================
+ * ANIMATED PAGE - Sayfa için AnimatePresence wrapper
+ * ============================================================================
+ * 
+ * React Router sayfa geçişleri için AnimatePresence kullanan wrapper
+ * Sayfa değişikliklerinde mount/unmount animasyonları sağlar
+ * 
+ * Parametreler:
+ * @param {ReactNode} children - Animasyonlu gösterilecek sayfa içeriği
+ * @param {string} key - Sayfa değişikliğini tetikleyen unique key
+ */
 export const AnimatedPage = ({ children, key }) => {
   return (
     <AnimatePresence mode="wait">
@@ -161,7 +259,19 @@ export const AnimatedPage = ({ children, key }) => {
   );
 };
 
-// Card animation component'i
+/**
+ * ============================================================================
+ * ANIMATED CARD - Kart için animasyon wrapper bileşeni
+ * ============================================================================
+ * 
+ * Kart bileşenleri için fade-in ve hover efektleri sağlar
+ * 
+ * Parametreler:
+ * @param {ReactNode} children - Animasyonlu gösterilecek kart içeriği
+ * @param {string} className - Ek CSS sınıfları
+ * @param {boolean} hover - Hover animasyonu aktif (varsayılan: true)
+ * @param {number} delay - Animasyon gecikmesi (saniye)
+ */
 export const AnimatedCard = ({ 
   children, 
   className = '',
@@ -188,7 +298,18 @@ export const AnimatedCard = ({
   );
 };
 
-// List animation component'i
+/**
+ * ============================================================================
+ * ANIMATED LIST - Liste için animasyon wrapper bileşeni
+ * ============================================================================
+ * 
+ * Liste öğeleri için sıralı animasyon sağlar
+ * 
+ * Parametreler:
+ * @param {ReactNode} children - Sıralı animasyonlu gösterilecek liste öğeleri
+ * @param {string} className - Ek CSS sınıfları
+ * @param {number} staggerDelay - Öğeler arası animasyon gecikmesi (saniye)
+ */
 export const AnimatedList = ({ 
   children, 
   className = '',

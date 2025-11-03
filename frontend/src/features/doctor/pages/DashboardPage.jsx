@@ -1,3 +1,8 @@
+/**
+ * @file DashboardPage.jsx
+ * @description Doktor Dashboard - Doktor paneli ana sayfası, son başvurular ve önerilen iş ilanları
+ */
+
 import React from 'react';
 import { 
   Activity, 

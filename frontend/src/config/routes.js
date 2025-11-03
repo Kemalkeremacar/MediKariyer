@@ -1,10 +1,44 @@
 /**
- * @fileoverview Route configuration for the application
- * @description Defines all application routes organized by user roles
- * Based on the actual routes defined in src/routes/index.jsx
+ * @file routes.js
+ * @description Route Configuration - Uygulama route tanımları
+ * 
+ * Bu dosya, uygulama genelinde kullanılan tüm route path'lerini merkezi olarak tanımlar.
+ * Route'lar rol bazında organize edilmiştir ve React Router ile kullanılır.
+ * 
+ * Ana Özellikler:
+ * - Rol bazlı route organizasyonu: Public, Admin, Doctor, Hospital, Shared
+ * - Merkezi yönetim: Tüm route'lar tek yerden yönetilir
+ * - Type safety: Sabit string değerleri ile tip güvenliği
+ * - Backend uyumluluk: Backend route'larla uyumlu path yapısı
+ * - Parametreli route'lar: Dinamik parametreler (örn: :id, :jobId)
+ * 
+ * Route Kategorileri:
+ * 1. PUBLIC: Ziyaretçiler için genel sayfalar
+ * 2. ADMIN: Yönetici paneli sayfaları
+ * 3. DOCTOR: Doktor paneli sayfaları
+ * 4. HOSPITAL: Hastane paneli sayfaları
+ * 5. SHARED: Tüm roller için ortak sayfalar
+ * 
+ * Kullanım:
+ * ```jsx
+ * import { ROUTE_CONFIG } from '@config/routes';
+ * 
+ * <Link to={ROUTE_CONFIG.DOCTOR.DASHBOARD}>Ana Sayfa</Link>
+ * <Navigate to={ROUTE_CONFIG.HOSPITAL.JOBS} />
+ * ```
+ * 
+ * Not: Route tanımları src/routes/index.jsx dosyasındaki gerçek route yapısıyla
+ * eşleşmelidir. Route değişikliklerinde hem bu dosya hem de routes/index.jsx
+ * güncellenmelidir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
-// Public routes
+// ============================================================================
+// PUBLIC ROUTES - Ziyaretçiler için genel sayfalar
+// ============================================================================
 export const ROUTE_CONFIG = {
   PUBLIC: {
     HOME: '/',
@@ -15,7 +49,9 @@ export const ROUTE_CONFIG = {
     PENDING_APPROVAL: '/pending-approval',
   },
   
-  // Admin routes
+  // ============================================================================
+  // ADMIN ROUTES - Yönetici paneli sayfaları
+  // ============================================================================
   ADMIN: {
     DASHBOARD: '/admin',
     USERS: '/admin/users',
@@ -29,7 +65,9 @@ export const ROUTE_CONFIG = {
     PHOTO_APPROVALS: '/admin/photo-approvals',
   },
   
-  // Doctor routes
+  // ============================================================================
+  // DOCTOR ROUTES - Doktor paneli sayfaları
+  // ============================================================================
   DOCTOR: {
     DASHBOARD: '/doctor',
     PROFILE: '/doctor/profile',
@@ -39,7 +77,9 @@ export const ROUTE_CONFIG = {
     APPLICATION_DETAIL: '/doctor/applications/:applicationId',
   },
   
-  // Hospital routes
+  // ============================================================================
+  // HOSPITAL ROUTES - Hastane paneli sayfaları
+  // ============================================================================
   HOSPITAL: {
     DASHBOARD: '/hospital',
     PROFILE: '/hospital/profile',
@@ -51,7 +91,9 @@ export const ROUTE_CONFIG = {
     CONTACTS: '/hospital/contacts',
   },
   
-  // Shared routes
+  // ============================================================================
+  // SHARED ROUTES - Tüm roller için ortak sayfalar
+  // ============================================================================
   SHARED: {
     NOTIFICATIONS: '/notifications',
   },

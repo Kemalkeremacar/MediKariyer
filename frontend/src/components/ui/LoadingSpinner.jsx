@@ -1,8 +1,60 @@
+/**
+ * @file LoadingSpinner.jsx
+ * @description Loading Spinner Bileşeni - Yükleme durumu göstergeleri koleksiyonu
+ * 
+ * Bu dosya, uygulama genelinde kullanılan tüm yükleme göstergesi bileşenlerini içerir.
+ * Farklı durumlar ve kullanım senaryoları için özelleştirilmiş spinner varyantları sunar.
+ * 
+ * Bileşenler:
+ * 1. LoadingSpinner: Temel spinner bileşeni (farklı boyut ve renkler)
+ * 2. SkeletonLoader: İçerik placeholder'ı için skeleton yükleme
+ * 3. ButtonSpinner: Buton içinde kullanılan küçük spinner
+ * 4. PageLoader: Tam sayfa yükleme göstergesi
+ * 5. TableLoader: Tablo yükleme göstergesi
+ * 6. InlineLoader: Satır içi yükleme göstergesi
+ * 
+ * Özellikler:
+ * - Çoklu boyut desteği: xs, sm, md, lg, xl, 2xl
+ * - Çoklu renk desteği: primary, secondary, white, gray, blue, red
+ * - Overlay mode: Arka plan üzerinde yükleme göstergesi
+ * - Full screen mode: Tam ekran yükleme ekranı
+ * - Text desteği: Spinner yanında metin gösterme
+ * - Skeleton loading: İçerik placeholder'ı
+ * - Responsive: Mobil ve desktop uyumlu
+ * 
+ * Kullanım Örnekleri:
+ * ```jsx
+ * // Basit spinner
+ * <LoadingSpinner size="md" color="primary" />
+ * 
+ * // Overlay ile
+ * <LoadingSpinner overlay text="Yükleniyor..." />
+ * 
+ * // Skeleton loader
+ * <SkeletonLoader rows={3} width="w-full" />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 
 /**
- * Gelişmiş Loading Spinner Component
- * Farklı boyutlar ve stiller destekler
+ * ============================================================================
+ * LOADING SPINNER - Temel yükleme göstergesi bileşeni
+ * ============================================================================
+ * 
+ * SVG tabanlı animasyonlu spinner bileşeni
+ * 
+ * Parametreler:
+ * @param {string} size - Spinner boyutu (xs, sm, md, lg, xl, 2xl)
+ * @param {string} color - Spinner rengi (primary, secondary, white, gray, blue, red)
+ * @param {string} className - Ek CSS sınıfları
+ * @param {string} text - Spinner yanında gösterilecek metin
+ * @param {boolean} overlay - Arka plan overlay'i göster (varsayılan: false)
+ * @param {boolean} fullScreen - Tam ekran modu (varsayılan: false)
  */
 const LoadingSpinner = ({ 
   size = 'md', 
@@ -102,8 +154,20 @@ const LoadingSpinner = ({
 };
 
 /**
- * Skeleton Loading Component
- * Content placeholder için
+ * ============================================================================
+ * SKELETON LOADER - İçerik placeholder yükleme göstergesi
+ * ============================================================================
+ * 
+ * İçerik yüklenirken gösterilen placeholder bileşeni
+ * Pulse animasyonu ile içerik yapısını gösterir
+ * 
+ * Parametreler:
+ * @param {string} width - Genişlik (Tailwind class, varsayılan: 'w-full')
+ * @param {string} height - Yükseklik (Tailwind class, varsayılan: 'h-4')
+ * @param {string} className - Ek CSS sınıfları
+ * @param {number} rows - Gösterilecek satır sayısı (varsayılan: 1)
+ * @param {boolean} avatar - Avatar placeholder göster (varsayılan: false)
+ * @param {boolean} card - Kart placeholder göster (varsayılan: false)
  */
 export const SkeletonLoader = ({ 
   width = 'w-full', 
@@ -161,7 +225,16 @@ export const SkeletonLoader = ({
 };
 
 /**
- * Button Loading State
+ * ============================================================================
+ * BUTTON SPINNER - Buton içinde kullanılan küçük spinner
+ * ============================================================================
+ * 
+ * Buton içinde gösterilen küçük yükleme göstergesi
+ * Genellikle form submit sırasında kullanılır
+ * 
+ * Parametreler:
+ * @param {string} size - Spinner boyutu (varsayılan: 'sm')
+ * @param {string} className - Ek CSS sınıfları
  */
 export const ButtonSpinner = ({ size = 'sm', className = '' }) => (
   <LoadingSpinner 
@@ -172,7 +245,15 @@ export const ButtonSpinner = ({ size = 'sm', className = '' }) => (
 );
 
 /**
- * Page Loading Component
+ * ============================================================================
+ * PAGE LOADER - Tam sayfa yükleme göstergesi
+ * ============================================================================
+ * 
+ * Tam sayfa yükleme ekranı için kullanılan bileşen
+ * Genellikle sayfa ilk yüklenirken veya büyük veri yüklenirken kullanılır
+ * 
+ * Parametreler:
+ * @param {string} text - Gösterilecek yükleme mesajı (varsayılan: 'Yükleniyor...')
  */
 export const PageLoader = ({ text = 'Yükleniyor...' }) => (
   <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -184,7 +265,16 @@ export const PageLoader = ({ text = 'Yükleniyor...' }) => (
 );
 
 /**
- * Table Loading Component
+ * ============================================================================
+ * TABLE LOADER - Tablo yükleme göstergesi
+ * ============================================================================
+ * 
+ * Tablo verileri yüklenirken gösterilen skeleton placeholder
+ * Grid yapısında satır ve sütun gösterir
+ * 
+ * Parametreler:
+ * @param {number} rows - Gösterilecek satır sayısı (varsayılan: 5)
+ * @param {number} columns - Gösterilecek sütun sayısı (varsayılan: 4)
  */
 export const TableLoader = ({ rows = 5, columns = 4 }) => (
   <div className="animate-pulse">
@@ -201,7 +291,15 @@ export const TableLoader = ({ rows = 5, columns = 4 }) => (
 );
 
 /**
- * Inline Loading Component
+ * ============================================================================
+ * INLINE LOADER - Satır içi yükleme göstergesi
+ * ============================================================================
+ * 
+ * Metin içinde veya satır içinde kullanılan küçük yükleme göstergesi
+ * Genellikle küçük veri yüklemelerinde kullanılır
+ * 
+ * Parametreler:
+ * @param {string} text - Gösterilecek yükleme metni (varsayılan: 'Yükleniyor')
  */
 export const InlineLoader = ({ text = 'Yükleniyor' }) => (
   <div className="flex items-center space-x-2 text-gray-600">

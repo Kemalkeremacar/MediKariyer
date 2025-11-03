@@ -1,24 +1,76 @@
 /**
- * Lookup Hook - Sistem lookup verileri için hook
+ * @file useLookup.js
+ * @description Lookup Hooks - Sistem lookup verileri yönetimi için custom hook'lar
  * 
- * Bu hook sistem genelinde kullanılan lookup verilerini sağlar:
- * - Uzmanlık alanları (specialties)
- * - Şehirler (cities) 
- * - Doktor eğitim türleri (doctor_education_types)
- * - Dil seviyeleri (language_levels)
- * - Diller (languages)
- * - Sertifika türleri (certificate_types)
- * - İş durumları (job_statuses)
- * - Başvuru durumları (application_statuses)
+ * Bu dosya, uygulama genelinde kullanılan tüm lookup (referans) verilerini
+ * yöneten custom hook'ları içerir. React Query kullanılarak veri fetch,
+ * cache ve state yönetimi sağlanır.
  * 
- * Bu veriler doktor/hastane profilleri oluştururken, iş ilanları oluştururken
- * ve admin sayfalarında dropdown/select bileşenleri için kullanılır.
+ * Ana Hook'lar:
+ * 1. useLookup: Tüm lookup verilerini içeren ana hook
+ * 2. useSpecialties: Sadece uzmanlık alanları için hook
+ * 3. useSubspecialties: Sadece yan dal uzmanlıklar için hook
+ * 4. useCities: Sadece şehirler için hook
+ * 5. useEducationTypes: Sadece eğitim türleri için hook
+ * 6. useLanguageLevels: Sadece dil seviyeleri için hook
+ * 7. useLanguages: Sadece diller için hook
+ * 8. useCertificateTypes: Sadece sertifika türleri için hook
+ * 9. useJobStatuses: Sadece iş durumları için hook
+ * 10. useApplicationStatuses: Sadece başvuru durumları için hook
  * 
- * Backend Uyumluluğu:
+ * Lookup Verileri:
+ * - specialties: Uzmanlık alanları (Ana dal/branş)
+ * - subspecialties: Yan dal uzmanlıklar (Ana dala bağlı)
+ * - cities: Şehirler
+ * - doctor_education_types: Doktor eğitim türleri
+ * - language_levels: Dil seviyeleri (Başlangıç, Orta, İleri vb.)
+ * - languages: Diller
+ * - certificate_types: Sertifika türleri
+ * - job_statuses: İş ilanı durumları (Aktif, Pasif vb.)
+ * - application_statuses: Başvuru durumları (Başvuruldu, Kabul Edildi vb.)
+ * 
+ * Ana Özellikler:
+ * - React Query entegrasyonu: Otomatik cache ve refetch yönetimi
+ * - Data transformation: Backend verilerini frontend formatına dönüştürme
+ * - Utility fonksiyonlar: ID'ye göre arama, filtreleme fonksiyonları
+ * - Loading states: Her lookup için ayrı loading state
+ * - Error handling: Her lookup için ayrı error state
+ * - Refetch fonksiyonlar: Manuel veri yenileme
+ * - Cache yönetimi: 30 dakika stale time, 1 saat cache time
+ * - Retry mekanizması: 3 kez otomatik retry
+ * 
+ * Backend Uyumluluk:
  * - Backend lookupService.js ile tam uyumlu
  * - Backend lookupController.js ile tam uyumlu
  * - Backend lookupRoutes.js ile tam uyumlu
- * - Frontend lookupSchemas.js ile validasyon desteği
+ * - Backend lookupSchemas.js ile validasyon desteği
+ * 
+ * Data Format:
+ * - Backend format: { id, name, ... }
+ * - Frontend format: { id, name, label, value, ... }
+ * - transformLookupData fonksiyonu ile dönüşüm yapılır
+ * 
+ * Kullanım Örnekleri:
+ * ```jsx
+ * import useLookup, { useCities, useSpecialties } from '@/hooks/useLookup';
+ * 
+ * // Tüm lookup verileri
+ * const { data, loading, error, refetch } = useLookup();
+ * const { specialties, cities } = data;
+ * 
+ * // Sadece şehirler
+ * const { data: cities, isLoading, error } = useCities();
+ * 
+ * // Sadece uzmanlıklar
+ * const { data: specialties, isLoading } = useSpecialties();
+ * ```
+ * 
+ * Utility Fonksiyonlar:
+ * - getSpecialtyById: ID'ye göre uzmanlık bulma
+ * - getSubspecialtiesBySpecialty: Branşa göre yan dalları getirme
+ * - getCityById: ID'ye göre şehir bulma
+ * - getRequiredEducationTypes: Zorunlu eğitim türlerini getirme
+ * - vb.
  * 
  * @author MediKariyer Development Team
  * @version 2.0.0
@@ -35,17 +87,32 @@ import {
 import logger from '../utils/logger';
 
 /**
- * Ana Lookup Hook
- * @description Tüm lookup verilerini yöneten ana hook
+ * ============================================================================
+ * USE LOOKUP HOOK - Ana lookup verileri hook'u
+ * ============================================================================
  * 
- * @returns {Object} Lookup verileri ve durumları
- * @returns {Object} data - Tüm lookup verileri
- * @returns {Object} loading - Loading durumları
- * @returns {Object} error - Hata durumları
- * @returns {Object} refetch - Yeniden yükleme fonksiyonları
- * @returns {Object} utils - Yardımcı fonksiyonlar
+ * Tüm lookup verilerini yöneten ana hook
+ * Tüm lookup türlerini paralel olarak fetch eder ve tek bir hook'ta birleştirir
  * 
- * @example
+ * Dönüş:
+ * @returns {Object} Lookup verileri, durumlar ve utility fonksiyonlar
+ * - data: {Object} Tüm lookup verileri (transform edilmiş)
+ *   - specialties, subspecialties, cities, educationTypes, vb.
+ * - rawData: {Object} Ham backend verileri (transform edilmemiş)
+ * - loading: {Object} Loading durumları
+ *   - isLoading: Genel loading durumu
+ *   - specialtiesLoading, citiesLoading, vb.: Bireysel loading durumları
+ * - error: {Object} Hata durumları
+ *   - error: Genel hata durumu
+ *   - specialtiesError, citiesError, vb.: Bireysel hata durumları
+ * - refetch: {Object} Yeniden yükleme fonksiyonları
+ *   - refetchAll: Tüm verileri yeniden yükle
+ *   - refetchSpecialties, refetchCities, vb.: Bireysel refetch fonksiyonları
+ * - utils: {Object} Yardımcı fonksiyonlar
+ *   - getSpecialtyById, getCityById, getSubspecialtiesBySpecialty, vb.
+ * 
+ * Kullanım Örneği:
+ * ```jsx
  * const { 
  *   data: { specialties, cities, educationTypes },
  *   loading: { isLoading, specialtiesLoading },
@@ -53,9 +120,23 @@ import logger from '../utils/logger';
  *   refetch: { refetchAll, refetchSpecialties },
  *   utils: { getSpecialtyById, getCityById }
  * } = useLookup();
+ * ```
+ * 
+ * Query Configuration:
+ * - staleTime: 30 dakika (30 * 60 * 1000)
+ * - cacheTime: 1 saat (60 * 60 * 1000)
+ * - retry: 3 kez otomatik retry
+ * - retryDelay: Exponential backoff (1000 * 2^attemptIndex, max 30000ms)
  */
 export const useLookup = () => {
-  // ==================== QUERY CONFIGURATION ====================
+  // ============================================================================
+  // QUERY CONFIGURATION - React Query konfigürasyonu
+  // ============================================================================
+  
+  /**
+   * Ortak query konfigürasyonu
+   * Tüm lookup query'leri için aynı cache ve retry ayarları kullanılır
+   */
   
   const queryConfig = {
     staleTime: 30 * 60 * 1000, // 30 dakika cache
@@ -68,11 +149,18 @@ export const useLookup = () => {
     }
   };
 
-  // ==================== INDIVIDUAL QUERIES ====================
+  // ============================================================================
+  // INDIVIDUAL QUERIES - Bireysel lookup query'leri
+  // ============================================================================
 
   /**
    * Uzmanlık Alanları Query
-   * @description Uzmanlık alanlarını getirir ve validasyon yapar
+   * 
+   * Backend'den uzmanlık alanlarını (ana dal/branş) getirir
+   * React Query cache'i kullanır, otomatik retry yapar
+   * 
+   * Query Key: ['lookup', 'specialties']
+   * Endpoint: ENDPOINTS.LOOKUP.SPECIALTIES
    */
   const { 
     data: specialtiesRaw, 
@@ -91,8 +179,13 @@ export const useLookup = () => {
   });
 
   /**
-   * Yan Dal Alanları Query
-   * @description Yan dal alanlarını getirir ve validasyon yapar
+   * Yan Dal Uzmanlıklar Query
+   * 
+   * Backend'den yan dal uzmanlıklarını getirir
+   * Ana dal'a bağlı olarak filtrelenebilir
+   * 
+   * Query Key: ['lookup', 'subspecialties']
+   * Endpoint: ENDPOINTS.LOOKUP.SUBSPECIALTIES
    */
   const { 
     data: subspecialtiesRaw, 
@@ -112,7 +205,12 @@ export const useLookup = () => {
 
   /**
    * Şehirler Query
-   * @description Şehirleri getirir ve validasyon yapar
+   * 
+   * Backend'den şehir listesini getirir
+   * Türkiye şehirleri ve diğer ülkelerin şehirlerini içerir
+   * 
+   * Query Key: ['lookup', 'cities']
+   * Endpoint: ENDPOINTS.LOOKUP.CITIES
    */
   const { 
     data: citiesRaw, 
@@ -132,7 +230,12 @@ export const useLookup = () => {
 
   /**
    * Doktor Eğitim Türleri Query
-   * @description Doktor eğitim türlerini getirir ve validasyon yapar
+   * 
+   * Backend'den doktor eğitim türlerini getirir
+   * Lisans, Yüksek Lisans, Doktora, Tıp Fakültesi vb.
+   * 
+   * Query Key: ['lookup', 'doctor-education-types']
+   * Endpoint: ENDPOINTS.LOOKUP.DOCTOR_EDUCATION_TYPES
    */
   const { 
     data: educationTypesRaw, 
@@ -152,7 +255,12 @@ export const useLookup = () => {
 
   /**
    * Dil Seviyeleri Query
-   * @description Dil seviyelerini getirir ve validasyon yapar
+   * 
+   * Backend'den dil seviyelerini getirir
+   * Başlangıç, Orta, İleri, Anadil seviyesi vb.
+   * 
+   * Query Key: ['lookup', 'language-levels']
+   * Endpoint: ENDPOINTS.LOOKUP.LANGUAGE_LEVELS
    */
   const { 
     data: languageLevelsRaw, 
@@ -172,7 +280,12 @@ export const useLookup = () => {
 
   /**
    * Diller Query
-   * @description Dilleri getirir ve validasyon yapar
+   * 
+   * Backend'den dil listesini getirir
+   * Türkçe, İngilizce, Almanca, Fransızca vb.
+   * 
+   * Query Key: ['lookup', 'languages']
+   * Endpoint: ENDPOINTS.LOOKUP.LANGUAGES
    */
   const { 
     data: languagesRaw, 
@@ -192,7 +305,12 @@ export const useLookup = () => {
 
   /**
    * Sertifika Türleri Query
-   * @description Sertifika türlerini getirir ve validasyon yapar
+   * 
+   * Backend'den sertifika türlerini getirir
+   * BLS, ACLS, PALS, vb. tıbbi sertifikalar
+   * 
+   * Query Key: ['lookup', 'certificate-types']
+   * Endpoint: ENDPOINTS.LOOKUP.CERTIFICATE_TYPES
    */
   const { 
     data: certificateTypesRaw, 
@@ -212,7 +330,12 @@ export const useLookup = () => {
 
   /**
    * İş Durumları Query
-   * @description İş durumlarını getirir ve validasyon yapar
+   * 
+   * Backend'den iş ilanı durumlarını getirir
+   * Aktif, Pasif, Taslak, Kapatıldı vb.
+   * 
+   * Query Key: ['lookup', 'job-statuses']
+   * Endpoint: ENDPOINTS.LOOKUP.JOB_STATUSES
    */
   const { 
     data: jobStatusesRaw, 
@@ -232,7 +355,12 @@ export const useLookup = () => {
 
   /**
    * Başvuru Durumları Query
-   * @description Başvuru durumlarını getirir ve validasyon yapar
+   * 
+   * Backend'den başvuru durumlarını getirir
+   * Başvuruldu (1), İnceleniyor (2), Kabul Edildi (3), Red Edildi (4), Geri Çekildi (5)
+   * 
+   * Query Key: ['lookup', 'application-statuses']
+   * Endpoint: ENDPOINTS.LOOKUP.APPLICATION_STATUSES
    */
   const { 
     data: applicationStatusesRaw, 
@@ -250,10 +378,18 @@ export const useLookup = () => {
     ...queryConfig
   });
 
-  // ==================== DATA TRANSFORMATION ====================
+  // ============================================================================
+  // DATA TRANSFORMATION - Veri dönüşümü
+  // ============================================================================
 
   /**
-   * Raw verileri frontend formatına çevir
+   * Raw backend verilerini frontend formatına dönüştür
+   * 
+   * transformLookupData fonksiyonu ile backend formatından frontend formatına
+   * dönüşüm yapılır. Her öğeye label ve value eklenir.
+   * 
+   * Backend Format: { id, name, ... }
+   * Frontend Format: { id, name, label, value, ... }
    */
   const specialties = transformLookupData(specialtiesRaw || []);
   const subspecialties = transformLookupData(subspecialtiesRaw || []);
@@ -265,20 +401,40 @@ export const useLookup = () => {
   const jobStatuses = transformLookupData(jobStatusesRaw || []);
   const applicationStatuses = transformLookupData(applicationStatusesRaw || []);
 
-  // ==================== LOADING STATES ====================
+  // ============================================================================
+  // LOADING STATES - Yükleme durumları
+  // ============================================================================
 
+  /**
+   * Genel loading durumu
+   * Herhangi bir lookup verisi yükleniyorsa true döner
+   */
   const isLoading = specialtiesLoading || subspecialtiesLoading || citiesLoading || educationTypesLoading || 
                    languageLevelsLoading || languagesLoading || certificateTypesLoading ||
                    jobStatusesLoading || applicationStatusesLoading;
 
-  // ==================== ERROR STATES ====================
+  // ============================================================================
+  // ERROR STATES - Hata durumları
+  // ============================================================================
 
+  /**
+   * Genel hata durumu
+   * Herhangi bir lookup verisi fetch'inde hata varsa error objesi döner
+   */
   const error = specialtiesError || subspecialtiesError || citiesError || educationTypesError ||
                languageLevelsError || languagesError || certificateTypesError ||
                jobStatusesError || applicationStatusesError;
 
-  // ==================== REFETCH FUNCTIONS ====================
+  // ============================================================================
+  // REFETCH FUNCTIONS - Yeniden yükleme fonksiyonları
+  // ============================================================================
 
+  /**
+   * Tüm lookup verilerini yeniden yükle
+   * 
+   * Tüm lookup query'lerinin refetch fonksiyonlarını çağırır
+   * Cache'den okumak yerine backend'den fresh data çeker
+   */
   const refetchAll = () => {
     refetchSpecialties();
     refetchSubspecialties();
@@ -291,12 +447,18 @@ export const useLookup = () => {
     refetchApplicationStatuses();
   };
 
-  // ==================== UTILITY FUNCTIONS ====================
+  // ============================================================================
+  // UTILITY FUNCTIONS - Yardımcı fonksiyonlar
+  // ============================================================================
 
   /**
    * ID'ye göre uzmanlık alanı bul
+   * 
+   * Parametreler:
    * @param {number} id - Uzmanlık alanı ID'si
-   * @returns {Object|null} Uzmanlık alanı objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Uzmanlık alanı objesi (bulunamazsa null)
    */
   const getSpecialtyById = (id) => {
     return specialties.find(item => item.value === id) || null;
@@ -304,8 +466,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre yan dal bul
+   * 
+   * Parametreler:
    * @param {number} id - Yan dal ID'si
-   * @returns {Object|null} Yan dal objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Yan dal objesi (bulunamazsa null)
    */
   const getSubspecialtyById = (id) => {
     return subspecialties.find(item => item.value === id) || null;
@@ -313,8 +479,14 @@ export const useLookup = () => {
 
   /**
    * Branşa göre yan dalları getir
-   * @param {number} specialtyId - Branş ID'si
-   * @returns {Array} Yan dallar listesi
+   * 
+   * Belirtilen ana dal/branşa bağlı tüm yan dalları döndürür
+   * 
+   * Parametreler:
+   * @param {number} specialtyId - Ana dal/branş ID'si
+   * 
+   * Dönüş:
+   * @returns {Array} Yan dallar listesi (bulunamazsa boş array)
    */
   const getSubspecialtiesBySpecialty = (specialtyId) => {
     return subspecialties.filter(item => item.specialty_id === specialtyId);
@@ -322,8 +494,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre şehir bul
+   * 
+   * Parametreler:
    * @param {number} id - Şehir ID'si
-   * @returns {Object|null} Şehir objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Şehir objesi (bulunamazsa null)
    */
   const getCityById = (id) => {
     return cities.find(item => item.value === id) || null;
@@ -331,8 +507,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre eğitim türü bul
+   * 
+   * Parametreler:
    * @param {number} id - Eğitim türü ID'si
-   * @returns {Object|null} Eğitim türü objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Eğitim türü objesi (bulunamazsa null)
    */
   const getEducationTypeById = (id) => {
     return educationTypes.find(item => item.value === id) || null;
@@ -340,8 +520,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre dil seviyesi bul
+   * 
+   * Parametreler:
    * @param {number} id - Dil seviyesi ID'si
-   * @returns {Object|null} Dil seviyesi objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Dil seviyesi objesi (bulunamazsa null)
    */
   const getLanguageLevelById = (id) => {
     return languageLevels.find(item => item.value === id) || null;
@@ -349,8 +533,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre dil bul
+   * 
+   * Parametreler:
    * @param {number} id - Dil ID'si
-   * @returns {Object|null} Dil objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Dil objesi (bulunamazsa null)
    */
   const getLanguageById = (id) => {
     return languages.find(item => item.value === id) || null;
@@ -358,8 +546,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre sertifika türü bul
+   * 
+   * Parametreler:
    * @param {number} id - Sertifika türü ID'si
-   * @returns {Object|null} Sertifika türü objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Sertifika türü objesi (bulunamazsa null)
    */
   const getCertificateTypeById = (id) => {
     return certificateTypes.find(item => item.value === id) || null;
@@ -367,8 +559,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre iş durumu bul
+   * 
+   * Parametreler:
    * @param {number} id - İş durumu ID'si
-   * @returns {Object|null} İş durumu objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} İş durumu objesi (bulunamazsa null)
    */
   const getJobStatusById = (id) => {
     return jobStatuses.find(item => item.value === id) || null;
@@ -376,8 +572,12 @@ export const useLookup = () => {
 
   /**
    * ID'ye göre başvuru durumu bul
+   * 
+   * Parametreler:
    * @param {number} id - Başvuru durumu ID'si
-   * @returns {Object|null} Başvuru durumu objesi
+   * 
+   * Dönüş:
+   * @returns {Object|null} Başvuru durumu objesi (bulunamazsa null)
    */
   const getApplicationStatusById = (id) => {
     return applicationStatuses.find(item => item.value === id) || null;
@@ -385,7 +585,11 @@ export const useLookup = () => {
 
   /**
    * Zorunlu eğitim türlerini getir
-   * @returns {Array} Zorunlu eğitim türleri
+   * 
+   * is_required flag'i true olan eğitim türlerini filtreler
+   * 
+   * Dönüş:
+   * @returns {Array} Zorunlu eğitim türleri listesi
    */
   const getRequiredEducationTypes = () => {
     return educationTypes.filter(item => item.is_required);
@@ -393,7 +597,11 @@ export const useLookup = () => {
 
   /**
    * Zorunlu sertifika türlerini getir
-   * @returns {Array} Zorunlu sertifika türleri
+   * 
+   * is_required flag'i true olan sertifika türlerini filtreler
+   * 
+   * Dönüş:
+   * @returns {Array} Zorunlu sertifika türleri listesi
    */
   const getRequiredCertificateTypes = () => {
     return certificateTypes.filter(item => item.is_required);
@@ -401,14 +609,26 @@ export const useLookup = () => {
 
   /**
    * Türkiye şehirlerini getir
-   * @returns {Array} Türkiye şehirleri
+   * 
+   * country field'ı 'Turkey' olan şehirleri filtreler
+   * 
+   * Dönüş:
+   * @returns {Array} Türkiye şehirleri listesi
    */
   const getTurkeyCities = () => {
     return cities.filter(item => item.country === 'Turkey');
   };
 
-  // ==================== RETURN OBJECT ====================
+  // ============================================================================
+  // RETURN OBJECT - Hook dönüş değerleri
+  // ============================================================================
 
+  /**
+   * Hook dönüş objesi
+   * 
+   * Tüm lookup verileri, loading/error durumları, refetch fonksiyonları
+   * ve utility fonksiyonları içerir
+   */
   return {
     // Transformed data
     data: {
@@ -497,16 +717,30 @@ export const useLookup = () => {
   };
 };
 
-// ==================== INDIVIDUAL LOOKUP HOOKS ====================
+// ============================================================================
+// INDIVIDUAL LOOKUP HOOKS - Bireysel lookup hook'ları
+// ============================================================================
 
 /**
- * Uzmanlık Alanları Hook
- * @description Sadece uzmanlık alanlarını getiren hook
+ * ============================================================================
+ * USE SPECIALTIES HOOK - Sadece uzmanlık alanları hook'u
+ * ============================================================================
  * 
+ * Sadece uzmanlık alanlarını (ana dal/branş) getiren hook
+ * useLookup hook'unun sadece specialties kısmına odaklanmış versiyonu
+ * 
+ * Dönüş:
  * @returns {Object} Uzmanlık alanları verisi ve durumları
+ * - data: {Array} Transform edilmiş uzmanlık alanları listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: specialties, isLoading, error, refetch } = useSpecialties();
+ * ```
  */
 export const useSpecialties = () => {
   const { 
@@ -537,14 +771,33 @@ export const useSpecialties = () => {
 };
 
 /**
- * Yan Dal Uzmanlıklar Hook
- * @description Yan dal uzmanlıklarını getiren hook (specialtyId'ye göre filtrelenebilir)
+ * ============================================================================
+ * USE SUBSPECIALTIES HOOK - Yan dal uzmanlıklar hook'u
+ * ============================================================================
  * 
- * @param {number|null} specialtyId - Uzmanlık ID'si (opsiyonel, filtreleme için)
+ * Yan dal uzmanlıklarını getiren hook
+ * Opsiyonel olarak specialtyId'ye göre filtreleme yapabilir
+ * 
+ * Parametreler:
+ * @param {number|null} specialtyId - Ana dal/branş ID'si (opsiyonel)
+ *                                   Belirtilirse sadece o branşa ait yan dalları getirir
+ * 
+ * Dönüş:
  * @returns {Object} Yan dal uzmanlıklar verisi ve durumları
+ * - data: {Array} Transform edilmiş yan dal uzmanlıkları listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
- * const { data: subspecialties, isLoading, error, refetch } = useSubspecialties(5);
+ * Kullanım Örnekleri:
+ * ```jsx
+ * // Tüm yan dallar
+ * const { data: subspecialties } = useSubspecialties();
+ * 
+ * // Sadece belirli branşa ait yan dallar
+ * const { data: subspecialties } = useSubspecialties(5);
+ * ```
  */
 export const useSubspecialties = (specialtyId = null) => {
   const { 
@@ -579,13 +832,24 @@ export const useSubspecialties = (specialtyId = null) => {
 };
 
 /**
- * Şehirler Hook
- * @description Sadece şehirleri getiren hook
+ * ============================================================================
+ * USE CITIES HOOK - Şehirler hook'u
+ * ============================================================================
  * 
+ * Sadece şehir listesini getiren hook
+ * 
+ * Dönüş:
  * @returns {Object} Şehirler verisi ve durumları
+ * - data: {Array} Transform edilmiş şehirler listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: cities, isLoading, error, refetch } = useCities();
+ * ```
  */
 export const useCities = () => {
   const { 
@@ -616,13 +880,24 @@ export const useCities = () => {
 };
 
 /**
- * Doktor Eğitim Türleri Hook
- * @description Sadece doktor eğitim türlerini getiren hook
+ * ============================================================================
+ * USE EDUCATION TYPES HOOK - Doktor eğitim türleri hook'u
+ * ============================================================================
  * 
+ * Sadece doktor eğitim türlerini getiren hook
+ * 
+ * Dönüş:
  * @returns {Object} Eğitim türleri verisi ve durumları
+ * - data: {Array} Transform edilmiş eğitim türleri listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: educationTypes, isLoading, error, refetch } = useEducationTypes();
+ * ```
  */
 export const useEducationTypes = () => {
   const { 
@@ -653,13 +928,24 @@ export const useEducationTypes = () => {
 };
 
 /**
- * Dil Seviyeleri Hook
- * @description Sadece dil seviyelerini getiren hook
+ * ============================================================================
+ * USE LANGUAGE LEVELS HOOK - Dil seviyeleri hook'u
+ * ============================================================================
  * 
+ * Sadece dil seviyelerini getiren hook
+ * 
+ * Dönüş:
  * @returns {Object} Dil seviyeleri verisi ve durumları
+ * - data: {Array} Transform edilmiş dil seviyeleri listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: languageLevels, isLoading, error, refetch } = useLanguageLevels();
+ * ```
  */
 export const useLanguageLevels = () => {
   const { 
@@ -690,13 +976,24 @@ export const useLanguageLevels = () => {
 };
 
 /**
- * Diller Hook
- * @description Sadece dilleri getiren hook
+ * ============================================================================
+ * USE LANGUAGES HOOK - Diller hook'u
+ * ============================================================================
  * 
+ * Sadece dil listesini getiren hook
+ * 
+ * Dönüş:
  * @returns {Object} Diller verisi ve durumları
+ * - data: {Array} Transform edilmiş diller listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: languages, isLoading, error, refetch } = useLanguages();
+ * ```
  */
 export const useLanguages = () => {
   const { 
@@ -727,13 +1024,24 @@ export const useLanguages = () => {
 };
 
 /**
- * Sertifika Türleri Hook
- * @description Sadece sertifika türlerini getiren hook
+ * ============================================================================
+ * USE CERTIFICATE TYPES HOOK - Sertifika türleri hook'u
+ * ============================================================================
  * 
+ * Sadece sertifika türlerini getiren hook
+ * 
+ * Dönüş:
  * @returns {Object} Sertifika türleri verisi ve durumları
+ * - data: {Array} Transform edilmiş sertifika türleri listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: certificateTypes, isLoading, error, refetch } = useCertificateTypes();
+ * ```
  */
 export const useCertificateTypes = () => {
   const { 
@@ -764,13 +1072,24 @@ export const useCertificateTypes = () => {
 };
 
 /**
- * İş Durumları Hook
- * @description Sadece iş durumlarını getiren hook
+ * ============================================================================
+ * USE JOB STATUSES HOOK - İş durumları hook'u
+ * ============================================================================
  * 
+ * Sadece iş ilanı durumlarını getiren hook
+ * 
+ * Dönüş:
  * @returns {Object} İş durumları verisi ve durumları
+ * - data: {Array} Transform edilmiş iş durumları listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: jobStatuses, isLoading, error, refetch } = useJobStatuses();
+ * ```
  */
 export const useJobStatuses = () => {
   const { 
@@ -801,13 +1120,24 @@ export const useJobStatuses = () => {
 };
 
 /**
- * Başvuru Durumları Hook
- * @description Sadece başvuru durumlarını getiren hook
+ * ============================================================================
+ * USE APPLICATION STATUSES HOOK - Başvuru durumları hook'u
+ * ============================================================================
  * 
+ * Sadece başvuru durumlarını getiren hook
+ * 
+ * Dönüş:
  * @returns {Object} Başvuru durumları verisi ve durumları
+ * - data: {Array} Transform edilmiş başvuru durumları listesi
+ * - rawData: {Array} Ham backend verisi
+ * - isLoading: {boolean} Yükleme durumu
+ * - error: {Error|null} Hata durumu
+ * - refetch: {Function} Yeniden yükleme fonksiyonu
  * 
- * @example
+ * Kullanım Örneği:
+ * ```jsx
  * const { data: applicationStatuses, isLoading, error, refetch } = useApplicationStatuses();
+ * ```
  */
 export const useApplicationStatuses = () => {
   const { 

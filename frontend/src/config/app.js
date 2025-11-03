@@ -1,43 +1,101 @@
 /**
- * @fileoverview Application configuration for MediKariyer
- * @description Defines application-wide constants and settings
+ * @file app.js
+ * @description Application Configuration - Uygulama geneli sabitler ve ayarlar
+ * 
+ * Bu dosya, uygulama genelinde kullanılan tüm sabitler, konfigürasyonlar ve
+ * ayarları merkezi olarak tanımlar. Uygulama adı, API URL'leri, dosya yükleme
+ * limitleri, validasyon kuralları, renk şemaları ve diğer genel ayarlar burada
+ * toplanmıştır.
+ * 
+ * Ana Özellikler:
+ * - Uygulama metadata: Ad, versiyon, açıklama, slogan
+ * - API konfigürasyonu: Base URL, timeout, pagination
+ * - Dosya yükleme: Max boyut, izin verilen türler
+ * - UI ayarları: Toast süresi, debounce delay, animasyon süresi
+ * - Güvenlik: Session timeout, login attempt limit, şifre kuralları
+ * - Rol tanımları: Admin, Doctor, Hospital, Guest
+ * - Durum tanımları: Job status, application status, notification types
+ * - Özellik bayrakları: Feature flags ile özellik açma/kapama
+ * - Tema: Renk paleti ve breakpoint'ler
+ * - Local storage key'leri: Storage key tanımları
+ * - Validasyon kuralları: Regex pattern'ler, uzunluk limitleri
+ * - Tarih formatları: Display, API, datetime, time formatları
+ * - Hata mesajları: Kullanıcı dostu hata mesajları
+ * - Başarı mesajları: Kullanıcı dostu başarı mesajları
+ * 
+ * Kullanım:
+ * ```jsx
+ * import { APP_CONFIG } from '@config/app';
+ * 
+ * console.log(APP_CONFIG.APP_NAME);
+ * const maxSize = APP_CONFIG.MAX_FILE_SIZE;
+ * ```
+ * 
+ * Environment Variables:
+ * - VITE_API_BASE_URL: API base URL'i (varsayılan: localhost:3000/api)
+ * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2024
  */
 
+// ============================================================================
+// APPLICATION CONFIGURATION OBJECT
+// ============================================================================
+
 export const APP_CONFIG = {
-  // Application metadata
+  // ==================== UYGULAMA METADATA ====================
+  /**
+   * Uygulama adı, versiyon, açıklama ve slogan bilgileri
+   */
   APP_NAME: 'MediKariyer',
   APP_VERSION: '1.0.0',
   APP_DESCRIPTION: 'Medical Career Platform - Doktor ve Hastane Buluşma Platformu',
   APP_TAGLINE: 'Sağlık sektöründe kariyerinizi şekillendirin',
   
-  // API configuration
+  // ==================== API KONFIGÜRASYONU ====================
+  /**
+   * API base URL ve timeout ayarları
+   */
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'http://192.168.1.198:3000/api'),
-  API_TIMEOUT: 30000, // 30 seconds
+  API_TIMEOUT: 30000, // 30 saniye
   
-  // Pagination
+  // ==================== SAYFALAMA AYARLARI ====================
+  /**
+   * Pagination için varsayılan ve maksimum sayfa boyutu
+   */
   DEFAULT_PAGE_SIZE: 20,
   MAX_PAGE_SIZE: 100,
   
-  // File upload
+  // ==================== DOSYA YÜKLEME AYARLARI ====================
+  /**
+   * Dosya yükleme limitleri ve izin verilen dosya türleri
+   */
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_FILE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-  MAX_IMAGE_SIZE: 2 * 1024 * 1024, // 2MB for images
+  MAX_IMAGE_SIZE: 2 * 1024 * 1024, // 2MB (resimler için)
   
-  // UI configuration
+  // ==================== UI KONFIGÜRASYONU ====================
+  /**
+   * Kullanıcı arayüzü ayarları: Toast süresi, debounce, animasyon
+   */
   TOAST_DURATION: 5000,
   DEBOUNCE_DELAY: 300,
   ANIMATION_DURATION: 200,
   
-  // Security
+  // ==================== GÜVENLİK AYARLARI ====================
+  /**
+   * Güvenlik ile ilgili ayarlar: Session timeout, login limit, şifre kuralları
+   */
   SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes
   MAX_LOGIN_ATTEMPTS: 5,
   PASSWORD_MIN_LENGTH: 6,
   PASSWORD_MAX_LENGTH: 128,
   
-  // User roles
+  // ==================== KULLANICI ROLLERİ ====================
+  /**
+   * Sistem kullanıcı rol tanımları
+   */
   USER_ROLES: {
     ADMIN: 'admin',
     DOCTOR: 'doctor',
@@ -45,7 +103,10 @@ export const APP_CONFIG = {
     GUEST: 'guest'
   },
   
-  // Job status
+  // ==================== İŞ İLANI DURUMLARI ====================
+  /**
+   * İş ilanı durum tanımları
+   */
   JOB_STATUS: {
     DRAFT: 'draft',
     ACTIVE: 'active',
@@ -54,7 +115,10 @@ export const APP_CONFIG = {
     EXPIRED: 'expired'
   },
   
-  // Application status
+  // ==================== BAŞVURU DURUMLARI ====================
+  /**
+   * Başvuru durum tanımları
+   */
   APPLICATION_STATUS: {
     PENDING: 'pending',
     REVIEWED: 'reviewed',
@@ -63,7 +127,10 @@ export const APP_CONFIG = {
     WITHDRAWN: 'withdrawn'
   },
   
-  // Notification types
+  // ==================== BİLDİRİM TİPLERİ ====================
+  /**
+   * Bildirim tip tanımları
+   */
   NOTIFICATION_TYPES: {
     JOB_APPLICATION: 'job_application',
     JOB_UPDATE: 'job_update',
@@ -72,7 +139,10 @@ export const APP_CONFIG = {
     CONTACT: 'contact'
   },
   
-  // Feature flags
+  // ==================== ÖZELLİK BAYRAKLARI ====================
+  /**
+   * Feature flags ile özellik açma/kapama kontrolü
+   */
   FEATURES: {
     NOTIFICATIONS: true,
     ANALYTICS: true,
@@ -86,7 +156,10 @@ export const APP_CONFIG = {
     ADVANCED_REPORTING: true
   },
   
-  // Theme configuration
+  // ==================== TEMA KONFIGÜRASYONU ====================
+  /**
+   * Tema renk paleti ve breakpoint tanımları
+   */
   THEME: {
     PRIMARY_COLOR: '#3B82F6', // Blue
     SECONDARY_COLOR: '#06B6D4', // Cyan
@@ -105,7 +178,10 @@ export const APP_CONFIG = {
     '2XL': '1536px'
   },
   
-  // Local storage keys
+  // ==================== LOCAL STORAGE KEY'LERİ ====================
+  /**
+   * Local Storage ve Session Storage için key tanımları
+   */
   STORAGE_KEYS: {
     AUTH_TOKEN: 'medikariyer_auth_token',
     REFRESH_TOKEN: 'medikariyer_refresh_token',
@@ -115,7 +191,10 @@ export const APP_CONFIG = {
     NOTIFICATIONS: 'medikariyer_notifications'
   },
   
-  // Validation rules
+  // ==================== VALİDASYON KURALLARI ====================
+  /**
+   * Form validasyonu için regex pattern'ler ve uzunluk limitleri
+   */
   VALIDATION: {
     EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     PHONE_REGEX: /^(\+90|0)?[5][0-9]{9}$/,
@@ -126,7 +205,10 @@ export const APP_CONFIG = {
     MAX_COMPANY_NAME_LENGTH: 100
   },
   
-  // Date formats
+  // ==================== TARİH FORMATLARI ====================
+  /**
+   * Tarih gösterimi ve API formatları
+   */
   DATE_FORMATS: {
     DISPLAY: 'DD/MM/YYYY',
     API: 'YYYY-MM-DD',
@@ -134,7 +216,10 @@ export const APP_CONFIG = {
     TIME: 'HH:mm'
   },
   
-  // Error messages
+  // ==================== HATA MESAJLARI ====================
+  /**
+   * Kullanıcı dostu hata mesajları
+   */
   ERROR_MESSAGES: {
     NETWORK_ERROR: 'Ağ bağlantısı hatası. Lütfen internet bağlantınızı kontrol edin.',
     UNAUTHORIZED: 'Bu işlem için yetkiniz bulunmamaktadır.',
@@ -146,7 +231,10 @@ export const APP_CONFIG = {
     INVALID_FILE_TYPE: 'Geçersiz dosya türü. Lütfen desteklenen formatları kullanın.'
   },
   
-  // Success messages
+  // ==================== BAŞARI MESAJLARI ====================
+  /**
+   * Kullanıcı dostu başarı mesajları
+   */
   SUCCESS_MESSAGES: {
     PROFILE_UPDATED: 'Profiliniz başarıyla güncellendi.',
     JOB_CREATED: 'İş ilanı başarıyla oluşturuldu.',

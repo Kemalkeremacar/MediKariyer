@@ -1,3 +1,8 @@
+/**
+ * @file HomePage.jsx
+ * @description Ana Sayfa - Platform tanıtım sayfası ve giriş noktası
+ */
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiUsers, FiShield, FiTrendingUp, FiCheckCircle, FiPlay, FiHeart } from 'react-icons/fi';
