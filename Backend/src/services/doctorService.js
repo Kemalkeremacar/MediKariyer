@@ -1267,7 +1267,6 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
   const {
     status,
     city,           // Şehir filtresi (iş ilanındaki şehir)
-    application_date, // Başvuru tarihi (tek tarih)
     page = 1,
     limit = 10
   } = filters;
@@ -1315,17 +1314,6 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     query = query.where('c.name', 'like', `%${city}%`);
   }
 
-  // Başvuru tarihi filtresi (tek tarih - o günün tamamını kapsar)
-  if (application_date) {
-    const startOfDay = new Date(application_date);
-    startOfDay.setHours(0, 0, 0, 0);
-    
-    const endOfDay = new Date(application_date);
-    endOfDay.setHours(23, 59, 59, 999);
-    
-    query = query.whereBetween('a.applied_at', [startOfDay, endOfDay]);
-  }
-
   // Toplam sayı için count query (aynı filtreleri kullan)
   let countQuery = db('applications as a')
     .leftJoin('jobs as j', 'a.job_id', 'j.id')
@@ -1347,16 +1335,6 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
 
   if (city) {
     countQuery = countQuery.where('c.name', 'like', `%${city}%`);
-  }
-
-  if (application_date) {
-    const startOfDay = new Date(application_date);
-    startOfDay.setHours(0, 0, 0, 0);
-    
-    const endOfDay = new Date(application_date);
-    endOfDay.setHours(23, 59, 59, 999);
-    
-    countQuery = countQuery.whereBetween('a.applied_at', [startOfDay, endOfDay]);
   }
 
   const totalResult = await countQuery.count('* as total').first();

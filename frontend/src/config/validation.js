@@ -490,36 +490,6 @@ export const hospitalProfileUpdateSchema = z.object({
   )
 });
 
-/**
- * Hospital Department Schema - Backend departmentSchema ile tam uyumlu
- * 
- * Hastane departman formu validasyonu
- * Departman adı ve açıklama kontrolü içerir
- * 
- * Field'lar:
- * - department_name: Departman adı (min 2, max 255 karakter)
- * - description: Departman açıklaması (max 500 karakter, opsiyonel)
- */
-export const hospitalDepartmentSchema = z.object({
-  department_name: z.string().min(2, 'Departman adı en az 2 karakter olmalıdır').max(255, 'Departman adı en fazla 255 karakter olabilir'),
-  description: z.string().max(500, 'Departman açıklaması en fazla 500 karakter olabilir').optional()
-});
-
-/**
- * Hospital Contact Schema - Backend contactSchema ile tam uyumlu
- * 
- * Hastane iletişim bilgileri formu validasyonu
- * Telefon ve e-posta kontrolü içerir
- * 
- * Field'lar:
- * - phone: Telefon numarası (regex formatı, 10-20 karakter, opsiyonel)
- * - email: E-posta adresi (geçerli e-posta formatı, opsiyonel)
- */
-export const hospitalContactSchema = z.object({
-  phone: z.string().regex(/^[\+]?[0-9\s\-\(\)]{10,20}$/, 'Geçerli bir telefon numarası giriniz').optional(),
-  email: z.string().email('Geçerli bir email adresi giriniz').optional()
-});
-
 // ============================================================================
 // JOB VALIDATION SCHEMAS - İş ilanı ve başvuru validasyon şemaları
 // ============================================================================
@@ -853,8 +823,6 @@ export default {
   
   // Hospital schemas
   hospitalProfileUpdateSchema,
-  hospitalDepartmentSchema,
-  hospitalContactSchema,
   
   // Job schemas
   jobSchema,

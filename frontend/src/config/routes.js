@@ -86,9 +86,8 @@ export const ROUTE_CONFIG = {
     JOBS: '/hospital/jobs',
     JOB_CREATE: '/hospital/jobs/new',
     APPLICATIONS: '/hospital/applications',
+    APPLICATION_DETAIL: '/hospital/applications/:applicationId',
     DOCTORS: '/hospital/doctors',
-    DEPARTMENTS: '/hospital/departments',
-    CONTACTS: '/hospital/contacts',
   },
   
   // ============================================================================

@@ -5,8 +5,6 @@
  * 
  * Ana İşlevler:
  * - Hastane profil yönetimi (CRUD)
- * - Departman yönetimi (CRUD)
- * - İletişim bilgisi yönetimi (CRUD)
  * - İş ilanı yönetimi (CRUD) - jobService'den taşındı
  * - Başvuru yönetimi (gelen başvurular, durum güncelleme) - applicationService'den taşındı
  * - Dashboard verileri (istatistikler, son başvurular)
@@ -19,8 +17,6 @@
  * 
  * Veritabanı Tabloları:
  * - hospital_profiles: Hastane profil bilgileri
- * - hospital_departments: Hastane departman bilgileri
- * - hospital_contacts: Hastane iletişim bilgileri
  * - jobs: İş ilanı bilgileri
  * - applications: Başvuru bilgileri
  * - doctor_profiles: Doktor profilleri
@@ -223,378 +219,6 @@ const getProfileCompletion = async (userId) => {
 // MODULE EXPORTS
 // ============================================================================
 
-/**
- * Hastane departmanlarını getirir
- * @description Hastanenin tüm departmanlarını alfabetik sırada getirir
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @returns {Promise<Array>} Departmanlar listesi
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @example
- * const departments = await getDepartments(123);
- * console.log('Departman sayısı:', departments.length);
- * 
- * @since 1.0.0
- */
-const getDepartments = async (userId) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const departments = await db('hospital_departments')
-      .where('hospital_id', hospitalProfile.id)
-      .orderBy('department_name', 'asc');
-
-    return departments;
-  } catch (error) {
-    logger.error('Get hospital departments error:', error);
-    throw error;
-  }
-};
-
-/**
- * Hastane departmanı ekler
- * @description Hastaneye yeni departman ekler
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @param {Object} departmentData - Departman verileri
- * @param {string} departmentData.department_name - Departman adı
- * @param {string} [departmentData.description] - Departman açıklaması
- * @param {string} [departmentData.head_doctor] - Başhekim adı
- * @returns {Promise<Object>} Oluşturulan departman bilgileri
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @example
- * const department = await addDepartment(123, {
- *   department_name: 'Kardiyoloji',
- *   description: 'Kalp ve damar hastalıkları'
- * });
- * 
- * @since 1.0.0
- */
-const addDepartment = async (userId, departmentData) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const [departmentId] = await db('hospital_departments').insert({
-      ...departmentData,
-      hospital_id: hospitalProfile.id
-    });
-
-    return await db('hospital_departments')
-      .where('id', departmentId)
-      .first();
-  } catch (error) {
-    logger.error('Add hospital department error:', error);
-    throw error;
-  }
-};
-
-/**
- * Hastane departmanını günceller
- * @description Mevcut departman bilgilerini günceller
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @param {number} departmentId - Güncellenecek departman ID'si
- * @param {Object} departmentData - Güncellenecek departman verileri
- * @param {string} [departmentData.department_name] - Departman adı
- * @param {string} [departmentData.description] - Departman açıklaması
- * @param {string} [departmentData.head_doctor] - Başhekim adı
- * @returns {Promise<Object|null>} Güncellenmiş departman bilgileri veya null (bulunamazsa)
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @example
- * const updatedDepartment = await updateDepartment(123, 456, {
- *   department_name: 'Güncellenmiş Kardiyoloji'
- * });
- * 
- * @since 1.0.0
- */
-const updateDepartment = async (userId, departmentId, departmentData) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const existingDepartment = await db('hospital_departments')
-      .where('id', departmentId)
-      .where('hospital_id', hospitalProfile.id)
-      .first();
-
-    if (!existingDepartment) return null;
-
-    await db('hospital_departments')
-      .where('id', departmentId)
-      .update(departmentData);
-
-    return await db('hospital_departments')
-      .where('id', departmentId)
-      .first();
-  } catch (error) {
-    logger.error('Update hospital department error:', error);
-    throw error;
-  }
-};
-
-/**
- * Hastane departmanını siler
- * @description Departmanı siler (şu anda iş ilanı kontrolü yapılmıyor)
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @param {number} departmentId - Silinecek departman ID'si
- * @returns {Promise<boolean>} Silme işleminin başarı durumu
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @example
- * const deleted = await deleteDepartment(123, 456);
- * if (deleted) {
- *   console.log('Departman başarıyla silindi');
- * }
- * 
- * @since 1.0.0
- */
-const deleteDepartment = async (userId, departmentId) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const existingDepartment = await db('hospital_departments')
-      .where('id', departmentId)
-      .where('hospital_id', hospitalProfile.id)
-      .first();
-
-    if (!existingDepartment) return false;
-
-    // Bu departmana ait iş ilanları var mı kontrol et
-    // Not: Schema'da jobs tablosunda department_id kolonu yok, bu kontrol şimdilik kaldırıldı
-    // İleride jobs tablosuna department_id kolonu eklenirse bu kontrol aktif edilebilir
-    /*
-    const jobCount = await db('jobs')
-      .where('department_id', departmentId)
-      .count('* as count')
-      .first();
-    
-    if (jobCount.count > 0) {
-      throw new AppError('Bu departmana ait iş ilanları bulunduğu için silinemez', 400);
-    }
-    */
-
-    await db('hospital_departments').where('id', departmentId).del();
-    return true;
-  } catch (error) {
-    logger.error('Delete hospital department error:', error);
-    throw error;
-  }
-};
-
-/**
- * Hastane iletişim bilgilerini getirir
- * @description Hastanenin tüm ek iletişim bilgilerini getirir
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @returns {Promise<Array>} İletişim bilgileri listesi
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @example
- * const contacts = await getContacts(123);
- * console.log('İletişim bilgisi sayısı:', contacts.length);
- * 
- * @since 1.0.0
- */
-const getContacts = async (userId) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const contacts = await db('hospital_contacts')
-      .where('hospital_id', hospitalProfile.id)
-      .orderBy('id', 'asc');
-
-    return contacts;
-  } catch (error) {
-    logger.error('Get hospital contacts error:', error);
-    throw error;
-  }
-};
-
-/**
- * Hastane ek iletişim bilgisi ekler
- * @description Hastaneye yeni iletişim bilgisi ekler
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @param {Object} contactData - İletişim verileri
- * @param {string} [contactData.phone] - Telefon numarası
- * @param {string} [contactData.email] - E-posta adresi
- * @returns {Promise<Object>} Oluşturulan iletişim bilgileri
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @note Schema'da hospital_contacts tablosunda sadece phone ve email field'ları var
- * 
- * @example
- * const contact = await addContact(123, {
- *   phone: '+905551234567',
- *   email: 'info@hospital.com'
- * });
- * 
- * @since 1.0.0
- */
-const addContact = async (userId, contactData) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const [contactId] = await db('hospital_contacts').insert({
-      hospital_id: hospitalProfile.id,
-      phone: contactData.phone || null,
-      email: contactData.email || null
-    });
-
-    return await db('hospital_contacts')
-      .where('id', contactId)
-      .first();
-  } catch (error) {
-    logger.error('Add hospital contact error:', error);
-    throw error;
-  }
-};
-
-/**
- * Hastane ek iletişim bilgisi günceller
- * @description Mevcut iletişim bilgisini günceller
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @param {number} contactId - Güncellenecek iletişim ID'si
- * @param {Object} contactData - Güncellenecek iletişim verileri
- * @param {string} [contactData.phone] - Telefon numarası
- * @param {string} [contactData.email] - E-posta adresi
- * @returns {Promise<Object|null>} Güncellenmiş iletişim bilgileri veya null (bulunamazsa)
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @note Schema'da hospital_contacts tablosunda sadece phone ve email field'ları var
- * 
- * @example
- * const updatedContact = await updateContact(123, 456, {
- *   phone: '+905559876543',
- *   email: 'newemail@hospital.com'
- * });
- * 
- * @since 1.0.0
- */
-const updateContact = async (userId, contactId, contactData) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const existingContact = await db('hospital_contacts')
-      .where('id', contactId)
-      .where('hospital_id', hospitalProfile.id)
-      .first();
-
-    if (!existingContact) return null;
-
-    const updateData = {};
-    if (contactData.phone !== undefined) updateData.phone = contactData.phone;
-    if (contactData.email !== undefined) updateData.email = contactData.email;
-
-    await db('hospital_contacts')
-      .where('id', contactId)
-      .update(updateData);
-
-    return await db('hospital_contacts')
-      .where('id', contactId)
-      .first();
-  } catch (error) {
-    logger.error('Update hospital contact error:', error);
-    throw error;
-  }
-};
-
-/**
- * Hastane ek iletişim bilgisi siler
- * @description İletişim bilgisini siler
- * @param {number} userId - JWT token'dan gelen kullanıcı ID'si (users.id)
- * @param {number} contactId - Silinecek iletişim ID'si
- * @returns {Promise<boolean>} Silme işleminin başarı durumu
- * @throws {AppError} 404 - Hastane profili bulunamadı
- * @throws {Error} Veritabanı hatası durumunda
- * 
- * @example
- * const deleted = await deleteContact(123, 456);
- * if (deleted) {
- *   console.log('İletişim bilgisi başarıyla silindi');
- * }
- * 
- * @since 1.0.0
- */
-const deleteContact = async (userId, contactId) => {
-  try {
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    const existingContact = await db('hospital_contacts')
-      .where('id', contactId)
-      .where('hospital_id', hospitalProfile.id)
-      .first();
-
-    if (!existingContact) return false;
-
-    await db('hospital_contacts').where('id', contactId).del();
-    return true;
-  } catch (error) {
-    logger.error('Delete hospital contact error:', error);
-    throw error;
-  }
-};
-
 // ============================================================================
 // İŞ İLANI YÖNETİMİ (jobService'den taşındı)
 // ============================================================================
@@ -610,6 +234,8 @@ const deleteContact = async (userId, contactId) => {
  * @param {string} [params.search] - Genel arama terimi
  * @param {string} [params.title_search] - İş ilanı başlığı arama terimi
  * @param {string} [params.specialty_search] - Uzmanlık alanı arama terimi
+ * @param {number} [params.specialty_id] - Uzmanlık ID'si (filtreleme)
+ * @param {number} [params.subspecialty_id] - Yan dal uzmanlığı ID'si (filtreleme)
  * @returns {Promise<Object>} İş ilanları ve sayfalama bilgisi
  * @throws {AppError} Hastane profili bulunamadığında
  */
@@ -621,7 +247,9 @@ const getJobs = async (userId, params = {}) => {
       status,
       search,
       title_search,
-      specialty_search
+      specialty_search,
+      specialty_id,
+      subspecialty_id
     } = params;
 
     // Hastane profil ID'sini al
@@ -639,13 +267,15 @@ const getJobs = async (userId, params = {}) => {
       .join('job_statuses as js', 'j.status_id', 'js.id')
       .join('specialties as s', 'j.specialty_id', 's.id')
       .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
       .where('j.hospital_id', hospitalProfile.id)
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarını gösterme
       .select(
         'j.*',
         'js.name as status',
         's.name as specialty',
-        'c.name as city'
+        'c.name as city',
+        'ss.name as subspecialty_name'
       );
 
     // Status filtresi - hastane istediği durumu filtreleyebilir
@@ -670,6 +300,16 @@ const getJobs = async (userId, params = {}) => {
     // Uzmanlık arama - sadece uzmanlık alanında
     if (specialty_search) {
       query = query.where('s.name', 'like', `%${specialty_search}%`);
+    }
+
+    // Uzmanlık ID filtresi
+    if (specialty_id) {
+      query = query.where('j.specialty_id', specialty_id);
+    }
+
+    // Yan dal uzmanlığı ID filtresi
+    if (subspecialty_id) {
+      query = query.where('j.subspecialty_id', subspecialty_id);
     }
 
     // Sayfalama - SQL Server için OFFSET/FETCH kullan
@@ -724,6 +364,16 @@ const getJobs = async (userId, params = {}) => {
     // Uzmanlık arama - sadece uzmanlık alanında
     if (specialty_search) {
       totalQuery.where('s.name', 'like', `%${specialty_search}%`);
+    }
+
+    // Uzmanlık ID filtresi
+    if (specialty_id) {
+      totalQuery.where('j.specialty_id', specialty_id);
+    }
+
+    // Yan dal uzmanlığı ID filtresi
+    if (subspecialty_id) {
+      totalQuery.where('j.subspecialty_id', subspecialty_id);
     }
 
     const [{ count }] = await totalQuery.count('* as count');
@@ -1179,6 +829,7 @@ const getApplications = async (userId, jobId, params = {}) => {
         'j.title as job_title',
         'j.min_experience_years',
         'j.employment_type',
+        'j.created_at as job_created_at',
         'c.name as job_city',
         's.name as specialty_name',
         'j.status_id as job_status_id',
@@ -1187,7 +838,16 @@ const getApplications = async (userId, jobId, params = {}) => {
 
     // Filtreler
     if (status) {
-      query = query.where('ast.name', status);
+      // Status parametresi sayı mı kontrol et
+      // Eğer sayı ise ast.id ile, değilse ast.name ile karşılaştır
+      const statusNum = parseInt(status, 10);
+      if (!isNaN(statusNum)) {
+        // Sayı geldiğinde ID ile karşılaştır
+        query = query.where('ast.id', statusNum);
+      } else {
+        // String geldiğinde name ile karşılaştır (geriye uyumluluk)
+        query = query.where('ast.name', status);
+      }
     }
 
     // Sayfalama
@@ -1238,7 +898,16 @@ const getApplications = async (userId, jobId, params = {}) => {
       .where('u.is_active', true); // Pasifleştirilmiş doktorların başvurularını sayma
 
     if (status) {
-      totalQuery.where('ast.name', status);
+      // Status parametresi sayı mı kontrol et
+      // Eğer sayı ise ast.id ile, değilse ast.name ile karşılaştır
+      const statusNum = parseInt(status, 10);
+      if (!isNaN(statusNum)) {
+        // Sayı geldiğinde ID ile karşılaştır
+        totalQuery.where('ast.id', statusNum);
+      } else {
+        // String geldiğinde name ile karşılaştır (geriye uyumluluk)
+        totalQuery.where('ast.name', status);
+      }
     }
 
     const [{ count }] = await totalQuery.count('* as count');
@@ -1279,7 +948,7 @@ const getApplications = async (userId, jobId, params = {}) => {
  */
 const getAllApplications = async (userId, params = {}) => {
   try {
-    const { page = 1, limit = 20, status, search, doctor_search, job_search } = params;
+    const { page = 1, limit = 20, status, search, doctor_search, job_search, jobIds } = params;
 
     // Hastane profil ID'sini al
     const hospitalProfile = await db('hospital_profiles')
@@ -1317,22 +986,45 @@ const getAllApplications = async (userId, params = {}) => {
         'j.id as job_id',
         'j.min_experience_years',
         'j.employment_type',
+        'j.created_at as job_created_at',
         'c.name as job_city',
         's.name as specialty_name',
         'j.status_id as job_status_id',
         'js.name as job_status'
       );
 
+    // İş ilanı ID filtresi - birden fazla job ID destekler (ÖNCE uygulanmalı)
+    if (jobIds) {
+      // jobIds string veya array olabilir
+      const jobIdArray = Array.isArray(jobIds) ? jobIds : (typeof jobIds === 'string' ? jobIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : []);
+      if (jobIdArray.length > 0) {
+        query = query.whereIn('j.id', jobIdArray);
+      }
+    }
+
     // Filtreler
     if (status) {
-      query = query.where('ast.name', status);
+      // Status parametresi sayı mı kontrol et
+      // Eğer sayı ise ast.id ile, değilse ast.name ile karşılaştır
+      const statusNum = parseInt(status, 10);
+      if (!isNaN(statusNum)) {
+        // Sayı geldiğinde ID ile karşılaştır
+        query = query.where('ast.id', statusNum);
+      } else {
+        // String geldiğinde name ile karşılaştır (geriye uyumluluk)
+        query = query.where('ast.name', status);
+      }
     }
 
     // Genel arama sorgusu
     if (search) {
       query = query.where(function() {
+        // İsim ve soyisim ayrı ayrı kontrol
         this.where('dp.first_name', 'like', `%${search}%`)
           .orWhere('dp.last_name', 'like', `%${search}%`)
+          // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${search}%`)
+          // İş ilanı başlığı kontrolü
           .orWhere('j.title', 'like', `%${search}%`);
       });
     }
@@ -1340,8 +1032,11 @@ const getAllApplications = async (userId, params = {}) => {
     // Doktor arama - sadece doktor adında
     if (doctor_search) {
       query = query.where(function() {
+        // İsim ve soyisim ayrı ayrı kontrol
         this.where('dp.first_name', 'like', `%${doctor_search}%`)
-          .orWhere('dp.last_name', 'like', `%${doctor_search}%`);
+          .orWhere('dp.last_name', 'like', `%${doctor_search}%`)
+          // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${doctor_search}%`);
       });
     }
 
@@ -1361,31 +1056,57 @@ const getAllApplications = async (userId, params = {}) => {
     const totalQuery = db('applications as a')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
+      .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
+      .join('users as u', 'dp.user_id', 'u.id')
       .where('j.hospital_id', hospitalProfile.id)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
-      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+      .where('u.is_active', true); // Pasifleştirilmiş doktorların başvurularını gösterme
+
+    // İş ilanı ID filtresi - birden fazla job ID destekler (totalQuery için) - ÖNCE uygulanmalı
+    if (jobIds) {
+      // jobIds string veya array olabilir
+      const jobIdArray = Array.isArray(jobIds) ? jobIds : (typeof jobIds === 'string' ? jobIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : []);
+      if (jobIdArray.length > 0) {
+        totalQuery.whereIn('j.id', jobIdArray);
+      }
+    }
 
     if (status) {
-      totalQuery.where('ast.name', status);
+      // Status parametresi sayı mı kontrol et
+      // Eğer sayı ise ast.id ile, değilse ast.name ile karşılaştır
+      const statusNum = parseInt(status, 10);
+      if (!isNaN(statusNum)) {
+        // Sayı geldiğinde ID ile karşılaştır
+        totalQuery.where('ast.id', statusNum);
+      } else {
+        // String geldiğinde name ile karşılaştır (geriye uyumluluk)
+        totalQuery.where('ast.name', status);
+      }
     }
 
     // Genel arama sorgusu
     if (search) {
-      totalQuery.join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
-        .where(function() {
-          this.where('dp.first_name', 'like', `%${search}%`)
-            .orWhere('dp.last_name', 'like', `%${search}%`)
-            .orWhere('j.title', 'like', `%${search}%`);
-        });
+      totalQuery.where(function() {
+        // İsim ve soyisim ayrı ayrı kontrol
+        this.where('dp.first_name', 'like', `%${search}%`)
+          .orWhere('dp.last_name', 'like', `%${search}%`)
+          // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${search}%`)
+          // İş ilanı başlığı kontrolü
+          .orWhere('j.title', 'like', `%${search}%`);
+      });
     }
 
     // Doktor arama - sadece doktor adında
     if (doctor_search) {
-      totalQuery.join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
-        .where(function() {
-          this.where('dp.first_name', 'like', `%${doctor_search}%`)
-            .orWhere('dp.last_name', 'like', `%${doctor_search}%`);
-        });
+      totalQuery.where(function() {
+        // İsim ve soyisim ayrı ayrı kontrol
+        this.where('dp.first_name', 'like', `%${doctor_search}%`)
+          .orWhere('dp.last_name', 'like', `%${doctor_search}%`)
+          // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${doctor_search}%`);
+      });
     }
 
     // İş ilanı arama - sadece iş ilanı başlığında

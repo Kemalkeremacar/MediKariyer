@@ -30,8 +30,6 @@ const DoctorApplicationsPage = () => {
   // Filtre state'leri
   const [statusFilter, setStatusFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
-  const [applicationDate, setApplicationDate] = useState('');
-  const dateInputRef = useRef(null); // Date input için ref (uncontrolled)
   const [currentPage, setCurrentPage] = useState(1);
   
   // Lookup data
@@ -42,7 +40,6 @@ const DoctorApplicationsPage = () => {
   const { data: applicationsData, isLoading: applicationsLoading, refetch: refetchApplications } = useMyApplications({
     status: statusFilter || undefined,
     city: cityFilter || undefined,
-    application_date: applicationDate || undefined,
     page: currentPage,
     limit: 12
   });
@@ -97,36 +94,31 @@ const DoctorApplicationsPage = () => {
   }, [applicationsData, applicationsLoading, applications.length, currentPage]);
 
   // Filtre değiştiğinde sayfa 1'e dön (sadece restore işlemi yapılmadıysa)
-  const prevFiltersRef = useRef({ statusFilter, cityFilter, applicationDate });
+  const prevFiltersRef = useRef({ statusFilter, cityFilter });
   useEffect(() => {
     const prev = prevFiltersRef.current;
     const hasFilterChanged = 
       prev.statusFilter !== statusFilter ||
-      prev.cityFilter !== cityFilter ||
-      prev.applicationDate !== applicationDate;
+      prev.cityFilter !== cityFilter;
     
     // Sadece filtre gerçekten değiştiyse ve restore işlemi yapılmadıysa sayfa 1'e dön
     if (hasFilterChanged && hasRestoredPageRef.current) {
       setCurrentPage(1);
     }
     
-    prevFiltersRef.current = { statusFilter, cityFilter, applicationDate };
-  }, [statusFilter, cityFilter, applicationDate]);
+    prevFiltersRef.current = { statusFilter, cityFilter };
+  }, [statusFilter, cityFilter]);
 
 
   // Aktif filtre sayısı (memoized)
   const activeFiltersCount = useMemo(() => {
-    return [statusFilter, cityFilter, applicationDate].filter(Boolean).length;
-  }, [statusFilter, cityFilter, applicationDate]);
+    return [statusFilter, cityFilter].filter(Boolean).length;
+  }, [statusFilter, cityFilter]);
 
   // Filtreleri temizle (memoized)
   const clearFilters = useCallback(() => {
     setStatusFilter('');
     setCityFilter('');
-    setApplicationDate('');
-    if (dateInputRef.current) {
-      dateInputRef.current.value = '';
-    }
   }, []);
 
   const handleApplicationClick = useCallback((application, e) => {
@@ -289,7 +281,7 @@ const DoctorApplicationsPage = () => {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Durum Filtresi */}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -327,101 +319,6 @@ const DoctorApplicationsPage = () => {
                 ))}
               </select>
             </div>
-
-            {/* Başvuru Tarihi */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Başvuru Tarihi
-              </label>
-              <input
-                ref={dateInputRef}
-                type="text"
-                placeholder="GG.AA.YYYY"
-                maxLength={10}
-                onChange={(e) => {
-                  const input = e.target;
-                  const oldValue = input.value;
-                  const cursorPos = input.selectionStart || 0;
-                  
-                  // Sadece rakamları al
-                  let digits = oldValue.replace(/\D/g, '');
-                  
-                  // Format mask: DD.MM.YYYY
-                  let formatted = '';
-                  if (digits.length > 0) {
-                    if (digits.length <= 2) {
-                      formatted = digits;
-                    } else if (digits.length <= 4) {
-                      formatted = digits.slice(0, 2) + '.' + digits.slice(2);
-                    } else {
-                      formatted = digits.slice(0, 2) + '.' + digits.slice(2, 4) + '.' + digits.slice(4, 8);
-                    }
-                  }
-                  
-                  // Cursor pozisyonunu hesapla (nokta eklemelerinde +1)
-                  let newCursorPos = cursorPos;
-                  if (oldValue.length < formatted.length) {
-                    // Nokta eklenmiş, cursor'ı kaydır
-                    if (cursorPos >= 2 && formatted.length > oldValue.length) {
-                      newCursorPos = cursorPos + 1;
-                    } else if (cursorPos >= 5 && formatted.length > oldValue.length) {
-                      newCursorPos = cursorPos + 1;
-                    } else {
-                      newCursorPos = formatted.length;
-                    }
-                  } else if (oldValue.length > formatted.length) {
-                    // Silme işlemi
-                    const removedDots = (oldValue.match(/\./g) || []).length - (formatted.match(/\./g) || []).length;
-                    newCursorPos = Math.max(0, cursorPos - removedDots);
-                  }
-                  
-                  // Input'un native value'sunu güncelle (state kullanmadan, render tetiklemeden)
-                  input.value = formatted;
-                  
-                  // Cursor pozisyonunu ayarla
-                  requestAnimationFrame(() => {
-                    input.setSelectionRange(newCursorPos, newCursorPos);
-                  });
-                  
-                  // Sadece tam tarih formatı yazıldığında state'i güncelle (API çağrısı için)
-                  if (formatted.length === 10) {
-                    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
-                    const match = formatted.match(dateRegex);
-                    
-                    if (match) {
-                      const day = parseInt(match[1], 10);
-                      const month = parseInt(match[2], 10);
-                      const year = parseInt(match[3], 10);
-                      
-                      // Geçerli tarih kontrolü
-                      if (year >= 1900 && year <= 2100 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-                        // YYYY-MM-DD formatına çevir (API için)
-                        const date = new Date(year, month - 1, day);
-                        if (date.getFullYear() === year && 
-                            date.getMonth() === month - 1 && 
-                            date.getDate() === day) {
-                          const apiDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                          setApplicationDate(apiDate); // Sadece tam tarih yazıldığında state güncellenir
-                        } else {
-                          setApplicationDate(''); // Sadece geçersiz tarih durumunda state güncellenir
-                          showToast.error('Geçerli bir tarih giriniz');
-                        }
-                      } else {
-                        setApplicationDate(''); // Sadece geçersiz tarih durumunda state güncellenir
-                        showToast.error('Geçerli bir tarih giriniz (1900-2100 arası)');
-                      }
-                    } else {
-                      setApplicationDate(''); // Sadece format hatası durumunda state güncellenir
-                    }
-                  } else {
-                    // Tarih tam yazılmamış - state'i değiştirme (render tetiklenmez, API çağrısı yapılmaz)
-                    // Input'un native değeri güncellendi, bu yeterli
-                  }
-                }}
-                style={{ color: '#ffffff' }}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl placeholder:text-white/70 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
-              />
-            </div>
           </div>
 
           {/* Aktif Filtreler (Chip'ler) */}
@@ -445,22 +342,6 @@ const DoctorApplicationsPage = () => {
                     <button
                       onClick={() => setCityFilter('')}
                       className="hover:bg-purple-500/30 rounded p-0.5 transition-colors"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </span>
-                )}
-                {applicationDate && (
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-300 rounded-lg text-sm border border-green-500/30">
-                    Başvuru Tarihi: {new Date(applicationDate).toLocaleDateString('tr-TR')}
-                    <button
-                      onClick={() => {
-                        setApplicationDate('');
-                        if (dateInputRef.current) {
-                          dateInputRef.current.value = '';
-                        }
-                      }}
-                      className="hover:bg-green-500/30 rounded p-0.5 transition-colors"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>

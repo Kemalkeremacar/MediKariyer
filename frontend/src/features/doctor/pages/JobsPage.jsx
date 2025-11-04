@@ -37,6 +37,8 @@ const DoctorJobsPage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   
   const searchInputRef = useRef(null);
+  const cursorPositionRef = useRef(null); // Cursor pozisyonunu korumak için
+  const scrollPositionRef = useRef(null); // Scroll pozisyonunu korumak için
   const [currentPage, setCurrentPage] = useState(() => parseInt(searchParams.get('page') || '1', 10));
 
   // Lookup Data Hook
@@ -62,6 +64,9 @@ const DoctorJobsPage = () => {
     // Input aktifken URL güncelleme (caret sıçramasını önler)
     if (document.activeElement === searchInputRef.current) return;
     
+    // Scroll pozisyonunu kaydet (URL güncellemesinden önce)
+    scrollPositionRef.current = window.scrollY;
+    
         setSearchParams(prev => {
           const newParams = new URLSearchParams(prev);
       if (debouncedSearch && debouncedSearch.length >= 2) {
@@ -77,12 +82,22 @@ const DoctorJobsPage = () => {
       }
           return newParams;
         });
+        
+    // Scroll pozisyonunu geri yükle (URL güncellemesinden sonra)
+    requestAnimationFrame(() => {
+      if (scrollPositionRef.current !== null) {
+        window.scrollTo(0, scrollPositionRef.current);
+      }
+    });
   }, [debouncedSearch, setSearchParams]);
 
   // 🔹 Tüm filtreler → URL'e yazılır (state değiştiğinde - debounced, agresif değil)
   // Debounce ile URL güncellemesi (300ms) - gereksiz render'ları önler
   useEffect(() => {
     const timeoutId = setTimeout(() => {
+      // Scroll pozisyonunu kaydet (filtre değişikliğinden önce)
+      scrollPositionRef.current = window.scrollY;
+      
       setSearchParams(prev => {
         const newParams = new URLSearchParams(prev);
         let hasChanges = false;
@@ -145,25 +160,84 @@ const DoctorJobsPage = () => {
         // Sadece değişiklik varsa güncelle
         return hasChanges ? newParams : prev;
       });
+      
+      // Scroll pozisyonunu geri yükle (filtre değişikliğinden sonra)
+      requestAnimationFrame(() => {
+        if (scrollPositionRef.current !== null) {
+          window.scrollTo(0, scrollPositionRef.current);
+        }
+      });
     }, 300); // 300ms debounce
     
     return () => clearTimeout(timeoutId);
   }, [cityId, specialtyId, subspecialtyId, employmentType, currentPage, setSearchParams]);
 
   // Search input için commit fonksiyonu (onBlur veya Enter tuşu için)
-  const commitSearchToUrl = useCallback(() => {
+  // Cursor pozisyonu korunur - focus kalkmaz - yazmaya devam edilebilir
+  // Sayfa refresh olmaz - form submit engellenir
+  const commitSearchToUrl = useCallback((cursorPosBeforeCommit = null) => {
     if (searchInputRef.current === document.activeElement) {
-      const value = (searchQuery || '').trim().replace(/\s+/g, ' ').slice(0, 100);
-        setSearchParams(prev => {
-          const newParams = new URLSearchParams(prev);
+      const originalQuery = searchQuery || '';
+      const value = originalQuery.trim().replace(/\s+/g, ' ').slice(0, 100);
+
+      // Cursor pozisyonunu kaydet (trim öncesi)
+      const cursorPosition = cursorPosBeforeCommit ?? searchInputRef.current?.selectionStart ?? cursorPositionRef.current ?? originalQuery.length;
+      cursorPositionRef.current = cursorPosition;
+
+      // Trim işlemi nedeniyle cursor pozisyonunu hesapla
+      const trimmedStart = originalQuery.length - (originalQuery.trimStart() || '').length;
+      const trimmedLength = value.length;
+
+      // URL'e yaz
+      setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
         if (value && value.length >= 2) {
           newParams.set('search', value);
+          // Recent searches'i localStorage'a kaydet
+          const key = 'doctor_jobs_recent_searches';
+          const raw = localStorage.getItem(key);
+          const list = Array.isArray(JSON.parse(raw || '[]')) ? JSON.parse(raw || '[]') : [];
+          const next = [value, ...list.filter((q) => q !== value)].slice(0, 5);
+          localStorage.setItem(key, JSON.stringify(next));
         } else {
           newParams.delete('search');
         }
-          return newParams;
+        return newParams;
+      });
+
+      // State'i güncelle (URL'den gelecek değer yerine doğrudan burada güncelle)
+      setSearchQuery(value);
+
+      // Scroll pozisyonunu kaydet ve koru
+      scrollPositionRef.current = window.scrollY;
+
+      // Input'un value'sunu doğrudan ayarla ve cursor pozisyonunu hemen restore et
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (searchInputRef.current) {
+            searchInputRef.current.value = value;
+            searchInputRef.current.focus();
+
+            let newPos = cursorPosition;
+            if (cursorPosition > trimmedStart) {
+              newPos = Math.min(cursorPosition - trimmedStart, trimmedLength);
+            } else {
+              newPos = Math.min(cursorPosition, trimmedLength);
+            }
+
+            newPos = Math.min(newPos, value.length);
+
+            searchInputRef.current.setSelectionRange(newPos, newPos);
+            cursorPositionRef.current = newPos;
+            
+            // Scroll pozisyonunu geri yükle
+            if (scrollPositionRef.current !== null) {
+              window.scrollTo(0, scrollPositionRef.current);
+            }
+          }
         });
-      }
+      });
+    }
   }, [searchQuery, setSearchParams]);
 
   // Search input'un değeri boşaldığında input'u temizle
@@ -172,6 +246,33 @@ const DoctorJobsPage = () => {
       searchInputRef.current.value = '';
     }
   }, [searchQuery]);
+
+  // Render'dan sonra cursor pozisyonunu geri yükle (eğer kaydedilmişse ve kullanıcı input'ta ise)
+  useEffect(() => {
+    // Sadece kullanıcı input'ta yazıyorsa cursor pozisyonunu geri yükle
+    if (cursorPositionRef.current !== null &&
+        searchInputRef.current &&
+        document.activeElement === searchInputRef.current &&
+        searchQuery.length > 0) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (searchInputRef.current && document.activeElement === searchInputRef.current) {
+            const pos = Math.min(cursorPositionRef.current, searchQuery.length);
+            searchInputRef.current.setSelectionRange(pos, pos);
+          }
+        });
+      });
+    }
+  }, [searchQuery]);
+
+  // Scroll pozisyonunu kaydet
+  useEffect(() => {
+    const handleScroll = () => {
+      scrollPositionRef.current = window.scrollY;
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // URL'den filtre değerlerini oku
   const urlCityId = searchParams.get('city_id') || '';
@@ -337,6 +438,9 @@ const DoctorJobsPage = () => {
     setSubspecialtyId('');
     setEmploymentType('');
     setSearchQuery('');
+    if (searchInputRef.current) {
+      searchInputRef.current.value = '';
+    }
   }, []);
 
 
@@ -406,6 +510,7 @@ const DoctorJobsPage = () => {
             </h2>
             {activeFiltersCount > 0 && (
               <button
+                type="button"
                 onClick={clearFilters}
                 className="text-sm text-blue-400 hover:text-blue-300 font-medium"
               >
@@ -414,6 +519,13 @@ const DoctorJobsPage = () => {
             )}
               </div>
 
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }}
+          >
           {/* Filtre Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Şehir */}
@@ -504,15 +616,38 @@ const DoctorJobsPage = () => {
               <input
                 ref={searchInputRef}
                 type="text"
-                defaultValue={searchQuery}
+                value={searchQuery}
                 onChange={(e) => {
                   const value = e.target.value;
+                  const cursorPos = e.target.selectionStart || value.length;
+
+                  // Cursor pozisyonunu kaydet
+                  cursorPositionRef.current = cursorPos;
+
                   setSearchQuery(value);
+
+                  // Cursor pozisyonunu geri yükle (render'dan sonra)
+                  requestAnimationFrame(() => {
+                    if (searchInputRef.current && document.activeElement === searchInputRef.current) {
+                      const newPos = Math.min(cursorPos, value.length);
+                      searchInputRef.current.setSelectionRange(newPos, newPos);
+                      cursorPositionRef.current = newPos;
+                    }
+                  });
                 }}
-                onBlur={commitSearchToUrl}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    commitSearchToUrl();
+                    e.preventDefault();
+                    e.stopPropagation(); // Event'in yayılmasını önle
+
+                    // Cursor pozisyonunu kaydet (trim öncesi - en önemli adım!)
+                    const cursorPos = e.target.selectionStart ?? searchInputRef.current?.selectionStart ?? cursorPositionRef.current ?? searchQuery.length;
+
+                    // commitSearchToUrl'a cursor pozisyonunu parametre olarak geçir
+                    commitSearchToUrl(cursorPos);
+
+                    // Form submit'i engelle
+                    return false;
                   }
                 }}
                 placeholder="İlan başlığı veya hastane adı ara..."
@@ -528,6 +663,7 @@ const DoctorJobsPage = () => {
                 <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 text-sm">
                   <span>Şehir: {cities.find(c => c.id === parseInt(cityId, 10))?.name}</span>
                   <button
+                    type="button"
                     onClick={() => setCityId('')}
                     className="hover:text-blue-200"
                   >
@@ -539,6 +675,7 @@ const DoctorJobsPage = () => {
                 <div className="flex items-center gap-2 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-sm">
                   <span>Ana Dal: {specialties.find(s => s.id === parseInt(specialtyId, 10))?.name}</span>
                   <button
+                    type="button"
                     onClick={() => setSpecialtyId('')}
                     className="hover:text-purple-200"
                   >
@@ -550,6 +687,7 @@ const DoctorJobsPage = () => {
                 <div className="flex items-center gap-2 px-3 py-1 bg-pink-500/20 border border-pink-500/30 rounded-full text-pink-300 text-sm">
                   <span>Yan Dal: {filteredSubspecialties.find(s => s.id === parseInt(subspecialtyId, 10))?.name}</span>
                   <button
+                    type="button"
                     onClick={() => setSubspecialtyId('')}
                     className="hover:text-pink-200"
                   >
@@ -561,6 +699,7 @@ const DoctorJobsPage = () => {
                 <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-green-300 text-sm">
                   <span>Çalışma Türü: {employmentType}</span>
                   <button
+                    type="button"
                     onClick={() => setEmploymentType('')}
                     className="hover:text-green-200"
                   >
@@ -572,6 +711,7 @@ const DoctorJobsPage = () => {
                 <div className="flex items-center gap-2 px-3 py-1 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-300 text-sm">
                   <span>Arama: {searchQuery}</span>
                 <button
+                    type="button"
                     onClick={() => setSearchQuery('')}
                     className="hover:text-orange-200"
                 >
@@ -581,7 +721,8 @@ const DoctorJobsPage = () => {
               )}
             </div>
           )}
-          </div>
+          </form>
+        </div>
 
         {/* İlanlar Listesi */}
         {(jobsLoading || lookupLoading?.isLoading) ? (

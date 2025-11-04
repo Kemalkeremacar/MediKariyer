@@ -7,8 +7,6 @@
  * - Profil yönetimi route'ları
  * - İş ilanı yönetimi route'ları (hospitalService içinde)
  * - Başvuru yönetimi route'ları (hospitalService içinde)
- * - Departman yönetimi route'ları
- * - İletişim bilgisi yönetimi route'ları
  * - Dashboard orchestration route'ları
  * - Middleware entegrasyonu
  * 
@@ -35,14 +33,6 @@
  * - GET /me/hospital/jobs/:jobId/applications - Başvurular getir (hospitalService)
  * - GET /me/hospital/applications - Tüm ilanların başvuruları getir (hospitalService)
  * - PUT /me/hospital/applications/:applicationId/status - Başvuru durumu güncelle (hospitalService)
- * - GET /me/hospital/departments - Departmanları getir
- * - POST /me/hospital/departments - Departman ekle
- * - PUT /me/hospital/departments/:departmentId - Departman güncelle
- * - DELETE /me/hospital/departments/:departmentId - Departman sil
- * - GET /me/hospital/contacts - İletişim bilgilerini getir
- * - POST /me/hospital/contacts - İletişim bilgisi ekle
- * - PUT /me/hospital/contacts/:contactId - İletişim bilgisi güncelle
- * - DELETE /me/hospital/contacts/:contactId - İletişim bilgisi sil
  * - GET /me/hospital/dashboard - Dashboard verileri (hospitalService içinde)
  * 
  * @author MediKariyer Development Team

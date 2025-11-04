@@ -7,8 +7,6 @@
  * - Hastane profil doğrulaması
  * - İş ilanı doğrulaması
  * - Başvuru durumu doğrulaması
- * - Departman doğrulaması
- * - İletişim bilgisi doğrulaması
  * - Türkçe hata mesajları
  * - Detaylı validasyon kuralları
  * 
@@ -16,15 +14,11 @@
  * - hospitalProfileSchema: Hastane profil güncelleme
  * - jobSchema: İş ilanı oluşturma/güncelleme
  * - applicationStatusSchema: Başvuru durumu güncelleme
- * - departmentSchema: Departman oluşturma/güncelleme
- * - contactSchema: İletişim bilgisi oluşturma/güncelleme
  * 
  * Schema.sql Uyumluluğu:
  * - hospital_profiles tablosu ile uyumlu
  * - jobs tablosu ile uyumlu
  * - application_statuses tablosu ile uyumlu
- * - hospital_departments tablosu ile uyumlu
- * - hospital_contacts tablosu ile uyumlu
  * 
  * @author MediKariyer Development Team
  * @version 1.0.0
@@ -359,6 +353,18 @@ const applicationsQuerySchema = Joi.object({
       'number.base': 'İş ilanı ID sayı olmalıdır',
       'number.integer': 'İş ilanı ID tam sayı olmalıdır',
       'number.positive': 'İş ilanı ID pozitif olmalıdır'
+    }),
+
+  jobIds: Joi.alternatives()
+    .try(
+      Joi.string().pattern(/^\d+(,\d+)*$/, 'comma-separated numbers'),
+      Joi.array().items(Joi.number().integer().positive())
+    )
+    .optional()
+    .messages({
+      'string.base': 'İş ilanı ID\'leri string olmalıdır',
+      'array.base': 'İş ilanı ID\'leri array olmalıdır',
+      'string.pattern.base': 'İş ilanı ID\'leri virgülle ayrılmış sayılar olmalıdır (örn: 1,2,3)'
     }),
 
   search: Joi.string()

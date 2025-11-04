@@ -426,18 +426,6 @@ const applicationFilterSchema = Joi.object({
       'string.min': 'Şehir adı en az 2 karakter olmalıdır',
       'string.max': 'Şehir adı en fazla 50 karakter olabilir'
     }),
-  
-  application_date: Joi.date()
-    .iso()
-    .min('1900-01-01')
-    .max('now')
-    .optional()
-    .allow('')
-    .messages({
-      'date.format': 'Başvuru tarihi ISO formatında olmalıdır (YYYY-MM-DD)',
-      'date.min': 'Başvuru tarihi 1900 yılından önce olamaz',
-      'date.max': 'Başvuru tarihi bugünden sonra olamaz'
-    }),
     
   page: Joi.number()
     .integer()

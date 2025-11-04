@@ -105,9 +105,9 @@ const JobDetailPage = () => {
   // Loading state
   if (jobLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
         <TransitionWrapper>
-          <div className="max-w-5xl mx-auto p-6 space-y-8">
+          <div className="max-w-7xl mx-auto space-y-8">
             <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
             <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
           </div>
@@ -164,9 +164,9 @@ const JobDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
       <TransitionWrapper>
-        <div className="max-w-5xl mx-auto p-6 space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

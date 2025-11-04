@@ -52,8 +52,8 @@ const HospitalDashboard = () => {
   // Loading state - skeleton loader
   if (dashboardLoading || profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="space-y-8 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
           <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
@@ -106,8 +106,8 @@ const HospitalDashboard = () => {
   console.log('📋 Recent Jobs:', recentJobs);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      <div className="space-y-8 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
           {/* Hero Section */}
           <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8">
             {/* Background Pattern */}

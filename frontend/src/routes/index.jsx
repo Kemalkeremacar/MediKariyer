@@ -188,9 +188,8 @@ import HospitalJobCreate from '@/features/hospital/pages/JobCreatePage';
 import HospitalJobDetail from '@/features/hospital/pages/JobDetailPage';
 import HospitalJobEdit from '@/features/hospital/pages/JobEditPage';
 import HospitalApplications from '@/features/hospital/pages/ApplicationsPage';
+import HospitalApplicationDetail from '@/features/hospital/pages/ApplicationDetailPage';
 import HospitalDoctors from '@/features/hospital/pages/DoctorsPage';
-import HospitalDepartments from '@/features/hospital/pages/DepartmentsPage';
-import HospitalContacts from '@/features/hospital/pages/ContactsPage';
 
 /**
  * ============================================================================
@@ -612,6 +611,25 @@ const AppRoutes = () => {
           />
 
           {/* 
+            Hastane Başvuru Detay Sayfası - /hospital/applications/:applicationId
+            Başvuru detaylarını gösterir, durum yönetimi yapılabilir
+          */}
+          <Route
+            path="hospital/applications/:applicationId"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['hospital']}>
+                    <ApprovalGuard>
+                      <HospitalApplicationDetail />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          {/* 
             Hastane Doktor Profilleri Sayfası - /hospital/doctors
             Sistemdeki doktor profillerini görüntüleme ve arama
           */}
@@ -623,44 +641,6 @@ const AppRoutes = () => {
                   <RoleGuard allowedRoles={['hospital']}>
                     <ApprovalGuard>
                       <HospitalDoctors />
-                    </ApprovalGuard>
-                  </RoleGuard>
-                </AuthGuard>
-              </ErrorBoundary>
-            }
-          />
-
-          {/* 
-            Hastane Departmanlar Sayfası - /hospital/departments
-            Hastane departmanlarını yönetme (CRUD işlemleri)
-          */}
-          <Route
-            path="hospital/departments"
-            element={
-              <ErrorBoundary>
-                <AuthGuard>
-                  <RoleGuard allowedRoles={['hospital']}>
-                    <ApprovalGuard>
-                      <HospitalDepartments />
-                    </ApprovalGuard>
-                  </RoleGuard>
-                </AuthGuard>
-              </ErrorBoundary>
-            }
-          />
-
-          {/* 
-            Hastane İletişim Bilgileri Sayfası - /hospital/contacts
-            Hastane iletişim bilgilerini yönetme (CRUD işlemleri)
-          */}
-          <Route
-            path="hospital/contacts"
-            element={
-              <ErrorBoundary>
-                <AuthGuard>
-                  <RoleGuard allowedRoles={['hospital']}>
-                    <ApprovalGuard>
-                      <HospitalContacts />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>

@@ -136,9 +136,9 @@ const JobCreatePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
       <TransitionWrapper>
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
             <button

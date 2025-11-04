@@ -5,8 +5,6 @@
  * 
  * Ana İşlevler:
  * - Hastane profil yönetimi (GET, PUT)
- * - Departman yönetimi (CRUD)
- * - İletişim bilgisi yönetimi (CRUD)
  * - İş ilanı yönetimi (CRUD) - hospitalService içinde
  * - Başvuru yönetimi (gelen başvurular, durum güncelleme) - hospitalService içinde
  * - Dashboard verileri (hospitalService içinde)
@@ -21,8 +19,6 @@
  * - GET /api/hospital/profile - Temel profil bilgileri
  * - PUT /api/hospital/profile - Profil güncelleme
  * - GET /api/hospital/profile/completion - Profil tamamlanma oranı
- * - GET/POST/PUT/DELETE /api/hospital/departments - Departman CRUD
- * - GET/POST/PUT/DELETE /api/hospital/contacts - İletişim CRUD
  * - GET/POST/PUT/DELETE /api/hospital/jobs - İş ilanı CRUD
  * - GET/PUT /api/hospital/applications - Başvuru yönetimi
  * - GET /api/hospital/dashboard - Dashboard verileri
@@ -423,7 +419,17 @@ const getJobApplications = catchAsync(async (req, res, next) => {
  * @since 2.0.0
  */
 const getAllApplications = catchAsync(async (req, res, next) => {
-  const result = await hospitalService.getAllApplications(req.user.id, req.query);
+  // jobIds parametresini normalize et (Express query string'den array'e çevir)
+  const normalizedQuery = { ...req.query };
+  if (req.query.jobIds && typeof req.query.jobIds === 'string') {
+    // String ise virgülle ayır ve array'e çevir
+    normalizedQuery.jobIds = req.query.jobIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+  } else if (Array.isArray(req.query.jobIds)) {
+    // Zaten array ise direkt kullan
+    normalizedQuery.jobIds = req.query.jobIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+  }
+  
+  const result = await hospitalService.getAllApplications(req.user.id, normalizedQuery);
   logger.info(`All applications retrieved by hospital user ${req.user.id}`);
   sendSuccess(res, 'Tüm başvurular başarıyla getirildi', result, 200);
 });

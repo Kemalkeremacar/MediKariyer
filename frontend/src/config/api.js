@@ -155,14 +155,6 @@ export const ENDPOINTS = {
     PROFILE_FULL: '/hospital', // GET - Tam profil bilgileri (aynı endpoint)
     PROFILE_COMPLETION: '/hospital/profile/completion', // GET - Profil tamamlanma oranı
     
-    // Departman CRUD
-    DEPARTMENTS: '/hospital/departments', // GET/POST - Departman listesi/oluşturma
-    DEPARTMENT_DETAIL: '/hospital/departments/:id', // PATCH/DELETE - Departman güncelleme/silme
-    
-    // İletişim CRUD
-    CONTACTS: '/hospital/contacts', // GET/POST - İletişim listesi/oluşturma
-    CONTACT_DETAIL: '/hospital/contacts/:id', // PATCH/DELETE - İletişim güncelleme/silme
-    
     // İş ilanları CRUD
     JOBS: '/hospital/jobs', // GET/POST - İş ilanı listesi/oluşturma
     JOB_DETAIL: '/hospital/jobs/:id', // GET/PATCH/DELETE - İş ilanı detayı/güncelleme/silme
