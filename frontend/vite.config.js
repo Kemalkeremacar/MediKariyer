@@ -21,12 +21,40 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['lucide-react', 'framer-motion'],
+        manualChunks: (id) => {
+          // node_modules içindeki paketleri ayır
+          if (id.includes('node_modules')) {
+            // React core - en büyük paket
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return 'vendor-react';
+            }
+            // React Router
+            if (id.includes('react-router')) {
+              return 'vendor-router';
+            }
+            // React Query - büyük paket
+            if (id.includes('@tanstack/react-query')) {
+              return 'vendor-query';
+            }
+            // UI kütüphaneleri
+            if (id.includes('lucide-react') || id.includes('framer-motion') || id.includes('sonner')) {
+              return 'vendor-ui';
+            }
+            // Zustand
+            if (id.includes('zustand')) {
+              return 'vendor-state';
+            }
+            // Axios
+            if (id.includes('axios')) {
+              return 'vendor-http';
+            }
+            // Diğer vendor paketleri
+            return 'vendor-other';
+          }
         },
       },
     },
+    // Chunk boyutu uyarısı için limit artırıldı (500 KB yerine 600 KB)
+    chunkSizeWarningLimit: 600,
   },
 })

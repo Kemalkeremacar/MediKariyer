@@ -71,9 +71,10 @@
  * @since 2024
  */
 
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { PageLoader } from '@/components/ui/LoadingSpinner';
 
 // ============================================================================
 // IMPORTS - Component ve middleware import'ları
@@ -137,69 +138,73 @@ import PendingApprovalPage from '@/features/auth/pages/PendingApprovalPage';
 
 /**
  * ============================================================================
- * ADMIN PAGES - Admin paneli sayfaları
+ * ADMIN PAGES - Admin paneli sayfaları (Lazy Loaded)
  * ============================================================================
  * 
  * Bu sayfalar admin rolüne sahip kullanıcılar için tanımlanmıştır
  * AuthGuard + RoleGuard ile korunur (ApprovalGuard yok, admin için gerekmez)
+ * Lazy loading ile performans optimizasyonu
  */
-import AdminDashboard from '@/features/admin/pages/DashboardPage';
-import AdminUsersPage from '@/features/admin/pages/UsersPage';
-import AdminUserDetailPage from '@/features/admin/pages/UserDetailPage';
-import AdminJobsPage from '@/features/admin/pages/JobsPage';
-import AdminJobDetailPage from '@/features/admin/pages/JobDetailPage';
-import AdminApplicationsPage from '@/features/admin/pages/ApplicationsPage';
-import AdminApplicationDetailPage from '@/features/admin/pages/ApplicationDetailPage';
-import AdminNotificationsPage from '@/features/admin/pages/AdminNotificationsPage';
-import AdminContactMessagesPage from '@/features/admin/pages/ContactMessagesPage';
-import PhotoApprovalsPage from '@/features/admin/pages/PhotoApprovalsPage';
-import AdminLogsPage from '@/features/admin/pages/LogsPage';
+const AdminDashboard = lazy(() => import('@/features/admin/pages/DashboardPage'));
+const AdminUsersPage = lazy(() => import('@/features/admin/pages/UsersPage'));
+const AdminUserDetailPage = lazy(() => import('@/features/admin/pages/UserDetailPage'));
+const AdminJobsPage = lazy(() => import('@/features/admin/pages/JobsPage'));
+const AdminJobDetailPage = lazy(() => import('@/features/admin/pages/JobDetailPage'));
+const AdminApplicationsPage = lazy(() => import('@/features/admin/pages/ApplicationsPage'));
+const AdminApplicationDetailPage = lazy(() => import('@/features/admin/pages/ApplicationDetailPage'));
+const AdminNotificationsPage = lazy(() => import('@/features/admin/pages/AdminNotificationsPage'));
+const AdminContactMessagesPage = lazy(() => import('@/features/admin/pages/ContactMessagesPage'));
+const PhotoApprovalsPage = lazy(() => import('@/features/admin/pages/PhotoApprovalsPage'));
+const AdminLogsPage = lazy(() => import('@/features/admin/pages/LogsPage'));
 
 /**
  * ============================================================================
- * DOCTOR PAGES - Doktor paneli sayfaları
+ * DOCTOR PAGES - Doktor paneli sayfaları (Lazy Loaded)
  * ============================================================================
  * 
  * Bu sayfalar doctor rolüne sahip kullanıcılar için tanımlanmıştır
  * AuthGuard + RoleGuard + ApprovalGuard ile korunur
  * Kullanıcının authenticate, doctor rolünde ve onaylı olması gerekir
+ * Lazy loading ile performans optimizasyonu
  */
-import DoctorDashboard from '@/features/doctor/pages/DashboardPage';
-import DoctorProfile from '@/features/doctor/pages/ProfilePage';
-import DoctorJobsPage from '@/features/doctor/pages/JobsPage';
-import DoctorJobDetailPage from '@/features/doctor/pages/JobDetailPage';
-import DoctorApplicationsPage from '@/features/doctor/pages/ApplicationsPage';
-import DoctorApplicationDetailPage from '@/features/doctor/pages/ApplicationDetailPage';
-import PhotoManagementPage from '@/features/doctor/pages/PhotoManagementPage';
+const DoctorDashboard = lazy(() => import('@/features/doctor/pages/DashboardPage'));
+const DoctorProfile = lazy(() => import('@/features/doctor/pages/ProfilePage'));
+const DoctorJobsPage = lazy(() => import('@/features/doctor/pages/JobsPage'));
+const DoctorJobDetailPage = lazy(() => import('@/features/doctor/pages/JobDetailPage'));
+const DoctorApplicationsPage = lazy(() => import('@/features/doctor/pages/ApplicationsPage'));
+const DoctorApplicationDetailPage = lazy(() => import('@/features/doctor/pages/ApplicationDetailPage'));
+const PhotoManagementPage = lazy(() => import('@/features/doctor/pages/PhotoManagementPage'));
 
 /**
  * ============================================================================
- * HOSPITAL PAGES - Hastane paneli sayfaları
+ * HOSPITAL PAGES - Hastane paneli sayfaları (Lazy Loaded)
  * ============================================================================
  * 
  * Bu sayfalar hospital rolüne sahip kullanıcılar için tanımlanmıştır
  * AuthGuard + RoleGuard + ApprovalGuard ile korunur
  * Kullanıcının authenticate, hospital rolünde ve onaylı olması gerekir
+ * Lazy loading ile performans optimizasyonu
  */
-import HospitalDashboard from '@/features/hospital/pages/DashboardPage';
-import HospitalProfile from '@/features/hospital/pages/ProfilePage';
-import HospitalJobs from '@/features/hospital/pages/JobsPage';
-import HospitalJobCreate from '@/features/hospital/pages/JobCreatePage';
-import HospitalJobDetail from '@/features/hospital/pages/JobDetailPage';
-import HospitalJobEdit from '@/features/hospital/pages/JobEditPage';
-import HospitalApplications from '@/features/hospital/pages/ApplicationsPage';
-import HospitalApplicationDetail from '@/features/hospital/pages/ApplicationDetailPage';
-import HospitalDoctors from '@/features/hospital/pages/DoctorsPage';
+const HospitalDashboard = lazy(() => import('@/features/hospital/pages/DashboardPage'));
+const HospitalProfile = lazy(() => import('@/features/hospital/pages/ProfilePage'));
+const HospitalJobs = lazy(() => import('@/features/hospital/pages/JobsPage'));
+const HospitalJobCreate = lazy(() => import('@/features/hospital/pages/JobCreatePage'));
+const HospitalJobDetail = lazy(() => import('@/features/hospital/pages/JobDetailPage'));
+const HospitalJobEdit = lazy(() => import('@/features/hospital/pages/JobEditPage'));
+const HospitalApplications = lazy(() => import('@/features/hospital/pages/ApplicationsPage'));
+const HospitalApplicationDetail = lazy(() => import('@/features/hospital/pages/ApplicationDetailPage'));
+const HospitalDoctors = lazy(() => import('@/features/hospital/pages/DoctorsPage'));
 
 /**
  * ============================================================================
- * SHARED PAGES - Ortak kullanılan sayfalar
+ * SHARED PAGES - Ortak kullanılan sayfalar (Lazy Loaded)
  * ============================================================================
  * 
  * Bu sayfalar tüm authenticate ve onaylı kullanıcılar için ortaktır
  * AuthGuard + ApprovalGuard ile korunur (RoleGuard yok, tüm roller erişebilir)
+ * Lazy loading ile performans optimizasyonu
  */
-import NotificationsPage from '@/features/notifications/pages/NotificationsPage';
+const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'));
 
 // ============================================================================
 // ANA ROUTE YAPISI - Uygulama route tanımları

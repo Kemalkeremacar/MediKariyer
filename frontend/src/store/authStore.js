@@ -403,19 +403,80 @@ const useAuthStore = create(
           hasTokens: !!(tokens?.accessToken && tokens?.refreshToken)
         });
         
-        /**
-         * State'i güncelle
-         * 
-         * Kullanıcı bilgilerini, token'ları ve authentication durumunu güncelle
-         * Son giriş zamanını kaydet
-         */
-        set({
-          user: userData,
-          token: tokens.accessToken,
-          refreshToken: tokens.refreshToken,
-          isAuthenticated: true,
-          lastLoginAt: new Date().toISOString()
-        });
+        try {
+          /**
+           * localStorage quota kontrolü
+           * 
+           * localStorage'a yazmadan önce quota kontrolü yap
+           * Eğer localStorage doluysa eski auth verilerini temizle
+           */
+          try {
+            // Test için küçük bir veri yazmayı dene
+            const testKey = '__medikariyer_quota_test__';
+            localStorage.setItem(testKey, 'test');
+            localStorage.removeItem(testKey);
+          } catch (quotaError) {
+            // localStorage quota hatası varsa eski auth verilerini temizle
+            logger.warn('localStorage quota exceeded, clearing old auth data', { error: quotaError });
+            try {
+              localStorage.removeItem('medikariyer-auth');
+              logger.info('Cleared old auth data from localStorage');
+            } catch (clearError) {
+              logger.error('Failed to clear localStorage', { error: clearError });
+            }
+          }
+          
+          /**
+           * State'i güncelle
+           * 
+           * Kullanıcı bilgilerini, token'ları ve authentication durumunu güncelle
+           * Son giriş zamanını kaydet
+           * Zustand persist middleware localStorage'a otomatik kaydedecek
+           */
+          set({
+            user: userData,
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            isAuthenticated: true,
+            lastLoginAt: new Date().toISOString()
+          });
+        } catch (error) {
+          /**
+           * localStorage yazma hatası
+           * 
+           * Quota hatası veya başka bir localStorage hatası durumunda
+           * Hata logla ve kullanıcıya bilgi ver
+           */
+          logger.error('Login state update error', { 
+            error: error.message,
+            errorName: error.name,
+            stack: error.stack
+          });
+          
+          // localStorage'ı temizle ve tekrar dene
+          try {
+            localStorage.removeItem('medikariyer-auth');
+            // Tekrar dene
+            set({
+              user: userData,
+              token: tokens.accessToken,
+              refreshToken: tokens.refreshToken,
+              isAuthenticated: true,
+              lastLoginAt: new Date().toISOString()
+            });
+          } catch (retryError) {
+            logger.error('Failed to retry login after localStorage clear', { error: retryError });
+            // Hata devam ederse state'i güncelle ama localStorage'a yazma
+            // Kullanıcı sayfa yenilendiğinde tekrar giriş yapmak zorunda kalacak
+            set({
+              user: userData,
+              token: tokens.accessToken,
+              refreshToken: tokens.refreshToken,
+              isAuthenticated: true,
+              lastLoginAt: new Date().toISOString()
+            });
+          }
+        }
       },
 
       /**
@@ -1059,23 +1120,57 @@ const useAuthStore = create(
        * 
        * State'in hangi kısımlarının persist edileceğini belirler
        * Sadece gerekli alanlar localStorage'a kaydedilir
+       * User objesi sadece temel alanlarla sınırlandırılır (profile bilgileri hariç)
        * 
        * @param {Object} state - Store state
        * @returns {Object} Persist edilecek state kısımları
        */
-      partialize: (state) => ({
-        user: state.user,
-        token: state.token,
-        refreshToken: state.refreshToken,
-        /**
-         * isAuthenticated hesaplama
-         * 
-         * user ve token varsa authenticated sayılır
-         * Bu değer persist edilir ama her zaman hesaplanır
-         */
-        isAuthenticated: !!(state.user && state.user.id && state.token),
-        lastLoginAt: state.lastLoginAt
-      })
+      partialize: (state) => {
+        // User objesini sadece gerekli alanlarla sınırlandır
+        // Profile bilgileri localStorage'a kaydedilmez (çok büyük olabilir)
+        const minimalUser = state.user ? {
+          id: state.user.id,
+          email: state.user.email,
+          role: state.user.role,
+          is_approved: state.user.is_approved,
+          is_active: state.user.is_active,
+          created_at: state.user.created_at,
+          last_login: state.user.last_login,
+          // Profile bilgileri localStorage'a kaydedilmez
+          // Her zaman backend'den alınabilir
+        } : null;
+
+        return {
+          user: minimalUser,
+          token: state.token,
+          refreshToken: state.refreshToken,
+          /**
+           * isAuthenticated hesaplama
+           * 
+           * user ve token varsa authenticated sayılır
+           * Bu değer persist edilir ama her zaman hesaplanır
+           */
+          isAuthenticated: !!(state.user && state.user.id && state.token),
+          lastLoginAt: state.lastLoginAt
+        };
+      },
+      /**
+       * Storage error handler
+       * 
+       * localStorage quota hatası durumunda çalışır
+       * Eski verileri temizleyip tekrar denemeyi sağlar
+       */
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          logger.error('localStorage rehydration error', { error });
+          // localStorage hatası varsa temizle
+          try {
+            localStorage.removeItem('medikariyer-auth');
+          } catch (e) {
+            logger.error('Failed to clear localStorage', { error: e });
+          }
+        }
+      }
     }
   )
 );
