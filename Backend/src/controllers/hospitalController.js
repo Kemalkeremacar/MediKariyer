@@ -325,9 +325,9 @@ const getJobById = catchAsync(async (req, res, next) => {
 });
 
 /**
- * Hastane iş ilanını siler
- * @description İş ilanını soft delete yapar
- * @route DELETE /api/hospital/jobs/:jobId
+ * Hastane iş ilanını tekrar gönderir (resubmit)
+ * @description Needs Revision durumundaki ilanı tekrar Pending Approval durumuna getirir
+ * @route POST /api/hospital/jobs/:jobId/resubmit
  * @access Private (Hospital)
  * @middleware authMiddleware, requireRole('hospital')
  * 
@@ -336,22 +336,23 @@ const getJobById = catchAsync(async (req, res, next) => {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  * 
- * @returns {Object} 200 - Silme işleminin başarı durumu
+ * @returns {Object} 200 - Güncellenmiş iş ilanı
  * @returns {Object} 401 - Unauthorized
  * @returns {Object} 403 - Forbidden (role check failed)
  * @returns {Object} 404 - İş ilanı bulunamadı
+ * @returns {Object} 400 - İlan revizyon durumunda değil
  * @returns {Object} 500 - Sunucu hatası
  * 
  * @example
- * DELETE /api/hospital/jobs/123
+ * POST /api/hospital/jobs/123/resubmit
  * Authorization: Bearer <jwt_token>
  * 
  * @since 2.0.0
  */
-const deleteJob = catchAsync(async (req, res, next) => {
-  const deleted = await hospitalService.deleteJob(req.user.id, req.params.jobId);
-  logger.info(`Hospital job deleted for user ${req.user.id}`);
-  sendSuccess(res, 'İş ilanı başarıyla silindi', { deleted }, 200);
+const resubmitJob = catchAsync(async (req, res, next) => {
+  const job = await hospitalService.resubmitJob(req.user.id, req.params.jobId);
+  logger.info(`Hospital job resubmitted for user ${req.user.id}, job ${req.params.jobId}`);
+  sendSuccess(res, 'İş ilanı başarıyla tekrar gönderildi', { job }, 200);
 });
 
 // ============================================================================
@@ -600,7 +601,7 @@ module.exports = {
   createJob,
   updateJob,
   updateJobStatus,
-  deleteJob,
+  resubmitJob,
   
   // Başvuru yönetimi (hospitalService içinde)
   getJobApplications,

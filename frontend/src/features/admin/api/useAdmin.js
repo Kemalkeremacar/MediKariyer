@@ -30,6 +30,10 @@ const QUERY_KEYS = {
   JOB_DETAIL: ['admin', 'job'],
   JOB_UPDATE: ['admin', 'job-update'],
   JOB_STATUS: ['admin', 'job-status'],
+  JOB_APPROVE: ['admin', 'job-approve'],
+  JOB_REVISION: ['admin', 'job-revision'],
+  JOB_REJECT: ['admin', 'job-reject'],
+  JOB_HISTORY: ['admin', 'job-history'],
   JOB_DELETE: ['admin', 'job-delete'],
   
   // Başvuru yönetimi
@@ -325,6 +329,84 @@ export function useDeleteJob() {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
     },
+  });
+}
+
+/**
+ * İş ilanını onaylar - Backend: approveJob
+ * @returns {Object} React Query mutation
+ */
+export function useApproveJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (jobId) => apiRequest.post(buildEndpoint(ENDPOINTS.ADMIN.JOB_APPROVE, { id: jobId }), {}),
+    onSuccess: (data, jobId) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
+      showToast.success('İş ilanı onaylandı');
+    },
+    onError: (error) => {
+      showToast.error('İş ilanı onaylanırken bir hata oluştu: ' + (error.response?.data?.message || error.message));
+    },
+  });
+}
+
+/**
+ * İş ilanı için revizyon talep eder - Backend: requestRevision
+ * @returns {Object} React Query mutation
+ */
+export function useRequestRevision() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ jobId, revision_note }) => 
+      apiRequest.post(buildEndpoint(ENDPOINTS.ADMIN.JOB_REVISION, { id: jobId }), { revision_note }),
+    onSuccess: (data, variables) => {
+      const { jobId } = variables;
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
+      showToast.success('Revizyon talebi gönderildi');
+    },
+    onError: (error) => {
+      showToast.error('Revizyon talebi gönderilirken bir hata oluştu: ' + (error.response?.data?.message || error.message));
+    },
+  });
+}
+
+/**
+ * İş ilanını reddeder - Backend: rejectJob
+ * @returns {Object} React Query mutation
+ */
+export function useRejectJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ jobId, rejection_reason }) => 
+      apiRequest.post(buildEndpoint(ENDPOINTS.ADMIN.JOB_REJECT, { id: jobId }), { rejection_reason }),
+    onSuccess: (data, variables) => {
+      const { jobId } = variables;
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
+      showToast.success('İş ilanı reddedildi');
+    },
+    onError: (error) => {
+      showToast.error('İş ilanı reddedilirken bir hata oluştu: ' + (error.response?.data?.message || error.message));
+    },
+  });
+}
+
+/**
+ * İş ilanı statü geçmişini getirir - Backend: getJobHistory
+ * @param {string|number} jobId - İş ilanı ID'si
+ * @returns {Object} React Query result
+ */
+export function useJobHistory(jobId) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.JOB_HISTORY, jobId],
+    queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_HISTORY, { id: jobId })),
+    enabled: !!jobId,
+    staleTime: 2 * 60 * 1000, // 2 dakika
   });
 }
 

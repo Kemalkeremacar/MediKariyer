@@ -22,11 +22,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Briefcase, Plus, Edit3, Trash2, Eye, 
+  Briefcase, Plus, Edit3, Eye, 
   MapPin, Calendar, Users, Clock, CheckCircle, X, 
-  AlertCircle, Target, Building, ArrowRight, RefreshCw, Filter
+  AlertCircle, Target, Building, ArrowRight, RefreshCw, Filter,
+  Hourglass, XCircle
 } from 'lucide-react';
-import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useDeleteHospitalJob, useHospitalProfile } from '../api/useHospital';
+import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useHospitalProfile, useResubmitHospitalJob } from '../api/useHospital';
 import { useJobStatuses, useSpecialties, useSubspecialties } from '@/hooks/useLookup';
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -44,6 +45,33 @@ const HospitalJobs = () => {
 
   // UI Store kaldırıldı: onaylar showToast.confirm ile yönetilecek
 
+  // Lookup data hooks
+  const { data: profileData } = useHospitalProfile();
+  const { data: jobStatuses, isLoading: jobStatusesLoading } = useJobStatuses();
+  const { data: specialties } = useSpecialties();
+  const { data: subspecialties } = useSubspecialties(specialtyId ? parseInt(specialtyId, 10) : null);
+
+  // Fallback: Eğer jobStatuses lookup'tan gelmezse manuel tanımla
+  const statusOptions = useMemo(() => {
+    return jobStatuses?.length > 0 ? jobStatuses.map(status => ({
+      ...status,
+      label: status.name // Artık backend'den Türkçe geliyor
+    })) : [
+      { value: 1, label: 'Onay Bekliyor', name: 'Onay Bekliyor' },
+      { value: 2, label: 'Revizyon Gerekli', name: 'Revizyon Gerekli' },
+      { value: 3, label: 'Onaylandı', name: 'Onaylandı' },
+      { value: 4, label: 'Pasif', name: 'Pasif' },
+      { value: 5, label: 'Reddedildi', name: 'Reddedildi' }
+    ];
+  }, [jobStatuses]);
+
+  // Status filtresini status name'e çevir (backend status name bekliyor)
+  const statusNameForApi = useMemo(() => {
+    if (!statusFilter) return undefined;
+    const statusOption = statusOptions.find(s => s.value.toString() === statusFilter.toString());
+    return statusOption?.name || undefined;
+  }, [statusFilter, statusOptions]);
+
   // API hook'ları
   const { 
     data: jobsData, 
@@ -52,16 +80,10 @@ const HospitalJobs = () => {
     refetch: refetchJobs
   } = useHospitalJobs({ 
     ...pagination, 
-    status: statusFilter,
+    status: statusNameForApi,
     specialty_id: specialtyId ? parseInt(specialtyId, 10) : undefined,
     subspecialty_id: subspecialtyId ? parseInt(subspecialtyId, 10) : undefined
   });
-  
-  const { data: profileData } = useHospitalProfile();
-  
-  const { data: jobStatuses, isLoading: jobStatusesLoading } = useJobStatuses();
-  const { data: specialties } = useSpecialties();
-  const { data: subspecialties } = useSubspecialties(specialtyId ? parseInt(specialtyId, 10) : null);
   
   // Ana dal değiştiğinde yan dal'ı sıfırla
   useEffect(() => {
@@ -98,52 +120,29 @@ const HospitalJobs = () => {
     setPagination(prev => ({ ...prev, page: 1 }));
   };
   
-  // Fallback: Eğer jobStatuses lookup'tan gelmezse manuel tanımla (Taslak kaldırıldı)
-  const statusOptions = jobStatuses?.length > 0 ? jobStatuses : [
-    { value: 1, label: 'Aktif', name: 'Aktif' },
-    { value: 2, label: 'Pasif', name: 'Pasif' }
-  ];
-
   const createJobMutation = useCreateHospitalJob();
   const updateJobMutation = useUpdateHospitalJob();
-  const deleteJobMutation = useDeleteHospitalJob();
+  const resubmitJobMutation = useResubmitHospitalJob();
 
   // Veri parsing
   const jobs = jobsData?.data?.jobs || [];
   const paginationData = jobsData?.data?.pagination || {};
 
-  // Job actions
-  const handleDeleteJob = async (jobId, jobTitle) => {
-    const ok = await showToast.confirm({
-      title: 'İş İlanını Sil',
-      message: `"${jobTitle}" iş ilanını kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve ilanla ilgili tüm başvurular da silinecektir.`,
-      confirmText: 'Sil',
-      cancelText: 'İptal',
-      type: 'danger',
-      destructive: true
-    });
-    if (ok) {
-      await confirmDeleteJob(jobId);
-    }
-  };
-
-  const confirmDeleteJob = async (jobId) => {
-    try {
-      await deleteJobMutation.mutateAsync(jobId);
-      showToast.success('İş ilanı başarıyla silindi');
-    } catch (error) {
-      console.error('İş ilanı silme hatası:', error);
-      showToast.error('İş ilanı silinirken hata oluştu');
-    }
-  };
-
-
-  // Status badge component
-  const StatusBadge = ({ status }) => {
-    // Database'deki status name'lere göre mapping (Taslak kaldırıldı)
+  // Status badge component - Türkçe status'lar için güncellendi
+  const StatusBadge = ({ status, statusId }) => {
+    // Artık backend'den Türkçe geliyor, çeviri gereksiz
     const statusConfig = {
-      'Aktif': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: '✓' },
-      'Pasif': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: '⏸' }
+      'Onay Bekliyor': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: '⏳' },
+      'Revizyon Gerekli': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: '🔄' },
+      'Onaylandı': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: '✓' },
+      'Pasif': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: '⏸' },
+      'Reddedildi': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: '✗' },
+      // Geriye uyumluluk için eski İngilizce isimler
+      'Pending Approval': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: '⏳' },
+      'Needs Revision': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: '🔄' },
+      'Approved': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: '✓' },
+      'Passive': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: '⏸' },
+      'Rejected': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: '✗' }
     };
 
     const config = statusConfig[status] || statusConfig['Pasif'];
@@ -267,8 +266,8 @@ const HospitalJobs = () => {
                 >
                   <option value="" className="bg-slate-800">Tüm İlanlar</option>
                   {statusOptions.map((status) => (
-                    <option key={status.value} value={status.label} className="bg-slate-800">
-                      {status.label}
+                    <option key={status.value} value={status.value} className="bg-slate-800">
+                      {status.label || status.name}
                     </option>
                   ))}
                 </select>
@@ -319,7 +318,7 @@ const HospitalJobs = () => {
               <div className="flex flex-wrap gap-2 mt-4">
                 {statusFilter && (
                   <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-green-300 text-sm">
-                    <span>Durum: {statusFilter}</span>
+                    <span>Durum: {statusOptions.find(s => s.value.toString() === statusFilter.toString())?.label || statusFilter}</span>
                     <button
                       onClick={() => setStatusFilter('')}
                       className="hover:text-green-200"
@@ -382,7 +381,7 @@ const HospitalJobs = () => {
                             {job.title}
                           </h3>
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <StatusBadge status={job.status} />
+                            <StatusBadge status={job.status} statusId={job.status_id} />
                             <span className="text-sm text-gray-400">
                               {job.application_count || 0} başvuru
                             </span>
@@ -428,25 +427,47 @@ const HospitalJobs = () => {
                           <Eye className="w-4 h-4" />
                         </Link>
                         
-                        <Link
-                          to={`/hospital/jobs/${job.id}/edit`}
-                          className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-3 py-2 rounded-lg hover:bg-yellow-500/30 transition-all duration-300 flex-shrink-0"
-                          title="Düzenle"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Link>
-
-                        <button
-                          onClick={() => handleDeleteJob(job.id, job.title)}
-                          className="bg-red-500/20 text-red-300 border border-red-500/30 px-3 py-2 rounded-lg hover:bg-red-500/30 transition-all duration-300 flex-shrink-0"
-                          title="Sil"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {/* Needs Revision durumunda resubmit butonu */}
+                        {job.status_id === 2 && (
+                          <button
+                            onClick={async () => {
+                              const ok = await showToast.confirm({
+                                title: 'İlanı Tekrar Gönder',
+                                message: `"${job.title}" ilanını tekrar göndermek istediğinizden emin misiniz? İlan admin onayına gönderilecektir.`,
+                                confirmText: 'Tekrar Gönder',
+                                cancelText: 'İptal',
+                                type: 'info'
+                              });
+                              if (ok) {
+                                try {
+                                  await resubmitJobMutation.mutateAsync(job.id);
+                                } catch (error) {
+                                  console.error('Resubmit error:', error);
+                                }
+                              }
+                            }}
+                            disabled={resubmitJobMutation.isPending}
+                            className="bg-green-500/20 text-green-300 border border-green-500/30 px-3 py-2 rounded-lg hover:bg-green-500/30 transition-all duration-300 flex-shrink-0"
+                            title="İlanı Tekrar Gönder"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${resubmitJobMutation.isPending ? 'animate-spin' : ''}`} />
+                          </button>
+                        )}
+                        
+                        {/* Sadece Needs Revision durumunda edit butonu göster */}
+                        {job.status_id === 2 && (
+                          <Link
+                            to={`/hospital/jobs/${job.id}/edit`}
+                            className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-3 py-2 rounded-lg hover:bg-yellow-500/30 transition-all duration-300 flex-shrink-0"
+                            title="Düzenle"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </Link>
+                        )}
                       </div>
 
                       <Link
-                        to={`/hospital/applications?jobId=${job.id}`}
+                        to={`/hospital/applications?jobIds=${job.id}`}
                         className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 group flex-shrink-0 whitespace-nowrap"
                       >
                         Başvurular

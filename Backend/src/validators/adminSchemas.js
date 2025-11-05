@@ -137,6 +137,36 @@ const jobUpdateSchema = Joi.object({
 });
 
 /**
+ * İş ilanı onaylama için validation şeması
+ * @description İş ilanını onaylarken kullanılacak veri doğrulaması
+ */
+const jobApproveSchema = Joi.object({}).allow({});
+
+/**
+ * İş ilanı revizyon talep etme için validation şeması
+ * @description İş ilanı için revizyon talep ederken kullanılacak veri doğrulaması
+ */
+const jobRevisionSchema = Joi.object({
+  revision_note: Joi.string().min(10).max(1000).required().messages({
+    'string.empty': 'Revizyon notu boş olamaz',
+    'string.min': 'Revizyon notu en az 10 karakter olmalıdır',
+    'string.max': 'Revizyon notu en fazla 1000 karakter olabilir',
+    'any.required': 'Revizyon notu zorunludur'
+  })
+});
+
+/**
+ * İş ilanı reddetme için validation şeması
+ * @description İş ilanını reddederken kullanılacak veri doğrulaması
+ */
+const jobRejectSchema = Joi.object({
+  rejection_reason: Joi.string().min(5).max(500).optional().allow('', null).messages({
+    'string.min': 'Red sebebi en az 5 karakter olmalıdır',
+    'string.max': 'Red sebebi en fazla 500 karakter olabilir'
+  })
+}).allow({});
+
+/**
  * Kullanıcı durum güncelleme için validation şeması
  * @description Kullanıcı aktiflik durumu değiştirirken kullanılacak veri doğrulaması
  */
@@ -294,6 +324,9 @@ module.exports = {
   userStatusUpdateSchema,
   jobStatusUpdateSchema,
   jobUpdateSchema,
+  jobApproveSchema,
+  jobRevisionSchema,
+  jobRejectSchema,
   applicationIdParamSchema,
   applicationStatusUpdateSchema,
   notificationsQuerySchema,

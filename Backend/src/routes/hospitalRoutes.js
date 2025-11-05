@@ -29,7 +29,6 @@
  * - GET /me/hospital/jobs - İş ilanları getir (hospitalService)
  * - POST /me/hospital/jobs - İş ilanı oluştur (hospitalService)
  * - PUT /me/hospital/jobs/:jobId - İş ilanı güncelle (hospitalService)
- * - DELETE /me/hospital/jobs/:jobId - İş ilanı sil (hospitalService)
  * - GET /me/hospital/jobs/:jobId/applications - Başvurular getir (hospitalService)
  * - GET /me/hospital/applications - Tüm ilanların başvuruları getir (hospitalService)
  * - PUT /me/hospital/applications/:applicationId/status - Başvuru durumu güncelle (hospitalService)
@@ -60,6 +59,7 @@ const {
   jobStatusUpdateSchema,
   jobIdParamSchema,
   jobStatusChangeSchema,
+  jobResubmitSchema,
   applicationStatusSchema,
   applicationsQuerySchema
 } = require('../validators/hospitalSchemas');
@@ -179,9 +179,13 @@ router.put(
   hospitalController.updateJob
 );
 
-// İş ilanını sil
-// DELETE /me/hospital/jobs/:jobId
-router.delete('/jobs/:jobId', hospitalController.deleteJob);
+// İş ilanını tekrar gönder (resubmit)
+// POST /me/hospital/jobs/:jobId/resubmit
+router.post('/jobs/:jobId/resubmit', 
+  validate(jobIdParamSchema, 'params'),
+  validate(jobResubmitSchema, 'body'),
+  hospitalController.resubmitJob
+);
 
 // İş ilanı durumunu güncelle
 // PATCH /me/hospital/jobs/:jobId/status

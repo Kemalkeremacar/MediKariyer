@@ -208,20 +208,9 @@ const jobSchema = Joi.object({
       'any.required': 'İş tanımı zorunludur'
     }),
 
-  // status_id sadece güncelleme için geçerli (oluşturmada otomatik Aktif)
-  // 1=Aktif: Doktorlar görür ve başvuru yapar
-  // 2=Pasif: Sadece hastane görür, doktorlar görmez
-  status_id: Joi.number()
-    .integer()
-    .positive()
-    .valid(1, 2) // 1=Aktif, 2=Pasif
-    .optional()
-    .messages({
-      'number.base': 'İlan durumu sayı olmalıdır',
-      'number.integer': 'İlan durumu tam sayı olmalıdır',
-      'number.positive': 'İlan durumu pozitif olmalıdır',
-      'any.only': 'Geçersiz ilan durumu. Sadece Aktif (1) veya Pasif (2) olabilir.'
-    })
+  // NOT: status_id burada yok çünkü oluşturma sırasında backend otomatik olarak
+  // status_id = 1 (Onay Bekliyor) olarak ayarlar. Hastane status_id gönderemez.
+  // status_id: Joi.forbidden() // Hastane status_id gönderemez
 });
 
 /**
@@ -231,13 +220,12 @@ const jobSchema = Joi.object({
 const jobStatusUpdateSchema = Joi.object({
   status_id: Joi.number()
     .integer()
-    .positive()
+    .valid(3, 4) // Sadece Onaylandı (3) veya Pasif (4) olabilir
     .required()
     .messages({
       'number.base': 'Durum ID\'si sayı olmalıdır',
       'number.integer': 'Durum ID\'si tam sayı olmalıdır',
-      'number.positive': 'Durum ID\'si pozitif olmalıdır',
-      'any.only': 'Geçersiz durum.',
+      'any.only': 'Sadece Onaylandı (3) veya Pasif (4) durumlarına geçiş yapabilirsiniz',
       'any.required': 'Durum ID\'si gereklidir'
     }),
   reason: Joi.string()
@@ -453,6 +441,12 @@ const jobStatusChangeSchema = Joi.object({
     })
 });
 
+/**
+ * Job Resubmit Schema
+ * @description İş ilanını tekrar gönderirken kullanılacak validation (body boş olabilir)
+ */
+const jobResubmitSchema = Joi.object({}).allow({});
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -466,6 +460,7 @@ module.exports = {
   jobStatusUpdateSchema,
   jobIdParamSchema,
   jobStatusChangeSchema,
+  jobResubmitSchema,
   
   // Başvuru durumu validation
   applicationStatusSchema,

@@ -33,7 +33,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, FileText, Calendar, Clock, Settings, Target, 
   Eye, User, Phone, Mail, Briefcase, MapPin, AlertCircle,
-  ChevronUp
+  ChevronUp, XCircle
 } from 'lucide-react';
 import { useFloating, autoUpdate, offset, shift, FloatingPortal } from '@floating-ui/react';
 import { useHospitalApplications, useUpdateApplicationStatus, useHospitalDoctorProfileDetail } from '../api/useHospital';
@@ -71,6 +71,14 @@ const HospitalApplicationDetailPage = () => {
   const { data: applicationsData, isLoading: applicationsLoading } = useHospitalApplications({ page: 1, limit: 100 });
   const applications = applicationsData?.data?.applications || [];
   const application = applications.find(a => a.id === parseInt(applicationId || '0'));
+
+  // İlan durumunu kontrol et - Pasif ilanlar için erişimi engelle
+  const jobStatus = application?.job_status || application?.job_status_fallback;
+  const isJobPassive = 
+    jobStatus === 'Pasif' || 
+    jobStatus === 'Passive' || 
+    application?.job_status_id === 4 ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif'));
 
   // Doktor profil detayı
   const { data: doctorProfileData, isLoading: doctorProfileLoading } = useHospitalDoctorProfileDetail(application?.doctor_profile_id);
@@ -161,6 +169,39 @@ const HospitalApplicationDetailPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-white mb-4">Başvuru bulunamadı</h2>
+            <button
+              onClick={handleGoBack}
+              className="text-blue-400 hover:text-blue-300 font-medium"
+            >
+              Başvurular sayfasına dön
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pasif ilan için erişimi engelle
+  if (isJobPassive) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-4 mb-8">
+            <button
+              onClick={handleGoBack}
+              className="p-2 hover:bg-white/10 rounded-xl transition-all"
+            >
+              <ArrowLeft className="w-6 h-6 text-white" />
+            </button>
+          </div>
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-4">Yayından Kaldırıldı</h2>
+            <p className="text-gray-300 mb-6 max-w-md mx-auto">
+              Bu ilan yayından kaldırıldığı için başvuru detayları görüntülenemez.
+            </p>
             <button
               onClick={handleGoBack}
               className="text-blue-400 hover:text-blue-300 font-medium"

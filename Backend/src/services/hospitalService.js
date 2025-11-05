@@ -325,7 +325,7 @@ const getJobs = async (userId, params = {}) => {
       const applicationCounts = await db('applications as a')
         .whereIn('a.job_id', jobIds)
         .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-        .where('a.status_id', '!=', 5) // Geri çekilmiş başvuruları sayma
+        // NOT: Geri çekilen başvurular artık sayılıyor
         .select('a.job_id', db.raw('COUNT(a.id) as application_count'))
         .groupBy('a.job_id');
 
@@ -414,10 +414,15 @@ const createJob = async (userId, jobData) => {
     }
 
     // İş ilanını oluştur - database'de city_id nullable
+    // ÖNEMLİ: status_id her zaman 1 (Onay Bekliyor) olarak ayarlanır
+    // Hastane status_id gönderse bile göz ardı edilir ve 1 olarak ayarlanır
+    const { status_id, ...cleanJobData } = jobData; // status_id'yi çıkar
+    
     const insertData = {
-      ...jobData,
+      ...cleanJobData,
       hospital_id: hospitalProfile.id,
-      status_id: 1, // active (job_statuses tablosunda 1 = Aktif)
+      status_id: 1, // Onay Bekliyor - Admin onayı bekliyor (HER ZAMAN)
+      revision_count: 0,
       created_at: db.fn.now(),
       updated_at: db.fn.now()
     };
@@ -425,7 +430,7 @@ const createJob = async (userId, jobData) => {
     const result = await db('jobs').insert(insertData).returning('id');
     const jobId = result[0].id;
 
-    logger.info(`Job created with ID: ${jobId}, status_id: 1 (Aktif)`);
+    logger.info(`Job created with ID: ${jobId}, status_id: 1 (Onay Bekliyor)`);
 
     // Oluşturulan iş ilanını ID ile getir
     const job = await db('jobs as j')
@@ -481,14 +486,22 @@ const updateJob = async (userId, jobId, jobData) => {
       throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
     }
 
+    // Sadece Revizyon Gerekli (status_id = 2) durumundaki ilanları güncelleyebilir
+    if (existingJob.status_id !== 2) {
+      throw new AppError('Bu ilan sadece revizyon durumundayken güncellenebilir', 400);
+    }
+
     // Eski durumu kaydet
     const oldStatus = existingJob.status_id;
+    
+    // status_id'yi jobData'dan çıkar (hastane status değiştiremez)
+    const { status_id, ...updateData } = jobData;
     
     // İş ilanını güncelle
     await db('jobs')
       .where('id', jobId)
       .update({
-        ...jobData,
+        ...updateData,
         updated_at: db.fn.now()
       });
 
@@ -501,19 +514,83 @@ const updateJob = async (userId, jobId, jobData) => {
       .select('j.*', 'js.name as status', 's.name as specialty', 'c.name as city')
       .first();
 
-    // İlan durumu değiştiyse bildirim gönder
-    if (jobData.status_id && jobData.status_id !== oldStatus) {
-      try {
-        const oldStatusName = await db('job_statuses').where('id', oldStatus).select('name').first();
-        await sendJobStatusChangeNotification(jobId, job.status, oldStatusName?.name || 'unknown');
-      } catch (notificationError) {
-        logger.warn('Job status change notification failed:', notificationError);
-      }
-    }
-
     return job;
   } catch (error) {
     logger.error('Update hospital job error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Hastane iş ilanını tekrar gönderir (resubmit)
+ * @description Revizyon Gerekli durumundaki ilanı tekrar Onay Bekliyor durumuna getirir
+ * @param {number} userId - Hastane kullanıcı ID'si
+ * @param {number} jobId - İş ilanı ID'si
+ * @returns {Promise<Object>} Güncellenmiş iş ilanı
+ * @throws {AppError} İlan bulunamadığında, sahiplik yetkisi yoksa veya status uygun değilse
+ */
+const resubmitJob = async (userId, jobId) => {
+  try {
+    // Hastane profil ID'sini al
+    const hospitalProfile = await db('hospital_profiles')
+      .where('user_id', userId)
+      .select('id')
+      .first();
+
+    if (!hospitalProfile) {
+      throw new AppError('Hastane profili bulunamadı', 404);
+    }
+
+    // İş ilanının sahipliğini ve durumunu kontrol et
+    const existingJob = await db('jobs')
+      .where({ id: jobId, hospital_id: hospitalProfile.id })
+      .first();
+
+    if (!existingJob) {
+      throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
+    }
+
+    // Sadece Revizyon Gerekli (status_id = 2) durumundaki ilanlar resubmit edilebilir
+    if (existingJob.status_id !== 2) {
+      throw new AppError('Bu ilan sadece revizyon durumundayken tekrar gönderilebilir', 400);
+    }
+
+    const oldStatusId = existingJob.status_id;
+
+    // İlanı Pending Approval durumuna getir ve revision_count'u artır
+    await db('jobs')
+      .where('id', jobId)
+      .update({
+        status_id: 1, // Onay Bekliyor
+        revision_count: db.raw('revision_count + 1'),
+        revision_note: null, // Revizyon notunu temizle
+        updated_at: db.fn.now()
+      });
+
+    // Job history kaydı oluştur
+    await db('job_history').insert({
+      job_id: jobId,
+      old_status_id: oldStatusId,
+      new_status_id: 1,
+      changed_by: userId,
+      note: 'İlan revize edilerek tekrar gönderildi',
+      changed_at: db.fn.now()
+    });
+
+    // Güncellenmiş iş ilanını getir
+    const job = await db('jobs as j')
+      .join('job_statuses as js', 'j.status_id', 'js.id')
+      .join('specialties as s', 'j.specialty_id', 's.id')
+      .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
+      .where('j.id', jobId)
+      .select('j.*', 'js.name as status', 's.name as specialty', 'c.name as city', 'ss.name as subspecialty_name')
+      .first();
+
+    logger.info(`Job resubmitted: ${jobId} by user ${userId}`);
+    return job;
+  } catch (error) {
+    logger.error('Resubmit hospital job error:', error);
     throw error;
   }
 };
@@ -632,10 +709,10 @@ const getJobById = async (userId, jobId) => {
       throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
     }
 
-    // Başvuru sayısını al (Geri çekilenler hariç)
+    // Başvuru sayısını al (Geri çekilenler dahil)
     const [{ count }] = await db('applications')
       .where('job_id', jobId)
-      .where('status_id', '!=', 5) // Geri çekilen başvuruları sayma
+      .whereNull('deleted_at') // Soft delete: Silinmiş başvuruları sayma
       .count('* as count');
     
     job.application_count = parseInt(count) || 0;
@@ -681,6 +758,23 @@ const updateJobStatus = async (userId, jobId, statusId, reason) => {
     // Eski durumu kaydet
     const oldStatus = existingJob.status_id;
     
+    // Durum geçiş kontrolü: Hastane sadece Onaylandı ↔ Pasif geçişini yapabilir
+    // - Onaylandı (3) → Pasif (4) ✓
+    // - Pasif (4) → Onaylandı (3) ✓
+    // - Diğer durumlardan (1, 2, 5) geçiş yapılamaz ✗
+    
+    if (oldStatus === 3 && statusId !== 4) {
+      throw new AppError('Onaylandı durumundaki ilanlar sadece Pasif durumuna geçirilebilir', 400);
+    }
+    
+    if (oldStatus === 4 && statusId !== 3) {
+      throw new AppError('Pasif durumundaki ilanlar sadece Onaylandı durumuna geçirilebilir', 400);
+    }
+    
+    if (oldStatus !== 3 && oldStatus !== 4) {
+      throw new AppError('Bu ilanın durumu değiştirilemez. Sadece Onaylandı veya Pasif durumundaki ilanların durumu değiştirilebilir', 400);
+    }
+    
     // İş ilanı durumunu güncelle
     await db('jobs')
       .where('id', jobId)
@@ -715,58 +809,6 @@ const updateJobStatus = async (userId, jobId, statusId, reason) => {
     throw error;
   }
 };
-
-/**
- * Hastane iş ilanını siler
- * @description İş ilanını soft delete yapar (status_id = 2 = pasif)
- * @param {number} userId - Hastane kullanıcı ID'si
- * @param {number} jobId - İş ilanı ID'si
- * @returns {Promise<boolean>} Silme işleminin başarı durumu
- * @throws {AppError} İlan bulunamadığında veya sahiplik yetkisi yoksa
- * 
- * @note Status Enum:
- * - 1: active (aktif)
- * - 2: closed (kapatılmış)
- * - 3: deleted (silinmiş)
- * - İleride archive, draft gibi durumlar eklenebilir
- */
-const deleteJob = async (userId, jobId) => {
-  try {
-    // Hastane profil ID'sini al
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    // İş ilanının sahipliğini kontrol et
-    const existingJob = await db('jobs')
-      .where({ id: jobId, hospital_id: hospitalProfile.id })
-      .first();
-
-    if (!existingJob) {
-      throw new AppError('İş ilanı bulunamadı veya yetkiniz yok', 404);
-    }
-
-    // Soft delete yap (deleted_at kolonu set et)
-    const deleted = await db('jobs')
-      .where('id', jobId)
-      .whereNull('deleted_at') // Zaten silinmemiş kayıtlar
-      .update({
-        deleted_at: db.fn.now(),
-        updated_at: db.fn.now()
-      });
-
-    return deleted > 0;
-  } catch (error) {
-    logger.error('Delete hospital job error:', error);
-    throw error;
-  }
-};
-
 
 // ============================================================================
 // BAŞVURU YÖNETİMİ (applicationService'den taşındı)
@@ -862,8 +904,15 @@ const getApplications = async (userId, jobId, params = {}) => {
       // JavaScript'te fallback hesaplama
       applications.forEach(app => {
         if (!app.job_status && app.job_status_id) {
-          app.job_status_fallback = app.job_status_id === 1 ? 'Aktif' : 
-                                   app.job_status_id === 2 ? 'Pasif' : 'Bilinmiyor';
+          // Yeni status sistemine göre fallback (Türkçe)
+          const statusMap = {
+            1: 'Onay Bekliyor',
+            2: 'Revizyon Gerekli',
+            3: 'Onaylandı',
+            4: 'Pasif',
+            5: 'Reddedildi'
+          };
+          app.job_status_fallback = statusMap[app.job_status_id] || 'Bilinmiyor';
         }
       });
       
@@ -885,14 +934,13 @@ const getApplications = async (userId, jobId, params = {}) => {
       });
     }
 
-    // Toplam sayı
+    // Toplam sayı (Geri çekilenler dahil)
     const totalQuery = db('applications as a')
       .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
       .join('users as u', 'dp.user_id', 'u.id')
       .join('application_statuses as ast', 'a.status_id', 'ast.id')
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('a.job_id', jobId)
-      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları sayma
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
       .where('u.is_active', true); // Pasifleştirilmiş doktorların başvurularını sayma
@@ -1244,7 +1292,7 @@ const getRecentApplications = async (userId, limit = 5) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // Son başvuruları getir - Soft delete ve geri çekilen başvurular kontrolü ile
+    // Son başvuruları getir - Soft delete kontrolü ile (Geri çekilen başvurular dahil)
     const applications = await db('applications as a')
       .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
       .join('users as u', 'dp.user_id', 'u.id')
@@ -1252,7 +1300,7 @@ const getRecentApplications = async (userId, limit = 5) => {
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('j.hospital_id', hospitalProfile.id)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
-      .where('a.status_id', '!=', 5) // Geri çekilen başvuruları gösterme
+      // NOT: Geri çekilen başvurular artık gösteriliyor
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
         'a.id',
@@ -1562,17 +1610,14 @@ module.exports = {
   updateProfile,
   getProfileCompletion,
   
-  // Departman ve İletişim yönetimi kaldırıldı
-  // Department ve Contact tabloları artık kullanılmıyor
-  // İletişim bilgileri hospital_profiles tablosunda tutuluyor
   
   // İş ilanı yönetimi (jobService'den taşındı)
   getJobs,
   getJobById,
   createJob,
   updateJob,
+  resubmitJob,
   updateJobStatus,
-  deleteJob,
   
   // Başvuru yönetimi (applicationService'den taşındı)
   getApplications,

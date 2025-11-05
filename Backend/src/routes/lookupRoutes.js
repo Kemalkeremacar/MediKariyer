@@ -199,9 +199,11 @@ router.get('/certificate-types', lookupController.getCertificateTypes);
  * Response: {
  *   "success": true,
  *   "data": [
- *     { "id": 1, "name": "Aktif" },
- *     { "id": 2, "name": "Pasif" },
- *     { "id": 3, "name": "Draft" }
+ *     { "id": 1, "name": "Onay Bekliyor" },
+ *     { "id": 2, "name": "Revizyon Gerekli" },
+ *     { "id": 3, "name": "Onaylandı" },
+ *     { "id": 4, "name": "Pasif" },
+ *     { "id": 5, "name": "Reddedildi" }
  *   ],
  *   "message": "İş durumları başarıyla getirildi"
  * }

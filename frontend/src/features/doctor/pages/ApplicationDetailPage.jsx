@@ -9,7 +9,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Briefcase, Building, FileText, Calendar, Clock, 
-  CheckCircle, MapPin, Trash2
+  CheckCircle, MapPin, Trash2, AlertCircle, XCircle
 } from 'lucide-react';
 import { useApplicationDetail, useWithdrawApplication } from '../api/useDoctor.js';
 import { useMyApplications } from '../api/useDoctor.js';
@@ -29,6 +29,19 @@ const DoctorApplicationDetailPage = () => {
   const application = applicationDetail || applications.find(a => a.id === parseInt(applicationId || '0'));
 
   const withdrawMutation = useWithdrawApplication();
+
+  // İlan durumunu kontrol et - Pasif ilan kontrolü
+  const jobStatusId = application?.job_status_id;
+  const jobStatus = application?.job_status || '';
+  const isJobPassive = 
+    jobStatusId === 4 ||
+    jobStatusId === '4' ||
+    jobStatus === 'Pasif' || 
+    jobStatus === 'Passive' ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'pasif') ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive'));
 
   // Status helper functions
   const getStatusText = (statusId) => {
@@ -81,6 +94,40 @@ const DoctorApplicationDetailPage = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-white mb-4">Başvuru bulunamadı</h2>
+            <button
+              onClick={() => navigate('/doctor/applications')}
+              className="text-blue-400 hover:text-blue-300 font-medium"
+            >
+              Başvurular sayfasına dön
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pasif ilan için erişimi engelle
+  if (application && isJobPassive) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8 flex items-center gap-4">
+            <button
+              onClick={() => navigate('/doctor/applications')}
+              className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Geri
+            </button>
+          </div>
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <XCircle className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-4">Yayından Kaldırıldı</h2>
+            <p className="text-gray-300 mb-6 max-w-md mx-auto">
+              Bu ilan yayından kaldırıldığı için başvuru detayları görüntülenemez.
+            </p>
             <button
               onClick={() => navigate('/doctor/applications')}
               className="text-blue-400 hover:text-blue-300 font-medium"
@@ -146,9 +193,17 @@ const DoctorApplicationDetailPage = () => {
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
                   <div className="text-gray-400 text-sm mb-1">Durum</div>
-                  <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(application?.status_id)}`}>
-                    {getStatusText(application?.status_id)}
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(application?.status_id)}`}>
+                      {getStatusText(application?.status_id)}
+                    </span>
+                    {/* İş ilanı pasifse "Yayından Kaldırıldı" badge'i göster */}
+                    {((applicationDetail?.job_status_id === 4) || (application?.job_status_id === 4)) && (
+                      <span className="inline-block px-4 py-2 rounded-full text-sm font-medium border bg-gray-500/20 text-gray-300 border-gray-500/30">
+                        Yayından Kaldırıldı
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

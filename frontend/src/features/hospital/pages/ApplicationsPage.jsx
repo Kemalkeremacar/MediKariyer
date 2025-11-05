@@ -33,7 +33,7 @@ import {
   UserCheck, GraduationCap, Award, Languages, ExternalLink, Settings,
   ArrowLeft, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { useFloating, autoUpdate, offset, flip, shift, useDismiss, useInteractions, FloatingPortal } from '@floating-ui/react';
+import { useFloating, autoUpdate, offset, flip, shift, useDismiss, useInteractions, FloatingPortal, size } from '@floating-ui/react';
 import { useHospitalApplications, useUpdateApplicationStatus, useHospitalDoctorProfileDetail, useHospitalJobs } from '../api/useHospital';
 import { useApplicationStatuses } from '@/hooks/useLookup';
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
@@ -60,6 +60,31 @@ const HospitalApplications = () => {
   const searchInputRef = useRef(null);
   const cursorPositionRef = useRef(null); // Cursor pozisyonunu korumak için
   const jobFilterRef = useRef(null); // İlanlarım dropdown referansı
+  const jobFilterButtonRef = useRef(null); // İlanlarım buton referansı
+
+  // Floating UI için dropdown konumlandırma
+  const { refs, floatingStyles, context } = useFloating({
+    open: isJobFilterOpen,
+    onOpenChange: setIsJobFilterOpen,
+    middleware: [
+      offset(8), 
+      flip(), 
+      shift({ padding: 8 }),
+      size({
+        apply({ availableWidth, elements }) {
+          // Butonun genişliğine göre dropdown genişliğini ayarla
+          if (elements.reference) {
+            elements.floating.style.width = `${elements.reference.offsetWidth}px`;
+          }
+        },
+        padding: 8,
+      }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+
+  const dismiss = useDismiss(context);
+  const { getFloatingProps } = useInteractions([dismiss]);
 
   const [selectedDoctorId, setSelectedDoctorId] = useState(null);
   const [popoverAnchor, setPopoverAnchor] = useState(null); // Buton referansı için
@@ -75,22 +100,7 @@ const HospitalApplications = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Dışarı tıklanınca dropdown'ı kapat
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (jobFilterRef.current && !jobFilterRef.current.contains(event.target)) {
-        setIsJobFilterOpen(false);
-      }
-    };
-
-    if (isJobFilterOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isJobFilterOpen]);
+  // Dışarı tıklanınca dropdown'ı kapat - Floating UI useDismiss hook'u ile yönetiliyor
 
   // Sayfa yüklendiğinde scroll pozisyonunu geri yükle
   useEffect(() => {
@@ -562,7 +572,7 @@ const HospitalApplications = () => {
               e.stopPropagation();
               return false;
             }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4"
+            className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 relative z-20"
           >
             {/* Üst satır: Tüm Durumlar ve İlanlarım */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -583,8 +593,12 @@ const HospitalApplications = () => {
               </div>
 
               {/* İlanlarım Filtresi */}
-              <div className="relative" ref={jobFilterRef}>
+              <div className="relative z-[200]" ref={jobFilterRef}>
                 <button
+                  ref={(node) => {
+                    refs.setReference(node);
+                    jobFilterButtonRef.current = node;
+                  }}
                   type="button"
                   onClick={() => setIsJobFilterOpen(!isJobFilterOpen)}
                   className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white hover:bg-white/10 transition-all flex items-center justify-between backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -599,43 +613,52 @@ const HospitalApplications = () => {
                   )}
                 </button>
 
-                {/* Dropdown Content */}
+                {/* Dropdown Content - Aşağı açılır ve başvuruların üzerinde kalır */}
+                {/* Max-height: 5 ilan için yaklaşık 240px (her ilan ~48px) */}
+                {/* FloatingPortal kullanarak z-index sorununu çözüyoruz */}
                 {isJobFilterOpen && (
-                  <div className="absolute z-50 w-full mt-2 bg-slate-800 border border-white/20 rounded-xl shadow-2xl max-h-96 overflow-y-auto backdrop-blur-md">
-                    {jobsLoading ? (
-                      <div className="p-4 text-center text-gray-400">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
-                        <span className="text-sm">İlanlar yükleniyor...</span>
-                      </div>
-                    ) : jobs.length === 0 ? (
-                      <div className="p-4 text-center text-gray-400">
-                        <Briefcase className="w-5 h-5 mx-auto mb-2 opacity-50" />
-                        <span className="text-sm">Henüz ilan bulunmamaktadır</span>
-                      </div>
-                    ) : (
-                      <div className="p-2">
-                        {jobs.map((job) => (
-                          <label
-                            key={job.id}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedJobIds.includes(job.id)}
-                              onChange={() => handleJobToggle(job.id)}
-                              className="w-4 h-4 text-blue-500 bg-white/10 border-white/20 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-transparent cursor-pointer"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm text-white font-medium truncate">{job.title}</div>
-                              <div className="text-xs text-gray-400 mt-0.5">
-                                {job.application_count || 0} başvuru
+                  <FloatingPortal>
+                    <div 
+                      ref={refs.setFloating}
+                      style={floatingStyles}
+                      {...getFloatingProps()}
+                      className="z-[9999] bg-slate-800 border border-white/20 rounded-xl shadow-2xl max-h-[240px] overflow-y-auto backdrop-blur-md"
+                    >
+                      {jobsLoading ? (
+                        <div className="p-4 text-center text-gray-400">
+                          <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
+                          <span className="text-sm">İlanlar yükleniyor...</span>
+                        </div>
+                      ) : jobs.length === 0 ? (
+                        <div className="p-4 text-center text-gray-400">
+                          <Briefcase className="w-5 h-5 mx-auto mb-2 opacity-50" />
+                          <span className="text-sm">Henüz ilan bulunmamaktadır</span>
+                        </div>
+                      ) : (
+                        <div className="p-2">
+                          {jobs.map((job) => (
+                            <label
+                              key={job.id}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedJobIds.includes(job.id)}
+                                onChange={() => handleJobToggle(job.id)}
+                                className="w-4 h-4 text-blue-500 bg-white/10 border-white/20 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-transparent cursor-pointer flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm text-white font-medium truncate">{job.title}</div>
+                                <div className="text-xs text-gray-400 mt-0.5">
+                                  {job.application_count || 0} başvuru
+                                </div>
                               </div>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </FloatingPortal>
                 )}
               </div>
             </div>
@@ -960,21 +983,51 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
               
               {/* İş İlanı Durumu */}
               <div className="mb-2">
-                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  (() => {
-                    const status = application.job_status || application.job_status_fallback;
-                    if (status === 'Aktif') return 'bg-green-500/20 text-green-300 border border-green-500/30';
-                    if (status === 'Pasif') return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+                {(() => {
+                  const status = application.job_status || application.job_status_fallback;
+                  
+                  // Status'a göre stil belirle (artık backend'den Türkçe geliyor)
+                  const getStatusStyles = (statusName) => {
+                    if (statusName === 'Onay Bekliyor') {
+                      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+                    }
+                    if (statusName === 'Revizyon Gerekli') {
+                      return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+                    }
+                    if (statusName === 'Onaylandı') {
+                      return 'bg-green-500/20 text-green-300 border border-green-500/30';
+                    }
+                    if (statusName === 'Pasif') {
+                      return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+                    }
+                    if (statusName === 'Reddedildi') {
+                      return 'bg-red-500/20 text-red-300 border border-red-500/30';
+                    }
+                    // Geriye uyumluluk için eski İngilizce isimler
+                    if (statusName === 'Pending Approval') {
+                      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+                    }
+                    if (statusName === 'Needs Revision') {
+                      return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+                    }
+                    if (statusName === 'Approved' || statusName === 'Aktif') {
+                      return 'bg-green-500/20 text-green-300 border border-green-500/30';
+                    }
+                    if (statusName === 'Passive') {
+                      return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+                    }
+                    if (statusName === 'Rejected') {
+                      return 'bg-red-500/20 text-red-300 border border-red-500/30';
+                    }
                     return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
-                  })()
-                }`}>
-                  {(() => {
-                    const status = application.job_status || application.job_status_fallback;
-                    if (status === 'Aktif') return '🟢 Aktif';
-                    if (status === 'Pasif') return '🟠 Pasif';
-                    return `❓ ${status || 'Bilinmiyor'}`;
-                  })()}
-                </span>
+                  };
+                  
+                  return (
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusStyles(status)}`}>
+                      {status || 'Bilinmiyor'}
+                    </span>
+                  );
+                })()}
               </div>
               
               <button

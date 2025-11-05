@@ -257,9 +257,11 @@ const getCertificateTypes = async () => {
  * @example
  * const jobStatuses = await getJobStatuses();
  * // [
- * //   { id: 1, name: "Aktif" },
- * //   { id: 2, name: "Pasif" },
- * //   { id: 3, name: "Draft" }
+ * //   { id: 1, name: "Onay Bekliyor" },
+ * //   { id: 2, name: "Revizyon Gerekli" },
+ * //   { id: 3, name: "Onaylandı" },
+ * //   { id: 4, name: "Pasif" },
+ * //   { id: 5, name: "Reddedildi" }
  * // ]
  * 
  * @throws {AppError} Veritabanı hatası durumunda

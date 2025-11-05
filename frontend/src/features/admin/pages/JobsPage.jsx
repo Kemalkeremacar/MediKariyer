@@ -7,8 +7,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminJobs } from '../api/useAdmin';
 import { useLookup } from '../../../hooks/useLookup';
+import { useJobStatuses } from '../../../hooks/useLookup';
 import { 
-  Briefcase, Eye, MapPin, Target, Calendar, CheckCircle, Clock, AlertCircle
+  Briefcase, Eye, MapPin, Target, Calendar, CheckCircle, Clock, AlertCircle, 
+  Hourglass, XCircle, RefreshCw, Users
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
@@ -20,6 +22,7 @@ const AdminJobsPage = () => {
     specialty_id: '',
     subspecialty_id: '',
     city_id: '',
+    status_id: '', // Status filtresi eklendi
     page: 1,
     limit: 10
   });
@@ -42,6 +45,7 @@ const AdminJobsPage = () => {
 
   // Lookup verileri
   const { data: lookupData, loading: lookupLoading } = useLookup();
+  const { data: jobStatuses } = useJobStatuses();
   const specialties = lookupData?.specialties || [];
   const subspecialties = lookupData?.subspecialties || [];
   const cities = lookupData?.cities || [];
@@ -241,11 +245,22 @@ const AdminJobsPage = () => {
     setFilters(prev => ({ ...prev, page }));
   };
 
-  // Status badge
-  const StatusBadge = ({ status }) => {
+  // Status badge - Yeni status'lar için güncellendi
+  // Status badge component - Türkçe status'lar için güncellendi
+  const StatusBadge = ({ status, statusId }) => {
+    // Artık backend'den Türkçe geliyor, çeviri gereksiz
     const statusConfig = {
-      'Aktif': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', icon: CheckCircle },
-      'Pasif': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200', icon: Clock }
+      'Onay Bekliyor': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200', icon: Hourglass },
+      'Revizyon Gerekli': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200', icon: RefreshCw },
+      'Onaylandı': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', icon: CheckCircle },
+      'Pasif': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200', icon: Clock },
+      'Reddedildi': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', icon: XCircle },
+      // Geriye uyumluluk için eski İngilizce isimler
+      'Pending Approval': { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200', icon: Hourglass },
+      'Needs Revision': { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200', icon: RefreshCw },
+      'Approved': { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', icon: CheckCircle },
+      'Passive': { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200', icon: Clock },
+      'Rejected': { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', icon: XCircle }
     };
 
     const config = statusConfig[status] || statusConfig['Pasif'];
@@ -353,7 +368,7 @@ const AdminJobsPage = () => {
           </div>
 
           {/* Filter Dropdowns */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Specialty Filter */}
             <select
               value={filters.specialty_id}
@@ -398,6 +413,20 @@ const AdminJobsPage = () => {
                 </option>
               ))}
             </select>
+
+            {/* Status Filter */}
+            <select
+              value={filters.status_id}
+              onChange={(e) => handleFilterChange('status_id', e.target.value)}
+              className="admin-form-select"
+            >
+              <option value="">Tüm Durumlar</option>
+              {jobStatuses?.map(status => (
+                <option key={status.value} value={status.value}>
+                  {status.label || status.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -413,8 +442,8 @@ const AdminJobsPage = () => {
                   {/* İlan Başlığı ve Durum - 4 kolon */}
                   <div className="lg:col-span-4">
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{job.title}</h3>
-                    <div className="flex items-center gap-2">
-                      <StatusBadge status={job.status} />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <StatusBadge status={job.status} statusId={job.status_id} />
                       <span className="text-xs text-gray-500">
                         {job.application_count || 0} Başvuru
                       </span>

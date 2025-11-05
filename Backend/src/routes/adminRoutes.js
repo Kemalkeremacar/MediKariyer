@@ -88,6 +88,34 @@ router.patch('/jobs/:id/status', validate(adminSchemas.jobIdParamSchema, 'params
  */
 router.delete('/jobs/:id', validate(adminSchemas.jobIdParamSchema, 'params'), adminController.deleteJob);
 
+/**
+ * @route   POST /api/admin/jobs/:id/approve
+ * @desc    İş ilanını onayla
+ * @access  Özel (Admin)
+ */
+router.post('/jobs/:id/approve', validate(adminSchemas.jobIdParamSchema, 'params'), validate(adminSchemas.jobApproveSchema, 'body'), adminController.approveJob);
+
+/**
+ * @route   POST /api/admin/jobs/:id/revision
+ * @desc    İş ilanı için revizyon talep et
+ * @access  Özel (Admin)
+ */
+router.post('/jobs/:id/revision', validate(adminSchemas.jobIdParamSchema, 'params'), validate(adminSchemas.jobRevisionSchema, 'body'), adminController.requestRevision);
+
+/**
+ * @route   POST /api/admin/jobs/:id/reject
+ * @desc    İş ilanını reddet
+ * @access  Özel (Admin)
+ */
+router.post('/jobs/:id/reject', validate(adminSchemas.jobIdParamSchema, 'params'), validate(adminSchemas.jobRejectSchema, 'body'), adminController.rejectJob);
+
+/**
+ * @route   GET /api/admin/jobs/:id/history
+ * @desc    İş ilanı statü geçmişini getir
+ * @access  Özel (Admin)
+ */
+router.get('/jobs/:id/history', validate(adminSchemas.jobIdParamSchema, 'params'), adminController.getJobHistory);
+
 // ============================================================================
 // KULLANICI YÖNETİMİ
 // ============================================================================

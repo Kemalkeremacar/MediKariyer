@@ -230,25 +230,25 @@ export const useUpdateHospitalJobStatus = () => {
 };
 
 /**
- * Hastane iş ilanını siler
- * Backend: DELETE /api/hospital/jobs/:jobId
- * hospitalService.deleteJob() ile uyumlu
+ * Hastane iş ilanını tekrar gönderir (resubmit)
+ * Backend: POST /api/hospital/jobs/:jobId/resubmit
+ * hospitalService.resubmitJob() ile uyumlu
  */
-export const useDeleteHospitalJob = () => {
+export const useResubmitHospitalJob = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (jobId) => {
-      const endpoint = buildEndpoint(`${ENDPOINTS.HOSPITAL.JOBS}/:jobId`, { jobId });
-      return apiRequest.delete(endpoint);
+      const endpoint = buildEndpoint(ENDPOINTS.HOSPITAL.JOB_RESUBMIT, { id: jobId });
+      return apiRequest.post(endpoint, {});
     },
-    onSuccess: (_, jobId) => {
-      queryClient.removeQueries(['hospital', 'jobs', jobId]);
+    onSuccess: (response, jobId) => {
+      queryClient.setQueryData(['hospital', 'job', jobId], response);
       queryClient.invalidateQueries(['hospital', 'jobs']);
       queryClient.invalidateQueries(['hospital', 'dashboard']);
-      showToast.success('İş ilanı başarıyla silindi');
+      showToast.success('İş ilanı başarıyla tekrar gönderildi');
     },
     onError: (err) => {
-      showToast.error(err.message || 'İş ilanı silinemedi');
+      showToast.error(err.message || 'İş ilanı tekrar gönderilemedi');
     },
   });
 };
@@ -572,7 +572,7 @@ const useHospital = {
   useCreateHospitalJob,
   useUpdateHospitalJob,
   useUpdateHospitalJobStatus,
-  useDeleteHospitalJob,
+  useResubmitHospitalJob,
   
   // Applications
   useHospitalApplications,

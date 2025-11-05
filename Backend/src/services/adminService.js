@@ -979,6 +979,233 @@ const updateJobStatus = async (jobId, statusId, reason = null) => {
 };
 
 /**
+ * İş ilanını onaylar
+ * 
+ * @param {number} jobId - İş ilanı ID'si
+ * @param {number} adminId - Admin kullanıcı ID'si
+ * @returns {Promise<Object|null>} Güncellenmiş iş ilanı, bulunamazsa null
+ */
+const approveJob = async (jobId, adminId) => {
+  try {
+    const job = await db('jobs').where('id', jobId).first();
+    if (!job) return null;
+
+    const oldStatusId = job.status_id;
+
+    // İlanı Onaylandı durumuna getir
+    await db('jobs').where('id', jobId).update({
+      status_id: 3, // Onaylandı
+      approved_at: db.fn.now(),
+      published_at: db.fn.now(),
+      updated_at: db.fn.now()
+    });
+
+    // Job history kaydı oluştur
+    await db('job_history').insert({
+      job_id: jobId,
+      old_status_id: oldStatusId,
+      new_status_id: 3,
+      changed_by: adminId,
+      note: 'İlan admin tarafından onaylandı',
+      changed_at: db.fn.now()
+    });
+
+    // Hastaneye bildirim gönder
+    try {
+      const hospitalProfile = await db('jobs as j')
+        .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+        .where('j.id', jobId)
+        .select('hp.user_id', 'hp.institution_name', 'j.title')
+        .first();
+
+      if (hospitalProfile) {
+        await notificationService.sendNotification({
+          user_id: hospitalProfile.user_id,
+          type: 'success',
+          title: 'İlan Onaylandı',
+          body: `${hospitalProfile.institution_name} hastanesindeki "${hospitalProfile.title}" ilanı onaylandı ve yayına alındı.`,
+          data: {
+            job_id: jobId,
+            job_title: hospitalProfile.title,
+            status: 'approved'
+          }
+        });
+      }
+    } catch (notificationError) {
+      logger.warn('Job approval notification failed:', notificationError);
+    }
+
+    return await getJobDetails(jobId);
+  } catch (error) {
+    logger.error('Approve job error:', error);
+    throw error;
+  }
+};
+
+/**
+ * İş ilanı için revizyon talep eder
+ * 
+ * @param {number} jobId - İş ilanı ID'si
+ * @param {number} adminId - Admin kullanıcı ID'si
+ * @param {string} revisionNote - Revizyon notu
+ * @returns {Promise<Object|null>} Güncellenmiş iş ilanı, bulunamazsa null
+ */
+const requestRevision = async (jobId, adminId, revisionNote) => {
+  try {
+    const job = await db('jobs').where('id', jobId).first();
+    if (!job) return null;
+
+    if (!revisionNote || revisionNote.trim() === '') {
+      throw new AppError('Revizyon notu zorunludur', 400);
+    }
+
+    const oldStatusId = job.status_id;
+
+    // İlanı Revizyon Gerekli durumuna getir
+    await db('jobs').where('id', jobId).update({
+      status_id: 2, // Revizyon Gerekli
+      revision_note: revisionNote,
+      revision_count: db.raw('revision_count + 1'),
+      updated_at: db.fn.now()
+    });
+
+    // Job history kaydı oluştur
+    await db('job_history').insert({
+      job_id: jobId,
+      old_status_id: oldStatusId,
+      new_status_id: 2,
+      changed_by: adminId,
+      note: revisionNote,
+      changed_at: db.fn.now()
+    });
+
+    // Hastaneye bildirim gönder
+    try {
+      const hospitalProfile = await db('jobs as j')
+        .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+        .where('j.id', jobId)
+        .select('hp.user_id', 'hp.institution_name', 'j.title')
+        .first();
+
+      if (hospitalProfile) {
+        await notificationService.sendNotification({
+          user_id: hospitalProfile.user_id,
+          type: 'warning',
+          title: 'İlan Revizyon Gerektiriyor',
+          body: `${hospitalProfile.institution_name} hastanesindeki "${hospitalProfile.title}" ilanı için revizyon talebi var.`,
+          data: {
+            job_id: jobId,
+            job_title: hospitalProfile.title,
+            revision_note: revisionNote,
+            status: 'needs_revision'
+          }
+        });
+      }
+    } catch (notificationError) {
+      logger.warn('Job revision notification failed:', notificationError);
+    }
+
+    return await getJobDetails(jobId);
+  } catch (error) {
+    logger.error('Request revision error:', error);
+    throw error;
+  }
+};
+
+/**
+ * İş ilanını reddeder
+ * 
+ * @param {number} jobId - İş ilanı ID'si
+ * @param {number} adminId - Admin kullanıcı ID'si
+ * @param {string} [rejectionReason=null] - Red sebebi
+ * @returns {Promise<Object|null>} Güncellenmiş iş ilanı, bulunamazsa null
+ */
+const rejectJob = async (jobId, adminId, rejectionReason = null) => {
+  try {
+    const job = await db('jobs').where('id', jobId).first();
+    if (!job) return null;
+
+    const oldStatusId = job.status_id;
+
+    // İlanı Reddedildi durumuna getir
+    await db('jobs').where('id', jobId).update({
+      status_id: 5, // Reddedildi
+      updated_at: db.fn.now()
+    });
+
+    // Job history kaydı oluştur
+    await db('job_history').insert({
+      job_id: jobId,
+      old_status_id: oldStatusId,
+      new_status_id: 5,
+      changed_by: adminId,
+      note: rejectionReason || 'İlan admin tarafından reddedildi',
+      changed_at: db.fn.now()
+    });
+
+    // Hastaneye bildirim gönder
+    try {
+      const hospitalProfile = await db('jobs as j')
+        .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+        .where('j.id', jobId)
+        .select('hp.user_id', 'hp.institution_name', 'j.title')
+        .first();
+
+      if (hospitalProfile) {
+        await notificationService.sendNotification({
+          user_id: hospitalProfile.user_id,
+          type: 'error',
+          title: 'İlan Reddedildi',
+          body: `${hospitalProfile.institution_name} hastanesindeki "${hospitalProfile.title}" ilanı reddedildi.${rejectionReason ? ` Sebep: ${rejectionReason}` : ''}`,
+          data: {
+            job_id: jobId,
+            job_title: hospitalProfile.title,
+            rejection_reason: rejectionReason,
+            status: 'rejected'
+          }
+        });
+      }
+    } catch (notificationError) {
+      logger.warn('Job rejection notification failed:', notificationError);
+    }
+
+    return await getJobDetails(jobId);
+  } catch (error) {
+    logger.error('Reject job error:', error);
+    throw error;
+  }
+};
+
+/**
+ * İş ilanı statü geçmişini getirir
+ * 
+ * @param {number} jobId - İş ilanı ID'si
+ * @returns {Promise<Array>} Statü geçmişi listesi
+ */
+const getJobHistory = async (jobId) => {
+  try {
+    const history = await db('job_history as jh')
+      .join('users as u', 'jh.changed_by', 'u.id')
+      .leftJoin('job_statuses as old_js', 'jh.old_status_id', 'old_js.id')
+      .leftJoin('job_statuses as new_js', 'jh.new_status_id', 'new_js.id')
+      .where('jh.job_id', jobId)
+      .select(
+        'jh.*',
+        'u.email as changed_by_email',
+        'u.role as changed_by_role',
+        'old_js.name as old_status_name',
+        'new_js.name as new_status_name'
+      )
+      .orderBy('jh.changed_at', 'desc');
+
+    return history;
+  } catch (error) {
+    logger.error('Get job history error:', error);
+    throw error;
+  }
+};
+
+/**
  * İş ilanını siler (hard delete)
  * İlişkili başvuruları da CASCADE ile siler
  * 
@@ -1250,7 +1477,9 @@ const sendJobStatusChangeNotification = async (jobId, newStatus, oldStatus, admi
       try {
         await notificationService.sendNotification({
           user_id: application.user_id,
-          type: newStatus === 'Pasif' ? 'warning' : 'info',
+          type: newStatus === 'Pasif' ? 'warning' : 
+                newStatus === 'Reddedildi' ? 'error' :
+                newStatus === 'Revizyon Gerekli' ? 'warning' : 'info',
           title: 'İlan Durumu Değişti',
           body: `${job.hospital_name} hastanesindeki ${job.job_title} pozisyonu için ilan durumu "${oldStatus}" → "${newStatus}" olarak değiştirildi.`,
           data: {
@@ -1548,6 +1777,10 @@ module.exports = {
   getJobDetails,
   updateJob,
   updateJobStatus,
+  approveJob,
+  requestRevision,
+  rejectJob,
+  getJobHistory,
   deleteJob,
   getAllApplications,
   getApplicationDetails,

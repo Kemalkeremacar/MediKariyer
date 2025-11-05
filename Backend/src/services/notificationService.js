@@ -621,10 +621,25 @@ const sendDoctorJobStatusNotification = async (doctorUserId, jobStatus, jobData)
       notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan arşivlendi.`;
       notificationType = 'warning';
       break;
-    case 'Aktif':
+    case 'Onaylandı':
       notificationTitle = 'İlan Aktifleştirildi';
       notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan tekrar aktifleştirildi.`;
       notificationType = 'info';
+      break;
+    case 'Onay Bekliyor':
+      notificationTitle = 'İlan Onay Bekliyor';
+      notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan onay bekliyor.`;
+      notificationType = 'info';
+      break;
+    case 'Revizyon Gerekli':
+      notificationTitle = 'İlan Revizyon Gerekiyor';
+      notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan revizyon gerekiyor.`;
+      notificationType = 'warning';
+      break;
+    case 'Reddedildi':
+      notificationTitle = 'İlan Reddedildi';
+      notificationBody = `${jobData.hospital_name} hastanesindeki ${jobData.job_title} pozisyonu için ilan reddedildi.`;
+      notificationType = 'error';
       break;
     default:
       notificationTitle = 'İlan Durumu Değişti';

@@ -402,12 +402,76 @@ const DoctorApplicationsPage = () => {
 // Application Card Component (Memoized)
 const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWithdrawing, getStatusText, getStatusColor }) => {
   const handleView = (e) => {
+    // Pasif ilanlar için detay sayfasına gitmeyi engelle
+    if (isJobPassive) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     onViewClick(application, e);
   };
 
   const handleWithdraw = () => {
     onWithdrawClick(application.id);
   };
+
+  // İlan durumunu kontrol et - Pasif ilan kontrolü
+  const jobStatusId = application.job_status_id;
+  const jobStatus = application.job_status || '';
+  const isJobPassive = 
+    jobStatusId === 4 ||
+    jobStatusId === '4' ||
+    jobStatus === 'Pasif' || 
+    jobStatus === 'Passive' ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'pasif') ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive'));
+
+  // Pasif ilan için özel görünüm
+  if (isJobPassive) {
+    return (
+      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3">
+              <div className="flex-1">
+                <h3 className="text-lg md:text-xl font-semibold text-white mb-2">{application.job_title}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 text-sm md:text-base">
+                  <div className="flex items-center gap-2">
+                    <Building className="w-4 h-4" />
+                    <span>{application.hospital_name || 'Hastane adı yok'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    <span>{application.job_city || 'Şehir belirtilmemiş'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 rounded-full text-xs md:text-sm font-medium border bg-gray-500/20 text-gray-300 border-gray-500/30">
+                  Yayından Kaldırıldı
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs md:text-sm text-gray-400 mb-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>Başvuru: {new Date(application.created_at || application.applied_at).toLocaleDateString('tr-TR')}</span>
+              </div>
+            </div>
+            
+            <div className="bg-gray-500/10 border border-gray-500/30 rounded-xl p-4 mt-4">
+              <p className="text-gray-400 text-sm text-center">
+                Bu ilan yayından kaldırıldığı için başvuru detayları görüntülenemez.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300">

@@ -247,6 +247,77 @@ const deleteJob = catchAsync(async (req, res) => {
   return sendSuccess(res, 'İş ilanı silindi');
 });
 
+/**
+ * İş ilanını onaylar
+ * 
+ * @route POST /api/admin/jobs/:id/approve
+ * @access Private (Admin)
+ * @param {number} req.params.id - Onaylanacak iş ilanı ID'si
+ * @returns {Object} Güncellenmiş iş ilanı
+ */
+const approveJob = catchAsync(async (req, res) => {
+  const job = await adminService.approveJob(req.params.id, req.user.id);
+  if (!job) throw new AppError('İş ilanı bulunamadı', 404);
+
+  logger.info(`Job approved: ${req.params.id} by ${req.user.email}`);
+  return sendSuccess(res, 'İş ilanı onaylandı', { job });
+});
+
+/**
+ * İş ilanı için revizyon talep eder
+ * 
+ * @route POST /api/admin/jobs/:id/revision
+ * @access Private (Admin)
+ * @param {number} req.params.id - Revizyon istenecek iş ilanı ID'si
+ * @param {string} req.body.revision_note - Revizyon notu
+ * @returns {Object} Güncellenmiş iş ilanı
+ */
+const requestRevision = catchAsync(async (req, res) => {
+  const { revision_note } = req.body;
+  if (!revision_note || revision_note.trim() === '') {
+    throw new AppError('Revizyon notu zorunludur', 400);
+  }
+
+  const job = await adminService.requestRevision(req.params.id, req.user.id, revision_note);
+  if (!job) throw new AppError('İş ilanı bulunamadı', 404);
+
+  logger.info(`Job revision requested: ${req.params.id} by ${req.user.email}`);
+  return sendSuccess(res, 'Revizyon talebi gönderildi', { job });
+});
+
+/**
+ * İş ilanını reddeder
+ * 
+ * @route POST /api/admin/jobs/:id/reject
+ * @access Private (Admin)
+ * @param {number} req.params.id - Reddedilecek iş ilanı ID'si
+ * @param {string} [req.body.rejection_reason] - Red sebebi
+ * @returns {Object} Güncellenmiş iş ilanı
+ */
+const rejectJob = catchAsync(async (req, res) => {
+  const { rejection_reason } = req.body;
+  const job = await adminService.rejectJob(req.params.id, req.user.id, rejection_reason);
+  if (!job) throw new AppError('İş ilanı bulunamadı', 404);
+
+  logger.info(`Job rejected: ${req.params.id} by ${req.user.email}`);
+  return sendSuccess(res, 'İş ilanı reddedildi', { job });
+});
+
+/**
+ * İş ilanı statü geçmişini getirir
+ * 
+ * @route GET /api/admin/jobs/:id/history
+ * @access Private (Admin)
+ * @param {number} req.params.id - İş ilanı ID'si
+ * @returns {Object} Statü geçmişi listesi
+ */
+const getJobHistory = catchAsync(async (req, res) => {
+  const history = await adminService.getJobHistory(req.params.id);
+
+  logger.info(`Job history retrieved: ${req.params.id} by ${req.user.email}`);
+  return sendSuccess(res, 'İlan geçmişi getirildi', { history });
+});
+
 // ============================================================================
 // BAŞVURU YÖNETİMİ
 // ============================================================================
@@ -477,6 +548,10 @@ module.exports = {
   updateJob,
   updateJobStatus,
   deleteJob,
+  approveJob,
+  requestRevision,
+  rejectJob,
+  getJobHistory,
   getAllApplications,
   getApplicationById,
   updateApplicationStatus,

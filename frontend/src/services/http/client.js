@@ -1378,6 +1378,14 @@ export const hospitalApiRequest = {
   deleteJob: (jobId) => apiRequest.delete(`/hospital/jobs/${jobId}`),
   
   /**
+   * İş ilanını tekrar gönderir (resubmit)
+   * 
+   * @param {number} jobId - İş ilanı ID'si
+   * @returns {Promise} Resubmit response promise
+   */
+  resubmitJob: (jobId) => apiRequest.post(`/hospital/jobs/${jobId}/resubmit`, {}),
+  
+  /**
    * Başvuru API çağrıları
    */
   

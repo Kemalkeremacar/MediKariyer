@@ -158,6 +158,7 @@ export const ENDPOINTS = {
     // İş ilanları CRUD
     JOBS: '/hospital/jobs', // GET/POST - İş ilanı listesi/oluşturma
     JOB_DETAIL: '/hospital/jobs/:id', // GET/PATCH/DELETE - İş ilanı detayı/güncelleme/silme
+    JOB_RESUBMIT: '/hospital/jobs/:id/resubmit', // POST - İş ilanı tekrar gönder (resubmit)
     JOB_APPLICATIONS: '/hospital/jobs/:id/applications', // GET - İş ilanı başvuruları
     
     // Başvuru yönetimi
@@ -195,6 +196,12 @@ export const ENDPOINTS = {
     JOBS: '/admin/jobs', // GET/PATCH/DELETE - İş ilanı listesi/güncelleme/silme
     JOB_DETAIL: '/admin/jobs/:id', // GET - İş ilanı detayı
     JOB_STATUS: '/admin/jobs/:id/status', // PATCH - İş ilanı durumu
+    JOB_APPROVE: '/admin/jobs/:id/approve', // POST - İş ilanı onayla
+    JOB_REVISION: '/admin/jobs/:id/revision', // POST - İş ilanı revizyon talep et
+    JOB_REJECT: '/admin/jobs/:id/reject', // POST - İş ilanı reddet
+    JOB_HISTORY: '/admin/jobs/:id/history', // GET - İş ilanı statü geçmişi
+    JOB_UPDATE: '/admin/jobs/:id', // PUT - İş ilanı güncelleme
+    JOB_DELETE: '/admin/jobs/:id', // DELETE - İş ilanı silme
     
     // Başvuru yönetimi
     APPLICATIONS: '/admin/applications', // GET - Tüm başvurular

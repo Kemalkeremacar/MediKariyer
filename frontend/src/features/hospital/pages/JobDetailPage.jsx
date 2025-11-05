@@ -21,9 +21,10 @@ import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Briefcase, Edit3, Users, MapPin, Calendar, 
-  Target, AlertCircle, ArrowLeft, Building, CheckCircle, Clock, Settings
+  Target, AlertCircle, ArrowLeft, Building, CheckCircle, Clock, Settings,
+  Hourglass, RefreshCw, XCircle, FileText, History
 } from 'lucide-react';
-import { useHospitalJobById, useUpdateHospitalJobStatus } from '../api/useHospital';
+import { useHospitalJobById, useUpdateHospitalJobStatus, useResubmitHospitalJob } from '../api/useHospital';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 // ConfirmationModal global; local import gerekmez
@@ -42,15 +43,20 @@ const JobDetailPage = () => {
   } = useHospitalJobById(jobId);
 
   const updateStatusMutation = useUpdateHospitalJobStatus();
+  const resubmitJobMutation = useResubmitHospitalJob();
 
   // UI Store kaldırıldı: onaylar showToast.confirm ile yönetilecek
 
   // Veri parsing
   const job = jobData?.data?.job || null;
 
-  // Status update handler
+  // Status update handler - Sadece Onaylandı ↔ Pasif geçişi için
+  // Hastane sadece:
+  // - Onaylandı (3) → Pasif (4) geçişi yapabilir
+  // - Pasif (4) → Onaylandı (3) geçişi yapabilir
   const handleStatusChange = async (statusId) => {
-    const isActivating = statusId === 1;
+    const statusNames = { 3: 'Onaylandı', 4: 'Pasif' };
+    const isActivating = statusId === 3;
     const ok = await showToast.confirm({
       title: 'İlan Durumu Değiştir',
       message: isActivating
@@ -66,8 +72,6 @@ const JobDetailPage = () => {
   };
 
   const confirmStatusChange = async (statusId) => {
-    const statusNames = { 1: 'Aktif', 2: 'Pasif' };
-    
     try {
       await updateStatusMutation.mutateAsync({
         jobId: jobId,
@@ -80,15 +84,21 @@ const JobDetailPage = () => {
     }
   };
 
-  const cancelStatusChange = () => {
-    // Modal otomatik kapanacak
-  };
-
-  // Status badge component (Taslak kaldırıldı)
-  const StatusBadge = ({ status }) => {
+  // Status badge component - Türkçe status'lar için güncellendi
+  const StatusBadge = ({ status, statusId }) => {
+    // Artık backend'den Türkçe geliyor, çeviri gereksiz
     const statusConfig = {
-      'Aktif': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: CheckCircle },
-      'Pasif': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: Clock }
+      'Onay Bekliyor': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: Hourglass },
+      'Revizyon Gerekli': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: RefreshCw },
+      'Onaylandı': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: CheckCircle },
+      'Pasif': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: Clock },
+      'Reddedildi': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: XCircle },
+      // Geriye uyumluluk için eski İngilizce isimler
+      'Pending Approval': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: Hourglass },
+      'Needs Revision': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: RefreshCw },
+      'Approved': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: CheckCircle },
+      'Passive': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: Clock },
+      'Rejected': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: XCircle }
     };
 
     const config = statusConfig[status] || statusConfig['Pasif'];
@@ -182,13 +192,43 @@ const JobDetailPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Link
-                to={`/hospital/jobs/${jobId}/edit`}
-                className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-4 py-3 rounded-xl hover:bg-yellow-500/30 transition-all duration-300 inline-flex items-center gap-2"
-              >
-                <Edit3 className="w-4 h-4" />
-                Düzenle
-              </Link>
+              {/* Needs Revision durumunda Resubmit butonu */}
+              {job?.status_id === 2 && (
+                <button
+                  onClick={async () => {
+                    const ok = await showToast.confirm({
+                      title: 'İlanı Tekrar Gönder',
+                      message: `"${job.title}" ilanını tekrar göndermek istediğinizden emin misiniz? İlan admin onayına gönderilecektir.`,
+                      confirmText: 'Tekrar Gönder',
+                      cancelText: 'İptal',
+                      type: 'info'
+                    });
+                    if (ok) {
+                      try {
+                        await resubmitJobMutation.mutateAsync(jobId);
+                        refetchJob();
+                      } catch (error) {
+                        console.error('Resubmit error:', error);
+                      }
+                    }
+                  }}
+                  disabled={resubmitJobMutation.isPending}
+                  className="bg-green-500/20 text-green-300 border border-green-500/30 px-4 py-3 rounded-xl hover:bg-green-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw className={`w-5 h-5 ${resubmitJobMutation.isPending ? 'animate-spin' : ''}`} />
+                  {resubmitJobMutation.isPending ? 'Gönderiliyor...' : 'Tekrar Gönder'}
+                </button>
+              )}
+              {/* Sadece Needs Revision durumunda edit butonu göster */}
+              {job?.status_id === 2 && (
+                <Link
+                  to={`/hospital/jobs/${jobId}/edit`}
+                  className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-4 py-3 rounded-xl hover:bg-yellow-500/30 transition-all duration-300 inline-flex items-center gap-2"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Düzenle
+                </Link>
+              )}
             </div>
           </div>
 
@@ -198,15 +238,42 @@ const JobDetailPage = () => {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <h2 className="text-3xl font-bold text-white mb-4">{job.title}</h2>
-                <div className="flex items-center gap-4 mb-4">
-                  <StatusBadge status={job.status} />
+                <div className="flex items-center gap-4 mb-4 flex-wrap">
+                  <StatusBadge status={job.status} statusId={job.status_id} />
                   <span className="text-gray-300 flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     {job.application_count || 0} Başvuru
                   </span>
+                  {job.approved_at && (
+                    <span className="text-gray-300 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Onaylandı: {new Date(job.approved_at).toLocaleDateString('tr-TR')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* Revision Note - Needs Revision durumunda göster */}
+            {job?.status_id === 2 && job?.revision_note && (
+              <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-orange-300 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-orange-200 mb-2 flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Revizyon Notu
+                    </h3>
+                    <p className="text-orange-100 whitespace-pre-wrap leading-relaxed">{job.revision_note}</p>
+                    {job.revision_count > 0 && (
+                      <p className="text-sm text-orange-300 mt-2">
+                        Revizyon Sayısı: {job.revision_count}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Job Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -291,65 +358,68 @@ const JobDetailPage = () => {
             </div>
 
             {/* İlan Durumu Yönetimi */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-white">İlan Durumu Yönetimi</h3>
-              </div>
-              
-              <div className="space-y-4">
-                {/* Mevcut Durum */}
-                <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status={job?.status} />
-                    <span className="text-gray-300">Mevcut Durum</span>
+            {job?.status_id !== 2 && (
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-white" />
                   </div>
+                  <h3 className="text-xl font-bold text-white">İlan Durumu Yönetimi</h3>
                 </div>
-
-                {/* Durum Değiştirme Butonları */}
-                <div className="flex items-center gap-4">
-                  {job?.status === 'Aktif' ? (
-                    <button
-                      onClick={() => handleStatusChange(2)}
-                      disabled={updateStatusMutation.isPending}
-                      className="bg-orange-500/20 text-orange-300 border border-orange-500/30 px-6 py-3 rounded-xl hover:bg-orange-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Clock className="w-5 h-5" />
-                      Pasif Yap
-                    </button>
-                  ) : job?.status === 'Pasif' ? (
-                    <button
-                      onClick={() => handleStatusChange(1)}
-                      disabled={updateStatusMutation.isPending}
-                      className="bg-green-500/20 text-green-300 border border-green-500/30 px-6 py-3 rounded-xl hover:bg-green-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      Aktif Yap
-                    </button>
-                  ) : (
-                    <div className="text-gray-400 text-sm">
-                      Durum bilgisi yükleniyor...
-                    </div>
-                  )}
-                </div>
-
-                {/* Bilgilendirme */}
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-blue-300 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-200">
-                      <p className="font-medium mb-1">Durum Değişikliği Hakkında:</p>
-                      <ul className="space-y-1 text-blue-300">
-                        <li>• <strong>Aktif:</strong> Doktorlar bu ilanı görebilir ve başvuru yapabilir</li>
-                        <li>• <strong>Pasif:</strong> Doktorlar bu ilanı göremez ve başvuru yapamaz</li>
-                      </ul>
+                
+                <div className="space-y-4">
+                  {/* Mevcut Durum */}
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <StatusBadge status={job?.status} statusId={job?.status_id} />
+                      <span className="text-gray-300">Mevcut Durum</span>
                     </div>
                   </div>
+
+                  {/* Durum Değiştirme Butonları */}
+                  <div className="flex items-center gap-4">
+                    {job?.status_id === 3 ? (
+                      <button
+                        onClick={() => handleStatusChange(4)}
+                        disabled={updateStatusMutation.isPending}
+                        className="bg-orange-500/20 text-orange-300 border border-orange-500/30 px-6 py-3 rounded-xl hover:bg-orange-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Clock className="w-5 h-5" />
+                        Pasif Yap
+                      </button>
+                    ) : job?.status_id === 4 ? (
+                      <button
+                        onClick={() => handleStatusChange(3)}
+                        disabled={updateStatusMutation.isPending}
+                        className="bg-green-500/20 text-green-300 border border-green-500/30 px-6 py-3 rounded-xl hover:bg-green-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <CheckCircle className="w-5 h-5" />
+                        Aktif Yap
+                      </button>
+                    ) : (
+                      <div className="text-gray-400 text-sm">
+                        Durum bilgisi yükleniyor...
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bilgilendirme */}
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-blue-300 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-blue-200">
+                        <p className="font-medium mb-1">Durum Değişikliği Hakkında:</p>
+                        <ul className="space-y-1 text-blue-300">
+                          <li>• <strong>Onaylandı:</strong> Doktorlar bu ilanı görebilir ve başvuru yapabilir</li>
+                          <li>• <strong>Pasif:</strong> Doktorlar bu ilanı göremez ve başvuru yapamaz</li>
+                          <li>• <strong>Not:</strong> Durum değişikliği sadece Onaylandı ve Pasif durumları arasında yapılabilir</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-white/10">
