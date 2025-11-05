@@ -1,6 +1,6 @@
 /**
- * Doctors Management Page - Admin doktor yönetimi sayfası
- * Sadece doktorları görüntüleme, düzenleme, onaylama işlemleri
+ * Hospitals Management Page - Admin hastane yönetimi sayfası
+ * Sadece hastaneleri görüntüleme, düzenleme, onaylama işlemleri
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -9,22 +9,20 @@ import { useUsers, useUpdateUserStatus, useUpdateUserApproval } from '../api/use
 import { showToast } from '@/utils/toastUtils';
 import { useLookup } from '@/hooks/useLookup';
 import { 
-  Stethoscope, 
+  Building, 
   Eye,
   Search
 } from 'lucide-react';
 
-const UsersPage = () => {
+const HospitalsPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
   const [filters, setFilters] = useState({
-    role: 'doctor', // Sabit: sadece doktorlar
+    role: 'hospital', // Sabit: sadece hastaneler
     isApproved: '',
     isActive: '',
-    doctor_search: '',
-    specialty_id: '',
-    subspecialty_id: '',
+    hospital_search: '',
     city_id: '',
     page: 1,
     limit: 10
@@ -44,14 +42,7 @@ const UsersPage = () => {
 
   // Lookup verileri
   const { data: lookupData, loading: lookupLoading } = useLookup();
-  const specialties = lookupData?.specialties || [];
-  const subspecialties = lookupData?.subspecialties || [];
   const cities = lookupData?.cities || [];
-
-  // Seçili ana dal'a göre yan dalları filtrele
-  const filteredSubspecialties = filters.specialty_id 
-    ? subspecialties.filter(sub => sub.specialty_id === parseInt(filters.specialty_id))
-    : [];
 
   // URL parametrelerini kontrol et ve filtreleri ayarla
   useEffect(() => {
@@ -101,7 +92,7 @@ const UsersPage = () => {
         { userId, approved: value, reason: 'Admin tarafından güncellendi' },
         {
           onSuccess: () => {
-            showToast.success(value ? 'Doktor onaylandı' : 'Doktor onayı kaldırıldı');
+            showToast.success(value ? 'Hastane onaylandı' : 'Hastane onayı kaldırıldı');
             refetch(); // Manuel refetch ekle
           },
           onError: (error) => {
@@ -114,7 +105,7 @@ const UsersPage = () => {
         { userId, field, value, reason: 'Admin tarafından güncellendi' },
         {
           onSuccess: () => {
-            showToast.success(value ? 'Doktor aktifleştirildi' : 'Doktor pasifleştirildi');
+            showToast.success(value ? 'Hastane aktifleştirildi' : 'Hastane pasifleştirildi');
             refetch(); // Manuel refetch ekle
           },
           onError: (error) => {
@@ -127,20 +118,11 @@ const UsersPage = () => {
 
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => {
-      const newFilters = {
-        ...prev,
-        [key]: value,
-        page: 1
-      };
-      
-      // Ana dal değiştiğinde yan dal'ı sıfırla
-      if (key === 'specialty_id') {
-        newFilters.subspecialty_id = '';
-      }
-      
-      return newFilters;
-    });
+    setFilters(prev => ({
+      ...prev,
+      [key]: value,
+      page: 1
+    }));
   };
 
   // Search input için commit fonksiyonu (Enter tuşu için)
@@ -175,7 +157,7 @@ const UsersPage = () => {
       // Filtreleri güncelle (sadece Enter'a basıldığında)
       setFilters(prev => ({
         ...prev,
-        doctor_search: value,
+        hospital_search: value,
         page: 1 // Arama yapıldığında ilk sayfaya dön
       }));
 
@@ -238,7 +220,24 @@ const UsersPage = () => {
         });
       });
     }
-  }, [filters.doctor_search, searchInput]);
+  }, [filters.hospital_search, searchInput]);
+
+  // Render'dan sonra cursor pozisyonunu geri yükle
+  useEffect(() => {
+    if (cursorPositionRef.current !== null &&
+        searchInputRef.current &&
+        document.activeElement === searchInputRef.current &&
+        searchInput.length > 0) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (searchInputRef.current && document.activeElement === searchInputRef.current) {
+            const pos = Math.min(cursorPositionRef.current, searchInput.length);
+            searchInputRef.current.setSelectionRange(pos, pos);
+          }
+        });
+      });
+    }
+  }, [searchInput]);
 
   const handleShowPendingOnly = () => {
     setShowPendingOnly(!showPendingOnly);
@@ -302,13 +301,13 @@ const UsersPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Stethoscope className="h-8 w-8 mr-3 text-blue-600" />
-              Doktorlar
+              <Building className="h-8 w-8 mr-3 text-green-600" />
+              Hastaneler
             </h1>
             <p className="text-gray-600 mt-2">
               {showPendingOnly 
-                ? 'Onay bekleyen doktorları görüntüleyin ve onaylayın'
-                : 'Tüm doktorları görüntüleyin, düzenleyin ve onaylayın'
+                ? 'Onay bekleyen hastaneleri görüntüleyin ve onaylayın'
+                : 'Tüm hastaneleri görüntüleyin, düzenleyin ve onaylayın'
               }
             </p>
           </div>
@@ -327,7 +326,7 @@ const UsersPage = () => {
                 : 'admin-btn-outline'
             }`}
           >
-            {showPendingOnly ? 'Tüm Doktorları Göster' : 'Sadece Onay Bekleyenleri Göster'}
+            {showPendingOnly ? 'Tüm Hastaneleri Göster' : 'Sadece Onay Bekleyenleri Göster'}
           </button>
         </div>
 
@@ -337,7 +336,7 @@ const UsersPage = () => {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Doktor adı veya soyadı ile ara..."
+              placeholder="Hastane adı ile ara..."
               value={searchInput}
               onChange={(e) => {
                 const value = e.target.value;
@@ -374,37 +373,7 @@ const UsersPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {/* Specialty Filter */}
-          <select
-            value={filters.specialty_id}
-            onChange={(e) => handleFilterChange('specialty_id', e.target.value)}
-            className="admin-form-select"
-            disabled={lookupLoading?.isLoading}
-          >
-            <option value="">Tüm Ana Dallar</option>
-            {specialties.map(specialty => (
-              <option key={specialty.value} value={specialty.value}>
-                {specialty.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Subspecialty Filter */}
-          <select
-            value={filters.subspecialty_id}
-            onChange={(e) => handleFilterChange('subspecialty_id', e.target.value)}
-            className="admin-form-select"
-            disabled={lookupLoading?.isLoading || !filters.specialty_id}
-          >
-            <option value="">Tüm Yan Dallar</option>
-            {filteredSubspecialties.map(subspecialty => (
-              <option key={subspecialty.value} value={subspecialty.value}>
-                {subspecialty.label}
-              </option>
-            ))}
-          </select>
-
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* City Filter */}
           <select
             value={filters.city_id}
@@ -444,13 +413,13 @@ const UsersPage = () => {
         </div>
       </div>
 
-      {/* Doctors Table */}
+      {/* Hospitals Table */}
       <div className="admin-table">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr>
-                <th>Doktor</th>
+                <th>Hastane</th>
                 <th>Onay Durumu</th>
                 <th>Aktivite Durumu</th>
                 <th>Kayıt Tarihi</th>
@@ -467,9 +436,7 @@ const UsersPage = () => {
                   <td>
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {user.profile?.first_name && user.profile?.last_name 
-                          ? `${user.profile.first_name} ${user.profile.last_name}`
-                          : 'Doktor'}
+                        {user.profile?.institution_name || 'Hastane'}
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
@@ -495,7 +462,7 @@ const UsersPage = () => {
                           navigate(`/admin/users/${user.id}`);
                         }}
                         className="admin-btn admin-btn-sm admin-btn-primary"
-                        title="Doktor Detaylarını Görüntüle"
+                        title="Hastane Detaylarını Görüntüle"
                       >
                         <Eye className="h-3 w-3 mr-1" />
                         Detay
@@ -530,7 +497,7 @@ const UsersPage = () => {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Toplam <span className="font-medium">{pagination.total}</span> doktordan{' '}
+                  Toplam <span className="font-medium">{pagination.total}</span> hastaneden{' '}
                   <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
                   <span className="font-medium">
                     {Math.min(pagination.current_page * pagination.per_page, pagination.total)}
@@ -564,4 +531,5 @@ const UsersPage = () => {
   );
 };
 
-export default UsersPage;
+export default HospitalsPage;
+

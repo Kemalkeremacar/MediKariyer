@@ -8,7 +8,7 @@
  * @since 2024
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle, 
   XCircle, 
@@ -29,12 +29,13 @@ const PhotoApprovalsPage = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   // API hooks
   const { data: photoRequestsData, isLoading, refetch } = usePhotoRequests({ 
     status: selectedStatus,
-    page: 1,
-    limit: 50
+    page: currentPage,
+    limit: 10
   });
   
   // Bekleyen taleplerin sayısını almak için ayrı query
@@ -49,10 +50,27 @@ const PhotoApprovalsPage = () => {
   const photoRequests = Array.isArray(photoRequestsData?.data?.data)
     ? photoRequestsData.data.data
     : [];
-  const pagination = photoRequestsData?.data?.pagination;
+  const rawPagination = photoRequestsData?.data?.pagination || {};
+  
+  // Normalize pagination format to match other pages
+  const pagination = {
+    current_page: rawPagination.current_page || rawPagination.page || currentPage || 1,
+    per_page: rawPagination.per_page || rawPagination.limit || 10,
+    total: rawPagination.total || 0,
+    total_pages: rawPagination.total_pages || rawPagination.pages || Math.ceil((rawPagination.total || 0) / (rawPagination.per_page || rawPagination.limit || 10)) || 1
+  };
   
   // Bekleyen taleplerin sayısı
   const pendingCount = pendingRequestsData?.data?.pagination?.total || 0;
+  
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+  
+  // Status değiştiğinde sayfayı 1'e sıfırla
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStatus]);
 
   // Fotoğraf talebini onayla
   const handleApprove = async (requestId) => {
@@ -297,6 +315,57 @@ const PhotoApprovalsPage = () => {
             </div>
           )}
         </div>
+
+        {/* Pagination */}
+        {pagination.total_pages > 1 && (
+          <div className="bg-slate-800/90 px-4 py-3 flex items-center justify-between border-t border-slate-600/30 sm:px-6">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => handlePageChange(pagination.current_page - 1)}
+                disabled={pagination.current_page <= 1}
+                className="relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                Önceki
+              </button>
+              <button
+                onClick={() => handlePageChange(pagination.current_page + 1)}
+                disabled={pagination.current_page >= pagination.total_pages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                Sonraki
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Toplam <span className="font-medium">{pagination.total}</span> talepten{' '}
+                  <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
+                  <span className="font-medium">
+                    {Math.min(pagination.current_page * pagination.per_page, pagination.total)}
+                  </span>{' '}
+                  arası gösteriliyor
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                  {Array.from({ length: pagination.total_pages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        page === pagination.current_page
+                          ? 'z-10 bg-indigo-500 border-indigo-400 text-white'
+                          : 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal */}
         <ModalContainer

@@ -55,6 +55,7 @@ export const ROUTE_CONFIG = {
   ADMIN: {
     DASHBOARD: '/admin',
     USERS: '/admin/users',
+    HOSPITALS: '/admin/hospitals',
     USER_DETAIL: '/admin/users/:id',
     JOBS: '/admin/jobs',
     JOB_DETAIL: '/admin/jobs/:id',

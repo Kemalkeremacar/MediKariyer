@@ -41,14 +41,27 @@ const ContactMessagesPage = () => {
   const deleteMessage = useDeleteContactMessage();
 
   const messages = messagesData?.data?.data || messagesData?.data || [];
-  const pagination = messagesData?.data?.pagination || messagesData?.pagination || {};
-  let derivedTotalPages = pagination?.total_pages ?? Math.ceil(((pagination?.total ?? 0) / (pagination?.per_page ?? 10)) || 0);
-  // Eğer backend toplam sayfa/total göndermiyorsa, en azından bir ileri sayfa olup olmadığını mevcut sayfa verisinden çıkar
-  if (!derivedTotalPages || Number.isNaN(derivedTotalPages)) {
-    // limit 10 sabit, tam 10 kayıt geldiyse bir sonraki sayfaya geçilebileceğini varsay
-    const maybeHasNext = (messages?.length || 0) >= 10;
-    derivedTotalPages = currentPage + (maybeHasNext ? 1 : 0);
-  }
+  // Backend returns: { data: messages, pagination: {...} }
+  // So pagination is at messagesData?.data?.pagination
+  const rawPagination = messagesData?.data?.pagination || messagesData?.pagination || {};
+  
+  // Normalize pagination format to match other pages
+  const perPage = rawPagination.per_page || rawPagination.limit || 10;
+  const total = rawPagination.total !== undefined && rawPagination.total !== null ? parseInt(rawPagination.total) : 0;
+  const calculatedTotalPages = total > 0 ? Math.ceil(total / perPage) : 1;
+  
+  const pagination = {
+    current_page: rawPagination.current_page || rawPagination.page || currentPage || 1,
+    per_page: perPage,
+    total: total,
+    total_pages: (rawPagination.total_pages !== undefined && rawPagination.total_pages !== null) 
+      ? parseInt(rawPagination.total_pages) 
+      : calculatedTotalPages
+  };
+  
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
 
   const handleViewMessage = (message, e) => {
     // Kartı ortala ve inline detay kutusunu aç/kapat
@@ -226,42 +239,54 @@ const ContactMessagesPage = () => {
           </div>
         </div>
 
-        {/* Sayfalama */}
-        {derivedTotalPages > 1 && (
-          <div className="flex justify-center items-center space-x-2 mt-6">
-            <button
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-            >
-              Önceki
-            </button>
-            {[...Array(derivedTotalPages)].map((_, i) => {
-              const page = i + 1;
-              const isCurrent = page === currentPage;
-              const shouldShow = page === 1 || page === derivedTotalPages || Math.abs(page - currentPage) <= 2;
-              if (!shouldShow) {
-                if (page === 2 && currentPage > 4) return <span key={page} className="px-2 text-gray-400">...</span>;
-                if (page === derivedTotalPages - 1 && currentPage < derivedTotalPages - 3) return <span key={page} className="px-2 text-gray-400">...</span>;
-                return null;
-              }
-              return (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg ${isCurrent ? 'bg-indigo-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-            <button
-              onClick={() => setCurrentPage((derivedTotalPages && currentPage < derivedTotalPages) ? currentPage + 1 : currentPage)}
-              disabled={derivedTotalPages ? (currentPage === derivedTotalPages) : true}
-              className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-            >
-              Sonraki
-            </button>
+        {/* Pagination */}
+        {pagination.total > 0 && pagination.total_pages > 0 && (
+          <div className="bg-slate-800/90 px-4 py-3 flex items-center justify-between border-t border-slate-600/30 sm:px-6 mt-6">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button
+                onClick={() => handlePageChange(pagination.current_page - 1)}
+                disabled={pagination.current_page <= 1}
+                className="relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                Önceki
+              </button>
+              <button
+                onClick={() => handlePageChange(pagination.current_page + 1)}
+                disabled={pagination.current_page >= pagination.total_pages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+              >
+                Sonraki
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Toplam <span className="font-medium">{pagination.total}</span> mesajdan{' '}
+                  <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
+                  <span className="font-medium">
+                    {Math.min(pagination.current_page * pagination.per_page, pagination.total)}
+                  </span>{' '}
+                  arası gösteriliyor
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  {pagination.total_pages > 0 && Array.from({ length: pagination.total_pages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        page === pagination.current_page
+                          ? 'z-10 bg-indigo-500 border-indigo-400 text-white'
+                          : 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
           </div>
         )}
         {/* Mesaj detayları artık inline açılıyor; modal kaldırıldı */}

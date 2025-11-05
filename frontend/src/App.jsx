@@ -102,7 +102,7 @@ function App() {
     <ErrorBoundary>
       <div className="App bg-gray-50">
         {/* 🔑 Lazy componentler için Suspense fallback */}
-        <Suspense fallback={<PageLoader text="Sayfa yükleniyor..." />}>
+        <Suspense fallback={<PageLoader />}>
           <AppRoutes />
         </Suspense>
 

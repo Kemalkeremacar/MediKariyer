@@ -147,6 +147,7 @@ import PendingApprovalPage from '@/features/auth/pages/PendingApprovalPage';
  */
 const AdminDashboard = lazy(() => import('@/features/admin/pages/DashboardPage'));
 const AdminUsersPage = lazy(() => import('@/features/admin/pages/UsersPage'));
+const AdminHospitalsPage = lazy(() => import('@/features/admin/pages/HospitalsPage'));
 const AdminUserDetailPage = lazy(() => import('@/features/admin/pages/UserDetailPage'));
 const AdminJobsPage = lazy(() => import('@/features/admin/pages/JobsPage'));
 const AdminJobDetailPage = lazy(() => import('@/features/admin/pages/JobDetailPage'));
@@ -712,8 +713,8 @@ const AppRoutes = () => {
           />
           
           {/* 
-            Admin Kullanıcı Yönetimi Sayfası - /admin/users
-            Tüm kullanıcıları listeler, filtreleme ve arama yapılabilir
+            Admin Doktor Yönetimi Sayfası - /admin/users
+            Sadece doktorları listeler, filtreleme ve arama yapılabilir
           */}
           <Route
             path="admin/users"
@@ -722,6 +723,23 @@ const AppRoutes = () => {
                 <AuthGuard>
                   <RoleGuard allowedRoles={['admin']}>
                     <AdminUsersPage />
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+          
+          {/* 
+            Admin Hastane Yönetimi Sayfası - /admin/hospitals
+            Sadece hastaneleri listeler, filtreleme ve arama yapılabilir
+          */}
+          <Route
+            path="admin/hospitals"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['admin']}>
+                    <AdminHospitalsPage />
                   </RoleGuard>
                 </AuthGuard>
               </ErrorBoundary>

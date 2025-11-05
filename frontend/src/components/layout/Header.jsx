@@ -23,8 +23,8 @@
  * - Hospital: Ana Sayfa, Profilim, İlan Yönetimi, Başvurular
  * 
  * Kullanıcı Dropdown Menüleri:
- * - Admin: Dashboard, Kullanıcı Yönetimi, Fotoğraf Onayları, İş İlanı Yönetimi,
- *          Başvurular, Bildirimler, İletişim Mesajları
+ * - Admin: Dashboard, Doktorlar, Hastaneler, İş İlanı Yönetimi, Başvurular,
+ *          Fotoğraf Onayları, Bildirimler, İletişim Mesajları
  * - Doctor: Ana Sayfa, Profilim, İş İlanları, Başvurularım
  * - Hospital: Ana Sayfa, Profilim, İlan Yönetimi, Başvurular
  * 
@@ -47,7 +47,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail } from 'lucide-react';
+import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
 import NavbarNotificationBell from '../../features/notifications/components/NavbarNotificationBell';
@@ -100,10 +100,11 @@ const Header = () => {
    */
   const adminMenuItems = [
     { to: ROUTE_CONFIG.ADMIN.DASHBOARD, text: 'Dashboard', icon: BarChart3 },
-    { to: ROUTE_CONFIG.ADMIN.USERS, text: 'Kullanıcı Yönetimi', icon: UserCheck },
-    { to: ROUTE_CONFIG.ADMIN.PHOTO_APPROVALS, text: 'Fotoğraf Onayları', icon: Camera },
+    { to: ROUTE_CONFIG.ADMIN.USERS, text: 'Doktorlar', icon: Stethoscope },
+    { to: ROUTE_CONFIG.ADMIN.HOSPITALS, text: 'Hastaneler', icon: Building2 },
     { to: ROUTE_CONFIG.ADMIN.JOBS, text: 'İş İlanı Yönetimi', icon: Briefcase },
     { to: ROUTE_CONFIG.ADMIN.APPLICATIONS, text: 'Başvurular', icon: ClipboardList },
+    { to: ROUTE_CONFIG.ADMIN.PHOTO_APPROVALS, text: 'Fotoğraf Onayları', icon: Camera },
     { to: ROUTE_CONFIG.ADMIN.NOTIFICATIONS, text: 'Bildirimler', icon: Bell },
     { to: ROUTE_CONFIG.ADMIN.CONTACT_MESSAGES, text: 'İletişim Mesajları', icon: Mail },
   ];

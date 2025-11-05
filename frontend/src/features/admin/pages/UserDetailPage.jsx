@@ -118,17 +118,22 @@ const UserDetailPage = () => {
   if (error) return <div className="p-6 text-red-500">Hata oluştu: {error.message}</div>;
   if (!user) return <div className="p-6 text-gray-500">Kullanıcı bulunamadı</div>;
 
+  // Kullanıcı rolünü belirle
+  const userRole = user.data?.user?.role || user.role;
+  const backUrl = userRole === 'hospital' ? '/admin/hospitals' : '/admin/users';
+  const backLabel = userRole === 'hospital' ? 'Hastane Listesine Dön' : 'Doktor Listesine Dön';
+
   return (
     <div className="min-h-screen bg-gray-50">
         <div className="p-6">
           {/* Header */}
           <div className="mb-8">
             <button
-              onClick={() => navigate('/admin/users')}
+              onClick={() => navigate(backUrl)}
               className="admin-btn admin-btn-outline flex items-center text-gray-600 hover:text-gray-900 mb-6"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              Kullanıcı Listesine Dön
+              {backLabel}
             </button>
             
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

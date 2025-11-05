@@ -21,7 +21,7 @@
 'use strict';
 
 const contactService = require('../services/contactService');
-const { sendSuccess, sendError } = require('../utils/response');
+const { sendSuccess, sendError, sendPaginated } = require('../utils/response');
 const { AppError, catchAsync } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
@@ -60,7 +60,7 @@ const getContactMessages = catchAsync(async (req, res) => {
   const result = await contactService.getContactMessages(filters);
 
   logger.info(`Admin ${req.user.id} iletişim mesajlarını listeledi`);
-  return sendSuccess(res, 'İletişim mesajları başarıyla getirildi', result.data, 200, result.pagination);
+  return sendPaginated(res, 'İletişim mesajları başarıyla getirildi', result.data, result.pagination);
 });
 
 /**

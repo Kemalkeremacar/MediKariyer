@@ -204,7 +204,7 @@ const HospitalProfile = () => {
             </div>
           </div>
 
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             {/* Profil Tamamlanma Göstergesi */}
             <div className="mb-6 p-4 bg-white/5 rounded-2xl border border-white/10">
               <h3 className="text-sm font-medium text-gray-300 mb-3">Profil Durumu</h3>

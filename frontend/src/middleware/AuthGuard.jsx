@@ -67,6 +67,7 @@ import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
 import { getAccessToken, isTokenValid } from '@/utils/tokenUtils';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 /**
  * ============================================================================
@@ -427,7 +428,11 @@ export const OptionalAuthGuard = ({ children }) => {
    * Bu, auth state'in hazırlanması sırasında sayfanın render edilmesini önler
    */
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Yükleniyor...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-blue-600">
+        <LoadingSpinner size="xl" color="white" />
+      </div>
+    );
   }
 
   /**

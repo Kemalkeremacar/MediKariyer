@@ -253,13 +253,15 @@ export const ButtonSpinner = ({ size = 'sm', className = '' }) => (
  * Genellikle sayfa ilk yüklenirken veya büyük veri yüklenirken kullanılır
  * 
  * Parametreler:
- * @param {string} text - Gösterilecek yükleme mesajı (varsayılan: 'Yükleniyor...')
+ * @param {string} text - Gösterilecek yükleme mesajı (varsayılan: null - gösterilmez)
  */
-export const PageLoader = ({ text = 'Yükleniyor...' }) => (
-  <div className="flex items-center justify-center min-h-screen bg-gray-50">
+export const PageLoader = ({ text = null }) => (
+  <div className="flex items-center justify-center min-h-screen bg-blue-600">
     <div className="text-center">
-      <LoadingSpinner size="xl" color="primary" />
-      <p className="mt-4 text-lg text-gray-600 font-medium">{text}</p>
+      <LoadingSpinner size="xl" color="white" />
+      {text && (
+        <p className="mt-4 text-lg text-white font-medium">{text}</p>
+      )}
     </div>
   </div>
 );

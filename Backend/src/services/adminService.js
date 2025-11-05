@@ -42,26 +42,61 @@ const logger = require('../utils/logger');
  * @param {string} [filters.role] - Kullanıcı rolü (doctor, hospital)
  * @param {string|boolean} [filters.isApproved] - Onay durumu
  * @param {string|boolean} [filters.isActive] - Aktiflik durumu
- * @param {string} [filters.search] - Genel arama terimi
+ * @param {string} [filters.search] - Genel arama terimi (email için)
  * @param {string} [filters.email_search] - E-posta arama terimi
+ * @param {string} [filters.doctor_search] - Doktor arama terimi (ad, soyad)
+ * @param {string} [filters.hospital_search] - Hastane arama terimi (kurum adı)
+ * @param {number} [filters.specialty_id] - Uzmanlık alanı ID'si (doktorlar için)
+ * @param {number} [filters.subspecialty_id] - Yan dal uzmanlık ID'si (doktorlar için)
+ * @param {number} [filters.city_id] - Şehir ID'si
  * @param {number} [filters.page=1] - Sayfa numarası
  * @param {number} [filters.limit=10] - Sayfa başına kayıt sayısı
  * @returns {Object} Kullanıcı listesi ve sayfalama bilgileri
  */
 const getUsers = async (filters = {}) => {
-  const { role, isApproved, isActive, search, email_search, page = 1, limit = 10 } = filters;
+  const { 
+    role, 
+    isApproved, 
+    isActive, 
+    search, 
+    email_search, 
+    doctor_search,
+    hospital_search,
+    specialty_id,
+    subspecialty_id,
+    city_id,
+    page = 1, 
+    limit = 10 
+  } = filters;
   
   // Debug logs removed
   
   let query = db('users')
     .leftJoin('doctor_profiles', 'users.id', 'doctor_profiles.user_id')
-    .leftJoin('hospital_profiles', 'users.id', 'hospital_profiles.user_id')
-    .select(
-      'users.*',
-      'doctor_profiles.first_name',
-      'doctor_profiles.last_name',
-      'hospital_profiles.institution_name'
-    );
+    .leftJoin('hospital_profiles', 'users.id', 'hospital_profiles.user_id');
+  
+  // Doktorlar için specialty ve subspecialty join'leri
+  if (role === 'doctor' || specialty_id || subspecialty_id) {
+    query = query.leftJoin('specialties as s', 'doctor_profiles.specialty_id', 's.id')
+                 .leftJoin('subspecialties as ss', 'doctor_profiles.subspecialty_id', 'ss.id')
+                 .leftJoin('cities as dc', 'doctor_profiles.residence_city_id', 'dc.id');
+  }
+  
+  // Hastaneler için city join
+  if (role === 'hospital' || (city_id && role !== 'doctor')) {
+    query = query.leftJoin('cities as hc', 'hospital_profiles.city_id', 'hc.id');
+  }
+  
+  query = query.select(
+    'users.*',
+    'doctor_profiles.first_name',
+    'doctor_profiles.last_name',
+    'doctor_profiles.specialty_id',
+    'doctor_profiles.subspecialty_id',
+    'doctor_profiles.residence_city_id',
+    'hospital_profiles.institution_name',
+    'hospital_profiles.city_id as hospital_city_id'
+  );
   
   // Admin kullanıcılarını filtrele (admin kendi kendini yönetmesin)
   query.where('users.role', '!=', 'admin');
@@ -77,7 +112,58 @@ const getUsers = async (filters = {}) => {
     const activeValue = isActive === 'true' || isActive === true ? 1 : 0;
     query.where('users.is_active', activeValue);
   }
-  // Genel arama sorgusu
+  
+  // Doktor filtreleri
+  if (role === 'doctor' || doctor_search || specialty_id || subspecialty_id || (city_id && role !== 'hospital')) {
+    if (specialty_id) {
+      query.where('doctor_profiles.specialty_id', specialty_id);
+    }
+    if (subspecialty_id) {
+      query.where('doctor_profiles.subspecialty_id', subspecialty_id);
+    }
+    if (city_id && role !== 'hospital') {
+      query.where('doctor_profiles.residence_city_id', city_id);
+    }
+    if (doctor_search) {
+      query.where(function() {
+        const searchTerm = doctor_search.trim();
+        const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+        
+        if (searchParts.length > 1) {
+          // Birden fazla kelime varsa: "Ad Soyad" şeklinde
+          // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap
+          this.where(function() {
+            // Birleşik arama: "Ad Soyad" tam eşleşmesi
+            this.whereRaw(`CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name) LIKE ?`, [`%${searchTerm}%`])
+                // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime
+                .orWhere(function() {
+                  this.where('doctor_profiles.first_name', 'like', `%${searchParts[0]}%`)
+                      .where('doctor_profiles.last_name', 'like', `%${searchParts[searchParts.length - 1]}%`);
+                });
+          })
+          // Veya: Sadece ad veya sadece soyad içinde arama
+          .orWhere('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
+          .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+        } else {
+          // Tek kelime varsa: Ad veya soyad içinde ara
+          this.where('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
+              .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+        }
+      });
+    }
+  }
+  
+  // Hastane filtreleri
+  if (role === 'hospital' || hospital_search || (city_id && role !== 'doctor')) {
+    if (hospital_search) {
+      query.where('hospital_profiles.institution_name', 'like', `%${hospital_search}%`);
+    }
+    if (city_id && role !== 'doctor') {
+      query.where('hospital_profiles.city_id', city_id);
+    }
+  }
+  
+  // Genel arama sorgusu (email)
   if (search) query.where('users.email', 'like', `%${search}%`);
   
   // E-posta arama - sadece e-posta alanında
@@ -86,25 +172,90 @@ const getUsers = async (filters = {}) => {
   const offset = (page - 1) * limit;
   
   // Count sorgusunu ayrı yap
-  const countQuery = db('users');
+  let countQuery = db('users')
+    .leftJoin('doctor_profiles', 'users.id', 'doctor_profiles.user_id')
+    .leftJoin('hospital_profiles', 'users.id', 'hospital_profiles.user_id');
+  
+  // Doktorlar için specialty ve subspecialty join'leri
+  if (role === 'doctor' || specialty_id || subspecialty_id) {
+    countQuery = countQuery.leftJoin('specialties as s', 'doctor_profiles.specialty_id', 's.id')
+                          .leftJoin('subspecialties as ss', 'doctor_profiles.subspecialty_id', 'ss.id')
+                          .leftJoin('cities as dc', 'doctor_profiles.residence_city_id', 'dc.id');
+  }
+  
+  // Hastaneler için city join
+  if (role === 'hospital' || (city_id && role !== 'doctor')) {
+    countQuery = countQuery.leftJoin('cities as hc', 'hospital_profiles.city_id', 'hc.id');
+  }
   
   // Admin kullanıcılarını filtrele (admin kendi kendini yönetmesin)
-  countQuery.where('role', '!=', 'admin');
+  countQuery.where('users.role', '!=', 'admin');
   
-  if (role) countQuery.where('role', role);
+  if (role) countQuery.where('users.role', role);
   if (isApproved !== undefined && isApproved !== '') {
     const approvedValue = isApproved === 'true' || isApproved === true ? 1 : 0;
-    countQuery.where('is_approved', approvedValue);
+    countQuery.where('users.is_approved', approvedValue);
   }
   if (isActive !== undefined && isActive !== '') {
     const activeValue = isActive === 'true' || isActive === true ? 1 : 0;
-    countQuery.where('is_active', activeValue);
+    countQuery.where('users.is_active', activeValue);
   }
-  // Genel arama sorgusu
-  if (search) countQuery.where('email', 'like', `%${search}%`);
+  
+  // Doktor filtreleri
+  if (role === 'doctor' || doctor_search || specialty_id || subspecialty_id || (city_id && role !== 'hospital')) {
+    if (specialty_id) {
+      countQuery.where('doctor_profiles.specialty_id', specialty_id);
+    }
+    if (subspecialty_id) {
+      countQuery.where('doctor_profiles.subspecialty_id', subspecialty_id);
+    }
+    if (city_id && role !== 'hospital') {
+      countQuery.where('doctor_profiles.residence_city_id', city_id);
+    }
+    if (doctor_search) {
+      countQuery.where(function() {
+        const searchTerm = doctor_search.trim();
+        const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+        
+        if (searchParts.length > 1) {
+          // Birden fazla kelime varsa: "Ad Soyad" şeklinde
+          // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap
+          this.where(function() {
+            // Birleşik arama: "Ad Soyad" tam eşleşmesi
+            this.whereRaw(`CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name) LIKE ?`, [`%${searchTerm}%`])
+                // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime
+                .orWhere(function() {
+                  this.where('doctor_profiles.first_name', 'like', `%${searchParts[0]}%`)
+                      .where('doctor_profiles.last_name', 'like', `%${searchParts[searchParts.length - 1]}%`);
+                });
+          })
+          // Veya: Sadece ad veya sadece soyad içinde arama
+          .orWhere('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
+          .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+        } else {
+          // Tek kelime varsa: Ad veya soyad içinde ara
+          this.where('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
+              .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+        }
+      });
+    }
+  }
+  
+  // Hastane filtreleri
+  if (role === 'hospital' || hospital_search || (city_id && role !== 'doctor')) {
+    if (hospital_search) {
+      countQuery.where('hospital_profiles.institution_name', 'like', `%${hospital_search}%`);
+    }
+    if (city_id && role !== 'doctor') {
+      countQuery.where('hospital_profiles.city_id', city_id);
+    }
+  }
+  
+  // Genel arama sorgusu (email)
+  if (search) countQuery.where('users.email', 'like', `%${search}%`);
   
   // E-posta arama - sadece e-posta alanında
-  if (email_search) countQuery.where('email', 'like', `%${email_search}%`);
+  if (email_search) countQuery.where('users.email', 'like', `%${email_search}%`);
   
   const [{ count }] = await countQuery.count('* as count');
   const users = await query
@@ -141,13 +292,15 @@ const getUsers = async (filters = {}) => {
  * @returns {Object|null} Kullanıcı detayları ve profil bilgileri
  */
 const getUserDetails = async (id) => {
-  const user = await db('users').where('id', id).first();
+  // MSSQL uyumluluğu için .first() yerine array indexing kullanıyoruz
+  const userResult = await db('users').where('id', id);
+  const user = Array.isArray(userResult) && userResult.length > 0 ? userResult[0] : (userResult || null);
   if (!user) return null;
   
   // Role'e göre profil bilgilerini getir
   if (user.role === 'doctor') {
     // Profil bilgilerini şehir isimleriyle birlikte getir
-    const profile = await db('doctor_profiles as dp')
+    const profileResult = await db('doctor_profiles as dp')
       .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
       .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
       .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
@@ -159,8 +312,10 @@ const getUserDetails = async (id) => {
         'rc.name as residence_city_name',
         's.name as specialty_name',
         'ss.name as subspecialty_name'
-      )
-      .first();
+      );
+    
+    // Array döndüğü için [0] ile alıyoruz
+    const profile = Array.isArray(profileResult) && profileResult.length > 0 ? profileResult[0] : (profileResult || null);
     
     let specialty_name = profile?.specialty_name;
     let subspecialty_name = profile?.subspecialty_name;
@@ -211,7 +366,7 @@ const getUserDetails = async (id) => {
     };
   } else if (user.role === 'hospital') {
     // Profil verilerini users ve cities ile zenginleştir
-    const profile = await db('hospital_profiles as hp')
+    const profileResult = await db('hospital_profiles as hp')
       .leftJoin('users as u', 'hp.user_id', 'u.id')
       .leftJoin('cities as c', 'hp.city_id', 'c.id')
       .where('hp.user_id', id)
@@ -219,8 +374,10 @@ const getUserDetails = async (id) => {
         'hp.*',
         'u.email',
         db.raw('ISNULL(c.name, \'\') as city')
-      )
-      .first();
+      );
+    
+    // Array döndüğü için [0] ile alıyoruz
+    const profile = Array.isArray(profileResult) && profileResult.length > 0 ? profileResult[0] : (profileResult || null);
 
     // Departman/İletişim tabloları bu şemada yok; boş dizi döndür
     const departments = [];
@@ -262,13 +419,14 @@ const getUserDetails = async (id) => {
  * @returns {Object} İş ilanları listesi ve sayfalama bilgileri
  */
 const getAllJobs = async (filters = {}) => {
-  const { search, title_search, hospital_search, status, hospital_id, specialty, location_city, page = 1, limit = 10 } = filters;
+  const { search, title_search, hospital_search, status, hospital_id, specialty_id, subspecialty_id, city_id, page = 1, limit = 10 } = filters;
 
   let query = db('jobs as j')
     .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .join('job_statuses as js', 'j.status_id', 'js.id')
     .join('specialties as s', 'j.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarını gösterme
     .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
@@ -277,6 +435,7 @@ const getAllJobs = async (filters = {}) => {
       'hp.institution_name', 
       'js.name as status',
       's.name as specialty',
+      'ss.name as subspecialty',
       'c.name as city'
     );
 
@@ -300,8 +459,9 @@ const getAllJobs = async (filters = {}) => {
   }
   if (status) query.where('j.status_id', status);
   if (hospital_id) query.where('j.hospital_id', hospital_id);
-  if (specialty) query.where('j.specialty_id', specialty);
-  if (location_city) query.where('c.name', 'like', `%${location_city}%`);
+  if (specialty_id) query.where('j.specialty_id', specialty_id);
+  if (subspecialty_id) query.where('j.subspecialty_id', subspecialty_id);
+  if (city_id) query.where('j.city_id', city_id);
 
   const offset = (page - 1) * limit;
   
@@ -333,8 +493,9 @@ const getAllJobs = async (filters = {}) => {
   }
   if (status) countQuery.where('j.status_id', status);
   if (hospital_id) countQuery.where('j.hospital_id', hospital_id);
-  if (specialty) countQuery.where('j.specialty_id', specialty);
-  if (location_city) countQuery.where('c.name', 'like', `%${location_city}%`);
+  if (specialty_id) countQuery.where('j.specialty_id', specialty_id);
+  if (subspecialty_id) countQuery.where('j.subspecialty_id', subspecialty_id);
+  if (city_id) countQuery.where('j.city_id', city_id);
   
   const [{ count }] = await countQuery.count('* as count');
   const jobs = await query
@@ -485,8 +646,29 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
   // Doktor arama - sadece doktor bilgilerinde
   if (doctor_search) {
     query.where(function () {
-      this.where('dp.first_name', 'like', `%${doctor_search}%`)
-        .orWhere('dp.last_name', 'like', `%${doctor_search}%`);
+      const searchTerm = doctor_search.trim();
+      const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+      
+      if (searchParts.length > 1) {
+        // Birden fazla kelime varsa: "Ad Soyad" şeklinde
+        // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap
+        this.where(function() {
+          // Birleşik arama: "Ad Soyad" tam eşleşmesi
+          this.whereRaw(`CONCAT(dp.first_name, ' ', dp.last_name) LIKE ?`, [`%${searchTerm}%`])
+              // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime
+              .orWhere(function() {
+                this.where('dp.first_name', 'like', `%${searchParts[0]}%`)
+                    .where('dp.last_name', 'like', `%${searchParts[searchParts.length - 1]}%`);
+              });
+        })
+        // Veya: Sadece ad veya sadece soyad içinde arama
+        .orWhere('dp.first_name', 'like', `%${searchTerm}%`)
+        .orWhere('dp.last_name', 'like', `%${searchTerm}%`);
+      } else {
+        // Tek kelime varsa: Ad veya soyad içinde ara
+        this.where('dp.first_name', 'like', `%${searchTerm}%`)
+            .orWhere('dp.last_name', 'like', `%${searchTerm}%`);
+      }
     });
   }
   
@@ -525,8 +707,29 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
   // Doktor arama - sadece doktor bilgilerinde
   if (doctor_search) {
     countQuery.where(function () {
-      this.where('dp.first_name', 'like', `%${doctor_search}%`)
-        .orWhere('dp.last_name', 'like', `%${doctor_search}%`);
+      const searchTerm = doctor_search.trim();
+      const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+      
+      if (searchParts.length > 1) {
+        // Birden fazla kelime varsa: "Ad Soyad" şeklinde
+        // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap
+        this.where(function() {
+          // Birleşik arama: "Ad Soyad" tam eşleşmesi
+          this.whereRaw(`CONCAT(dp.first_name, ' ', dp.last_name) LIKE ?`, [`%${searchTerm}%`])
+              // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime
+              .orWhere(function() {
+                this.where('dp.first_name', 'like', `%${searchParts[0]}%`)
+                    .where('dp.last_name', 'like', `%${searchParts[searchParts.length - 1]}%`);
+              });
+        })
+        // Veya: Sadece ad veya sadece soyad içinde arama
+        .orWhere('dp.first_name', 'like', `%${searchTerm}%`)
+        .orWhere('dp.last_name', 'like', `%${searchTerm}%`);
+      } else {
+        // Tek kelime varsa: Ad veya soyad içinde ara
+        this.where('dp.first_name', 'like', `%${searchTerm}%`)
+            .orWhere('dp.last_name', 'like', `%${searchTerm}%`);
+      }
     });
   }
   
@@ -700,9 +903,12 @@ const updateApplicationStatus = async (applicationId, statusId, reason = null) =
   const application = await db('applications').where('id', applicationId).first();
   if (!application) return null;
 
+  // Not: applied_at güncellenmez - bu ilk başvuru tarihi olarak kalır
+  // Sadece status_id ve updated_at güncellenir
   await db('applications').where('id', applicationId).update({
     status_id: statusId,
     updated_at: db.fn.now()
+    // applied_at değiştirilmez - ilk başvuru tarihi korunur
   });
 
   // Güncellenmiş başvuruyu status adı ile birlikte getir
@@ -799,49 +1005,199 @@ const deleteJob = async (jobId) => {
 const getApplicationDetails = async (applicationId) => {
   console.log('🔍 Admin getApplicationDetails - Application ID:', applicationId);
   
-  const application = await db('applications as a')
-    .join('jobs as j', 'a.job_id', 'j.id')
-    .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
-    .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
-    .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
-    .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
-    .join('application_statuses as ast', 'a.status_id', 'ast.id')
-    .leftJoin('cities as residence_city', 'dp.residence_city_id', 'residence_city.id')
-    .leftJoin('cities as birth_place', 'dp.birth_place_id', 'birth_place.id')
-    .where('a.id', applicationId)
-    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
-    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
-    .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
-    .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
-    .select(
-      'a.*',
-      'a.doctor_profile_id',
-      'j.id as job_id',
-      'j.title as job_title',
-      'j.description as job_description',
-      'dp.first_name',
-      'dp.last_name',
-      'dp.phone',
-      'dp.profile_photo',
-      'residence_city.name as residence_city_name',
-      'birth_place.name as birth_place_name',
-      'doctor_users.id as user_id',
-      'doctor_users.email',
-      'hp.institution_name',
-      'ast.name as status'
-    )
-    .first();
-
-  console.log('📋 Admin getApplicationDetails - Result:', application ? 'Found' : 'Not Found');
+  // MSSQL'de .first() ve .limit() parametrik top (@p0) ürettiği için
+  // getAllApplications fonksiyonunu kullanıp memory'de filtreliyoruz
+  // Bu yaklaşım verimsiz görünebilir ama MSSQL uyumluluğu için gerekli
+  const result = await getAllApplications({ 
+    page: 1, 
+    limit: 10000 // Tüm uygulamaları al (pratikte bu sayı yeterli olmalı)
+  });
+  
+  // Sonuçlardan applicationId'ye göre filtreleme yapıyoruz
+  const application = result.data.find(app => app.id === parseInt(applicationId));
+  
+  // Eğer getAllApplications'da bulunamazsa veya eksik bilgiler varsa,
+  // daha detaylı bir sorgu yapıyoruz (ama limit/offset olmadan)
   if (!application) {
-    console.log('❌ Application not found - Possible reasons:');
-    console.log('   - Application ID does not exist');
-    console.log('   - Application is soft deleted');
-    console.log('   - Doctor is deactivated (is_active = false)');
-    console.log('   - Hospital is deactivated (is_active = false)');
+    console.log('❌ Application not found in getAllApplications, trying direct query');
+    
+    // Basit bir sorgu yapıyoruz - sadece temel bilgileri alıyoruz
+    const simpleQuery = await db('applications as a')
+      .join('jobs as j', 'a.job_id', 'j.id')
+      .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
+      .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+      .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
+      .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
+      .join('application_statuses as ast', 'a.status_id', 'ast.id')
+      .leftJoin('cities as residence_city', 'dp.residence_city_id', 'residence_city.id')
+      .where('a.id', applicationId)
+      .whereNull('a.deleted_at')
+      .whereNull('j.deleted_at')
+      .where('doctor_users.is_active', true)
+      .where('hospital_users.is_active', true)
+      .select(
+        'a.*',
+        'j.title as job_title',
+        'j.status_id as job_status_id',
+        'dp.first_name',
+        'dp.last_name',
+        'dp.specialty_id as doctor_specialty_id',
+        'residence_city.name as residence_city_name',
+        'hp.institution_name',
+        'ast.name as status'
+      );
+    
+    // Array döndüğü için [0] ile alıyoruz
+    const simpleResult = Array.isArray(simpleQuery) ? simpleQuery[0] : simpleQuery;
+    
+    if (!simpleResult) {
+      console.log('❌ Application not found - Possible reasons:');
+      console.log('   - Application ID does not exist');
+      console.log('   - Application is soft deleted');
+      console.log('   - Doctor is deactivated (is_active = false)');
+      console.log('   - Hospital is deactivated (is_active = false)');
+      return null;
+    }
+    
+    console.log('📋 Admin getApplicationDetails - Found via simple query');
+    return simpleResult;
   }
-
-  return application;
+  
+  // getAllApplications'dan gelen veri temel bilgileri içeriyor
+  // Eksik bilgileri (doctor phone, profile_photo, birth_place, hospital email/phone/city) için
+  // ayrı sorgular yapıyoruz - bunlar tek kayıt döndüreceği için MSSQL'de sorun yaratmaz
+  let doctorDetails = null;
+  let hospitalDetails = null;
+  let jobDetails = null;
+  
+  try {
+    // Doctor detaylarını alıyoruz - hastane modülündeki getDoctorProfileDetail'e benzer şekilde
+    console.log('🔍 Fetching doctor details for doctor_profile_id:', application.doctor_profile_id);
+    const doctorQueryResult = await db('doctor_profiles as dp')
+      .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
+      .leftJoin('specialties as doctor_specialty', 'dp.specialty_id', 'doctor_specialty.id')
+      .leftJoin('subspecialties as doctor_subspecialty', 'dp.subspecialty_id', 'doctor_subspecialty.id')
+      .leftJoin('cities as residence_city', 'dp.residence_city_id', 'residence_city.id')
+      .leftJoin('cities as birth_place', 'dp.birth_place_id', 'birth_place.id')
+      .where('dp.id', application.doctor_profile_id)
+      .select(
+        'dp.first_name',
+        'dp.last_name',
+        'dp.title',
+        'dp.phone',
+        'dp.profile_photo',
+        'dp.specialty_id',
+        'dp.subspecialty_id',
+        'doctor_specialty.name as specialty_name',
+        'doctor_subspecialty.name as subspecialty_name',
+        'residence_city.name as residence_city_name',
+        'birth_place.name as birth_place_name',
+        'doctor_users.id as user_id',
+        'doctor_users.email'
+      );
+    
+    // Array döndüğü için [0] ile alıyoruz
+    doctorDetails = Array.isArray(doctorQueryResult) && doctorQueryResult.length > 0 ? doctorQueryResult[0] : (doctorQueryResult || null);
+    console.log('✅ Doctor details fetched:', {
+      user_id: doctorDetails?.user_id,
+      first_name: doctorDetails?.first_name,
+      last_name: doctorDetails?.last_name
+    });
+  } catch (error) {
+    console.log('⚠️ Error fetching doctor details:', error.message);
+    console.log('⚠️ Error stack:', error.stack);
+  }
+  
+  try {
+    // Hospital detaylarını alıyoruz - önce job'tan hospital_id'yi alıyoruz
+    const jobQuery = await db('jobs').where('id', application.job_id).select('hospital_id');
+    const job = Array.isArray(jobQuery) && jobQuery.length > 0 ? jobQuery[0] : (jobQuery || null);
+    
+    if (job && job.hospital_id) {
+      const hospitalQuery = await db('hospital_profiles as hp')
+        .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
+        .leftJoin('cities as hospital_city', 'hp.city_id', 'hospital_city.id')
+        .where('hp.id', job.hospital_id)
+        .select(
+          'hp.phone as hospital_phone',
+          'hospital_city.name as hospital_city_name',
+          'hospital_users.id as hospital_user_id',
+          'hospital_users.email as hospital_email'
+        );
+      
+      hospitalDetails = Array.isArray(hospitalQuery) && hospitalQuery.length > 0 ? hospitalQuery[0] : (hospitalQuery || null);
+    }
+  } catch (error) {
+    console.log('⚠️ Error fetching hospital details:', error.message);
+  }
+  
+  try {
+    // Job detaylarını alıyoruz - getAllJobs pattern'ini kullanıyoruz (MSSQL uyumlu)
+    console.log('🔍 Fetching job details for job_id:', application.job_id);
+    const jobQueryResult = await db('jobs as j')
+      .join('job_statuses as js', 'j.status_id', 'js.id')
+      .join('specialties as job_specialty', 'j.specialty_id', 'job_specialty.id')
+      .leftJoin('subspecialties as job_subspecialty', 'j.subspecialty_id', 'job_subspecialty.id')
+      .leftJoin('cities as job_city', 'j.city_id', 'job_city.id')
+      .where('j.id', application.job_id)
+      .whereNull('j.deleted_at')
+      .select(
+        'j.description as job_description',
+        'j.employment_type',
+        'j.min_experience_years',
+        // Not: max_experience_years, salary_min, salary_max kolonları jobs tablosunda yok
+        'js.name as job_status',
+        'job_specialty.name as job_specialty_name',
+        'job_subspecialty.name as job_subspecialty_name',
+        'job_city.name as job_city_name'
+      );
+    
+    // Array döndüğü için [0] ile alıyoruz
+    jobDetails = Array.isArray(jobQueryResult) && jobQueryResult.length > 0 ? jobQueryResult[0] : (jobQueryResult || null);
+    
+    if (jobDetails) {
+      console.log('✅ Job details fetched successfully');
+    } else {
+      console.log('⚠️ Job details not found for job_id:', application.job_id);
+    }
+  } catch (error) {
+    console.log('⚠️ Error fetching job details:', error.message);
+    console.log('⚠️ Error details:', error);
+    // Job details olmadan da devam edebiliriz, sadece job bilgileri eksik olur
+    jobDetails = null;
+  }
+  
+  // Tüm bilgileri birleştiriyoruz
+  const enrichedApplication = {
+    ...application,
+    ...(jobDetails || {}),
+    ...(hospitalDetails || {}),
+    // Doktor bilgilerini düzgün birleştiriyoruz
+    // getAllApplications'dan gelen doktor bilgilerini koruyoruz, eksikleri doctorDetails'ten ekliyoruz
+    first_name: doctorDetails?.first_name || application.first_name || null,
+    last_name: doctorDetails?.last_name || application.last_name || null,
+    phone: doctorDetails?.phone || application.phone || null,
+    profile_photo: doctorDetails?.profile_photo || null,
+    birth_place_name: doctorDetails?.birth_place_name || null,
+    user_id: doctorDetails?.user_id || null, // Frontend'de useUserById için kritik
+    email: doctorDetails?.email || application.email || null,
+    // Doktor specialty bilgileri
+    title: doctorDetails?.title || null,
+    specialty_name: doctorDetails?.specialty_name || null,
+    subspecialty_name: doctorDetails?.subspecialty_name || null,
+    residence_city_name: doctorDetails?.residence_city_name || application.residence_city_name || null,
+    // Job bilgileri
+    job_specialty_name: jobDetails?.job_specialty_name || application.job_specialty || null,
+    // Hospital bilgileri
+    hospital_user_id: hospitalDetails?.hospital_user_id || null,
+    hospital_city_name: hospitalDetails?.hospital_city_name || null,
+    hospital_email: hospitalDetails?.hospital_email || null,
+    hospital_phone: hospitalDetails?.hospital_phone || null
+  };
+  
+  console.log('📋 Admin getApplicationDetails - Result: Found and enriched');
+  console.log('📋 Final user_id:', enrichedApplication.user_id);
+  return enrichedApplication;
 };
 
 // ============================================================================

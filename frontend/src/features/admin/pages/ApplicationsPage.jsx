@@ -20,7 +20,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Calendar
+  Calendar,
+  Building
 } from 'lucide-react';
 import { useLookup } from '../../../hooks/useLookup';
 
@@ -39,23 +40,25 @@ const ApplicationsPage = () => {
     hospital_search: ''
   });
 
-  // Refs to maintain focus
+  // Refs to maintain focus and cursor position
   const doctorSearchRef = useRef(null);
   const hospitalSearchRef = useRef(null);
+  const doctorCursorPositionRef = useRef(null);
+  const hospitalCursorPositionRef = useRef(null);
+  const doctorScrollPositionRef = useRef(null);
+  const hospitalScrollPositionRef = useRef(null);
+  const shouldRestoreDoctorFocusRef = useRef(false);
+  const shouldRestoreHospitalFocusRef = useRef(false);
 
-  // Debounced search effect
+  // Scroll pozisyonunu kaydet
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setFilters(prev => ({
-        ...prev,
-        doctor_search: searchInputs.doctor_search,
-        hospital_search: searchInputs.hospital_search,
-        page: 1
-      }));
-    }, 300); // Reduced to 300ms for faster response
-
-    return () => clearTimeout(timeoutId);
-  }, [searchInputs.doctor_search, searchInputs.hospital_search]);
+    const handleScroll = () => {
+      doctorScrollPositionRef.current = window.scrollY;
+      hospitalScrollPositionRef.current = window.scrollY;
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Lookup Data Hook
   const { 
@@ -86,11 +89,150 @@ const ApplicationsPage = () => {
     }));
   };
 
+  // Search input için commit fonksiyonu (Enter tuşu için)
+  const commitSearchToFilters = useCallback((field, cursorPosBeforeCommit = null) => {
+    const searchRef = field === 'doctor_search' ? doctorSearchRef : hospitalSearchRef;
+    const cursorPositionRef = field === 'doctor_search' ? doctorCursorPositionRef : hospitalCursorPositionRef;
+    const scrollPositionRef = field === 'doctor_search' ? doctorScrollPositionRef : hospitalScrollPositionRef;
+    const shouldRestoreFocusRef = field === 'doctor_search' ? shouldRestoreDoctorFocusRef : shouldRestoreHospitalFocusRef;
+
+    if (searchRef.current === document.activeElement) {
+      const originalQuery = searchInputs[field] || '';
+      const value = originalQuery.trim().replace(/\s+/g, ' ').slice(0, 100);
+
+      // Cursor pozisyonunu kaydet (trim öncesi)
+      const cursorPosition = cursorPosBeforeCommit ?? searchRef.current?.selectionStart ?? cursorPositionRef.current ?? originalQuery.length;
+      
+      // Trim işlemi nedeniyle cursor pozisyonunu hesapla
+      const trimmedStart = originalQuery.length - (originalQuery.trimStart() || '').length;
+      const trimmedLength = value.length;
+      
+      let newPos = cursorPosition;
+      if (cursorPosition > trimmedStart) {
+        newPos = Math.min(cursorPosition - trimmedStart, trimmedLength);
+      } else {
+        newPos = Math.min(cursorPosition, trimmedLength);
+      }
+      newPos = Math.min(newPos, value.length);
+      
+      cursorPositionRef.current = newPos;
+
+      // Scroll pozisyonunu kaydet
+      scrollPositionRef.current = window.scrollY;
+
+      // Focus'u restore etmek için flag set et
+      shouldRestoreFocusRef.current = true;
+
+      // Filtreleri güncelle (sadece Enter'a basıldığında)
+      setFilters(prev => ({
+        ...prev,
+        [field]: value,
+        page: 1
+      }));
+
+      // State'i güncelle
+      setSearchInputs(prev => ({
+        ...prev,
+        [field]: value
+      }));
+
+      // Hemen focus'u koru
+      requestAnimationFrame(() => {
+        if (searchRef.current) {
+          searchRef.current.focus();
+          if (cursorPositionRef.current !== null) {
+            searchRef.current.setSelectionRange(cursorPositionRef.current, cursorPositionRef.current);
+          }
+        }
+      });
+    }
+  }, [searchInputs]);
+
+  // Filter güncellemesinden sonra cursor pozisyonunu ve focus'u koru
+  useEffect(() => {
+    // Doctor search için
+    if (shouldRestoreDoctorFocusRef.current && doctorSearchRef.current) {
+      const restoreFocus = () => {
+        if (doctorSearchRef.current) {
+          doctorSearchRef.current.value = searchInputs.doctor_search;
+          doctorSearchRef.current.focus();
+          if (doctorCursorPositionRef.current !== null) {
+            const pos = Math.min(doctorCursorPositionRef.current, searchInputs.doctor_search.length);
+            doctorSearchRef.current.setSelectionRange(pos, pos);
+          }
+          if (doctorScrollPositionRef.current !== null) {
+            window.scrollTo(0, doctorScrollPositionRef.current);
+          }
+        }
+      };
+
+      requestAnimationFrame(() => {
+        restoreFocus();
+        requestAnimationFrame(() => {
+          restoreFocus();
+          setTimeout(() => {
+            if (shouldRestoreDoctorFocusRef.current && doctorSearchRef.current) {
+              restoreFocus();
+              shouldRestoreDoctorFocusRef.current = false;
+            }
+          }, 50);
+        });
+      });
+    }
+  }, [filters.doctor_search, searchInputs.doctor_search]);
+
+  useEffect(() => {
+    // Hospital search için
+    if (shouldRestoreHospitalFocusRef.current && hospitalSearchRef.current) {
+      const restoreFocus = () => {
+        if (hospitalSearchRef.current) {
+          hospitalSearchRef.current.value = searchInputs.hospital_search;
+          hospitalSearchRef.current.focus();
+          if (hospitalCursorPositionRef.current !== null) {
+            const pos = Math.min(hospitalCursorPositionRef.current, searchInputs.hospital_search.length);
+            hospitalSearchRef.current.setSelectionRange(pos, pos);
+          }
+          if (hospitalScrollPositionRef.current !== null) {
+            window.scrollTo(0, hospitalScrollPositionRef.current);
+          }
+        }
+      };
+
+      requestAnimationFrame(() => {
+        restoreFocus();
+        requestAnimationFrame(() => {
+          restoreFocus();
+          setTimeout(() => {
+            if (shouldRestoreHospitalFocusRef.current && hospitalSearchRef.current) {
+              restoreFocus();
+              shouldRestoreHospitalFocusRef.current = false;
+            }
+          }, 50);
+        });
+      });
+    }
+  }, [filters.hospital_search, searchInputs.hospital_search]);
+
   const handleSearchInputChange = (field, value) => {
+    const searchRef = field === 'doctor_search' ? doctorSearchRef : hospitalSearchRef;
+    const cursorPositionRef = field === 'doctor_search' ? doctorCursorPositionRef : hospitalCursorPositionRef;
+
+    const cursorPos = searchRef.current?.selectionStart || value.length;
+    cursorPositionRef.current = cursorPos;
+
     setSearchInputs(prev => ({
       ...prev,
       [field]: value
     }));
+
+    // Cursor pozisyonunu geri yükle
+    requestAnimationFrame(() => {
+      if (searchRef.current && document.activeElement === searchRef.current) {
+        const newPos = Math.min(cursorPos, value.length);
+        searchRef.current.setSelectionRange(newPos, newPos);
+        cursorPositionRef.current = newPos;
+      }
+    });
   };
 
   const handlePageChange = (newPage) => {
@@ -149,16 +291,16 @@ const ApplicationsPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <FileText className="h-8 w-8 mr-3 text-indigo-600" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <FileText className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-indigo-600" />
                 Başvuru Yönetimi
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
                 Tüm başvuruları görüntüleyin ve takip edin
               </p>
             </div>
@@ -166,8 +308,8 @@ const ApplicationsPage = () => {
         </div>
 
         {/* Filters */}
-        <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-4 mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             {/* Status Filter */}
             <div className="md:col-span-1">
               <select
@@ -185,26 +327,44 @@ const ApplicationsPage = () => {
             </div>
 
             {/* Search Inputs */}
-            <div className="md:col-span-2 flex space-x-2">
-              <div className="relative flex-1">
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              <div className="relative">
                 <input
                   ref={doctorSearchRef}
                   type="text"
-                  placeholder="Doktor ara..."
+                  placeholder="Doktor adı/soyadı..."
                   value={searchInputs.doctor_search}
                   onChange={(e) => handleSearchInputChange('doctor_search', e.target.value)}
-                  className="admin-form-input"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const cursorPos = e.target.selectionStart ?? doctorSearchRef.current?.selectionStart ?? doctorCursorPositionRef.current ?? searchInputs.doctor_search.length;
+                      commitSearchToFilters('doctor_search', cursorPos);
+                      return false;
+                    }
+                  }}
+                  className="admin-form-input w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-text"
                   autoComplete="off"
                 />
               </div>
-              <div className="relative flex-1">
+              <div className="relative">
                 <input
                   ref={hospitalSearchRef}
                   type="text"
-                  placeholder="Hastane ara..."
+                  placeholder="Hastane adı..."
                   value={searchInputs.hospital_search}
                   onChange={(e) => handleSearchInputChange('hospital_search', e.target.value)}
-                  className="admin-form-input"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const cursorPos = e.target.selectionStart ?? hospitalSearchRef.current?.selectionStart ?? hospitalCursorPositionRef.current ?? searchInputs.hospital_search.length;
+                      commitSearchToFilters('hospital_search', cursorPos);
+                      return false;
+                    }
+                  }}
+                  className="admin-form-input w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-text"
                   autoComplete="off"
                 />
               </div>
@@ -214,11 +374,11 @@ const ApplicationsPage = () => {
 
         {/* Applications Table */}
         <div className="admin-table">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full">
               <thead>
                 <tr>
-                  <th>Başvuru</th>
                   <th>Doktor</th>
                   <th>İş İlanı</th>
                   <th>Hastane</th>
@@ -235,28 +395,8 @@ const ApplicationsPage = () => {
                     className="hover:bg-gray-50 cursor-pointer transition-colors"
                   >
                     <td>
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 text-gray-400 mr-2" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            #{application.id}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {application.notes ? 'Notlar var' : 'Not yok'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex items-center">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {application.first_name} {application.last_name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {application.residence_city_name}
-                          </div>
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {application.first_name} {application.last_name}
                       </div>
                     </td>
                     <td>
@@ -299,28 +439,73 @@ const ApplicationsPage = () => {
             </table>
           </div>
 
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {applications.map((application) => (
+              <div
+                key={application.id}
+                onClick={() => handleViewApplication(application.id)}
+                className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-900 mb-1">
+                      {application.first_name} {application.last_name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-2">{application.job_title}</p>
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <Building className="h-4 w-4 mr-1" />
+                      {application.institution_name}
+                    </div>
+                  </div>
+                  {getStatusBadge(application.status_id, application.status)}
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Calendar className="h-4 w-4 text-gray-400 mr-1" />
+                    {new Date(application.applied_at).toLocaleDateString('tr-TR')}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewApplication(application.id);
+                    }}
+                    className="admin-btn admin-btn-sm admin-btn-primary"
+                    title="Detayları görüntüle"
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    Detay
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
           {pagination.total_pages > 1 && (
-            <div className="bg-slate-800/90 px-4 py-3 flex items-center justify-between border-t border-slate-600/30 sm:px-6">
+            <div className="bg-slate-800/90 px-3 sm:px-4 py-3 flex items-center justify-between border-t border-slate-600/30 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
                   onClick={() => handlePageChange(pagination.current_page - 1)}
                   disabled={pagination.current_page <= 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+                  className="relative inline-flex items-center px-3 sm:px-4 py-2 border border-slate-500 text-xs sm:text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
                 >
                   Önceki
                 </button>
+                <div className="flex items-center text-xs text-slate-300">
+                  Sayfa {pagination.current_page} / {pagination.total_pages}
+                </div>
                 <button
                   onClick={() => handlePageChange(pagination.current_page + 1)}
                   disabled={pagination.current_page >= pagination.total_pages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+                  className="relative inline-flex items-center px-3 sm:px-4 py-2 border border-slate-500 text-xs sm:text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
                 >
                   Sonraki
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-slate-300">
+                  <p className="text-sm text-gray-700">
                     Toplam <span className="font-medium">{pagination.total}</span> başvurudan{' '}
                     <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
                     <span className="font-medium">
@@ -335,7 +520,7 @@ const ApplicationsPage = () => {
                       <button
                         key={page}
                         onClick={() => handlePageChange(page)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        className={`relative inline-flex items-center px-3 sm:px-4 py-2 border text-xs sm:text-sm font-medium ${
                           page === pagination.current_page
                             ? 'z-10 bg-indigo-500 border-indigo-400 text-white'
                             : 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'

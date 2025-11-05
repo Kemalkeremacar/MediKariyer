@@ -1,17 +1,19 @@
 /**
- * Admin Application Detail Page (Yeniden Tasarım)
+ * Admin Application Detail Page
  * - Başvuru, Hastane ve Doktor detayları sekmeli yapı
  * - Sağ kolon: durum güncelleme aksiyonları
+ * - Hastane versiyonuna benzer yapıda, dinamik ve kapsamlı
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   FileText, User, Calendar, ArrowLeft, CheckCircle, XCircle,
-  Clock, Briefcase, Eye, AlertCircle, RefreshCw, MessageSquare,
-  Mail, Phone, MapPin, Building, ExternalLink
+  Clock, Briefcase, Eye, AlertCircle, MessageSquare,
+  Mail, Phone, MapPin, Building, ExternalLink, Settings, Target
 } from 'lucide-react';
-import { useApplicationById, useUpdateApplicationStatus } from '../api/useAdmin';
+import { useApplicationById, useUpdateApplicationStatus, useUserById } from '../api/useAdmin';
+import { useApplicationStatuses } from '@/hooks/useLookup';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
@@ -19,13 +21,13 @@ const AdminApplicationDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('application');
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [notes, setNotes] = useState('');
 
   const { data: applicationData, isLoading, error, refetch } = useApplicationById(id);
   const updateStatusMutation = useUpdateApplicationStatus();
 
-  // Hook bu sayfada axios response döndürüyor (data sarmalı var). Güçlü normalizasyon:
+  // Backend'den gelen veriyi parse et
   const rawApplication = (
     applicationData?.data?.data?.application ||
     applicationData?.data?.application ||
@@ -33,80 +35,74 @@ const AdminApplicationDetailPage = () => {
     {}
   );
 
-  // Farklı response şekillerini tek modele normalize et
-  const application = (() => {
-    const a = rawApplication || {};
-    const get = (...keys) => keys.find((k) => k !== undefined && k !== null && k !== '') ?? undefined;
+  // Application verisini normalize et
+  const application = rawApplication || {};
 
-    const id = a.id || a.application_id || a.app_id;
-    const appliedAt = a.applied_at || a.created_at || a.appliedAt || a.createdAt;
-    const status = a.status_id || a.statusId || a.status;
+  // Doktor profil detayını al
+  const doctorUserId = application.user_id;
+  const { data: doctorData, isLoading: doctorLoading, error: doctorError } = useUserById(doctorUserId);
+  
+  // Debug: Application ve doctor data'yı kontrol et
+  useEffect(() => {
+    console.log('📋 Application:', application);
+    console.log('👤 Doctor User ID:', doctorUserId);
+    console.log('👤 Doctor Data:', doctorData);
+    console.log('👤 Doctor Loading:', doctorLoading);
+    console.log('👤 Doctor Error:', doctorError);
+  }, [application, doctorUserId, doctorData, doctorLoading, doctorError]);
 
-    const jobId = a.job_id || a.jobId || a.job?.id;
-    const jobTitle = get(a.job_title, a.jobTitle, a.job?.title, 'Belirtilmemiş');
+  // Status options
+  const { data: applicationStatuses } = useApplicationStatuses();
+  const statusOptions = applicationStatuses?.length > 0 
+    ? applicationStatuses.filter(s => s.value !== 5) // Geri Çekildi hariç
+    : [
+        { value: 1, label: 'Başvuruldu', name: 'Başvuruldu' },
+        { value: 2, label: 'İnceleniyor', name: 'İnceleniyor' },
+        { value: 3, label: 'Kabul Edildi', name: 'Kabul Edildi' },
+        { value: 4, label: 'Reddedildi', name: 'Reddedildi' }
+      ];
 
-    // Hastane alanları birkaç farklı yerden gelebilir
-    const hospitalName = get(
-      a.hospital_name,
-      a.hospital,
-      a.hospital_profile?.institution_name,
-      a.hospitalProfile?.institution_name,
-      a.job?.hospital_name,
-      a.job?.hospital?.institution_name
-    );
-    const hospitalCity = get(
-      a.city_name,
-      a.city,
-      a.hospital_city,
-      a.hospital_profile?.city,
-      a.hospitalProfile?.city,
-      a.job?.city_name
-    );
-    const hospitalEmail = get(
-      a.hospital_email,
-      a.hospital_profile?.email,
-      a.hospitalProfile?.email
-    );
-    const hospitalPhone = get(
-      a.hospital_phone,
-      a.hospital_profile?.phone,
-      a.hospitalProfile?.phone
-    );
+  // Application değiştiğinde state'i güncelle
+  useEffect(() => {
+    if (application.status_id) {
+      setSelectedStatus(application.status_id.toString());
+      setNotes(application.notes || '');
+    }
+  }, [application]);
 
-    // Doktor alanları
-    const doctorFirstName = get(
-      a.first_name,
-      a.firstName,
-      a.doctor_first_name,
-      a.user?.profile?.first_name
-    );
-    const doctorLastName = get(
-      a.last_name,
-      a.lastName,
-      a.doctor_last_name,
-      a.user?.profile?.last_name
-    );
-    const doctorEmail = get(a.email, a.doctor_email, a.user?.email);
-    const userId = a.user_id || a.userId || a.user?.id;
 
-    return {
-      id,
-      applied_at: appliedAt,
-      status_id: status,
-      job_id: jobId,
-      job_title: jobTitle,
-      hospital_name: hospitalName,
-      city_name: hospitalCity,
-      hospital_email: hospitalEmail,
-      hospital_phone: hospitalPhone,
-      first_name: doctorFirstName,
-      last_name: doctorLastName,
-      email: doctorEmail,
-      user_id: userId,
-      cover_letter: a.cover_letter || a.coverLetter,
-      notes: a.notes,
-    };
-  })();
+  const handleStatusUpdate = async () => {
+    if (!selectedStatus) return;
+    
+    try {
+      await updateStatusMutation.mutateAsync({
+        applicationId: parseInt(id),
+        status_id: parseInt(selectedStatus),
+        reason: notes || null
+      });
+      showToast.success('Başvuru durumu güncellendi');
+      setNotes('');
+      refetch();
+    } catch (error) {
+      console.error('Başvuru durumu güncelleme hatası:', error);
+      showToast.error('Başvuru durumu güncellenemedi');
+    }
+  };
+
+  const handleNoteOnlyUpdate = async () => {
+    try {
+      await updateStatusMutation.mutateAsync({
+        applicationId: parseInt(id),
+        status_id: application.status_id,
+        reason: notes || null
+      });
+      showToast.success('Not güncellendi');
+      refetch();
+    } catch (error) {
+      console.error('Not güncelleme hatası:', error);
+      showToast.error('Not güncellenemedi');
+    }
+  };
 
   const getStatusConfig = (status) => {
     const statusConfig = {
@@ -122,41 +118,24 @@ const AdminApplicationDetailPage = () => {
     return statusConfig[map[status]] || statusConfig[1];
   };
 
-  const handleStatusUpdate = async (statusId) => {
-    const statusCfg = getStatusConfig(statusId);
-    const confirmed = await showToast.confirm(
-      'Başvuru Durumu Güncelle',
-      `Başvuru durumunu "${statusCfg.text}" olarak değiştirmek istiyor musunuz?`,
-      { confirmText: 'Güncelle', cancelText: 'İptal', type: 'warning' }
-    );
-    if (!confirmed) return;
-    setIsUpdating(true);
-    try {
-      await updateStatusMutation.mutateAsync({ applicationId: id, status_id: statusId, notes: notes || 'Admin tarafından güncellendi' });
-      showToast.success('Başvuru durumu güncellendi');
-      setNotes('');
-      refetch();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const StatusBadge = ({ status }) => {
-    const cfg = getStatusConfig(status);
+  const StatusBadge = ({ status_id, statusName }) => {
+    const cfg = getStatusConfig(status_id);
     const Icon = cfg.icon;
     return (
       <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border gap-2 ${cfg.color}`}>
         <Icon className="w-4 h-4" />
-        {cfg.text}
+        {statusName || cfg.text}
       </span>
     );
   };
 
+  const isStatusChanged = parseInt(selectedStatus) !== (application.status_id || 0);
+  const isNotesChanged = notes !== (application.notes || '');
+  const isWithdrawn = application.status_id === 5;
+
   if (isLoading) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <div className="p-6">
           <SkeletonLoader className="h-12 w-80 bg-gray-200 rounded-lg mb-6" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -172,9 +151,9 @@ const AdminApplicationDetailPage = () => {
     );
   }
 
-  if (error || (!application?.id && !application?.application_id)) {
+  if (error || !application.id) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         <div className="p-6">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center bg-white rounded-xl shadow-lg p-8 border border-gray-200">
@@ -195,10 +174,16 @@ const AdminApplicationDetailPage = () => {
     );
   }
 
-  const statusCfg = getStatusConfig(application.status_id || application.status);
+  // Backend response format: { success: true, data: { user: { profile: {...} } } }
+  // useUserById returns response.data, so doctorData = { user: { profile: {...} } }
+  const doctorProfile = doctorData?.user?.profile || doctorData?.profile || {};
+  const doctorEducations = doctorProfile.educations || [];
+  const doctorExperiences = doctorProfile.experiences || [];
+  const doctorCertificates = doctorProfile.certificates || [];
+  const doctorLanguages = doctorProfile.languages || [];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <div className="p-6">
         {/* Header */}
         <div className="mb-6">
@@ -212,19 +197,13 @@ const AdminApplicationDetailPage = () => {
                 Geri Dön
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                  <FileText className="h-8 w-8 mr-3 text-indigo-600" />
-                  Başvuru Detayı #{application.id}
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {application.first_name} {application.last_name} - {application.job_title}
                 </h1>
-                <p className="text-gray-600 mt-2">Başvuru detaylarını görüntüleyin ve durumunu güncelleyin</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button onClick={() => refetch()} className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Yenile
-              </button>
-              <StatusBadge status={application.status_id || application.status} />
+              <StatusBadge status_id={application.status_id} statusName={application.status} />
             </div>
           </div>
         </div>
@@ -262,143 +241,286 @@ const AdminApplicationDetailPage = () => {
 
             {/* Tab Content */}
             <div className="p-6">
+              {/* Başvuru Sekmesi */}
               {activeTab === 'application' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Başvuru Tarihi */}
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Calendar className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Başvuru Tarihi</p>
-                        <p className="text-lg font-semibold text-gray-900">{application.applied_at ? new Date(application.applied_at).toLocaleString('tr-TR') : 'Bilinmiyor'}</p>
-                      </div>
+                  {/* Başvuru Tarihi */}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Başvuru Tarihi</span>
                     </div>
-                    {/* İlan Bilgisi */}
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Briefcase className="w-6 h-6 text-blue-600" />
+                    <span className="text-sm text-gray-900 font-medium">
+                      {application.applied_at 
+                        ? new Date(application.applied_at).toLocaleDateString('tr-TR', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'Bilinmiyor'}
+                    </span>
+                  </div>
+
+                  {/* İş İlanı Detayları */}
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Briefcase className="w-5 h-5 text-blue-600" />
+                      İş İlanı Detayları
+                    </h2>
+                    
+                    <div className="space-y-4">
+                      {/* İlan Başlığı */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            {application.job_title || 'Belirtilmemiş'}
+                          </h3>
+                          {application.job_id && (
+                            <button
+                              onClick={() => navigate(`/admin/jobs/${application.job_id}`)}
+                              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                            >
+                              İlan detaylarını görüntüle
+                              <ExternalLink className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">İş İlanı</p>
-                        <button
-                          onClick={() => {
-                            const digits = String(application.job_id || '').match(/\d+/);
-                            if (digits) navigate(`/admin/jobs/${digits[0]}`);
-                          }}
-                          className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors flex items-center gap-2"
-                        >
-                          {application.job_title || 'Belirtilmemiş'}
-                          <ExternalLink className="w-4 h-4" />
-                        </button>
+
+                      {/* Temel Bilgiler */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                        {application.job_specialty_name && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">Uzmanlık Alanı</p>
+                            <p className="text-sm text-gray-900">{application.job_specialty_name}</p>
+                          </div>
+                        )}
+                        {application.job_subspecialty_name && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">Yan Dal</p>
+                            <p className="text-sm text-gray-900">{application.job_subspecialty_name}</p>
+                          </div>
+                        )}
+                        {application.job_city_name && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">Şehir</p>
+                            <p className="text-sm text-gray-900">{application.job_city_name}</p>
+                          </div>
+                        )}
+                        {application.employment_type && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">Çalışma Şekli</p>
+                            <p className="text-sm text-gray-900">{application.employment_type}</p>
+                          </div>
+                        )}
+                        {application.min_experience_years && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">Deneyim</p>
+                            <p className="text-sm text-gray-900">
+                              {application.min_experience_years}+ yıl
+                            </p>
+                          </div>
+                        )}
                       </div>
+
+                      {/* İlan Açıklaması */}
+                      {application.job_description && (
+                        <div className="pt-4 border-t border-gray-200">
+                          <h4 className="text-sm font-semibold text-gray-900 mb-2">İlan Açıklaması</h4>
+                          <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed bg-gray-50 rounded-lg p-4">
+                            {application.job_description}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Ön Yazı */}
-                  {application.cover_letter && (
+                  {/* Doktor Ön Yazısı */}
+                  {application.cover_letter ? (
                     <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-indigo-600" />
-                        Ön Yazı
+                        <FileText className="w-5 h-5 text-green-600" />
+                        Doktor Ön Yazısı
                       </h3>
-                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{application.cover_letter}</p>
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                          {application.cover_letter}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 text-center">
+                      <FileText className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">Ön Yazı Bulunamadı</h3>
+                      <p className="text-gray-500 text-sm">
+                        Bu başvuru için doktor ön yazısı eklenmemiş.
+                      </p>
                     </div>
                   )}
 
                   {/* Notlar */}
                   {application.notes && (
-                    <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                    <div className="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
                       <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <MessageSquare className="w-5 h-5 text-indigo-600" />
-                        Notlar
+                        <MessageSquare className="w-5 h-5 text-yellow-600" />
+                        Hastane Notları
                       </h3>
-                      <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{application.notes}</p>
+                      <div className="bg-white rounded-lg p-4 border border-yellow-200">
+                        <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                          {application.notes}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
               )}
 
+              {/* Hastane Sekmesi */}
               {activeTab === 'hospital' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Building className="w-6 h-6 text-green-600" />
-                      </div>
+                  <div className="bg-white rounded-lg border border-gray-200 p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Building className="w-5 h-5 text-green-600" />
+                      Hastane Bilgileri
+                    </h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Hastane</p>
-                        <p className="text-lg font-semibold text-gray-900">{application.hospital_name || application.hospital || 'Belirtilmemiş'}</p>
+                        <p className="text-sm font-medium text-gray-600 mb-1">Hastane Adı</p>
+                        <p className="text-sm text-gray-900 font-semibold">
+                          {application.institution_name || 'Belirtilmemiş'}
+                        </p>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <MapPin className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Şehir</p>
-                        <p className="text-lg font-semibold text-gray-900">{application.city_name || application.city || 'Belirtilmemiş'}</p>
-                      </div>
-                    </div>
-                    {application.hospital_email && (
-                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Mail className="w-6 h-6 text-green-600" />
-                        </div>
+                      {application.hospital_city_name && (
                         <div>
-                          <p className="text-sm font-medium text-gray-600">E-posta</p>
-                          <p className="text-lg font-semibold text-gray-900">{application.hospital_email}</p>
+                          <p className="text-sm font-medium text-gray-600 mb-1">Şehir</p>
+                          <p className="text-sm text-gray-900">{application.hospital_city_name}</p>
                         </div>
-                      </div>
-                    )}
-                    {application.hospital_phone && (
-                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <Phone className="w-6 h-6 text-green-600" />
-                        </div>
+                      )}
+                      {application.hospital_email && (
                         <div>
-                          <p className="text-sm font-medium text-gray-600">Telefon</p>
-                          <p className="text-lg font-semibold text-gray-900">{application.hospital_phone}</p>
+                          <p className="text-sm font-medium text-gray-600 mb-1">E-posta</p>
+                          <p className="text-sm text-gray-900">{application.hospital_email}</p>
                         </div>
+                      )}
+                      {application.hospital_phone && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 mb-1">Telefon</p>
+                          <p className="text-sm text-gray-900">{application.hospital_phone}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Hastane Profil Butonu */}
+                    {application.hospital_user_id && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <button
+                          onClick={() => navigate(`/admin/users/${application.hospital_user_id}`)}
+                          className="flex items-center justify-center px-6 py-3 rounded-lg transition-colors bg-green-500 text-white hover:bg-green-600 w-full md:w-auto"
+                        >
+                          <Building className="w-4 h-4 mr-2" />
+                          Hastane Profilini Görüntüle
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
+              {/* Doktor Sekmesi */}
               {activeTab === 'doctor' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <User className="w-6 h-6 text-blue-600" />
+                  {doctorLoading ? (
+                    <SkeletonLoader count={3} />
+                  ) : (doctorProfile.first_name || application.first_name) ? (
+                    <>
+                      {/* Doktor Temel Bilgileri */}
+                      <div className="bg-white rounded-lg border border-gray-200 p-6">
+                        <div className="flex items-start gap-4">
+                          {(doctorProfile.profile_photo || application.profile_photo) ? (
+                            <img
+                              src={doctorProfile.profile_photo || application.profile_photo}
+                              alt={`${doctorProfile.first_name || application.first_name} ${doctorProfile.last_name || application.last_name}`}
+                              className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                            />
+                          ) : (
+                            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                              {(doctorProfile.first_name || application.first_name)?.[0]}{(doctorProfile.last_name || application.last_name)?.[0]}
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-gray-900">
+                              {(doctorProfile.title || application.title || 'Dr.')} {doctorProfile.first_name || application.first_name} {doctorProfile.last_name || application.last_name}
+                            </h3>
+                            <p className="text-gray-600 text-sm mt-1">
+                              {doctorProfile.specialty_name || application.specialty_name || 'Uzmanlık Belirtilmemiş'}
+                            </p>
+                            {(doctorProfile.subspecialty_name || application.subspecialty_name) && (
+                              <p className="text-gray-500 text-xs mt-1">
+                                Yan Dal: {doctorProfile.subspecialty_name || application.subspecialty_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-200">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">Telefon</p>
+                            <p className="text-sm text-gray-900">{application.phone || doctorProfile.phone || 'Belirtilmemiş'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">E-posta</p>
+                            <p className="text-sm text-gray-900">{application.email || doctorProfile.email || 'Belirtilmemiş'}</p>
+                          </div>
+                          {(doctorProfile.residence_city_name || application.residence_city_name) && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-600 mb-1">İkamet Şehri</p>
+                              <p className="text-sm text-gray-900">{doctorProfile.residence_city_name || application.residence_city_name}</p>
+                            </div>
+                          )}
+                          {(doctorProfile.birth_place_name || application.birth_place_name) && (
+                            <div>
+                              <p className="text-sm font-medium text-gray-600 mb-1">Doğum Yeri</p>
+                              <p className="text-sm text-gray-900">{doctorProfile.birth_place_name || application.birth_place_name}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Ad Soyad</p>
-                        <p className="text-lg font-semibold text-gray-900">{[application.first_name, application.last_name].filter(Boolean).join(' ') || 'Belirtilmemiş'}</p>
-                      </div>
+                      
+                      {/* Doktor Profil Butonu */}
+                      {application.user_id && (
+                        <div>
+                          <button
+                            onClick={() => navigate(`/admin/users/${application.user_id}`)}
+                            className="flex items-center justify-center px-6 py-3 rounded-lg transition-colors bg-indigo-500 text-white hover:bg-indigo-600 w-full md:w-auto"
+                          >
+                            <User className="w-4 h-4 mr-2" />
+                            Doktor Profilini Görüntüle
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="bg-white rounded-lg p-6 border border-gray-200 text-center">
+                      <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Doktor Profili Bulunamadı</h3>
+                      <p className="text-gray-600 text-sm mb-2">
+                        Bu başvuruya ait doktor profili bulunamadı veya pasif durumda.
+                      </p>
+                      {!application.user_id && (
+                        <p className="text-yellow-600 text-xs mt-2">
+                          Uyarı: User ID bulunamadı (user_id: {String(application.user_id)})
+                        </p>
+                      )}
+                      {doctorError && (
+                        <p className="text-red-500 text-xs mt-2">
+                          Hata: {doctorError.message || JSON.stringify(doctorError)}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Mail className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">E-posta</p>
-                        <p className="text-lg font-semibold text-gray-900">{application.email || 'Belirtilmemiş'}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => navigate(`/admin/users/${application.user_id}`)}
-                      disabled={!application.user_id}
-                      className={`flex items-center px-4 py-2 rounded-lg transition-colors ${application.user_id ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Doktor Profilini Görüntüle
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
@@ -407,46 +529,158 @@ const AdminApplicationDetailPage = () => {
           {/* Right - Status Management */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Durum Yönetimi</h3>
-              <div className="space-y-3">
-                <button
-                  className="w-full bg-purple-500 text-white px-4 py-3 rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
-                  onClick={() => handleStatusUpdate(2)}
-                  disabled={isUpdating}
-                >
-                  <Eye className="w-4 h-4" />
-                  İnceleme Altına Al
-                </button>
-                <button
-                  className="w-full bg-green-500 text-white px-4 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
-                  onClick={() => handleStatusUpdate(3)}
-                  disabled={isUpdating}
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Kabul Et
-                </button>
-                <button
-                  className="w-full bg-red-500 text-white px-4 py-3 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-                  onClick={() => handleStatusUpdate(4)}
-                  disabled={isUpdating}
-                >
-                  <XCircle className="w-4 h-4" />
-                  Reddet
-                </button>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-purple-600" />
+                Durum Yönetimi
+              </h3>
+
+              {/* Mevcut Durum */}
+              <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                  Mevcut Durum
+                </h4>
+                <div className="flex items-center justify-between">
+                  <StatusBadge status_id={application.status_id} statusName={application.status} />
+                  <div className="text-right">
+                    <span className="text-xs text-gray-500 block">Son Güncelleme</span>
+                    <span className="text-sm text-gray-700">
+                      {application.updated_at
+                        ? new Date(application.updated_at).toLocaleDateString('tr-TR')
+                        : 'Bilinmiyor'}
+                    </span>
+                  </div>
+                </div>
+                {isWithdrawn && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center gap-2 text-yellow-600 text-xs">
+                      <AlertCircle className="w-4 h-4" />
+                      <span>Geri çekilen başvurularda durum güncelleme yapılamaz.</span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Not Ekle (Opsiyonel)</label>
+
+              {/* Başvuru Tarihi */}
+              <div className="mb-4">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <span className="text-xs text-gray-600">Başvuru Tarihi</span>
+                  </div>
+                  <span className="text-sm text-gray-900 font-medium">
+                    {application.applied_at
+                      ? new Date(application.applied_at).toLocaleDateString('tr-TR')
+                      : 'Bilinmiyor'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Durum Seçimi */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Target className="w-4 h-4 text-green-600" />
+                  Yeni Durum
+                </label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  disabled={isWithdrawn}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status.value} value={status.value}>
+                      {status.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Not Alanı */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-orange-600" />
+                  Admin Notu
+                </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Başvuru hakkında not ekleyin..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-700 text-sm resize-none h-24 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Değerlendirme notları ekleyin..."
+                  rows={4}
+                  disabled={isWithdrawn}
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
+
+              {/* Mevcut Not Gösterimi */}
+              {application.notes && (
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-yellow-600" />
+                    Mevcut Not
+                  </label>
+                  <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
+                      {application.notes}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Butonlar */}
+              {!isWithdrawn ? (
+                <div className="flex flex-col gap-3 pt-4 border-t border-gray-200">
+                  {/* Sadece Not Güncelle */}
+                  {!isStatusChanged && isNotesChanged && (
+                    <button
+                      onClick={handleNoteOnlyUpdate}
+                      disabled={updateStatusMutation.isPending}
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateStatusMutation.isPending ? 'Güncelleniyor...' : 'Notu Güncelle'}
+                    </button>
+                  )}
+
+                  {/* Durum ve Not Güncelle */}
+                  {isStatusChanged && (
+                    <button
+                      onClick={handleStatusUpdate}
+                      disabled={updateStatusMutation.isPending}
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateStatusMutation.isPending ? 'Güncelleniyor...' : 'Durum ve Notu Güncelle'}
+                    </button>
+                  )}
+
+                  {/* Değişiklik yoksa */}
+                  {!isStatusChanged && !isNotesChanged && (
+                    <p className="text-xs text-gray-500 text-center">
+                      Değişiklik yapmak için yukarıdaki alanları düzenleyin
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-yellow-800 text-sm font-medium mb-1">
+                          Durum Güncelleme Devre Dışı
+                        </p>
+                        <p className="text-yellow-700 text-xs">
+                          Geri çekilen başvurularda durum veya not güncellemesi yapılamaz.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
     </div>
   );
 };

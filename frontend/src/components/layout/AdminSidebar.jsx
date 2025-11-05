@@ -16,20 +16,22 @@
  * 
  * Menü Öğeleri:
  * 1. Dashboard: Genel istatistikler ve özet bilgiler
- * 2. Kullanıcı Yönetimi: Tüm kullanıcıların yönetimi
- * 3. Fotoğraf Onayları: Doktor profil fotoğrafı onayları
+ * 2. Doktorlar: Doktor kullanıcılarının yönetimi
+ * 3. Hastaneler: Hastane kullanıcılarının yönetimi
  * 4. İş İlanı Yönetimi: Tüm iş ilanlarının yönetimi
  * 5. Başvurular: Tüm başvuruların görüntülenmesi
- * 6. Bildirimler: Sistem bildirimlerinin yönetimi
- * 7. İletişim Mesajları: Gelen iletişim mesajlarının yönetimi
- * 8. Sistem Logları: Sistem loglarının görüntülenmesi
+ * 6. Fotoğraf Onayları: Doktor profil fotoğrafı onayları
+ * 7. Bildirimler: Sistem bildirimlerinin yönetimi
+ * 8. İletişim Mesajları: Gelen iletişim mesajlarının yönetimi
+ * 9. Sistem Logları: Sistem loglarının görüntülenmesi
  * 
  * Renk Şemaları:
  * - Dashboard: Mavi gradient (blue-500 to blue-600)
- * - Kullanıcı Yönetimi: Yeşil gradient (green-500 to green-600)
- * - Fotoğraf Onayları: Mor gradient (purple-500 to purple-600)
+ * - Doktorlar: Yeşil gradient (green-500 to green-600)
+ * - Hastaneler: Yeşil gradient (green-500 to green-600)
  * - İş İlanı Yönetimi: Mor gradient (purple-500 to purple-600)
  * - Başvurular: Zümrüt gradient (emerald-500 to emerald-600)
+ * - Fotoğraf Onayları: Mor gradient (purple-500 to purple-600)
  * - Bildirimler: Amber gradient (amber-500 to amber-600)
  * - İletişim Mesajları: Teal gradient (teal-500 to teal-600)
  * - Sistem Logları: Kırmızı gradient (red-500 to red-600)
@@ -66,6 +68,7 @@ import {
   FiActivity,
   FiCamera
 } from 'react-icons/fi';
+import { Building2 } from 'lucide-react';
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -96,18 +99,18 @@ const AdminSidebar = () => {
       color: 'from-blue-500 to-blue-600'
     },
     {
-      name: 'Kullanıcı Yönetimi',
+      name: 'Doktorlar',
       href: '/admin/users',
       current: currentPath === '/admin/users',
       icon: FiUsers,
       color: 'from-green-500 to-green-600'
     },
     {
-      name: 'Fotoğraf Onayları',
-      href: '/admin/photo-approvals',
-      current: currentPath === '/admin/photo-approvals',
-      icon: FiCamera,
-      color: 'from-purple-500 to-purple-600'
+      name: 'Hastaneler',
+      href: '/admin/hospitals',
+      current: currentPath === '/admin/hospitals',
+      icon: Building2,
+      color: 'from-green-500 to-green-600'
     },
     {
       name: 'İş İlanı Yönetimi',
@@ -122,6 +125,13 @@ const AdminSidebar = () => {
       current: currentPath === '/admin/applications',
       icon: FiCheckCircle,
       color: 'from-emerald-500 to-emerald-600'
+    },
+    {
+      name: 'Fotoğraf Onayları',
+      href: '/admin/photo-approvals',
+      current: currentPath === '/admin/photo-approvals',
+      icon: FiCamera,
+      color: 'from-purple-500 to-purple-600'
     },
     {
       name: 'Bildirimler',

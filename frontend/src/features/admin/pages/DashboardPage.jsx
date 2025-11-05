@@ -21,7 +21,9 @@ import {
   ArrowRight,
   Bell,
   Calendar,
-  Camera
+  Camera,
+  Stethoscope,
+  Building2
 } from 'lucide-react';
 import { useDashboard } from '../api/useAdmin';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -59,13 +61,22 @@ const DashboardPage = () => {
 
   const quickActions = [
     {
-      title: 'Kullanıcı Yönetimi',
-      description: 'Doktor ve hastane kullanıcılarını yönetin',
-      icon: Users,
+      title: 'Doktorlar',
+      description: 'Doktor kullanıcılarını yönetin',
+      icon: Stethoscope,
       color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
       href: '/admin/users'
+    },
+    {
+      title: 'Hastaneler',
+      description: 'Hastane kullanıcılarını yönetin',
+      icon: Building2,
+      color: 'from-green-500 to-green-600',
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600',
+      href: '/admin/hospitals'
     },
     {
       title: 'Fotoğraf Onayları',
@@ -218,14 +229,20 @@ const DashboardPage = () => {
           ) : dashboardData ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <StatCard
-                title="Toplam Kullanıcı"
-                value={dashboardData.data?.overview?.totalUsers}
-                subtitle={`${dashboardData.data?.overview?.totalDoctors} Doktor, ${dashboardData.data?.overview?.totalHospitals} Hastane`}
-                icon={Users}
+                title="Doktorlar"
+                value={dashboardData.data?.overview?.totalDoctors}
+                subtitle="Kayıtlı doktor sayısı"
+                icon={Stethoscope}
                 color="blue"
-                trend={dashboardData.data?.trends?.recentUsers > 0 ? 'up' : 'down'}
-                trendValue={Math.round((dashboardData.data?.trends?.recentUsers / dashboardData.data?.overview?.totalUsers) * 100)}
                 onClick={() => navigate('/admin/users')}
+              />
+              <StatCard
+                title="Hastaneler"
+                value={dashboardData.data?.overview?.totalHospitals}
+                subtitle="Kayıtlı hastane sayısı"
+                icon={Building2}
+                color="green"
+                onClick={() => navigate('/admin/hospitals')}
               />
               <StatCard
                 title="Toplam İş İlanı"
@@ -246,14 +263,6 @@ const DashboardPage = () => {
                 trend={dashboardData.data?.trends?.recentApplications > 0 ? 'up' : 'down'}
                 trendValue={Math.round((dashboardData.data?.trends?.recentApplications / dashboardData.data?.overview?.totalApplications) * 100)}
                 onClick={() => navigate('/admin/applications')}
-              />
-              <StatCard
-                title="Onay Bekleyen"
-                value={dashboardData.data?.overview?.pendingApprovals}
-                subtitle="Kullanıcı onayları"
-                icon={Clock}
-                color="yellow"
-                onClick={() => navigate('/admin/users?isApproved=false')}
               />
             </div>
           ) : error ? (

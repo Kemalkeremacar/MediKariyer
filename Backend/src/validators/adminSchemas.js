@@ -38,7 +38,12 @@ const getUsersQuerySchema = Joi.object({
   isApproved: Joi.string().valid('true', 'false').optional(),
   isActive: Joi.string().valid('true', 'false').optional(),
   search: Joi.string().max(100).pattern(/^[a-zA-Z0-9\s@._-]*$/).optional(),
-  email_search: Joi.string().max(100).pattern(/^[a-zA-Z0-9\s@._-]*$/).optional()
+  email_search: Joi.string().max(100).pattern(/^[a-zA-Z0-9\s@._-]*$/).optional(),
+  doctor_search: Joi.string().max(100).pattern(/^[a-zA-Z0-9\sçğıöşüÇĞIİÖŞÜ._\-,]*$/).optional(),
+  hospital_search: Joi.string().max(100).pattern(/^[a-zA-Z0-9\sçğıöşüÇĞIİÖŞÜ._\-,]*$/).optional(),
+  specialty_id: Joi.number().integer().positive().optional(),
+  subspecialty_id: Joi.number().integer().positive().optional(),
+  city_id: Joi.number().integer().positive().optional()
 }).allow({});
 
 
