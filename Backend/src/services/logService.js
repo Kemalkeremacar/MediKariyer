@@ -99,6 +99,8 @@ class LogService {
         .insert({
           actor_id: auditData.actorId,
           actor_role: auditData.actorRole,
+          actor_name: auditData.actorName || null,
+          actor_email: auditData.actorEmail || null,
           action: auditData.action,
           resource_type: auditData.resourceType || null,
           resource_id: auditData.resourceId || null,
@@ -450,6 +452,101 @@ class LogService {
       };
     } catch (error) {
       logger.error('Log istatistik hatası', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Kullanıcı bilgilerini al (audit log için)
+   * @param {number} userId - Kullanıcı ID
+   * @param {string} role - Kullanıcı rolü
+   * @returns {Promise<Object>} - { name, email }
+   */
+  static async getUserInfoForAudit(userId, role) {
+    try {
+      const db = getDb();
+      const [user] = await db('users').select('email').where('id', userId);
+      
+      if (!user) {
+        return { name: null, email: null };
+      }
+      
+      let name = null;
+      
+      // Role'e göre profile bilgisini al
+      if (role === 'doctor') {
+        const profile = await db('doctor_profiles')
+          .select('first_name', 'last_name')
+          .where('user_id', userId)
+          .first();
+        if (profile) {
+          name = `${profile.first_name} ${profile.last_name}`;
+        }
+      } else if (role === 'hospital') {
+        const profile = await db('hospital_profiles')
+          .select('institution_name')
+          .where('user_id', userId)
+          .first();
+        if (profile) {
+          name = profile.institution_name;
+        }
+      } else if (role === 'admin') {
+        name = 'Admin';
+      }
+      
+      return { name, email: user.email };
+    } catch (error) {
+      logger.error('Kullanıcı bilgisi alma hatası', { error: error.message });
+      return { name: null, email: null };
+    }
+  }
+
+  /**
+   * Tek bir log kaydını getir (detay için)
+   * 
+   * @param {string} logType - Log tipi ('application', 'audit', 'security')
+   * @param {number} logId - Log ID
+   * @returns {Promise<Object>} - Log kaydı
+   */
+  static async getLogById(logType, logId) {
+    try {
+      const db = getDb();
+      let log = null;
+      
+      switch (logType) {
+        case 'application':
+          log = await db('logs.application_logs')
+            .select('*')
+            .where('id', logId)
+            .first();
+          break;
+        case 'audit':
+          log = await db('logs.audit_logs')
+            .select('*')
+            .where('id', logId)
+            .first();
+          break;
+        case 'security':
+          log = await db('logs.security_logs')
+            .select('*')
+            .where('id', logId)
+            .first();
+          break;
+        default:
+          throw new Error(`Geçersiz log tipi: ${logType}`);
+      }
+      
+      if (!log) {
+        throw new Error('Log kaydı bulunamadı');
+      }
+      
+      return log;
+    } catch (error) {
+      logger.error('Log detay getirme hatası', { 
+        error: error.message, 
+        logType, 
+        logId 
+      });
       throw error;
     }
   }

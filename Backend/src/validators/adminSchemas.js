@@ -96,8 +96,9 @@ const jobStatusUpdateSchema = Joi.object({
     'number.positive': 'Durum ID\'si pozitif olmalıdır',
     'any.required': 'Durum ID\'si zorunludur'
   }),
-  reason: Joi.string().max(500).optional().messages({
-    'string.max': 'Sebep en fazla 500 karakter olabilir'
+  reason: Joi.string().max(500).optional().allow(null, '').messages({
+    'string.max': 'Sebep en fazla 500 karakter olabilir',
+    'string.base': 'Sebep string olmalıdır'
   })
 });
 

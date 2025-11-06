@@ -129,12 +129,8 @@ const authenticateToken = async (req, res, next) => {
       isActive: user.is_active
     };
 
-    // Log'u sadece ilk authentication'da at (çok fazla log'u önlemek için)
-    // Her request'te log atmak yerine, sadece session başlangıcında log at
-    if (!req.user._logged) {
-      logger.info(`User authenticated: ${user.email} (${user.role})`);
-      req.user._logged = true;
-    }
+    // Log'u kaldırdık - her request'te log atmak yerine sadece login endpoint'inde log atılıyor
+    // Bu sayede infinite loop ve gereksiz log kayıtları önleniyor
     
     next();
   } catch (error) {

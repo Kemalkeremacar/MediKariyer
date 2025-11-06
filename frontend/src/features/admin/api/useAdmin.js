@@ -285,11 +285,14 @@ export function useUpdateJob() {
 export function useUpdateJobStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ jobId, status_id, reason }) => 
-      apiRequest.patch(buildEndpoint(ENDPOINTS.ADMIN.JOB_STATUS, { id: jobId }), { 
-        status_id, 
-        reason 
-      }),
+    mutationFn: ({ jobId, status_id, reason }) => {
+      const payload = { status_id };
+      // Reason varsa ekle, yoksa ekleme
+      if (reason && reason.trim()) {
+        payload.reason = reason.trim();
+      }
+      return apiRequest.patch(buildEndpoint(ENDPOINTS.ADMIN.JOB_STATUS, { id: jobId }), payload);
+    },
     onSuccess: (data, variables) => {
       const { jobId, status_id } = variables;
       

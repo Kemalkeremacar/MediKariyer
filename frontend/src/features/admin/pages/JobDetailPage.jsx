@@ -25,6 +25,8 @@ import {
   Hourglass, RefreshCw, XCircle, History, FileText, Settings
 } from 'lucide-react';
 import { useJobById, useDeleteJob, useUpdateJobStatus, useApproveJob, useRequestRevision, useRejectJob, useJobHistory } from '../api/useAdmin';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '../api/useAdmin';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { showToast } from '@/utils/toastUtils';
@@ -36,6 +38,9 @@ const AdminJobDetailPage = () => {
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
+  const [selectedStatusId, setSelectedStatusId] = useState(null);
+  const [statusChangeReason, setStatusChangeReason] = useState('');
   const [revisionNote, setRevisionNote] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -94,12 +99,21 @@ const AdminJobDetailPage = () => {
 
   // Request revision handler
   const handleRequestRevision = async () => {
-    if (!revisionNote.trim()) {
+    const trimmedNote = revisionNote.trim();
+    if (!trimmedNote) {
       showToast.error('Revizyon notu zorunludur');
       return;
     }
+    if (trimmedNote.length < 10) {
+      showToast.error('Revizyon notu en az 10 karakter olmalıdır');
+      return;
+    }
+    if (trimmedNote.length > 1000) {
+      showToast.error('Revizyon notu en fazla 1000 karakter olabilir');
+      return;
+    }
     try {
-      await requestRevisionMutation.mutateAsync({ jobId: id, revision_note: revisionNote });
+      await requestRevisionMutation.mutateAsync({ jobId: id, revision_note: trimmedNote });
       setShowRevisionModal(false);
       setRevisionNote('');
       refetchJob();
@@ -110,8 +124,21 @@ const AdminJobDetailPage = () => {
 
   // Reject job handler
   const handleRejectJob = async () => {
+    const trimmedReason = rejectionReason.trim();
+    // Rejection reason optional ama girilmişse validation yap
+    if (trimmedReason && trimmedReason.length < 5) {
+      showToast.error('Red sebebi en az 5 karakter olmalıdır');
+      return;
+    }
+    if (trimmedReason && trimmedReason.length > 500) {
+      showToast.error('Red sebebi en fazla 500 karakter olabilir');
+      return;
+    }
     try {
-      await rejectJobMutation.mutateAsync({ jobId: id, rejection_reason: rejectionReason });
+      await rejectJobMutation.mutateAsync({ 
+        jobId: id, 
+        rejection_reason: trimmedReason || null 
+      });
       setShowRejectModal(false);
       setRejectionReason('');
       refetchJob();
@@ -120,11 +147,23 @@ const AdminJobDetailPage = () => {
     }
   };
 
-  // Status change handler - Direct status update
-  const handleStatusChange = async (newStatusId) => {
+  // Status change handler - Direct status update with reason
+  const handleStatusChange = async (newStatusId, reason = null) => {
     try {
-      await updateStatusMutation.mutateAsync({ jobId: id, status_id: newStatusId });
+      const payload = { 
+        jobId: id, 
+        status_id: newStatusId
+      };
+      
+      // Reason varsa ekle, yoksa ekleme (null gönderme)
+      if (reason && reason.trim()) {
+        payload.reason = reason.trim();
+      }
+      
+      await updateStatusMutation.mutateAsync(payload);
       refetchJob();
+      // History'i de yenile
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_HISTORY, id] });
     } catch (error) {
       console.error('Status change error:', error);
     }
@@ -181,6 +220,15 @@ const AdminJobDetailPage = () => {
     return statusMap[statusName] || statusName;
   };
 
+  // Status options - Paylaşılan durum listesi
+  const statusOptions = [
+    { id: 1, name: 'Onay Bekliyor', description: 'Admin onayı bekliyor', color: 'yellow', icon: Hourglass },
+    { id: 2, name: 'Revizyon Gerekli', description: 'Revizyon talebi var', color: 'orange', icon: RefreshCw },
+    { id: 3, name: 'Onaylandı', description: 'Onaylandı ve yayında', color: 'green', icon: CheckCircle },
+    { id: 4, name: 'Pasif', description: 'Yayından kaldırıldı', color: 'gray', icon: Clock },
+    { id: 5, name: 'Reddedildi', description: 'Tamamen reddedildi', color: 'red', icon: XCircle },
+  ];
+
   // Edit Modal Component - Manuel durum seçimi için
   const EditModal = () => {
     if (!showEditModal) return null;
@@ -199,14 +247,6 @@ const AdminJobDetailPage = () => {
         window.scrollTo(0, scrollY);
       };
     }, []);
-
-    const statusOptions = [
-      { id: 1, name: 'Onay Bekliyor', description: 'Admin onayı bekliyor', color: 'yellow', icon: Hourglass },
-      { id: 2, name: 'Revizyon Gerekli', description: 'Revizyon talebi var', color: 'orange', icon: RefreshCw },
-      { id: 3, name: 'Onaylandı', description: 'Onaylandı ve yayında', color: 'green', icon: CheckCircle },
-      { id: 4, name: 'Pasif', description: 'Yayından kaldırıldı', color: 'gray', icon: Clock },
-      { id: 5, name: 'Reddedildi', description: 'Tamamen reddedildi', color: 'red', icon: XCircle },
-    ];
 
     return (
       <ModalContainer
@@ -264,9 +304,11 @@ const AdminJobDetailPage = () => {
                       setShowRejectModal(true);
                       return;
                     }
-                    // Diğer durumlar için direkt değiştir
-                    await handleStatusChange(status.id);
+                    // Diğer durumlar için not modal'ı aç
+                    setSelectedStatusId(status.id);
+                    setStatusChangeReason('');
                     setShowEditModal(false);
+                    setShowStatusChangeModal(true);
                   }}
                   className={`bg-gradient-to-br ${colorClasses[status.color]} text-white p-5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group`}
                 >
@@ -825,10 +867,19 @@ const AdminJobDetailPage = () => {
                   <textarea
                     value={revisionNote}
                     onChange={(e) => setRevisionNote(e.target.value)}
-                    placeholder="Revizyon notunu buraya yazın..."
+                    placeholder="Revizyon notunu buraya yazın... (En az 10 karakter)"
                     className="w-full min-h-[150px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
                     required
+                    minLength={10}
+                    maxLength={1000}
                   />
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span className={revisionNote.trim().length < 10 ? 'text-red-500' : 'text-gray-500'}>
+                      {revisionNote.trim().length < 10 
+                        ? `En az ${10 - revisionNote.trim().length} karakter daha gerekli` 
+                        : `${revisionNote.trim().length}/1000 karakter`}
+                    </span>
+                  </div>
                   <div className="flex gap-3 justify-end">
                     <button
                       onClick={() => {
@@ -841,8 +892,8 @@ const AdminJobDetailPage = () => {
                     </button>
                     <button
                       onClick={handleRequestRevision}
-                      disabled={requestRevisionMutation.isPending || !revisionNote.trim()}
-                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50"
+                      disabled={requestRevisionMutation.isPending || revisionNote.trim().length < 10}
+                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {requestRevisionMutation.isPending ? 'Gönderiliyor...' : 'Revizyon İste'}
                     </button>
@@ -875,9 +926,19 @@ const AdminJobDetailPage = () => {
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Red sebebini buraya yazın..."
+                  placeholder="Red sebebini buraya yazın... (En az 5 karakter)"
                   className="w-full min-h-[100px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  maxLength={500}
                 />
+                {rejectionReason.trim() && (
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className={rejectionReason.trim().length < 5 ? 'text-red-500' : 'text-gray-500'}>
+                      {rejectionReason.trim().length < 5 
+                        ? `En az ${5 - rejectionReason.trim().length} karakter daha gerekli` 
+                        : `${rejectionReason.trim().length}/500 karakter`}
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="flex gap-3 justify-end">
                 <button
@@ -895,6 +956,73 @@ const AdminJobDetailPage = () => {
                   className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
                 >
                   {rejectJobMutation.isPending ? 'Reddediliyor...' : 'Reddet'}
+                </button>
+              </div>
+            </div>
+          </ModalContainer>
+        )}
+
+        {/* Status Change Modal - Manuel durum değişikliği için not alanı */}
+        {showStatusChangeModal && selectedStatusId && (
+          <ModalContainer
+            isOpen={true}
+            onClose={() => {
+              setShowStatusChangeModal(false);
+              setSelectedStatusId(null);
+              setStatusChangeReason('');
+            }}
+            title="Durum Değişikliği"
+            size="medium"
+          >
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-blue-900 font-medium">
+                  Durum: <span className="font-bold">{getTurkishStatusName(job?.status)}</span> → <span className="font-bold">{statusOptions.find(s => s.id === selectedStatusId)?.name}</span>
+                </p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Değişiklik Notu (Opsiyonel)
+                </label>
+                <textarea
+                  value={statusChangeReason}
+                  onChange={(e) => setStatusChangeReason(e.target.value)}
+                  placeholder="Durum değişikliği için bir not ekleyin..."
+                  className="w-full min-h-[100px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                  maxLength={500}
+                />
+                {statusChangeReason.trim() && (
+                  <div className="flex items-center justify-between text-sm mt-1">
+                    <span className="text-gray-500">
+                      {statusChangeReason.trim().length}/500 karakter
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => {
+                    setShowStatusChangeModal(false);
+                    setSelectedStatusId(null);
+                    setStatusChangeReason('');
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={async () => {
+                    const reason = statusChangeReason.trim() || null;
+                    await handleStatusChange(selectedStatusId, reason);
+                    setShowStatusChangeModal(false);
+                    setSelectedStatusId(null);
+                    setStatusChangeReason('');
+                    showToast.success('Durum başarıyla güncellendi');
+                  }}
+                  disabled={updateStatusMutation.isPending}
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {updateStatusMutation.isPending ? 'Güncelleniyor...' : 'Durumu Değiştir'}
                 </button>
               </div>
             </div>

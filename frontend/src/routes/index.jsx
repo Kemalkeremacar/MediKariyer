@@ -157,6 +157,7 @@ const AdminNotificationsPage = lazy(() => import('@/features/admin/pages/AdminNo
 const AdminContactMessagesPage = lazy(() => import('@/features/admin/pages/ContactMessagesPage'));
 const PhotoApprovalsPage = lazy(() => import('@/features/admin/pages/PhotoApprovalsPage'));
 const AdminLogsPage = lazy(() => import('@/features/admin/pages/LogsPage'));
+const AdminLogDetailPage = lazy(() => import('@/features/admin/pages/LogDetailPage'));
 
 /**
  * ============================================================================
@@ -896,6 +897,24 @@ const AppRoutes = () => {
                 <AuthGuard>
                   <RoleGuard allowedRoles={['admin']}>
                     <AdminLogsPage />
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+          
+          {/* 
+            Admin Log Detay Sayfası - /admin/logs/:type/:id
+            Log detaylarını görüntüler
+            Parametre: type (application, audit, security), id (log ID)
+          */}
+          <Route
+            path="admin/logs/:type/:id"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['admin']}>
+                    <AdminLogDetailPage />
                   </RoleGuard>
                 </AuthGuard>
               </ErrorBoundary>

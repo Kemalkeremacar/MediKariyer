@@ -97,16 +97,22 @@ if (process.env.NODE_ENV === 'production') {
   );
 }
 
-// Database transport ekle (error ve warn logları için)
-// Production'da default olarak aktif, development'ta kapalı
+// Database transport ekle
+// Development'ta da aktif olabilir (ENABLE_DB_LOGGING=true ile)
+// Production'da default olarak aktif
 const enableDbLogging = process.env.ENABLE_DB_LOGGING !== undefined 
   ? process.env.ENABLE_DB_LOGGING === 'true'
   : process.env.NODE_ENV === 'production';
 
 if (enableDbLogging) {
+  // DB_LOG_LEVEL: 'error' | 'warn' | 'info' | 'http' | 'debug'
+  // 'info' seviyesi: info, warn, error loglarını database'e yazar
+  // 'http' seviyesi: http, info, warn, error loglarını database'e yazar
+  const dbLogLevel = process.env.DB_LOG_LEVEL || 'info';
+  
   transports.push(
     new DatabaseTransport({
-      level: process.env.DB_LOG_LEVEL || 'warn', // Sadece warn ve error logları
+      level: dbLogLevel, // info seviyesi ile tüm önemli loglar yazılır
       category: 'application',
       batchSize: 10,
       flushInterval: 5000
@@ -122,6 +128,12 @@ const logger = winston.createLogger({
   transports,
   exitOnError: false
 });
+
+// Database logging aktifse bilgi ver
+if (enableDbLogging) {
+  const dbLogLevel = process.env.DB_LOG_LEVEL || 'info';
+  logger.info('✅ Database logging aktif', { level: dbLogLevel });
+}
 
 // HTTP request logging için stream
 logger.stream = {

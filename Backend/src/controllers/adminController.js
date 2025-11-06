@@ -25,6 +25,7 @@
 
 const adminService = require('../services/adminService');
 const notificationService = require('../services/notificationService');
+const LogService = require('../services/logService');
 const { AppError, catchAsync } = require('../utils/errorHandler');
 const { sendSuccess, sendPaginated } = require('../utils/response');
 const logger = require('../utils/logger');
@@ -96,6 +97,24 @@ const updateUserApproval = catchAsync(async (req, res) => {
   if (!result) throw new AppError('Kullanıcı bulunamadı', 404);
 
   logger.info(`User approval updated: ${req.params.id} - ${approved ? 'approved' : 'rejected'} by ${req.user.email}`);
+  
+  // Audit log kaydet
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: 'Admin', email: req.user.email }));
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    actorName: userInfo.name || 'Admin',
+    actorEmail: userInfo.email,
+    action: approved ? 'user.approve' : 'user.reject',
+    resourceType: 'user',
+    resourceId: parseInt(req.params.id),
+    oldValues: { is_approved: !approved },
+    newValues: { is_approved: approved, reason },
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { reason }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+  
   return sendSuccess(res, approved ? 'Kullanıcı onaylandı' : 'Kullanıcı reddedildi');
 });
 
@@ -207,10 +226,29 @@ const getJobById = catchAsync(async (req, res) => {
  * @returns {Object} Başarı mesajı
  */
 const updateJobStatus = catchAsync(async (req, res) => {
-  const result = await adminService.updateJobStatus(req.params.id, req.body.status_id, req.body.reason);
-  if (!result) throw new AppError('İş ilanı bulunamadı', 404);
+  const job = await adminService.updateJobStatus(req.params.id, req.body.status_id, req.user.id, req.body.reason);
+  if (!job) throw new AppError('İş ilanı bulunamadı', 404);
 
   logger.info(`Job status updated: ${req.params.id} - status_id: ${req.body.status_id} by ${req.user.email}`);
+  
+  // Audit log kaydet
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: 'Admin', email: req.user.email }));
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    actorName: userInfo.name || 'Admin',
+    actorEmail: userInfo.email,
+    action: 'job.status_update',
+    resourceType: 'job',
+    resourceId: parseInt(req.params.id),
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { 
+      new_status_id: req.body.status_id,
+      reason: req.body.reason 
+    }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+  
   return sendSuccess(res, 'İş ilanı durumu güncellendi');
 });
 
@@ -260,6 +298,22 @@ const approveJob = catchAsync(async (req, res) => {
   if (!job) throw new AppError('İş ilanı bulunamadı', 404);
 
   logger.info(`Job approved: ${req.params.id} by ${req.user.email}`);
+  
+  // Audit log kaydet
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: 'Admin', email: req.user.email }));
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    actorName: userInfo.name || 'Admin',
+    actorEmail: userInfo.email,
+    action: 'job.approve',
+    resourceType: 'job',
+    resourceId: parseInt(req.params.id),
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { job_title: job.title }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+  
   return sendSuccess(res, 'İş ilanı onaylandı', { job });
 });
 
@@ -282,6 +336,22 @@ const requestRevision = catchAsync(async (req, res) => {
   if (!job) throw new AppError('İş ilanı bulunamadı', 404);
 
   logger.info(`Job revision requested: ${req.params.id} by ${req.user.email}`);
+  
+  // Audit log kaydet
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: 'Admin', email: req.user.email }));
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    actorName: userInfo.name || 'Admin',
+    actorEmail: userInfo.email,
+    action: 'job.request_revision',
+    resourceType: 'job',
+    resourceId: parseInt(req.params.id),
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { revision_note }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+  
   return sendSuccess(res, 'Revizyon talebi gönderildi', { job });
 });
 
@@ -300,6 +370,22 @@ const rejectJob = catchAsync(async (req, res) => {
   if (!job) throw new AppError('İş ilanı bulunamadı', 404);
 
   logger.info(`Job rejected: ${req.params.id} by ${req.user.email}`);
+  
+  // Audit log kaydet
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: 'Admin', email: req.user.email }));
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    actorName: userInfo.name || 'Admin',
+    actorEmail: userInfo.email,
+    action: 'job.reject',
+    resourceType: 'job',
+    resourceId: parseInt(req.params.id),
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { rejection_reason, job_title: job.title }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+  
   return sendSuccess(res, 'İş ilanı reddedildi', { job });
 });
 
@@ -364,6 +450,24 @@ const updateApplicationStatus = catchAsync(async (req, res) => {
   
   const result = await adminService.updateApplicationStatus(id, status_id, reason);
   logger.info(`Application ${id} status updated to ${status_id} by ${req.user.email}`);
+  
+  // Audit log kaydet
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: 'Admin', email: req.user.email }));
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    actorName: userInfo.name || 'Admin',
+    actorEmail: userInfo.email,
+    action: 'application.update_status',
+    resourceType: 'application',
+    resourceId: parseInt(id),
+    oldValues: { status_id: result.oldStatusId },
+    newValues: { status_id, reason },
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { reason }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
+  
   return sendSuccess(res, 'Başvuru durumu güncellendi', result);
 });
 
@@ -521,6 +625,21 @@ const reviewPhotoRequest = catchAsync(async (req, res) => {
   }
   
   const result = await adminService.reviewPhotoRequest(req.user.id, parseInt(id), action, reason);
+  
+  // Audit log kaydet
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: 'Admin', email: req.user.email }));
+  await LogService.createAuditLog({
+    actorId: req.user.id,
+    actorRole: req.user.role,
+    actorName: userInfo.name || 'Admin',
+    actorEmail: userInfo.email,
+    action: `photo_request.${action}`,
+    resourceType: 'photo_request',
+    resourceId: parseInt(id),
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { reason, doctor_profile_id: result.doctor_profile_id }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
   
   const message = action === 'approve' 
     ? 'Fotoğraf onaylandı ve profilde güncellendi'

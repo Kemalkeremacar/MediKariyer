@@ -120,6 +120,19 @@ router.get(
 );
 
 /**
+ * GET /api/logs/:type/:id
+ * Tek bir log kaydının detayını getir
+ * 
+ * Params:
+ * - type: application, audit, security
+ * - id: Log ID
+ */
+router.get(
+  '/:type/:id',
+  LogController.getLogById
+);
+
+/**
  * POST /api/logs/cleanup
  * Eski logları temizle
  * 

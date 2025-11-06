@@ -31,8 +31,8 @@ const config = {
     user: process.env.DB_USER || 'sa',
     password: process.env.DB_PASSWORD,
     options: {
-      encrypt: false,  // Named Pipes için false
-      trustServerCertificate: true,
+      encrypt: process.env.DB_ENCRYPT === 'true' || process.env.DB_ENCRYPT === true,
+      trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true' || process.env.DB_TRUST_SERVER_CERTIFICATE === true,
       enableArithAbort: true,
       requestTimeout: 60000,
       connectionTimeout: 60000,

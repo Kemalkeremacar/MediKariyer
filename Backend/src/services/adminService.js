@@ -963,19 +963,33 @@ const updateJob = async (jobId, jobData) => {
  * 
  * @param {number} jobId - İş ilanı ID'si
  * @param {number} statusId - Yeni durum ID'si (job_statuses.id)
+ * @param {number} adminId - Admin kullanıcı ID'si
  * @param {string} [reason=null] - Durum değişiklik sebebi
- * @returns {boolean|null} İşlem başarılıysa true, ilan bulunamazsa null
+ * @returns {Promise<Object|null>} Güncellenmiş iş ilanı, bulunamazsa null
  */
-const updateJobStatus = async (jobId, statusId, reason = null) => {
+const updateJobStatus = async (jobId, statusId, adminId, reason = null) => {
   const job = await db('jobs').where('id', jobId).first();
   if (!job) return null;
 
+  const oldStatusId = job.status_id;
+
+  // Durumu güncelle
   await db('jobs').where('id', jobId).update({
     status_id: statusId,
     updated_at: db.fn.now()
   });
 
-  return true;
+  // Job history kaydı oluştur
+  await db('job_history').insert({
+    job_id: jobId,
+    old_status_id: oldStatusId,
+    new_status_id: statusId,
+    changed_by: adminId,
+    note: reason || `Durum manuel olarak değiştirildi: ${oldStatusId} → ${statusId}`,
+    changed_at: db.fn.now()
+  });
+
+  return await getJobDetails(jobId);
 };
 
 /**

@@ -108,6 +108,8 @@ const registerDoctor = catchAsync(async (req, res) => {
     await LogService.createAuditLog({
       actorId: result.user.id,
       actorRole: result.user.role,
+      actorName: `${result.profile.first_name} ${result.profile.last_name}`,
+      actorEmail: result.user.email,
       action: 'user.register',
       resourceType: 'doctor',
       resourceId: result.profile.id,
@@ -222,6 +224,8 @@ const registerHospital = catchAsync(async (req, res) => {
     await LogService.createAuditLog({
       actorId: result.user.id,
       actorRole: result.user.role,
+      actorName: result.profile.institution_name,
+      actorEmail: result.user.email,
       action: 'user.register',
       resourceType: 'hospital',
       resourceId: result.profile.id,
@@ -316,10 +320,15 @@ const loginUnified = catchAsync(async (req, res) => {
 
   logger.info(`User logged in: ${email} (${user.role})`);
 
+  // Kullanıcı bilgilerini al (audit log için)
+  const userInfo = await LogService.getUserInfoForAudit(user.id, user.role).catch(() => ({ name: null, email: user.email }));
+
   // Audit log kaydet
   await LogService.createAuditLog({
     actorId: user.id,
     actorRole: user.role,
+    actorName: userInfo.name,
+    actorEmail: userInfo.email || email,
     action: 'user.login',
     resourceType: 'user',
     resourceId: user.id,
@@ -413,9 +422,13 @@ const logout = catchAsync(async (req, res) => {
 
   // Audit log kaydet (eğer req.user varsa - authMiddleware'den geçtiyse)
   if (req.user) {
+    const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: null, email: req.user.email }));
+    
     await LogService.createAuditLog({
       actorId: req.user.id,
       actorRole: req.user.role,
+      actorName: userInfo.name,
+      actorEmail: userInfo.email,
       action: 'user.logout',
       resourceType: 'user',
       resourceId: req.user.id,
@@ -446,10 +459,15 @@ const logoutAll = catchAsync(async (req, res) => {
 
   logger.info(`User logged out from all devices: ${req.user.email}`);
 
+  // Kullanıcı bilgilerini al (audit log için)
+  const userInfo = await LogService.getUserInfoForAudit(req.user.id, req.user.role).catch(() => ({ name: null, email: req.user.email }));
+
   // Audit log kaydet
   await LogService.createAuditLog({
     actorId: req.user.id,
     actorRole: req.user.role,
+    actorName: userInfo.name,
+    actorEmail: userInfo.email,
     action: 'user.logout_all',
     resourceType: 'user',
     resourceId: req.user.id,

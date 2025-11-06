@@ -102,6 +102,35 @@ class LogController {
   }
 
   /**
+   * Tek bir log kaydının detayını getir
+   * GET /api/logs/:type/:id
+   * 
+   * @param {Object} req - Express request
+   * @param {Object} res - Express response
+   * @returns {Promise<void>}
+   */
+  static async getLogById(req, res) {
+    try {
+      const { type, id } = req.params;
+      
+      // Log tipi validasyonu
+      if (!['application', 'audit', 'security'].includes(type)) {
+        return errorResponse(res, 'Geçersiz log tipi', 400);
+      }
+      
+      const log = await LogService.getLogById(type, parseInt(id));
+      
+      return sendSuccess(res, 'Log detayı getirildi', { log }, 200);
+    } catch (error) {
+      if (error.message === 'Log kaydı bulunamadı') {
+        return errorResponse(res, 'Log kaydı bulunamadı', 404);
+      }
+      logger.error('Log detay getirme hatası', { error: error.message, stack: error.stack });
+      return errorResponse(res, 'Log detayı getirme işlemi başarısız', 500);
+    }
+  }
+
+  /**
    * Eski logları temizle
    * POST /api/logs/cleanup
    * 

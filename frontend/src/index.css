@@ -2025,4 +2025,205 @@ html, body {
   }
 }
 
+/* ================================================================ */
+/* LOGS PAGE STİLLERİ - Sadece özel badge stilleri */
+/* Diğer tüm stiller mevcut admin stillerini kullanır */
+/* ================================================================ */
+
+/* Logs Page Container - Admin sayfalarıyla aynı background */
+.logs-page-container {
+  min-height: 100vh;
+  background: linear-gradient(to bottom, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1.5rem;
+}
+
+/* Logs Tabs - Basit tab stili */
+.logs-tabs-container {
+  @apply admin-card;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.logs-tabs-list {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.logs-tab-button {
+  padding: 0.875rem 1.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.logs-tab-button:hover {
+  color: #1e293b;
+  background: #f8fafc;
+}
+
+.logs-tab-button-active {
+  color: #3b82f6;
+  background: transparent;
+}
+
+.logs-tab-button-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+}
+
+/* Log Item */
+.logs-item {
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 0.75rem;
+}
+
+.logs-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.logs-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.logs-item-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.logs-item-message {
+  color: #1e293b;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Search Input Wrapper - Icon için */
+.logs-search-wrapper {
+  position: relative;
+}
+
+.logs-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  width: 1.25rem;
+  height: 1.25rem;
+  pointer-events: none;
+}
+
+/* Logs Badge Styles - Açık renkli badge'ler */
+.logs-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.logs-badge-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.logs-badge-warn {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fed7aa;
+}
+
+.logs-badge-info {
+  background: #eff6ff;
+  color: #1e40af;
+  border-color: #bfdbfe;
+}
+
+.logs-badge-http {
+  background: #faf5ff;
+  color: #6b21a8;
+  border-color: #e9d5ff;
+}
+
+.logs-badge-debug {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.logs-badge-critical {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.logs-badge-high {
+  background: #fff7ed;
+  color: #9a3412;
+  border-color: #ffedd5;
+}
+
+.logs-badge-medium {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fed7aa;
+}
+
+.logs-badge-low {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+/* Logs Page Responsive */
+@media (max-width: 768px) {
+  .logs-page-container {
+    padding: 1rem;
+  }
+  
+  .logs-tabs-list {
+    flex-direction: column;
+  }
+  
+  .logs-tab-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .logs-item-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
 

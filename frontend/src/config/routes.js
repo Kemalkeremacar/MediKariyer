@@ -64,6 +64,8 @@ export const ROUTE_CONFIG = {
     NOTIFICATIONS: '/admin/notifications',
     CONTACT_MESSAGES: '/admin/contact-messages',
     PHOTO_APPROVALS: '/admin/photo-approvals',
+    LOGS: '/admin/logs',
+    LOG_DETAIL: '/admin/logs/:type/:id',
   },
   
   // ============================================================================

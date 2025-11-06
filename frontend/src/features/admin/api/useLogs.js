@@ -6,6 +6,7 @@
  * @version 1.0.0
  */
 
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import http from '@/services/http/client';
 import { showToast } from '@/utils/toastUtils';
@@ -129,14 +130,31 @@ const mockStatistics = {
 /**
  * Application loglarını getir
  */
-export const useApplicationLogs = (filters = {}) => {
+export const useApplicationLogs = (filters = {}, enabled = true) => {
+  // Query key için stabil filter objesi oluştur
+  const stableFilters = useMemo(() => ({
+    level: filters.level || '',
+    category: filters.category || '',
+    startDate: filters.startDate || '',
+    endDate: filters.endDate || '',
+    page: filters.page || 1,
+    limit: filters.limit || 20
+  }), [
+    filters.level,
+    filters.category,
+    filters.startDate,
+    filters.endDate,
+    filters.page,
+    filters.limit
+  ]);
+
   return useQuery({
-    queryKey: ['logs', 'application', filters],
+    queryKey: ['logs', 'application', stableFilters],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
         
-        Object.entries(filters).forEach(([key, value]) => {
+        Object.entries(stableFilters).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
             params.append(key, value);
           }
@@ -155,21 +173,40 @@ export const useApplicationLogs = (filters = {}) => {
       }
     },
     staleTime: 30000, // 30 saniye
-    enabled: true
+    enabled: enabled,
+    refetchOnWindowFocus: false, // Window focus'ta refetch yapma
+    refetchOnMount: false // Mount'ta refetch yapma (sadece enabled değiştiğinde)
   });
 };
 
 /**
  * Audit loglarını getir
  */
-export const useAuditLogs = (filters = {}) => {
+export const useAuditLogs = (filters = {}, enabled = true) => {
+  // Query key için stabil filter objesi oluştur
+  const stableFilters = useMemo(() => ({
+    action: filters.action || '',
+    resourceType: filters.resourceType || '',
+    startDate: filters.startDate || '',
+    endDate: filters.endDate || '',
+    page: filters.page || 1,
+    limit: filters.limit || 20
+  }), [
+    filters.action,
+    filters.resourceType,
+    filters.startDate,
+    filters.endDate,
+    filters.page,
+    filters.limit
+  ]);
+
   return useQuery({
-    queryKey: ['logs', 'audit', filters],
+    queryKey: ['logs', 'audit', stableFilters],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
         
-        Object.entries(filters).forEach(([key, value]) => {
+        Object.entries(stableFilters).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
             params.append(key, value);
           }
@@ -188,21 +225,38 @@ export const useAuditLogs = (filters = {}) => {
       }
     },
     staleTime: 30000,
-    enabled: true
+    enabled: enabled
   });
 };
 
 /**
  * Security loglarını getir
  */
-export const useSecurityLogs = (filters = {}) => {
+export const useSecurityLogs = (filters = {}, enabled = true) => {
+  // Query key için stabil filter objesi oluştur
+  const stableFilters = useMemo(() => ({
+    eventType: filters.eventType || '',
+    severity: filters.severity || '',
+    startDate: filters.startDate || '',
+    endDate: filters.endDate || '',
+    page: filters.page || 1,
+    limit: filters.limit || 20
+  }), [
+    filters.eventType,
+    filters.severity,
+    filters.startDate,
+    filters.endDate,
+    filters.page,
+    filters.limit
+  ]);
+
   return useQuery({
-    queryKey: ['logs', 'security', filters],
+    queryKey: ['logs', 'security', stableFilters],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
         
-        Object.entries(filters).forEach(([key, value]) => {
+        Object.entries(stableFilters).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== '') {
             params.append(key, value);
           }
@@ -221,22 +275,28 @@ export const useSecurityLogs = (filters = {}) => {
       }
     },
     staleTime: 30000,
-    enabled: true
+    enabled: enabled
   });
 };
 
 /**
  * Log istatistiklerini getir
  */
-export const useLogStatistics = (options = {}) => {
+export const useLogStatistics = (options = {}, enabled = false) => {
+  // Options'ı stabil hale getir (query key için)
+  const stableOptions = useMemo(() => ({
+    startDate: options.startDate || null,
+    endDate: options.endDate || null
+  }), [options.startDate, options.endDate]);
+
   return useQuery({
-    queryKey: ['logs', 'statistics', options],
+    queryKey: ['logs', 'statistics', stableOptions],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
         
-        if (options.startDate) params.append('startDate', options.startDate);
-        if (options.endDate) params.append('endDate', options.endDate);
+        if (stableOptions.startDate) params.append('startDate', stableOptions.startDate);
+        if (stableOptions.endDate) params.append('endDate', stableOptions.endDate);
         
         const { data } = await http.get(`/logs/statistics?${params.toString()}`);
         return data.data;
@@ -251,7 +311,9 @@ export const useLogStatistics = (options = {}) => {
       }
     },
     staleTime: 60000, // 1 dakika
-    enabled: true
+    enabled: enabled,
+    refetchOnWindowFocus: false, // Window focus'ta refetch yapma
+    refetchOnMount: false // Mount'ta refetch yapma
   });
 };
 
