@@ -19,7 +19,7 @@ import { ENDPOINTS, buildEndpoint, buildQueryString } from '@config/api.js';
 import { showToast } from '@/utils/toastUtils';
 
 // Query Keys - Backend adminService.js'ye birebir uygun
-const QUERY_KEYS = {
+export const QUERY_KEYS = {
   // Kullanıcı yönetimi
   USERS: ['admin', 'users'],
   USER_DETAIL: ['admin', 'user'],
@@ -237,7 +237,11 @@ export function useJobById(jobId) {
     queryKey: [QUERY_KEYS.JOB_DETAIL, jobIdClean],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_DETAIL, { id: jobIdClean })),
     enabled: !!jobIdClean,
-    staleTime: 5 * 60 * 1000, // 5 dakika
+    staleTime: 0,
+    cacheTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
@@ -409,7 +413,11 @@ export function useJobHistory(jobId) {
     queryKey: [QUERY_KEYS.JOB_HISTORY, jobId],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_HISTORY, { id: jobId })),
     enabled: !!jobId,
-    staleTime: 2 * 60 * 1000, // 2 dakika
+    staleTime: 0,
+    cacheTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 

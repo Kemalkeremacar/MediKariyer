@@ -207,6 +207,10 @@ const DoctorProfile = () => {
     setDeleteModal({ isOpen: true, id, type });
   };
 
+  const closeDeleteModal = useCallback(() => {
+    setDeleteModal({ isOpen: false, id: null, type: null });
+  }, []);
+
   const handleConfirmDelete = async () => {
     if (!deleteModal.id || !deleteModal.type) return;
 
@@ -226,7 +230,7 @@ const DoctorProfile = () => {
           break;
       }
       showToast.success('Öğe silindi');
-      setDeleteModal({ isOpen: false, id: null, type: null });
+      closeDeleteModal();
     } catch (error) {
       showToast.error('Silme başarısız');
     }
@@ -362,6 +366,7 @@ const DoctorProfile = () => {
       setShowForm(false);
       setFormData({});
       setEditingItem(null);
+      setSelectedSpecialtyId(null);
     } catch (error) {
       if (error.errors) {
         // Zod validation hatası
@@ -620,7 +625,7 @@ const DoctorProfile = () => {
           {/* Silme Onay Modalı */}
           <DeleteConfirmationModal
             isOpen={deleteModal.isOpen}
-            onClose={() => setDeleteModal({ isOpen: false, id: null, type: null })}
+            onClose={closeDeleteModal}
             onConfirm={handleConfirmDelete}
             isLoading={
               deleteEducationMutation.isPending ||
@@ -1602,7 +1607,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
       size="medium" 
       maxHeight="85vh" 
       closeOnBackdrop={true} 
-      align="bottom" 
+      align="center" 
       fullScreenOnMobile={false}
     >
       <div className="flex-1 overflow-y-auto">
@@ -1735,11 +1740,11 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading, type }
 
   const getTypeLabel = () => {
     switch (type) {
-      case 'education': return 'eğitim bilgisini';
-      case 'experience': return 'deneyim bilgisini';
-      case 'certificate': return 'sertifika bilgisini';
-      case 'language': return 'dil bilgisini';
-      default: return 'bu öğeyi';
+      case 'education': return 'Eğitim bilgisini';
+      case 'experience': return 'Deneyim bilgisini';
+      case 'certificate': return 'Sertifika bilgisini';
+      case 'language': return 'Dil bilgisini';
+      default: return 'Bu öğeyi';
     }
   };
 
@@ -1751,7 +1756,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading, type }
       size="small"
       maxHeight="80vh"
       closeOnBackdrop={true}
-      align="bottom"
+      align="center"
       fullScreenOnMobile={false}
     >
       <div className="p-4 md:p-6">

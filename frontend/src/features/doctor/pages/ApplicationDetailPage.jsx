@@ -69,10 +69,12 @@ const DoctorApplicationDetailPage = () => {
   const handleWithdraw = async () => {
     const confirmed = await showToast.confirm({
       title: "Başvuruyu Geri Çek",
-      message: "Bu başvuruyu geri çekmek istediğinizden emin misiniz?",
+      message: "Bu başvuruyu geri çekmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
       type: "warning",
+      size: "small",
       confirmText: "Geri Çek",
       cancelText: "İptal",
+      destructive: true,
     });
     
     if (!confirmed) return;

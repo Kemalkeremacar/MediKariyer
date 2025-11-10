@@ -22,7 +22,7 @@ import { useTokenRefresh, useSessionTimeout } from './hooks/useTokenRefresh';
 
 // Components
 import { PageLoader } from './components/ui/LoadingSpinner';
-import ConfirmationModal from './components/ui/ConfirmationModal';
+import GlobalModalManager from './components/ui/GlobalModalManager';
 
 // Store
 import useUIStore from './store/uiStore';
@@ -118,8 +118,8 @@ function App() {
           }}
         />
 
-        {/* ✅ Confirmation Modal */}
-        <ConfirmationModal />
+        {/* ✅ Global Modals */}
+        <GlobalModalManager />
       </div>
     </ErrorBoundary>
   );

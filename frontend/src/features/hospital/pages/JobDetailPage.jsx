@@ -17,8 +17,8 @@
  * @since 2024
  */
 
-import React from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Briefcase, Edit3, Users, MapPin, Calendar, 
   Target, AlertCircle, ArrowLeft, Building, CheckCircle, Clock, Settings,
@@ -29,10 +29,63 @@ import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 // ConfirmationModal global; local import gerekmez
 import { showToast } from '@/utils/toastUtils';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 
 const JobDetailPage = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const jobsBackUrlRef = useRef('/hospital/jobs');
+  const detailScrollRef = useRef(null);
+
+  useEffect(() => {
+    if (location.state?.from) {
+      jobsBackUrlRef.current = location.state.from;
+    }
+  }, [location.state]);
+
+  const captureDetailScroll = useCallback(() => {
+    if (typeof window === 'undefined') return 0;
+    const current = window.scrollY || window.pageYOffset || 0;
+    detailScrollRef.current = current;
+    return current;
+  }, []);
+
+  const restoreDetailScroll = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    if (detailScrollRef.current === null || detailScrollRef.current === undefined) return;
+    const target = Number(detailScrollRef.current) || 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: target, behavior: 'auto' });
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 120);
+    });
+  }, []);
+
+  const handleBackToJobs = useCallback(() => {
+    const targetUrl = jobsBackUrlRef.current || '/hospital/jobs';
+    if (typeof window !== 'undefined') {
+      if (!sessionStorage.getItem('hospital_jobs_state')) {
+        const fallbackState = {
+          scrollY: window.scrollY || window.pageYOffset || 0,
+          page: 1,
+          statusFilter: '',
+          specialtyId: '',
+          subspecialtyId: '',
+        };
+        try {
+          sessionStorage.setItem('hospital_jobs_state', JSON.stringify(fallbackState));
+        } catch (error) {
+          console.error('JobDetailPage: varsayılan liste durumu kaydedilemedi', error);
+        }
+      }
+    }
+    navigate(targetUrl);
+  }, [navigate]);
 
   // API hooks
   const { 
@@ -50,37 +103,267 @@ const JobDetailPage = () => {
   // Veri parsing
   const job = jobData?.data?.job || null;
 
+  const rawHistory = job?.status_history || job?.history || job?.status_log || [];
+
+  const getTurkishStatusName = useCallback((status) => {
+    if (!status && status !== 0) return 'Bilinmiyor';
+    const statusIdMap = {
+      1: 'Onay Bekliyor',
+      2: 'Revizyon Gerekli',
+      3: 'Onaylandı',
+      4: 'Pasif',
+      5: 'Reddedildi'
+    };
+    if (typeof status === 'number') {
+      return statusIdMap[status] || 'Bilinmiyor';
+    }
+    const normalized = String(status).trim();
+    if (/^\d+$/.test(normalized)) {
+      const numeric = Number(normalized);
+      if (!Number.isNaN(numeric) && statusIdMap[numeric]) {
+        return statusIdMap[numeric];
+      }
+    }
+    if (Object.values(statusIdMap).includes(normalized)) {
+      return normalized;
+    }
+    const normalizedLower = normalized.toLowerCase();
+    const statusMap = {
+      'pending approval': 'Onay Bekliyor',
+      'pending_approval': 'Onay Bekliyor',
+      'needs revision': 'Revizyon Gerekli',
+      'needs_revision': 'Revizyon Gerekli',
+      'approved': 'Onaylandı',
+      'active': 'Onaylandı',
+      'passive': 'Pasif',
+      'inactive': 'Pasif',
+      'rejected': 'Reddedildi',
+      'aktif': 'Onaylandı',
+      'pasif': 'Pasif'
+    };
+    if (statusMap[normalizedLower]) {
+      return statusMap[normalizedLower];
+    }
+    return normalized;
+  }, []);
+
+  const resolveRevisionNote = useCallback((entry) => {
+    if (!entry) return '';
+    const candidates = [];
+    const tryPush = (val) => {
+      if (typeof val === 'string' && val.trim()) {
+        candidates.push(val.trim());
+      }
+    };
+    tryPush(entry.note);
+    tryPush(entry.revision_note);
+    if (entry.details) {
+      const details = typeof entry.details === 'string' ? (() => {
+        try {
+          return JSON.parse(entry.details);
+        } catch (error) {
+          return null;
+        }
+      })() : entry.details;
+      if (details) {
+        tryPush(details.revision_note);
+        tryPush(details.note);
+      }
+    }
+    if (entry.data) {
+      const dataBlock = typeof entry.data === 'string' ? (() => {
+        try {
+          return JSON.parse(entry.data);
+        } catch (error) {
+          return null;
+        }
+      })() : entry.data;
+      if (dataBlock) {
+        tryPush(dataBlock.revision_note);
+        tryPush(dataBlock.note);
+      }
+    }
+    if (entry.metadata) {
+      tryPush(entry.metadata.revision_note);
+      tryPush(entry.metadata.note);
+    }
+    return candidates.length > 0 ? candidates[0] : '';
+  }, []);
+
+  const allRevisionEntries = useMemo(() => {
+    const collected = [];
+    const pushEntry = (rawEntry = {}) => {
+      const note = resolveRevisionNote(rawEntry);
+      if (!note || !note.trim()) return;
+
+      const changedAt =
+        rawEntry.changed_at ||
+        rawEntry.created_at ||
+        rawEntry.updated_at ||
+        rawEntry.timestamp ||
+        job?.revision_requested_at ||
+        null;
+
+      const roleRaw =
+        rawEntry.changed_by_role ||
+        rawEntry.actor_role ||
+        rawEntry.changed_by ||
+        rawEntry.role ||
+        'admin';
+
+      collected.push({
+        changed_at: changedAt,
+        changed_by_role: typeof roleRaw === 'string' ? roleRaw.toLowerCase() : roleRaw,
+        note: note.trim()
+      });
+    };
+
+    const shouldIncludeEntry = (entry) => {
+      const role = (entry?.changed_by_role || entry?.actor_role || entry?.changed_by || '').toString().toLowerCase();
+      const newStatus = getTurkishStatusName(entry?.new_status_name ?? entry?.new_status_id ?? entry?.status_id);
+      return role === 'admin' || newStatus === 'Revizyon Gerekli';
+    };
+
+    if (Array.isArray(rawHistory)) {
+      rawHistory.forEach((entry) => {
+        if (shouldIncludeEntry(entry)) {
+          pushEntry(entry);
+        }
+      });
+    }
+
+    if (Array.isArray(job?.revision_history)) {
+      job.revision_history.forEach((entry) => pushEntry(entry));
+    }
+
+    if (Array.isArray(job?.status_history)) {
+      job.status_history.forEach((entry) => {
+        if (shouldIncludeEntry(entry)) {
+          pushEntry(entry);
+        }
+      });
+    }
+
+    const getTime = (entry) => {
+      if (!entry) return 0;
+      const time = new Date(entry.changed_at ?? 0).getTime();
+      return Number.isNaN(time) ? 0 : time;
+    };
+
+    const seen = new Set();
+    const unique = collected.filter((entry) => {
+      const key = `${entry.changed_at ?? 'unknown'}-${entry.note}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    unique.sort((a, b) => getTime(b) - getTime(a));
+    return unique;
+  }, [rawHistory, job?.revision_history, job?.status_history, resolveRevisionNote, getTurkishStatusName, job?.revision_requested_at]);
+
+  const jobLatestRevisionFallback =
+    allRevisionEntries[0] ||
+    job?.latest_revision ||
+    job?.last_revision ||
+    job?.lastRevision ||
+    (Array.isArray(job?.status_history)
+      ? job.status_history
+          .slice()
+          .reverse()
+          .find((entry) => getTurkishStatusName(entry.new_status_name ?? entry.new_status_id) === 'Revizyon Gerekli')
+      : null);
+
+  const hospitalRevisionCount =
+    allRevisionEntries.length ||
+    job?.revision_count ||
+    (jobLatestRevisionFallback ? 1 : 0);
+
+  const latestRevisionNote =
+    (allRevisionEntries[0]?.note && allRevisionEntries[0].note.trim()) ||
+    jobLatestRevisionFallback?.note ||
+    jobLatestRevisionFallback?.revision_note ||
+    job?.last_revision_note ||
+    job?.latest_revision_note ||
+    job?.revision_note ||
+    '';
+
+  const jobStatusName = getTurkishStatusName(job?.status ?? job?.status_id);
+  const isNeedsRevision = jobStatusName === 'Revizyon Gerekli';
+
   // Status update handler - Sadece Onaylandı ↔ Pasif geçişi için
   // Hastane sadece:
   // - Onaylandı (3) → Pasif (4) geçişi yapabilir
   // - Pasif (4) → Onaylandı (3) geçişi yapabilir
-  const handleStatusChange = async (statusId) => {
-    const statusNames = { 3: 'Onaylandı', 4: 'Pasif' };
-    const isActivating = statusId === 3;
-    const ok = await showToast.confirm({
-      title: 'İlan Durumu Değiştir',
-      message: isActivating
-        ? 'Bu ilanı aktif yapmak istediğinizden emin misiniz? Aktif ilanlar doktorlar tarafından görülebilir ve başvuru yapılabilir.'
-        : 'Bu ilanı pasif yapmak istediğinizden emin misiniz? Pasif ilanlar doktorlar tarafından görülemez ve başvuru yapılamaz.',
-      confirmText: isActivating ? 'Aktif Yap' : 'Pasif Yap',
-      cancelText: 'İptal',
-      type: isActivating ? 'success' : 'warning'
+  const [statusModal, setStatusModal] = useState({
+    isOpen: false,
+    targetStatus: null,
+  });
+  const [resubmitModal, setResubmitModal] = useState({
+    isOpen: false,
+  });
+
+  const openStatusModal = (statusId) => {
+    captureDetailScroll();
+    setStatusModal({
+      isOpen: true,
+      targetStatus: statusId,
     });
-    if (ok) {
-      await confirmStatusChange(statusId);
+  };
+
+  const closeStatusModal = () => {
+    setStatusModal({
+      isOpen: false,
+      targetStatus: null,
+    });
+    restoreDetailScroll();
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!statusModal.targetStatus) return;
+    try {
+      const targetStatus = statusModal.targetStatus;
+      await updateStatusMutation.mutateAsync({
+        jobId,
+        status_id: targetStatus,
+        reason: 'Hastane tarafından güncellendi',
+      });
+      showToast.success(targetStatus === 3 ? 'İlan aktif edildi' : 'İlan pasif hale getirildi');
+      closeStatusModal();
+      await refetchJob();
+      restoreDetailScroll();
+    } catch (error) {
+      console.error('Status update error:', error);
+      showToast.error(error.response?.data?.message || 'Durum güncellenemedi');
+      restoreDetailScroll();
     }
   };
 
-  const confirmStatusChange = async (statusId) => {
+  const openResubmitModal = () => {
+    captureDetailScroll();
+    setResubmitModal({
+      isOpen: true,
+    });
+  };
+
+  const closeResubmitModal = () => {
+    setResubmitModal({
+      isOpen: false,
+    });
+    restoreDetailScroll();
+  };
+
+  const handleResubmitJob = async () => {
     try {
-      await updateStatusMutation.mutateAsync({
-        jobId: jobId,
-        status_id: statusId,
-        reason: 'Hastane tarafından güncellendi'
-      });
-      refetchJob();
+      await resubmitJobMutation.mutateAsync(jobId);
+      showToast.success('İlan tekrar gönderildi. Admin onayı bekleniyor.');
+      closeResubmitModal();
+      await refetchJob();
+      restoreDetailScroll();
     } catch (error) {
-      console.error('Status update error:', error);
+      console.error('Resubmit error:', error);
+      showToast.error(error.response?.data?.message || 'İlan tekrar gönderilemedi');
+      restoreDetailScroll();
     }
   };
 
@@ -136,13 +419,14 @@ const JobDetailPage = () => {
               <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-4">İş İlanı Yüklenemedi</h2>
               <p className="text-gray-300 mb-6">{jobError.message || 'Bir hata oluştu'}</p>
-              <Link
-                to="/hospital/jobs"
+              <button
+                type="button"
+                onClick={handleBackToJobs}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
                 İş İlanlarına Dön
-              </Link>
+              </button>
             </div>
           </div>
         </TransitionWrapper>
@@ -159,13 +443,14 @@ const JobDetailPage = () => {
               <AlertCircle className="w-16 h-16 text-orange-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-4">İş İlanı Bulunamadı</h2>
               <p className="text-gray-300 mb-6">Aradığınız iş ilanı bulunamadı veya silinmiş olabilir.</p>
-              <Link
-                to="/hospital/jobs"
+              <button
+                type="button"
+                onClick={handleBackToJobs}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
                 İş İlanlarına Dön
-              </Link>
+              </button>
             </div>
           </div>
         </TransitionWrapper>
@@ -180,12 +465,13 @@ const JobDetailPage = () => {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link
-                to="/hospital/jobs"
+              <button
+                type="button"
+                onClick={handleBackToJobs}
                 className="bg-white/10 backdrop-blur-sm border border-white/20 text-white p-3 rounded-xl hover:bg-white/20 transition-all duration-300"
               >
                 <ArrowLeft className="w-5 h-5" />
-              </Link>
+              </button>
               <div>
                 <h1 className="text-3xl font-bold text-white">İş İlanı Detayı</h1>
                 <p className="text-gray-300 mt-1">İş ilanı bilgilerini görüntüleyin</p>
@@ -195,23 +481,7 @@ const JobDetailPage = () => {
               {/* Needs Revision durumunda Resubmit butonu */}
               {job?.status_id === 2 && (
                 <button
-                  onClick={async () => {
-                    const ok = await showToast.confirm({
-                      title: 'İlanı Tekrar Gönder',
-                      message: `"${job.title}" ilanını tekrar göndermek istediğinizden emin misiniz? İlan admin onayına gönderilecektir.`,
-                      confirmText: 'Tekrar Gönder',
-                      cancelText: 'İptal',
-                      type: 'info'
-                    });
-                    if (ok) {
-                      try {
-                        await resubmitJobMutation.mutateAsync(jobId);
-                        refetchJob();
-                      } catch (error) {
-                        console.error('Resubmit error:', error);
-                      }
-                    }
-                  }}
+                  onClick={openResubmitModal}
                   disabled={resubmitJobMutation.isPending}
                   className="bg-green-500/20 text-green-300 border border-green-500/30 px-4 py-3 rounded-xl hover:bg-green-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -255,7 +525,7 @@ const JobDetailPage = () => {
             </div>
 
             {/* Revision Note - Needs Revision durumunda göster */}
-            {job?.status_id === 2 && job?.revision_note && (
+            {isNeedsRevision && latestRevisionNote && (
               <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-orange-300 mt-0.5 flex-shrink-0" />
@@ -264,10 +534,10 @@ const JobDetailPage = () => {
                       <FileText className="w-5 h-5" />
                       Revizyon Notu
                     </h3>
-                    <p className="text-orange-100 whitespace-pre-wrap leading-relaxed">{job.revision_note}</p>
-                    {job.revision_count > 0 && (
+                    <p className="text-orange-100 whitespace-pre-wrap leading-relaxed">{latestRevisionNote}</p>
+                    {hospitalRevisionCount > 0 && (
                       <p className="text-sm text-orange-300 mt-2">
-                        Revizyon Sayısı: {job.revision_count}
+                        Revizyon Sayısı: {hospitalRevisionCount}
                       </p>
                     )}
                   </div>
@@ -380,7 +650,7 @@ const JobDetailPage = () => {
                   <div className="flex items-center gap-4">
                     {job?.status_id === 3 ? (
                       <button
-                        onClick={() => handleStatusChange(4)}
+                        onClick={() => openStatusModal(4)}
                         disabled={updateStatusMutation.isPending}
                         className="bg-orange-500/20 text-orange-300 border border-orange-500/30 px-6 py-3 rounded-xl hover:bg-orange-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -389,7 +659,7 @@ const JobDetailPage = () => {
                       </button>
                     ) : job?.status_id === 4 ? (
                       <button
-                        onClick={() => handleStatusChange(3)}
+                        onClick={() => openStatusModal(3)}
                         disabled={updateStatusMutation.isPending}
                         className="bg-green-500/20 text-green-300 border border-green-500/30 px-6 py-3 rounded-xl hover:bg-green-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -424,22 +694,97 @@ const JobDetailPage = () => {
             {/* Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-white/10">
               <Link
-                to={`/hospital/applications?jobId=${jobId}`}
+                to={`/hospital/applications?jobIds=${jobId}`}
                 className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-3 rounded-xl hover:bg-blue-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium"
               >
                 <Users className="w-5 h-5" />
                 Başvuruları Görüntüle ({job.application_count || 0})
               </Link>
-              <Link
-                to="/hospital/jobs"
+              <button
+                type="button"
+                onClick={handleBackToJobs}
                 className="text-gray-300 hover:text-white transition-colors"
               >
                 İş İlanlarına Dön
-              </Link>
+              </button>
             </div>
           </div>
         </div>
       </TransitionWrapper>
+
+      {statusModal.isOpen && (
+        <ModalContainer
+          isOpen={statusModal.isOpen}
+          onClose={closeStatusModal}
+          title="İlan Durumu Değiştir"
+          size="small"
+          maxHeight="80vh"
+          align="center"
+          backdropClassName="bg-black/40 backdrop-blur-sm"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-200 leading-relaxed">
+              {statusModal.targetStatus === 3
+                ? `"${job?.title}" ilanını tekrar aktif hale getirmek istediğinizden emin misiniz? İlan aktif olduğunda doktorlar tarafından görüntülenebilir ve başvuru yapılabilir.`
+                : `"${job?.title}" ilanını pasif yapmak istediğinizden emin misiniz? Pasif ilanlar doktorlar tarafından görüntülenmez ve yeni başvuru alınmaz.`}
+            </p>
+            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-sm text-blue-200">
+              <strong>Bilgi:</strong> Dilerseniz daha sonra ilan durumunu tekrar değiştirebilirsiniz.
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeStatusModal}
+                className="px-5 py-2 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleConfirmStatusChange}
+                disabled={updateStatusMutation.isPending}
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {updateStatusMutation.isPending
+                  ? 'Güncelleniyor...'
+                  : statusModal.targetStatus === 3
+                    ? 'Aktif Yap'
+                    : 'Pasif Yap'}
+              </button>
+            </div>
+          </div>
+        </ModalContainer>
+      )}
+
+      {resubmitModal.isOpen && (
+        <ModalContainer
+          isOpen={resubmitModal.isOpen}
+          onClose={closeResubmitModal}
+          title="İlanı Tekrar Gönder"
+          size="small"
+          maxHeight="80vh"
+          backdropClassName="bg-black/40 backdrop-blur-sm"
+        >
+          <div className="space-y-4">
+            <p className="text-gray-200 leading-relaxed">
+              "{job?.title}" ilanını revizyonları tamamlayarak tekrar admin onayına göndermek üzeresiniz. Onaylanana kadar ilan doktorlar tarafından görünmeyecektir.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeResubmitModal}
+                className="px-5 py-2 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleResubmitJob}
+                disabled={resubmitJobMutation.isPending}
+                className="px-5 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resubmitJobMutation.isPending ? 'Gönderiliyor...' : 'Tekrar Gönder'}
+              </button>
+            </div>
+          </div>
+        </ModalContainer>
+      )}
 
       {/* ConfirmationModal global olarak App.jsx içinde render ediliyor */}
     </div>

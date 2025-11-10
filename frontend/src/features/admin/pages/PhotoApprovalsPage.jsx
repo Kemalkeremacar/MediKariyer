@@ -79,8 +79,7 @@ const PhotoApprovalsPage = () => {
         requestId,
         action: 'approve'
       });
-      setShowModal(false);
-      setSelectedRequest(null);
+      closeModal();
     } catch (error) {
       console.error('Approve error:', error);
     }
@@ -99,9 +98,7 @@ const PhotoApprovalsPage = () => {
         action: 'reject',
         reason: rejectReason
       });
-      setShowModal(false);
-      setSelectedRequest(null);
-      setRejectReason('');
+      closeModal();
     } catch (error) {
       console.error('Reject error:', error);
     }
@@ -372,129 +369,123 @@ const PhotoApprovalsPage = () => {
           isOpen={showModal && Boolean(selectedRequest)}
           onClose={closeModal}
           title="Fotoğraf Talebi Detayı"
-          size="large"
+          size="medium"
           closeOnBackdrop={true}
-          maxHeight="90vh"
-          align="auto"
-          fullScreenOnMobile
+          align="center"
+          maxHeight="85vh"
+          backdropClassName="bg-black/40 backdrop-blur-sm"
         >
-          <div className="space-y-6">
-                {/* Doctor Info */}
-                <div className="admin-card">
-                  <div className="admin-card-body">
-                    <h3 className="font-semibold text-gray-900 mb-2">Doktor Bilgileri</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600">Ad Soyad:</span>
-                        <p className="text-gray-900">{selectedRequest?.title} {selectedRequest?.first_name} {selectedRequest?.last_name}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">E-posta:</span>
-                        <p className="text-gray-900">{selectedRequest?.email || '-'}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Talep Tarihi:</span>
-                        <p className="text-gray-900">{selectedRequest?.created_at ? new Date(selectedRequest.created_at).toLocaleString('tr-TR') : '-'}</p>
-                      </div>
-                      <div>
-                        <span className="text-gray-600">Durum:</span>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(selectedRequest?.status)}`}>
-                          {getStatusText(selectedRequest?.status)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+          <div className="space-y-6 text-gray-200">
+            {/* Doktor Bilgileri */}
+            <section className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <h3 className="text-lg font-semibold text-gray-100 mb-4">Doktor Bilgileri</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-300">
+                <div>
+                  <span className="text-gray-400">Ad Soyad</span>
+                  <p className="text-gray-100 text-base font-medium">{selectedRequest?.title} {selectedRequest?.first_name} {selectedRequest?.last_name}</p>
                 </div>
-
-                {/* Photos Comparison */}
-                <div className="admin-card">
-                  <div className="admin-card-body">
-                    <h3 className="font-semibold text-gray-900 mb-4">Fotoğraf Karşılaştırması</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Eski Fotoğraf (Talep Anındaki)</h4>
-                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-lg">
-                          {selectedRequest?.old_photo ? (
-                            <img
-                              src={selectedRequest.old_photo}
-                              alt="Talep anındaki fotoğraf"
-                              className="w-full h-full object-contain"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <User className="w-12 h-12 text-gray-400" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Yeni Fotoğraf</h4>
-                        <div className="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-lg">
-                          <img
-                            src={selectedRequest?.file_url}
-                            alt="Yeni fotoğraf"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <span className="text-gray-400">E-posta</span>
+                  <p className="text-gray-100 text-base font-medium">{selectedRequest?.email || '-'}</p>
                 </div>
+                <div>
+                  <span className="text-gray-400">Talep Tarihi</span>
+                  <p className="text-gray-100 text-base">{selectedRequest?.created_at ? new Date(selectedRequest.created_at).toLocaleString('tr-TR') : '-'}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-gray-400">Durum</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(selectedRequest?.status)}`}>
+                    {getStatusText(selectedRequest?.status)}
+                  </span>
+                </div>
+              </div>
+            </section>
 
-                {/* Reject Reason Input */}
-                {selectedRequest?.status === 'pending' && (
-                  <div className="admin-card">
-                    <div className="admin-card-body">
-                      <label className="admin-form-label">
-                        Red Nedeni (Reddetmek için)
-                      </label>
-                      <textarea
-                        value={rejectReason}
-                        onChange={(e) => setRejectReason(e.target.value)}
-                        placeholder="Red nedeni yazın..."
-                        className="admin-form-textarea"
-                        rows={3}
+            {/* Fotoğraf Karşılaştırması */}
+            <section className="bg-white/5 border border-white/10 rounded-xl p-4">
+              <h3 className="text-lg font-semibold text-gray-100 mb-4">Fotoğraf Karşılaştırması</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-300">Mevcut Fotoğraf</h4>
+                  <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-900/60 border border-white/10 flex items-center justify-center">
+                    {selectedRequest?.old_photo ? (
+                      <img
+                        src={selectedRequest?.old_photo}
+                        alt="Mevcut fotoğraf"
+                        className="w-full h-full object-contain"
                       />
-                      <p className="text-xs text-gray-500 mt-1">
-                        {rejectReason.length > 0 ? `${rejectReason.length} karakter` : 'Reddetmek için neden yazın'}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Rejection Reason Display */}
-                {selectedRequest?.status === 'rejected' && selectedRequest?.reason && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-red-800 mb-1">Red Nedeni</h4>
-                        <p className="text-red-700 text-sm">{selectedRequest?.reason}</p>
+                    ) : (
+                      <div className="text-center text-gray-500 text-sm">
+                        <User className="w-10 h-10 mx-auto mb-2 text-gray-500" />
+                        Fotoğraf bulunamadı
                       </div>
-                    </div>
+                    )}
                   </div>
-                )}
-                {/* Footer - Sabit (eğer pending ise) */}
-                {selectedRequest && selectedRequest?.status === 'pending' && (
-                  <div className="flex gap-3 justify-end pt-2">
-                    <button
-                      onClick={() => selectedRequest?.id && handleReject(selectedRequest.id)}
-                      disabled={reviewPhotoRequestMutation.isPending || !rejectReason.trim()}
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
-                    >
-                      <XCircle className="w-5 h-5" />
-                      Reddet
-                    </button>
-                    <button
-                      onClick={() => selectedRequest?.id && handleApprove(selectedRequest.id)}
-                      disabled={reviewPhotoRequestMutation.isPending}
-                      className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      Onayla
-                    </button>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-300">Yeni Fotoğraf</h4>
+                  <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-900/60 border border-white/10 flex items-center justify-center">
+                    <img
+                      src={selectedRequest?.file_url}
+                      alt="Yeni fotoğraf"
+                      className="w-full h-full object-contain"
+                    />
                   </div>
-                )}
+                </div>
+              </div>
+            </section>
+
+            {/* Red Nedeni (Editable) */}
+            {selectedRequest?.status === 'pending' && (
+              <section className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-gray-100">Red Nedeni</label>
+                  <span className="text-xs text-gray-400">Reddetmek için zorunlu</span>
+                </div>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Red nedeni yazın..."
+                  className="w-full rounded-lg bg-slate-900/60 text-gray-100 placeholder-gray-500 border border-white/15 focus:ring-2 focus:ring-red-500 focus:border-red-500 min-h-[120px] resize-none"
+                  rows={4}
+                />
+              </section>
+            )}
+
+            {/* Kayıtlı Red Nedeni (Read-only) */}
+            {selectedRequest?.status === 'rejected' && selectedRequest?.reason && (
+              <section className="bg-red-500/10 border border-red-500/40 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-300 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-semibold text-red-200 mb-1">Kaydedilmiş Red Nedeni</h4>
+                    <p className="text-red-100 text-sm whitespace-pre-wrap">{selectedRequest?.reason}</p>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Footer */}
+            {selectedRequest && selectedRequest?.status === 'pending' && (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-end">
+                <button
+                  onClick={() => selectedRequest?.id && handleReject(selectedRequest.id)}
+                  disabled={reviewPhotoRequestMutation.isPending || !rejectReason.trim()}
+                  className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
+                >
+                  <XCircle className="w-5 h-5" />
+                  Reddet
+                </button>
+                <button
+                  onClick={() => selectedRequest?.id && handleApprove(selectedRequest.id)}
+                  disabled={reviewPhotoRequestMutation.isPending}
+                  className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
+                >
+                  <CheckCircle className="w-5 h-5" />
+                  Onayla
+                </button>
+              </div>
+            )}
           </div>
         </ModalContainer>
       </div>

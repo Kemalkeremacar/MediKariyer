@@ -135,9 +135,12 @@ export const useHospitalJobs = (filters = {}) => {
       return apiRequest.get(`${ENDPOINTS.HOSPITAL.JOBS}${queryString}`);
     },
     select: (res) => res.data,
-    staleTime: 30 * 1000, // 30 saniye - İş ilanları daha dinamik
+    staleTime: 0,
+    cacheTime: 5 * 60 * 1000,
     keepPreviousData: true,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: 'always',
   });
 };
 
@@ -175,8 +178,11 @@ export const useHospitalJobById = (jobId) => {
     },
     select: (res) => res.data,
     enabled: !!jobId,
-    staleTime: 2 * 60 * 1000, // 2 dakika
-    refetchOnWindowFocus: false,
+    staleTime: 0,
+    cacheTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: 'always',
   });
 };
 

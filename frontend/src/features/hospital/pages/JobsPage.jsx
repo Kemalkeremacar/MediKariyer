@@ -19,21 +19,22 @@
  * @since 2024
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Briefcase, Plus, Edit3, Eye, 
   MapPin, Calendar, Users, Clock, CheckCircle, X, 
   AlertCircle, Target, Building, ArrowRight, RefreshCw, Filter,
   Hourglass, XCircle
 } from 'lucide-react';
-import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useHospitalProfile, useResubmitHospitalJob } from '../api/useHospital';
+import { useHospitalJobs, useCreateHospitalJob, useUpdateHospitalJob, useHospitalProfile } from '../api/useHospital';
 import { useJobStatuses, useSpecialties, useSubspecialties } from '@/hooks/useLookup';
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 
 const HospitalJobs = () => {
+  const location = useLocation();
   // State management
   const [statusFilter, setStatusFilter] = useState(''); // Status filtresi
   const [specialtyId, setSpecialtyId] = useState(''); // Uzmanlık filtresi
@@ -43,7 +44,82 @@ const HospitalJobs = () => {
     limit: 20
   });
 
+  const restoringRef = useRef(false);
+  const pendingScrollRef = useRef(null);
+  const modalScrollRef = useRef(null);
+
   // UI Store kaldırıldı: onaylar showToast.confirm ile yönetilecek
+
+  const captureListScroll = useCallback(() => {
+    if (typeof window === 'undefined') return 0;
+    const current = window.scrollY || window.pageYOffset || 0;
+    modalScrollRef.current = current;
+    return current;
+  }, []);
+
+  const restoreListScroll = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    if (modalScrollRef.current === null || modalScrollRef.current === undefined) return;
+    const target = Number(modalScrollRef.current) || 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: target, behavior: 'auto' });
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 120);
+    });
+  }, []);
+
+  const storeListState = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const stateToSave = {
+      scrollY,
+      page: pagination.page,
+      statusFilter,
+      specialtyId,
+      subspecialtyId,
+    };
+    try {
+      sessionStorage.setItem('hospital_jobs_state', JSON.stringify(stateToSave));
+    } catch (error) {
+      console.error('HospitalJobs: liste durumu kaydedilemedi', error);
+    }
+  }, [pagination.page, specialtyId, statusFilter, subspecialtyId]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedRaw = sessionStorage.getItem('hospital_jobs_state');
+    if (!savedRaw) return;
+    try {
+      const saved = JSON.parse(savedRaw);
+      restoringRef.current = true;
+      if (saved.statusFilter !== undefined) {
+        setStatusFilter(saved.statusFilter);
+      }
+      if (saved.specialtyId !== undefined) {
+        setSpecialtyId(saved.specialtyId);
+      }
+      if (saved.subspecialtyId !== undefined) {
+        setSubspecialtyId(saved.subspecialtyId);
+      }
+      if (saved.page !== undefined) {
+        setPagination(prev => ({ ...prev, page: Number(saved.page) || 1 }));
+      }
+      if (saved.scrollY !== undefined) {
+        pendingScrollRef.current = Number(saved.scrollY) || 0;
+      }
+    } catch (error) {
+      console.error('HospitalJobs: kayıtlı görünüm yüklenemedi', error);
+    } finally {
+      sessionStorage.removeItem('hospital_jobs_state');
+      setTimeout(() => {
+        restoringRef.current = false;
+      }, 0);
+    }
+  }, []);
 
   // Lookup data hooks
   const { data: profileData } = useHospitalProfile();
@@ -100,6 +176,7 @@ const HospitalJobs = () => {
   
   // Filtre değiştiğinde sayfa 1'e dön
   useEffect(() => {
+    if (restoringRef.current) return;
     setPagination(prev => ({ ...prev, page: 1 }));
   }, [statusFilter, specialtyId, subspecialtyId]);
   
@@ -122,11 +199,25 @@ const HospitalJobs = () => {
   
   const createJobMutation = useCreateHospitalJob();
   const updateJobMutation = useUpdateHospitalJob();
-  const resubmitJobMutation = useResubmitHospitalJob();
-
   // Veri parsing
   const jobs = jobsData?.data?.jobs || [];
   const paginationData = jobsData?.data?.pagination || {};
+
+  useEffect(() => {
+    if (jobsLoading) return;
+    if (pendingScrollRef.current === null || pendingScrollRef.current === undefined) return;
+    const target = Number(pendingScrollRef.current) || 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: target, behavior: 'auto' });
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 120);
+    });
+    pendingScrollRef.current = null;
+  }, [jobsLoading, jobs.length]);
 
   // Status badge component - Türkçe status'lar için güncellendi
   const StatusBadge = ({ status, statusId }) => {
@@ -223,6 +314,7 @@ const HospitalJobs = () => {
                   <div className="flex-shrink-0 w-full md:w-auto">
                     <Link
                       to="/hospital/jobs/new"
+                      onClick={storeListState}
                       className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
                     >
                       <Plus className="w-5 h-5" />
@@ -421,43 +513,21 @@ const HospitalJobs = () => {
                       <div className="flex gap-2">
                         <Link
                           to={`/hospital/jobs/${job.id}`}
+                          onClick={storeListState}
+                          state={{ from: location.pathname }}
                           className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-2 rounded-lg hover:bg-blue-500/30 transition-all duration-300 flex-shrink-0"
                           title="Detayları Görüntüle"
                         >
                           <Eye className="w-4 h-4" />
                         </Link>
                         
-                        {/* Needs Revision durumunda resubmit butonu */}
-                        {job.status_id === 2 && (
-                          <button
-                            onClick={async () => {
-                              const ok = await showToast.confirm({
-                                title: 'İlanı Tekrar Gönder',
-                                message: `"${job.title}" ilanını tekrar göndermek istediğinizden emin misiniz? İlan admin onayına gönderilecektir.`,
-                                confirmText: 'Tekrar Gönder',
-                                cancelText: 'İptal',
-                                type: 'info'
-                              });
-                              if (ok) {
-                                try {
-                                  await resubmitJobMutation.mutateAsync(job.id);
-                                } catch (error) {
-                                  console.error('Resubmit error:', error);
-                                }
-                              }
-                            }}
-                            disabled={resubmitJobMutation.isPending}
-                            className="bg-green-500/20 text-green-300 border border-green-500/30 px-3 py-2 rounded-lg hover:bg-green-500/30 transition-all duration-300 flex-shrink-0"
-                            title="İlanı Tekrar Gönder"
-                          >
-                            <RefreshCw className={`w-4 h-4 ${resubmitJobMutation.isPending ? 'animate-spin' : ''}`} />
-                          </button>
-                        )}
                         
                         {/* Sadece Needs Revision durumunda edit butonu göster */}
                         {job.status_id === 2 && (
                           <Link
                             to={`/hospital/jobs/${job.id}/edit`}
+                            onClick={storeListState}
+                            state={{ from: location.pathname }}
                             className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-3 py-2 rounded-lg hover:bg-yellow-500/30 transition-all duration-300 flex-shrink-0"
                             title="Düzenle"
                           >
@@ -468,6 +538,7 @@ const HospitalJobs = () => {
 
                       <Link
                         to={`/hospital/applications?jobIds=${job.id}`}
+                        onClick={storeListState}
                         className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 group flex-shrink-0 whitespace-nowrap"
                       >
                         Başvurular
@@ -492,6 +563,7 @@ const HospitalJobs = () => {
               <div className="flex gap-4 justify-center">
                 <Link
                   to="/hospital/jobs/new"
+                  onClick={storeListState}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
                 >
                   <Plus className="w-5 h-5" />

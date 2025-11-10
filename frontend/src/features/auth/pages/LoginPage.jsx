@@ -13,6 +13,7 @@ import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
 import { loginSchema } from '@config/validation.js';
 import { ButtonSpinner } from '@/components/ui/LoadingSpinner';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 import { showToast } from '@/utils/toastUtils';
 import logger from '@/utils/logger';
 
@@ -357,45 +358,27 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Error Modal - Basit Versiyon */}
-      {errorModal.show && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50"
-          style={{ zIndex: 9999 }}
-        >
-          <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6"
-            style={{ zIndex: 10000 }}
-          >
-            {/* Modal Header */}
-            <div className="mb-4">
-              <h3 className="text-xl font-bold text-blue-900">
-                {errorModal.message}
-              </h3>
-            </div>
-
-            {/* Modal Body */}
-            <div className="mb-6">
-              <p className="text-blue-800 leading-relaxed">
-                {errorModal.description}
-              </p>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="flex justify-end">
-              <button
-                onClick={() => {
-                  setErrorModal({ show: false, message: '', description: '' });
-                }}
-                className="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-600 transition-colors"
-                style={{ zIndex: 10001 }}
-              >
-                Tamam
-              </button>
-            </div>
+      <ModalContainer
+        isOpen={errorModal.show}
+        onClose={() => setErrorModal({ show: false, message: '', description: '' })}
+        title={errorModal.message || 'Bilgi'}
+        size="small"
+        align="center"
+      >
+        <div className="space-y-6">
+          <p className="text-blue-100 leading-relaxed">
+            {errorModal.description || 'Lütfen bilgilerinizi kontrol edip tekrar deneyin.'}
+          </p>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setErrorModal({ show: false, message: '', description: '' })}
+              className="px-6 py-2 rounded-lg font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+            >
+              Tamam
+            </button>
           </div>
         </div>
-      )}
+      </ModalContainer>
     </div>
   );
 };

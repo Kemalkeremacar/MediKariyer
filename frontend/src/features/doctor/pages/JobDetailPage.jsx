@@ -5,8 +5,8 @@
  * Modern ve kullanıcı dostu tasarım
  */
 
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Briefcase, Building, FileText, CheckCircle, Send, ArrowLeft, Clock
 } from 'lucide-react';
@@ -19,6 +19,7 @@ import { ModalContainer } from '@/components/ui/ModalContainer';
 const DoctorJobDetailPage = () => {
   const { jobId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [coverLetter, setCoverLetter] = useState('');
   const [showApplicationModal, setShowApplicationModal] = useState(false);
 
@@ -34,6 +35,58 @@ const DoctorJobDetailPage = () => {
 
   const applyToJobMutation = useApplyToJob();
 
+  const jobsScrollPositionRef = useRef(null);
+  const jobsPageRef = useRef(null);
+  const jobsBackUrlRef = useRef('/doctor/jobs');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    jobsScrollPositionRef.current = sessionStorage.getItem('jobsPageScrollPosition');
+    jobsPageRef.current = sessionStorage.getItem('jobsPageCurrentPage');
+    jobsBackUrlRef.current = location.state?.from
+      || sessionStorage.getItem('jobsLastVisitedUrl')
+      || '/doctor/jobs';
+  }, [location]);
+
+  const handleBackToJobs = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const fallbackScroll = window.scrollY || window.pageYOffset || 0;
+      const storedScroll = jobsScrollPositionRef.current;
+      const storedPage = jobsPageRef.current;
+      const targetUrl = jobsBackUrlRef.current || '/doctor/jobs';
+
+      sessionStorage.setItem('jobsLastVisitedUrl', targetUrl);
+
+      sessionStorage.setItem(
+        'jobsPageScrollPosition',
+        storedScroll !== null && storedScroll !== undefined ? storedScroll : String(fallbackScroll)
+      );
+
+      sessionStorage.setItem(
+        'jobsPageCurrentPage',
+        storedPage !== null && storedPage !== undefined ? storedPage : (() => {
+          try {
+            const parsed = new URL(targetUrl, window.location.origin);
+            const pageParam = parsed.searchParams.get('page');
+            return pageParam || '1';
+          } catch (error) {
+            return '1';
+          }
+        })()
+      );
+
+      navigate(targetUrl);
+      return;
+    }
+
+    navigate('/doctor/jobs');
+  }, [navigate]);
+
+  const closeApplicationModal = () => {
+    setShowApplicationModal(false);
+    setCoverLetter('');
+  };
+
   const handleApplicationSubmit = async () => {
     if (!job) return;
 
@@ -43,30 +96,16 @@ const DoctorJobDetailPage = () => {
         coverLetter: coverLetter.trim() || undefined
       });
       
-      setShowApplicationModal(false);
-      setCoverLetter('');
+      closeApplicationModal();
       showToast.success('Başvurunuz başarıyla gönderildi!');
       navigate('/doctor/applications');
     } catch (error) {
       const errorMessage = error.response?.data?.message;
       
       if (errorMessage === 'Bu ilana daha önce başvuru yapılmış') {
-        await showToast.confirm(
-          'Başvuru Yapılamaz',
-          'Bu ilana zaten aktif bir başvurunuz bulunmaktadır. Aynı ilana tekrar başvuru yapamazsınız.\n\nNot: Eğer başvurunuzu geri çektiyseniz, tekrar başvuru yapabilirsiniz.\n\nBaşvuru durumunuzu kontrol etmek için "Başvurularım" sayfasını ziyaret edebilirsiniz.',
-          {
-            confirmText: 'Başvurularımı Gör',
-            cancelText: 'Tamam',
-            type: 'warning',
-            onConfirm: () => {
-              setShowApplicationModal(false);
-              setCoverLetter('');
-              navigate('/doctor/applications');
-            },
-            onCancel: () => { 
-            }
-          }
-        );
+        closeApplicationModal();
+        showToast.warning('Bu ilana zaten aktif bir başvurunuz bulunuyor. Başvurularım sayfasına yönlendiriliyorsunuz; mevcut başvurunuzu kontrol edip gerekirse geri çekebilirsiniz.');
+        navigate('/doctor/applications');
       } else if (errorMessage === 'Validasyon hatası') {
         const details = error.response?.data?.details;
         if (details && details.length > 0) {
@@ -95,7 +134,7 @@ const DoctorJobDetailPage = () => {
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-white mb-4">İlan bulunamadı</h2>
             <button
-              onClick={() => navigate('/doctor/jobs')}
+              onClick={handleBackToJobs}
               className="text-blue-400 hover:text-blue-300 font-medium"
             >
               İlanlar sayfasına dön
@@ -112,7 +151,7 @@ const DoctorJobDetailPage = () => {
         {/* Header - Geri butonu ve başlık */}
         <div className="mb-6 flex items-center gap-4">
           <button
-            onClick={() => navigate('/doctor/jobs')}
+            onClick={handleBackToJobs}
             className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -292,18 +331,15 @@ const DoctorJobDetailPage = () => {
             <div className="sticky bottom-4 bg-slate-900/95 backdrop-blur-lg border border-white/20 rounded-2xl p-4 shadow-2xl">
               <div className="flex items-center gap-4">
                 <button
-                  onClick={() => {
-                    // Scroll pozisyonunu kaydet (geri dönünce kullanılmak üzere)
-                    const scrollY = window.scrollY || window.pageYOffset;
-                    sessionStorage.setItem('jobsPageScrollPosition', scrollY.toString());
-                    navigate('/doctor/jobs');
-                  }}
+                  onClick={handleBackToJobs}
                   className="flex-1 bg-white/10 border border-white/20 text-white px-6 py-4 rounded-2xl hover:bg-white/20 transition-all duration-300 font-medium"
                 >
                   Geri
                 </button>
                 <button
-                  onClick={() => setShowApplicationModal(true)}
+                  onClick={() => {
+                    setShowApplicationModal(true);
+                  }}
                   disabled={((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif')}
                   className={`flex-1 px-6 py-4 rounded-2xl transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2 ${((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif') ? 'bg-white/10 text-gray-400 border border-white/20 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'}`}
                 >
@@ -322,10 +358,7 @@ const DoctorJobDetailPage = () => {
           coverLetter={coverLetter}
           onCoverLetterChange={setCoverLetter}
           onSubmit={handleApplicationSubmit}
-          onClose={() => {
-            setShowApplicationModal(false);
-            setCoverLetter('');
-          }}
+          onClose={closeApplicationModal}
           isLoading={applyToJobMutation.isPending}
         />
       </div>
@@ -342,19 +375,21 @@ const ApplicationModal = ({ isOpen, job, coverLetter, onCoverLetterChange, onSub
       isOpen={isOpen}
       onClose={onClose}
       title="Başvuru Yap"
-      size="small"
-      maxHeight="80vh"
+      size="medium"
+      maxHeight="85vh"
       closeOnBackdrop={true}
       fullScreenOnMobile={false}
-      align="bottom"
+      align="center"
     >
-      <div className="p-4">
+      <div className="p-4 md:p-6 space-y-5">
         {/* İlan Bilgisi (Kompakt) */}
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-white/10">
-          <Briefcase className="w-4 h-4 text-blue-400" />
-          <span className="text-sm text-gray-300 truncate">{job.title}</span>
+        <div className="flex items-center gap-3 pb-4 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-blue-400" />
+            <span className="text-sm md:text-base text-gray-200 font-medium truncate">{job.title}</span>
+          </div>
           <span className="text-gray-500">•</span>
-          <span className="text-sm text-gray-400 truncate">{job.hospital_name}</span>
+          <span className="text-sm md:text-base text-gray-400 truncate">{job.hospital_name}</span>
         </div>
 
         {/* Form */}
@@ -367,9 +402,9 @@ const ApplicationModal = ({ isOpen, job, coverLetter, onCoverLetterChange, onSub
               value={coverLetter}
               onChange={(e) => onCoverLetterChange(e.target.value)}
               placeholder="Kendinizi tanıtın ve neden bu pozisyon için uygun olduğunuzu açıklayın..."
-              rows={5}
+              rows={6}
               maxLength={1000}
-              className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200 hover:bg-white/10 text-sm"
+              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all duration-200 hover:bg-white/10 text-sm md:text-base"
             />
             <div className="text-xs text-gray-400 mt-1.5 text-right">
               {coverLetter.length}/1000
@@ -387,17 +422,17 @@ const ApplicationModal = ({ isOpen, job, coverLetter, onCoverLetterChange, onSub
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center gap-3 pt-4 mt-4 border-t border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 pt-4 mt-4 border-t border-white/10">
           <button
             onClick={onClose}
-            className="flex-1 bg-white/5 border border-white/20 text-white px-4 py-2.5 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm font-medium"
+            className="w-full sm:flex-1 bg-white/5 border border-white/20 text-white px-4 py-3 rounded-xl hover:bg-white/10 transition-all duration-200 text-sm md:text-base font-medium"
           >
             İptal
           </button>
           <button
             onClick={onSubmit}
             disabled={isLoading}
-            className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2.5 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 text-sm font-medium shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-200 text-sm md:text-base font-medium shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <>

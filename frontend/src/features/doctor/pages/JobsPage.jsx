@@ -13,7 +13,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useRef, memo, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, MapPin, Building, 
   Clock, X, Send,
@@ -27,6 +27,7 @@ import { useLookup } from '@/hooks/useLookup';
 const DoctorJobsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Filtre state'leri (URL'den okunacak)
   const [cityId, setCityId] = useState(() => searchParams.get('city_id') || '');
@@ -449,9 +450,11 @@ const DoctorJobsPage = () => {
     const scrollY = window.scrollY || window.pageYOffset;
     sessionStorage.setItem('jobsPageScrollPosition', scrollY.toString());
     sessionStorage.setItem('jobsPageCurrentPage', currentPage.toString());
+    const fromUrl = `${location.pathname}${location.search}`;
+    sessionStorage.setItem('jobsLastVisitedUrl', fromUrl);
     // İlan detay sayfasına yönlendir
-    navigate(`/doctor/jobs/${job.id}`);
-  }, [navigate, currentPage]);
+    navigate(`/doctor/jobs/${job.id}`, { state: { from: fromUrl } });
+  }, [navigate, currentPage, location.pathname, location.search]);
 
   // Lookup verileri
   const cities = lookupData?.cities || [];

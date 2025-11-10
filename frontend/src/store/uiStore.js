@@ -125,6 +125,13 @@ import { create } from 'zustand';
  * @type {Object} Zustand store instance
  */
 const useUiStore = create((set, get) => ({
+  /**
+   * Modal open sırası (stack)
+   * 
+   * Açılan modalların render sırasını korur
+   */
+  modalOrder: [],
+
   // ======================================================================
   // STATE - State değişkenleri
   // ======================================================================
@@ -474,29 +481,67 @@ const useUiStore = create((set, get) => ({
    * @param {string} modalId - Modal unique ID'si
    * @param {Object} props - Modal props'ları
    */
-  openModal: (modalId, props = {}) => set((state) => ({
-    modals: {
-      ...state.modals,
-      [modalId]: { open: true, props }
-    }
-  })),
+  openModal: (modalId, props = {}) => set((state) => {
+    const plainAnchor = props.anchorRect
+      ? {
+          x: props.anchorRect.x,
+          y: props.anchorRect.y,
+          width: props.anchorRect.width,
+          height: props.anchorRect.height,
+          top: props.anchorRect.top,
+          left: props.anchorRect.left,
+          right: props.anchorRect.right,
+          bottom: props.anchorRect.bottom
+        }
+      : null;
+
+    return {
+      modals: {
+        ...state.modals,
+        [modalId]: {
+          open: true,
+          props: {
+            ...props,
+            anchorRect: plainAnchor
+          }
+        }
+      },
+      modalOrder: state.modalOrder.includes(modalId)
+        ? state.modalOrder
+        : [...state.modalOrder, modalId]
+    };
+  }),
   
   /**
    * Modal kapatır
    * 
    * @param {string} modalId - Kapatılacak modal'ın ID'si
    */
-  closeModal: (modalId) => set((state) => ({
-    modals: {
-      ...state.modals,
-      [modalId]: { open: false, props: {} }
-    }
-  })),
+  closeModal: (modalId) =>
+    set((state) => {
+      const modal = state.modals[modalId];
+      modal?.props?.onClose?.();
+
+      return {
+        modals: {
+          ...state.modals,
+          [modalId]: { open: false, props: {} }
+        },
+        modalOrder: state.modalOrder.filter((id) => id !== modalId)
+      };
+    }),
   
   /**
    * Tüm modal'ları kapatır
    */
-  closeAllModals: () => set({ modals: {} }),
+  closeAllModals: () => {
+    const { modals } = get();
+    Object.keys(modals).forEach((modalId) => {
+      modals[modalId]?.props?.onClose?.();
+    });
+
+    set({ modals: {}, modalOrder: [] });
+  },
   
   /**
    * Modal açık mı kontrol eder
@@ -518,6 +563,21 @@ const useUiStore = create((set, get) => ({
   getModalProps: (modalId) => {
     const modal = get().modals[modalId];
     return modal?.props || {};
+  },
+
+  /**
+   * Açık modal listesini döndürür
+   * 
+   * @returns {Array<{ id: string, config: Object }>} Açık modal listesi
+   */
+  getOpenModals: () => {
+    const state = get();
+    return state.modalOrder
+      .map((id) => ({
+        id,
+        config: state.modals[id]
+      }))
+      .filter((item) => item.config?.open);
   },
   
   /**

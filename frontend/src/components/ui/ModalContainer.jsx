@@ -41,8 +41,52 @@
  * @since 2024
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useMemo, useLayoutEffect, useState } from 'react';
 import { X } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import {
+  useFloating,
+  flip,
+  shift,
+  offset,
+  autoUpdate
+} from '@floating-ui/react';
+
+let bodyLockCount = 0;
+let savedScrollY = 0;
+
+const lockBodyScroll = () => {
+  if (typeof document === 'undefined') return;
+  if (bodyLockCount === 0) {
+    savedScrollY = window.scrollY || window.pageYOffset;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${savedScrollY}px`;
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+  }
+  bodyLockCount += 1;
+};
+
+const unlockBodyScroll = () => {
+  if (typeof document === 'undefined') return;
+  if (bodyLockCount === 0) return;
+  bodyLockCount -= 1;
+  if (bodyLockCount === 0) {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    const scrollToRestore = savedScrollY;
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollToRestore);
+    });
+  }
+};
+
+const getModalRoot = () => {
+  if (typeof document === 'undefined') return null;
+  return document.getElementById('modal-root');
+};
 
 export const ModalContainer = ({ 
   isOpen, 
@@ -55,24 +99,108 @@ export const ModalContainer = ({
   showCloseButton = true,
   align = 'bottom',
   initialFocusRef,
-  fullScreenOnMobile = false
+  fullScreenOnMobile = false,
+  anchorRect = null,
+  placement = 'bottom',
+  offsetDistance = 16,
+  backdropClassName = '',
+  containerClassName = ''
 }) => {
   const modalRef = useRef(null);
-  const scrollPositionRef = useRef(0);
-  const labelledById = useRef(`modal-title-${Math.random().toString(36).slice(2)}`);
+  const labelledByIdRef = useRef(null);
+  if (!labelledByIdRef.current) {
+    labelledByIdRef.current = `modal-title-${Math.random().toString(36).slice(2)}`;
+  }
+  const labelledById = labelledByIdRef.current;
+  const modalRoot = getModalRoot();
+
+  const hasAnchor = Boolean(anchorRect);
+
+  const virtualReference = useMemo(() => {
+    if (!anchorRect) return null;
+    return {
+      getBoundingClientRect: () => anchorRect
+    };
+  }, [anchorRect]);
+
+  const {
+    refs,
+    floatingStyles,
+    update
+  } = useFloating({
+    placement,
+    middleware: [
+      offset(offsetDistance),
+      flip({ padding: 16 }),
+      shift({ padding: 16 })
+    ],
+    strategy: 'fixed',
+    whileElementsMounted: hasAnchor ? autoUpdate : undefined
+  });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    lockBodyScroll();
+    return () => {
+      unlockBodyScroll();
+    };
+  }, [isOpen]);
+
+  const calculateViewportPosition = useCallback(() => {
+    if (typeof window === 'undefined') {
+      return {
+        center: 0,
+        top: 0,
+        bottom: 0
+      };
+    }
+    const scrollY = window.scrollY || window.pageYOffset;
+    const innerHeight = window.innerHeight;
+    const topPadding = Math.min(innerHeight / 4, 160);
+    return {
+      center: scrollY + innerHeight / 2,
+      top: scrollY + topPadding,
+      bottom: scrollY + innerHeight - topPadding
+    };
+  }, []);
+
+  const [viewportPosition, setViewportPosition] = useState(() => calculateViewportPosition());
+
+  useEffect(() => {
+    if (!isOpen || hasAnchor) return;
+    const handleReposition = () => {
+      setViewportPosition(calculateViewportPosition());
+    };
+    handleReposition();
+    window.addEventListener('scroll', handleReposition, { passive: true });
+    window.addEventListener('resize', handleReposition);
+    return () => {
+      window.removeEventListener('scroll', handleReposition);
+      window.removeEventListener('resize', handleReposition);
+    };
+  }, [isOpen, hasAnchor, calculateViewportPosition]);
+
+  useEffect(() => {
+    if (!isOpen || !virtualReference) return;
+    refs.setReference(virtualReference);
+    update?.();
+  }, [isOpen, virtualReference, refs, update]);
+
+  useEffect(() => {
+    if (!isOpen || !modalRoot) return;
+    const handleResize = () => {
+      update?.();
+    };
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, [isOpen, modalRoot, update]);
 
   useEffect(() => {
     if (isOpen) {
-      // Mevcut scroll pozisyonunu kaydet (useRef ile - closure sorunu yok)
-      const currentScroll = window.scrollY || window.pageYOffset;
-      scrollPositionRef.current = currentScroll;
-
-      // Body scroll'u kilitle
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${currentScroll}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
       // ESC tuşu ile kapatma
       const handleEscape = (e) => {
         if (e.key === 'Escape') {
@@ -112,28 +240,26 @@ export const ModalContainer = ({
 
       return () => {
         // Cleanup: body lock'u kaldır ve scroll pozisyonunu restore et
-        const savedScroll = scrollPositionRef.current;
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        // Scroll restore - requestAnimationFrame ile güvenli restore
-        requestAnimationFrame(() => {
-          window.scrollTo(0, savedScroll);
-        });
         document.removeEventListener('keydown', handleEscape);
         document.removeEventListener('keydown', handleKeyTrap);
       };
     }
   }, [isOpen, onClose, initialFocusRef]);
 
-  const handleBackdropClick = (e) => {
-    if (closeOnBackdrop && e.target === e.currentTarget) {
+  useLayoutEffect(() => {
+    if (hasAnchor && modalRef.current) {
+      refs.setFloating(modalRef.current);
+    }
+  }, [hasAnchor, refs]);
+
+  const handleBackdropClick = useCallback((e) => {
+    if (!closeOnBackdrop) return;
+    if (e.target === e.currentTarget) {
       onClose();
     }
-  };
+  }, [closeOnBackdrop, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !modalRoot) return null;
 
   // Size configuration
   const sizeConfig = {
@@ -143,37 +269,81 @@ export const ModalContainer = ({
     xl: 'max-w-7xl'
   };
 
-  // Align configuration
-  const alignClass = align === 'top' ? 'items-start' 
-    : align === 'bottom' || align === 'end' ? 'items-end' 
-    : 'items-center';
-
   const containerResponsive = fullScreenOnMobile
     ? 'md:rounded-2xl md:max-w-[inherit] md:w-full md:h-auto h-screen max-w-none rounded-none'
     : '';
 
-  // Bottom align için ekstra padding
-  const paddingBottom = (align === 'bottom' || align === 'end') ? 'pb-16 md:pb-20' : '';
+  const overlayClasses = hasAnchor
+    ? 'fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-start justify-start p-0 animate-in fade-in duration-200'
+    : 'fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] animate-in fade-in duration-200';
+
+  const modalClasses = [
+    'bg-slate-800/95 rounded-2xl shadow-2xl w-full',
+    sizeConfig[size],
+    containerResponsive,
+    'flex flex-col animate-in zoom-in-95 duration-300 border border-white/20',
+    containerClassName
+  ].filter(Boolean).join(' ');
+
+  let modalStyle;
+  if (hasAnchor) {
+    modalStyle = {
+      ...floatingStyles,
+      maxHeight,
+      overflow: 'hidden'
+    };
+  } else {
+    const { center, top, bottom } = viewportPosition;
+    let topValue = center;
+    let leftValue = '50%';
+    let transformValue = 'translate(-50%, -50%)';
+
+    if (align === 'top' || align === 'start') {
+      topValue = top;
+      transformValue = 'translate(-50%, 0)';
+    } else if (align === 'bottom' || align === 'end') {
+      topValue = bottom;
+      transformValue = 'translate(-50%, -100%)';
+    }
+
+    if (align === 'left') {
+      leftValue = '2rem';
+      transformValue = 'translate(0, -50%)';
+    } else if (align === 'right') {
+      leftValue = 'calc(100% - 2rem)';
+      transformValue = 'translate(-100%, -50%)';
+    }
+
+    modalStyle = {
+      position: 'absolute',
+      top: `${topValue}px`,
+      left: leftValue,
+      transform: transformValue,
+      maxHeight,
+      overflow: 'hidden'
+    };
+  }
   
-  return (
+  return createPortal(
     <div 
-      className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex ${alignClass} justify-center p-4 ${paddingBottom} animate-in fade-in duration-200`}
+      className={`${overlayClasses} ${backdropClassName}`.trim()}
       onClick={handleBackdropClick}
     >
-      <div 
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={title ? labelledById.current : undefined}
-        className={`bg-slate-800/95 rounded-2xl shadow-2xl w-full ${sizeConfig[size]} ${containerResponsive} flex flex-col animate-in zoom-in-95 duration-300 border border-white/20`}
-        style={{ maxHeight, overflow: 'hidden' }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative z-[101] w-full h-full pointer-events-none">
+        <div
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? labelledById : undefined}
+          className={`${modalClasses} pointer-events-auto`}
+          style={modalStyle}
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10 bg-gradient-to-r from-slate-800 to-slate-900 flex-shrink-0">
             {title && (
-              <h2 id={labelledById.current} className="text-xl md:text-2xl font-bold text-white">
+              <h2 id={labelledById} className="text-xl md:text-2xl font-bold text-white">
                 {title}
               </h2>
             )}
@@ -194,6 +364,8 @@ export const ModalContainer = ({
           {children}
         </div>
       </div>
-    </div>
+      </div>
+    </div>,
+    modalRoot
   );
 };

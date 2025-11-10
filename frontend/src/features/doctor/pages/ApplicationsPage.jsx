@@ -46,6 +46,31 @@ const DoctorApplicationsPage = () => {
 
   const withdrawMutation = useWithdrawApplication();
   const deleteMutation = useDeleteApplication();
+  const lastScrollPositionRef = useRef(null);
+
+  const captureScrollPosition = useCallback(() => {
+    if (typeof window === 'undefined') return 0;
+    const currentScroll = window.scrollY || window.pageYOffset || 0;
+    lastScrollPositionRef.current = currentScroll;
+    return currentScroll;
+  }, []);
+
+  const restoreScrollPosition = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const targetScroll = lastScrollPositionRef.current;
+    if (targetScroll === null || targetScroll === undefined) return;
+    const scrollToTarget = () => {
+      window.scrollTo({
+        top: targetScroll,
+        behavior: 'auto'
+      });
+    };
+    requestAnimationFrame(() => {
+      scrollToTarget();
+      setTimeout(scrollToTarget, 50);
+      setTimeout(scrollToTarget, 120);
+    });
+  }, []);
 
   const applications = applicationsData?.applications || [];
   const pagination = applicationsData?.pagination || {};
@@ -132,27 +157,40 @@ const DoctorApplicationsPage = () => {
   }, [navigate, currentPage]);
 
   const handleWithdraw = useCallback(async (applicationId) => {
+    const currentScroll = captureScrollPosition();
     const confirmed = await showToast.confirm({
       title: "Başvuruyu Geri Çek",
-      message: "Bu başvuruyu geri çekmek istediğinizden emin misiniz?",
+      message: "Bu başvuruyu geri çekmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
       type: "warning",
+      size: "small",
       confirmText: "Geri Çek",
       cancelText: "İptal",
+      destructive: true,
     });
     
-    if (!confirmed) return;
+    if (!confirmed) {
+      restoreScrollPosition();
+      return;
+    }
 
     try {
       await withdrawMutation.mutateAsync({ applicationId, reason: '' });
       showToast.success('Başvuru geri çekildi');
-      refetchApplications();
+      if (currentScroll >= 0) {
+        sessionStorage.setItem('applicationsPageScrollPosition', String(currentScroll));
+        sessionStorage.setItem('applicationsPageCurrentPage', currentPage.toString());
+      }
+      await refetchApplications();
+      restoreScrollPosition();
     } catch (error) {
       console.error('Withdraw error:', error);
       showToast.error('Başvuru geri çekilemedi');
+      restoreScrollPosition();
     }
-  }, [withdrawMutation, refetchApplications]);
+  }, [captureScrollPosition, restoreScrollPosition, withdrawMutation, refetchApplications, currentPage]);
 
   const handleDelete = useCallback(async (applicationId) => {
+    const currentScroll = captureScrollPosition();
     const confirmed = await showToast.confirm({
       title: "Başvuruyu Sil",
       message: "Bu başvuruyu kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!",
@@ -162,17 +200,26 @@ const DoctorApplicationsPage = () => {
       cancelText: "İptal",
     });
     
-    if (!confirmed) return;
+    if (!confirmed) {
+      restoreScrollPosition();
+      return;
+    }
 
     try {
       await deleteMutation.mutateAsync(applicationId);
       showToast.success('Başvuru kalıcı olarak silindi');
-      refetchApplications();
+      if (currentScroll >= 0) {
+        sessionStorage.setItem('applicationsPageScrollPosition', String(currentScroll));
+        sessionStorage.setItem('applicationsPageCurrentPage', currentPage.toString());
+      }
+      await refetchApplications();
+      restoreScrollPosition();
     } catch (error) {
       console.error('Delete error:', error);
       showToast.error('Başvuru silinemedi');
+      restoreScrollPosition();
     }
-  }, [deleteMutation, refetchApplications]);
+  }, [captureScrollPosition, restoreScrollPosition, deleteMutation, refetchApplications, currentPage]);
 
   // Status helper functions (component dışına çıkar - her render'da yeniden oluşturulmasın)
   const getStatusText = useCallback((statusId) => {
@@ -353,7 +400,7 @@ const DoctorApplicationsPage = () => {
         </div>
 
         {/* Başvuru Listesi */}
-        <div className="space-y-6">
+        <div className="space-y-6 pb-16 md:pb-20">
           {applicationsLoading ? (
             <div className="flex justify-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>

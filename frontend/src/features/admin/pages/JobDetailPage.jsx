@@ -17,16 +17,15 @@
  * @since 2024
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Briefcase, Edit3, Trash2, Users, MapPin, Calendar, 
   Clock, Target, AlertCircle, ArrowLeft, CheckCircle, Building, X,
-  Hourglass, RefreshCw, XCircle, History, FileText, Settings
+  Hourglass, RefreshCw, XCircle, History, FileText, Settings, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { useJobById, useDeleteJob, useUpdateJobStatus, useApproveJob, useRequestRevision, useRejectJob, useJobHistory } from '../api/useAdmin';
+import { useJobById, useDeleteJob, useUpdateJobStatus, useApproveJob, useRequestRevision, useRejectJob, useJobHistory, QUERY_KEYS } from '../api/useAdmin';
 import { useQueryClient } from '@tanstack/react-query';
-import { QUERY_KEYS } from '../api/useAdmin';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { showToast } from '@/utils/toastUtils';
@@ -34,6 +33,7 @@ import { showToast } from '@/utils/toastUtils';
 const AdminJobDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRevisionModal, setShowRevisionModal] = useState(false);
@@ -41,8 +41,88 @@ const AdminJobDetailPage = () => {
   const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
   const [selectedStatusId, setSelectedStatusId] = useState(null);
   const [statusChangeReason, setStatusChangeReason] = useState('');
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [revisionNote, setRevisionNote] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const actionScrollRef = useRef(null);
+
+  const captureScroll = useCallback(() => {
+    if (typeof window === 'undefined') return 0;
+    const current = window.scrollY || window.pageYOffset || 0;
+    actionScrollRef.current = current;
+    return current;
+  }, []);
+
+  const restoreScroll = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    if (actionScrollRef.current === null || actionScrollRef.current === undefined) return;
+    const target = Number(actionScrollRef.current) || 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: target, behavior: 'auto' });
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 50);
+      setTimeout(() => {
+        window.scrollTo({ top: target, behavior: 'auto' });
+      }, 120);
+    });
+  }, []);
+
+  const closeApprovalModal = () => {
+    setShowApprovalModal(false);
+    restoreScroll();
+  };
+
+  const closeRevisionModal = () => {
+    setShowRevisionModal(false);
+    setRevisionNote('');
+    restoreScroll();
+  };
+
+  const closeRejectModal = () => {
+    setShowRejectModal(false);
+    setRejectionReason('');
+    restoreScroll();
+  };
+
+  const closeStatusChangeModal = () => {
+    setShowStatusChangeModal(false);
+    setStatusChangeReason('');
+    setSelectedStatusId(null);
+    restoreScroll();
+  };
+
+  const openApprovalModal = () => {
+    captureScroll();
+    setShowApprovalModal(true);
+  };
+
+  const openRevisionModal = () => {
+    captureScroll();
+    setShowRevisionModal(true);
+  };
+
+  const openRejectModal = () => {
+    captureScroll();
+    setShowRejectModal(true);
+  };
+
+  const openStatusChangeModal = (statusId = null) => {
+    captureScroll();
+    if (statusId !== null) {
+      setSelectedStatusId(statusId);
+    }
+    setShowStatusChangeModal(true);
+  };
+
+  const openDeleteModal = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+  };
 
   // API hooks - Admin API kullanır (tüm hastanelerin ilanlarına erişir)
   const { 
@@ -61,28 +141,203 @@ const AdminJobDetailPage = () => {
 
   // Veri parsing - Backend response: { data: { data: { job: {...} } } }
   const job = jobData?.data?.data?.job || jobData?.data?.job || jobData?.data || null;
-  const history = historyData?.data?.history || [];
+  const historyResponse = historyData?.data ?? null;
+  const history =
+    (historyResponse?.data && Array.isArray(historyResponse.data.history)
+      ? historyResponse.data.history
+      : Array.isArray(historyResponse?.history)
+        ? historyResponse.history
+        : []) || [];
+
+  const getTurkishStatusName = useCallback((statusName) => {
+    if (!statusName && statusName !== 0) return 'Bilinmiyor';
+    const statusIdMap = {
+      1: 'Onay Bekliyor',
+      2: 'Revizyon Gerekli',
+      3: 'Onaylandı',
+      4: 'Pasif',
+      5: 'Reddedildi'
+    };
+    if (typeof statusName === 'number') {
+      return statusIdMap[statusName] || 'Bilinmiyor';
+    }
+    const normalized = String(statusName).trim();
+    if (/^\d+$/.test(normalized)) {
+      const numeric = Number(normalized);
+      if (!Number.isNaN(numeric) && statusIdMap[numeric]) {
+        return statusIdMap[numeric];
+      }
+    }
+    const turkishStatuses = ['Onay Bekliyor', 'Revizyon Gerekli', 'Onaylandı', 'Pasif', 'Reddedildi'];
+    if (turkishStatuses.includes(normalized)) {
+      return normalized;
+    }
+    const normalizedLower = normalized.toLowerCase();
+    const statusMap = {
+      'pending approval': 'Onay Bekliyor',
+      'pending_approval': 'Onay Bekliyor',
+      'needs revision': 'Revizyon Gerekli',
+      'needs_revision': 'Revizyon Gerekli',
+      'approved': 'Onaylandı',
+      'active': 'Onaylandı',
+      'passive': 'Pasif',
+      'inactive': 'Pasif',
+      'rejected': 'Reddedildi',
+      'aktİf': 'Onaylandı',
+      'pasif': 'Pasif'
+    };
+    if (statusMap[normalizedLower]) {
+      return statusMap[normalizedLower];
+    }
+    return normalized;
+  }, []);
+
+  const resolveRevisionNote = useCallback((entry) => {
+    if (!entry) return '';
+    const candidates = [];
+    const tryPush = (val) => {
+      if (typeof val === 'string' && val.trim()) {
+        candidates.push(val.trim());
+      }
+    };
+    tryPush(entry.note);
+    tryPush(entry.revision_note);
+    if (entry.details) {
+      const details = typeof entry.details === 'string' ? (() => {
+        try {
+          return JSON.parse(entry.details);
+        } catch (error) {
+          return null;
+        }
+      })() : entry.details;
+      if (details) {
+        tryPush(details.revision_note);
+        tryPush(details.note);
+      }
+    }
+    if (entry.data) {
+      const dataBlock = typeof entry.data === 'string' ? (() => {
+        try {
+          return JSON.parse(entry.data);
+        } catch (error) {
+          return null;
+        }
+      })() : entry.data;
+      if (dataBlock) {
+        tryPush(dataBlock.revision_note);
+        tryPush(dataBlock.note);
+      }
+    }
+    if (entry.metadata) {
+      tryPush(entry.metadata.revision_note);
+      tryPush(entry.metadata.note);
+    }
+    return candidates.length > 0 ? candidates[0] : '';
+  }, []);
+
+  const allRevisionEntries = useMemo(() => {
+    const collected = [];
+    const pushEntry = (rawEntry = {}, explicitRole) => {
+      const note = resolveRevisionNote(rawEntry);
+      if (!note || !note.trim()) return;
+
+      const changedAt =
+        rawEntry.changed_at ||
+        rawEntry.created_at ||
+        rawEntry.updated_at ||
+        rawEntry.timestamp ||
+        job?.revision_requested_at ||
+        null;
+
+      const roleRaw =
+        explicitRole ||
+        rawEntry.changed_by_role ||
+        rawEntry.actor_role ||
+        rawEntry.changed_by ||
+        rawEntry.role ||
+        'admin';
+
+      collected.push({
+        changed_at: changedAt,
+        changed_by_role: typeof roleRaw === 'string' ? roleRaw.toLowerCase() : roleRaw,
+        note: note.trim()
+      });
+    };
+
+    const shouldIncludeEntry = (entry) => {
+      const role = (entry?.changed_by_role || entry?.actor_role || entry?.changed_by || '').toString().toLowerCase();
+      const newStatus = getTurkishStatusName(entry?.new_status_name ?? entry?.new_status_id ?? entry?.status_id);
+      return role === 'admin' || newStatus === 'Revizyon Gerekli';
+    };
+
+    if (Array.isArray(history)) {
+      history.forEach((entry) => {
+        if (shouldIncludeEntry(entry)) {
+          pushEntry(entry);
+        }
+      });
+    }
+
+    if (Array.isArray(job?.revision_history)) {
+      job.revision_history.forEach((entry) => {
+        pushEntry(entry);
+      });
+    }
+
+    if (Array.isArray(job?.status_history)) {
+      job.status_history.forEach((entry) => {
+        if (shouldIncludeEntry(entry)) {
+          pushEntry(entry);
+        }
+      });
+    }
+
+    const getTime = (entry) => {
+      if (!entry) return 0;
+      const time = new Date(entry.changed_at ?? 0).getTime();
+      return Number.isNaN(time) ? 0 : time;
+    };
+
+    const seen = new Set();
+    const unique = collected.filter((entry) => {
+      const key = `${entry.changed_at ?? 'unknown'}-${entry.note}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    unique.sort((a, b) => getTime(b) - getTime(a));
+    return unique;
+  }, [history, job?.revision_history, job?.status_history, resolveRevisionNote, getTurkishStatusName, job?.revision_requested_at]);
+
+  const jobStatusName = getTurkishStatusName(job?.status ?? job?.status_id);
+  const isPendingApproval = jobStatusName === 'Onay Bekliyor';
+  const isNeedsRevision = jobStatusName === 'Revizyon Gerekli';
+
+  const revisionCount = allRevisionEntries.length || job?.revision_count || 0;
+  const latestRevisionEntry = allRevisionEntries[0] || (job?.revision_note ? {
+    changed_at: job?.revision_requested_at || job?.updated_at || job?.created_at || null,
+    changed_by_role: 'admin',
+    note: job.revision_note
+  } : null);
+  const olderRevisionEntries = allRevisionEntries.length > 1 ? allRevisionEntries.slice(1) : [];
+  const latestRevisionNoteRaw = latestRevisionEntry?.note
+    || job?.last_revision_note
+    || job?.latest_revision_note
+    || job?.revision_note
+    || '';
+  const latestAdminRevisionNote = latestRevisionNoteRaw.trim();
 
   // Job actions
-  const handleDeleteJob = async () => {
-    const confirmed = await showToast.confirm(
-      'İş İlanını Sil',
-      `"${job.title}" iş ilanını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`,
-      {
-        confirmText: 'Sil',
-        cancelText: 'İptal',
-        type: 'danger'
-      }
-    );
-
-    if (confirmed) {
-      try {
-        await deleteJobMutation.mutateAsync(id);
-        showToast.success('İş ilanı başarıyla silindi');
-          navigate('/admin/jobs');
-      } catch (error) {
-        console.error('İş ilanı silme hatası:', error);
-      }
+  const confirmDeleteJob = async () => {
+    try {
+      await deleteJobMutation.mutateAsync(id);
+      showToast.success('İş ilanı başarıyla silindi');
+      closeDeleteModal();
+      navigate('/admin/jobs');
+    } catch (error) {
+      console.error('İş ilanı silme hatası:', error);
+      showToast.error(error.response?.data?.message || 'İş ilanı silinemedi');
     }
   };
 
@@ -90,10 +345,12 @@ const AdminJobDetailPage = () => {
   const handleApproveJob = async () => {
     try {
       await approveJobMutation.mutateAsync(id);
-      setShowApprovalModal(false);
+      closeApprovalModal();
       refetchJob();
+      restoreScroll();
     } catch (error) {
       console.error('Approve job error:', error);
+      restoreScroll();
     }
   };
 
@@ -114,11 +371,12 @@ const AdminJobDetailPage = () => {
     }
     try {
       await requestRevisionMutation.mutateAsync({ jobId: id, revision_note: trimmedNote });
-      setShowRevisionModal(false);
-      setRevisionNote('');
+      closeRevisionModal();
       refetchJob();
+      restoreScroll();
     } catch (error) {
       console.error('Request revision error:', error);
+      restoreScroll();
     }
   };
 
@@ -139,11 +397,12 @@ const AdminJobDetailPage = () => {
         jobId: id, 
         rejection_reason: trimmedReason || null 
       });
-      setShowRejectModal(false);
-      setRejectionReason('');
+      closeRejectModal();
       refetchJob();
+      restoreScroll();
     } catch (error) {
       console.error('Reject job error:', error);
+      restoreScroll();
     }
   };
 
@@ -164,8 +423,10 @@ const AdminJobDetailPage = () => {
       refetchJob();
       // History'i de yenile
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_HISTORY, id] });
+      restoreScroll();
     } catch (error) {
       console.error('Status change error:', error);
+      restoreScroll();
     }
   };
 
@@ -197,29 +458,6 @@ const AdminJobDetailPage = () => {
     );
   };
 
-  // Status isimlerini Türkçe'ye çevir (paylaşılan fonksiyon) - Artık backend'den Türkçe geliyor ama geriye uyumluluk için
-  const getTurkishStatusName = (statusName) => {
-    // Artık backend'den Türkçe geliyor, çeviri gereksiz ama eski veriler için fallback
-    if (!statusName) return 'Bilinmiyor';
-    // Eğer zaten Türkçe ise direkt döndür
-    const turkishStatuses = ['Onay Bekliyor', 'Revizyon Gerekli', 'Onaylandı', 'Pasif', 'Reddedildi'];
-    if (turkishStatuses.includes(statusName)) {
-      return statusName;
-    }
-    // Eski İngilizce isimler için çeviri
-    const statusMap = {
-      'Pending Approval': 'Onay Bekliyor',
-      'Needs Revision': 'Revizyon Gerekli',
-      'Approved': 'Onaylandı',
-      'Passive': 'Pasif',
-      'Rejected': 'Reddedildi',
-      // Eski status'lar için geriye uyumluluk
-      'Aktif': 'Onaylandı',
-      'Pasif': 'Pasif'
-    };
-    return statusMap[statusName] || statusName;
-  };
-
   // Status options - Paylaşılan durum listesi
   const statusOptions = [
     { id: 1, name: 'Onay Bekliyor', description: 'Admin onayı bekliyor', color: 'yellow', icon: Hourglass },
@@ -233,30 +471,17 @@ const AdminJobDetailPage = () => {
   const EditModal = () => {
     if (!showEditModal) return null;
 
-    // Viewport pozisyonu için scroll pozisyonunu koru
-    useEffect(() => {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-
-      return () => {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        window.scrollTo(0, scrollY);
-      };
-    }, []);
-
     return (
       <ModalContainer
         isOpen={true}
-        onClose={() => setShowEditModal(false)}
+        onClose={() => {
+          setShowEditModal(false);
+        }}
         title="İlan Durumunu Değiştir"
-        size="large"
+        size="medium"
         maxHeight="90vh"
         closeOnBackdrop={true}
-        align="auto"
+        align="center"
         fullScreenOnMobile
       >
         <div className="space-y-6">
@@ -287,28 +512,28 @@ const AdminJobDetailPage = () => {
               return (
                 <button
                   key={status.id}
-                  onClick={async () => {
+                  onClick={() => {
                     // Özel durumlar için modal aç
                     if (status.id === 3 && job?.status_id === 1) {
                       setShowEditModal(false);
-                      setShowApprovalModal(true);
+                      openApprovalModal();
                       return;
                     }
                     if (status.id === 2 && job?.status_id === 1) {
                       setShowEditModal(false);
-                      setShowRevisionModal(true);
+                      openRevisionModal();
                       return;
                     }
                     if (status.id === 5 && (job?.status_id === 1 || job?.status_id === 2)) {
                       setShowEditModal(false);
-                      setShowRejectModal(true);
+                      openRejectModal();
                       return;
                     }
                     // Diğer durumlar için not modal'ı aç
                     setSelectedStatusId(status.id);
                     setStatusChangeReason('');
                     setShowEditModal(false);
-                    setShowStatusChangeModal(true);
+                    openStatusChangeModal(status.id);
                   }}
                   className={`bg-gradient-to-br ${colorClasses[status.color]} text-white p-5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group`}
                 >
@@ -413,7 +638,7 @@ const AdminJobDetailPage = () => {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={handleDeleteJob}
+                onClick={openDeleteModal}
                 className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
                 disabled={deleteJobMutation.isPending}
                 title="İş ilanını kalıcı olarak siler (deleted_at set eder)"
@@ -448,7 +673,39 @@ const AdminJobDetailPage = () => {
           </div>
 
 
-          {/* Job Info Grid */}
+            {/* Önceki Revizyonlar */}
+            {latestAdminRevisionNote && isPendingApproval && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <History className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-amber-800">Son Revizyon Notu</h3>
+                      {revisionCount > 1 && (
+                        <p className="text-sm text-amber-700 mt-1">
+                          Toplam revizyon talebi: {revisionCount}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <div className="bg-white border border-amber-200/70 rounded-lg p-3 shadow-sm">
+                        <div className="flex items-center justify-between text-xs text-gray-600">
+                          <span>{latestRevisionEntry?.changed_at ? new Date(latestRevisionEntry.changed_at).toLocaleString('tr-TR') : 'Son revizyon'}</span>
+                          <span className="text-gray-500">
+                            {latestRevisionEntry?.changed_by_role === 'admin' ? 'Admin tarafından' : latestRevisionEntry?.changed_by_role === 'hospital' ? 'Hastane tarafından' : ''}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">
+                          {latestAdminRevisionNote}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Job Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Hastane Adı - Admin için ek bilgi */}
             <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -587,7 +844,7 @@ const AdminJobDetailPage = () => {
                 {/* Pending Approval → Approved */}
                 {job.status_id === 1 && (
                   <button
-                    onClick={() => setShowApprovalModal(true)}
+                    onClick={openApprovalModal}
                     className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-5 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group"
                   >
                     <div className="flex items-center gap-3 mb-2">
@@ -605,7 +862,7 @@ const AdminJobDetailPage = () => {
                 {/* Pending Approval → Needs Revision */}
                 {job.status_id === 1 && (
                   <button
-                    onClick={() => setShowRevisionModal(true)}
+                    onClick={openRevisionModal}
                     className="bg-gradient-to-br from-orange-500 to-amber-600 text-white p-5 rounded-xl hover:from-orange-600 hover:to-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group"
                   >
                     <div className="flex items-center gap-3 mb-2">
@@ -623,7 +880,7 @@ const AdminJobDetailPage = () => {
                 {/* Pending Approval → Rejected */}
                 {job.status_id === 1 && (
                   <button
-                    onClick={() => setShowRejectModal(true)}
+                    onClick={openRejectModal}
                     className="bg-gradient-to-br from-red-500 to-rose-600 text-white p-5 rounded-xl hover:from-red-600 hover:to-rose-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group"
                   >
                     <div className="flex items-center gap-3 mb-2">
@@ -641,7 +898,7 @@ const AdminJobDetailPage = () => {
                 {/* Needs Revision → Approved */}
                 {job.status_id === 2 && (
                   <button
-                    onClick={() => setShowApprovalModal(true)}
+                    onClick={openApprovalModal}
                     className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-5 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group"
                   >
                     <div className="flex items-center gap-3 mb-2">
@@ -659,7 +916,7 @@ const AdminJobDetailPage = () => {
                 {/* Needs Revision → Rejected */}
                 {job.status_id === 2 && (
                   <button
-                    onClick={() => setShowRejectModal(true)}
+                    onClick={openRejectModal}
                     className="bg-gradient-to-br from-red-500 to-rose-600 text-white p-5 rounded-xl hover:from-red-600 hover:to-rose-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group"
                   >
                     <div className="flex items-center gap-3 mb-2">
@@ -677,7 +934,10 @@ const AdminJobDetailPage = () => {
                 {/* Approved → Passive */}
                 {job.status_id === 3 && (
                   <button
-                    onClick={() => handleStatusChange(4)}
+                    onClick={() => {
+                      captureScroll();
+                      handleStatusChange(4);
+                    }}
                     disabled={updateStatusMutation.isPending}
                     className="bg-gradient-to-br from-gray-500 to-slate-600 text-white p-5 rounded-xl hover:from-gray-600 hover:to-slate-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -696,7 +956,10 @@ const AdminJobDetailPage = () => {
                 {/* Passive → Approved */}
                 {job.status_id === 4 && (
                   <button
-                    onClick={() => handleStatusChange(3)}
+                    onClick={() => {
+                      captureScroll();
+                      handleStatusChange(3);
+                    }}
                     disabled={updateStatusMutation.isPending}
                     className="bg-gradient-to-br from-green-500 to-emerald-600 text-white p-5 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -733,7 +996,9 @@ const AdminJobDetailPage = () => {
 
                 {/* Generic Status Change Button - Manual Status Selection */}
                 <button
-                  onClick={() => setShowEditModal(true)}
+                  onClick={() => {
+                    setShowEditModal(true);
+                  }}
                   className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 text-left group border-2 border-indigo-300"
                 >
                   <div className="flex items-center gap-3 mb-2">
@@ -750,7 +1015,7 @@ const AdminJobDetailPage = () => {
             </div>
 
             {/* Revizyon Notu Bilgisi */}
-            {job.status_id === 2 && job.revision_note && (
+            {isNeedsRevision && job?.revision_note && (
               <div className="mt-6 bg-orange-50 border-2 border-orange-200 rounded-xl p-5">
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-6 h-6 text-orange-600 mt-0.5 flex-shrink-0" />
@@ -760,9 +1025,9 @@ const AdminJobDetailPage = () => {
                       Revizyon Notu
                     </h4>
                     <p className="text-orange-800 whitespace-pre-wrap leading-relaxed">{job.revision_note}</p>
-                    {job.revision_count > 0 && (
+                    {revisionCount > 0 && (
                       <p className="text-sm text-orange-600 mt-2 font-medium">
-                        🔄 Revizyon Sayısı: {job.revision_count}
+                        🔄 Revizyon Sayısı: {revisionCount}
                       </p>
                     )}
                   </div>
@@ -773,39 +1038,57 @@ const AdminJobDetailPage = () => {
 
           {/* Job History Timeline */}
           {history.length > 0 && (
-            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <History className="w-5 h-5 text-blue-600" />
-                İlan Geçmişi
-              </h3>
-              <div className="space-y-4">
-                {history.map((entry, index) => (
-                  <div key={entry.id} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-500' : 'bg-gray-400'}`} />
-                      {index < history.length - 1 && <div className="w-0.5 h-full bg-gray-300 mt-1" />}
-                    </div>
-                    <div className="flex-1 pb-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-900">
-                          {getTurkishStatusName(entry.old_status_name) || 'Başlangıç'} → {getTurkishStatusName(entry.new_status_name)}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {new Date(entry.changed_at).toLocaleString('tr-TR')}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 mb-1">
-                        {entry.changed_by_role === 'admin' ? 'Admin' : 'Hastane'} tarafından değiştirildi
-                      </p>
-                      {entry.note && (
-                        <p className="text-sm text-gray-700 bg-white p-2 rounded border border-gray-200 mt-2">
-                          {entry.note}
-                        </p>
-                      )}
-                    </div>
+            <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen((prev) => !prev)}
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <History className="w-5 h-5 text-blue-600" />
+                  <div className="text-left">
+                    <div className="text-lg font-semibold text-gray-900">İlan Geçmişi</div>
+                    <div className="text-sm text-gray-500">Toplam {history.length} kayıt</div>
                   </div>
-                ))}
-              </div>
+                </div>
+                {isHistoryOpen ? (
+                  <ChevronUp className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+              {isHistoryOpen && (
+                <div className="px-6 pb-6 pt-2">
+                  <div className="space-y-4">
+                    {history.map((entry, index) => (
+                      <div key={entry.id || `${entry.changed_at}-${index}`} className="flex gap-4">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-blue-500' : 'bg-gray-400'}`} />
+                          {index < history.length - 1 && <div className="w-0.5 h-full bg-gray-300 mt-1" />}
+                        </div>
+                        <div className="flex-1 pb-4">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-900">
+                              {getTurkishStatusName(entry.old_status_name) || 'Başlangıç'} → {getTurkishStatusName(entry.new_status_name)}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(entry.changed_at).toLocaleString('tr-TR')}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mb-1">
+                            {entry.changed_by_role === 'admin' ? 'Admin' : 'Hastane'} tarafından değiştirildi
+                          </p>
+                          {entry.note && (
+                            <p className="text-sm text-gray-700 bg-white p-2 rounded border border-gray-200 mt-2">
+                              {entry.note}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -813,19 +1096,22 @@ const AdminJobDetailPage = () => {
         {/* Approval Modal */}
         {showApprovalModal && (
           <ModalContainer
-            isOpen={true}
-            onClose={() => setShowApprovalModal(false)}
+            isOpen={showApprovalModal}
+            onClose={closeApprovalModal}
             title="İlanı Onayla"
             size="medium"
+            align="center"
+            maxHeight="85vh"
+            backdropClassName="bg-black/40 backdrop-blur-sm"
           >
             <div className="space-y-4">
-              <p className="text-gray-700">
+              <p className="text-gray-200">
                 "{job.title}" ilanını onaylamak istediğinizden emin misiniz? İlan onaylandıktan sonra yayına girecek ve doktorlar tarafından görülebilecek.
               </p>
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => setShowApprovalModal(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  onClick={closeApprovalModal}
+                  className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
                 >
                   İptal
                 </button>
@@ -844,52 +1130,49 @@ const AdminJobDetailPage = () => {
         {/* Revision Modal */}
         {showRevisionModal && (
           <ModalContainer
-            isOpen={true}
-            onClose={() => {
-              setShowRevisionModal(false);
-              setRevisionNote('');
-            }}
+            isOpen={showRevisionModal}
+            onClose={closeRevisionModal}
             title={job?.status_id === 2 ? 'Revizyon Notu' : 'Revizyon Talep Et'}
             size="large"
+            align="center"
+            maxHeight="85vh"
+            backdropClassName="bg-black/40 backdrop-blur-sm"
           >
             <div className="space-y-4">
               {job?.status_id === 2 ? (
                 <>
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                    <p className="text-orange-800 whitespace-pre-wrap">{job.revision_note}</p>
+                  <div className="bg-orange-500/10 border border-orange-500/40 rounded-lg p-4">
+                    <p className="text-orange-100 whitespace-pre-wrap">{job.revision_note}</p>
                   </div>
                 </>
               ) : (
                 <>
-                  <p className="text-gray-700 mb-4">
+                  <p className="text-gray-200 mb-4">
                     "{job.title}" ilanı için revizyon talep ediyorsunuz. Lütfen revizyon notunu girin:
                   </p>
                   <textarea
                     value={revisionNote}
                     onChange={(e) => setRevisionNote(e.target.value)}
                     placeholder="Revizyon notunu buraya yazın... (En az 10 karakter)"
-                    className="w-full min-h-[150px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                    className="w-full min-h-[150px] px-4 py-3 rounded-lg bg-slate-900/60 text-gray-100 placeholder-gray-500 border border-white/15 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
                     required
                     minLength={10}
                     maxLength={1000}
                   />
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span className={revisionNote.trim().length < 10 ? 'text-red-500' : 'text-gray-500'}>
+                  <div className="flex items-center justify-between text-sm text-gray-400">
+                    <span className={revisionNote.trim().length < 10 ? 'text-red-400' : 'text-gray-400'}>
                       {revisionNote.trim().length < 10 
                         ? `En az ${10 - revisionNote.trim().length} karakter daha gerekli` 
                         : `${revisionNote.trim().length}/1000 karakter`}
                     </span>
                   </div>
                   <div className="flex gap-3 justify-end">
-                    <button
-                      onClick={() => {
-                        setShowRevisionModal(false);
-                        setRevisionNote('');
-                      }}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                    >
-                      İptal
-                    </button>
+                  <button
+                    onClick={closeRevisionModal}
+                    className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
+                  >
+                    İptal
+                  </button>
                     <button
                       onClick={handleRequestRevision}
                       disabled={requestRevisionMutation.isPending || revisionNote.trim().length < 10}
@@ -907,32 +1190,32 @@ const AdminJobDetailPage = () => {
         {/* Reject Modal */}
         {showRejectModal && (
           <ModalContainer
-            isOpen={true}
-            onClose={() => {
-              setShowRejectModal(false);
-              setRejectionReason('');
-            }}
+            isOpen={showRejectModal}
+            onClose={closeRejectModal}
             title="İlanı Reddet"
             size="medium"
+            align="center"
+            maxHeight="85vh"
+            backdropClassName="bg-black/40 backdrop-blur-sm"
           >
             <div className="space-y-4">
-              <p className="text-gray-700">
+              <p className="text-gray-200">
                 "{job.title}" ilanını reddetmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
               </p>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
                   Red Sebebi (Opsiyonel)
                 </label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Red sebebini buraya yazın... (En az 5 karakter)"
-                  className="w-full min-h-[100px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  className="w-full min-h-[100px] px-4 py-3 rounded-lg bg-slate-900/60 text-gray-100 placeholder-gray-500 border border-white/15 focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
                   maxLength={500}
                 />
                 {rejectionReason.trim() && (
                   <div className="flex items-center justify-between text-sm mt-1">
-                    <span className={rejectionReason.trim().length < 5 ? 'text-red-500' : 'text-gray-500'}>
+                    <span className={rejectionReason.trim().length < 5 ? 'text-red-400' : 'text-gray-400'}>
                       {rejectionReason.trim().length < 5 
                         ? `En az ${5 - rejectionReason.trim().length} karakter daha gerekli` 
                         : `${rejectionReason.trim().length}/500 karakter`}
@@ -942,11 +1225,8 @@ const AdminJobDetailPage = () => {
               </div>
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => {
-                    setShowRejectModal(false);
-                    setRejectionReason('');
-                  }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  onClick={closeRejectModal}
+                  className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
                 >
                   İptal
                 </button>
@@ -962,38 +1242,70 @@ const AdminJobDetailPage = () => {
           </ModalContainer>
         )}
 
+    {isDeleteModalOpen && (
+      <ModalContainer
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        title="İlanı Sil"
+        size="small"
+        maxHeight="80vh"
+        align="center"
+        backdropClassName="bg-black/40 backdrop-blur-sm"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-200 leading-relaxed">
+            "{job.title}" ilanını kalıcı olarak silmek üzeresiniz. Bu işlem geri alınamaz ve ilgili tüm başvurular etkilenebilir.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={closeDeleteModal}
+              className="px-5 py-2 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20 transition-colors"
+            >
+              İptal
+            </button>
+            <button
+              onClick={confirmDeleteJob}
+              disabled={deleteJobMutation.isPending}
+              className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {deleteJobMutation.isPending ? 'Siliniyor...' : 'Sil'}
+            </button>
+          </div>
+        </div>
+      </ModalContainer>
+    )}
+
         {/* Status Change Modal - Manuel durum değişikliği için not alanı */}
         {showStatusChangeModal && selectedStatusId && (
           <ModalContainer
-            isOpen={true}
-            onClose={() => {
-              setShowStatusChangeModal(false);
-              setSelectedStatusId(null);
-              setStatusChangeReason('');
-            }}
+            isOpen={showStatusChangeModal}
+            onClose={closeStatusChangeModal}
             title="Durum Değişikliği"
             size="medium"
+            align="center"
+            maxHeight="85vh"
+            backdropClassName="bg-black/40 backdrop-blur-sm"
           >
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-blue-900 font-medium">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <p className="text-blue-100 font-medium">
                   Durum: <span className="font-bold">{getTurkishStatusName(job?.status)}</span> → <span className="font-bold">{statusOptions.find(s => s.id === selectedStatusId)?.name}</span>
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-200 mb-2">
                   Değişiklik Notu (Opsiyonel)
                 </label>
                 <textarea
                   value={statusChangeReason}
                   onChange={(e) => setStatusChangeReason(e.target.value)}
                   placeholder="Durum değişikliği için bir not ekleyin..."
-                  className="w-full min-h-[100px] px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                  className="w-full min-h-[100px] px-4 py-3 rounded-lg bg-slate-900/60 text-gray-100 placeholder-gray-500 border border-white/15 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
                   maxLength={500}
                 />
                 {statusChangeReason.trim() && (
                   <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="text-gray-500">
+                    <span className="text-gray-400">
                       {statusChangeReason.trim().length}/500 karakter
                     </span>
                   </div>
@@ -1001,22 +1313,17 @@ const AdminJobDetailPage = () => {
               </div>
               <div className="flex gap-3 justify-end">
                 <button
-                  onClick={() => {
-                    setShowStatusChangeModal(false);
-                    setSelectedStatusId(null);
-                    setStatusChangeReason('');
-                  }}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  onClick={closeStatusChangeModal}
+                  className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
                 >
                   İptal
                 </button>
                 <button
                   onClick={async () => {
                     const reason = statusChangeReason.trim() || null;
+                    captureScroll();
                     await handleStatusChange(selectedStatusId, reason);
-                    setShowStatusChangeModal(false);
-                    setSelectedStatusId(null);
-                    setStatusChangeReason('');
+                    closeStatusChangeModal();
                     showToast.success('Durum başarıyla güncellendi');
                   }}
                   disabled={updateStatusMutation.isPending}

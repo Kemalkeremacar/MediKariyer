@@ -22,7 +22,7 @@ const AdminJobsPage = () => {
     specialty_id: '',
     subspecialty_id: '',
     city_id: '',
-    status_id: '', // Status filtresi eklendi
+    status: '', // Durum filtresi
     page: 1,
     limit: 10
   });
@@ -79,10 +79,20 @@ const AdminJobsPage = () => {
   };
 
   const handleFilterChange = (key, value) => {
+    const numericKeys = ['specialty_id', 'subspecialty_id', 'city_id', 'status', 'hospital_id', 'page', 'limit'];
+    const processedValue = (() => {
+      if (value === '' || value === null || value === undefined) return '';
+      if (numericKeys.includes(key)) {
+        const numeric = Number(value);
+        return Number.isNaN(numeric) ? '' : numeric;
+      }
+      return value;
+    })();
+
     setFilters(prev => {
       const newFilters = {
         ...prev,
-        [key]: value,
+        [key]: processedValue,
         page: 1
       };
       
@@ -416,8 +426,8 @@ const AdminJobsPage = () => {
 
             {/* Status Filter */}
             <select
-              value={filters.status_id}
-              onChange={(e) => handleFilterChange('status_id', e.target.value)}
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
               className="admin-form-select"
             >
               <option value="">Tüm Durumlar</option>
