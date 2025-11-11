@@ -72,6 +72,9 @@ const HospitalApplicationDetailPage = () => {
   const applications = applicationsData?.data?.applications || [];
   const application = applications.find(a => a.id === parseInt(applicationId || '0'));
 
+  const doctorProfileId = application?.doctor_is_active === false ? null : application?.doctor_profile_id;
+  const { data: doctorProfileData, isLoading: doctorProfileLoading } = useHospitalDoctorProfileDetail(doctorProfileId);
+  
   // İlan durumunu kontrol et - Pasif ilanlar için erişimi engelle
   const jobStatus = application?.job_status || application?.job_status_fallback;
   const isJobPassive = 
@@ -80,9 +83,9 @@ const HospitalApplicationDetailPage = () => {
     application?.job_status_id === 4 ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif'));
 
+  const isDoctorInactive = application?.doctor_is_active === false;
+
   // Doktor profil detayı
-  const { data: doctorProfileData, isLoading: doctorProfileLoading } = useHospitalDoctorProfileDetail(application?.doctor_profile_id);
-  
   // Popover state
   const [popoverAnchor, setPopoverAnchor] = useState(null);
   const profileButtonRef = useRef(null);
@@ -181,7 +184,46 @@ const HospitalApplicationDetailPage = () => {
     );
   }
 
-  // Pasif ilan için erişimi engelle
+  if (isDoctorInactive) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleGoBack}
+              className="p-2 hover:bg-white/10 rounded-xl transition-all"
+            >
+              <ArrowLeft className="w-6 h-6 text-white" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Başvuru Detayları</h1>
+              <p className="text-gray-300 mt-1">
+                {application.first_name} {application.last_name} - {application.job_title}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-10 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-2xl font-semibold text-white mb-4">Doktor Hesabı Silinmiş</h2>
+            <p className="text-gray-300 max-w-2xl mx-auto">
+              Bu başvuruyu yapan doktor hesabını sildiği için profil bilgilerine erişilemiyor. Başvuru işlemleri geçmiş kayıtlarınız için saklanmaya devam eder.
+            </p>
+            <button
+              onClick={handleGoBack}
+              className="mt-6 inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Başvurular sayfasına dön
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isJobPassive) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">

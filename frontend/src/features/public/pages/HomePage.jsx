@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiUsers, FiShield, FiTrendingUp, FiCheckCircle, FiPlay, FiHeart } from 'react-icons/fi';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { useAuthStore } from '@/store/authStore';
+import doctorImg from '@/assets/doktor.png';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -58,9 +59,9 @@ const HomePage = () => {
                 <div className="relative">
                   {/* Ana Fotoğraf Container */}
                   <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                    <img 
-                      src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=2070&auto=format&fit=crop"
-                      alt="Sağlık Profesyonelleri"
+                    <img
+                      src={doctorImg}
+                      alt="Doktor"
                       className="w-full h-[400px] sm:h-[500px] lg:h-[600px] object-cover"
                     />
                     {/* Gradient Overlay */}

@@ -25,6 +25,9 @@ import {
   validateLogin, 
   validateDoctorRegister, 
   validateHospitalRegister,
+  validateForgotPassword,
+  validateResetPassword,
+  validateChangePassword,
   validateRefreshToken,
   validateLogout
 } from '@config/validation.js';
@@ -127,6 +130,144 @@ export const useLogin = () => {
       // LoginPage kendi hata yönetimini yapıyor, toast gösterme
       // showError(errorMessage);
     },
+  });
+};
+
+/**
+ * Forgot Password Hook
+ * Backend: authController.forgotPassword
+ * Endpoint: POST /auth/forgot-password
+ * Response: { success, message }
+ */
+export const useForgotPassword = () => {
+  const { showSuccess, showError } = useUiStore();
+
+  return useMutation({
+    mutationFn: async ({ email }) => {
+      logger.info('Forgot password request started', { email });
+
+      const validation = validateForgotPassword({ email });
+      if (!validation.isValid) {
+        const errorMessage = validation.errors[0] || 'Form doğrulama hatası';
+        throw new Error(errorMessage);
+      }
+
+      const response = await apiRequest.post(ENDPOINTS.AUTH.FORGOT_PASSWORD, { email });
+
+      const result = response.data;
+
+      if (!result.success) {
+        throw new Error(result.message || 'Şifre sıfırlama talebi başarısız');
+      }
+
+      return result;
+    },
+    onSuccess: (res) => {
+      logger.info('Forgot password request successful', res);
+      const successMessage = res?.message || 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.';
+      showSuccess(successMessage);
+    },
+    onError: (error) => {
+      logger.error('Forgot password request error', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+
+      const errorMessage = error.response?.data?.message || error.message || 'Şifre sıfırlama talebi başarısız';
+      showError(errorMessage);
+    }
+  });
+};
+
+/**
+ * Reset Password Hook
+ * Backend: authController.resetPassword
+ * Endpoint: POST /auth/reset-password
+ */
+export const useResetPassword = () => {
+  const navigate = useNavigate();
+  const { showSuccess, showError } = useUiStore();
+
+  return useMutation({
+    mutationFn: async ({ token, password, confirmPassword }) => {
+      const validation = validateResetPassword({ token, password, confirmPassword });
+      if (!validation.isValid) {
+        const errorMessage = validation.errors[0] || 'Form doğrulama hatası';
+        throw new Error(errorMessage);
+      }
+
+      const response = await apiRequest.post(ENDPOINTS.AUTH.RESET_PASSWORD, { token, password });
+      const result = response.data;
+
+      if (!result.success) {
+        throw new Error(result.message || 'Şifre sıfırlama başarısız');
+      }
+
+      return result;
+    },
+    onSuccess: (res) => {
+      const message = res?.message || 'Şifreniz başarıyla güncellendi. Yeni şifrenizle giriş yapabilirsiniz.';
+      showSuccess(message);
+
+      navigate(ROUTE_CONFIG.PUBLIC.LOGIN, {
+        replace: true,
+        state: {
+          message
+        }
+      });
+    },
+    onError: (error) => {
+      logger.error('Reset password request error', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+
+      const errorMessage = error.response?.data?.message || error.message || 'Şifre sıfırlama başarısız';
+      showError(errorMessage);
+    }
+  });
+};
+
+export const useChangePassword = () => {
+  const { showSuccess, showError } = useUiStore();
+
+  return useMutation({
+    mutationFn: async ({ currentPassword, newPassword, confirmPassword }) => {
+      const validation = validateChangePassword({ currentPassword, newPassword, confirmPassword });
+      if (!validation.isValid) {
+        const errorMessage = validation.errors[0] || 'Form doğrulama hatası';
+        throw new Error(errorMessage);
+      }
+
+      const response = await apiRequest.post(ENDPOINTS.AUTH.CHANGE_PASSWORD, {
+        currentPassword,
+        newPassword,
+        confirmPassword
+      });
+
+      const result = response.data;
+      if (!result.success) {
+        throw new Error(result.message || 'Şifre değiştirme başarısız');
+      }
+
+      return result;
+    },
+    onSuccess: (res) => {
+      const message = res?.message || 'Şifreniz başarıyla güncellendi.';
+      showSuccess(message);
+    },
+    onError: (error) => {
+      logger.error('Change password error', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+
+      const errorMessage = error.response?.data?.message || error.message || 'Şifre değiştirme başarısız';
+      showError(errorMessage);
+    }
   });
 };
 

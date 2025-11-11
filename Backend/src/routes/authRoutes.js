@@ -46,7 +46,9 @@ const {
   loginSchema,
   refreshTokenSchema,
   logoutSchema,
-  changePasswordSchema
+  changePasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema
 } = require('../validators/authSchemas');
 // ==================== END DEPENDENCIES ====================
 
@@ -307,6 +309,22 @@ router.post('/change-password',
   authMiddleware,
   validate(changePasswordSchema, 'body'),
   authController.changePassword
+);
+
+/**
+ * Şifre sıfırlama talebi - /api/auth/forgot-password
+ */
+router.post('/forgot-password',
+  validate(forgotPasswordSchema, 'body'),
+  authController.forgotPassword
+);
+
+/**
+ * Şifre sıfırlama işlemi - /api/auth/reset-password
+ */
+router.post('/reset-password',
+  validate(resetPasswordSchema, 'body'),
+  authController.resetPassword
 );
 // ==================== END PASSWORD MANAGEMENT ROUTES ====================
 

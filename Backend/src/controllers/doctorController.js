@@ -979,6 +979,13 @@ const cancelPhotoRequest = catchAsync(async (req, res) => {
   });
 });
 
+const deactivateAccount = catchAsync(async (req, res) => {
+  await doctorService.deactivateAccount(req.user.id);
+  logger.info(`Doctor account deactivated: ${req.user.email}`);
+
+  return sendSuccess(res, 'Hesabınız başarıyla silindi.');
+});
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -1064,5 +1071,6 @@ module.exports = {
   requestPhotoChange,
   getPhotoRequestStatus,
   getPhotoRequestHistory,
-  cancelPhotoRequest
+  cancelPhotoRequest,
+  deactivateAccount
 };

@@ -63,6 +63,7 @@ body {
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* text-size-adjust removed due to limited browser support */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -862,6 +863,23 @@ textarea:-webkit-autofill:active {
   box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.95) inset !important;
   transition: background-color 5000s ease-in-out 0s;
   background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(248, 250, 252, 0.95) inset !important;
+  box-shadow: 0 0 0px 1000px rgba(248, 250, 252, 0.95) inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
+  background-color: rgba(248, 250, 252, 0.95) !important;
 }
 
 /* Form stilleri */
@@ -2126,6 +2144,10 @@ html, body {
 /* Search Input Wrapper - Icon için */
 .logs-search-wrapper {
   position: relative;
+}
+
+.logs-search-wrapper .admin-form-input {
+  padding-left: 2.75rem;
 }
 
 .logs-search-icon {

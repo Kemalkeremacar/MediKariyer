@@ -557,12 +557,11 @@ const resubmitJob = async (userId, jobId) => {
 
     const oldStatusId = existingJob.status_id;
 
-    // İlanı Pending Approval durumuna getir ve revision_count'u artır
+    // İlanı Pending Approval durumuna getir
     await db('jobs')
       .where('id', jobId)
       .update({
         status_id: 1, // Onay Bekliyor
-        revision_count: db.raw('revision_count + 1'),
         revision_note: null, // Revizyon notunu temizle
         updated_at: db.fn.now()
       });
@@ -858,7 +857,6 @@ const getApplications = async (userId, jobId, params = {}) => {
       .where('a.job_id', jobId)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
-      .where('u.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
       .select(
         'a.*',
         'dp.first_name',
@@ -867,6 +865,7 @@ const getApplications = async (userId, jobId, params = {}) => {
         'dp.profile_photo',
         'dp.specialty_id',
         'u.email',
+        'u.is_active as doctor_is_active',
         'ast.name as status',
         'j.title as job_title',
         'j.min_experience_years',
@@ -942,8 +941,7 @@ const getApplications = async (userId, jobId, params = {}) => {
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('a.job_id', jobId)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
-      .where('u.is_active', true); // Pasifleştirilmiş doktorların başvurularını sayma
+      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
 
     if (status) {
       // Status parametresi sayı mı kontrol et
@@ -1020,7 +1018,6 @@ const getAllApplications = async (userId, params = {}) => {
       .where('j.hospital_id', hospitalProfile.id)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
-      .where('u.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
       .select(
         'a.*',
         'dp.first_name',
@@ -1029,6 +1026,7 @@ const getAllApplications = async (userId, params = {}) => {
         'dp.profile_photo',
         'dp.specialty_id',
         'u.email',
+        'u.is_active as doctor_is_active',
         'ast.name as status',
         'j.title as job_title',
         'j.id as job_id',
@@ -1108,8 +1106,7 @@ const getAllApplications = async (userId, params = {}) => {
       .join('users as u', 'dp.user_id', 'u.id')
       .where('j.hospital_id', hospitalProfile.id)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
-      .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
-      .where('u.is_active', true); // Pasifleştirilmiş doktorların başvurularını gösterme
+      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
 
     // İş ilanı ID filtresi - birden fazla job ID destekler (totalQuery için) - ÖNCE uygulanmalı
     if (jobIds) {

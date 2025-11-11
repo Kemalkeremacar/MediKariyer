@@ -23,12 +23,12 @@ const DoctorDashboard = () => {
 
   if (dashboardLoading || profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <SkeletonLoader className="h-12 w-80 bg-white/10" />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <SkeletonLoader className="h-96 bg-white/10 rounded-2xl" />
-            <SkeletonLoader className="h-96 bg-white/10 rounded-2xl" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-white p-4 md:p-8">
+        <div className="mx-auto max-w-7xl">
+          <SkeletonLoader className="h-12 w-80 bg-blue-100/60" />
+          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <SkeletonLoader className="h-96 rounded-2xl bg-blue-100/60" />
+            <SkeletonLoader className="h-96 rounded-2xl bg-blue-100/60" />
           </div>
         </div>
       </div>
@@ -38,14 +38,14 @@ const DoctorDashboard = () => {
   // Error handling
   if (dashboardError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-white p-4 md:p-8">
+        <div className="mx-auto flex min-h-screen max-w-7xl items-center justify-center">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Dashboard Yüklenemedi</h2>
-            <p className="text-gray-300 mb-6">{dashboardError.message || 'Bir hata oluştu'}</p>
+            <h2 className="mb-4 text-2xl font-bold text-blue-900">Dashboard Yüklenemedi</h2>
+            <p className="mb-6 text-slate-600">{dashboardError.message || 'Bir hata oluştu'}</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition-colors"
+              className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
             >
               Sayfayı Yenile
             </button>
@@ -69,47 +69,47 @@ const DoctorDashboard = () => {
   const fullName = `${title} ${firstName} ${lastName}`.trim();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-white p-4 md:p-8">
+      <div className="mx-auto max-w-7xl">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 mb-8">
+          <div className="relative mb-8 overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-100 via-white to-white p-8 shadow-[0_20px_60px_-30px_rgba(30,64,175,0.45)]">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.15),transparent_55%)]" />
             </div>
             
             <div className="relative z-10">
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center">
                 {/* Profil Fotoğrafı - Sol Taraf */}
                 {profilePhoto && (
                   <div className="flex-shrink-0">
-                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-blue-400/30 shadow-lg">
+                    <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-blue-200 shadow-lg">
                       <img 
                         src={profilePhoto} 
                         alt={fullName}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                       />
                     </div>
                   </div>
                 )}
                 
                 {/* Metin ve Buton - Sağ Taraf */}
-                <div className="flex-1 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="flex flex-1 flex-col items-start justify-between gap-6 md:flex-row md:items-center">
                   <div className="flex-1">
-                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Hoş Geldiniz</h1>
-                    <h2 className="text-xl md:text-2xl font-semibold text-blue-400 mb-4">{fullName}</h2>
-                    <p className="text-gray-300 text-base md:text-lg leading-relaxed">
+                    <h1 className="mb-2 text-2xl font-bold text-blue-900 md:text-3xl">Hoş Geldiniz</h1>
+                    <h2 className="mb-4 text-xl font-semibold text-blue-600 md:text-2xl">{fullName}</h2>
+                    <p className="text-base leading-relaxed text-slate-600 md:text-lg">
                       Kariyerinizi ileriye taşıyacak fırsatları keşfedin ve başvurularınızı takip edin.
                     </p>
                   </div>
-                  <div className="flex-shrink-0 w-full md:w-auto">
+                  <div className="w-full flex-shrink-0 md:w-auto">
                     <Link
                       to="/doctor/profile"
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
+                      className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 px-6 py-3 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-20px_rgba(37,99,235,0.55)] md:w-auto"
                     >
-                      <User className="w-5 h-5" />
+                      <User className="h-5 w-5" />
                       Profili Düzenle
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </div>
                 </div>
@@ -118,40 +118,40 @@ const DoctorDashboard = () => {
           </div>
 
           {/* Ana İçerik */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Son Başvurular */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300">
-              <div className="p-8 border-b border-white/20">
+            <div className="rounded-2xl border border-blue-100 bg-white p-8 shadow-[0_16px_48px_-30px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1">
+              <div className="border-b border-slate-100 pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Activity className="w-6 h-6 text-blue-400" />
+                  <h2 className="flex items-center gap-3 text-2xl font-bold text-blue-900">
+                    <Activity className="h-6 w-6 text-blue-500" />
                     Son Başvurular
                   </h2>
                   <Link
                     to="/doctor/applications"
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all duration-300 flex items-center gap-2 group"
+                    className="group inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-100"
                   >
                     Tümünü Gör
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </div>
               </div>
-              <div className="p-8">
+              <div className="pt-6">
                 {recentApplications.length > 0 ? (
                   <div className="space-y-4">
                     {recentApplications.map((application) => (
-                      <div key={application.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-default">
+                      <div key={application.id} className="cursor-default rounded-2xl border border-blue-100 bg-blue-50/40 p-6 transition-all duration-300 hover:border-blue-300 hover:bg-white">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-white text-lg">{application.job_title}</h3>
-                          <p className="text-gray-300 mt-1">{application.hospital_name}</p>
-                          <div className="flex items-center gap-4 mt-3">
+                          <h3 className="text-lg font-semibold text-blue-900">{application.job_title}</h3>
+                          <p className="mt-1 text-slate-600">{application.hospital_name}</p>
+                          <div className="mt-3 flex items-center gap-4">
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              application.status_id === 1 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                              application.status_id === 2 ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                              application.status_id === 3 ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                              application.status_id === 4 ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
-                              application.status_id === 5 ? 'bg-gray-500/20 text-gray-300 border border-gray-500/30' :
-                              'bg-gray-500/20 text-gray-300 border border-gray-500/30'
+                              application.status_id === 1 ? 'border border-amber-200 bg-amber-100 text-amber-800' :
+                              application.status_id === 2 ? 'border border-blue-200 bg-blue-100 text-blue-800' :
+                              application.status_id === 3 ? 'border border-emerald-200 bg-emerald-100 text-emerald-800' :
+                              application.status_id === 4 ? 'border border-rose-200 bg-rose-100 text-rose-800' :
+                              application.status_id === 5 ? 'border border-gray-200 bg-gray-100 text-gray-700' :
+                              'border border-gray-200 bg-gray-100 text-gray-700'
                             }`}>
                               {application.status_id === 1 ? 'Başvuruldu' :
                                application.status_id === 2 ? 'İnceleniyor' :
@@ -160,7 +160,7 @@ const DoctorDashboard = () => {
                                application.status_id === 5 ? 'Geri Çekildi' :
                                application.status || 'Bilinmiyor'}
                             </span>
-                            <span className="text-xs text-gray-400">
+                            <span className="text-xs text-slate-500">
                               {new Date(application.applied_at || application.created_at).toLocaleDateString('tr-TR')}
                             </span>
                           </div>
@@ -169,17 +169,17 @@ const DoctorDashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Activity className="w-10 h-10 text-white" />
+                  <div className="py-12 text-center">
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                      <Activity className="h-10 w-10 text-blue-500" />
                     </div>
-                    <p className="text-gray-300 text-lg mb-4">Henüz başvuru yapmadınız</p>
+                    <p className="mb-4 text-lg text-slate-600">Henüz başvuru yapmadınız</p>
                     <Link
                       to="/doctor/jobs"
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
+                      className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-20px_rgba(37,99,235,0.6)]"
                     >
                       İş İlanlarını Keşfedin
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </div>
                 )}
@@ -187,38 +187,38 @@ const DoctorDashboard = () => {
             </div>
 
             {/* Önerilen İş İlanları */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 hover:bg-white/15 transition-all duration-300">
-              <div className="p-8 border-b border-white/20">
+            <div className="rounded-2xl border border-blue-100 bg-white p-8 shadow-[0_16px_48px_-30px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1">
+              <div className="border-b border-slate-100 pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Target className="w-6 h-6 text-purple-400" />
+                  <h2 className="flex items-center gap-3 text-2xl font-bold text-blue-900">
+                    <Target className="h-6 w-6 text-blue-500" />
                     Önerilen İş İlanları
                   </h2>
                   <Link
                     to="/doctor/jobs"
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all duration-300 flex items-center gap-2 group"
+                    className="group inline-flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-100"
                   >
                     Tümünü Gör
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </div>
               </div>
-              <div className="p-8">
+              <div className="pt-6">
                 {recentJobs.length > 0 ? (
                   <div className="space-y-4">
                     {recentJobs.map((job) => (
-                      <div key={job.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-default">
+                      <div key={job.id} className="cursor-default rounded-2xl border border-blue-100 bg-blue-50/40 p-6 transition-all duration-300 hover:border-blue-300 hover:bg-white">
                         <div className="flex items-start">
                           <div className="flex-1">
-                            <h3 className="font-semibold text-white text-lg">{job.title}</h3>
-                            <p className="text-gray-300 mt-1">{job.hospital_name}</p>
-                            <div className="flex items-center gap-4 mt-3">
-                              <div className="flex items-center gap-1 text-sm text-gray-400">
-                                <MapPin className="w-4 h-4" />
+                            <h3 className="text-lg font-semibold text-blue-900">{job.title}</h3>
+                            <p className="mt-1 text-slate-600">{job.hospital_name}</p>
+                            <div className="mt-3 flex items-center gap-4">
+                              <div className="flex items-center gap-1 text-sm text-slate-500">
+                                <MapPin className="h-4 w-4" />
                                 {job.city}
                               </div>
-                              <div className="flex items-center gap-1 text-sm text-gray-400">
-                                <Calendar className="w-4 h-4" />
+                              <div className="flex items-center gap-1 text-sm text-slate-500">
+                                <Calendar className="h-4 w-4" />
                                 {new Date(job.created_at).toLocaleDateString('tr-TR')}
                               </div>
                             </div>
@@ -228,17 +228,17 @@ const DoctorDashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Briefcase className="w-10 h-10 text-white" />
+                  <div className="py-12 text-center">
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                      <Briefcase className="h-10 w-10 text-blue-500" />
                     </div>
-                    <p className="text-gray-300 text-lg mb-4">Önerilen iş ilanı bulunamadı</p>
+                    <p className="mb-4 text-lg text-slate-600">Önerilen iş ilanı bulunamadı</p>
                     <Link
                       to="/doctor/jobs"
-                      className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-pink-700 transition-all duration-300 inline-flex items-center gap-2 group"
+                      className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-20px_rgba(37,99,235,0.6)]"
                     >
                       Tüm İş İlanlarını Görün
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </div>
                 )}

@@ -149,6 +149,58 @@ const AdminJobDetailPage = () => {
         ? historyResponse.history
         : []) || [];
 
+  const normalizeDateValue = useCallback((value) => {
+    if (!value) return null;
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value;
+    }
+    if (typeof value === 'number') {
+      const fromNumber = new Date(value);
+      return Number.isNaN(fromNumber.getTime()) ? null : fromNumber;
+    }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+
+      const candidates = [];
+
+      // Örnek: "2025-01-07 12:37:05" → ISO benzeri
+      if (trimmed.includes(' ') && !trimmed.includes('T')) {
+        candidates.push(trimmed.replace(' ', 'T'));
+      }
+      candidates.push(trimmed);
+
+      // UTC bilgisi belirtilmemişse son çare olarak 'Z' eklemeyi dene
+      if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
+        const withZ = `${trimmed.includes('T') ? trimmed : trimmed.replace(' ', 'T')}Z`;
+        candidates.push(withZ);
+      }
+
+      for (const candidate of candidates) {
+        const date = new Date(candidate);
+        if (!Number.isNaN(date.getTime())) {
+          return date;
+        }
+      }
+    }
+    return null;
+  }, []);
+
+  const formatDateTime = useCallback((value) => {
+    const date = normalizeDateValue(value);
+    if (!date) return '-';
+    try {
+      return new Intl.DateTimeFormat('tr-TR', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+        timeZone: 'Europe/Istanbul',
+        hour12: false
+      }).format(date);
+    } catch (error) {
+      return date.toLocaleString('tr-TR');
+    }
+  }, [normalizeDateValue]);
+
   const getTurkishStatusName = useCallback((statusName) => {
     if (!statusName && statusName !== 0) return 'Bilinmiyor';
     const statusIdMap = {
@@ -255,11 +307,22 @@ const AdminJobDetailPage = () => {
         rawEntry.actor_role ||
         rawEntry.changed_by ||
         rawEntry.role ||
-        'admin';
+        'unknown';
+
+      let normalizedRole = typeof roleRaw === 'string' ? roleRaw.toLowerCase() : roleRaw;
+      if (!normalizedRole || normalizedRole === 'unknown') {
+        const statusName = getTurkishStatusName(rawEntry?.new_status_name ?? rawEntry?.new_status_id ?? rawEntry?.status_id);
+        if (statusName === 'Revizyon Gerekli') {
+          normalizedRole = 'admin';
+        }
+      }
+      if (!normalizedRole) {
+        normalizedRole = 'unknown';
+      }
 
       collected.push({
         changed_at: changedAt,
-        changed_by_role: typeof roleRaw === 'string' ? roleRaw.toLowerCase() : roleRaw,
+        changed_by_role: normalizedRole,
         note: note.trim()
       });
     };
@@ -280,7 +343,7 @@ const AdminJobDetailPage = () => {
 
     if (Array.isArray(job?.revision_history)) {
       job.revision_history.forEach((entry) => {
-        pushEntry(entry);
+        pushEntry(entry, entry?.changed_by_role || entry?.actor_role || entry?.role);
       });
     }
 
@@ -294,8 +357,8 @@ const AdminJobDetailPage = () => {
 
     const getTime = (entry) => {
       if (!entry) return 0;
-      const time = new Date(entry.changed_at ?? 0).getTime();
-      return Number.isNaN(time) ? 0 : time;
+      const date = normalizeDateValue(entry.changed_at ?? 0);
+      return date ? date.getTime() : 0;
     };
 
     const seen = new Set();
@@ -308,13 +371,20 @@ const AdminJobDetailPage = () => {
 
     unique.sort((a, b) => getTime(b) - getTime(a));
     return unique;
-  }, [history, job?.revision_history, job?.status_history, resolveRevisionNote, getTurkishStatusName, job?.revision_requested_at]);
+  }, [history, job?.revision_history, job?.status_history, resolveRevisionNote, getTurkishStatusName, job?.revision_requested_at, normalizeDateValue]);
 
   const jobStatusName = getTurkishStatusName(job?.status ?? job?.status_id);
   const isPendingApproval = jobStatusName === 'Onay Bekliyor';
   const isNeedsRevision = jobStatusName === 'Revizyon Gerekli';
 
-  const revisionCount = allRevisionEntries.length || job?.revision_count || 0;
+  const revisionCount = useMemo(() => {
+    const serverCountRaw = Number(job?.revision_count ?? job?.revisionCount);
+    if (Number.isFinite(serverCountRaw) && serverCountRaw >= 0) {
+      return serverCountRaw;
+    }
+    const adminEntries = allRevisionEntries.filter((entry) => entry.changed_by_role === 'admin');
+    return adminEntries.length;
+  }, [allRevisionEntries, job?.revision_count, job?.revisionCount]);
   const latestRevisionEntry = allRevisionEntries[0] || (job?.revision_note ? {
     changed_at: job?.revision_requested_at || job?.updated_at || job?.created_at || null,
     changed_by_role: 'admin',
@@ -690,7 +760,7 @@ const AdminJobDetailPage = () => {
                     <div className="space-y-3">
                       <div className="bg-white border border-amber-200/70 rounded-lg p-3 shadow-sm">
                         <div className="flex items-center justify-between text-xs text-gray-600">
-                          <span>{latestRevisionEntry?.changed_at ? new Date(latestRevisionEntry.changed_at).toLocaleString('tr-TR') : 'Son revizyon'}</span>
+                          <span>{formatDateTime(latestRevisionEntry?.changed_at || latestRevisionEntry?.created_at)}</span>
                           <span className="text-gray-500">
                             {latestRevisionEntry?.changed_by_role === 'admin' ? 'Admin tarafından' : latestRevisionEntry?.changed_by_role === 'hospital' ? 'Hastane tarafından' : ''}
                           </span>
@@ -1072,7 +1142,7 @@ const AdminJobDetailPage = () => {
                               {getTurkishStatusName(entry.old_status_name) || 'Başlangıç'} → {getTurkishStatusName(entry.new_status_name)}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {new Date(entry.changed_at).toLocaleString('tr-TR')}
+                              {formatDateTime(entry.changed_at || entry.created_at || entry.updated_at || entry.timestamp)}
                             </span>
                           </div>
                           <p className="text-xs text-gray-600 mb-1">

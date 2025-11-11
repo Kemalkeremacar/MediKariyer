@@ -38,9 +38,12 @@ const AdminApplicationDetailPage = () => {
   // Application verisini normalize et
   const application = rawApplication || {};
 
+  const isDoctorInactive = application.doctor_is_active === false;
+
   // Doktor profil detayını al
   const doctorUserId = application.user_id;
-  const { data: doctorData, isLoading: doctorLoading, error: doctorError } = useUserById(doctorUserId);
+  const shouldFetchDoctor = !!doctorUserId && !isDoctorInactive;
+  const { data: doctorData, isLoading: doctorLoading, error: doctorError } = useUserById(shouldFetchDoctor ? doctorUserId : null);
   
   // Debug: Application ve doctor data'yı kontrol et
   useEffect(() => {
@@ -167,6 +170,42 @@ const AdminApplicationDetailPage = () => {
                 <ArrowLeft className="w-4 h-4" />
                 Başvuru Listesine Dön
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isDoctorInactive) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="p-6">
+          <div className="mb-6">
+            <button
+              onClick={() => navigate('/admin/applications')}
+              className="flex items-center px-4 py-2 bg-gray-600 text-white border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Başvuru Listesine Dön
+            </button>
+          </div>
+
+          <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-10 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-300 to-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Doktor Hesabı Silinmiş</h2>
+            <p className="text-gray-600 max-w-xl mx-auto">
+              Bu başvuruyu yapan doktor hesabını sildiği için profil detaylarına erişilemiyor. Başvuru kaydı arşiv amaçlı olarak listede tutulmaya devam eder.
+            </p>
+            <div className="mt-6">
+              <div className="inline-flex flex-col items-center gap-2 bg-gray-100 rounded-xl px-6 py-4">
+                <span className="text-sm font-medium text-gray-700">Başvuru</span>
+                <span className="text-lg font-semibold text-gray-900">
+                  {application.first_name} {application.last_name} - {application.job_title}
+                </span>
+              </div>
             </div>
           </div>
         </div>

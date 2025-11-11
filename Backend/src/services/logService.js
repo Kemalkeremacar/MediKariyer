@@ -51,8 +51,10 @@ class LogService {
    */
   static async createApplicationLog(logData) {
     try {
-      const [log] = await getDb()('logs.application_logs')
+      const timestamp = new Date().toISOString();
+      const [log] = await getDb()('dbo.application_logs')
         .insert({
+          timestamp,
           level: logData.level,
           category: logData.category,
           message: logData.message,
@@ -65,7 +67,8 @@ class LogService {
           status_code: logData.statusCode || null,
           duration_ms: logData.durationMs || null,
           metadata: logData.metadata ? JSON.stringify(logData.metadata) : null,
-          stack_trace: logData.stackTrace || null
+          stack_trace: logData.stackTrace || null,
+          created_at: timestamp
         })
         .returning('*');
       
@@ -95,8 +98,10 @@ class LogService {
    */
   static async createAuditLog(auditData) {
     try {
-      const [log] = await getDb()('logs.audit_logs')
+      const timestamp = new Date().toISOString();
+      const [log] = await getDb()('dbo.audit_logs')
         .insert({
+          timestamp,
           actor_id: auditData.actorId,
           actor_role: auditData.actorRole,
           actor_name: auditData.actorName || null,
@@ -108,7 +113,8 @@ class LogService {
           new_values: auditData.newValues ? JSON.stringify(auditData.newValues) : null,
           ip_address: auditData.ipAddress || null,
           user_agent: auditData.userAgent || null,
-          metadata: auditData.metadata ? JSON.stringify(auditData.metadata) : null
+          metadata: auditData.metadata ? JSON.stringify(auditData.metadata) : null,
+          created_at: timestamp
         })
         .returning('*');
       
@@ -138,8 +144,10 @@ class LogService {
    */
   static async createSecurityLog(securityData) {
     try {
-      const [log] = await getDb()('logs.security_logs')
+      const timestamp = new Date().toISOString();
+      const [log] = await getDb()('dbo.security_logs')
         .insert({
+          timestamp,
           event_type: securityData.eventType,
           severity: securityData.severity,
           message: securityData.message,
@@ -149,7 +157,8 @@ class LogService {
           user_agent: securityData.userAgent || null,
           url: securityData.url || null,
           method: securityData.method || null,
-          metadata: securityData.metadata ? JSON.stringify(securityData.metadata) : null
+          metadata: securityData.metadata ? JSON.stringify(securityData.metadata) : null,
+          created_at: timestamp
         })
         .returning('*');
       
@@ -196,7 +205,7 @@ class LogService {
 
       const db = getDb();
       
-      let query = db('logs.application_logs as al')
+      let query = db('dbo.application_logs as al')
         .select('al.*')
         .orderBy('al.timestamp', 'desc');
 
@@ -263,7 +272,7 @@ class LogService {
       const offset = (page - 1) * limit;
 
       const db = getDb();
-      let query = db('logs.audit_logs as al')
+      let query = db('dbo.audit_logs as al')
         .select('al.*')
         .orderBy('al.timestamp', 'desc');
 
@@ -328,7 +337,7 @@ class LogService {
       const offset = (page - 1) * limit;
 
       const db = getDb();
-      let query = db('logs.security_logs as sl')
+      let query = db('dbo.security_logs as sl')
         .select('sl.*')
         .orderBy('sl.timestamp', 'desc');
 
@@ -378,7 +387,7 @@ class LogService {
       const endDate = options.endDate || new Date();
 
       // Application logs by level
-      const appLogsByLevel = await getDb()('logs.application_logs')
+      const appLogsByLevel = await getDb()('dbo.application_logs')
         .select('level')
         .count('* as count')
         .where('timestamp', '>=', startDate)
@@ -386,7 +395,7 @@ class LogService {
         .groupBy('level');
 
       // Application logs by category
-      const appLogsByCategory = await getDb()('logs.application_logs')
+      const appLogsByCategory = await getDb()('dbo.application_logs')
         .select('category')
         .count('* as count')
         .where('timestamp', '>=', startDate)
@@ -396,7 +405,7 @@ class LogService {
         .limit(10);
 
       // Security logs by severity
-      const securityLogsBySeverity = await getDb()('logs.security_logs')
+      const securityLogsBySeverity = await getDb()('dbo.security_logs')
         .select('severity')
         .count('* as count')
         .where('timestamp', '>=', startDate)
@@ -404,7 +413,7 @@ class LogService {
         .groupBy('severity');
 
       // Top audit actions
-      const topAuditActions = await getDb()('logs.audit_logs')
+      const topAuditActions = await getDb()('dbo.audit_logs')
         .select('action')
         .count('* as count')
         .where('timestamp', '>=', startDate)
@@ -414,17 +423,17 @@ class LogService {
         .limit(10);
 
       // Total counts
-      const [appLogsTotal] = await getDb()('logs.application_logs')
+      const [appLogsTotal] = await getDb()('dbo.application_logs')
         .count('* as total')
         .where('timestamp', '>=', startDate)
         .where('timestamp', '<=', endDate);
 
-      const [auditLogsTotal] = await getDb()('logs.audit_logs')
+      const [auditLogsTotal] = await getDb()('dbo.audit_logs')
         .count('* as total')
         .where('timestamp', '>=', startDate)
         .where('timestamp', '<=', endDate);
 
-      const [securityLogsTotal] = await getDb()('logs.security_logs')
+      const [securityLogsTotal] = await getDb()('dbo.security_logs')
         .count('* as total')
         .where('timestamp', '>=', startDate)
         .where('timestamp', '<=', endDate);
@@ -515,19 +524,19 @@ class LogService {
       
       switch (logType) {
         case 'application':
-          log = await db('logs.application_logs')
+          log = await db('dbo.application_logs')
             .select('*')
             .where('id', logId)
             .first();
           break;
         case 'audit':
-          log = await db('logs.audit_logs')
+          log = await db('dbo.audit_logs')
             .select('*')
             .where('id', logId)
             .first();
           break;
         case 'security':
-          log = await db('logs.security_logs')
+          log = await db('dbo.security_logs')
             .select('*')
             .where('id', logId)
             .first();
@@ -560,7 +569,7 @@ class LogService {
    */
   static async cleanupOldLogs(retentionDays = 90) {
     try {
-      await getDb().raw('EXEC logs.sp_cleanup_old_logs @retention_days = ?', [retentionDays]);
+      await getDb().raw('EXEC dbo.sp_cleanup_old_logs @retention_days = ?', [retentionDays]);
       logger.info('Eski loglar temizlendi', { retentionDays });
     } catch (error) {
       logger.error('Log temizleme hatası', { error: error.message });

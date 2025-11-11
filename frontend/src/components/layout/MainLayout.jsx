@@ -148,13 +148,18 @@ const MainLayout = () => {
   // Auth sayfaları için özel layout (Footer olmadan)
   const isAuthPage = location.pathname.startsWith('/login') || 
                      location.pathname.startsWith('/register') || 
-                     location.pathname.startsWith('/forgot-password');
+                     location.pathname.startsWith('/forgot-password') ||
+                     location.pathname.startsWith('/reset-password');
   
+  const showAuthHeader = !location.pathname.startsWith('/reset-password');
+  const hideHeaderRoutes = new Set(['/doctor/settings']);
+  const shouldHideHeader = hideHeaderRoutes.has(location.pathname);
+
   if (isAuthPage) {
     return (
       <div className="flex flex-col w-full bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-800">
-        {/* Üst Navigasyon */}
-        <Header />
+        {/* Üst Navigasyon (reset-password hariç) */}
+        {showAuthHeader && <Header />}
 
         {/* Ana içerik - Full width for auth pages */}
         <main role="main" className="flex-1 w-full">
@@ -177,7 +182,7 @@ const MainLayout = () => {
         : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
     }`}>
       {/* Üst Navigasyon */}
-      <Header />
+      {!shouldHideHeader && <Header />}
 
       {/* Ana içerik - Full width for all pages */}
       <main role="main" className="flex-1 w-full">

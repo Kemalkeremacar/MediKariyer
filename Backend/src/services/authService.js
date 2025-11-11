@@ -24,11 +24,13 @@
 'use strict';
 
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const db = require('../config/dbConfig').db;
 const { AppError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 const jwtUtils = require('../utils/jwtUtils');
 const LogService = require('./logService');
+const emailService = require('../utils/emailService');
 
 // ==================== TYPE DEFINITIONS ====================
 /**
@@ -1004,6 +1006,141 @@ const logoutAll = async (userId) => {
   }
 };
 
+// ==================== PASSWORD RESET FUNCTIONS ====================
+
+const PASSWORD_RESET_EXPIRY_MINUTES = Number(process.env.PASSWORD_RESET_EXPIRY_MINUTES || 60);
+
+const hashResetToken = (token) =>
+  crypto.createHash('sha256').update(token).digest('hex');
+
+const requestPasswordReset = async ({ email, ipAddress, userAgent }) => {
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+
+  if (!normalizedEmail) {
+    return { success: true };
+  }
+
+  const user = await db('users')
+    .whereRaw('LOWER(email) = ?', [normalizedEmail])
+    .first();
+
+  if (!user) {
+    logger.warn('Password reset request for non-existing email', { email: normalizedEmail });
+    await LogService.createSecurityLog({
+      eventType: 'password_reset_requested',
+      severity: 'medium',
+      message: 'Var olmayan bir e-posta için şifre sıfırlama talebi',
+      email: normalizedEmail,
+      ipAddress,
+      userAgent
+    }).catch(() => {});
+
+    return { success: true };
+  }
+
+  // Eski tokenları temizle
+  await db('password_reset_tokens')
+    .where('user_id', user.id)
+    .whereNull('used_at')
+    .del();
+
+  const token = crypto.randomBytes(40).toString('hex');
+  const tokenHash = hashResetToken(token);
+  const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MINUTES * 60 * 1000);
+
+  await db('password_reset_tokens').insert({
+    user_id: user.id,
+    token_hash: tokenHash,
+    expires_at: expiresAt,
+    ip_address: ipAddress ? ipAddress.substring(0, 100) : null,
+    user_agent: userAgent ? userAgent.substring(0, 500) : null,
+    created_at: db.fn.now(),
+    updated_at: db.fn.now()
+  });
+
+  await LogService.createSecurityLog({
+    eventType: 'password_reset_requested',
+    severity: 'medium',
+    message: 'Şifre sıfırlama talebi oluşturuldu',
+    userId: user.id,
+    email: user.email,
+    ipAddress,
+    userAgent,
+    metadata: {
+      expires_at: expiresAt.toISOString()
+    }
+  }).catch(() => {});
+
+  await emailService.sendPasswordResetEmail({
+    to: user.email,
+    token,
+    expiresAt
+  });
+
+  return { success: true };
+};
+
+const resetPasswordWithToken = async ({ token, newPassword, ipAddress, userAgent }) => {
+  const tokenHash = hashResetToken(token);
+
+  const resetRecord = await db('password_reset_tokens')
+    .where('token_hash', tokenHash)
+    .first();
+
+  if (!resetRecord) {
+    throw new AppError('Geçersiz veya süresi dolmuş şifre sıfırlama bağlantısı', 400);
+  }
+
+  if (resetRecord.used_at) {
+    throw new AppError('Bu şifre sıfırlama bağlantısı zaten kullanılmış', 400);
+  }
+
+  if (new Date(resetRecord.expires_at) < new Date()) {
+    throw new AppError('Şifre sıfırlama bağlantısının süresi dolmuş', 400);
+  }
+
+  const user = await db('users').where('id', resetRecord.user_id).first();
+
+  if (!user) {
+    throw new AppError('Kullanıcı bulunamadı', 404);
+  }
+
+  const password_hash = await bcrypt.hash(newPassword, 12);
+
+  await db.transaction(async (trx) => {
+    await trx('users')
+      .where('id', user.id)
+      .update({
+        password_hash,
+        updated_at: trx.fn.now()
+      });
+
+    await trx('password_reset_tokens')
+      .where('id', resetRecord.id)
+      .update({
+        used_at: trx.fn.now(),
+        updated_at: trx.fn.now()
+      });
+
+    // Tüm refresh tokenları geçersiz kıl
+    await trx('refresh_tokens')
+      .where('user_id', user.id)
+      .del();
+  });
+
+  await LogService.createSecurityLog({
+    eventType: 'password_reset_completed',
+    severity: 'medium',
+    message: 'Şifre sıfırlama işlemi başarıyla tamamlandı',
+    userId: user.id,
+    email: user.email,
+    ipAddress,
+    userAgent
+  }).catch(() => {});
+
+  return { success: true };
+};
+
 // ==================== END TOKEN MANAGEMENT FUNCTIONS ====================
 
 // ==================== MODULE EXPORTS ====================
@@ -1040,6 +1177,8 @@ module.exports = {
   // Token Management Functions
   logout,
   logoutAll,
+  requestPasswordReset,
+  resetPasswordWithToken,
   
   // Token Cleanup Functions
   cleanupExpiredTokens

@@ -1,3 +1,52 @@
+const normalizeDateValue = (value) => {
+  if (!value) return null;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+  if (typeof value === 'number') {
+    const fromNumber = new Date(value);
+    return Number.isNaN(fromNumber.getTime()) ? null : fromNumber;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const candidates = [];
+
+    if (trimmed.includes(' ') && !trimmed.includes('T')) {
+      candidates.push(trimmed.replace(' ', 'T'));
+    }
+    candidates.push(trimmed);
+
+    if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
+      const withZ = `${trimmed.includes('T') ? trimmed : trimmed.replace(' ', 'T')}Z`;
+      candidates.push(withZ);
+    }
+
+    for (const candidate of candidates) {
+      const date = new Date(candidate);
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
+    }
+  }
+  return null;
+};
+
+const formatDateTime = (value) => {
+  const date = normalizeDateValue(value);
+  if (!date) return '-';
+  try {
+    return new Intl.DateTimeFormat('tr-TR', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone: 'Europe/Istanbul',
+      hour12: false
+    }).format(date);
+  } catch (error) {
+    return date.toLocaleString('tr-TR');
+  }
+};
 /**
  * Hospital Job Detail Page
  * 
@@ -190,7 +239,7 @@ const JobDetailPage = () => {
     return candidates.length > 0 ? candidates[0] : '';
   }, []);
 
-  const allRevisionEntries = useMemo(() => {
+const allRevisionEntries = useMemo(() => {
     const collected = [];
     const pushEntry = (rawEntry = {}) => {
       const note = resolveRevisionNote(rawEntry);
@@ -209,12 +258,23 @@ const JobDetailPage = () => {
         rawEntry.actor_role ||
         rawEntry.changed_by ||
         rawEntry.role ||
-        'admin';
+        'unknown';
 
+      let normalizedRole = typeof roleRaw === 'string' ? roleRaw.toLowerCase() : roleRaw;
+      if (!normalizedRole || normalizedRole === 'unknown') {
+        const statusName = getTurkishStatusName(rawEntry?.new_status_name ?? rawEntry?.new_status_id ?? rawEntry?.status_id);
+        if (statusName === 'Revizyon Gerekli') {
+          normalizedRole = 'admin';
+        }
+      }
+      if (!normalizedRole) {
+        normalizedRole = 'unknown';
+      }
       collected.push({
         changed_at: changedAt,
-        changed_by_role: typeof roleRaw === 'string' ? roleRaw.toLowerCase() : roleRaw,
-        note: note.trim()
+        changed_by_role: normalizedRole,
+        note: note.trim(),
+        _source: rawEntry
       });
     };
 
@@ -233,7 +293,12 @@ const JobDetailPage = () => {
     }
 
     if (Array.isArray(job?.revision_history)) {
-      job.revision_history.forEach((entry) => pushEntry(entry));
+      job.revision_history.forEach((entry) => {
+        const role = (entry?.changed_by_role || entry?.actor_role || entry?.changed_by || '').toString().toLowerCase();
+        if (role === 'admin') {
+          pushEntry(entry);
+        }
+      });
     }
 
     if (Array.isArray(job?.status_history)) {
@@ -246,8 +311,8 @@ const JobDetailPage = () => {
 
     const getTime = (entry) => {
       if (!entry) return 0;
-      const time = new Date(entry.changed_at ?? 0).getTime();
-      return Number.isNaN(time) ? 0 : time;
+      const date = normalizeDateValue(entry.changed_at ?? 0);
+      return date ? date.getTime() : 0;
     };
 
     const seen = new Set();
@@ -260,7 +325,7 @@ const JobDetailPage = () => {
 
     unique.sort((a, b) => getTime(b) - getTime(a));
     return unique;
-  }, [rawHistory, job?.revision_history, job?.status_history, resolveRevisionNote, getTurkishStatusName, job?.revision_requested_at]);
+  }, [rawHistory, job?.revision_history, job?.status_history, resolveRevisionNote, getTurkishStatusName, job?.revision_requested_at, normalizeDateValue]);
 
   const jobLatestRevisionFallback =
     allRevisionEntries[0] ||
@@ -274,10 +339,16 @@ const JobDetailPage = () => {
           .find((entry) => getTurkishStatusName(entry.new_status_name ?? entry.new_status_id) === 'Revizyon Gerekli')
       : null);
 
-  const hospitalRevisionCount =
-    allRevisionEntries.length ||
-    job?.revision_count ||
-    (jobLatestRevisionFallback ? 1 : 0);
+  const hospitalRevisionCount = useMemo(() => {
+    const serverCountRaw = Number(job?.revision_count ?? job?.revisionCount);
+    if (Number.isFinite(serverCountRaw) && serverCountRaw >= 0) {
+      return serverCountRaw;
+    }
+    const adminEntries = allRevisionEntries.filter((entry) => entry.changed_by_role === 'admin');
+    const dynamicCount = adminEntries.length;
+    if (dynamicCount > 0) return dynamicCount;
+    return jobLatestRevisionFallback ? 1 : 0;
+  }, [allRevisionEntries, job?.revision_count, job?.revisionCount, jobLatestRevisionFallback]);
 
   const latestRevisionNote =
     (allRevisionEntries[0]?.note && allRevisionEntries[0].note.trim()) ||

@@ -108,6 +108,7 @@ export const ENDPOINTS = {
     PROFILE_COMPLETE: '/doctor/profile/complete', // GET - Tam profil bilgileri (alias)
     PROFILE_COMPLETION: '/doctor/profile/completion', // GET - Profil tamamlanma oranı
     PROFILE_PERSONAL: '/doctor/profile/personal', // PATCH - Kişisel bilgi güncelleme
+    ACCOUNT_DEACTIVATE: '/doctor/account/deactivate', // POST - Hesabı pasife al
     
     // Eğitim CRUD
     EDUCATIONS: '/doctor/educations', // GET/POST - Eğitim listesi/oluşturma

@@ -2,7 +2,7 @@
  * @file databaseTransport.js
  * @description Winston için custom MSSQL database transport
  * 
- * Bu transport, Winston loglarını logs.application_logs tablosuna yazar.
+ * Bu transport, Winston loglarını dbo.application_logs tablosuna yazar.
  * Async queue kullanarak performans optimize edilmiştir.
  * 
  * Özellikler:
@@ -149,7 +149,7 @@ class DatabaseTransport extends Transport {
     try {
       // Batch insert
       const db = this.getDb();
-      await db('logs.application_logs').insert(logsToInsert);
+      await db('dbo.application_logs').insert(logsToInsert);
     } catch (error) {
       // Database error durumunda silent failure
       // Critical error ise logları geri queue'ya koy (maksimum 100 log)

@@ -563,6 +563,8 @@ router.get('/profile/photo/history', doctorController.getPhotoRequestHistory);
  */
 router.delete('/profile/photo/request', doctorController.cancelPhotoRequest);
 
+router.post('/account/deactivate', doctorController.deactivateAccount);
+
 /**
  * @route   GET /api/doctor/dashboard
  * @desc    Doktorun dashboard verilerini getir

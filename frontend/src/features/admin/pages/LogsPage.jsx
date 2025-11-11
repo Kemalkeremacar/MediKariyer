@@ -57,6 +57,8 @@ const LogsPage = () => {
     page: 1,
     limit: 20
   });
+  const [auditActionQuery, setAuditActionQuery] = useState('');
+  const [auditResourceQuery, setAuditResourceQuery] = useState('');
   
   const [securityFilters, setSecurityFilters] = useState({
     eventType: '',
@@ -153,6 +155,8 @@ const LogsPage = () => {
       page: 1,
       limit: 20
     });
+    setAuditActionQuery('');
+    setAuditResourceQuery('');
     setSecurityFilters({
       eventType: '',
       severity: '',
@@ -172,23 +176,119 @@ const LogsPage = () => {
   // Arama filtresi
   const filteredLogs = useMemo(() => {
     if (!currentData?.logs) return [];
-    if (!searchQuery) return currentData.logs;
+    
+    let logs = [...currentData.logs];
+    
+    // Tab bazlı filtreler (frontend fallback)
+    if (activeTab === 'application') {
+      if (applicationFilters.level) {
+        logs = logs.filter(log => (log.level || '').toLowerCase() === applicationFilters.level.toLowerCase());
+      }
+      if (applicationFilters.category) {
+        logs = logs.filter(log => (log.category || '').toLowerCase().includes(applicationFilters.category.toLowerCase()));
+      }
+      if (applicationFilters.startDate) {
+        const start = new Date(applicationFilters.startDate);
+        logs = logs.filter(log => {
+          const ts = log.timestamp ? new Date(log.timestamp) : null;
+          return ts && ts >= start;
+        });
+      }
+      if (applicationFilters.endDate) {
+        const end = new Date(applicationFilters.endDate);
+        end.setHours(23, 59, 59, 999);
+        logs = logs.filter(log => {
+          const ts = log.timestamp ? new Date(log.timestamp) : null;
+          return ts && ts <= end;
+        });
+      }
+    } else if (activeTab === 'audit') {
+      if (auditActionQuery || auditFilters.action) {
+        const actionFilter = (auditActionQuery || auditFilters.action).toLowerCase();
+        logs = logs.filter(log => (log.action || '').toLowerCase().includes(actionFilter));
+      }
+      if (auditResourceQuery || auditFilters.resourceType) {
+        const resourceFilter = (auditResourceQuery || auditFilters.resourceType).toLowerCase();
+        logs = logs.filter(log => (log.resource_type || '').toLowerCase().includes(resourceFilter));
+      }
+      if (auditFilters.startDate) {
+        const start = new Date(auditFilters.startDate);
+        logs = logs.filter(log => {
+          const ts = log.timestamp ? new Date(log.timestamp) : null;
+          return ts && ts >= start;
+        });
+      }
+      if (auditFilters.endDate) {
+        const end = new Date(auditFilters.endDate);
+        end.setHours(23, 59, 59, 999);
+        logs = logs.filter(log => {
+          const ts = log.timestamp ? new Date(log.timestamp) : null;
+          return ts && ts <= end;
+        });
+      }
+    } else if (activeTab === 'security') {
+      if (securityFilters.eventType) {
+        logs = logs.filter(log => (log.event_type || '').toLowerCase().includes(securityFilters.eventType.toLowerCase()));
+      }
+      if (securityFilters.severity) {
+        logs = logs.filter(log => (log.severity || '').toLowerCase() === securityFilters.severity.toLowerCase());
+      }
+      if (securityFilters.startDate) {
+        const start = new Date(securityFilters.startDate);
+        logs = logs.filter(log => {
+          const ts = log.timestamp ? new Date(log.timestamp) : null;
+          return ts && ts >= start;
+        });
+      }
+      if (securityFilters.endDate) {
+        const end = new Date(securityFilters.endDate);
+        end.setHours(23, 59, 59, 999);
+        logs = logs.filter(log => {
+          const ts = log.timestamp ? new Date(log.timestamp) : null;
+          return ts && ts <= end;
+        });
+      }
+    }
+    
+    if (!searchQuery) return logs;
     
     const query = searchQuery.toLowerCase();
-    return currentData.logs.filter(log => {
+    return logs.filter(log => {
       const message = log.message?.toLowerCase() || '';
       const action = log.action?.toLowerCase() || '';
       const actorName = log.actor_name?.toLowerCase() || '';
       const actorEmail = log.actor_email?.toLowerCase() || '';
       const email = log.email?.toLowerCase() || '';
+      const eventType = log.event_type?.toLowerCase() || '';
+      const category = log.category?.toLowerCase() || '';
       
       return message.includes(query) || 
              action.includes(query) || 
              actorName.includes(query) || 
              actorEmail.includes(query) ||
-             email.includes(query);
+             email.includes(query) ||
+             eventType.includes(query) ||
+             category.includes(query);
     });
-  }, [currentData, searchQuery]);
+  }, [
+    currentData,
+    activeTab,
+    applicationFilters.level,
+    applicationFilters.category,
+    applicationFilters.startDate,
+    applicationFilters.endDate,
+    auditActionQuery,
+    auditResourceQuery,
+    auditFilters.action,
+    auditFilters.resourceType,
+    auditFilters.startDate,
+    auditFilters.endDate,
+    securityFilters.eventType,
+    securityFilters.severity,
+    securityFilters.startDate,
+    securityFilters.endDate,
+    searchQuery
+  ]);
 
   // Timestamp formatı - Daha okunabilir
   const formatTimestamp = (timestamp) => {
@@ -491,24 +591,36 @@ const LogsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="admin-form-label">Aksiyon</label>
-                <input
-                  type="text"
-                  placeholder="Aksiyon ara..."
-                  value={auditFilters.action}
-                  onChange={(e) => handleFilterChange('action', e.target.value)}
-                  className="admin-form-input"
-                />
+                <div className="logs-search-wrapper">
+                  <FiSearch className="logs-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Aksiyon ara..."
+                    value={auditActionQuery}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setAuditActionQuery(value);
+                    }}
+                    className="admin-form-input pl-10"
+                  />
+                </div>
               </div>
               
               <div>
                 <label className="admin-form-label">Kaynak Tipi</label>
-                <input
-                  type="text"
-                  placeholder="Resource type..."
-                  value={auditFilters.resourceType}
-                  onChange={(e) => handleFilterChange('resourceType', e.target.value)}
-                  className="admin-form-input"
-                />
+                <div className="logs-search-wrapper">
+                  <FiSearch className="logs-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Resource type..."
+                    value={auditResourceQuery}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setAuditResourceQuery(value);
+                    }}
+                    className="admin-form-input pl-10"
+                  />
+                </div>
               </div>
               
               <div>

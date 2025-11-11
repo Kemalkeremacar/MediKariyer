@@ -544,6 +544,44 @@ const changePassword = catchAsync(async (req, res) => {
   
   return sendSuccess(res, 'Şifre başarıyla değiştirildi');
 });
+
+/**
+ * Şifre sıfırlama talebi oluşturur
+ */
+const forgotPassword = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  logger.info('Password reset request received', { email });
+
+  await authService.requestPasswordReset({
+    email,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent') || null
+  });
+
+  return sendSuccess(
+    res,
+    'Eğer kayıtlı bir hesabınız varsa, şifre sıfırlama bağlantısı e-posta adresinize gönderildi.'
+  );
+});
+
+/**
+ * Şifre sıfırlama token'ı ile yeni şifre belirler
+ */
+const resetPassword = catchAsync(async (req, res) => {
+  const { token, password } = req.body;
+
+  logger.info('Password reset confirmation received');
+
+  await authService.resetPasswordWithToken({
+    token,
+    newPassword: password,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent') || null
+  });
+
+  return sendSuccess(res, 'Şifreniz başarıyla güncellendi. Yeni şifrenizle giriş yapabilirsiniz.');
+});
 // ==================== END PASSWORD MANAGEMENT FUNCTIONS ====================
 
 // ==================== USER INFO FUNCTIONS ====================
@@ -654,6 +692,8 @@ module.exports = {
   
   // Password Management Functions
   changePassword,
+  forgotPassword,
+  resetPassword,
   
   // User Info Functions
   getMe,

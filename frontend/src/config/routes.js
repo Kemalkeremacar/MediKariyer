@@ -47,6 +47,8 @@ export const ROUTE_CONFIG = {
     LOGIN: '/login',
     REGISTER: '/register',
     PENDING_APPROVAL: '/pending-approval',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD: '/reset-password',
   },
   
   // ============================================================================
@@ -78,6 +80,7 @@ export const ROUTE_CONFIG = {
     JOB_DETAIL: '/doctor/jobs/:jobId',
     APPLICATIONS: '/doctor/applications',
     APPLICATION_DETAIL: '/doctor/applications/:applicationId',
+    SETTINGS: '/doctor/settings',
   },
   
   // ============================================================================

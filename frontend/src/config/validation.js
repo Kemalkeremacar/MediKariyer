@@ -194,6 +194,36 @@ export const loginSchema = z.object({
 });
 
 /**
+ * Forgot Password Schema - Backend forgotPasswordSchema ile tam uyumlu
+ *
+ * Şifre sıfırlama talebi formu validasyonu
+ * Sadece e-posta adresi kontrolü içerir
+ *
+ * Field'lar:
+ * - email: E-posta adresi (emailSchema)
+ */
+export const forgotPasswordSchema = z.object({
+  email: emailSchema
+});
+
+/**
+ * Reset Password Schema - Backend resetPasswordSchema ile uyumlu
+ *
+ * Şifre sıfırlama formu validasyonu
+ * Token, yeni şifre ve şifre tekrarı kontrolü içerir
+ */
+export const resetPasswordSchema = z.object({
+  token: z.string()
+    .min(32, 'Geçersiz veya eksik şifre sıfırlama bağlantısı')
+    .max(255, 'Geçersiz şifre sıfırlama bağlantısı'),
+  password: passwordSchema,
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Şifreler eşleşmiyor',
+  path: ['confirmPassword']
+});
+
+/**
  * Doctor Registration Schema - Backend registerDoctorSchema ile tam uyumlu
  * 
  * Doktor kayıt formu validasyonu
@@ -705,6 +735,64 @@ export const validateLogin = (data) => {
 };
 
 /**
+ * Forgot Password Validation Function - Backend ile uyumlu
+ *
+ * Şifremi Unuttum form verilerini validate eder
+ *
+ * Parametreler:
+ * @param {Object} data - Form verileri (email)
+ *
+ * Dönüş:
+ * @returns {Object} Validation sonucu (isValid, data, errors)
+ */
+export const validateForgotPassword = (data) => {
+  try {
+    const validatedData = forgotPasswordSchema.parse(data);
+    return { isValid: true, data: validatedData, errors: [] };
+  } catch (error) {
+    return {
+      isValid: false,
+      data: null,
+      errors: error.errors?.map(err => err.message) || ['Validation error']
+    };
+  }
+};
+
+export const validateChangePassword = (data) => {
+  try {
+    const validatedData = changePasswordSchema.parse(data);
+    return { isValid: true, data: validatedData, errors: [] };
+  } catch (error) {
+    return {
+      isValid: false,
+      data: null,
+      errors: error.errors?.map(err => err.message) || ['Validation error']
+    };
+  }
+};
+
+/**
+ * Reset Password Validation Function - Backend ile uyumlu
+ *
+ * Şifre sıfırlama form verilerini validate eder
+ *
+ * @param {Object} data - Form verileri (token, password, confirmPassword)
+ * @returns {Object} Validation sonucu (isValid, data, errors)
+ */
+export const validateResetPassword = (data) => {
+  try {
+    const validatedData = resetPasswordSchema.parse(data);
+    return { isValid: true, data: validatedData, errors: [] };
+  } catch (error) {
+    return {
+      isValid: false,
+      data: null,
+      errors: error.errors?.map(err => err.message) || ['Validation error']
+    };
+  }
+};
+
+/**
  * Doctor Registration Validation Function - Backend ile uyumlu
  * 
  * Doktor kayıt form verilerini validate eder
@@ -809,6 +897,8 @@ export default {
   loginSchema,
   registerDoctorSchema,
   registerHospitalSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
   changePasswordSchema,
   refreshTokenSchema,
   logoutSchema,
@@ -844,6 +934,9 @@ export default {
   validateLogin,
   validateDoctorRegister,
   validateHospitalRegister,
+  validateForgotPassword,
+  validateChangePassword,
+  validateResetPassword,
   validateRefreshToken,
   validateLogout,
 };

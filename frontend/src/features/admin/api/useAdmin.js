@@ -258,8 +258,8 @@ export function useUpdateJob() {
       const { jobId, jobData } = variables;
       
       // Ana sayfadaki iş ilanları listesini yenile
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       
       // Detay sayfasındaki iş ilanı verisini manuel güncelle
       queryClient.setQueryData([QUERY_KEYS.JOB_DETAIL, jobId], (oldData) => {
@@ -301,8 +301,8 @@ export function useUpdateJobStatus() {
       const { jobId, status_id } = variables;
       
       // Ana sayfadaki iş ilanları listesini yenile
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       
       // Detay sayfasındaki iş ilanı verisini manuel güncelle
       queryClient.setQueryData([QUERY_KEYS.JOB_DETAIL, jobId], (oldData) => {
@@ -333,8 +333,8 @@ export function useDeleteJob() {
   return useMutation({
     mutationFn: (jobId) => apiRequest.delete(buildEndpoint(ENDPOINTS.ADMIN.JOB_DELETE, { id: jobId })),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
     },
   });
 }
@@ -348,8 +348,8 @@ export function useApproveJob() {
   return useMutation({
     mutationFn: (jobId) => apiRequest.post(buildEndpoint(ENDPOINTS.ADMIN.JOB_APPROVE, { id: jobId }), {}),
     onSuccess: (data, jobId) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
       showToast.success('İş ilanı onaylandı');
     },
@@ -370,8 +370,8 @@ export function useRequestRevision() {
       apiRequest.post(buildEndpoint(ENDPOINTS.ADMIN.JOB_REVISION, { id: jobId }), { revision_note }),
     onSuccess: (data, variables) => {
       const { jobId } = variables;
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
       showToast.success('Revizyon talebi gönderildi');
     },
@@ -392,8 +392,8 @@ export function useRejectJob() {
       apiRequest.post(buildEndpoint(ENDPOINTS.ADMIN.JOB_REJECT, { id: jobId }), { rejection_reason }),
     onSuccess: (data, variables) => {
       const { jobId } = variables;
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.JOBS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
       showToast.success('İş ilanı reddedildi');
     },
@@ -471,8 +471,8 @@ export function useUpdateApplicationStatus() {
       const { applicationId, status_id } = variables;
       
       // Ana sayfadaki başvuru listesini yenile
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPLICATIONS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.APPLICATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       
       // Detay sayfasındaki başvuru verisini manuel güncelle
       queryClient.setQueryData([QUERY_KEYS.APPLICATION_DETAIL, applicationId], (oldData) => {
@@ -504,8 +504,8 @@ export function useDeleteApplication() {
     mutationFn: (applicationId) => 
       apiRequest.delete(buildEndpoint(ENDPOINTS.ADMIN.APPLICATION_DELETE, { id: applicationId })),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.APPLICATIONS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.DASHBOARD });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.APPLICATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
     },
   });
 }
@@ -555,8 +555,8 @@ export function useUpdateNotification() {
     mutationFn: ({ notificationId, notificationData }) => 
       apiRequest.patch(buildEndpoint(ENDPOINTS.ADMIN.NOTIFICATION_UPDATE, { id: notificationId }), notificationData),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATION_DETAIL });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.NOTIFICATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.NOTIFICATION_DETAIL] });
     },
   });
 }
@@ -571,8 +571,8 @@ export function useDeleteNotification() {
     mutationFn: (notificationId) => 
       apiRequest.delete(buildEndpoint(ENDPOINTS.ADMIN.NOTIFICATION_DELETE, { id: notificationId })),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATIONS });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.NOTIFICATION_DETAIL });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.NOTIFICATIONS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.NOTIFICATION_DETAIL] });
     },
   });
 }
@@ -634,8 +634,8 @@ export function useDeleteContactMessage() {
   return useMutation({
     mutationFn: (messageId) => apiRequest.delete(buildEndpoint(ENDPOINTS.ADMIN.CONTACT_MESSAGE_DELETE, { id: messageId })),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTACT_MESSAGES });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CONTACT_STATISTICS });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CONTACT_MESSAGES] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CONTACT_STATISTICS] });
     },
   });
 }

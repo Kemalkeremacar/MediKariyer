@@ -135,6 +135,8 @@ import NotFound from '@/features/public/pages/NotFound';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import RegisterPage from '@/features/auth/pages/RegisterPage';
 import PendingApprovalPage from '@/features/auth/pages/PendingApprovalPage';
+import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
+import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
 
 /**
  * ============================================================================
@@ -176,6 +178,7 @@ const DoctorJobDetailPage = lazy(() => import('@/features/doctor/pages/JobDetail
 const DoctorApplicationsPage = lazy(() => import('@/features/doctor/pages/ApplicationsPage'));
 const DoctorApplicationDetailPage = lazy(() => import('@/features/doctor/pages/ApplicationDetailPage'));
 const PhotoManagementPage = lazy(() => import('@/features/doctor/pages/PhotoManagementPage'));
+const DoctorSettingsPage = lazy(() => import('@/features/doctor/pages/SettingsPage'));
 
 /**
  * ============================================================================
@@ -304,6 +307,28 @@ const AppRoutes = () => {
               </GuestGuard>
             }
           />
+
+          {/* 
+            Şifre sıfırlama isteği sayfası - /forgot-password
+            GuestGuard: Sadece misafir kullanıcılar erişebilir
+          */}
+          <Route
+            path="forgot-password"
+            element={
+              <GuestGuard>
+                <ForgotPasswordPage />
+              </GuestGuard>
+            }
+          />
+
+          <Route
+            path="reset-password"
+            element={
+              <GuestGuard>
+                <ResetPasswordPage />
+              </GuestGuard>
+            }
+          />
           
           {/* 
             Onay bekleme sayfası - /pending-approval
@@ -364,6 +389,21 @@ const AppRoutes = () => {
                   <RoleGuard allowedRoles={['doctor']}>
                     <ApprovalGuard>
                       <DoctorProfile />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          <Route
+            path="doctor/settings"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['doctor']}>
+                    <ApprovalGuard>
+                      <DoctorSettingsPage />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>

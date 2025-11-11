@@ -619,20 +619,23 @@ export const usePhotoRequestHistory = () => {
  * @returns {Object} Mutation hook
  */
 export const useCancelPhotoRequest = () => {
-  const queryClient = useQueryClient();
-  
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest.delete('/doctor/profile/photo/request');
-      return response.data;
-    },
+    mutationFn: () => apiRequest.delete(ENDPOINTS.DOCTOR.PHOTO_REQUEST),
     onSuccess: () => {
-      // Photo request status'u yenile
-      queryClient.invalidateQueries({ queryKey: ['doctor', 'photo-request-status'] });
+      qc.invalidateQueries(['doctor', 'photo', 'status']);
+      qc.invalidateQueries(['doctor', 'photo', 'history']);
+      showToast.success('Fotoğraf talebi iptal edildi');
     },
-    onError: (error) => {
-      logger.error('Cancel photo request failed:', error);
-    }
+    onError: (err) => {
+      showToast.error(err.message || 'Fotoğraf talebi iptal edilemedi');
+    },
+  });
+};
+
+export const useDeactivateDoctorAccount = () => {
+  return useMutation({
+    mutationFn: () => apiRequest.post(ENDPOINTS.DOCTOR.ACCOUNT_DEACTIVATE)
   });
 };
 

@@ -404,6 +404,38 @@ const registerHospitalSchema = Joi.object({
  */
 const logoutSchema = Joi.object({}); // Boş obje, authMiddleware ile user bilgisi alınır
 
+/**
+ * Forgot Password Schema
+ * @description Şifre sıfırlama talebi validasyonu
+ */
+const forgotPasswordSchema = Joi.object({
+  email: emailSchema
+});
+
+/**
+ * Reset Password Schema
+ * @description Şifre sıfırlama işlemi validasyonu
+ */
+const resetPasswordSchema = Joi.object({
+  token: Joi.string()
+    .min(32)
+    .max(255)
+    .required()
+    .messages({
+      'string.min': 'Geçersiz veya eksik şifre sıfırlama token\'ı',
+      'string.max': 'Geçersiz şifre sıfırlama token\'ı',
+      'any.required': 'Şifre sıfırlama token\'ı zorunludur'
+    }),
+  password: passwordSchema,
+  confirmPassword: Joi.string()
+    .valid(Joi.ref('password'))
+    .optional()
+    .allow('', null)
+    .messages({
+      'any.only': 'Şifreler eşleşmiyor'
+    })
+});
+
 // ==================== END AUTHENTICATION SCHEMAS ====================
 /**
  * AuthSchemas modülü export'ları
@@ -416,6 +448,8 @@ module.exports = {
   loginSchema,
   changePasswordSchema,
   refreshTokenSchema,
-  logoutSchema
+  logoutSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema
 };
 // ==================== END MODULE EXPORTS ====================

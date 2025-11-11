@@ -305,10 +305,10 @@ const LoginPage = () => {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-green-200">
+                    <p className="text-sm font-medium text-slate-900">
                       Başarılı
                     </p>
-                    <p className="text-sm text-green-300 mt-1">
+                    <p className="text-sm text-slate-900 mt-1">
                       {location.state.message}
                     </p>
                   </div>

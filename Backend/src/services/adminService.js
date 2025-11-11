@@ -559,6 +559,13 @@ const getJobDetails = async (jobId) => {
 
   if (!job) return null;
   
+  const [{ admin_revision_count }] = await db('job_history as jh')
+    .join('users as u', 'jh.changed_by', 'u.id')
+    .where('jh.job_id', jobId)
+    .where('jh.new_status_id', 2) // Revizyon Gerekli durumuna geçişler
+    .where('u.role', 'admin')
+    .count({ admin_revision_count: '*' });
+
   // Debug: Tüm bilgileri kontrol et
   console.log('🔍 Admin getJobDetails - Job ID:', jobId);
   console.log('📋 Raw Job Object:', {
@@ -582,7 +589,9 @@ const getJobDetails = async (jobId) => {
     .whereNull('deleted_at') // Soft delete: Silinmiş başvuruları sayma
     .count('* as count');
     
-  return { ...job, application_count: parseInt(count) || 0 };
+  const revisionCount = parseInt(admin_revision_count, 10) || 0;
+    
+  return { ...job, revision_count: revisionCount, application_count: parseInt(count) || 0 };
 };
 
 // ============================================================================
@@ -618,7 +627,6 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
     .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
-    .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını gösterme
     .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
     .select(
       'a.*',
@@ -629,6 +637,7 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
       'dp.first_name',
       'dp.last_name',
       'dp.specialty_id as doctor_specialty_id',
+      'doctor_users.is_active as doctor_is_active',
       'residence_city.name as residence_city_name',
       'hp.institution_name',
       'ast.name as status'
@@ -690,9 +699,10 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
     .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
     .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
+    .join('application_statuses as ast', 'a.status_id', 'ast.id')
     .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
     .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
-    .where('doctor_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını sayma
+    .where('hospital_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını sayma
     .where('hospital_users.is_active', true); // Pasifleştirilmiş hastanelerin iş ilanlarını sayma
 
   if (search) {
@@ -1274,7 +1284,6 @@ const getApplicationDetails = async (applicationId) => {
       .where('a.id', applicationId)
       .whereNull('a.deleted_at')
       .whereNull('j.deleted_at')
-      .where('doctor_users.is_active', true)
       .where('hospital_users.is_active', true)
       .select(
         'a.*',
@@ -1283,6 +1292,7 @@ const getApplicationDetails = async (applicationId) => {
         'dp.first_name',
         'dp.last_name',
         'dp.specialty_id as doctor_specialty_id',
+        'doctor_users.is_active as doctor_is_active',
         'residence_city.name as residence_city_name',
         'hp.institution_name',
         'ast.name as status'

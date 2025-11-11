@@ -2171,6 +2171,45 @@ const cancelPhotoRequest = async (userId) => {
   return updated > 0;
 };
 
+/**
+ * Doktor hesabını siler (pasif hale getirir)
+ * @description Doktorun hesabını pasife alır ve oturumlarını sonlandırır
+ * @param {number} userId - Kullanıcının ID'si (users.id)
+ * @returns {Promise<boolean>} İşlem durumu
+ * @throws {AppError} Kullanıcı bulunamadığında veya hesap zaten pasif olduğunda
+ */
+const deactivateAccount = async (userId) => {
+  try {
+    await db.transaction(async (trx) => {
+      const user = await trx('users').where('id', userId).first();
+      if (!user) {
+        throw new AppError('Kullanıcı bulunamadı', 404);
+      }
+
+      if (user.is_active === false) {
+        throw new AppError('Hesabınız zaten pasif durumda', 400);
+      }
+
+      await trx('users')
+        .where('id', userId)
+        .update({
+          is_active: false,
+          updated_at: trx.fn.now()
+        });
+
+      await trx('refresh_tokens').where('user_id', userId).del();
+    });
+
+    return true;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    logger.error('Doctor account deactivate error:', error);
+    throw new AppError('Hesap kapatılamadı', 500);
+  }
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -2225,5 +2264,8 @@ module.exports = {
   requestProfilePhotoChange,
   getMyPhotoRequestStatus,
   getMyPhotoRequestHistory,
-  cancelPhotoRequest
+  cancelPhotoRequest,
+
+  // Hesap yönetimi
+  deactivateAccount
 };
