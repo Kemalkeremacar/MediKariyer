@@ -25,7 +25,7 @@ const expressLoader = require('./expressLoader'); // Express'in temel ayarların
 // Proje genelinde kullanılacak yardımcı modüller (Utilities)
 const logger = require('./src/utils/logger'); // Olayları (info, error, warning) kaydetmek için kullanılan Winston logger.
 const { testConnection } = require('./src/config/dbConfig'); // Veritabanı bağlantı testi
-const { startTokenCleanupScheduler } = require('./src/utils/tokenCleanup'); // Token temizleme sistemi
+const { startTokenCleanupScheduler, stopTokenCleanupScheduler } = require('./src/utils/tokenCleanup'); // Token temizleme sistemi
 // Not: globalErrorHandler kaldırıldı. Hata yönetimi sorumluluğu expressLoader'a devredildi.
 
 // Yeni bir Express uygulaması oluşturulur.
@@ -80,6 +80,7 @@ startServer();
 // SIGTERM sinyali (genellikle process manager'lar tarafından gönderilir, örn: PM2, Docker)
 process.on('SIGTERM', () => {
   logger.info('SIGTERM sinyali alındı, sunucu düzgün bir şekilde kapatılıyor.');
+  stopTokenCleanupScheduler();
   if (server) {
     server.close(() => {
       logger.info('İşlem sonlandırıldı.');
@@ -93,6 +94,7 @@ process.on('SIGTERM', () => {
 // SIGINT sinyali (genellikle Ctrl+C ile manuel olarak gönderilir)
 process.on('SIGINT', () => {
   logger.info('SIGINT sinyali alındı, sunucu düzgün bir şekilde kapatılıyor.');
+  stopTokenCleanupScheduler();
   if (server) {
     server.close(() => {
       logger.info('İşlem sonlandırıldı.');

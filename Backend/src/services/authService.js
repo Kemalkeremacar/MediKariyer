@@ -32,6 +32,33 @@ const jwtUtils = require('../utils/jwtUtils');
 const LogService = require('./logService');
 const emailService = require('../utils/emailService');
 
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * JWT refresh token süresini (gün cinsinden) ortam değişkenlerinden okur.
+ * Ortam değişkeni tanımlı değilse veya format hatalıysa varsayılan olarak 7 gün kullanılır.
+ * Desteklenen formatlar: "7d", "7", "30d" vb.
+ */
+const resolveRefreshTokenExpiryDays = () => {
+  const rawValue = (process.env.JWT_REFRESH_EXPIRES_IN || '').trim();
+
+  if (!rawValue) {
+    return 7;
+  }
+
+  const daySuffixMatch = rawValue.match(/^(\d+)\s*d$/i);
+  if (daySuffixMatch) {
+    const parsed = parseInt(daySuffixMatch[1], 10);
+    return Number.isNaN(parsed) ? 7 : parsed;
+  }
+
+  const numericValue = parseInt(rawValue, 10);
+  return Number.isNaN(numericValue) ? 7 : numericValue;
+};
+
+const REFRESH_TOKEN_EXPIRY_DAYS = resolveRefreshTokenExpiryDays();
+const REFRESH_TOKEN_EXPIRY_MS = REFRESH_TOKEN_EXPIRY_DAYS * DAY_IN_MS;
+
 // ==================== TYPE DEFINITIONS ====================
 /**
  * @typedef {object} User
@@ -890,9 +917,6 @@ const registerHospital = async (registrationData) => {
 const refreshToken = async (refreshToken) => {
   const { user, tokenRecord } = await validateRefreshToken(refreshToken);
 
-  // jwtUtils artık dosya başında import edildi
-  const { DEFAULT_SYSTEM_SETTINGS } = require('../config/appConstants');
-  
   // Yeni access token oluştur
   const accessToken = jwtUtils.generateAccessToken({
     id: user.id,
@@ -905,7 +929,7 @@ const refreshToken = async (refreshToken) => {
   
   // Token rotation kontrolü - sadece token'ın yarısı geçmişse yeni token oluştur
   const tokenAge = Date.now() - new Date(tokenRecord.created_at).getTime();
-  const tokenMaxAge = 7 * 24 * 60 * 60 * 1000; // 7 gün
+  const tokenMaxAge = REFRESH_TOKEN_EXPIRY_MS;
   
   if (tokenAge > tokenMaxAge / 2) {
     // Token'ın yarısı geçmişse yeni refresh token oluştur
@@ -916,11 +940,7 @@ const refreshToken = async (refreshToken) => {
     });
     
     const newRefreshTokenHash = jwtUtils.hashRefreshToken(newRefreshToken);
-    
-    // Refresh token süresini appConstants'tan al
-    const refreshTokenExpiry = DEFAULT_SYSTEM_SETTINGS.refresh_token_expiry || '7d';
-    const days = parseInt(refreshTokenExpiry.replace('d', ''));
-    const expiryTime = days * 24 * 60 * 60 * 1000;
+    const expiryTime = REFRESH_TOKEN_EXPIRY_MS;
     
     await db.transaction(async (trx) => {
       await trx('refresh_tokens').where('id', tokenRecord.id).del();

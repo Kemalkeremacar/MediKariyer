@@ -11,6 +11,45 @@ const db = require('../config/dbConfig').db;
 const logger = require('./logger');
 
 /**
+ * Çalışan cron görevlerinin referanslarını tutar.
+ * Graceful shutdown sırasında bu referanslar üzerinden stop/destroy çağrıları yapılır.
+ * @type {import('node-cron').ScheduledTask[]}
+ */
+const scheduledTasks = [];
+
+/**
+ * Yeni oluşturulan cron görevini kayıt altına alır.
+ * @param {import('node-cron').ScheduledTask} task
+ */
+const registerTask = (task) => {
+  scheduledTasks.push(task);
+  return task;
+};
+
+/**
+ * Halihazırda çalışan görevleri durdurur ve listeden temizler.
+ * Hatalar yutulmadan loglanır ki kapatma sürecinde sorunlar görülebilsin.
+ */
+const stopAllRegisteredTasks = () => {
+  if (!scheduledTasks.length) {
+    return;
+  }
+
+  scheduledTasks.forEach((task, index) => {
+    try {
+      task.stop();
+      if (typeof task.destroy === 'function') {
+        task.destroy();
+      }
+    } catch (error) {
+      logger.error('Token cleanup task stop error:', { index, error });
+    }
+  });
+
+  scheduledTasks.length = 0;
+};
+
+/**
  * Süresi dolmuş refresh token'ları temizler
  * @returns {Promise<{deleted: number, errors: number}>} Temizleme sonucu
  */
@@ -85,32 +124,43 @@ const getTokenStats = async () => {
  * Otomatik temizleme sistemi başlatır
  */
 const startTokenCleanupScheduler = () => {
+  if (scheduledTasks.length > 0) {
+    logger.warn('Token cleanup scheduler already running. Skipping reinitialisation.');
+    return;
+  }
+
   // Her gün saat 02:00'da süresi dolmuş token'ları temizle
-  cron.schedule('0 2 * * *', async () => {
-    logger.info('Starting scheduled token cleanup...');
-    await cleanupExpiredTokens();
-  });
+  registerTask(
+    cron.schedule('0 2 * * *', async () => {
+      logger.info('Starting scheduled token cleanup...');
+      await cleanupExpiredTokens();
+    })
+  );
 
   // Her hafta pazar günü saat 03:00'da eski token'ları temizle
-  cron.schedule('0 3 * * 0', async () => {
-    logger.info('Starting scheduled old token cleanup...');
-    await cleanupOldTokens();
-  });
+  registerTask(
+    cron.schedule('0 3 * * 0', async () => {
+      logger.info('Starting scheduled old token cleanup...');
+      await cleanupOldTokens();
+    })
+  );
 
   // Her saat başı token istatistiklerini logla
-  cron.schedule('0 * * * *', async () => {
-    const stats = await getTokenStats();
-    logger.info('Token statistics:', stats);
-  });
+  registerTask(
+    cron.schedule('0 * * * *', async () => {
+      const stats = await getTokenStats();
+      logger.info('Token statistics:', stats);
+    })
+  );
 
   logger.info('Token cleanup scheduler started');
 };
 
 /**
- * Otomatik temizleme sistemi durdurur
+ * Otomatik temizleme sistemini durdurur
  */
 const stopTokenCleanupScheduler = () => {
-  cron.destroy();
+  stopAllRegisteredTasks();
   logger.info('Token cleanup scheduler stopped');
 };
 
