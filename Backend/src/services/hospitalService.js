@@ -1060,12 +1060,23 @@ const getAllApplications = async (userId, params = {}) => {
       const jobIdArray = Array.isArray(jobIds) ? jobIds : (typeof jobIds === 'string' ? jobIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : []);
       if (jobIdArray.length > 0) {
         // Bu jobIds'lerin bu hastaneye ait olduğunu kontrol et
-        const validJobIds = await db('jobs')
+        // SQL Server için tek elemanlı array'lerde whereIn sorun çıkarabiliyor
+        let validJobIdsQuery = db('jobs')
           .where('hospital_id', hospitalProfile.id)
-          .whereIn('id', jobIdArray)
-          .whereNull('deleted_at')
+          .whereNull('deleted_at');
+        
+        if (jobIdArray.length === 1) {
+          validJobIdsQuery = validJobIdsQuery.where('id', jobIdArray[0]);
+        } else {
+          validJobIdsQuery = validJobIdsQuery.whereIn('id', jobIdArray);
+        }
+        
+        const validJobIdsRaw = await validJobIdsQuery
           .select('id')
           .pluck('id');
+        
+        // SQL Server'dan gelen ID'leri integer'a dönüştür
+        const validJobIds = validJobIdsRaw.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
         
         if (validJobIds.length === 0) {
           // Geçerli job ID yoksa boş sonuç döndür
@@ -1081,7 +1092,12 @@ const getAllApplications = async (userId, params = {}) => {
         }
         
         // Sadece geçerli jobIds'leri kullan
-        query = query.whereIn('j.id', validJobIds);
+        // SQL Server için tek elemanlı array'lerde whereIn sorun çıkarabiliyor
+        if (validJobIds.length === 1) {
+          query = query.where('j.id', validJobIds[0]);
+        } else {
+          query = query.whereIn('j.id', validJobIds);
+        }
       }
     }
 
@@ -1150,7 +1166,12 @@ const getAllApplications = async (userId, params = {}) => {
       // jobIds string veya array olabilir
       const jobIdArray = Array.isArray(jobIds) ? jobIds : (typeof jobIds === 'string' ? jobIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : []);
       if (jobIdArray.length > 0) {
-        totalQuery.whereIn('j.id', jobIdArray);
+        // SQL Server için tek elemanlı array'lerde whereIn sorun çıkarabiliyor
+        if (jobIdArray.length === 1) {
+          totalQuery.where('j.id', jobIdArray[0]);
+        } else {
+          totalQuery.whereIn('j.id', jobIdArray);
+        }
       }
     }
 
