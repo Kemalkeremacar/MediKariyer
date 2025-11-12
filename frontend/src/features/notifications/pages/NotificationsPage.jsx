@@ -13,6 +13,7 @@ import {
 } from '../api/useNotifications';
 import NotificationCard from '../components/NotificationCard';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { Bell, CheckCircle, Filter, Search, Trash2 } from 'lucide-react';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -43,7 +44,7 @@ const NotificationsPage = () => {
     try {
       await markAsReadMutation.mutateAsync(notificationId);
     } catch (error) {
-      showToast.error('Bildirim okundu olarak işaretlenemedi');
+      showToast.error(toastMessages.notification.markReadError);
     }
   };
 
@@ -51,16 +52,16 @@ const NotificationsPage = () => {
     try {
       await markAllAsReadMutation.mutateAsync();
     } catch (error) {
-      showToast.error('Tüm bildirimler okundu olarak işaretlenemedi');
+      showToast.error(toastMessages.notification.markAllReadErrorGeneric);
     }
   };
 
   const handleDeleteNotification = async (notificationId) => {
     try {
       await deleteNotificationMutation.mutateAsync(notificationId);
-      showToast.success('Bildirim silindi');
+      showToast.success(toastMessages.notification.deleteSuccess);
     } catch (error) {
-      showToast.error('Bildirim silinemedi');
+      showToast.error(error, { defaultMessage: toastMessages.notification.deleteError });
     }
   };
 

@@ -816,16 +816,18 @@ const HospitalApplications = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-12 h-12 text-white" />
+            <div className="min-h-[500px] flex items-center justify-center">
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-12 text-center max-w-md">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileText className="w-12 h-12 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Henüz Başvuru Yok
+                </h3>
+                <p className="text-gray-300 mb-8">
+                  İş ilanlarınıza henüz başvuru yapılmamış.
+                </p>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">
-                Henüz Başvuru Yok
-              </h3>
-              <p className="text-gray-300 mb-8">
-                İş ilanlarınıza henüz başvuru yapılmamış.
-              </p>
             </div>
           )}
 
@@ -934,6 +936,10 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
     navigate(`/hospital/applications/${application.id}`);
   };
 
+  // Doktor aktif değilse (false, 0, null, undefined) bilgileri gizle
+  // Aktif edildiğinde (true, 1) bilgiler tekrar görünür olacak
+  const isDoctorInactive = !application.doctor_is_active || application.doctor_is_active === false || application.doctor_is_active === 0;
+
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -941,27 +947,41 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
         <div className="lg:col-span-4">
           <div className="flex items-start">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-bold text-white mb-1">
-                {application.first_name} {application.last_name}
-              </h3>
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-gray-300 text-sm">
-                  <Phone className="w-3 h-3" />
-                  <span className="truncate">{application.phone}</span>
+              {isDoctorInactive ? (
+                <div className="bg-gray-500/20 border border-gray-500/30 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-gray-400 mb-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">Kullanıcı Pasif</span>
+                  </div>
+                  <p className="text-gray-500 text-xs">
+                    Bu başvuruyu yapan doktor hesabını sildiği için profil bilgilerine erişilemiyor.
+                  </p>
                 </div>
-                <div className="flex items-center gap-2 text-gray-300 text-sm">
-                  <Mail className="w-3 h-3" />
-                  <span className="truncate">{application.email}</span>
-                </div>
-              </div>
-              <button
-                ref={profileButtonRef}
-                onClick={() => onViewProfile(application.doctor_profile_id, profileButtonRef.current)}
-                className="mt-3 text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
-              >
-                <Eye className="w-4 h-4" />
-                Profili Görüntüle
-              </button>
+              ) : (
+                <>
+                  <h3 className="text-lg font-bold text-white mb-1">
+                    {application.first_name} {application.last_name}
+                  </h3>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-gray-300 text-sm">
+                      <Phone className="w-3 h-3" />
+                      <span className="truncate">{application.phone || 'Belirtilmemiş'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-300 text-sm">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate">{application.email || 'Belirtilmemiş'}</span>
+                    </div>
+                  </div>
+                  <button
+                    ref={profileButtonRef}
+                    onClick={() => onViewProfile(application.doctor_profile_id, profileButtonRef.current)}
+                    className="mt-3 text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                  >
+                    <Eye className="w-4 h-4" />
+                    Profili Görüntüle
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1044,24 +1064,50 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
         {/* Durum Yönetimi - 5 kolon */}
         <div className="lg:col-span-5">
           <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            {/* Başvuru Durumu */}
-            <div className="mb-4">
-              <label className="text-sm font-medium text-gray-300 block mb-2 text-center">
-              Başvuru Durumu
-            </label>
-              <div className="flex items-center justify-center">
-              <StatusBadge status_id={application.status_id} statusName={application.status} />
-        </div>
-      </div>
-      
-            {/* Başvuru Detayları Butonu */}
-            <button
-              onClick={handleViewDetails}
-              className="w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <Eye className="w-3 h-3" />
-              Başvuru Detayları
-            </button>
+            {isDoctorInactive ? (
+              // Pasif doktor için disabled görünüm
+              <>
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-500 block mb-2 text-center">
+                    Başvuru Durumu
+                  </label>
+                  <div className="flex items-center justify-center">
+                    <div className="bg-gray-500/10 border border-gray-500/20 text-gray-500 px-3 py-1.5 rounded-lg text-sm font-medium">
+                      Kullanıcı Pasif
+                    </div>
+                  </div>
+                </div>
+                <button
+                  disabled
+                  className="w-full bg-gray-500/10 border border-gray-500/20 text-gray-500 px-3 py-1.5 rounded-lg text-sm font-medium cursor-not-allowed flex items-center justify-center gap-2 opacity-50"
+                >
+                  <Eye className="w-3 h-3" />
+                  Başvuru Detayları
+                </button>
+              </>
+            ) : (
+              // Aktif doktor için normal görünüm
+              <>
+                {/* Başvuru Durumu */}
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-gray-300 block mb-2 text-center">
+                    Başvuru Durumu
+                  </label>
+                  <div className="flex items-center justify-center">
+                    <StatusBadge status_id={application.status_id} statusName={application.status} />
+                  </div>
+                </div>
+                
+                {/* Başvuru Detayları Butonu */}
+                <button
+                  onClick={handleViewDetails}
+                  className="w-full bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <Eye className="w-3 h-3" />
+                  Başvuru Detayları
+                </button>
+              </>
+            )}
           </div>
         </div>
         </div>

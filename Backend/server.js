@@ -26,6 +26,7 @@ const expressLoader = require('./expressLoader'); // Express'in temel ayarların
 const logger = require('./src/utils/logger'); // Olayları (info, error, warning) kaydetmek için kullanılan Winston logger.
 const { testConnection } = require('./src/config/dbConfig'); // Veritabanı bağlantı testi
 const { startTokenCleanupScheduler, stopTokenCleanupScheduler } = require('./src/utils/tokenCleanup'); // Token temizleme sistemi
+const { startJobExpirationCron, stopJobExpirationCron } = require('./src/utils/jobExpirationCron'); // 30 günlük ilan süresi kontrolü
 // Not: globalErrorHandler kaldırıldı. Hata yönetimi sorumluluğu expressLoader'a devredildi.
 
 // Yeni bir Express uygulaması oluşturulur.
@@ -54,6 +55,9 @@ const startServer = async () => {
 
     // Token temizleme sistemini başlat
     startTokenCleanupScheduler();
+    
+    // 30 günlük ilan süresi kontrolü cron job'ını başlat
+    startJobExpirationCron();
 
     // Sunucuyu başlat
     server = app.listen(PORT, () => {
@@ -81,6 +85,7 @@ startServer();
 process.on('SIGTERM', () => {
   logger.info('SIGTERM sinyali alındı, sunucu düzgün bir şekilde kapatılıyor.');
   stopTokenCleanupScheduler();
+  stopJobExpirationCron();
   if (server) {
     server.close(() => {
       logger.info('İşlem sonlandırıldı.');
@@ -95,6 +100,7 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   logger.info('SIGINT sinyali alındı, sunucu düzgün bir şekilde kapatılıyor.');
   stopTokenCleanupScheduler();
+  stopJobExpirationCron();
   if (server) {
     server.close(() => {
       logger.info('İşlem sonlandırıldı.');

@@ -33,11 +33,244 @@ import {
   Mail,
   Briefcase,
   Award,
-  Languages
+  Languages,
+  ListChecks,
+  ExternalLink,
+  CheckCircle2,
+  X as XIcon,
+  ArrowLeft as ArrowLeftIcon
 } from 'lucide-react';
-import { useUserById, useUpdateUserStatus, useUpdateUserApproval } from '../api/useAdmin';
+import { useUserById, useUpdateUserStatus, useUpdateUserApproval, useApplications } from '../api/useAdmin';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
+
+// Başvurular Tab Component
+const DoctorApplicationsTab = ({ userId }) => {
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  // user_id'yi integer'a çevir
+  const userIdInt = userId ? parseInt(userId, 10) : null;
+
+  const { data: applicationsData, isLoading, error } = useApplications({
+    user_id: userIdInt,
+    page,
+    limit
+  });
+
+  // sendPaginated formatı: { success: true, message: "...", data: [...], pagination: {...} }
+  // Axios response: response.data = { success: true, message: "...", data: [...], pagination: {...} }
+  // React Query: { data: { success: true, message: "...", data: [...], pagination: {...} } }
+  const applications = 
+    applicationsData?.data?.data ||  // sendPaginated'dan gelen data array'i
+    [];
+  
+  const pagination = 
+    applicationsData?.data?.pagination ||  // sendPaginated'dan gelen pagination
+    {};
+
+  const getStatusBadge = (statusId, statusName) => {
+    const statusConfig = {
+      1: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-200', icon: Clock, label: 'Başvuruldu' },
+      2: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200', icon: Eye, label: 'İnceleniyor' },
+      3: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-200', icon: CheckCircle2, label: 'Kabul Edildi' },
+      4: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-200', icon: XIcon, label: 'Reddedildi' },
+      5: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-200', icon: ArrowLeftIcon, label: 'Geri Çekildi' }
+    };
+
+    const config = statusConfig[statusId] || statusConfig[1];
+    const Icon = config.icon;
+
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border ${config.bg} ${config.text} ${config.border}`}>
+        <Icon className="w-4 h-4" />
+        {statusName || config.label}
+      </span>
+    );
+  };
+
+  const getJobStatusBadge = (statusId, statusName) => {
+    const statusConfig = {
+      1: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Onay Bekliyor' },
+      2: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Revizyon Gerekli' },
+      3: { bg: 'bg-green-100', text: 'text-green-800', label: 'Onaylandı' },
+      4: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Pasif' },
+      5: { bg: 'bg-red-100', text: 'text-red-800', label: 'Reddedildi' }
+    };
+
+    const config = statusConfig[statusId] || statusConfig[1];
+    return (
+      <span className={`px-2 py-1 rounded-md text-xs font-medium ${config.bg} ${config.text}`}>
+        {statusName || config.label}
+      </span>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <SkeletonLoader className="h-32 bg-gray-200 rounded-xl" count={3} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-red-900 mb-2">Hata Oluştu</h3>
+        <p className="text-red-700">{error.message || 'Başvurular yüklenirken bir hata oluştu'}</p>
+      </div>
+    );
+  }
+
+  if (applications.length === 0) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-12 text-center max-w-md">
+          <div className="w-20 h-20 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <ListChecks className="w-10 h-10 text-indigo-500" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Henüz Başvuru Yok</h3>
+          <p className="text-gray-600">Bu doktor henüz hiçbir iş ilanına başvurmamış.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Başlık ve İstatistik */}
+      <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-200 rounded-xl p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <ListChecks className="w-6 h-6 text-indigo-600" />
+              Başvurular
+            </h3>
+            <p className="text-gray-600">
+              Toplam <span className="font-semibold text-indigo-600">{pagination.total || applications.length}</span> başvuru
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Başvuru Listesi */}
+      <div className="space-y-4">
+        {applications.map((application) => (
+          <div
+            key={application.id}
+            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:border-indigo-300"
+          >
+            <div className="flex items-start justify-between">
+              {/* Sol Taraf - İlan Bilgileri */}
+              <div className="flex-1">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-lg">
+                    <Briefcase className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-lg font-bold text-gray-900 mb-2">
+                      {application.job_title || 'İlan Başlığı Belirtilmemiş'}
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {/* Hastane Bilgisi */}
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Building className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm font-medium">{application.institution_name || 'Hastane Adı Belirtilmemiş'}</span>
+                      </div>
+
+                      {/* Başvuru Tarihi */}
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm">
+                          {application.applied_at
+                            ? new Date(application.applied_at).toLocaleDateString('tr-TR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                            : 'Tarih Belirtilmemiş'}
+                        </span>
+                      </div>
+
+                      {/* Uzmanlık */}
+                      {application.job_specialty && (
+                        <div className="flex items-center gap-2 text-gray-700">
+                          <Briefcase className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm">{application.job_specialty}</span>
+                        </div>
+                      )}
+
+                      {/* İlan Durumu */}
+                      {application.job_status_id && (
+                        <div className="flex items-center gap-2">
+                          {getJobStatusBadge(application.job_status_id, application.job_status)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Başvuru Durumu */}
+                    <div className="mt-4">
+                      {getStatusBadge(application.status_id, application.status)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sağ Taraf - Aksiyon Butonları */}
+              <div className="flex items-center gap-3 ml-4">
+                <button
+                  onClick={() => navigate(`/admin/applications/${application.id}`)}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium shadow-md"
+                >
+                  <Eye className="w-4 h-4" />
+                  Detayları Gör
+                </button>
+                {application.job_id && (
+                  <button
+                    onClick={() => navigate(`/admin/jobs/${application.job_id}`)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                    title="İlan detaylarına git"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    İlana Git
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Sayfalama */}
+      {pagination.total_pages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-6 border-t border-gray-200">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Önceki
+          </button>
+          <span className="px-4 py-2 text-gray-700 font-medium">
+            Sayfa {page} / {pagination.total_pages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(pagination.total_pages, p + 1))}
+            disabled={page >= pagination.total_pages}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Sonraki
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const UserDetailPage = () => {
   const { id } = useParams();
@@ -57,7 +290,7 @@ const UserDetailPage = () => {
   const handleStatusChange = (field, value) => {
     const isMutating = updateUserStatus.isPending || updateUserApproval.isPending;
     if (isMutating) {
-      showToast.warning('İşlem devam ediyor, lütfen bekleyin...');
+      showToast.warning(toastMessages.general.loading);
       return;
     }
     
@@ -66,11 +299,11 @@ const UserDetailPage = () => {
         { userId: id, approved: value, reason: 'Admin tarafından güncellendi' },
         {
           onSuccess: () => {
-            showToast.success(value ? 'Kullanıcı onaylandı' : 'Kullanıcı onayı kaldırıldı');
+            showToast.success(value ? toastMessages.user.approveSuccess : toastMessages.user.approveRemoved);
             refetch();
           },
           onError: (error) => {
-            showToast.error(error.response?.data?.message || 'Onay durumu güncellenirken hata oluştu');
+            showToast.error(error, { defaultMessage: toastMessages.user.approveError });
           }
         }
       );
@@ -79,11 +312,11 @@ const UserDetailPage = () => {
         { userId: id, field, value, reason: 'Admin tarafından güncellendi' },
         {
           onSuccess: () => {
-            showToast.success(value ? 'Kullanıcı aktifleştirildi' : 'Kullanıcı pasifleştirildi');
+            showToast.success(value ? toastMessages.user.activateSuccess : toastMessages.user.deactivateSuccess);
             refetch();
           },
           onError: (error) => {
-            showToast.error(error.response?.data?.message || 'Durum güncellenirken hata oluştu');
+            showToast.error(error, { defaultMessage: toastMessages.user.statusUpdateError });
           }
         }
       );
@@ -224,7 +457,8 @@ const UserDetailPage = () => {
               <nav className="flex space-x-8 px-6">
                 {[
                   { id: 'overview', label: 'Genel Bakış', icon: Eye },
-                  { id: 'profile', label: 'Profil', icon: User }
+                  { id: 'profile', label: 'Profil', icon: User },
+                  ...(userRole === 'doctor' ? [{ id: 'applications', label: 'Başvurular', icon: ListChecks }] : [])
                 ].map((tab) => {
                   const Icon = tab.icon;
                   return (
@@ -690,7 +924,10 @@ const UserDetailPage = () => {
                 </div>
               )}
 
-              
+              {/* Başvurular Tab - Sadece Doktorlar için */}
+              {activeTab === 'applications' && userRole === 'doctor' && (
+                <DoctorApplicationsTab userId={id} />
+              )}
 
             </div>
           </div>

@@ -9,8 +9,61 @@
 'use strict';
 
 // Gerekli kütüphaneler
+const fs = require('fs');
+const path = require('path');
 const knex = require('knex'); // SQL sorgu oluşturucu (Query Builder)
 const logger = require('../utils/logger'); // Loglama sistemi
+
+// .env dosyasındaki ortam değişkenlerini yükler (eğer daha önce yüklenmediyse)
+// Bu dosya birçok yerden require edilebildiği için burada da yüklenmesi gerekir
+require('dotenv').config({ 
+  path: path.resolve(__dirname, '../../.env'),
+  override: false // Eğer zaten yüklenmişse üzerine yazma
+});
+
+/**
+ * .env dosyasından DB_PASSWORD değerini manuel olarak okur
+ * dotenv, < ve > karakterlerini özel işlediği için manuel parse gerekir
+ * @returns {string|null} DB_PASSWORD değeri veya null
+ */
+const readPasswordFromEnv = () => {
+  try {
+    const envPath = path.resolve(__dirname, '../../.env');
+    if (!fs.existsSync(envPath)) {
+      return null;
+    }
+    
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    const lines = envContent.split('\n');
+    
+    for (const line of lines) {
+      // Yorum satırlarını ve boş satırları atla
+      const trimmedLine = line.trim();
+      if (!trimmedLine || trimmedLine.startsWith('#')) {
+        continue;
+      }
+      
+      // DB_PASSWORD satırını bul
+      if (trimmedLine.startsWith('DB_PASSWORD=')) {
+        // = işaretinden sonrasını al
+        const value = trimmedLine.substring('DB_PASSWORD='.length);
+        
+        // Tırnak işaretlerini kaldır (varsa)
+        if ((value.startsWith('"') && value.endsWith('"')) || 
+            (value.startsWith("'") && value.endsWith("'"))) {
+          return value.slice(1, -1);
+        }
+        
+        return value;
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    logger.error('❌ .env dosyasından DB_PASSWORD okunurken hata:', error);
+    return null;
+  }
+};
 
 // Hangi ortamda (development, production vb.) çalışıldığını belirle.
 const environment = process.env.NODE_ENV || 'development';
@@ -23,19 +76,34 @@ const instanceName = process.env.DB_INSTANCE || null;
 // Server adını oluştur (instance varsa ekle)
 const finalServer = instanceName ? `${serverName}\\${instanceName}` : serverName;
 
+// DB_PASSWORD değerini güvenli şekilde oku (özel karakterler için)
+// dotenv, < ve > karakterlerini özel işlediği için manuel okuma yapıyoruz
+// Önce manuel okumayı dene, yoksa process.env'den al
+let dbPassword = readPasswordFromEnv();
+if (!dbPassword) {
+  dbPassword = process.env.DB_PASSWORD;
+}
+
+if (!dbPassword) {
+  logger.warn('⚠️ DB_PASSWORD ortam değişkeni tanımlı değil veya boş!');
+} else {
+  // Debug: Şifre uzunluğunu ve ilk/son karakterleri logla (güvenlik için tam değeri değil)
+  logger.debug(`🔐 DB_PASSWORD yüklendi (uzunluk: ${dbPassword.length}, ilk: ${dbPassword.charAt(0)}, son: ${dbPassword.charAt(dbPassword.length - 1)})`);
+}
+
 const config = {
   client: 'mssql',
   connection: {
     server: finalServer,
     database: databaseName,
-    user: process.env.DB_USER || 'sa',
-    password: process.env.DB_PASSWORD,
+    user: process.env.DB_USER || 'tstSqlUser',
+    password: dbPassword,
     options: {
-      encrypt: process.env.DB_ENCRYPT === 'true' || process.env.DB_ENCRYPT === true,
-      trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE === 'true' || process.env.DB_TRUST_SERVER_CERTIFICATE === true,
+      encrypt: process.env.DB_ENCRYPT?.toLowerCase() === 'true',
+      trustServerCertificate: process.env.DB_TRUST_SERVER_CERTIFICATE?.toLowerCase() === 'true',
       enableArithAbort: true,
-      requestTimeout: 60000,
-      connectionTimeout: 60000,
+      requestTimeout: parseInt(process.env.DB_REQUEST_TIMEOUT) || 60000,
+      connectionTimeout: parseInt(process.env.DB_CONNECTION_TIMEOUT) || 60000,
       useUTC: true
     }
   },

@@ -10,6 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, buildEndpoint } from '@config/api.js';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import useAuthStore from '@/store/authStore';
 import logger from '@/utils/logger';
 
@@ -23,8 +24,11 @@ export const useDoctorProfile = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
     enabled: !!userId, // Sadece kullanıcı varsa çalıştır
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    staleTime: 30 * 1000, // 30 saniye cache - profil sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -37,8 +41,11 @@ export const useDoctorCompleteProfile = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    staleTime: 30 * 1000, // 30 saniye cache - profil sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -74,10 +81,10 @@ export const useUpdateDoctorProfile = () => {
       qc.invalidateQueries(['hospital', 'application']);
       qc.invalidateQueries(['hospital', 'doctors']);
       
-      showToast.success('Profil başarıyla güncellendi');
+      showToast.success(toastMessages.profile.updateSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Profil güncellenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.profile.updateError });
     },
   });
 };
@@ -89,10 +96,10 @@ export const useUpdateDoctorPersonalInfo = () => {
     onSuccess: () => {
       qc.invalidateQueries(['doctor', 'profile']);
       qc.invalidateQueries(['doctor', 'profile', 'complete']);
-      showToast.success('Kişisel bilgiler güncellendi');
+      showToast.success(toastMessages.profile.personalInfoUpdateSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Kişisel bilgiler güncellenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.profile.personalInfoUpdateError });
     },
   });
 };
@@ -106,8 +113,11 @@ export const useDoctorProfileCompletion = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETION),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { completion_percentage, ... } }
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    staleTime: 30 * 1000, // 30 saniye cache - tamamlanma oranı sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -121,8 +131,11 @@ export const useDoctorEducations = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.EDUCATIONS),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { educations } }
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    staleTime: 30 * 1000, // 30 saniye cache - eğitimler sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -136,10 +149,10 @@ export const useCreateEducation = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Eğitim eklendi');
+      showToast.success(toastMessages.education.createSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Eğitim eklenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.education.createError });
     },
   });
 };
@@ -157,10 +170,10 @@ export const useUpdateEducation = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Eğitim güncellendi');
+      showToast.success(toastMessages.education.updateSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Eğitim güncellenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.education.updateError });
     },
   });
 };
@@ -178,10 +191,10 @@ export const useDeleteEducation = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Eğitim silindi');
+      showToast.success(toastMessages.education.deleteSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Eğitim silinemedi');
+      showToast.error(err, { defaultMessage: toastMessages.education.deleteError });
     },
   });
 };
@@ -196,8 +209,11 @@ export const useDoctorExperiences = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.EXPERIENCES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { experiences } }
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    staleTime: 30 * 1000, // 30 saniye cache - deneyimler sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -211,10 +227,10 @@ export const useCreateExperience = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Deneyim eklendi');
+      showToast.success(toastMessages.experience.createSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Deneyim eklenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.experience.createError });
     },
   });
 };
@@ -232,10 +248,10 @@ export const useUpdateExperience = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Deneyim güncellendi');
+      showToast.success(toastMessages.experience.updateSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Deneyim güncellenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.experience.updateError });
     },
   });
 };
@@ -253,10 +269,10 @@ export const useDeleteExperience = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Deneyim silindi');
+      showToast.success(toastMessages.experience.deleteSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Deneyim silinemedi');
+      showToast.error(err, { defaultMessage: toastMessages.experience.deleteError });
     },
   });
 };
@@ -271,8 +287,11 @@ export const useDoctorCertificates = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.CERTIFICATES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { certificates } }
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    staleTime: 30 * 1000, // 30 saniye cache - sertifikalar sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -286,10 +305,10 @@ export const useCreateCertificate = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Sertifika eklendi');
+      showToast.success(toastMessages.certificate.createSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Sertifika eklenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.certificate.createError });
     },
   });
 };
@@ -307,10 +326,10 @@ export const useUpdateCertificate = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Sertifika güncellendi');
+      showToast.success(toastMessages.certificate.updateSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Sertifika güncellenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.certificate.updateError });
     },
   });
 };
@@ -328,10 +347,10 @@ export const useDeleteCertificate = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Sertifika silindi');
+      showToast.success(toastMessages.certificate.deleteSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Sertifika silinemedi');
+      showToast.error(err, { defaultMessage: toastMessages.certificate.deleteError });
     },
   });
 };
@@ -346,8 +365,11 @@ export const useDoctorLanguages = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.LANGUAGES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { languages } }
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    staleTime: 30 * 1000, // 30 saniye cache - diller sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -361,10 +383,10 @@ export const useCreateLanguage = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Dil eklendi');
+      showToast.success(toastMessages.language.createSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Dil eklenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.language.createError });
     },
   });
 };
@@ -382,10 +404,10 @@ export const useUpdateLanguage = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Dil güncellendi');
+      showToast.success(toastMessages.language.updateSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Dil güncellenemedi');
+      showToast.error(err, { defaultMessage: toastMessages.language.updateError });
     },
   });
 };
@@ -403,10 +425,10 @@ export const useDeleteLanguage = () => {
       qc.invalidateQueries(['admin', 'user']);
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      showToast.success('Dil silindi');
+      showToast.success(toastMessages.language.deleteSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Dil silinemedi');
+      showToast.error(err, { defaultMessage: toastMessages.language.deleteError });
     },
   });
 };
@@ -417,8 +439,11 @@ export const useDoctorDashboard = () => {
     queryKey: ['doctor', 'dashboard'],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.DASHBOARD),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { dashboard } }
-    staleTime: 0, // Cache'i devre dışı bırak - her seferinde fresh data
-    cacheTime: 0, // Cache'i devre dışı bırak
+    staleTime: 0, // Fresh data - dashboard istatistikleri kritik
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -436,10 +461,12 @@ export const useDoctorJobs = (params = {}) => {
     queryKey: ['doctor', 'jobs', cleanParams],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.JOBS, { params: cleanParams }),
     select: (res) => res.data?.data,
-    staleTime: 30 * 1000, // 30 saniye - İş ilanları daha dinamik
-    cacheTime: 2 * 60 * 1000, // 2 dakika cache
+    staleTime: 0, // Fresh data - iş ilanları kritik (pasif durumları için)
+    cacheTime: 0,
     retry: 1,
-    refetchOnWindowFocus: false
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -452,6 +479,11 @@ export const useDoctorJobDetail = (jobId) => {
     },
     select: (res) => res.data?.data, // Backend response: { success, message, data: job }
     enabled: !!jobId,
+    staleTime: 0, // Fresh data - iş ilanı detayı kritik (pasif durumları için)
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -483,8 +515,11 @@ export const useMyApplications = (params = {}) => {
     queryKey: ['doctor', 'applications', cleanParams],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.APPLICATIONS_ME, { params: cleanParams }),
     select: (res) => res.data?.data,
-    staleTime: 0, // Cache'i devre dışı bırak - her seferinde fresh data
-    cacheTime: 0, // Cache'i devre dışı bırak
+    staleTime: 0, // Fresh data - başvurular kritik
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -497,6 +532,11 @@ export const useApplicationDetail = (applicationId) => {
     },
     select: (res) => res.data?.data, // Backend response: { success, message, data: { application } }
     enabled: !!applicationId,
+    staleTime: 0, // Fresh data - başvuru detayı kritik
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 
@@ -513,10 +553,10 @@ export const useWithdrawApplication = () => {
       qc.invalidateQueries(['hospital', 'applications']); // Hastane başvurular sayfası
       qc.invalidateQueries(['hospital', 'dashboard']); // Hastane dashboard
       qc.invalidateQueries(['admin', 'applications']); // Admin başvurular sayfası
-      showToast.success('Başvuru geri çekildi');
+      showToast.success(toastMessages.application.withdrawSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Başvuru geri çekilemedi');
+      showToast.error(err, { defaultMessage: toastMessages.application.withdrawError });
     },
   });
 };
@@ -534,10 +574,10 @@ export const useDeleteApplication = () => {
       qc.invalidateQueries(['hospital', 'applications']); // Hastane başvurular sayfası
       qc.invalidateQueries(['hospital', 'dashboard']); // Hastane dashboard
       qc.invalidateQueries(['admin', 'applications']); // Admin başvurular sayfası
-      showToast.success('Başvuru kalıcı olarak silindi');
+      showToast.success(toastMessages.application.deleteSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Başvuru silinemedi');
+      showToast.error(err, { defaultMessage: toastMessages.application.deleteError });
     },
   });
 };
@@ -564,7 +604,7 @@ export const useRequestPhotoChange = () => {
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
-      const response = await apiRequest.post('/doctor/profile/photo', { file_url: dataUrl });
+      const response = await apiRequest.post(ENDPOINTS.DOCTOR.PHOTO, { file_url: dataUrl });
       return response.data;
     },
     onSuccess: () => {
@@ -588,11 +628,14 @@ export const usePhotoRequestStatus = () => {
   return useQuery({
     queryKey: ['doctor', 'photo-request-status'],
     queryFn: async () => {
-      const response = await apiRequest.get('/doctor/profile/photo/status');
+      const response = await apiRequest.get(ENDPOINTS.DOCTOR.PHOTO_STATUS);
       return response.data;
     },
-    staleTime: 30 * 1000, // 30 saniye
-    cacheTime: 5 * 60 * 1000, // 5 dakika
+    staleTime: 30 * 1000, // 30 saniye cache - fotoğraf durumu sık değişmez
+    cacheTime: 2 * 60 * 1000,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     retry: 2
   });
 };
@@ -604,11 +647,14 @@ export const usePhotoRequestHistory = () => {
   return useQuery({
     queryKey: ['doctor', 'photo-request-history'],
     queryFn: async () => {
-      const response = await apiRequest.get('/doctor/profile/photo/history');
+      const response = await apiRequest.get(ENDPOINTS.DOCTOR.PHOTO_HISTORY);
       return response.data;
     },
-    staleTime: 0,
-    cacheTime: 5 * 60 * 1000,
+    staleTime: 0, // Fresh data - fotoğraf geçmişi kritik
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     retry: 1
   });
 };
@@ -623,12 +669,13 @@ export const useCancelPhotoRequest = () => {
   return useMutation({
     mutationFn: () => apiRequest.delete(ENDPOINTS.DOCTOR.PHOTO_REQUEST),
     onSuccess: () => {
-      qc.invalidateQueries(['doctor', 'photo', 'status']);
-      qc.invalidateQueries(['doctor', 'photo', 'history']);
-      showToast.success('Fotoğraf talebi iptal edildi');
+      qc.invalidateQueries({ queryKey: ['doctor', 'photo-request-status'] });
+      qc.invalidateQueries({ queryKey: ['doctor', 'photo-request-history'] });
+      qc.invalidateQueries({ queryKey: ['doctor', 'profile'] });
+      showToast.success(toastMessages.photo.cancelRequestSuccess);
     },
     onError: (err) => {
-      showToast.error(err.message || 'Fotoğraf talebi iptal edilemedi');
+      showToast.error(err, { defaultMessage: toastMessages.photo.cancelRequestError });
     },
   });
 };

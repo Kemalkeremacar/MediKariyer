@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '../../../services/http/client';
 import { ENDPOINTS, buildEndpoint, buildQueryString } from '@config/api.js';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages, formatErrorMessage } from '@/config/toast';
 
 // Query Keys - Backend adminService.js'ye birebir uygun
 export const QUERY_KEYS = {
@@ -78,7 +79,11 @@ export function useUsers(filters = {}) {
       return apiRequest.get(`${ENDPOINTS.ADMIN.USERS}${queryString}`);
     },
     keepPreviousData: true,
-    staleTime: 0, // Verileri hemen stale yap, filtreleme değiştiğinde yenile
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
@@ -95,7 +100,11 @@ export function useUserById(userId) {
       return response.data; // Axios response'dan data'yı çıkar
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 dakika
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
@@ -217,7 +226,11 @@ export function useAdminJobs(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`${ENDPOINTS.ADMIN.JOBS}${queryString}`);
     },
-    staleTime: 2 * 60 * 1000, // 2 dakika
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
@@ -238,7 +251,7 @@ export function useJobById(jobId) {
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_DETAIL, { id: jobIdClean })),
     enabled: !!jobIdClean,
     staleTime: 0,
-    cacheTime: 5 * 60 * 1000,
+    cacheTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -351,10 +364,10 @@ export function useApproveJob() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
-      showToast.success('İş ilanı onaylandı');
+      showToast.success(toastMessages.job.approveSuccess);
     },
     onError: (error) => {
-      showToast.error('İş ilanı onaylanırken bir hata oluştu: ' + (error.response?.data?.message || error.message));
+      showToast.error(error, { defaultMessage: toastMessages.job.approveError });
     },
   });
 }
@@ -373,10 +386,10 @@ export function useRequestRevision() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
-      showToast.success('Revizyon talebi gönderildi');
+      showToast.success(toastMessages.job.revisionRequestSuccess);
     },
     onError: (error) => {
-      showToast.error('Revizyon talebi gönderilirken bir hata oluştu: ' + (error.response?.data?.message || error.message));
+      showToast.error(error, { defaultMessage: toastMessages.job.revisionRequestError });
     },
   });
 }
@@ -395,10 +408,10 @@ export function useRejectJob() {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOBS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.DASHBOARD] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.JOB_DETAIL, jobId] });
-      showToast.success('İş ilanı reddedildi');
+      showToast.success(toastMessages.job.rejectSuccess);
     },
     onError: (error) => {
-      showToast.error('İş ilanı reddedilirken bir hata oluştu: ' + (error.response?.data?.message || error.message));
+      showToast.error(error, { defaultMessage: toastMessages.job.rejectError });
     },
   });
 }
@@ -414,7 +427,7 @@ export function useJobHistory(jobId) {
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_HISTORY, { id: jobId })),
     enabled: !!jobId,
     staleTime: 0,
-    cacheTime: 5 * 60 * 1000,
+    cacheTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -437,7 +450,11 @@ export function useApplications(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`${ENDPOINTS.ADMIN.APPLICATIONS}${queryString}`);
     },
-    staleTime: 2 * 60 * 1000, // 2 dakika
+    staleTime: 0, // Her zaman fresh data
+    cacheTime: 0, // Cache'i devre dışı bırak
+    refetchOnMount: 'always', // Mount olduğunda her zaman refetch
+    refetchOnWindowFocus: true, // Window focus olduğunda refetch
+    refetchOnReconnect: true, // Reconnect olduğunda refetch
   });
 }
 
@@ -451,7 +468,11 @@ export function useApplicationById(applicationId) {
     queryKey: [QUERY_KEYS.APPLICATION_DETAIL, applicationId],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.APPLICATION_DETAIL, { id: applicationId })),
     enabled: !!applicationId,
-    staleTime: 5 * 60 * 1000, // 5 dakika
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
@@ -526,7 +547,11 @@ export function useAdminNotifications(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`${ENDPOINTS.ADMIN.NOTIFICATIONS}${queryString}`);
     },
-    staleTime: 2 * 60 * 1000, // 2 dakika
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
@@ -540,7 +565,11 @@ export function useNotificationById(notificationId) {
     queryKey: [QUERY_KEYS.NOTIFICATION_DETAIL, notificationId],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.NOTIFICATION_DETAIL, { id: notificationId })),
     enabled: !!notificationId,
-    staleTime: 5 * 60 * 1000, // 5 dakika
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 
@@ -577,69 +606,6 @@ export function useDeleteNotification() {
   });
 }
 
-
-// ============================================================================
-// İLETİŞİM MESAJLARI YÖNETİMİ - Backend adminService.js ile uyumlu
-// ============================================================================
-
-/**
- * İletişim mesajlarını getirir - Backend: contactController.getContactMessages
- * @param {Object} filters - Filtreleme parametreleri
- * @returns {Object} React Query result
- */
-export function useContactMessages(filters = {}) {
-  return useQuery({
-    queryKey: [QUERY_KEYS.CONTACT_MESSAGES, filters],
-    queryFn: () => {
-      const queryString = buildQueryString(filters);
-      return apiRequest.get(`${ENDPOINTS.ADMIN.CONTACT_MESSAGES}${queryString}`);
-    },
-    staleTime: 5 * 60 * 1000, // 5 dakika
-  });
-}
-
-/**
- * İletişim mesajı istatistiklerini getirir - Backend: contactController.getContactStatistics
- * @returns {Object} React Query result
- */
-export function useContactStatistics() {
-  return useQuery({
-    queryKey: QUERY_KEYS.CONTACT_STATISTICS,
-    queryFn: () => apiRequest.get(ENDPOINTS.ADMIN.CONTACT_STATISTICS),
-    staleTime: 10 * 60 * 1000, // 10 dakika
-  });
-}
-
-/**
- * Tek iletişim mesajını getirir - Backend: contactController.getContactMessageById
- * @param {string|number} messageId - Mesaj ID'si
- * @returns {Object} React Query result
- */
-export function useContactMessageById(messageId) {
-  return useQuery({
-    queryKey: [QUERY_KEYS.CONTACT_MESSAGE_DETAIL, messageId],
-    queryFn: () => apiRequest.get(ENDPOINTS.ADMIN.CONTACT_MESSAGE_BY_ID(messageId)),
-    enabled: !!messageId,
-    staleTime: 5 * 60 * 1000, // 5 dakika
-  });
-}
-
-/**
- * İletişim mesajını siler - Backend: contactController.deleteContactMessage
- * @returns {Object} React Query mutation
- */
-export function useDeleteContactMessage() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (messageId) => apiRequest.delete(buildEndpoint(ENDPOINTS.ADMIN.CONTACT_MESSAGE_DELETE, { id: messageId })),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CONTACT_MESSAGES] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CONTACT_STATISTICS] });
-    },
-  });
-}
-
 // ============================================================================
 // DASHBOARD VE ANALYTICS - Backend adminService.js ile uyumlu
 // ============================================================================
@@ -657,7 +623,11 @@ export function useDashboard(filters = {}) {
       const response = await apiRequest.get(`${ENDPOINTS.ADMIN.DASHBOARD}${queryString}`);
       return response.data; // Axios response'dan data'yı çıkar
     },
-    staleTime: 2 * 60 * 1000, // 2 dakika
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     refetchInterval: 5 * 60 * 1000, // 5 dakikada bir yenile
   });
 }
@@ -687,8 +657,7 @@ export function useDashboard(filters = {}) {
  * - useUpdateNotification, useDeleteNotification
  * 
  * İletişim Mesajları:
- * - useContactMessages, useContactStatistics, useContactMessageById
- * - useDeleteContactMessage
+ * - Artık '../../contact/useContactMessages' dosyasından import ediliyor
  * 
  * Dashboard ve Analytics:
  * - useDashboard
@@ -716,8 +685,11 @@ export function usePhotoRequests(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`/admin/photo-requests${queryString}`);
     },
-    staleTime: 30 * 1000, // 30 saniye
-    cacheTime: 5 * 60 * 1000, // 5 dakika
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
     retry: 2
   });
 }
@@ -758,7 +730,7 @@ export function useReviewPhotoRequest() {
     },
     onError: (error) => {
       console.error('Review photo request error:', error);
-      showToast.error('İşlem başarısız: ' + (error.response?.data?.message || error.message));
+      showToast.error(error, { defaultMessage: toastMessages.general.operationError });
     }
   });
 }

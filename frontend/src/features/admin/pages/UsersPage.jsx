@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUsers, useUpdateUserStatus, useUpdateUserApproval } from '../api/useAdmin';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { useLookup } from '@/hooks/useLookup';
 import { 
   Stethoscope, 
@@ -91,7 +92,7 @@ const UsersPage = () => {
   const handleStatusChange = (userId, field, value) => {
     // Çok hızlı tıklamaları engelle
     if (isProcessing) {
-      showToast.warning('İşlem devam ediyor, lütfen bekleyin...');
+      showToast.warning(toastMessages.general.loading);
       return;
     }
     
@@ -101,11 +102,11 @@ const UsersPage = () => {
         { userId, approved: value, reason: 'Admin tarafından güncellendi' },
         {
           onSuccess: () => {
-            showToast.success(value ? 'Doktor onaylandı' : 'Doktor onayı kaldırıldı');
+            showToast.success(value ? toastMessages.user.doctorApproveSuccess : toastMessages.user.doctorApproveRemoved);
             refetch(); // Manuel refetch ekle
           },
           onError: (error) => {
-            showToast.error(error.response?.data?.message || 'Onay durumu güncellenirken hata oluştu');
+            showToast.error(error, { defaultMessage: toastMessages.user.approveError });
           }
         }
       );
@@ -114,11 +115,11 @@ const UsersPage = () => {
         { userId, field, value, reason: 'Admin tarafından güncellendi' },
         {
           onSuccess: () => {
-            showToast.success(value ? 'Doktor aktifleştirildi' : 'Doktor pasifleştirildi');
+            showToast.success(value ? toastMessages.user.doctorActivateSuccess : toastMessages.user.doctorDeactivateSuccess);
             refetch(); // Manuel refetch ekle
           },
           onError: (error) => {
-            showToast.error(error.response?.data?.message || 'Durum güncellenirken hata oluştu');
+            showToast.error(error, { defaultMessage: toastMessages.user.statusUpdateError });
           }
         }
       );

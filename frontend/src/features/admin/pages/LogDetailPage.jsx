@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fi';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import http from '@/services/http/client';
 
 const LogDetailPage = () => {
@@ -29,7 +30,7 @@ const LogDetailPage = () => {
         setError(null);
       } catch (err) {
         setError(err.response?.data?.message || 'Log detayı yüklenirken hata oluştu');
-        showToast.error('Log detayı yüklenirken hata oluştu');
+        showToast.error(toastMessages.log.loadError);
       } finally {
         setIsLoading(false);
       }

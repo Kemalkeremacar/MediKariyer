@@ -1748,17 +1748,23 @@ select:-webkit-autofill:focus {
 }
 
 /* ======================================== */
-/* TOAST STILLERİ - Sabit pozisyon */
+/* TOAST STILLERİ - Dinamik pozisyon (scroll pozisyonuna göre) */
 /* ======================================== */
 
-/* Sonner Toast Container */
+/* Sonner Toast Container - Portal ile body seviyesinde, scroll pozisyonuna göre dinamik */
 [data-sonner-toaster] {
   position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  /* Dinamik pozisyon - JavaScript ile scroll pozisyonuna göre ayarlanacak */
+  /* bottom ve top değerleri JavaScript tarafından setProperty ile ayarlanır */
+  right: auto !important;
   z-index: 9999 !important;
   pointer-events: auto !important;
   max-width: 400px !important;
+  /* Portal ile body'de render edildiği için her zaman viewport içinde görünür */
+  /* JavaScript ile scroll pozisyonuna göre dinamik olarak ayarlanır */
+  transition: top 0.3s ease, bottom 0.3s ease !important;
 }
 
 /* Toast mesajları - Sabit kalması için */
@@ -1821,15 +1827,8 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Toast container'ın viewport'ta sabit kalması */
-[data-sonner-toaster] {
-  position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
-  bottom: auto !important;
-  left: auto !important;
-  transform: none !important;
-}
+/* Toast artık portal ile body seviyesinde render ediliyor */
+/* position: fixed ile her zaman viewport içinde görünür */
 
 /* ================================================================ */
 /* MODÜLER SAYFA STİLLERİ - Ortak bileşen stilleri */

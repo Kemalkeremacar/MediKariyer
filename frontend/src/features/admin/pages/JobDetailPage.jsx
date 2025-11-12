@@ -29,6 +29,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 
 const AdminJobDetailPage = () => {
   const { id } = useParams();
@@ -402,12 +403,12 @@ const AdminJobDetailPage = () => {
   const confirmDeleteJob = async () => {
     try {
       await deleteJobMutation.mutateAsync(id);
-      showToast.success('İş ilanı başarıyla silindi');
+      showToast.success(toastMessages.job.deleteSuccess);
       closeDeleteModal();
       navigate('/admin/jobs');
     } catch (error) {
       console.error('İş ilanı silme hatası:', error);
-      showToast.error(error.response?.data?.message || 'İş ilanı silinemedi');
+      showToast.error(error, { defaultMessage: toastMessages.job.deleteError });
     }
   };
 
@@ -428,15 +429,15 @@ const AdminJobDetailPage = () => {
   const handleRequestRevision = async () => {
     const trimmedNote = revisionNote.trim();
     if (!trimmedNote) {
-      showToast.error('Revizyon notu zorunludur');
+      showToast.error(toastMessages.job.revisionNoteRequired);
       return;
     }
     if (trimmedNote.length < 10) {
-      showToast.error('Revizyon notu en az 10 karakter olmalıdır');
+      showToast.error(toastMessages.job.revisionNoteMinLength);
       return;
     }
     if (trimmedNote.length > 1000) {
-      showToast.error('Revizyon notu en fazla 1000 karakter olabilir');
+      showToast.error(toastMessages.job.revisionNoteMaxLength);
       return;
     }
     try {
@@ -455,11 +456,11 @@ const AdminJobDetailPage = () => {
     const trimmedReason = rejectionReason.trim();
     // Rejection reason optional ama girilmişse validation yap
     if (trimmedReason && trimmedReason.length < 5) {
-      showToast.error('Red sebebi en az 5 karakter olmalıdır');
+      showToast.error(toastMessages.job.rejectReasonMinLength);
       return;
     }
     if (trimmedReason && trimmedReason.length > 500) {
-      showToast.error('Red sebebi en fazla 500 karakter olabilir');
+      showToast.error(toastMessages.job.rejectReasonMaxLength);
       return;
     }
     try {
@@ -1394,7 +1395,7 @@ const AdminJobDetailPage = () => {
                     captureScroll();
                     await handleStatusChange(selectedStatusId, reason);
                     closeStatusChangeModal();
-                    showToast.success('Durum başarıyla güncellendi');
+                    showToast.success(toastMessages.job.statusUpdateSuccessGeneric);
                   }}
                   disabled={updateStatusMutation.isPending}
                   className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

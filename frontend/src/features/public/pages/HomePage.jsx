@@ -76,30 +76,26 @@ const HomePage = () => {
 
               {/* Sağ Taraf - Hoşgeldiniz Metni */}
               <div className="order-1 lg:order-2 text-center lg:text-left">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-blue-900 leading-tight mb-6">
-                  <div className="block">Sağlık Kariyerinizi</div>
-                  <div className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-600 turkish-text py-2">
-                    Şekillendirin
-                  </div>
+                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black text-blue-900 leading-[1.1] mb-6 tracking-tight">
+                  <div className="block">MediKariyer</div>
                 </h1>
-                <p className="text-base md:text-lg text-gray-700 leading-relaxed mb-8" style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}>
-                  Türkiye'nin en kapsamlı sağlık kariyer platformu. Doktorlar ve sağlık kurumlarını 
-                  bir araya getiren modern çözümlerle kariyerinizi ileriye taşıyın.
+                <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-700 leading-relaxed mb-10" style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}>
+                  Türkiye'nin En Büyük Sağlık Kariyer Platformu
                 </p>
                 
-                <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   <button
                     onClick={handleRegisterClick}
-                    className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-8 py-4 rounded-xl text-base font-medium hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:scale-105 inline-flex items-center justify-center group"
+                    className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-10 py-5 rounded-2xl text-lg sm:text-xl font-bold hover:from-blue-700 hover:to-blue-900 transition-all duration-300 shadow-2xl hover:shadow-blue-500/30 hover:scale-105 inline-flex items-center justify-center group"
                   >
                     Hemen Başla
-                    <FiArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                    <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
                   </button>
                   <button
                     onClick={handleAboutClick}
-                    className="bg-blue-100 backdrop-blur-sm border-2 border-blue-200 text-blue-800 px-8 py-4 rounded-xl text-base font-medium hover:bg-blue-200 transition-all duration-300 inline-flex items-center justify-center group"
+                    className="bg-blue-100 backdrop-blur-sm border-2 border-blue-200 text-blue-800 px-10 py-5 rounded-2xl text-lg sm:text-xl font-bold hover:bg-blue-200 transition-all duration-300 inline-flex items-center justify-center group"
                   >
-                    <FiPlay className="mr-2 group-hover:scale-110 transition-transform" />
+                    <FiPlay className="mr-3 group-hover:scale-110 transition-transform text-xl" />
                     Nasıl Çalışır?
                   </button>
                 </div>

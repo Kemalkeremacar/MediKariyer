@@ -60,7 +60,7 @@ const PendingApprovalPage = () => {
               <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
                 <span className="text-yellow-600 text-sm font-bold">2</span>
               </div>
-              <span className="text-gray-700">Admin tarafından onay bekleniyor</span>
+              <span className="text-gray-700">Onay bekleniyor</span>
             </div>
             <div className="flex items-center">
               <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center mr-3">

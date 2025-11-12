@@ -15,6 +15,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { apiRequest } from '@/services/http/client';
 
@@ -54,7 +55,7 @@ const AdminNotificationsPage = () => {
       refetch();
     } catch (error) {
       console.error('Okundu işaretleme hatası:', error);
-      showToast.error('Bildirim güncellenirken hata oluştu');
+      showToast.error(toastMessages.notification.updateError);
     } finally {
       setIsProcessing(false);
     }
@@ -63,7 +64,7 @@ const AdminNotificationsPage = () => {
   // Tümünü okundu olarak işaretle
   const handleMarkAllAsRead = async () => {
     if (isProcessing) {
-      showToast.warning('İşlem devam ediyor, lütfen bekleyin...');
+      showToast.warning(toastMessages.general.loading);
       return;
     }
     
@@ -73,12 +74,12 @@ const AdminNotificationsPage = () => {
     try {
       await apiRequest.patch('/admin/notifications/mark-all-read');
       showToast.dismiss(loadingToast);
-      showToast.success('Tüm bildirimler okundu olarak işaretlendi');
+      showToast.success(toastMessages.notification.markAllReadSuccess);
       refetch();
     } catch (error) {
       console.error('API hatası:', error);
       showToast.dismiss(loadingToast);
-      showToast.error('Bildirimler işaretlenirken hata oluştu');
+      showToast.error(toastMessages.notification.markAllReadError);
     } finally {
       setIsProcessing(false);
     }
@@ -87,7 +88,7 @@ const AdminNotificationsPage = () => {
   // Tek bildirimi sil
   const handleDeleteNotification = async (notificationId) => {
     if (deleteNotificationMutation.isPending) {
-      showToast.warning('İşlem devam ediyor, lütfen bekleyin...');
+      showToast.warning(toastMessages.general.loading);
       return;
     }
     
@@ -101,11 +102,11 @@ const AdminNotificationsPage = () => {
     
     deleteNotificationMutation.mutate(notificationId, {
       onSuccess: () => {
-        showToast.success('Bildirim silindi');
+        showToast.success(toastMessages.notification.deleteSuccess);
         refetch();
       },
       onError: (error) => {
-        showToast.error(error.response?.data?.message || 'Bildirim silinirken hata oluştu');
+        showToast.error(error, { defaultMessage: toastMessages.notification.deleteError });
       }
     });
   };

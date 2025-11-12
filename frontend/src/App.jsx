@@ -5,7 +5,6 @@
 
 import React, { useEffect, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Toaster } from 'sonner'; // Toast notification kütüphanesi
 
 // Routes
 import AppRoutes from './routes/index';
@@ -30,7 +29,6 @@ import useAuthStore from './store/authStore';
 
 // Utils
 import logger from './utils/logger';
-import { getToastConfig } from '@config/toast.js';
 
 function App() {
   // Store hooks
@@ -44,9 +42,6 @@ function App() {
   useTokenRefresh();
   // 30 dakika session timeout
   useSessionTimeout(30);
-
-  // Toast ayarlarını tema göre al
-  const toastConfig = getToastConfig(theme);
 
   // Uygulama başlatma ve global hata yakalama
   useEffect(() => {
@@ -98,6 +93,18 @@ function App() {
     closeAllModals();
   }, [location.pathname, closeAllModals]);
 
+  // Tema değişikliğinde Toaster'ı güncelle
+  useEffect(() => {
+    const toasterRoot = document.getElementById('toaster-root');
+    if (toasterRoot) {
+      // Tema değişikliğini localStorage'a kaydet
+      localStorage.setItem('theme', theme);
+      // Toaster'ı yeniden render et (main.jsx'deki root'u kullan)
+      const event = new CustomEvent('theme-changed', { detail: { theme } });
+      window.dispatchEvent(event);
+    }
+  }, [theme]);
+
   return (
     <ErrorBoundary>
       <div className="App bg-gray-50">
@@ -105,18 +112,6 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <AppRoutes />
         </Suspense>
-
-        {/* ✅ Sonner Toaster - Sabit pozisyonlu */}
-        <Toaster 
-          {...toastConfig} 
-          style={{
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
-            zIndex: 9999,
-            pointerEvents: 'auto'
-          }}
-        />
 
         {/* ✅ Global Modals */}
         <GlobalModalManager />

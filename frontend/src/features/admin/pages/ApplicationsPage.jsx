@@ -400,7 +400,15 @@ const ApplicationsPage = () => {
                       </div>
                     </td>
                     <td>
-                      <div className="text-sm text-gray-900">{application.job_title}</div>
+                      <div className="flex flex-col gap-1">
+                        <div className="text-sm text-gray-900">{application.job_title}</div>
+                        {/* Pasif ilan veya pasif hastane kontrolü */}
+                        {((application.job_status_id === 4) || (application.hospital_is_active === false || application.hospital_is_active === 0)) && (
+                          <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300">
+                            {application.job_status_id === 4 ? 'İlan Pasif' : application.hospital_is_active === false || application.hospital_is_active === 0 ? 'Hastane Pasif' : ''}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td>
                       <div className="flex items-center">
@@ -452,7 +460,15 @@ const ApplicationsPage = () => {
                     <h3 className="text-base font-semibold text-gray-900 mb-1">
                       {application.first_name} {application.last_name}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-2">{application.job_title}</p>
+                    <div className="flex flex-col gap-1 mb-2">
+                      <p className="text-sm text-gray-600">{application.job_title}</p>
+                      {/* Pasif ilan veya pasif hastane kontrolü */}
+                      {((application.job_status_id === 4) || (application.hospital_is_active === false || application.hospital_is_active === 0)) && (
+                        <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 border border-gray-300 w-fit">
+                          {application.job_status_id === 4 ? 'İlan Pasif' : application.hospital_is_active === false || application.hospital_is_active === 0 ? 'Hastane Pasif' : ''}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center text-sm text-gray-500 mb-2">
                       <Building className="h-4 w-4 mr-1" />
                       {application.institution_name}

@@ -36,6 +36,7 @@ import {
 import { useLookup } from '@/hooks/useLookup';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 
 const HospitalProfile = () => {
   // API hook'ları
@@ -68,13 +69,13 @@ const HospitalProfile = () => {
 
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      showToast.error('Dosya boyutu 5MB\'dan küçük olmalıdır');
+      showToast.error(toastMessages.validation.fileSizeError);
       return;
     }
 
     // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
-      showToast.error('Sadece resim dosyaları yüklenebilir');
+      showToast.error(toastMessages.validation.fileFormatError);
       return;
     }
 

@@ -7,8 +7,9 @@ import React, { useState } from 'react';
 import { 
   useContactMessages, 
   useDeleteContactMessage
-} from '../api/useAdmin';
+} from '../../contact/useContactMessages';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { 
   MessageSquare, 
   Mail, 
@@ -76,7 +77,7 @@ const ContactMessagesPage = () => {
 
   const handleDeleteMessage = async (messageId) => {
     if (deleteMessage.isPending) {
-      showToast.warning('İşlem devam ediyor, lütfen bekleyin...');
+      showToast.warning(toastMessages.general.loading);
       return;
     }
 
@@ -93,11 +94,11 @@ const ContactMessagesPage = () => {
     
     deleteMessage.mutate(messageId, {
       onSuccess: () => {
-        showToast.success('Mesaj silindi');
+        showToast.success(toastMessages.message.deleteSuccess);
         refetch();
       },
       onError: (error) => {
-        showToast.error(error.response?.data?.message || 'Mesaj silinemedi');
+        showToast.error(error, { defaultMessage: toastMessages.message.deleteError });
       }
     });
   };

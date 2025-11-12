@@ -3,6 +3,7 @@ import { Lock, ShieldOff, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { useChangePassword } from '@/features/auth/api/useAuth';
 import { useDeactivateDoctorAccount } from '../api/useDoctor';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import useAuthStore from '@/store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_CONFIG } from '@config/routes.js';
@@ -73,7 +74,7 @@ const SettingsPage = () => {
     setConfirmModalOpen(false);
     deactivateAccountMutation.mutate(undefined, {
       onSuccess: (res) => {
-        const message = res?.message || 'Hesabınız silindi.';
+        const message = res?.message || toastMessages.account.deactivateSuccess;
         showToast.success(message);
         logout();
         navigate(ROUTE_CONFIG.PUBLIC.LOGIN, {
@@ -84,8 +85,7 @@ const SettingsPage = () => {
         });
       },
       onError: (error) => {
-        const message = error?.response?.data?.message || error.message || 'Hesap kapatma işlemi sırasında bir hata oluştu.';
-        showToast.error(message);
+        showToast.error(error, { defaultMessage: toastMessages.account.deactivateError });
       }
     });
   };

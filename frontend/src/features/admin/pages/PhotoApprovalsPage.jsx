@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { usePhotoRequests, useReviewPhotoRequest } from '../api/useAdmin';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 
@@ -88,7 +89,7 @@ const PhotoApprovalsPage = () => {
   // Fotoğraf talebini reddet
   const handleReject = async (requestId) => {
     if (!rejectReason.trim()) {
-      showToast.error('Red nedeni gereklidir');
+      showToast.error(toastMessages.photoApproval.rejectReasonRequired);
       return;
     }
 

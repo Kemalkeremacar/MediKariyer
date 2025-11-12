@@ -13,7 +13,7 @@
  * @since 2024
  */
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS } from '@config/api.js';
@@ -112,7 +112,7 @@ export const useLogin = () => {
         if (message.includes('admin onayını bekliyor') || message.includes('admin onayını')) {
           errorMessage = 'Hesabınız admin onayını bekliyor. Onaylandıktan sonra giriş yapabilirsiniz.';
         } else if (message.includes('pasifleştirilmiştir')) {
-          errorMessage = 'Hesabınız admin tarafından pasifleştirilmiştir. Lütfen sistem yöneticisi ile iletişime geçin.';
+          errorMessage = 'Hesabınız pasifleştirilmiştir. Lütfen sistem yöneticisi ile iletişime geçin.';
         } else {
           errorMessage = message || 'Erişim reddedildi';
         }
@@ -511,6 +511,7 @@ export const useLogout = () => {
   const navigate = useNavigate();
   const { logout, refreshToken } = useAuthStore();
   const { showSuccess } = useUiStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
@@ -537,6 +538,9 @@ export const useLogout = () => {
       logger.info('Logout successful');
       showSuccess('Başarıyla çıkış yaptınız');
       
+      // React Query cache'ini temizle - farklı kullanıcılar için cache karışmasın
+      queryClient.clear();
+      
       // AuthStore'dan logout et
       logout();
       
@@ -545,7 +549,9 @@ export const useLogout = () => {
     },
     onError: (error) => {
       logger.error('Logout error', error);
-      // Hata olsa bile logout et
+      
+      // Hata olsa bile cache'i temizle ve logout et
+      queryClient.clear();
       logout();
       navigate(ROUTE_CONFIG.PUBLIC.LOGIN, { replace: true });
     },
@@ -561,6 +567,7 @@ export const useLogoutAll = () => {
   const navigate = useNavigate();
   const { logout } = useAuthStore();
   const { showSuccess } = useUiStore();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
@@ -580,6 +587,9 @@ export const useLogoutAll = () => {
       logger.info('Logout all devices successful');
       showSuccess('Tüm cihazlardan başarıyla çıkış yaptınız');
       
+      // React Query cache'ini temizle - farklı kullanıcılar için cache karışmasın
+      queryClient.clear();
+      
       // AuthStore'dan logout et
       logout();
       
@@ -588,7 +598,9 @@ export const useLogoutAll = () => {
     },
     onError: (error) => {
       logger.error('Logout all devices error', error);
-      // Hata olsa bile logout et
+      
+      // Hata olsa bile cache'i temizle ve logout et
+      queryClient.clear();
       logout();
       navigate(ROUTE_CONFIG.PUBLIC.LOGIN, { replace: true });
     },

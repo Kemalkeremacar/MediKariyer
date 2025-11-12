@@ -24,6 +24,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, buildEndpoint, buildQueryString } from '@config/api.js';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 
 // 🔹 Public: Mesaj Gönderme Hook'u
 export const useSendMessage = () => {
@@ -32,11 +33,11 @@ export const useSendMessage = () => {
       return await apiRequest.post(ENDPOINTS.CONTACT.MESSAGES, messageData);
     },
     onSuccess: (result) => {
-      showToast.success('Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.');
+      showToast.success(toastMessages.message.sendSuccess);
     },
     onError: (error) => {
       console.error('Mesaj gönderme hatası:', error);
-      showToast.error('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+      showToast.error(error, { defaultMessage: toastMessages.message.sendError });
     },
   });
 };
@@ -88,11 +89,11 @@ export const useUpdateContactMessageStatus = () => {
       // İstatistikleri yenile
       queryClient.invalidateQueries(['admin', 'contact-statistics']);
       
-      showToast.success('Mesaj durumu güncellendi');
+      showToast.success(toastMessages.message.updateStatusSuccess);
     },
     onError: (error) => {
       console.error('Mesaj durumu güncelleme hatası:', error);
-      showToast.error('Mesaj durumu güncellenemedi');
+      showToast.error(error, { defaultMessage: toastMessages.message.updateStatusError });
     },
   });
 };
@@ -114,11 +115,11 @@ export const useReplyToContactMessage = () => {
       // İstatistikleri yenile
       queryClient.invalidateQueries(['admin', 'contact-statistics']);
       
-      showToast.success('Yanıt başarıyla gönderildi');
+      showToast.success(toastMessages.message.replySuccess);
     },
     onError: (error) => {
       console.error('Yanıt gönderme hatası:', error);
-      showToast.error('Yanıt gönderilemedi');
+      showToast.error(error, { defaultMessage: toastMessages.message.replyError });
     },
   });
 };
@@ -140,11 +141,11 @@ export const useDeleteContactMessage = () => {
       // İstatistikleri yenile
       queryClient.invalidateQueries(['admin', 'contact-statistics']);
       
-      showToast.success('Mesaj silindi');
+      showToast.success(toastMessages.message.deleteSuccess);
     },
     onError: (error) => {
       console.error('Mesaj silme hatası:', error);
-      showToast.error('Mesaj silinemedi');
+      showToast.error(error, { defaultMessage: toastMessages.message.deleteError });
     },
   });
 };
@@ -180,7 +181,7 @@ export const useBulkUpdateContactStatus = () => {
     },
     onError: (error) => {
       console.error('Toplu durum güncelleme hatası:', error);
-      showToast.error('Toplu durum güncelleme başarısız');
+      showToast.error(error, { defaultMessage: toastMessages.message.bulkUpdateError });
     },
   });
 };
@@ -207,7 +208,7 @@ export const useBulkDeleteContactMessages = () => {
     },
     onError: (error) => {
       console.error('Toplu mesaj silme hatası:', error);
-      showToast.error('Toplu mesaj silme başarısız');
+      showToast.error(error, { defaultMessage: toastMessages.message.bulkDeleteError });
     },
   });
 };

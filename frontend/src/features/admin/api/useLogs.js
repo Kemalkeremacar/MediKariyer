@@ -10,6 +10,7 @@ import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import http from '@/services/http/client';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 
 // Mock data for testing
 const mockApplicationLogs = {
@@ -329,7 +330,7 @@ export const useCleanupLogs = () => {
       return data;
     },
     onSuccess: () => {
-      showToast.success('Log temizleme işlemi başlatıldı');
+      showToast.success(toastMessages.log.clearSuccess);
       
       // Tüm log query'lerini invalidate et
       queryClient.invalidateQueries({ queryKey: ['logs'] });

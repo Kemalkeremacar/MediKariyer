@@ -14,6 +14,7 @@ import {
 import { useApplicationDetail, useWithdrawApplication } from '../api/useDoctor.js';
 import { useMyApplications } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
 const DoctorApplicationDetailPage = () => {
@@ -30,9 +31,10 @@ const DoctorApplicationDetailPage = () => {
 
   const withdrawMutation = useWithdrawApplication();
 
-  // İlan durumunu kontrol et - Pasif ilan kontrolü
+  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif veya hastane pasif)
   const jobStatusId = application?.job_status_id;
   const jobStatus = application?.job_status || '';
+  const hospitalIsActive = application?.hospital_is_active !== false && application?.hospital_is_active !== 0 && application?.hospital_is_active !== '0';
   const isJobPassive = 
     jobStatusId === 4 ||
     jobStatusId === '4' ||
@@ -41,7 +43,8 @@ const DoctorApplicationDetailPage = () => {
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'pasif') ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
-    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive'));
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive')) ||
+    !hospitalIsActive; // Hastane pasifse ilan da pasif gibi görünsün
 
   // Status helper functions
   const getStatusText = (statusId) => {
@@ -81,25 +84,32 @@ const DoctorApplicationDetailPage = () => {
 
     try {
       await withdrawMutation.mutateAsync({ applicationId: parseInt(applicationId || '0'), reason: '' });
-      showToast.success('Başvuru geri çekildi');
+      // Toast mesajı mutation'ın onSuccess'inde gösteriliyor
       navigate('/doctor/applications');
     } catch (error) {
       console.error('Withdraw error:', error);
-      showToast.error('Başvuru geri çekilemedi');
+      // Toast mesajı mutation'ın onError'unda gösteriliyor
     }
   };
 
 
   if (!application && !detailLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+        <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-10 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-12 h-12 text-white" />
+            </div>
             <h2 className="text-2xl font-bold text-white mb-4">Başvuru bulunamadı</h2>
+            <p className="text-gray-300 mb-6 max-w-md mx-auto">
+              Aradığınız başvuru bulunamadı veya erişim yetkiniz bulunmuyor.
+            </p>
             <button
               onClick={() => navigate('/doctor/applications')}
-              className="text-blue-400 hover:text-blue-300 font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 font-medium rounded-xl transition-all border border-blue-500/30"
             >
+              <ArrowLeft className="w-4 h-4" />
               Başvurular sayfasına dön
             </button>
           </div>
@@ -111,8 +121,8 @@ const DoctorApplicationDetailPage = () => {
   // Pasif ilan için erişimi engelle
   if (application && isJobPassive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+        <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
           <div className="mb-8 flex items-center gap-4">
             <button
               onClick={() => navigate('/doctor/applications')}
@@ -122,7 +132,7 @@ const DoctorApplicationDetailPage = () => {
               Geri
             </button>
           </div>
-          <div className="text-center py-16">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-10 text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <XCircle className="w-12 h-12 text-white" />
             </div>
@@ -132,8 +142,9 @@ const DoctorApplicationDetailPage = () => {
             </p>
             <button
               onClick={() => navigate('/doctor/applications')}
-              className="text-blue-400 hover:text-blue-300 font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 font-medium rounded-xl transition-all border border-blue-500/30"
             >
+              <ArrowLeft className="w-4 h-4" />
               Başvurular sayfasına dön
             </button>
           </div>
@@ -143,8 +154,8 @@ const DoctorApplicationDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+      <div className="max-w-7xl mx-auto flex-1">
         {/* Header - Geri butonu ve başlık */}
         <div className="mb-8 flex items-center gap-4">
           <button
@@ -199,8 +210,8 @@ const DoctorApplicationDetailPage = () => {
                     <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(application?.status_id)}`}>
                       {getStatusText(application?.status_id)}
                     </span>
-                    {/* İş ilanı pasifse "Yayından Kaldırıldı" badge'i göster */}
-                    {((applicationDetail?.job_status_id === 4) || (application?.job_status_id === 4)) && (
+                    {/* İş ilanı pasifse veya hastane pasifse "Yayından Kaldırıldı" badge'i göster */}
+                    {isJobPassive && (
                       <span className="inline-block px-4 py-2 rounded-full text-sm font-medium border bg-gray-500/20 text-gray-300 border-gray-500/30">
                         Yayından Kaldırıldı
                       </span>

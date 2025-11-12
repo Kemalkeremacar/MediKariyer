@@ -317,7 +317,7 @@ const validateCredentials = async (email, password) => {
   
   // Admin için is_active kontrolü yapılmaz, diğer kullanıcılar için yapılır
   if (user.role !== 'admin' && !user.is_active) {
-    throw new AppError('Hesabınız admin tarafından pasifleştirilmiştir. Lütfen sistem yöneticisi ile iletişime geçin.', 403);
+    throw new AppError('Hesabınız pasifleştirilmiştir. Lütfen sistem yöneticisi ile iletişime geçin.', 403);
   }
   
   // Admin için is_approved kontrolü yapılmaz, diğer kullanıcılar için yapılır

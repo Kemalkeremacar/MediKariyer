@@ -41,7 +41,7 @@ const LoginPage = () => {
       setErrorModal({
         show: true,
         message: '⚠️ Admin Onayı Bekleniyor!',
-        description: 'Hesabınız admin tarafından onaylandıktan sonra sisteme erişebilirsiniz.'
+        description: 'Hesabınız onaylandıktan sonra sisteme erişebilirsiniz.'
       });
       
       // Location state'i temizle
@@ -58,7 +58,7 @@ const LoginPage = () => {
           setErrorModal({
             show: true,
             message: '⚠️ Admin Onayı Bekleniyor!',
-            description: 'Hesabınız admin tarafından onaylandıktan sonra sisteme erişebilirsiniz.'
+            description: 'Hesabınız onaylandıktan sonra sisteme erişebilirsiniz.'
           });
         }
         // Login sayfasında kal, yönlendirme yapma
@@ -284,10 +284,10 @@ const LoginPage = () => {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-red-200">
+                    <p className="text-sm font-medium text-gray-900">
                       Giriş Hatası
                     </p>
-                    <p className="text-sm text-red-300 mt-1">
+                    <p className="text-sm text-gray-900 mt-1">
                       {formError}
                     </p>
                   </div>

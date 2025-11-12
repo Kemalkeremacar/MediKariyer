@@ -39,6 +39,7 @@ import { useFloating, autoUpdate, offset, shift, FloatingPortal } from '@floatin
 import { useHospitalApplications, useUpdateApplicationStatus, useHospitalDoctorProfileDetail } from '../api/useHospital';
 import { useApplicationStatuses } from '@/hooks/useLookup';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { StatusBadge } from './ApplicationsPage';
 import { GraduationCap, Award, Languages } from 'lucide-react';
@@ -72,7 +73,10 @@ const HospitalApplicationDetailPage = () => {
   const applications = applicationsData?.data?.applications || [];
   const application = applications.find(a => a.id === parseInt(applicationId || '0'));
 
-  const doctorProfileId = application?.doctor_is_active === false ? null : application?.doctor_profile_id;
+  // Doktor aktif değilse (false, 0, null, undefined) profil bilgilerine erişim yok
+  // Aktif edildiğinde (true, 1) profil bilgileri tekrar görünür olacak
+  const isDoctorInactive = !application?.doctor_is_active || application?.doctor_is_active === false || application?.doctor_is_active === 0;
+  const doctorProfileId = isDoctorInactive ? null : application?.doctor_profile_id;
   const { data: doctorProfileData, isLoading: doctorProfileLoading } = useHospitalDoctorProfileDetail(doctorProfileId);
   
   // İlan durumunu kontrol et - Pasif ilanlar için erişimi engelle
@@ -82,8 +86,6 @@ const HospitalApplicationDetailPage = () => {
     jobStatus === 'Passive' || 
     application?.job_status_id === 4 ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif'));
-
-  const isDoctorInactive = application?.doctor_is_active === false;
 
   // Doktor profil detayı
   // Popover state
@@ -131,10 +133,10 @@ const HospitalApplicationDetailPage = () => {
         status_id: parseInt(selectedStatus),
         notes: notes || null
       });
-      showToast.success('Başvuru durumu güncellendi');
+      showToast.success(toastMessages.application.updateStatusSuccess);
     } catch (error) {
       console.error('Başvuru durumu güncelleme hatası:', error);
-      showToast.error('Başvuru durumu güncellenemedi');
+      showToast.error(error, { defaultMessage: toastMessages.application.updateStatusError });
     }
   };
 
@@ -145,10 +147,10 @@ const HospitalApplicationDetailPage = () => {
         status_id: application?.status_id,
         notes: notes || null
       });
-      showToast.success('Not güncellendi');
+      showToast.success(toastMessages.application.updateNoteSuccess);
     } catch (error) {
       console.error('Not güncelleme hatası:', error);
-      showToast.error('Not güncellenemedi');
+      showToast.error(error, { defaultMessage: toastMessages.application.updateNoteError });
     }
   };
 
@@ -186,9 +188,9 @@ const HospitalApplicationDetailPage = () => {
 
   if (isDoctorInactive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex items-center gap-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+        <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
+          <div className="flex items-center gap-4 mb-8">
             <button
               onClick={handleGoBack}
               className="p-2 hover:bg-white/10 rounded-xl transition-all"
@@ -208,12 +210,12 @@ const HospitalApplicationDetailPage = () => {
               <AlertCircle className="w-12 h-12 text-white" />
             </div>
             <h2 className="text-2xl font-semibold text-white mb-4">Doktor Hesabı Silinmiş</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
+            <p className="text-gray-300 max-w-2xl mx-auto mb-6">
               Bu başvuruyu yapan doktor hesabını sildiği için profil bilgilerine erişilemiyor. Başvuru işlemleri geçmiş kayıtlarınız için saklanmaya devam eder.
             </p>
             <button
               onClick={handleGoBack}
-              className="mt-6 inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 font-medium rounded-xl transition-all border border-blue-500/30"
             >
               <ArrowLeft className="w-4 h-4" />
               Başvurular sayfasına dön
@@ -226,8 +228,8 @@ const HospitalApplicationDetailPage = () => {
 
   if (isJobPassive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+        <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
           <div className="flex items-center gap-4 mb-8">
             <button
               onClick={handleGoBack}
@@ -236,7 +238,7 @@ const HospitalApplicationDetailPage = () => {
               <ArrowLeft className="w-6 h-6 text-white" />
             </button>
           </div>
-          <div className="text-center py-16">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-10 text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertCircle className="w-12 h-12 text-white" />
             </div>
@@ -246,8 +248,9 @@ const HospitalApplicationDetailPage = () => {
             </p>
             <button
               onClick={handleGoBack}
-              className="text-blue-400 hover:text-blue-300 font-medium"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 font-medium rounded-xl transition-all border border-blue-500/30"
             >
+              <ArrowLeft className="w-4 h-4" />
               Başvurular sayfasına dön
             </button>
           </div>
@@ -259,8 +262,8 @@ const HospitalApplicationDetailPage = () => {
   const doctorProfile = doctorProfileData?.data?.profile;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+      <div className="max-w-7xl mx-auto space-y-8 flex-1">
         {/* Header */}
         <div className="flex items-center gap-4">
           <button

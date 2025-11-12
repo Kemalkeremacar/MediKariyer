@@ -27,6 +27,7 @@ import {
 } from 'react-icons/fi';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { 
   useApplicationLogs, 
   useAuditLogs, 
@@ -402,7 +403,7 @@ const LogsPage = () => {
   // Export fonksiyonu
   const handleExport = () => {
     if (!currentData?.logs || currentData.logs.length === 0) {
-      showToast.warning('Export edilecek log bulunamadı');
+      showToast.warning(toastMessages.log.exportNoData);
       return;
     }
 
@@ -414,7 +415,7 @@ const LogsPage = () => {
     link.download = `logs_${activeTab}_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
-    showToast.success('Loglar export edildi');
+    showToast.success(toastMessages.log.exportSuccess);
   };
 
   // Loading state

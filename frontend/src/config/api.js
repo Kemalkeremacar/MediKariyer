@@ -110,6 +110,12 @@ export const ENDPOINTS = {
     PROFILE_PERSONAL: '/doctor/profile/personal', // PATCH - Kişisel bilgi güncelleme
     ACCOUNT_DEACTIVATE: '/doctor/account/deactivate', // POST - Hesabı pasife al
     
+    // Fotoğraf yönetimi
+    PHOTO: '/doctor/profile/photo', // POST - Profil fotoğrafı değişiklik talebi oluştur
+    PHOTO_STATUS: '/doctor/profile/photo/status', // GET - Fotoğraf talep durumu
+    PHOTO_HISTORY: '/doctor/profile/photo/history', // GET - Fotoğraf talep geçmişi
+    PHOTO_REQUEST: '/doctor/profile/photo/request', // DELETE - Fotoğraf talebini iptal et
+    
     // Eğitim CRUD
     EDUCATIONS: '/doctor/educations', // GET/POST - Eğitim listesi/oluşturma
     EDUCATION_DETAIL: '/doctor/educations/:id', // PATCH/DELETE - Eğitim güncelleme/silme

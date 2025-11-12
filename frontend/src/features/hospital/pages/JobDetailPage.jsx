@@ -78,6 +78,7 @@ import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 // ConfirmationModal global; local import gerekmez
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 
 const JobDetailPage = () => {
@@ -399,13 +400,13 @@ const allRevisionEntries = useMemo(() => {
         status_id: targetStatus,
         reason: 'Hastane tarafından güncellendi',
       });
-      showToast.success(targetStatus === 3 ? 'İlan aktif edildi' : 'İlan pasif hale getirildi');
+      showToast.success(targetStatus === 3 ? toastMessages.job.activateSuccess : toastMessages.job.deactivateSuccess);
       closeStatusModal();
       await refetchJob();
       restoreDetailScroll();
     } catch (error) {
       console.error('Status update error:', error);
-      showToast.error(error.response?.data?.message || 'Durum güncellenemedi');
+      showToast.error(error, { defaultMessage: toastMessages.job.statusUpdateError });
       restoreDetailScroll();
     }
   };
@@ -427,13 +428,13 @@ const allRevisionEntries = useMemo(() => {
   const handleResubmitJob = async () => {
     try {
       await resubmitJobMutation.mutateAsync(jobId);
-      showToast.success('İlan tekrar gönderildi. Admin onayı bekleniyor.');
+      showToast.success(toastMessages.job.resubmitSuccess);
       closeResubmitModal();
       await refetchJob();
       restoreDetailScroll();
     } catch (error) {
       console.error('Resubmit error:', error);
-      showToast.error(error.response?.data?.message || 'İlan tekrar gönderilemedi');
+      showToast.error(error, { defaultMessage: toastMessages.job.resubmitError });
       restoreDetailScroll();
     }
   };

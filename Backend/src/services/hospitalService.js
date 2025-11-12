@@ -775,12 +775,21 @@ const updateJobStatus = async (userId, jobId, statusId, reason) => {
     }
     
     // İş ilanı durumunu güncelle
+    const updateData = {
+      status_id: statusId,
+      updated_at: db.fn.now()
+    };
+    
+    // Eğer Pasif'ten (4) Onaylandı'ya (3) geçiş yapılıyorsa
+    // published_at'i güncelle (yeni yayın tarihi olarak)
+    if (oldStatus === 4 && statusId === 3) {
+      updateData.published_at = db.fn.now();
+      logger.info(`Job ${jobId}: Pasif → Aktif geçişi, published_at güncellendi`);
+    }
+    
     await db('jobs')
       .where('id', jobId)
-      .update({
-        status_id: statusId,
-        updated_at: db.fn.now()
-      });
+      .update(updateData);
 
     // Güncellenmiş iş ilanını getir
     const job = await db('jobs as j')
@@ -855,16 +864,19 @@ const getApplications = async (userId, jobId, params = {}) => {
       .leftJoin('cities as c', 'j.city_id', 'c.id')
       .leftJoin('specialties as s', 'j.specialty_id', 's.id')
       .where('a.job_id', jobId)
+      .where('j.hospital_id', hospitalProfile.id) // GÜVENLİK: Sadece bu hastaneye ait ilanların başvuruları
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
         'a.*',
-        'dp.first_name',
-        'dp.last_name',
-        'dp.phone',
-        'dp.profile_photo',
+        // Pasif doktorlar için bilgileri gizle (SQL Server bit tipi için güvenli kontrol)
+        // Aktif edildiğinde (is_active = 1) bilgiler tekrar görünür olacak
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.first_name END as first_name'),
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.last_name END as last_name'),
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.phone END as phone'),
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.profile_photo END as profile_photo'),
         'dp.specialty_id',
-        'u.email',
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE u.email END as email'),
         'u.is_active as doctor_is_active',
         'ast.name as status',
         'j.title as job_title',
@@ -1020,12 +1032,14 @@ const getAllApplications = async (userId, params = {}) => {
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
         'a.*',
-        'dp.first_name',
-        'dp.last_name',
-        'dp.phone',
-        'dp.profile_photo',
+        // Pasif doktorlar için bilgileri gizle (SQL Server bit tipi için güvenli kontrol)
+        // Aktif edildiğinde (is_active = 1) bilgiler tekrar görünür olacak
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.first_name END as first_name'),
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.last_name END as last_name'),
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.phone END as phone'),
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.profile_photo END as profile_photo'),
         'dp.specialty_id',
-        'u.email',
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE u.email END as email'),
         'u.is_active as doctor_is_active',
         'ast.name as status',
         'j.title as job_title',
@@ -1040,11 +1054,34 @@ const getAllApplications = async (userId, params = {}) => {
       );
 
     // İş ilanı ID filtresi - birden fazla job ID destekler (ÖNCE uygulanmalı)
+    // GÜVENLİK: jobIds'lerin bu hastaneye ait olduğunu kontrol et
     if (jobIds) {
       // jobIds string veya array olabilir
       const jobIdArray = Array.isArray(jobIds) ? jobIds : (typeof jobIds === 'string' ? jobIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id)) : []);
       if (jobIdArray.length > 0) {
-        query = query.whereIn('j.id', jobIdArray);
+        // Bu jobIds'lerin bu hastaneye ait olduğunu kontrol et
+        const validJobIds = await db('jobs')
+          .where('hospital_id', hospitalProfile.id)
+          .whereIn('id', jobIdArray)
+          .whereNull('deleted_at')
+          .select('id')
+          .pluck('id');
+        
+        if (validJobIds.length === 0) {
+          // Geçerli job ID yoksa boş sonuç döndür
+          return {
+            applications: [],
+            pagination: {
+              current_page: page,
+              per_page: limit,
+              total: 0,
+              total_pages: 0
+            }
+          };
+        }
+        
+        // Sadece geçerli jobIds'leri kullan
+        query = query.whereIn('j.id', validJobIds);
       }
     }
 
@@ -1399,13 +1436,18 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // Doktor profillerini getir
+    // Doktor profillerini getir - GÜVENLİK: Sadece bu hastaneye başvuran doktorlar
     let query = db('doctor_profiles as dp')
       .join('users as u', 'dp.user_id', 'u.id')
+      .join('applications as a', 'dp.id', 'a.doctor_profile_id') // Sadece başvuran doktorlar
+      .join('jobs as j', 'a.job_id', 'j.id') // İlanlar
       .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
       .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
       .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
       .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
+      .where('j.hospital_id', hospitalProfile.id) // GÜVENLİK: Sadece bu hastaneye ait ilanlar
+      .whereNull('a.deleted_at') // Silinmiş başvuruları gösterme
+      .whereNull('j.deleted_at') // Silinmiş ilanları gösterme
       .select(
         'dp.id',
         'dp.first_name',
@@ -1429,7 +1471,8 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
         'u.created_at'
       )
       .where('u.is_approved', true)
-      .where('u.is_active', true);
+      .where('u.is_active', true)
+      .distinct('dp.id'); // Aynı doktor birden fazla başvuru yapmışsa tekrar gösterme
 
     // Arama filtresi
     if (search) {
@@ -1456,11 +1499,17 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
       .offset(offset)
       .orderBy('dp.created_at', 'desc');
 
-    // Toplam sayı
+    // Toplam sayı - GÜVENLİK: Sadece bu hastaneye başvuran doktorlar
     let totalQuery = db('doctor_profiles as dp')
       .join('users as u', 'dp.user_id', 'u.id')
+      .join('applications as a', 'dp.id', 'a.doctor_profile_id') // Sadece başvuran doktorlar
+      .join('jobs as j', 'a.job_id', 'j.id') // İlanlar
+      .where('j.hospital_id', hospitalProfile.id) // GÜVENLİK: Sadece bu hastaneye ait ilanlar
+      .whereNull('a.deleted_at') // Silinmiş başvuruları gösterme
+      .whereNull('j.deleted_at') // Silinmiş ilanları gösterme
       .where('u.is_approved', true)
-      .where('u.is_active', true);
+      .where('u.is_active', true)
+      .distinct('dp.id'); // Aynı doktor birden fazla başvuru yapmışsa tekrar sayma
 
     if (search) {
       totalQuery = totalQuery.where(function() {
@@ -1539,6 +1588,19 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
 
     if (!doctorProfile) {
       throw new AppError('Doktor profili bulunamadı', 404);
+    }
+
+    // GÜVENLİK: Bu doktorun bu hastaneye başvurmuş olup olmadığını kontrol et
+    const hasApplication = await db('applications as a')
+      .join('jobs as j', 'a.job_id', 'j.id')
+      .where('a.doctor_profile_id', doctorProfileId)
+      .where('j.hospital_id', hospitalProfile.id)
+      .whereNull('a.deleted_at')
+      .whereNull('j.deleted_at')
+      .first();
+    
+    if (!hasApplication) {
+      throw new AppError('Bu doktor profiline erişim yetkiniz yok', 403);
     }
 
     // Doktor için ek bilgileri getir - lookup tablolarıyla JOIN (Soft delete kontrolü ile)

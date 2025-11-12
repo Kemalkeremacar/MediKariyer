@@ -98,6 +98,11 @@ import { toast } from "sonner";
  */
 import useUiStore from '../store/uiStore';
 
+/**
+ * Toast mesaj şablonları ve formatlama fonksiyonları
+ */
+import { formatErrorMessage } from '@/config/toast';
+
 // ============================================================================
 // TOAST UTILITIES - Toast notification fonksiyonları
 // ============================================================================
@@ -136,18 +141,25 @@ export const showToast = {
    * Kırmızı renkte hata toast'ı gösterir
    * Varsayılan süre: 7 saniye (hata mesajları daha uzun kalmalı)
    * 
-   * @param {string} message - Gösterilecek mesaj
+   * @param {string|Error} message - Gösterilecek mesaj veya Error objesi
    * @param {object} options - Toast seçenekleri
+   * @param {string} options.defaultMessage - Varsayılan mesaj (Error objesi kullanıldığında)
    * @returns {string|number} Toast ID'si
    * 
    * @example
    * showToast.error('Bir hata oluştu!');
+   * showToast.error(error, { defaultMessage: 'İşlem başarısız' });
    */
-  error: (message, options = {}) =>
-    toast.error(message, {
+  error: (message, options = {}) => {
+    const formattedMessage = typeof message === 'string' 
+      ? message 
+      : formatErrorMessage(message, options.defaultMessage || 'Bir hata oluştu');
+    
+    return toast.error(formattedMessage, {
       duration: 7000, // 7 saniye - hata mesajları daha uzun kalsın
       ...options,
-    }),
+    });
+  },
 
   /**
    * Uyarı mesajı gösterir
@@ -228,17 +240,23 @@ export const showToast = {
    *   {
    *     loading: 'Yükleniyor...',
    *     success: 'Başarılı!',
-   *     error: 'Hata oluştu!'
+   *     error: (err) => formatErrorMessage(err, 'Hata oluştu!')
    *   }
    * );
    */
-  promise: (promise, { loading, success, error }, options = {}) =>
-    toast.promise(promise, {
+  promise: (promise, { loading, success, error }, options = {}) => {
+    // Error mesajını formatla (eğer fonksiyon değilse)
+    const formattedError = typeof error === 'function' 
+      ? error 
+      : (err) => formatErrorMessage(err, error || 'Bir hata oluştu');
+    
+    return toast.promise(promise, {
       loading,
       success,
-      error,
+      error: formattedError,
       ...options,
-    }),
+    });
+  },
 
   /**
    * Belirli bir toast'ı kapatır
@@ -406,6 +424,14 @@ export const showToast = {
 // ============================================================================
 // EXPORTS - Toast utilities export
 // ============================================================================
+
+/**
+ * Hata mesajı formatlama fonksiyonu export
+ * 
+ * Diğer dosyalardan da kullanılabilir
+ * toast.js'den re-export ediliyor
+ */
+export { formatErrorMessage };
 
 /**
  * Default export

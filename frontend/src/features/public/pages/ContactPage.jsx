@@ -6,7 +6,7 @@
 import React, { useState } from 'react';
 import { FiMail, FiPhone, FiMapPin, FiClock, FiSend } from 'react-icons/fi';
 import { showToast } from '@/utils/toastUtils';
-import { useSendMessage } from '../../contact/api/useContactMessages';
+import { useSendMessage } from '../../contact/useContactMessages';
 import { contactMessageSchema } from '@config/validation.js';
 
 const ContactPage = () => {

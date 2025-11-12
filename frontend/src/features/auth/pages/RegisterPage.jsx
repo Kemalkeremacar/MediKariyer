@@ -8,6 +8,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiUser, FiHome, FiMail, FiLock, FiPhone, FiMapPin, FiArrowLeft, FiCheck, FiCamera, FiUpload, FiImage } from 'react-icons/fi';
 import { useRegisterDoctor, useRegisterHospital } from '../api/useAuth';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import useAuthStore from '../../../store/authStore';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
@@ -92,13 +93,13 @@ const RegisterPage = () => {
 
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      showToast.error('Fotoğraf boyutu 5MB\'dan küçük olmalıdır');
+      showToast.error(toastMessages.validation.fileSizeError);
       return;
     }
 
     // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
-      showToast.error('Sadece resim dosyaları yüklenebilir');
+      showToast.error(toastMessages.validation.fileFormatError);
       return;
     }
 
@@ -123,13 +124,13 @@ const RegisterPage = () => {
 
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      showToast.error('Logo boyutu 5MB\'dan küçük olmalıdır');
+      showToast.error(toastMessages.validation.fileSizeError);
       return;
     }
 
     // Dosya tipi kontrolü
     if (!file.type.startsWith('image/')) {
-      showToast.error('Sadece resim dosyaları yüklenebilir');
+      showToast.error(toastMessages.validation.fileFormatError);
       return;
     }
 

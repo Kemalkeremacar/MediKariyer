@@ -609,12 +609,20 @@ const getJobDetails = async (jobId) => {
  * @param {number} [filters.status] - Başvuru durumu
  * @param {number} [filters.job_id] - İş ilanı ID'si
  * @param {number} [filters.doctor_profile_id] - Doktor profil ID'si
+ * @param {number} [filters.user_id] - Doktor user ID'si (doctor_profile_id yerine kullanılabilir)
  * @param {number} [filters.hospital_id] - Hastane ID'si
  * @param {number} [filters.page=1] - Sayfa numarası
  * @param {number} [filters.limit=10] - Sayfa başına kayıt sayısı
  * @returns {Object} Başvuru listesi ve sayfalama bilgileri
  */
-const getAllApplications = async ({ search, doctor_search, hospital_search, status, job_id, doctor_profile_id, hospital_id, page = 1, limit = 10 } = {}) => {
+const getAllApplications = async ({ search, doctor_search, hospital_search, status, job_id, doctor_profile_id, user_id, hospital_id, page = 1, limit = 10 } = {}) => {
+  // user_id'yi integer'a çevir (query string'den string olarak gelebilir)
+  if (user_id) {
+    user_id = parseInt(user_id, 10);
+    if (isNaN(user_id)) {
+      user_id = null;
+    }
+  }
   let query = db('applications as a')
     .join('jobs as j', 'a.job_id', 'j.id')
     .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
@@ -626,9 +634,10 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
     .leftJoin('job_statuses as js', 'j.status_id', 'js.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
-    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
-    .where('hospital_users.is_active', true) // Pasifleştirilmiş hastanelerin iş ilanlarını gösterme
-    .select(
+    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+    // NOT: hospital_users.is_active filtresi kaldırıldı - pasif hastane ilanları da gösterilecek
+    // NOT: j.status_id filtresi yok - pasif ilanlar da gösterilecek
+  query.select(
       'a.*',
       'j.title as job_title',
       'j.status_id as job_status_id',
@@ -640,7 +649,8 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
       'doctor_users.is_active as doctor_is_active',
       'residence_city.name as residence_city_name',
       'hp.institution_name',
-      'ast.name as status'
+      'ast.name as status',
+      'hospital_users.is_active as hospital_is_active' // Hastane aktiflik durumu
     );
 
   if (search) {
@@ -688,6 +698,7 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
   if (status) query.where('a.status_id', status);
   if (job_id) query.where('a.job_id', job_id);
   if (doctor_profile_id) query.where('a.doctor_profile_id', doctor_profile_id);
+  if (user_id) query.where('doctor_users.id', user_id); // user_id ile doktor başvurularını filtrele
   if (hospital_id) query.where('j.hospital_id', hospital_id);
 
   const offset = (page - 1) * limit;
@@ -701,9 +712,8 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
     .join('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .join('application_statuses as ast', 'a.status_id', 'ast.id')
     .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-    .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
-    .where('hospital_users.is_active', true) // Pasifleştirilmiş doktorların başvurularını sayma
-    .where('hospital_users.is_active', true); // Pasifleştirilmiş hastanelerin iş ilanlarını sayma
+    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+    // NOT: hospital_users.is_active filtresi kaldırıldı - pasif hastane ilanları da sayılacak
 
   if (search) {
     countQuery.where(function () {
@@ -750,6 +760,7 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
   if (status) countQuery.where('a.status_id', status);
   if (job_id) countQuery.where('a.job_id', job_id);
   if (doctor_profile_id) countQuery.where('a.doctor_profile_id', doctor_profile_id);
+  if (user_id) countQuery.where('doctor_users.id', user_id); // user_id ile doktor başvurularını filtrele
   if (hospital_id) countQuery.where('j.hospital_id', hospital_id);
 
   const [{ count }] = await countQuery.count('* as count');

@@ -186,10 +186,10 @@ const Header = () => {
           <div className="flex-shrink-0">
             <button
               onClick={handleLogoClick}
-              className="flex items-center space-x-3 group cursor-pointer"
+              className="flex items-center space-x-3 sm:space-x-4 group cursor-pointer"
             >
               {/* Logo Icon - Her zaman varsayılan logo */}
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+              <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden shadow-lg">
                 <img 
                   src={logoImage} 
                   alt="MediKariyer Logo" 
@@ -197,7 +197,7 @@ const Header = () => {
                 />
               </div>
               {/* Logo Text - 4 Parametre Planına Göre */}
-              <span className="text-2xl font-bold text-white">
+              <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
                 {APP_CONFIG.APP_NAME}
               </span>
             </button>

@@ -53,6 +53,7 @@ import {
 } from '../api/useDoctor.js';
 import { useLookup } from '../../../hooks/useLookup';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { useNavigate } from 'react-router-dom';
@@ -134,10 +135,10 @@ const DoctorProfile = () => {
   const handlePersonalInfoUpdate = async (data) => {
     try {
       await updateProfileMutation.mutateAsync(data);
-      showToast.success('Kişisel bilgiler güncellendi');
+      // Toast mesajı mutation'ın onSuccess'inde gösteriliyor
     } catch (error) {
       console.error('handlePersonalInfoUpdate - Error:', error);
-      showToast.error('Güncelleme başarısız');
+      // Toast mesajı mutation'ın onError'unda gösteriliyor
     }
   };
 
@@ -229,10 +230,10 @@ const DoctorProfile = () => {
           await deleteLanguageMutation.mutateAsync(deleteModal.id);
           break;
       }
-      showToast.success('Öğe silindi');
+      // Toast mesajları mutation'ların onSuccess'inde gösteriliyor
       closeDeleteModal();
     } catch (error) {
-      showToast.error('Silme başarısız');
+      // Toast mesajları mutation'ların onError'unda gösteriliyor
     }
   };
 
@@ -343,7 +344,7 @@ const DoctorProfile = () => {
             await updateLanguageMutation.mutateAsync({ id: editingItem.id, data: validatedData });
             break;
         }
-        showToast.success('Güncelleme başarılı');
+        // Toast mesajları mutation'ların onSuccess'inde gösteriliyor
       } else {
         // Yeni ekleme
         switch (type) {
@@ -360,7 +361,7 @@ const DoctorProfile = () => {
             await createLanguageMutation.mutateAsync(validatedData);
             break;
         }
-        showToast.success('Ekleme başarılı');
+        // Toast mesajları mutation'ların onSuccess'inde gösteriliyor
       }
       
       setShowForm(false);
@@ -381,7 +382,7 @@ const DoctorProfile = () => {
           showToast.error(backendDetails[0].message);
         } else {
           // Genel hata mesajı
-          showToast.error('İşlem başarısız: ' + (error.response?.data?.message || error.message));
+          showToast.error(error, { defaultMessage: toastMessages.general.operationError });
         }
       }
     }
@@ -666,14 +667,14 @@ const PhotoManagementModal = ({
 
     // Dosya boyutu kontrolü (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      showToast.error('Dosya boyutu 5MB\'dan küçük olmalıdır');
+      showToast.error(toastMessages.photo.fileSizeError);
       return;
     }
 
     // Dosya tipi kontrolü
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      showToast.error('Sadece JPEG, PNG ve WebP formatları desteklenir');
+      showToast.error(toastMessages.photo.fileFormatError);
       return;
     }
 
@@ -682,18 +683,18 @@ const PhotoManagementModal = ({
       reader.onloadend = async () => {
         try {
           await requestPhotoChangeMutation.mutateAsync(reader.result);
-          showToast.success('Fotoğraf yüklendi! Admin onayı bekleniyor.');
+          showToast.success(toastMessages.photo.uploadSuccess);
           // Dosya input'unu temizle
           e.target.value = '';
         } catch (error) {
           console.error('Photo upload error:', error);
-          showToast.error('Fotoğraf yükleme başarısız: ' + (error.response?.data?.message || error.message));
+          showToast.error(error, { defaultMessage: toastMessages.photo.uploadError });
         }
     };
     reader.readAsDataURL(file);
     } catch (error) {
       console.error('Photo upload error:', error);
-      showToast.error('Fotoğraf yükleme başarısız');
+      showToast.error(error, { defaultMessage: toastMessages.photo.uploadError });
     }
   };
 
@@ -1022,7 +1023,7 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
         showToast.error(firstError.message);
       } else {
         console.error('Validation error:', error);
-        showToast.error('Güncelleme başarısız: ' + error.message);
+        showToast.error(error, { defaultMessage: toastMessages.general.updateError });
       }
     }
   };

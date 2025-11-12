@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useMyApplications, useWithdrawApplication, useDeleteApplication } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { useLookup } from '../../../hooks/useLookup';
 
@@ -175,7 +176,7 @@ const DoctorApplicationsPage = () => {
 
     try {
       await withdrawMutation.mutateAsync({ applicationId, reason: '' });
-      showToast.success('Başvuru geri çekildi');
+      // Toast mesajı mutation'ın onSuccess'inde gösteriliyor
       if (currentScroll >= 0) {
         sessionStorage.setItem('applicationsPageScrollPosition', String(currentScroll));
         sessionStorage.setItem('applicationsPageCurrentPage', currentPage.toString());
@@ -184,7 +185,7 @@ const DoctorApplicationsPage = () => {
       restoreScrollPosition();
     } catch (error) {
       console.error('Withdraw error:', error);
-      showToast.error('Başvuru geri çekilemedi');
+      // Toast mesajı mutation'ın onError'unda gösteriliyor
       restoreScrollPosition();
     }
   }, [captureScrollPosition, restoreScrollPosition, withdrawMutation, refetchApplications, currentPage]);
@@ -207,7 +208,7 @@ const DoctorApplicationsPage = () => {
 
     try {
       await deleteMutation.mutateAsync(applicationId);
-      showToast.success('Başvuru kalıcı olarak silindi');
+      // Toast mesajı mutation'ın onSuccess'inde gösteriliyor
       if (currentScroll >= 0) {
         sessionStorage.setItem('applicationsPageScrollPosition', String(currentScroll));
         sessionStorage.setItem('applicationsPageCurrentPage', currentPage.toString());
@@ -216,7 +217,7 @@ const DoctorApplicationsPage = () => {
       restoreScrollPosition();
     } catch (error) {
       console.error('Delete error:', error);
-      showToast.error('Başvuru silinemedi');
+      // Toast mesajı mutation'ın onError'unda gösteriliyor
       restoreScrollPosition();
     }
   }, [captureScrollPosition, restoreScrollPosition, deleteMutation, refetchApplications, currentPage]);
@@ -406,16 +407,20 @@ const DoctorApplicationsPage = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
           ) : applications?.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg md:text-xl font-semibold text-gray-300 mb-2">
-                {activeFiltersCount > 0 ? 'Filtreye uygun başvuru bulunamadı' : 'Başvuru bulunamadı'}
-              </h3>
-              <p className="text-gray-400 text-sm md:text-base px-4">
-                {activeFiltersCount > 0 
-                  ? 'Filtreleri değiştirip tekrar deneyin.' 
-                  : 'Henüz hiç başvuru yapmadınız.'}
-              </p>
+            <div className="min-h-[400px] flex items-center justify-center">
+              <div className="text-center max-w-md">
+                <div className="w-20 h-20 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileText className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-lg md:text-xl font-semibold text-gray-300 mb-2">
+                  {activeFiltersCount > 0 ? 'Filtreye uygun başvuru bulunamadı' : 'Başvuru bulunamadı'}
+                </h3>
+                <p className="text-gray-400 text-sm md:text-base px-4">
+                  {activeFiltersCount > 0 
+                    ? 'Filtreleri değiştirip tekrar deneyin.' 
+                    : 'Henüz hiç başvuru yapmadınız.'}
+                </p>
+              </div>
             </div>
           ) : (
             applications.map((application) => (
@@ -462,9 +467,10 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
     onWithdrawClick(application.id);
   };
 
-  // İlan durumunu kontrol et - Pasif ilan kontrolü
+  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif veya hastane pasif)
   const jobStatusId = application.job_status_id;
   const jobStatus = application.job_status || '';
+  const hospitalIsActive = application.hospital_is_active !== false && application.hospital_is_active !== 0 && application.hospital_is_active !== '0';
   const isJobPassive = 
     jobStatusId === 4 ||
     jobStatusId === '4' ||
@@ -473,7 +479,8 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'pasif') ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
-    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive'));
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive')) ||
+    !hospitalIsActive; // Hastane pasifse ilan da pasif gibi görünsün
 
   // Pasif ilan için özel görünüm
   if (isJobPassive) {

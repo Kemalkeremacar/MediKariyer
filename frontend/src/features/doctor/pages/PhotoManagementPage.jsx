@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, ArrowLeft, Clock, AlertCircle, Info, Upload, RefreshCw, CheckCircle, XCircle, Image as ImageIcon, History } from 'lucide-react';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { useDoctorProfile, usePhotoRequestStatus, useRequestPhotoChange, useCancelPhotoRequest } from '../api/useDoctor.js';
 import useAuthStore from '@/store/authStore';
 
@@ -236,11 +237,11 @@ const PhotoManagementPage = () => {
     setSelectedFile(null);
     if (!photoFile) return;
     if (!ALLOWED_TYPES.includes(photoFile.type)) {
-      showToast.error('Lütfen JPG veya PNG formatında bir dosya seçiniz.');
+      showToast.error(toastMessages.photoManagement.fileFormatError);
       return;
     }
     if (photoFile.size > MAX_FILE_SIZE) {
-      showToast.error('Dosya boyutu en fazla 10MB olabilir.');
+      showToast.error(toastMessages.photoManagement.fileSizeError);
       return;
     }
     setSelectedFile(photoFile);
@@ -254,7 +255,7 @@ const PhotoManagementPage = () => {
     setIsUploading(true);
     try {
       await requestPhotoChangeMutation.mutateAsync(selectedFile);
-      showToast.success('Fotoğraf talebi gönderildi!');
+      showToast.success(toastMessages.photoManagement.requestSuccess);
       
       // Pending state'ini ayarla (backend'den veri gelene kadar)
       setAwaitingApproval(true);
@@ -278,7 +279,7 @@ const PhotoManagementPage = () => {
       
       setSubmissionMessage({ type: 'success', text: 'Değiştirme talebiniz gönderildi. Admin onayı bekleniyor.' });
     } catch (error) {
-      showToast.error('Fotoğraf yüklenemedi.');
+      showToast.error(toastMessages.photoManagement.uploadError);
       setSubmissionMessage({ type: 'error', text: 'Fotoğraf yüklenemedi. Lütfen dosya türü/boyutunu ve bağlantınızı kontrol edin.' });
     }
     setIsUploading(false);
@@ -287,7 +288,7 @@ const PhotoManagementPage = () => {
   const handleCancelRequest = async () => {
     try {
       await cancelPhotoRequestMutation.mutateAsync();
-      showToast.success('Değişiklik talebiniz iptal edildi.');
+      showToast.success(toastMessages.photoManagement.cancelSuccess);
       // UI ve yerel durumu hemen senkronize et
       setAwaitingApproval(false);
       setSelectedFile(null);
@@ -298,7 +299,7 @@ const PhotoManagementPage = () => {
       refetchStatus();
       refetchProfile();
     } catch (error) {
-      showToast.error('İptal işlemi başarısız.');
+      showToast.error(toastMessages.photoManagement.cancelError);
     }
   };
 

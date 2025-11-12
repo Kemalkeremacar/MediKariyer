@@ -15,6 +15,7 @@ import {
 import { useApplicationById, useUpdateApplicationStatus, useUserById } from '../api/useAdmin';
 import { useApplicationStatuses } from '@/hooks/useLookup';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
 const AdminApplicationDetailPage = () => {
@@ -83,12 +84,12 @@ const AdminApplicationDetailPage = () => {
         status_id: parseInt(selectedStatus),
         reason: notes || null
       });
-      showToast.success('Başvuru durumu güncellendi');
+      showToast.success(toastMessages.application.updateStatusSuccess);
       setNotes('');
       refetch();
     } catch (error) {
       console.error('Başvuru durumu güncelleme hatası:', error);
-      showToast.error('Başvuru durumu güncellenemedi');
+      showToast.error(error, { defaultMessage: toastMessages.application.updateStatusError });
     }
   };
 
@@ -99,11 +100,11 @@ const AdminApplicationDetailPage = () => {
         status_id: application.status_id,
         reason: notes || null
       });
-      showToast.success('Not güncellendi');
+      showToast.success(toastMessages.application.updateNoteSuccess);
       refetch();
     } catch (error) {
       console.error('Not güncelleme hatası:', error);
-      showToast.error('Not güncellenemedi');
+      showToast.error(error, { defaultMessage: toastMessages.application.updateNoteError });
     }
   };
 
@@ -156,21 +157,21 @@ const AdminApplicationDetailPage = () => {
 
   if (error || !application.id) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="p-6">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center bg-white rounded-xl shadow-lg p-8 border border-gray-200">
-              <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Başvuru Bulunamadı</h2>
-              <p className="text-gray-600 mb-6">Aradığınız başvuru bulunamadı veya silinmiş olabilir.</p>
-              <button
-                onClick={() => navigate('/admin/applications')}
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Başvuru Listesine Dön
-              </button>
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="p-6 flex-1 flex flex-col justify-center">
+          <div className="text-center bg-white rounded-xl shadow-lg p-10 border border-gray-200 max-w-2xl mx-auto">
+            <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-12 h-12 text-red-500" />
             </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Başvuru Bulunamadı</h2>
+            <p className="text-gray-600 mb-6">Aradığınız başvuru bulunamadı veya silinmiş olabilir.</p>
+            <button
+              onClick={() => navigate('/admin/applications')}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Başvuru Listesine Dön
+            </button>
           </div>
         </div>
       </div>
@@ -179,8 +180,8 @@ const AdminApplicationDetailPage = () => {
 
   if (isDoctorInactive) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="p-6">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="p-6 flex-1 flex flex-col justify-center">
           <div className="mb-6">
             <button
               onClick={() => navigate('/admin/applications')}
@@ -196,16 +197,29 @@ const AdminApplicationDetailPage = () => {
               <AlertCircle className="w-12 h-12 text-white" />
             </div>
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Doktor Hesabı Silinmiş</h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
+            <p className="text-gray-600 max-w-xl mx-auto mb-6">
               Bu başvuruyu yapan doktor hesabını sildiği için profil detaylarına erişilemiyor. Başvuru kaydı arşiv amaçlı olarak listede tutulmaya devam eder.
             </p>
-            <div className="mt-6">
+            <div className="mt-6 space-y-4">
               <div className="inline-flex flex-col items-center gap-2 bg-gray-100 rounded-xl px-6 py-4">
                 <span className="text-sm font-medium text-gray-700">Başvuru</span>
                 <span className="text-lg font-semibold text-gray-900">
                   {application.first_name} {application.last_name} - {application.job_title}
                 </span>
               </div>
+              
+              {/* Doktor Profil Linki */}
+              {application.user_id && (
+                <div className="pt-4">
+                  <button
+                    onClick={() => navigate(`/admin/users/${application.user_id}`)}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium shadow-md"
+                  >
+                    <User className="w-4 h-4" />
+                    Doktor Profilini Görüntüle
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

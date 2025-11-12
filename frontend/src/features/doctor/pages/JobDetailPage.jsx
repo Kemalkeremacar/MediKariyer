@@ -13,6 +13,7 @@ import {
 import { useDoctorJobDetail, useApplyToJob } from '../api/useDoctor.js';
 import { useDoctorJobs } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
+import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 
@@ -97,14 +98,14 @@ const DoctorJobDetailPage = () => {
       });
       
       closeApplicationModal();
-      showToast.success('Başvurunuz başarıyla gönderildi!');
+      showToast.success(toastMessages.application.createSuccess);
       navigate('/doctor/applications');
     } catch (error) {
       const errorMessage = error.response?.data?.message;
       
       if (errorMessage === 'Bu ilana daha önce başvuru yapılmış') {
         closeApplicationModal();
-        showToast.warning('Bu ilana zaten aktif bir başvurunuz bulunuyor. Başvurularım sayfasına yönlendiriliyorsunuz; mevcut başvurunuzu kontrol edip gerekirse geri çekebilirsiniz.');
+        showToast.warning(toastMessages.application.alreadyExists);
         navigate('/doctor/applications');
       } else if (errorMessage === 'Validasyon hatası') {
         const details = error.response?.data?.details;
@@ -119,10 +120,10 @@ const DoctorJobDetailPage = () => {
             }
           );
         } else {
-          showToast.error('Başvuru yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+          showToast.error(error, { defaultMessage: toastMessages.application.createError });
         }
       } else {
-        showToast.error(errorMessage || 'Başvuru yapılırken bir hata oluştu. Lütfen tekrar deneyin.');
+        showToast.error(error, { defaultMessage: toastMessages.application.createError });
       }
     }
   };
