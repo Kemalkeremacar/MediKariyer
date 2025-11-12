@@ -910,9 +910,8 @@ const getApplications = async (userId, jobId, params = {}) => {
       .limit(limit)
       .offset(offset);
 
-    // Debug: İş ilanı durumunu kontrol et
+    // JavaScript'te fallback hesaplama (job_status eksikse)
     if (applications.length > 0) {
-      // JavaScript'te fallback hesaplama
       applications.forEach(app => {
         if (!app.job_status && app.job_status_id) {
           // Yeni status sistemine göre fallback (Türkçe)
@@ -925,23 +924,6 @@ const getApplications = async (userId, jobId, params = {}) => {
           };
           app.job_status_fallback = statusMap[app.job_status_id] || 'Bilinmiyor';
         }
-      });
-      
-      console.log('🔍 Backend Job Status Debug:', {
-        jobId: jobId,
-        firstApplication: {
-          job_title: applications[0].job_title,
-          job_status_id: applications[0].job_status_id,
-          job_status: applications[0].job_status,
-          job_status_fallback: applications[0].job_status_fallback,
-          allFields: Object.keys(applications[0])
-        }
-      });
-      
-      // SQL sorgusunu da logla
-      console.log('🔍 SQL Query Debug:', {
-        jobId: jobId,
-        query: query.toString()
       });
     }
 
@@ -1309,15 +1291,36 @@ const updateApplicationStatus = async (userId, applicationId, statusId, notes = 
         .first();
 
       if (doctorUser) {
-        await notificationService.sendDoctorNotification(doctorUser.user_id, statusId, {
+        // Status ID'yi status string'ine çevir
+        const statusMap = {
+          1: 'pending',      // Beklemede
+          2: 'pending',      // İnceleniyor
+          3: 'accepted',     // Kabul Edildi
+          4: 'rejected',     // Red Edildi
+          5: 'withdrawn'     // Geri Çekildi
+        };
+        
+        const statusString = statusMap[statusId] || 'pending';
+        
+        // Hastane adını al
+        const hospitalInfo = await db('jobs as j')
+          .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+          .where('j.id', application.job_id)
+          .select('hp.institution_name')
+          .first();
+        
+        await notificationService.sendDoctorNotification(doctorUser.user_id, statusString, {
           application_id: applicationId,
           job_title: application.job_title,
-          hospital_name: application.hospital || 'Hastane',
+          hospital_name: hospitalInfo?.institution_name || 'Hastane',
           notes: notes
         });
+        
+        logger.info(`Application status change notification sent to doctor ${doctorUser.user_id}`);
       }
     } catch (notificationError) {
-      logger.warn('Notification creation failed:', notificationError);
+      logger.warn('Application status change notification failed:', notificationError);
+      // Bildirim hatası durum değişikliğini engellemez
     }
 
     return updatedApplication;

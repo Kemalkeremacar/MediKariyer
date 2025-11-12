@@ -262,8 +262,8 @@ const HospitalApplicationDetailPage = () => {
   const doctorProfile = doctorProfileData?.data?.profile;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
-      <div className="max-w-7xl mx-auto space-y-8 flex-1">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col overflow-x-hidden">
+      <div className="max-w-7xl mx-auto space-y-8 flex-1 w-full min-w-0">
         {/* Header */}
         <div className="flex items-center gap-4">
           <button
@@ -280,9 +280,9 @@ const HospitalApplicationDetailPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Sol Kolon - Doktor Bilgileri ve Ön Yazı */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 min-w-0">
             {/* Doktor Bilgileri */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -387,22 +387,24 @@ const HospitalApplicationDetailPage = () => {
           </div>
 
           {/* Sağ Kolon - Durum Yönetimi */}
-          <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
+          <div className="space-y-6 min-w-0">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 w-full max-w-full overflow-hidden">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <Settings className="w-5 h-5 text-purple-400" />
                 Durum Yönetimi
               </h2>
 
               {/* Mevcut Durum */}
-              <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl p-4 mb-4 border border-blue-500/30">
+              <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl p-4 mb-4 border border-blue-500/30 min-h-[100px]">
                 <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-400" />
                   Mevcut Durum
                 </h3>
-                <div className="flex items-center justify-between">
-                  <StatusBadge status_id={application.status_id} statusName={application.status} />
-                  <div className="text-right">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-shrink-0 min-w-0">
+                    <StatusBadge status_id={application.status_id} statusName={application.status} />
+                  </div>
+                  <div className="text-right flex-shrink-0 whitespace-nowrap">
                     <span className="text-xs text-gray-400 block">Son Güncelleme</span>
                     <span className="text-sm text-gray-300">
                       {new Date(application.updated_at).toLocaleDateString('tr-TR')}
@@ -483,7 +485,7 @@ const HospitalApplicationDetailPage = () => {
 
               {/* Butonlar */}
               {!isWithdrawn ? (
-                <div className="flex flex-col gap-3 pt-4 border-t border-white/10">
+                <div className="flex flex-col gap-3 pt-4 border-t border-white/10 min-h-[80px]">
                   {/* Sadece Not Güncelle */}
                   {!isStatusChanged && isNotesChanged && (
                     <button
@@ -500,7 +502,7 @@ const HospitalApplicationDetailPage = () => {
                     <button
                       onClick={handleStatusUpdate}
                       disabled={updateStatusMutation.isPending}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed break-words"
                     >
                       {updateStatusMutation.isPending ? 'Güncelleniyor...' : 'Durum ve Notu Güncelle'}
                     </button>
@@ -508,11 +510,11 @@ const HospitalApplicationDetailPage = () => {
                   
                   {/* Değişiklik yoksa buton gösterme */}
                   {!isStatusChanged && !isNotesChanged && (
-                    <p className="text-xs text-gray-400 text-center">Değişiklik yapmak için yukarıdaki alanları düzenleyin</p>
+                    <p className="text-xs text-gray-400 text-center py-3">Değişiklik yapmak için yukarıdaki alanları düzenleyin</p>
                   )}
                 </div>
               ) : (
-                <div className="pt-4 border-t border-white/10">
+                <div className="pt-4 border-t border-white/10 min-h-[80px]">
                   <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />

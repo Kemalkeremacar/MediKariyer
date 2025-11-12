@@ -30,6 +30,7 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
+import { resolveRevisionNote as resolveRevisionNoteUtil } from '@/utils/jobUtils';
 
 const AdminJobDetailPage = () => {
   const { id } = useParams();
@@ -245,47 +246,9 @@ const AdminJobDetailPage = () => {
     return normalized;
   }, []);
 
+  // Utility fonksiyonunu kullan
   const resolveRevisionNote = useCallback((entry) => {
-    if (!entry) return '';
-    const candidates = [];
-    const tryPush = (val) => {
-      if (typeof val === 'string' && val.trim()) {
-        candidates.push(val.trim());
-      }
-    };
-    tryPush(entry.note);
-    tryPush(entry.revision_note);
-    if (entry.details) {
-      const details = typeof entry.details === 'string' ? (() => {
-        try {
-          return JSON.parse(entry.details);
-        } catch (error) {
-          return null;
-        }
-      })() : entry.details;
-      if (details) {
-        tryPush(details.revision_note);
-        tryPush(details.note);
-      }
-    }
-    if (entry.data) {
-      const dataBlock = typeof entry.data === 'string' ? (() => {
-        try {
-          return JSON.parse(entry.data);
-        } catch (error) {
-          return null;
-        }
-      })() : entry.data;
-      if (dataBlock) {
-        tryPush(dataBlock.revision_note);
-        tryPush(dataBlock.note);
-      }
-    }
-    if (entry.metadata) {
-      tryPush(entry.metadata.revision_note);
-      tryPush(entry.metadata.note);
-    }
-    return candidates.length > 0 ? candidates[0] : '';
+    return resolveRevisionNoteUtil(entry);
   }, []);
 
   const allRevisionEntries = useMemo(() => {
@@ -522,9 +485,9 @@ const AdminJobDetailPage = () => {
     const IconComponent = config.icon;
 
     return (
-      <span className={`px-4 py-2 rounded-lg text-sm font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center gap-2`}>
-        <IconComponent className="w-4 h-4" />
-        {status}
+      <span className={`px-4 py-2 rounded-lg text-sm font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center justify-center gap-2 w-[160px]`}>
+        <IconComponent className="w-4 h-4 flex-shrink-0" />
+        <span className="text-center truncate">{status}</span>
       </span>
     );
   };

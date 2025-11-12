@@ -19,7 +19,7 @@
  * @since 2024
  */
 
-import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Briefcase, Plus, Edit3, Eye, 
@@ -239,9 +239,9 @@ const HospitalJobs = () => {
     const config = statusConfig[status] || statusConfig['Pasif'];
 
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center gap-1`}>
-        <span>{config.icon}</span>
-        {status}
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center justify-center gap-1 w-[140px]`}>
+        <span className="flex-shrink-0">{config.icon}</span>
+        <span className="text-center truncate">{status}</span>
       </span>
     );
   };
@@ -576,55 +576,12 @@ const HospitalJobs = () => {
 
           {/* Pagination */}
           {paginationData.pages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <button
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                disabled={pagination.page <= 1}
-                className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                Önceki
-              </button>
-              
-              {Array.from({ length: paginationData.pages }, (_, i) => {
-                const page = i + 1;
-                const isCurrentPage = page === pagination.page;
-                const shouldShow = 
-                  page === 1 || 
-                  page === paginationData.pages || 
-                  Math.abs(page - pagination.page) <= 2;
-
-                if (!shouldShow) {
-                  if (page === 2 && pagination.page > 4) {
-                    return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                  }
-                  if (page === paginationData.pages - 1 && pagination.page < paginationData.pages - 3) {
-                    return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                  }
-                  return null;
-                }
-
-                return (
-                  <button
-                    key={page}
-                    onClick={() => setPagination(prev => ({ ...prev, page }))}
-                    className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm ${
-                      isCurrentPage
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                        : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-
-              <button
-                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                disabled={pagination.page >= paginationData.pages}
-                className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                Sonraki
-              </button>
+            <div className="mt-8">
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={paginationData.pages}
+                onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+              />
             </div>
           )}
         </div>
@@ -633,5 +590,75 @@ const HospitalJobs = () => {
     </div>
   );
 };
+
+// Sayfalama Component (Memoized)
+const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
+  const handlePrev = useCallback(() => {
+    onPageChange(Math.max(1, currentPage - 1));
+  }, [currentPage, onPageChange]);
+
+  const handleNext = useCallback(() => {
+    onPageChange(Math.min(totalPages, currentPage + 1));
+  }, [currentPage, totalPages, onPageChange]);
+
+  const handlePage = useCallback((page) => {
+    onPageChange(page);
+  }, [onPageChange]);
+
+  return (
+    <div className="flex justify-center items-center space-x-2">
+      <button
+        onClick={handlePrev}
+        disabled={currentPage === 1}
+        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+      >
+        Önceki
+      </button>
+      
+      {[...Array(totalPages)].map((_, i) => {
+        const page = i + 1;
+        const isCurrentPage = page === currentPage;
+        const shouldShow = 
+          page === 1 || 
+          page === totalPages || 
+          Math.abs(page - currentPage) <= 2;
+
+        if (!shouldShow) {
+          if (page === 2 && currentPage > 4) {
+            return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+          }
+          if (page === totalPages - 1 && currentPage < totalPages - 3) {
+            return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+          }
+          return null;
+        }
+
+        return (
+          <button
+            key={page}
+            onClick={() => handlePage(page)}
+            className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm transition-all ${
+              isCurrentPage
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
+            }`}
+          >
+            {page}
+          </button>
+        );
+      })}
+
+      <button
+        onClick={handleNext}
+        disabled={currentPage === totalPages}
+        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+      >
+        Sonraki
+      </button>
+    </div>
+  );
+});
+
+Pagination.displayName = 'Pagination';
 
 export default HospitalJobs;

@@ -18,6 +18,7 @@ import './index.css';
 // Hooks
 import useScrollToTop from './hooks/useScrollToTop';
 import { useTokenRefresh, useSessionTimeout } from './hooks/useTokenRefresh';
+import { useNotificationStream } from './features/notifications/api/useNotifications';
 
 // Components
 import { PageLoader } from './components/ui/LoadingSpinner';
@@ -42,6 +43,8 @@ function App() {
   useTokenRefresh();
   // 30 dakika session timeout
   useSessionTimeout(30);
+  // SSE real-time bildirim stream
+  useNotificationStream();
 
   // Uygulama başlatma ve global hata yakalama
   useEffect(() => {

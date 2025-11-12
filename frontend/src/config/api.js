@@ -268,6 +268,7 @@ export const ENDPOINTS = {
     DELETE: '/notifications/:id', // DELETE - Bildirim sil
     SETTINGS: '/notifications/settings', // GET/PATCH - Bildirim ayarları
     UNREAD_COUNT: '/notifications/unread-count', // GET - Okunmamış bildirim sayısı
+    STREAM: '/notifications/stream', // GET - SSE real-time bildirim stream
   },
 
   // ==================== CONTACT ENDPOINTS (Backend: /api/contact/*) ====================

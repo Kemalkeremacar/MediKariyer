@@ -11,12 +11,103 @@ import {
   useMarkAllAsRead,
   useDeleteNotification
 } from '../api/useNotifications';
-import NotificationCard from '../components/NotificationCard';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { Bell, CheckCircle, Filter, Search, Trash2 } from 'lucide-react';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+
+/**
+ * Notification Card Component
+ * Tek bir bildirimi render eder
+ */
+const NotificationCard = ({ notification, onMarkAsRead, onDelete }) => {
+  // Backend'den gelen type'ı frontend icon mapping'e uyarla
+  const getIcon = (type) => {
+    // Backend type'ları: 'info', 'success', 'warning', 'error'
+    // Frontend type mapping'i için
+    const typeMapping = {
+      'info': 'application_status',
+      'success': 'application_status',
+      'warning': 'application_status',
+      'error': 'application_status'
+    };
+    
+    const mappedType = typeMapping[type] || type;
+    
+    const icons = {
+      application_status: '📋',
+      interview_scheduled: '📅',
+      job_match: '💼',
+      message: '💬',
+      system: '⚙️',
+      reminder: '⏰',
+    };
+    return icons[mappedType] || '📢';
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('tr-TR');
+  };
+
+  // Backend'den gelen field'ları kullan (normalize edilmiş)
+  const isRead = notification.isRead !== undefined 
+    ? notification.isRead 
+    : (notification.read_at === null || notification.read_at === undefined);
+  const createdAt = notification.createdAt || notification.created_at;
+  const message = notification.message || notification.body;
+
+  return (
+    <div
+      className={`notification-card ${
+        !isRead ? 'unread' : ''
+      } flex items-start gap-3 p-4 bg-white shadow rounded cursor-pointer hover:bg-gray-50`}
+      onClick={() => !isRead && onMarkAsRead(notification.id)}
+    >
+      <div className="text-2xl">{getIcon(notification.type)}</div>
+
+      <div className="flex-1">
+        <div className="flex justify-between items-center">
+          <h4 className="font-medium">{notification.title}</h4>
+          <span className="text-xs text-gray-500">
+            {formatDate(createdAt)}
+          </span>
+        </div>
+        <p className="text-sm text-gray-600">{message}</p>
+        {notification.actionUrl && (
+          <a
+            href={notification.actionUrl}
+            className="text-blue-600 text-sm mt-1 inline-block"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {notification.actionText || 'Görüntüle'}
+          </a>
+        )}
+      </div>
+
+      {!isRead && (
+        <div className="unread-indicator">
+          <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+        </div>
+      )}
+
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(notification.id);
+          }}
+          className="text-red-500 hover:text-red-700 p-1"
+          title="Bildirimi sil"
+        >
+          🗑️
+        </button>
+      )}
+    </div>
+  );
+};
 
 const NotificationsPage = () => {
   const [filters, setFilters] = useState({
@@ -36,9 +127,12 @@ const NotificationsPage = () => {
   const markAllAsReadMutation = useMarkAllAsRead();
   const deleteNotificationMutation = useDeleteNotification();
 
-  const notifications = notificationsData?.data?.notifications || [];
+  const notifications = notificationsData?.data?.data || notificationsData?.data?.notifications || [];
   const pagination = notificationsData?.data?.pagination || {};
-  const unreadCount = notifications.filter((n) => !n.read_at).length;
+  const unreadCount = notifications.filter((n) => {
+    // Backend'den normalize edilmiş isRead field'ını veya read_at field'ını kullan
+    return n.isRead === false || (n.isRead === undefined && (n.read_at === null || n.read_at === undefined));
+  }).length;
 
   const handleMarkAsRead = async (notificationId) => {
     try {

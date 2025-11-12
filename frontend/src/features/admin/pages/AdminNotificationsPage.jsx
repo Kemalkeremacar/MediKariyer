@@ -177,12 +177,22 @@ const AdminNotificationsPage = () => {
                 <p className="text-gray-600">Henüz hiç bildirim bulunmuyor.</p>
               </div>
             ) : (
-              notifications.map((notification) => (
+              notifications.map((notification) => {
+                // Backend'den normalize edilmiş field'ları kullan
+                const isRead = notification.isRead !== undefined 
+                  ? notification.isRead 
+                  : (notification.is_read !== undefined 
+                    ? notification.is_read 
+                    : (notification.read_at === null || notification.read_at === undefined));
+                const message = notification.message || notification.body;
+                const createdAt = notification.createdAt || notification.created_at;
+                
+                return (
                 <div 
                   key={notification.id} 
-                  onClick={() => !notification.is_read && handleMarkAsRead(notification.id)}
+                  onClick={() => !isRead && handleMarkAsRead(notification.id)}
                   className={`admin-card border-l-4 ${
-                    notification.is_read 
+                    isRead 
                       ? 'border-gray-300 bg-gray-50' 
                       : 'border-blue-500 bg-white shadow-md cursor-pointer hover:shadow-xl hover:scale-[1.01]'
                   } transition-all duration-200`}
@@ -192,41 +202,41 @@ const AdminNotificationsPage = () => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-3">
                           <div className={`p-2 rounded-full ${
-                            notification.is_read ? 'bg-gray-100' : 'bg-blue-100'
+                            isRead ? 'bg-gray-100' : 'bg-blue-100'
                           }`}>
                             {getTypeIcon(notification.type)}
                           </div>
                           <h3 className={`text-lg font-semibold ${
-                            notification.is_read ? 'text-gray-500' : 'text-gray-900'
+                            isRead ? 'text-gray-500' : 'text-gray-900'
                           }`}>
                             {notification.title}
                           </h3>
-                          {!notification.is_read && (
+                          {!isRead && (
                             <span className="px-3 py-1 text-xs rounded-full font-bold bg-blue-500 text-white animate-pulse">
                               ● Yeni
                             </span>
                           )}
                         </div>
                         <p className={`mb-4 ${
-                          notification.is_read ? 'text-gray-400' : 'text-gray-700'
+                          isRead ? 'text-gray-400' : 'text-gray-700'
                         }`}>
-                          {notification.body}
+                          {message}
                         </p>
                         <div className="flex items-center space-x-4 text-sm">
                           <span className={`flex items-center ${
-                            notification.is_read ? 'text-gray-400' : 'text-gray-500'
+                            isRead ? 'text-gray-400' : 'text-gray-500'
                           }`}>
                             <Calendar className="h-4 w-4 mr-1" />
-                            {new Date(notification.created_at).toLocaleDateString('tr-TR', {
+                            {createdAt ? new Date(createdAt).toLocaleDateString('tr-TR', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit'
-                            })}
+                            }) : ''}
                           </span>
                         </div>
-                        {!notification.is_read && (
+                        {!isRead && (
                           <p className="text-xs text-blue-600 mt-3 font-medium">
                             💡 Okundu olarak işaretlemek için tıklayın
                           </p>
@@ -248,7 +258,8 @@ const AdminNotificationsPage = () => {
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
 

@@ -50,7 +50,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
-import NavbarNotificationBell from '../../features/notifications/components/NavbarNotificationBell';
+import NavbarNotificationBell from './NavbarNotificationBell';
 import useAuthStore from '../../store/authStore';
 import logoImage from '../../assets/logo.jpg';
 

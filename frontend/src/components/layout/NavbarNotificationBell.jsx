@@ -1,10 +1,11 @@
 /**
  * Navbar Notification Bell
  * 🔔 simgesi + unread count badge
+ * Global layout component - Header'da kullanılır
  */
 
 import React, { useState } from 'react';
-import { useUnreadNotificationCount } from '../api/useNotifications';
+import { useUnreadNotificationCount } from '@/features/notifications/api/useNotifications';
 import { Bell, Settings, AlertTriangle, Users, MessageSquare, FileText, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTE_CONFIG } from '@config/routes.js';
@@ -108,3 +109,4 @@ const NavbarNotificationBell = () => {
 };
 
 export default NavbarNotificationBell;
+

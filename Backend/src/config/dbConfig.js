@@ -87,8 +87,8 @@ if (!dbPassword) {
 if (!dbPassword) {
   logger.warn('⚠️ DB_PASSWORD ortam değişkeni tanımlı değil veya boş!');
 } else {
-  // Debug: Şifre uzunluğunu ve ilk/son karakterleri logla (güvenlik için tam değeri değil)
-  logger.debug(`🔐 DB_PASSWORD yüklendi (uzunluk: ${dbPassword.length}, ilk: ${dbPassword.charAt(0)}, son: ${dbPassword.charAt(dbPassword.length - 1)})`);
+  // Şifre yüklendi (güvenlik için tam değer loglanmıyor)
+  logger.debug(`DB_PASSWORD yüklendi (uzunluk: ${dbPassword.length})`);
 }
 
 const config = {

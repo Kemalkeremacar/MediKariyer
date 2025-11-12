@@ -1247,6 +1247,43 @@ const createApplication = async (doctorProfileId, data) => {
   
   logger.info(`Application created: ${applicationId} for job ${jobId} by doctor ${doctorProfileId}`);
   
+  // Hastaneye bildirim gönder
+  try {
+    // İlan bilgilerini al (hastane user_id için)
+    const jobWithHospital = await db('jobs as j')
+      .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+      .join('users as u', 'hp.user_id', 'u.id')
+      .where('j.id', jobId)
+      .select('j.title as job_title', 'hp.institution_name', 'u.id as hospital_user_id')
+      .first();
+    
+    // Doktor bilgilerini al
+    const doctorProfile = await db('doctor_profiles')
+      .where('id', doctorProfileId)
+      .select('first_name', 'last_name')
+      .first();
+    
+    if (jobWithHospital && doctorProfile) {
+      await notificationService.sendNotification({
+        user_id: jobWithHospital.hospital_user_id,
+        type: 'info',
+        title: 'Yeni Başvuru Aldınız',
+        body: `"${jobWithHospital.job_title}" pozisyonu için ${doctorProfile.first_name} ${doctorProfile.last_name} doktorundan yeni bir başvuru aldınız.`,
+        data: {
+          application_id: applicationId,
+          job_id: jobId,
+          job_title: jobWithHospital.job_title,
+          doctor_name: `${doctorProfile.first_name} ${doctorProfile.last_name}`,
+          doctor_profile_id: doctorProfileId
+        }
+      });
+      logger.info(`New application notification sent to hospital ${jobWithHospital.hospital_user_id}`);
+    }
+  } catch (notificationError) {
+    logger.warn('New application notification failed:', notificationError);
+    // Bildirim hatası başvuru oluşturmayı engellemez
+  }
+  
   return application;
 };
 
@@ -1512,9 +1549,7 @@ const withdrawApplication = async (applicationId, doctorProfileId, reason = '') 
   logger.info(`Application query result:`, { application, applicationId, doctorProfileId });
 
   if (!application) {
-    // Debug için tüm başvuruları kontrol et
-    const allApplications = await db('applications').select('*');
-    logger.info(`All applications in database:`, allApplications);
+    logger.warn(`Application not found - applicationId: ${applicationId}, doctorProfileId: ${doctorProfileId}`);
     
     // Bu doktorun tüm başvurularını kontrol et
     const doctorApplications = await db('applications')
@@ -1542,6 +1577,56 @@ const withdrawApplication = async (applicationId, doctorProfileId, reason = '') 
   const updatedApplication = await getApplicationById(applicationId, doctorProfileId);
   
   logger.info(`Application withdrawn: ${applicationId} by doctor ${doctorProfileId}`);
+  
+  // Hastaneye bildirim gönder
+  try {
+    // Başvuru ve ilan bilgilerini al (hastane user_id için)
+    const applicationWithJob = await db('applications as a')
+      .join('jobs as j', 'a.job_id', 'j.id')
+      .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+      .join('users as u', 'hp.user_id', 'u.id')
+      .where('a.id', applicationId)
+      .select(
+        'j.title as job_title',
+        'hp.institution_name',
+        'u.id as hospital_user_id',
+        'a.doctor_profile_id'
+      )
+      .first();
+    
+    // Doktor bilgilerini al
+    const doctorProfile = await db('doctor_profiles')
+      .where('id', applicationWithJob?.doctor_profile_id)
+      .select('first_name', 'last_name')
+      .first();
+    
+    if (applicationWithJob && doctorProfile) {
+      // Job ID'yi al
+      const jobId = await db('applications')
+        .where('id', applicationId)
+        .select('job_id')
+        .first();
+      
+      await notificationService.sendNotification({
+        user_id: applicationWithJob.hospital_user_id,
+        type: 'warning',
+        title: 'Başvuru Geri Çekildi',
+        body: `${doctorProfile.first_name} ${doctorProfile.last_name} doktoru "${applicationWithJob.job_title}" pozisyonu için başvurusunu geri çekti.${reason ? ` Sebep: ${reason}` : ''}`,
+        data: {
+          application_id: applicationId,
+          job_id: jobId?.job_id || null,
+          job_title: applicationWithJob.job_title,
+          doctor_name: `${doctorProfile.first_name} ${doctorProfile.last_name}`,
+          doctor_profile_id: applicationWithJob.doctor_profile_id,
+          reason: reason || null
+        }
+      });
+      logger.info(`Application withdrawal notification sent to hospital ${applicationWithJob.hospital_user_id}`);
+    }
+  } catch (notificationError) {
+    logger.warn('Application withdrawal notification failed:', notificationError);
+    // Bildirim hatası başvuru geri çekmeyi engellemez
+  }
   
   return updatedApplication;
 };

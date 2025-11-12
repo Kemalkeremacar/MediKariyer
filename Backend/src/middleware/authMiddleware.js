@@ -63,8 +63,8 @@ const db = require('../config/dbConfig').db;
  * @example
  * // Route'da kullanım
  * router.get('/protected', authMiddleware, (req, res) => {
- *   console.log(req.user.id); // Kullanıcı ID'si
- *   console.log(req.user.role); // Kullanıcı rolü
+ *   // req.user.id - Kullanıcı ID'si
+ *   // req.user.role - Kullanıcı rolü
  * });
  */
 const authenticateToken = async (req, res, next) => {

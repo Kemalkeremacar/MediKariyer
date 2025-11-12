@@ -126,9 +126,9 @@ const AdminApplicationDetailPage = () => {
     const cfg = getStatusConfig(status_id);
     const Icon = cfg.icon;
     return (
-      <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium border gap-2 ${cfg.color}`}>
-        <Icon className="w-4 h-4" />
-        {statusName || cfg.text}
+      <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-sm font-medium border gap-2 w-[140px] ${cfg.color}`}>
+        <Icon className="w-4 h-4 flex-shrink-0" />
+        <span className="text-center truncate">{statusName || cfg.text}</span>
       </span>
     );
   };
@@ -236,8 +236,8 @@ const AdminApplicationDetailPage = () => {
   const doctorLanguages = doctorProfile.languages || [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-6">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+      <div className="p-6 w-full min-w-0">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between">
@@ -262,9 +262,9 @@ const AdminApplicationDetailPage = () => {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Left - Tabs */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-lg">
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-lg min-w-0">
             {/* Tabs */}
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8 px-6">
@@ -580,8 +580,8 @@ const AdminApplicationDetailPage = () => {
           </div>
 
           {/* Right - Status Management */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="lg:col-span-1 min-w-0">
+            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-full overflow-hidden">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Settings className="w-5 h-5 text-purple-600" />
                 Durum Yönetimi
@@ -589,13 +589,12 @@ const AdminApplicationDetailPage = () => {
 
               {/* Mevcut Durum */}
               <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  Mevcut Durum
-                </h4>
-                <div className="flex items-center justify-between">
-                  <StatusBadge status_id={application.status_id} statusName={application.status} />
-                  <div className="text-right">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-blue-600" />
+                    Mevcut Durum
+                  </h4>
+                  <div className="text-right flex-shrink-0 whitespace-nowrap">
                     <span className="text-xs text-gray-500 block">Son Güncelleme</span>
                     <span className="text-sm text-gray-700">
                       {application.updated_at
@@ -603,6 +602,9 @@ const AdminApplicationDetailPage = () => {
                         : 'Bilinmiyor'}
                     </span>
                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <StatusBadge status_id={application.status_id} statusName={application.status} />
                 </div>
                 {isWithdrawn && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
@@ -682,13 +684,13 @@ const AdminApplicationDetailPage = () => {
 
               {/* Butonlar */}
               {!isWithdrawn ? (
-                <div className="flex flex-col gap-3 pt-4 border-t border-gray-200">
+                <div className="flex flex-col gap-3 pt-4 border-t border-gray-200 min-h-[80px]">
                   {/* Sadece Not Güncelle */}
                   {!isStatusChanged && isNotesChanged && (
                     <button
                       onClick={handleNoteOnlyUpdate}
                       disabled={updateStatusMutation.isPending}
-                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-3 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed break-words"
                     >
                       {updateStatusMutation.isPending ? 'Güncelleniyor...' : 'Notu Güncelle'}
                     </button>
@@ -699,7 +701,7 @@ const AdminApplicationDetailPage = () => {
                     <button
                       onClick={handleStatusUpdate}
                       disabled={updateStatusMutation.isPending}
-                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-300 font-medium shadow-lg disabled:opacity-50 disabled:cursor-not-allowed break-words"
                     >
                       {updateStatusMutation.isPending ? 'Güncelleniyor...' : 'Durum ve Notu Güncelle'}
                     </button>
@@ -707,13 +709,13 @@ const AdminApplicationDetailPage = () => {
 
                   {/* Değişiklik yoksa */}
                   {!isStatusChanged && !isNotesChanged && (
-                    <p className="text-xs text-gray-500 text-center">
+                    <p className="text-xs text-gray-500 text-center py-3">
                       Değişiklik yapmak için yukarıdaki alanları düzenleyin
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="pt-4 border-t border-gray-200">
+                <div className="pt-4 border-t border-gray-200 min-h-[80px]">
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <div className="flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />

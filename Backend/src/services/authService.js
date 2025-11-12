@@ -281,7 +281,7 @@ const validateCredentials = async (email, password) => {
     .first();
 
   if (!user) {
-    // Debug: Veritabanında benzer email'leri kontrol et
+    // Benzer email'leri kontrol et (hata ayıklama için)
     let similarEmails = [];
     try {
       const emailPrefix = normalizedEmail.includes('@') 

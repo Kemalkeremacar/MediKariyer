@@ -34,10 +34,32 @@ const notificationService = require('../services/notificationService');
 const { sendSuccess } = require('../utils/response');
 const { AppError, catchAsync } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
+const sseManager = require('../utils/sseManager');
 
 // ============================================================================
 // BİLDİRİM LİSTELEME VE GETİRME
 // ============================================================================
+
+/**
+ * Bildirim response'unu frontend formatına normalize eder
+ * @param {Object} notification - Backend notification objesi
+ * @returns {Object} Normalize edilmiş notification objesi
+ */
+const normalizeNotification = (notification) => {
+  if (!notification) return null;
+  
+  return {
+    ...notification,
+    // Backend field'larını frontend formatına çevir
+    isRead: notification.read_at !== null && notification.read_at !== undefined,
+    createdAt: notification.created_at,
+    message: notification.body,
+    // read_at ve body'yi de koru (geriye dönük uyumluluk için)
+    read_at: notification.read_at,
+    body: notification.body,
+    created_at: notification.created_at
+  };
+};
 
 /**
  * Kullanıcının bildirimlerini listele
@@ -55,9 +77,16 @@ const logger = require('../utils/logger');
  * Response: { data: [...], pagination: { current_page: 1, per_page: 10, total: 25, total_pages: 3 } }
  */
 const getNotifications = catchAsync(async (req, res) => {
-  const notifications = await notificationService.getNotificationsByUser(req.user.id, req.query);
+  const result = await notificationService.getNotificationsByUser(req.user.id, req.query);
+  
+  // Bildirimleri normalize et
+  const normalizedData = {
+    ...result,
+    data: result.data.map(normalizeNotification)
+  };
+  
   logger.info(`Notifications retrieved for user ${req.user.id}`);
-  return sendSuccess(res, 'Bildirimler başarıyla getirildi', notifications);
+  return sendSuccess(res, 'Bildirimler başarıyla getirildi', normalizedData);
 });
 
 /**
@@ -71,7 +100,7 @@ const getNotifications = catchAsync(async (req, res) => {
 const getUnreadCount = catchAsync(async (req, res) => {
   const count = await notificationService.getUnreadCount(req.user.id);
   logger.info(`Unread count retrieved for user ${req.user.id}: ${count}`);
-  return sendSuccess(res, 'Okunmamış bildirim sayısı getirildi', { unread_count: count });
+  return sendSuccess(res, 'Okunmamış bildirim sayısı getirildi', { count });
 });
 
 /**
@@ -91,7 +120,10 @@ const getNotificationById = async (req, res, next) => {
       throw new AppError('Bu bildirimi görüntüleme yetkiniz yok', 403);
     }
     
-    return sendSuccess(res, 'Bildirim başarıyla getirildi', notification, 200);
+    // Bildirimi normalize et
+    const normalizedNotification = normalizeNotification(notification);
+    
+    return sendSuccess(res, 'Bildirim başarıyla getirildi', normalizedNotification, 200);
   } catch (error) {
     logger.error('Bildirim getirme hatası:', error);
     next(error);
@@ -288,6 +320,126 @@ const getNotificationStats = async (req, res, next) => {
 
 
 // ============================================================================
+// SSE (SERVER-SENT EVENTS) ENDPOINT
+// ============================================================================
+
+/**
+ * SSE bildirim stream endpoint
+ * @description Kullanıcıya real-time bildirim gönderir
+ * @param {Object} req - Express request nesnesi
+ * @param {Object} req.user - Authenticated user bilgileri
+ * @param {number} req.user.id - Kullanıcı kimliği
+ * @param {Object} res - Express response nesnesi
+ * @returns {void} SSE stream
+ */
+const streamNotifications = catchAsync(async (req, res) => {
+  // SSE için token kontrolü (query param veya header'dan)
+  let userId = null;
+  
+  // Önce header'dan token al (normal HTTP istekleri için)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    const { verifyAccessToken } = require('../utils/jwtUtils');
+    try {
+      const decoded = verifyAccessToken(token);
+      userId = decoded.userId ?? decoded.id ?? decoded.sub;
+    } catch (error) {
+      logger.warn('SSE token doğrulama hatası (header):', error);
+    }
+  }
+  
+  // Header'dan alınamadıysa query param'dan al (EventSource için)
+  if (!userId && req.query.token) {
+    const { verifyAccessToken } = require('../utils/jwtUtils');
+    try {
+      const decoded = verifyAccessToken(req.query.token);
+      userId = decoded.userId ?? decoded.id ?? decoded.sub;
+    } catch (error) {
+      logger.warn('SSE token doğrulama hatası (query):', error);
+      res.status(401).end();
+      return;
+    }
+  }
+  
+  // Token yoksa veya geçersizse hata döndür
+  if (!userId) {
+    res.status(401).end();
+    return;
+  }
+  
+  // SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Nginx için
+  
+  // CORS headers (SSE için özel)
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:5000',
+    'http://localhost:5173',
+    'http://192.168.1.198:5000',
+    process.env.CORS_ORIGIN || 'http://localhost:5000'
+  ];
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control, Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  
+  // SSE manager'a client ekle (önce ekle, sonra mesaj gönder)
+  sseManager.addClient(userId, res);
+  
+  // İlk bağlantı mesajı gönder (heartbeat)
+  try {
+    // SSE bağlantısını flush et (browser'a hemen gönder)
+    res.flushHeaders();
+    
+    // Heartbeat mesajı (comment - browser tarafında görünmez)
+    res.write(': SSE bağlantısı kuruldu\n\n');
+    
+    // Bağlantıyı doğrulamak için bir test mesajı gönder
+    const connectionMessage = JSON.stringify({
+      type: 'connection',
+      message: 'SSE bağlantısı başarıyla kuruldu',
+      userId: userId,
+      timestamp: new Date().toISOString()
+    });
+    res.write(`data: ${connectionMessage}\n\n`);
+    
+    // Response'u flush et (browser'a hemen gönder)
+    if (typeof res.flush === 'function') {
+      res.flush();
+    }
+    
+    logger.info(`[SSE Controller] İlk bağlantı mesajı gönderildi - User ID: ${userId}`);
+  } catch (error) {
+    logger.error(`[SSE Controller] İlk mesaj gönderme hatası - User ID: ${userId}`, error);
+    sseManager.removeClient(userId, res);
+    return;
+  }
+  
+  logger.info(`[SSE Controller] ✅ SSE stream başlatıldı - User ID: ${userId}, Toplam bağlantı: ${sseManager.isUserConnected(userId) ? 'Bağlı' : 'Bağlı değil'}`);
+  
+  // Bağlantı kapandığında temizleme zaten sseManager'da yapılıyor
+  req.on('close', () => {
+    logger.info(`[SSE Controller] 🔌 SSE stream kapatıldı - User ID: ${userId}`);
+    sseManager.removeClient(userId, res);
+  });
+  
+  // Bağlantı hatası durumunda
+  req.on('error', (error) => {
+    logger.error(`[SSE Controller] ❌ SSE stream hatası - User ID: ${userId}`, error);
+    sseManager.removeClient(userId, res);
+  });
+});
+
+// ============================================================================
 // MODULE EXPORTS
 // ============================================================================
 
@@ -309,5 +461,8 @@ module.exports = {
   // Admin bildirim işlemleri
   sendNotification,
   getAllNotificationsForAdmin,
-  getNotificationStats
+  getNotificationStats,
+  
+  // SSE endpoint
+  streamNotifications
 };

@@ -74,8 +74,7 @@ class LogService {
       
       return log;
     } catch (error) {
-      // Database'e yazamadıysak en azından console'a yaz
-      console.error('❌ Application log kayıt hatası:', error.message);
+      logger.error('Application log kayıt hatası:', error);
       throw error;
     }
   }
@@ -121,7 +120,7 @@ class LogService {
       logger.debug('Audit log kaydedildi', { action: auditData.action, actor: auditData.actorId });
       return log;
     } catch (error) {
-      console.error('❌ Audit log kayıt hatası:', error.message);
+      logger.error('Audit log kayıt hatası:', error);
       throw error;
     }
   }
@@ -169,7 +168,7 @@ class LogService {
       
       return log;
     } catch (error) {
-      console.error('❌ Security log kayıt hatası:', error.message);
+      logger.error('Security log kayıt hatası:', error);
       throw error;
     }
   }

@@ -24,7 +24,7 @@
  * @since 2024
  */
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   FileText, Search, Filter, User, MapPin, Calendar, 
@@ -833,55 +833,12 @@ const HospitalApplications = () => {
 
           {/* Pagination */}
           {pagination.pages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <button
-                onClick={() => handleFilterChange('page', currentPage - 1)}
-                disabled={currentPage <= 1}
-                className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                Önceki
-              </button>
-              
-              {Array.from({ length: pagination.pages }, (_, i) => {
-                  const page = i + 1;
-                const isCurrentPage = page === currentPage;
-                const shouldShow = 
-                  page === 1 || 
-                  page === pagination.pages || 
-                  Math.abs(page - currentPage) <= 2;
-
-                if (!shouldShow) {
-                  if (page === 2 && currentPage > 4) {
-                    return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                  }
-                  if (page === pagination.pages - 1 && currentPage < pagination.pages - 3) {
-                    return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                  }
-                  return null;
-                }
-
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => handleFilterChange('page', page)}
-                    className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm ${
-                      isCurrentPage
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                        : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
-
-              <button
-                onClick={() => handleFilterChange('page', currentPage + 1)}
-                disabled={currentPage >= pagination.pages}
-                className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
-              >
-                Sonraki
-              </button>
+            <div className="mt-8">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={pagination.pages}
+                onPageChange={(page) => handleFilterChange('page', page)}
+              />
             </div>
           )}
         </div>
@@ -914,9 +871,9 @@ export const StatusBadge = ({ status_id, statusName }) => {
   const Icon = config.icon;
 
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center gap-1`}>
-      <Icon className="w-3 h-3" />
-      {statusName || config.label}
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center justify-center gap-1 w-[140px]`}>
+      <Icon className="w-3 h-3 flex-shrink-0" />
+      <span className="text-center truncate">{statusName || config.label}</span>
     </span>
   );
 };
@@ -941,11 +898,11 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
   const isDoctorInactive = !application.doctor_is_active || application.doctor_is_active === false || application.doctor_is_active === 0;
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300 min-h-[180px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-full">
         {/* Doktor Bilgileri - 4 kolon */}
-        <div className="lg:col-span-4">
-          <div className="flex items-start">
+        <div className="lg:col-span-4 flex flex-col min-w-0">
+          <div className="flex items-start flex-1 min-w-0">
             <div className="flex-1 min-w-0">
               {isDoctorInactive ? (
                 <div className="bg-gray-500/20 border border-gray-500/30 rounded-xl p-4">
@@ -987,8 +944,8 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
         </div>
 
         {/* İlan Bilgileri - 3 kolon */}
-        <div className="lg:col-span-3">
-          <div className="space-y-3">
+        <div className="lg:col-span-3 flex flex-col min-w-0">
+          <div className="space-y-3 flex-1 min-w-0">
             <div>
               <span className="text-gray-400 text-xs block mb-1">İş İlanı</span>
               <p className="text-white font-medium mb-1">{application.job_title}</p>
@@ -1062,8 +1019,8 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
         </div>
 
         {/* Durum Yönetimi - 5 kolon */}
-        <div className="lg:col-span-5">
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+        <div className="lg:col-span-5 flex flex-col min-w-0">
+          <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex-1 flex flex-col justify-between min-h-[120px] w-full">
             {isDoctorInactive ? (
               // Pasif doktor için disabled görünüm
               <>
@@ -1072,7 +1029,7 @@ const ApplicationCard = ({ application, statusOptions, onStatusChange, onViewPro
                     Başvuru Durumu
                   </label>
                   <div className="flex items-center justify-center">
-                    <div className="bg-gray-500/10 border border-gray-500/20 text-gray-500 px-3 py-1.5 rounded-lg text-sm font-medium">
+                    <div className="bg-gray-500/10 border border-gray-500/20 text-gray-500 px-3 py-1.5 rounded-lg text-sm font-medium w-[140px] text-center">
                       Kullanıcı Pasif
                     </div>
                   </div>
@@ -1459,5 +1416,75 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
     </FloatingPortal>
   );
 };
+
+// Sayfalama Component (Memoized)
+const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
+  const handlePrev = useCallback(() => {
+    onPageChange(Math.max(1, currentPage - 1));
+  }, [currentPage, onPageChange]);
+
+  const handleNext = useCallback(() => {
+    onPageChange(Math.min(totalPages, currentPage + 1));
+  }, [currentPage, totalPages, onPageChange]);
+
+  const handlePage = useCallback((page) => {
+    onPageChange(page);
+  }, [onPageChange]);
+
+  return (
+    <div className="flex justify-center items-center space-x-2">
+      <button
+        onClick={handlePrev}
+        disabled={currentPage === 1}
+        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+      >
+        Önceki
+      </button>
+      
+      {[...Array(totalPages)].map((_, i) => {
+        const page = i + 1;
+        const isCurrentPage = page === currentPage;
+        const shouldShow = 
+          page === 1 || 
+          page === totalPages || 
+          Math.abs(page - currentPage) <= 2;
+
+        if (!shouldShow) {
+          if (page === 2 && currentPage > 4) {
+            return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+          }
+          if (page === totalPages - 1 && currentPage < totalPages - 3) {
+            return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+          }
+          return null;
+        }
+
+        return (
+          <button
+            key={page}
+            onClick={() => handlePage(page)}
+            className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm transition-all ${
+              isCurrentPage
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
+            }`}
+          >
+            {page}
+          </button>
+        );
+      })}
+
+      <button
+        onClick={handleNext}
+        disabled={currentPage === totalPages}
+        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+      >
+        Sonraki
+      </button>
+    </div>
+  );
+});
+
+Pagination.displayName = 'Pagination';
 
 export default HospitalApplications;

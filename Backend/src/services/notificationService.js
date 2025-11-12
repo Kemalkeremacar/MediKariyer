@@ -45,6 +45,7 @@ const db = require('../config/dbConfig').db;
 const { AppError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 const { PAGINATION } = require('../config/appConstants');
+const sseManager = require('../utils/sseManager');
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -439,6 +440,35 @@ const sendNotification = async (notificationData) => {
     }
   }
   
+  // SSE ile real-time bildirim gönder
+  try {
+    const normalizedNotification = {
+      id: notification.id,
+      user_id: notification.user_id,
+      type: notification.type,
+      title: notification.title,
+      body: notification.body,
+      data: notification.data,
+      read_at: notification.read_at,
+      created_at: notification.created_at,
+      isRead: notification.read_at !== null && notification.read_at !== undefined,
+      createdAt: notification.created_at,
+      message: notification.body
+    };
+    
+    logger.info(`[Notification Service] SSE bildirim gönderiliyor - User ID: ${user_id}, Title: ${notification.title}`);
+    const sent = sseManager.sendToUser(user_id, normalizedNotification);
+    
+    if (sent) {
+      logger.info(`[Notification Service] ✅ SSE bildirim gönderildi - User ID: ${user_id}`);
+    } else {
+      logger.warn(`[Notification Service] ⚠️ SSE bildirim gönderilemedi - User ID: ${user_id} bağlı değil`);
+    }
+  } catch (sseError) {
+    // SSE hatası bildirim gönderimini engellemez
+    logger.error('[Notification Service] ❌ SSE bildirim gönderme hatası:', sseError);
+  }
+  
   return notification;
 };
 
@@ -552,23 +582,33 @@ const sendDoctorNotification = async (doctorUserId, status, applicationData) => 
 
   switch (status) {
     case 'accepted':
+    case 3: // Status ID 3 = Kabul Edildi
       notificationTitle = 'Başvurunuz Onaylandı';
-      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz onaylandı.`;
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz onaylandı.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
       notificationType = 'success';
       break;
     case 'rejected':
+    case 4: // Status ID 4 = Red Edildi
       notificationTitle = 'Başvurunuz Reddedildi';
-      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz reddedildi.`;
-      notificationType = 'warning';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz reddedildi.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
+      notificationType = 'error';
       break;
     case 'pending':
+    case 1: // Status ID 1 = Beklemede
+    case 2: // Status ID 2 = İnceleniyor
       notificationTitle = 'Başvuru Durumu Güncellendi';
-      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz inceleme aşamasına alındı.`;
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz inceleme aşamasına alındı.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
       notificationType = 'info';
+      break;
+    case 'withdrawn':
+    case 5: // Status ID 5 = Geri Çekildi
+      notificationTitle = 'Başvuru Geri Çekildi';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz geri çekildi.`;
+      notificationType = 'warning';
       break;
     default:
       notificationTitle = 'Başvuru Durumu Değişti';
-      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvuru durumunuz güncellendi.`;
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvuru durumunuz güncellendi.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
       notificationType = 'info';
   }
 
@@ -750,6 +790,93 @@ const sendHospitalWithdrawalNotification = async (hospitalUserId, applicationDat
  */
 const sendAdminNotification = async (notificationData) => {
   return await sendSystemNotification(notificationData);
+};
+
+/**
+ * Kullanıcı durumu değişikliği bildirimi gönderir
+ * @description Admin tarafından kullanıcı onay/aktif/pasif durumu değiştiğinde bildirim gönderir
+ * @param {number} userId - Kullanıcı ID'si
+ * @param {string} action - İşlem türü (approved, approval_removed, activated, deactivated)
+ * @param {string} [reason=null] - Durum değişiklik sebebi
+ * @returns {Promise<Object>} Gönderilen bildirim bilgisi
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendUserStatusNotification(123, 'approved');
+ * await sendUserStatusNotification(123, 'deactivated', 'Kurallara uyulmadı');
+ */
+const sendUserStatusNotification = async (userId, action, reason = null) => {
+  try {
+    // Kullanıcı bilgilerini al
+    const user = await db('users').where('id', userId).first();
+    if (!user) {
+      logger.warn(`User ${userId} not found for status notification`);
+      return null;
+    }
+
+    // Kullanıcı adını al (role'e göre)
+    let userName = '';
+    if (user.role === 'doctor') {
+      const doctorProfile = await db('doctor_profiles').where('user_id', userId).first();
+      if (doctorProfile) {
+        userName = `${doctorProfile.first_name || ''} ${doctorProfile.last_name || ''}`.trim();
+      }
+    } else if (user.role === 'hospital') {
+      const hospitalProfile = await db('hospital_profiles').where('user_id', userId).first();
+      if (hospitalProfile) {
+        userName = hospitalProfile.institution_name || '';
+      }
+    }
+
+    let notificationTitle = '';
+    let notificationBody = '';
+    let notificationType = 'info';
+
+    switch (action) {
+      case 'approved':
+        notificationTitle = 'Hesabınız Onaylandı';
+        notificationBody = `Hesabınız admin tarafından onaylandı. Artık platformu kullanmaya başlayabilirsiniz.`;
+        notificationType = 'success';
+        break;
+      case 'approval_removed':
+        notificationTitle = 'Hesap Onayı Kaldırıldı';
+        notificationBody = `Hesabınızın onayı admin tarafından kaldırıldı.${reason ? ` Sebep: ${reason}` : ''}`;
+        notificationType = 'warning';
+        break;
+      case 'activated':
+        notificationTitle = 'Hesabınız Aktifleştirildi';
+        notificationBody = `Hesabınız admin tarafından aktifleştirildi. Artık platforma giriş yapabilirsiniz.`;
+        notificationType = 'success';
+        break;
+      case 'deactivated':
+        notificationTitle = 'Hesabınız Pasifleştirildi';
+        notificationBody = `Hesabınız admin tarafından pasifleştirildi. Platforma giriş yapamazsınız.${reason ? ` Sebep: ${reason}` : ''}`;
+        notificationType = 'error';
+        break;
+      default:
+        notificationTitle = 'Hesap Durumu Değişti';
+        notificationBody = `Hesap durumunuz değiştirildi.${reason ? ` Sebep: ${reason}` : ''}`;
+        notificationType = 'info';
+    }
+
+    return await sendNotification({
+      user_id: userId,
+      type: notificationType,
+      title: notificationTitle,
+      body: notificationBody,
+      data: {
+        action: action,
+        reason: reason,
+        user_role: user.role,
+        user_name: userName,
+        timestamp: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    logger.error('User status notification failed:', error);
+    // Bildirim hatası ana işlemi engellemez
+    return null;
+  }
 };
 
 
@@ -954,6 +1081,7 @@ module.exports = {
   sendDoctorNotification,
   sendHospitalNotification,
   sendAdminNotification,
+  sendUserStatusNotification,
   
   // İstatistik ve raporlama
   getNotificationStats,

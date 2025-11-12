@@ -74,6 +74,44 @@ router.get('/unread-count',
 );
 
 /**
+ * @route OPTIONS /api/notifications/stream
+ * @description SSE için CORS preflight request
+ * @access Public
+ */
+router.options('/stream', (req, res) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:5000',
+    'http://localhost:5173',
+    'http://192.168.1.198:5000',
+    process.env.CORS_ORIGIN || 'http://localhost:5000'
+  ];
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Headers', 'Cache-Control, Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 saat
+  res.status(204).end();
+});
+
+/**
+ * @route GET /api/notifications/stream
+ * @description SSE bildirim stream endpoint - Real-time bildirimler
+ * @access Private - Doctor, Hospital, Admin
+ * @note SSE için token query param veya header'dan alınabilir (EventSource Authorization header desteklemez)
+ */
+router.get('/stream',
+  // authMiddleware'i kaldırdık - streamNotifications içinde manuel token kontrolü yapılıyor
+  // Çünkü EventSource Authorization header desteklemez, query param kullanıyoruz
+  notificationController.streamNotifications
+);
+
+/**
  * @route GET /api/notifications/:id
  * @description Tek bir bildirimi getir
  * @access Private - Doctor, Hospital, Admin

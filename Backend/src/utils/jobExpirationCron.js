@@ -17,6 +17,7 @@
 const cron = require('node-cron');
 const db = require('../config/dbConfig').db;
 const logger = require('./logger');
+const notificationService = require('../services/notificationService');
 
 /**
  * 30 günü dolan ilanları otomatik olarak pasif eder
@@ -69,12 +70,26 @@ const checkExpiredJobs = async () => {
             .first();
           
           if (jobDetails) {
-            // Bildirim gönder (notificationService kullanılabilir)
-            logger.info(`[Job Expiration Cron] Bildirim gönderilecek: ${jobDetails.institution_name} - ${jobDetails.title}`);
-            // TODO: notificationService.sendNotification() çağrılabilir
+            // Hastaneye bildirim gönder
+            try {
+              await notificationService.sendNotification({
+                user_id: jobDetails.user_id,
+                type: 'warning',
+                title: 'İlan Süresi Doldu',
+                body: `"${jobDetails.title}" ilanınızın süresi doldu. İlanı yenilemek için güncelleyebilirsiniz.`,
+                data: {
+                  job_id: job.id,
+                  job_title: jobDetails.title,
+                  expired_at: new Date().toISOString()
+                }
+              });
+              logger.info(`[Job Expiration Cron] Bildirim gönderildi: ${jobDetails.institution_name} - ${jobDetails.title}`);
+            } catch (notificationError) {
+              logger.error(`[Job Expiration Cron] Bildirim gönderilemedi (job ${job.id}):`, notificationError);
+            }
           }
-        } catch (notificationError) {
-          logger.warn(`[Job Expiration Cron] Bildirim gönderilemedi (job ${job.id}):`, notificationError);
+        } catch (error) {
+          logger.warn(`[Job Expiration Cron] İlan detayları alınamadı (job ${job.id}):`, error);
         }
       }
     } else {

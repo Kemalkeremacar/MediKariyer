@@ -80,6 +80,7 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { ModalContainer } from '@/components/ui/ModalContainer';
+import { resolveRevisionNote as resolveRevisionNoteUtil } from '@/utils/jobUtils';
 
 const JobDetailPage = () => {
   const { jobId } = useParams();
@@ -197,47 +198,9 @@ const JobDetailPage = () => {
     return normalized;
   }, []);
 
+  // Utility fonksiyonunu kullan
   const resolveRevisionNote = useCallback((entry) => {
-    if (!entry) return '';
-    const candidates = [];
-    const tryPush = (val) => {
-      if (typeof val === 'string' && val.trim()) {
-        candidates.push(val.trim());
-      }
-    };
-    tryPush(entry.note);
-    tryPush(entry.revision_note);
-    if (entry.details) {
-      const details = typeof entry.details === 'string' ? (() => {
-        try {
-          return JSON.parse(entry.details);
-        } catch (error) {
-          return null;
-        }
-      })() : entry.details;
-      if (details) {
-        tryPush(details.revision_note);
-        tryPush(details.note);
-      }
-    }
-    if (entry.data) {
-      const dataBlock = typeof entry.data === 'string' ? (() => {
-        try {
-          return JSON.parse(entry.data);
-        } catch (error) {
-          return null;
-        }
-      })() : entry.data;
-      if (dataBlock) {
-        tryPush(dataBlock.revision_note);
-        tryPush(dataBlock.note);
-      }
-    }
-    if (entry.metadata) {
-      tryPush(entry.metadata.revision_note);
-      tryPush(entry.metadata.note);
-    }
-    return candidates.length > 0 ? candidates[0] : '';
+    return resolveRevisionNoteUtil(entry);
   }, []);
 
 const allRevisionEntries = useMemo(() => {
@@ -460,9 +423,9 @@ const allRevisionEntries = useMemo(() => {
     const IconComponent = config.icon;
 
     return (
-      <span className={`px-4 py-2 rounded-xl text-sm font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center gap-2`}>
-        <IconComponent className="w-4 h-4" />
-        {status}
+      <span className={`px-4 py-2 rounded-xl text-sm font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center justify-center gap-2 w-[160px]`}>
+        <IconComponent className="w-4 h-4 flex-shrink-0" />
+        <span className="text-center truncate">{status}</span>
       </span>
     );
   };
@@ -531,9 +494,9 @@ const allRevisionEntries = useMemo(() => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 overflow-x-hidden">
       <TransitionWrapper>
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="max-w-7xl mx-auto space-y-8 w-full min-w-0">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">

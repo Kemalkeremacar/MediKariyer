@@ -566,21 +566,8 @@ const getJobDetails = async (jobId) => {
     .where('u.role', 'admin')
     .count({ admin_revision_count: '*' });
 
-  // Debug: Tüm bilgileri kontrol et
-  console.log('🔍 Admin getJobDetails - Job ID:', jobId);
-  console.log('📋 Raw Job Object:', {
-    id: job.id,
-    title: job.title,
-    specialty_id: job.specialty_id,
-    specialty: job.specialty,
-    city_id: job.city_id,
-    city: job.city,
-    status_id: job.status_id,
-    status: job.status,
-    institution_name: job.institution_name,
-    employment_type: job.employment_type,
-    min_experience_years: job.min_experience_years
-  });
+  // Job detayları logger ile kaydediliyor (gerekirse)
+  logger.debug(`Admin getJobDetails - Job ID: ${jobId}`);
   
   // Başvuru sayısını al (Geri çekilenler ve silinmişler hariç)
   const [{ count }] = await db('applications')
@@ -804,10 +791,25 @@ const updateUserApproval = async (userId, approved, rejectionReason = null) => {
     throw new AppError('Admin hesabı değiştirilemez', 403);
   }
 
+  // Eski onay durumunu kaydet
+  const oldApprovalStatus = user.is_approved;
+
   await db('users').where('id', userId).update({
     is_approved: approved,
     updated_at: db.fn.now()
   });
+
+  // Bildirim gönder (durum değiştiyse)
+  if (oldApprovalStatus !== approved) {
+    try {
+      const action = approved ? 'approved' : 'approval_removed';
+      await notificationService.sendUserStatusNotification(userId, action, rejectionReason);
+      logger.info(`User approval status notification sent to user ${userId}, action: ${action}`);
+    } catch (notificationError) {
+      logger.warn('User approval notification failed:', notificationError);
+      // Bildirim hatası ana işlemi engellemez
+    }
+  }
 
   return true;
 };
@@ -831,14 +833,27 @@ const updateUserStatus = async (userId, isActive, reason = null) => {
     throw new AppError('Admin hesabı değiştirilemez', 403);
   }
 
+  // Eski aktiflik durumunu kaydet
+  const oldActiveStatus = user.is_active;
+
   const updateData = {
     is_active: isActive,
     updated_at: db.fn.now()
   };
 
-  // Reason bilgisi şimdilik log'lanabilir, database'de alan yok
-
   await db('users').where('id', userId).update(updateData);
+
+  // Bildirim gönder (durum değiştiyse)
+  if (oldActiveStatus !== isActive) {
+    try {
+      const action = isActive ? 'activated' : 'deactivated';
+      await notificationService.sendUserStatusNotification(userId, action, reason);
+      logger.info(`User status notification sent to user ${userId}, action: ${action}`);
+    } catch (notificationError) {
+      logger.warn('User status notification failed:', notificationError);
+      // Bildirim hatası ana işlemi engellemez
+    }
+  }
 
   return true;
 };
@@ -850,10 +865,11 @@ const updateUserStatus = async (userId, isActive, reason = null) => {
  * Kullanıcı giriş yapamaz, verileri görünmez ama silinmez
  * 
  * @param {number} userId - Pasifleştirilecek kullanıcı ID'si
+ * @param {string} [reason=null] - Pasifleştirme sebebi
  * @returns {boolean} İşlem başarılıysa true
  * @throws {AppError} Kullanıcı bulunamazsa
  */
-const deactivateUser = async (userId) => {
+const deactivateUser = async (userId, reason = null) => {
   try {
     // Önce kullanıcının profilini kontrol et
     const user = await db('users').where('id', userId).first();
@@ -866,6 +882,9 @@ const deactivateUser = async (userId) => {
       throw new AppError('Admin hesabı pasifleştirilemez', 403);
     }
 
+    // Eski aktiflik durumunu kaydet
+    const oldActiveStatus = user.is_active;
+
     // Kullanıcıyı pasifleştir
     await db('users').where('id', userId).update({
       is_active: false,
@@ -874,6 +893,17 @@ const deactivateUser = async (userId) => {
 
     // Refresh token'ları temizle (güvenlik için)
     await db('refresh_tokens').where('user_id', userId).del();
+
+    // Bildirim gönder (durum değiştiyse)
+    if (oldActiveStatus !== false) {
+      try {
+        await notificationService.sendUserStatusNotification(userId, 'deactivated', reason);
+        logger.info(`User deactivation notification sent to user ${userId}`);
+      } catch (notificationError) {
+        logger.warn('User deactivation notification failed:', notificationError);
+        // Bildirim hatası ana işlemi engellemez
+      }
+    }
 
     return true;
   } catch (error) {
@@ -886,10 +916,11 @@ const deactivateUser = async (userId) => {
  * Kullanıcıyı yeniden aktifleştirir
  * 
  * @param {number} userId - Aktifleştirilecek kullanıcı ID'si
+ * @param {string} [reason=null] - Aktifleştirme sebebi
  * @returns {boolean} İşlem başarılıysa true
  * @throws {AppError} Kullanıcı bulunamazsa
  */
-const activateUser = async (userId) => {
+const activateUser = async (userId, reason = null) => {
   try {
     // Önce kullanıcının profilini kontrol et
     const user = await db('users').where('id', userId).first();
@@ -897,11 +928,25 @@ const activateUser = async (userId) => {
       throw new AppError('Kullanıcı bulunamadı', 404);
     }
 
+    // Eski aktiflik durumunu kaydet
+    const oldActiveStatus = user.is_active;
+
     // Kullanıcıyı aktifleştir
     await db('users').where('id', userId).update({
       is_active: true,
       updated_at: db.fn.now()
     });
+
+    // Bildirim gönder (durum değiştiyse)
+    if (oldActiveStatus !== true) {
+      try {
+        await notificationService.sendUserStatusNotification(userId, 'activated', reason);
+        logger.info(`User activation notification sent to user ${userId}`);
+      } catch (notificationError) {
+        logger.warn('User activation notification failed:', notificationError);
+        // Bildirim hatası ana işlemi engellemez
+      }
+    }
 
     return true;
   } catch (error) {
@@ -935,9 +980,52 @@ const updateApplicationStatus = async (applicationId, statusId, reason = null) =
   // Güncellenmiş başvuruyu status adı ile birlikte getir
   const updatedApplication = await db('applications as a')
     .leftJoin('application_statuses as ast', 'a.status_id', 'ast.id')
+    .join('jobs as j', 'a.job_id', 'j.id')
     .where('a.id', applicationId)
-    .select('a.*', 'ast.name as status_name')
+    .select('a.*', 'ast.name as status_name', 'j.title as job_title')
     .first();
+
+  // Bildirim gönder
+  try {
+    // doctor_profile_id'den user_id'yi al
+    const doctorUser = await db('doctor_profiles')
+      .join('users', 'doctor_profiles.user_id', 'users.id')
+      .where('doctor_profiles.id', application.doctor_profile_id)
+      .select('users.id as user_id')
+      .first();
+
+    if (doctorUser) {
+      // Status ID'yi status string'ine çevir
+      const statusMap = {
+        1: 'pending',      // Beklemede
+        2: 'pending',      // İnceleniyor
+        3: 'accepted',     // Kabul Edildi
+        4: 'rejected',     // Red Edildi
+        5: 'withdrawn'     // Geri Çekildi
+      };
+      
+      const statusString = statusMap[statusId] || 'pending';
+      
+      // Hastane adını al
+      const hospitalInfo = await db('jobs as j')
+        .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+        .where('j.id', application.job_id)
+        .select('hp.institution_name')
+        .first();
+      
+      await notificationService.sendDoctorNotification(doctorUser.user_id, statusString, {
+        application_id: applicationId,
+        job_title: updatedApplication.job_title || 'İş İlanı',
+        hospital_name: hospitalInfo?.institution_name || 'Hastane',
+        notes: reason
+      });
+      
+      logger.info(`[Admin Service] Application status change notification sent to doctor ${doctorUser.user_id}`);
+    }
+  } catch (notificationError) {
+    logger.warn('[Admin Service] Application status change notification failed:', notificationError);
+    // Bildirim hatası durum değişikliğini engellemez
+  }
 
   return updatedApplication;
 };
@@ -1265,7 +1353,7 @@ const deleteJob = async (jobId) => {
  * @returns {Object|null} Başvuru detayları
  */
 const getApplicationDetails = async (applicationId) => {
-  console.log('🔍 Admin getApplicationDetails - Application ID:', applicationId);
+  logger.debug(`Admin getApplicationDetails - Application ID: ${applicationId}`);
   
   // MSSQL'de .first() ve .limit() parametrik top (@p0) ürettiği için
   // getAllApplications fonksiyonunu kullanıp memory'de filtreliyoruz
@@ -1281,7 +1369,7 @@ const getApplicationDetails = async (applicationId) => {
   // Eğer getAllApplications'da bulunamazsa veya eksik bilgiler varsa,
   // daha detaylı bir sorgu yapıyoruz (ama limit/offset olmadan)
   if (!application) {
-    console.log('❌ Application not found in getAllApplications, trying direct query');
+    logger.debug('Application not found in getAllApplications, trying direct query');
     
     // Basit bir sorgu yapıyoruz - sadece temel bilgileri alıyoruz
     const simpleQuery = await db('applications as a')
@@ -1313,15 +1401,11 @@ const getApplicationDetails = async (applicationId) => {
     const simpleResult = Array.isArray(simpleQuery) ? simpleQuery[0] : simpleQuery;
     
     if (!simpleResult) {
-      console.log('❌ Application not found - Possible reasons:');
-      console.log('   - Application ID does not exist');
-      console.log('   - Application is soft deleted');
-      console.log('   - Doctor is deactivated (is_active = false)');
-      console.log('   - Hospital is deactivated (is_active = false)');
+      logger.warn(`Application not found - ID: ${applicationId}. Possible reasons: Application ID does not exist, soft deleted, or user deactivated`);
       return null;
     }
     
-    console.log('📋 Admin getApplicationDetails - Found via simple query');
+    logger.debug('Admin getApplicationDetails - Found via simple query');
     return simpleResult;
   }
   
@@ -1334,7 +1418,7 @@ const getApplicationDetails = async (applicationId) => {
   
   try {
     // Doctor detaylarını alıyoruz - hastane modülündeki getDoctorProfileDetail'e benzer şekilde
-    console.log('🔍 Fetching doctor details for doctor_profile_id:', application.doctor_profile_id);
+    logger.debug(`Fetching doctor details for doctor_profile_id: ${application.doctor_profile_id}`);
     const doctorQueryResult = await db('doctor_profiles as dp')
       .join('users as doctor_users', 'dp.user_id', 'doctor_users.id')
       .leftJoin('specialties as doctor_specialty', 'dp.specialty_id', 'doctor_specialty.id')
@@ -1360,14 +1444,9 @@ const getApplicationDetails = async (applicationId) => {
     
     // Array döndüğü için [0] ile alıyoruz
     doctorDetails = Array.isArray(doctorQueryResult) && doctorQueryResult.length > 0 ? doctorQueryResult[0] : (doctorQueryResult || null);
-    console.log('✅ Doctor details fetched:', {
-      user_id: doctorDetails?.user_id,
-      first_name: doctorDetails?.first_name,
-      last_name: doctorDetails?.last_name
-    });
+    logger.debug(`Doctor details fetched - user_id: ${doctorDetails?.user_id}`);
   } catch (error) {
-    console.log('⚠️ Error fetching doctor details:', error.message);
-    console.log('⚠️ Error stack:', error.stack);
+    logger.error('Error fetching doctor details:', error);
   }
   
   try {
@@ -1390,12 +1469,12 @@ const getApplicationDetails = async (applicationId) => {
       hospitalDetails = Array.isArray(hospitalQuery) && hospitalQuery.length > 0 ? hospitalQuery[0] : (hospitalQuery || null);
     }
   } catch (error) {
-    console.log('⚠️ Error fetching hospital details:', error.message);
+    logger.error('Error fetching hospital details:', error);
   }
   
   try {
     // Job detaylarını alıyoruz - getAllJobs pattern'ini kullanıyoruz (MSSQL uyumlu)
-    console.log('🔍 Fetching job details for job_id:', application.job_id);
+    logger.debug(`Fetching job details for job_id: ${application.job_id}`);
     const jobQueryResult = await db('jobs as j')
       .join('job_statuses as js', 'j.status_id', 'js.id')
       .join('specialties as job_specialty', 'j.specialty_id', 'job_specialty.id')
@@ -1417,14 +1496,11 @@ const getApplicationDetails = async (applicationId) => {
     // Array döndüğü için [0] ile alıyoruz
     jobDetails = Array.isArray(jobQueryResult) && jobQueryResult.length > 0 ? jobQueryResult[0] : (jobQueryResult || null);
     
-    if (jobDetails) {
-      console.log('✅ Job details fetched successfully');
-    } else {
-      console.log('⚠️ Job details not found for job_id:', application.job_id);
+    if (!jobDetails) {
+      logger.warn(`Job details not found for job_id: ${application.job_id}`);
     }
   } catch (error) {
-    console.log('⚠️ Error fetching job details:', error.message);
-    console.log('⚠️ Error details:', error);
+    logger.error('Error fetching job details:', error);
     // Job details olmadan da devam edebiliriz, sadece job bilgileri eksik olur
     jobDetails = null;
   }
@@ -1457,8 +1533,7 @@ const getApplicationDetails = async (applicationId) => {
     hospital_phone: hospitalDetails?.hospital_phone || null
   };
   
-  console.log('📋 Admin getApplicationDetails - Result: Found and enriched');
-  console.log('📋 Final user_id:', enrichedApplication.user_id);
+  logger.debug(`Admin getApplicationDetails - Result: Found and enriched, user_id: ${enrichedApplication.user_id}`);
   return enrichedApplication;
 };
 

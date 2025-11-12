@@ -277,9 +277,9 @@ const AdminJobsPage = () => {
     const IconComponent = config.icon;
 
     return (
-      <span className={`px-3 py-1 rounded-lg text-xs font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center gap-1`}>
-        <IconComponent className="w-3 h-3" />
-        {status}
+      <span className={`px-3 py-1 rounded-lg text-xs font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center justify-center gap-1 w-[140px]`}>
+        <IconComponent className="w-3 h-3 flex-shrink-0" />
+        <span className="text-center truncate">{status}</span>
       </span>
     );
   };

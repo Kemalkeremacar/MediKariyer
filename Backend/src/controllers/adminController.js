@@ -61,11 +61,11 @@ const getUserDetails = catchAsync(async (req, res) => {
   const user = await adminService.getUserDetails(req.params.id);
   if (!user) throw new AppError('Kullanıcı bulunamadı', 404);
   
-  // Debug: Logo kontrolü
+  // Hospital kullanıcıları için profil bilgileri loglanıyor
   if (user.role === 'hospital') {
-    logger.info('Hospital user details - Full Profile:', { 
+    logger.debug('Hospital user details retrieved:', { 
       userId: user.id,
-      profileKeys: user.profile ? Object.keys(user.profile) : [],
+      hasProfile: !!user.profile,
       hasLogo: !!user.profile?.logo,
       logo: user.profile?.logo ? user.profile.logo.substring(0, 50) + '...' : null
     });
@@ -158,13 +158,15 @@ const updateUserStatus = catchAsync(async (req, res) => {
  * @route PATCH /api/admin/users/:id/deactivate
  * @access Private (Admin)
  * @param {number} req.params.id - Pasifleştirilecek kullanıcı ID'si
+ * @param {string} [req.body.reason] - Pasifleştirme sebebi
  * @returns {Object} Başarı mesajı
  */
 const deactivateUser = catchAsync(async (req, res) => {
-  const result = await adminService.deactivateUser(req.params.id);
+  const { reason } = req.body;
+  const result = await adminService.deactivateUser(req.params.id, reason);
   if (!result) throw new AppError('Kullanıcı bulunamadı', 404);
 
-  logger.info(`User deactivated: ${req.params.id} by ${req.user.email}`);
+  logger.info(`User deactivated: ${req.params.id} by ${req.user.email}${reason ? `, reason: ${reason}` : ''}`);
   return sendSuccess(res, 'Kullanıcı pasifleştirildi');
 });
 
@@ -174,13 +176,15 @@ const deactivateUser = catchAsync(async (req, res) => {
  * @route PATCH /api/admin/users/:id/activate
  * @access Private (Admin)
  * @param {number} req.params.id - Aktifleştirilecek kullanıcı ID'si
+ * @param {string} [req.body.reason] - Aktifleştirme sebebi
  * @returns {Object} Başarı mesajı
  */
 const activateUser = catchAsync(async (req, res) => {
-  const result = await adminService.activateUser(req.params.id);
+  const { reason } = req.body;
+  const result = await adminService.activateUser(req.params.id, reason);
   if (!result) throw new AppError('Kullanıcı bulunamadı', 404);
 
-  logger.info(`User activated: ${req.params.id} by ${req.user.email}`);
+  logger.info(`User activated: ${req.params.id} by ${req.user.email}${reason ? `, reason: ${reason}` : ''}`);
   return sendSuccess(res, 'Kullanıcı aktifleştirildi');
 });
 
