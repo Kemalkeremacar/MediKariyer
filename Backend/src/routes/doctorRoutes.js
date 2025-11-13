@@ -671,13 +671,10 @@ router.patch('/applications/:id/withdraw',
 
 /**
  * @route   DELETE /api/doctor/applications/:id
- * @desc    Doktorlar için başvuruyu kalıcı olarak sil
+ * @desc    [DEPRECATED] Doktorlar başvuruyu silemez, sadece geri çekebilir
  * @access  Özel (Doktor)
- * @middleware authMiddleware, requireRole(['doctor']), validate(applicationIdParamSchema, 'params')
- * @param   {number} req.params.id - Başvuru kimliği
- * @returns {Object} Silme sonucu
- * @example
- * DELETE /api/doctor/applications/123
+ * @deprecated Doktorlar başvuruyu silemez. Sadece "Başvuruldu" durumundaki başvuruları geri çekebilir (PATCH /api/doctor/applications/:id/withdraw)
+ * @returns {Object} Hata mesajı
  */
 router.delete('/applications/:id',
   validate(applicationIdParamSchema, 'params'),

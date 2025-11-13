@@ -755,6 +755,26 @@ const registerDoctor = async (registrationData) => {
       const createdUser = await db('users').where('id', userId).first();
       const createdProfile = await db('doctor_profiles').where('id', profileId).first();
 
+      // Admin'lere yeni doktor kaydı bildirimi gönder
+      try {
+        const notificationService = require('./notificationService');
+        await notificationService.sendAdminSystemNotification({
+          type: 'info',
+          title: 'Yeni Doktor Kaydı',
+          body: `${first_name} ${last_name} (${normalizedEmail}) adlı doktor sisteme kayıt oldu. Onay bekliyor.`,
+          data: {
+            user_id: userId,
+            role: 'doctor',
+            doctor_profile_id: profileId,
+            name: `${first_name} ${last_name}`,
+            email: normalizedEmail
+          }
+        });
+      } catch (notificationError) {
+        logger.warn('Admin notification failed for new doctor registration:', notificationError);
+        // Bildirim hatası kayıt işlemini engellemez
+      }
+
       // Şifre hash'ini doğrula (kayıt sonrası test)
       if (createdUser.password_hash) {
         try {
@@ -885,6 +905,26 @@ const registerHospital = async (registrationData) => {
     // Oluşturulan profilin ID'sini al
     const profile = await trx('hospital_profiles').where('user_id', userId).first();
     const profileId = profile.id;
+
+    // Admin'lere yeni hastane kaydı bildirimi gönder
+    try {
+      const notificationService = require('./notificationService');
+      await notificationService.sendAdminSystemNotification({
+        type: 'info',
+        title: 'Yeni Hastane Kaydı',
+        body: `${institution_name} (${normalizedEmail}) adlı hastane sisteme kayıt oldu. Onay bekliyor.`,
+        data: {
+          user_id: userId,
+          role: 'hospital',
+          hospital_profile_id: profileId,
+          institution_name: institution_name,
+          email: normalizedEmail
+        }
+      });
+    } catch (notificationError) {
+      logger.warn('Admin notification failed for new hospital registration:', notificationError);
+      // Bildirim hatası kayıt işlemini engellemez
+    }
 
     await trx.commit();
 

@@ -42,7 +42,7 @@ const logger = require('../utils/logger');
  * @param {string} [filters.role] - Kullanıcı rolü (doctor, hospital)
  * @param {string|boolean} [filters.isApproved] - Onay durumu
  * @param {string|boolean} [filters.isActive] - Aktiflik durumu
- * @param {string} [filters.search] - Genel arama terimi (email için)
+ * @param {string} [filters.search] - Genel arama terimi (email, isim, soyisim, kurum adı)
  * @param {string} [filters.email_search] - E-posta arama terimi
  * @param {string} [filters.doctor_search] - Doktor arama terimi (ad, soyad)
  * @param {string} [filters.hospital_search] - Hastane arama terimi (kurum adı)
@@ -127,27 +127,29 @@ const getUsers = async (filters = {}) => {
     if (doctor_search) {
       query.where(function() {
         const searchTerm = doctor_search.trim();
+        const searchLower = searchTerm.toLowerCase();
         const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+        const searchPartsLower = searchParts.map(part => part.toLowerCase());
         
         if (searchParts.length > 1) {
           // Birden fazla kelime varsa: "Ad Soyad" şeklinde
-          // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap
+          // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap (case-insensitive)
           this.where(function() {
-            // Birleşik arama: "Ad Soyad" tam eşleşmesi
-            this.whereRaw(`CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name) LIKE ?`, [`%${searchTerm}%`])
-                // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime
+            // Birleşik arama: "Ad Soyad" tam eşleşmesi (case-insensitive)
+            this.whereRaw(`LOWER(CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name)) LIKE ?`, [`%${searchLower}%`])
+                // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime (case-insensitive)
                 .orWhere(function() {
-                  this.where('doctor_profiles.first_name', 'like', `%${searchParts[0]}%`)
-                      .where('doctor_profiles.last_name', 'like', `%${searchParts[searchParts.length - 1]}%`);
+                  this.whereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchPartsLower[0]}%`])
+                      .whereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchPartsLower[searchPartsLower.length - 1]}%`]);
                 });
           })
-          // Veya: Sadece ad veya sadece soyad içinde arama
-          .orWhere('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
-          .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+          // Veya: Sadece ad veya sadece soyad içinde arama (case-insensitive)
+          .orWhereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchLower}%`])
+          .orWhereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchLower}%`]);
         } else {
-          // Tek kelime varsa: Ad veya soyad içinde ara
-          this.where('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
-              .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+          // Tek kelime varsa: Ad veya soyad içinde ara (case-insensitive)
+          this.whereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchLower}%`])
+              .orWhereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchLower}%`]);
         }
       });
     }
@@ -156,18 +158,35 @@ const getUsers = async (filters = {}) => {
   // Hastane filtreleri
   if (role === 'hospital' || hospital_search || (city_id && role !== 'doctor')) {
     if (hospital_search) {
-      query.where('hospital_profiles.institution_name', 'like', `%${hospital_search}%`);
+      const hospitalSearchLower = hospital_search.trim().toLowerCase();
+      query.whereRaw('LOWER(hospital_profiles.institution_name) LIKE ?', [`%${hospitalSearchLower}%`]);
     }
     if (city_id && role !== 'doctor') {
       query.where('hospital_profiles.city_id', city_id);
     }
   }
   
-  // Genel arama sorgusu (email)
-  if (search) query.where('users.email', 'like', `%${search}%`);
+  // Genel arama sorgusu (email, isim, soyisim, kurum adı) - Case-insensitive
+  if (search) {
+    const searchTerm = search.trim();
+    const searchLower = searchTerm.toLowerCase();
+    query.where(function() {
+      // Email üzerinde arama (case-insensitive)
+      this.whereRaw('LOWER(users.email) LIKE ?', [`%${searchLower}%`])
+          // Doktorlar için: isim ve soyisim üzerinde arama (case-insensitive)
+          .orWhereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchLower}%`])
+          .orWhereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchLower}%`])
+          .orWhereRaw(`LOWER(CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name)) LIKE ?`, [`%${searchLower}%`])
+          // Hastaneler için: kurum adı üzerinde arama (case-insensitive)
+          .orWhereRaw('LOWER(hospital_profiles.institution_name) LIKE ?', [`%${searchLower}%`]);
+    });
+  }
   
-  // E-posta arama - sadece e-posta alanında
-  if (email_search) query.where('users.email', 'like', `%${email_search}%`);
+  // E-posta arama - sadece e-posta alanında (case-insensitive)
+  if (email_search) {
+    const emailSearchLower = email_search.trim().toLowerCase();
+    query.whereRaw('LOWER(users.email) LIKE ?', [`%${emailSearchLower}%`]);
+  }
   
   const offset = (page - 1) * limit;
   
@@ -215,27 +234,29 @@ const getUsers = async (filters = {}) => {
     if (doctor_search) {
       countQuery.where(function() {
         const searchTerm = doctor_search.trim();
+        const searchLower = searchTerm.toLowerCase();
         const searchParts = searchTerm.split(/\s+/).filter(part => part.length > 0);
+        const searchPartsLower = searchParts.map(part => part.toLowerCase());
         
         if (searchParts.length > 1) {
           // Birden fazla kelime varsa: "Ad Soyad" şeklinde
-          // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap
+          // Hem birleşik arama (CONCAT) hem de ayrı ayrı arama yap (case-insensitive)
           this.where(function() {
-            // Birleşik arama: "Ad Soyad" tam eşleşmesi
-            this.whereRaw(`CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name) LIKE ?`, [`%${searchTerm}%`])
-                // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime
+            // Birleşik arama: "Ad Soyad" tam eşleşmesi (case-insensitive)
+            this.whereRaw(`LOWER(CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name)) LIKE ?`, [`%${searchLower}%`])
+                // Veya: Ad kısmında ilk kelime, Soyad kısmında ikinci kelime (case-insensitive)
                 .orWhere(function() {
-                  this.where('doctor_profiles.first_name', 'like', `%${searchParts[0]}%`)
-                      .where('doctor_profiles.last_name', 'like', `%${searchParts[searchParts.length - 1]}%`);
+                  this.whereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchPartsLower[0]}%`])
+                      .whereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchPartsLower[searchPartsLower.length - 1]}%`]);
                 });
           })
-          // Veya: Sadece ad veya sadece soyad içinde arama
-          .orWhere('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
-          .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+          // Veya: Sadece ad veya sadece soyad içinde arama (case-insensitive)
+          .orWhereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchLower}%`])
+          .orWhereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchLower}%`]);
         } else {
-          // Tek kelime varsa: Ad veya soyad içinde ara
-          this.where('doctor_profiles.first_name', 'like', `%${searchTerm}%`)
-              .orWhere('doctor_profiles.last_name', 'like', `%${searchTerm}%`);
+          // Tek kelime varsa: Ad veya soyad içinde ara (case-insensitive)
+          this.whereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchLower}%`])
+              .orWhereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchLower}%`]);
         }
       });
     }
@@ -244,18 +265,35 @@ const getUsers = async (filters = {}) => {
   // Hastane filtreleri
   if (role === 'hospital' || hospital_search || (city_id && role !== 'doctor')) {
     if (hospital_search) {
-      countQuery.where('hospital_profiles.institution_name', 'like', `%${hospital_search}%`);
+      const hospitalSearchLower = hospital_search.trim().toLowerCase();
+      countQuery.whereRaw('LOWER(hospital_profiles.institution_name) LIKE ?', [`%${hospitalSearchLower}%`]);
     }
     if (city_id && role !== 'doctor') {
       countQuery.where('hospital_profiles.city_id', city_id);
     }
   }
   
-  // Genel arama sorgusu (email)
-  if (search) countQuery.where('users.email', 'like', `%${search}%`);
+  // Genel arama sorgusu (email, isim, soyisim, kurum adı) - Case-insensitive
+  if (search) {
+    const searchTerm = search.trim();
+    const searchLower = searchTerm.toLowerCase();
+    countQuery.where(function() {
+      // Email üzerinde arama (case-insensitive)
+      this.whereRaw('LOWER(users.email) LIKE ?', [`%${searchLower}%`])
+          // Doktorlar için: isim ve soyisim üzerinde arama (case-insensitive)
+          .orWhereRaw('LOWER(doctor_profiles.first_name) LIKE ?', [`%${searchLower}%`])
+          .orWhereRaw('LOWER(doctor_profiles.last_name) LIKE ?', [`%${searchLower}%`])
+          .orWhereRaw(`LOWER(CONCAT(doctor_profiles.first_name, ' ', doctor_profiles.last_name)) LIKE ?`, [`%${searchLower}%`])
+          // Hastaneler için: kurum adı üzerinde arama (case-insensitive)
+          .orWhereRaw('LOWER(hospital_profiles.institution_name) LIKE ?', [`%${searchLower}%`]);
+    });
+  }
   
-  // E-posta arama - sadece e-posta alanında
-  if (email_search) countQuery.where('users.email', 'like', `%${email_search}%`);
+  // E-posta arama - sadece e-posta alanında (case-insensitive)
+  if (email_search) {
+    const emailSearchLower = email_search.trim().toLowerCase();
+    countQuery.whereRaw('LOWER(users.email) LIKE ?', [`%${emailSearchLower}%`]);
+  }
   
   const [{ count }] = await countQuery.count('* as count');
   const users = await query
@@ -1031,17 +1069,40 @@ const updateApplicationStatus = async (applicationId, statusId, reason = null) =
 };
 
 /**
- * Başvuruyu siler
+ * Başvuruyu siler (soft delete)
  * 
  * @param {number} applicationId - Başvuru ID'si
  * @returns {boolean} İşlem başarılıysa true
  */
 const deleteApplication = async (applicationId) => {
-  const application = await db('applications').where('id', applicationId).first();
-  if (!application) return false;
+  try {
+    // Başvurunun varlığını kontrol et
+    const application = await db('applications')
+      .where('id', applicationId)
+      .whereNull('deleted_at')
+      .first();
+    
+    if (!application) {
+      throw new AppError('Başvuru bulunamadı veya zaten silinmiş', 404);
+    }
 
-  await db('applications').where('id', applicationId).del();
-  return true;
+    // Başvuruyu soft delete yap
+    await db('applications')
+      .where('id', applicationId)
+      .whereNull('deleted_at')
+      .update({
+        deleted_at: db.raw('GETDATE()'),
+        updated_at: db.raw('GETDATE()')
+      });
+
+    return true;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    logger.error('Application delete error:', error);
+    throw new AppError('Başvuru silinemedi', 500);
+  }
 };
 
 // ============================================================================
@@ -1329,20 +1390,52 @@ const getJobHistory = async (jobId) => {
 };
 
 /**
- * İş ilanını siler (hard delete)
- * İlişkili başvuruları da CASCADE ile siler
+ * İş ilanını siler (soft delete)
+ * İlişkili başvuruları da soft delete yapar
  * 
  * @param {number} jobId - Silinecek iş ilanı ID'si
  * @returns {boolean|null} İşlem başarılıysa true, ilan bulunamazsa null
  */
 const deleteJob = async (jobId) => {
-  const job = await db('jobs').where('id', jobId).first();
-  if (!job) return null;
+  try {
+    await db.transaction(async (trx) => {
+      // İş ilanının varlığını kontrol et
+      const job = await trx('jobs')
+        .where('id', jobId)
+        .whereNull('deleted_at')
+        .first();
+      
+      if (!job) {
+        throw new AppError('İş ilanı bulunamadı veya zaten silinmiş', 404);
+      }
 
-  // Hard delete - CASCADE ile applications tablosundaki kayıtlar da silinir
-  await db('jobs').where('id', jobId).del();
+      // İş ilanını soft delete yap
+      await trx('jobs')
+        .where('id', jobId)
+        .whereNull('deleted_at')
+        .update({
+          deleted_at: trx.raw('GETDATE()'),
+          updated_at: trx.raw('GETDATE()')
+        });
 
-  return true;
+      // İlişkili başvuruları da soft delete yap
+      await trx('applications')
+        .where('job_id', jobId)
+        .whereNull('deleted_at')
+        .update({
+          deleted_at: trx.raw('GETDATE()'),
+          updated_at: trx.raw('GETDATE()')
+        });
+    });
+
+    return true;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    logger.error('Job delete error:', error);
+    throw new AppError('İş ilanı silinemedi', 500);
+  }
 };
 
 /**

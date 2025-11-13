@@ -15,8 +15,7 @@ import {
   Mail, 
   Calendar, 
   User, 
-  Trash2,
-  RefreshCw
+  Trash2
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 // import { ModalContainer } from '@/components/ui/ModalContainer';
@@ -33,7 +32,7 @@ const ContactMessagesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Backend hook'ları - sayfalama etkin
-  const { data: messagesData, isLoading, refetch } = useContactMessages({
+  const { data: messagesData, isLoading } = useContactMessages({
     page: currentPage,
     limit: 10,
     sort_by: 'created_at',
@@ -95,7 +94,7 @@ const ContactMessagesPage = () => {
     deleteMessage.mutate(messageId, {
       onSuccess: () => {
         showToast.success(toastMessages.message.deleteSuccess);
-        refetch();
+        // Otomatik yenileme aktif, refetch gerekmez
       },
       onError: (error) => {
         showToast.error(error, { defaultMessage: toastMessages.message.deleteError });
@@ -136,13 +135,6 @@ const ContactMessagesPage = () => {
                 İletişim formundan gelen mesajları görüntüleyin
               </p>
             </div>
-            <button
-              onClick={() => refetch()}
-              className="admin-btn admin-btn-primary"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Yenile
-            </button>
           </div>
         </div>
 

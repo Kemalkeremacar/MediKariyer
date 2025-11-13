@@ -96,6 +96,7 @@ const getUnreadNotifications = async (userId, limit = 10) => {
   const notifications = await db('notifications')
     .where({ user_id: userId })
     .whereNull('read_at')
+    .whereNull('deleted_at')
     .select('id', 'title', 'body', 'created_at', 'type', 'data_json')
     .orderBy('created_at', 'desc')
     .limit(limit);
@@ -142,6 +143,7 @@ const getNotificationsByUser = async (userId, options = {}) => {
   
   let query = db('notifications')
     .where('user_id', userId)
+    .whereNull('deleted_at')
     .orderBy('created_at', 'desc');
 
   if (isRead !== undefined) {
@@ -159,7 +161,9 @@ const getNotificationsByUser = async (userId, options = {}) => {
   const offset = (page - 1) * limit;
   
   // Count sorgusunu ayrı yap
-  const countQuery = db('notifications').where('user_id', userId);
+  const countQuery = db('notifications')
+    .where('user_id', userId)
+    .whereNull('deleted_at');
   
   if (isRead !== undefined) {
     if (isRead) {
@@ -213,6 +217,7 @@ const getUnreadCount = async (userId) => {
   const [{ count }] = await db('notifications')
     .where('user_id', userId)
     .whereNull('read_at')
+    .whereNull('deleted_at')
     .count('* as count');
   
   return parseInt(count);
@@ -232,7 +237,10 @@ const getUnreadCount = async (userId) => {
  * }
  */
 const getNotificationById = async (id) => {
-  const notification = await db('notifications').where('id', id).first();
+  const notification = await db('notifications')
+    .where('id', id)
+    .whereNull('deleted_at')
+    .first();
   
   if (!notification) return null;
   
@@ -271,6 +279,7 @@ const markAsRead = async (notificationId, userId) => {
   const updated = await db('notifications')
     .where('id', notificationId)
     .where('user_id', userId)
+    .whereNull('deleted_at')
     .update({
       read_at: db.fn.now()
     });
@@ -300,6 +309,7 @@ const markMultipleAsRead = async (notificationIds, userId) => {
   const updated = await db('notifications')
     .whereIn('id', notificationIds)
     .where('user_id', userId)
+    .whereNull('deleted_at')
     .update({
       read_at: db.fn.now()
     });
@@ -322,6 +332,7 @@ const markAllAsRead = async (userId) => {
   const updated = await db('notifications')
     .where('user_id', userId)
     .whereNull('read_at')
+    .whereNull('deleted_at')
     .update({
       read_at: db.fn.now()
     });
@@ -348,12 +359,15 @@ const markAllAsRead = async (userId) => {
  * }
  */
 const deleteNotification = async (notificationId, userId) => {
-  const deleted = await db('notifications')
+  const updated = await db('notifications')
     .where('id', notificationId)
     .where('user_id', userId)
-    .del();
+    .whereNull('deleted_at')
+    .update({
+      deleted_at: db.raw('GETDATE()')
+    });
   
-  return deleted > 0;
+  return updated > 0;
 };
 
 /**
@@ -368,12 +382,15 @@ const deleteNotification = async (notificationId, userId) => {
  * console.log(`${result.count} okunmuş bildirim temizlendi`);
  */
 const clearReadNotifications = async (userId) => {
-  const deleted = await db('notifications')
+  const updated = await db('notifications')
     .where('user_id', userId)
     .whereNotNull('read_at')
-    .del();
+    .whereNull('deleted_at')
+    .update({
+      deleted_at: db.raw('GETDATE()')
+    });
   
-  return { count: deleted };
+  return { count: updated };
 };
 
 // ============================================================================
@@ -793,6 +810,112 @@ const sendAdminNotification = async (notificationData) => {
 };
 
 /**
+ * Admin için toplu bildirim gönderir (user_ids veya role ile)
+ * @description Admin belirli kullanıcılara veya role sahip kullanıcılara bildirim gönderir
+ * @param {Object} notificationData - Bildirim verileri
+ * @param {string} notificationData.type - Bildirim türü (info, warning, success, error)
+ * @param {string} notificationData.title - Bildirim başlığı
+ * @param {string} notificationData.body - Bildirim içeriği
+ * @param {Array<number>} [notificationData.user_ids] - Hedef kullanıcı ID'leri
+ * @param {string} [notificationData.role] - Hedef rol (doctor, hospital, admin, all)
+ * @param {Object} [notificationData.data] - Ek veriler
+ * @returns {Promise<Object>} Gönderilen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendAdminBulkNotification({
+ *   type: 'info',
+ *   title: 'Sistem Bakımı',
+ *   body: 'Sistem bakımı yapılacaktır.',
+ *   user_ids: [1, 2, 3]
+ * });
+ * 
+ * await sendAdminBulkNotification({
+ *   type: 'info',
+ *   title: 'Sistem Bakımı',
+ *   body: 'Sistem bakımı yapılacaktır.',
+ *   role: 'doctor'
+ * });
+ */
+const sendAdminBulkNotification = async (notificationData) => {
+  const { type, title, body, user_ids, role, data, channel = 'inapp' } = notificationData;
+  
+  let userIds = [];
+  
+  // Eğer user_ids belirtilmişse, direkt kullan
+  if (user_ids && Array.isArray(user_ids) && user_ids.length > 0) {
+    // Kullanıcıların varlığını kontrol et
+    const users = await db('users')
+      .whereIn('id', user_ids)
+      .where({ is_approved: true, is_active: true })
+      .select('id');
+    
+    userIds = users.map(u => u.id);
+  } 
+  // Eğer role belirtilmişse, o role sahip kullanıcıları bul
+  else if (role) {
+    let query = db('users')
+      .select('id')
+      .where({ is_approved: true, is_active: true });
+    
+    if (role !== 'all') {
+      query = query.where('role', role);
+    }
+    
+    const users = await query;
+    userIds = users.map(u => u.id);
+  }
+  
+  if (userIds.length === 0) {
+    return { sent_count: 0, message: 'Hedef kullanıcı bulunamadı' };
+  }
+  
+  return await sendBulkNotification(userIds, { type, title, body, data, channel });
+};
+
+/**
+ * Admin'lere sistem olayı bildirimi gönderir
+ * @description Yeni kayıt, yeni ilan, yeni fotoğraf talebi gibi sistem olaylarında admin'lere bildirim gönderir
+ * @param {Object} notificationData - Bildirim verileri
+ * @param {string} notificationData.type - Bildirim türü (info, warning, success, error)
+ * @param {string} notificationData.title - Bildirim başlığı
+ * @param {string} notificationData.body - Bildirim içeriği
+ * @param {Object} [notificationData.data] - Ek JSON verisi
+ * @returns {Promise<Object>} Gönderilen bildirim sayısı
+ * @throws {AppError} Veritabanı hatası durumunda
+ * 
+ * @example
+ * await sendAdminSystemNotification({
+ *   type: 'info',
+ *   title: 'Yeni Doktor Kaydı',
+ *   body: 'Dr. Ahmet Yılmaz sisteme kayıt oldu.',
+ *   data: { user_id: 123, role: 'doctor' }
+ * });
+ */
+const sendAdminSystemNotification = async (notificationData) => {
+  try {
+    // Tüm aktif ve onaylı admin kullanıcılarını bul
+    const adminUsers = await db('users')
+      .where({ role: 'admin', is_approved: true, is_active: true })
+      .select('id');
+    
+    if (adminUsers.length === 0) {
+      logger.warn('No active admin users found for system notification');
+      return { sent_count: 0 };
+    }
+    
+    const adminUserIds = adminUsers.map(u => u.id);
+    
+    // Tüm admin'lere bildirim gönder
+    return await sendBulkNotification(adminUserIds, notificationData);
+  } catch (error) {
+    logger.error('Admin system notification failed:', error);
+    // Bildirim hatası ana işlemi engellemez
+    return { sent_count: 0 };
+  }
+};
+
+/**
  * Kullanıcı durumu değişikliği bildirimi gönderir
  * @description Admin tarafından kullanıcı onay/aktif/pasif durumu değiştiğinde bildirim gönderir
  * @param {number} userId - Kullanıcı ID'si
@@ -896,9 +1019,9 @@ const sendUserStatusNotification = async (userId, action, reason = null) => {
  */
 const getNotificationStats = async () => {
   const [total, unread, byType] = await Promise.all([
-    db('notifications').count('* as count').first(),
-    db('notifications').whereNull('read_at').count('* as count').first(),
-    db('notifications').select('type').count('* as count').groupBy('type')
+    db('notifications').whereNull('deleted_at').count('* as count').first(),
+    db('notifications').whereNull('read_at').whereNull('deleted_at').count('* as count').first(),
+    db('notifications').whereNull('deleted_at').select('type').count('* as count').groupBy('type')
   ]);
   
   return {
@@ -924,9 +1047,9 @@ const getNotificationStats = async () => {
  */
 const getUserNotificationStats = async (userId) => {
   const [total, unread, byType] = await Promise.all([
-    db('notifications').where('user_id', userId).count('* as count').first(),
-    db('notifications').where('user_id', userId).whereNull('read_at').count('* as count').first(),
-    db('notifications').where('user_id', userId).select('type').count('* as count').groupBy('type')
+    db('notifications').where('user_id', userId).whereNull('deleted_at').count('* as count').first(),
+    db('notifications').where('user_id', userId).whereNull('read_at').whereNull('deleted_at').count('* as count').first(),
+    db('notifications').where('user_id', userId).whereNull('deleted_at').select('type').count('* as count').groupBy('type')
   ]);
   
   return {
@@ -981,6 +1104,7 @@ const getAllNotificationsForAdmin = async (filters = {}) => {
       'users.role as user_role'
     )
     .where('notifications.user_id', adminUser.id) // Sadece admin'e gelen bildirimler
+    .whereNull('notifications.deleted_at')
     .orderBy('notifications.created_at', 'desc');
 
   if (type) query.where('notifications.type', type);
@@ -999,7 +1123,8 @@ const getAllNotificationsForAdmin = async (filters = {}) => {
   // Count sorgusunu ayrı yap
   const countQuery = db('notifications')
     .join('users', 'notifications.user_id', 'users.id')
-    .where('notifications.user_id', adminUser.id); // Sadece admin'e gelen bildirimler
+    .where('notifications.user_id', adminUser.id) // Sadece admin'e gelen bildirimler
+    .whereNull('notifications.deleted_at');
     
   if (type) countQuery.where('notifications.type', type);
   if (is_read !== undefined) {
@@ -1081,6 +1206,8 @@ module.exports = {
   sendDoctorNotification,
   sendHospitalNotification,
   sendAdminNotification,
+  sendAdminBulkNotification,
+  sendAdminSystemNotification,
   sendUserStatusNotification,
   
   // İstatistik ve raporlama

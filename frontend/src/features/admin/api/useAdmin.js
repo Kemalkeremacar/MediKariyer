@@ -690,6 +690,8 @@ export function usePhotoRequests(filters = {}) {
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+    // Dinamik güncelleme: Her 5 saniyede bir otomatik yenile
+    refetchInterval: 5000,
     retry: 2
   });
 }

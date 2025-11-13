@@ -58,8 +58,14 @@ const updateNotificationStatusSchema = Joi.object({
  */
 const notificationFilterSchema = Joi.object({
   // Durum filtreleri
-  isRead: Joi.boolean().optional().messages({
-    'boolean.base': 'Okundu durumu true/false olmalıdır'
+  isRead: Joi.alternatives().try(
+    Joi.boolean(),
+    Joi.string().valid('true', 'false').custom((value, helpers) => {
+      return value === 'true';
+    })
+  ).optional().messages({
+    'boolean.base': 'Okundu durumu true/false olmalıdır',
+    'any.only': 'Okundu durumu true/false olmalıdır'
   }),
   
   // Tip filtreleri

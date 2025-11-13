@@ -18,12 +18,13 @@ import logger from '@/utils/logger';
 export const useDoctorProfile = () => {
   const { user } = useAuthStore();
   const userId = user?.id;
+  const isDoctor = user?.role === 'doctor';
   
   return useQuery({
     queryKey: ['doctor', 'profile', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
-    enabled: !!userId, // Sadece kullanıcı varsa çalıştır
+    enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
     staleTime: 30 * 1000, // 30 saniye cache - profil sık değişmez
     cacheTime: 2 * 60 * 1000,
     refetchOnMount: 'always',
@@ -35,12 +36,13 @@ export const useDoctorProfile = () => {
 export const useDoctorCompleteProfile = () => {
   const { user } = useAuthStore();
   const userId = user?.id;
+  const isDoctor = user?.role === 'doctor';
   
   return useQuery({
     queryKey: ['doctor', 'profile', 'complete', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
-    enabled: !!userId,
+    enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
     staleTime: 30 * 1000, // 30 saniye cache - profil sık değişmez
     cacheTime: 2 * 60 * 1000,
     refetchOnMount: 'always',
@@ -107,12 +109,13 @@ export const useUpdateDoctorPersonalInfo = () => {
 export const useDoctorProfileCompletion = () => {
   const { user } = useAuthStore();
   const userId = user?.id;
+  const isDoctor = user?.role === 'doctor';
   
   return useQuery({
     queryKey: ['doctor', 'profile', 'completion', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETION),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { completion_percentage, ... } }
-    enabled: !!userId,
+    enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
     staleTime: 30 * 1000, // 30 saniye cache - tamamlanma oranı sık değişmez
     cacheTime: 2 * 60 * 1000,
     refetchOnMount: 'always',
@@ -435,10 +438,14 @@ export const useDeleteLanguage = () => {
 
 // 🔹 Dashboard
 export const useDoctorDashboard = () => {
+  const { user } = useAuthStore();
+  const isDoctor = user?.role === 'doctor';
+  
   return useQuery({
     queryKey: ['doctor', 'dashboard'],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.DASHBOARD),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { dashboard } }
+    enabled: isDoctor, // Sadece doktor rolünde çalıştır
     staleTime: 0, // Fresh data - dashboard istatistikleri kritik
     cacheTime: 0,
     refetchOnMount: 'always',

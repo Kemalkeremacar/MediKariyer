@@ -826,20 +826,10 @@ const withdrawApplication = catchAsync(async (req, res) => {
  * 
  * @example
  * DELETE /api/doctor/applications/123
+ * @deprecated Doktorlar başvuruyu silemez, sadece geri çekebilir (withdrawApplication)
  */
 const deleteApplication = catchAsync(async (req, res) => {
-  const userId = req.user.id;
-  const { id } = req.params;
-  
-  // Doktor profilini al
-  const profile = await doctorService.getProfile(userId);
-  if (!profile) {
-    throw new AppError('Profil bulunamadı', 404);
-  }
-  
-  const result = await doctorService.deleteApplication(id, profile.id);
-  
-  return sendSuccess(res, 'Başvuru kalıcı olarak silindi', result);
+  throw new AppError('Doktorlar başvuruyu silemez. Sadece "Başvuruldu" durumundaki başvuruları geri çekebilirsiniz.', 403);
 });
 
 /**

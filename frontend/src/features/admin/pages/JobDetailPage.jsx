@@ -22,7 +22,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   Briefcase, Edit3, Trash2, Users, MapPin, Calendar, 
   Clock, Target, AlertCircle, ArrowLeft, CheckCircle, Building, X,
-  Hourglass, RefreshCw, XCircle, History, FileText, Settings, ChevronDown, ChevronUp
+  Hourglass, RefreshCw, XCircle, History, FileText, Settings, ChevronDown, ChevronUp, Download
 } from 'lucide-react';
 import { useJobById, useDeleteJob, useUpdateJobStatus, useApproveJob, useRequestRevision, useRejectJob, useJobHistory, QUERY_KEYS } from '../api/useAdmin';
 import { useQueryClient } from '@tanstack/react-query';
@@ -31,6 +31,8 @@ import { ModalContainer } from '@/components/ui/ModalContainer';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { resolveRevisionNote as resolveRevisionNoteUtil } from '@/utils/jobUtils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const AdminJobDetailPage = () => {
   const { id } = useParams();
@@ -375,6 +377,193 @@ const AdminJobDetailPage = () => {
     }
   };
 
+  // Export iş ilanı fonksiyonu (PDF - HTML tabanlı, Türkçe karakter desteği ile)
+  const handleExportJob = async () => {
+    if (!job) {
+      showToast.warning('İş ilanı verisi bulunamadı');
+      return;
+    }
+
+    const formatDate = (date) => {
+      if (!date) return 'Belirtilmemiş';
+      try {
+        return new Date(date).toLocaleDateString('tr-TR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch {
+        return date;
+      }
+    };
+
+    const jobStatus = getTurkishStatusName(job?.status ?? job?.status_name ?? job?.status_id);
+    
+    // HTML escape fonksiyonu
+    const escapeHtml = (text) => {
+      if (!text) return '';
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    };
+    
+    // Geçici HTML elementi oluştur
+    const printWindow = document.createElement('div');
+    printWindow.style.position = 'absolute';
+    printWindow.style.left = '-9999px';
+    printWindow.style.width = '210mm'; // A4 genişliği
+    printWindow.style.padding = '20mm';
+    printWindow.style.fontFamily = 'Arial, sans-serif';
+    printWindow.style.backgroundColor = '#ffffff';
+    printWindow.style.color = '#000000';
+    
+    printWindow.innerHTML = `
+      <div style="max-width: 800px; margin: 0 auto; background: white; padding: 25px; font-family: 'Segoe UI', Arial, sans-serif; page-break-inside: avoid;">
+        <!-- Header - İlan Başlığı -->
+        <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); page-break-inside: avoid;">
+          <div style="text-align: center;">
+            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px; font-weight: 500;">
+              ${escapeHtml(job.institution_name || job.hospital_name || 'Hastane')}
+            </div>
+            <h1 style="font-size: 22px; font-weight: bold; margin: 0; letter-spacing: 0.3px; line-height: 1.3;">
+              ${escapeHtml(job.title || 'İŞ İLANI')}
+            </h1>
+          </div>
+        </div>
+
+        <!-- İş Detayları - Badge'ler -->
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; page-break-inside: avoid;">
+          ${job.specialty_name ? `
+            <div style="background: #eff6ff; color: #1e40af; padding: 6px 14px; border-radius: 16px; font-size: 11px; font-weight: 600; border: 1.5px solid #3b82f6;">
+              🏥 ${escapeHtml(job.specialty_name)}
+            </div>
+          ` : ''}
+          ${job.subspecialty_name ? `
+            <div style="background: #f0fdf4; color: #166534; padding: 6px 14px; border-radius: 16px; font-size: 11px; font-weight: 600; border: 1.5px solid #10b981;">
+              🎯 ${escapeHtml(job.subspecialty_name)}
+            </div>
+          ` : ''}
+          ${job.city ? `
+            <div style="background: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 16px; font-size: 11px; font-weight: 600; border: 1.5px solid #f59e0b;">
+              📍 ${escapeHtml(job.city)}
+            </div>
+          ` : ''}
+          ${job.employment_type ? `
+            <div style="background: #f3e8ff; color: #6b21a8; padding: 6px 14px; border-radius: 16px; font-size: 11px; font-weight: 600; border: 1.5px solid #8b5cf6;">
+              ⏰ ${escapeHtml(job.employment_type)}
+            </div>
+          ` : ''}
+          ${job.min_experience_years ? `
+            <div style="background: #fce7f3; color: #9f1239; padding: 6px 14px; border-radius: 16px; font-size: 11px; font-weight: 600; border: 1.5px solid #ec4899;">
+              💼 ${escapeHtml(String(job.min_experience_years))}+ Yıl
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Açıklama Bölümü -->
+        <div style="background: #f8fafc; padding: 18px; border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 18px; page-break-inside: avoid;">
+          <h2 style="color: #1e40af; font-size: 16px; font-weight: bold; margin: 0 0 12px 0; padding-bottom: 8px; border-bottom: 2px solid #3b82f6;">
+            📝 İş Tanımı
+          </h2>
+          <div style="color: #374151; font-size: 12px; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word;">
+            ${escapeHtml(job.description || 'Açıklama bulunmamaktadır.').replace(/\n/g, '<br>')}
+          </div>
+        </div>
+
+        <!-- Detaylar Grid -->
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px; page-break-inside: avoid;">
+          <!-- Sol Kolon -->
+          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #3b82f6;">
+            <h3 style="color: #1e40af; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #3b82f6;">
+              📋 İlan Detayları
+            </h3>
+            <div style="font-size: 11px; line-height: 1.8;">
+              <div style="margin-bottom: 6px;">
+                <strong style="color: #6b7280;">Durum:</strong>
+                <span style="color: #111827; margin-left: 5px;">${escapeHtml(jobStatus)}</span>
+              </div>
+              <div style="margin-bottom: 6px;">
+                <strong style="color: #6b7280;">Hastane:</strong>
+                <span style="color: #111827; margin-left: 5px;">${escapeHtml(job.institution_name || job.hospital_name || 'Belirtilmemiş')}</span>
+              </div>
+              <div>
+                <strong style="color: #6b7280;">İlan Tarihi:</strong>
+                <span style="color: #111827; margin-left: 5px; font-size: 10px;">${escapeHtml(formatDate(job.created_at))}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sağ Kolon -->
+          <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 3px solid #10b981;">
+            <h3 style="color: #1e40af; font-size: 14px; font-weight: bold; margin: 0 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #10b981;">
+              📊 Başvuru Durumu
+            </h3>
+            <div style="font-size: 11px; line-height: 1.8;">
+              <div style="margin-bottom: 6px;">
+                <strong style="color: #6b7280;">Toplam:</strong>
+                <span style="color: #111827; font-size: 16px; font-weight: bold; margin-left: 5px;">${job.application_count || job?.applications?.length || 0}</span>
+              </div>
+              <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                <strong style="color: #6b7280;">İlan Durumu:</strong>
+                <span style="color: #111827; font-weight: 600; margin-left: 5px;">${escapeHtml(jobStatus)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; color: #9ca3af; font-size: 10px; margin-top: 15px; padding-top: 12px; border-top: 1px solid #e5e7eb; page-break-inside: avoid;">
+          <p style="margin: 0;">MediKariyer • ${new Date().toLocaleDateString('tr-TR')}</p>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(printWindow);
+    
+    try {
+      // HTML'i canvas'a çevir
+      const canvas = await html2canvas(printWindow, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Canvas'ı PDF'e çevir
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210; // A4 genişliği (mm)
+      const pageHeight = 297; // A4 yüksekliği (mm)
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Dosya adı: direkt ilan başlığı
+      const cleanTitle = (job.title || 'İş İlanı').replace(/[<>:"/\\|?*]/g, '').trim();
+      const fileName = `${cleanTitle}.pdf`;
+      pdf.save(fileName);
+      
+      document.body.removeChild(printWindow);
+      showToast.success('İş ilanı başarıyla indirildi');
+    } catch (error) {
+      console.error('PDF oluşturma hatası:', error);
+      document.body.removeChild(printWindow);
+      showToast.error('PDF oluşturulurken bir hata oluştu');
+    }
+  };
+
   // Approve job handler
   const handleApproveJob = async () => {
     try {
@@ -671,6 +860,14 @@ const AdminJobDetailPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={handleExportJob}
+                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
+                title="İş ilanını indir"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                İndir
+              </button>
               <button
                 onClick={openDeleteModal}
                 className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"

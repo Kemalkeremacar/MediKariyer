@@ -156,6 +156,7 @@ const AdminJobDetailPage = lazy(() => import('@/features/admin/pages/JobDetailPa
 const AdminApplicationsPage = lazy(() => import('@/features/admin/pages/ApplicationsPage'));
 const AdminApplicationDetailPage = lazy(() => import('@/features/admin/pages/ApplicationDetailPage'));
 const AdminNotificationsPage = lazy(() => import('@/features/admin/pages/AdminNotificationsPage'));
+const NotificationSendPage = lazy(() => import('@/features/admin/pages/NotificationSendPage'));
 const AdminContactMessagesPage = lazy(() => import('@/features/admin/pages/ContactMessagesPage'));
 const PhotoApprovalsPage = lazy(() => import('@/features/admin/pages/PhotoApprovalsPage'));
 const AdminLogsPage = lazy(() => import('@/features/admin/pages/LogsPage'));
@@ -179,6 +180,7 @@ const DoctorApplicationsPage = lazy(() => import('@/features/doctor/pages/Applic
 const DoctorApplicationDetailPage = lazy(() => import('@/features/doctor/pages/ApplicationDetailPage'));
 const PhotoManagementPage = lazy(() => import('@/features/doctor/pages/PhotoManagementPage'));
 const DoctorSettingsPage = lazy(() => import('@/features/doctor/pages/SettingsPage'));
+const DoctorNotificationsPage = lazy(() => import('@/features/doctor/pages/NotificationsPage'));
 
 /**
  * ============================================================================
@@ -199,6 +201,8 @@ const HospitalJobEdit = lazy(() => import('@/features/hospital/pages/JobEditPage
 const HospitalApplications = lazy(() => import('@/features/hospital/pages/ApplicationsPage'));
 const HospitalApplicationDetail = lazy(() => import('@/features/hospital/pages/ApplicationDetailPage'));
 const HospitalDoctors = lazy(() => import('@/features/hospital/pages/DoctorsPage'));
+const HospitalNotificationsPage = lazy(() => import('@/features/hospital/pages/NotificationsPage'));
+const HospitalSettingsPage = lazy(() => import('@/features/hospital/pages/SettingsPage'));
 
 /**
  * ============================================================================
@@ -509,6 +513,25 @@ const AppRoutes = () => {
           />
 
           {/* 
+            Doktor Bildirimler Sayfası - /doctor/notifications
+            Doktorun tüm bildirimlerini görüntüleme ve yönetme
+          */}
+          <Route
+            path="doctor/notifications"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['doctor']}>
+                    <ApprovalGuard>
+                      <DoctorNotificationsPage />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          {/* 
             ====================================================================
             HOSPITAL ROUTES - Hastane paneli sayfaları
             ====================================================================
@@ -676,18 +699,29 @@ const AppRoutes = () => {
             }
           />
 
-          {/* 
-            Hastane Doktor Profilleri Sayfası - /hospital/doctors
-            Sistemdeki doktor profillerini görüntüleme ve arama
-          */}
           <Route
-            path="hospital/doctors"
+            path="hospital/notifications"
             element={
               <ErrorBoundary>
                 <AuthGuard>
                   <RoleGuard allowedRoles={['hospital']}>
                     <ApprovalGuard>
-                      <HospitalDoctors />
+                      <HospitalNotificationsPage />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          <Route
+            path="hospital/settings"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['hospital']}>
+                    <ApprovalGuard>
+                      <HospitalSettingsPage />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>
@@ -886,6 +920,23 @@ const AppRoutes = () => {
                 <AuthGuard>
                   <RoleGuard allowedRoles={['admin']}>
                     <AdminNotificationsPage />
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+          
+          {/* 
+            Admin Bildirim Gönderme Sayfası - /admin/notifications/send
+            Kullanıcılara toplu bildirim gönderme
+          */}
+          <Route
+            path="admin/notifications/send"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['admin']}>
+                    <NotificationSendPage />
                   </RoleGuard>
                 </AuthGuard>
               </ErrorBoundary>

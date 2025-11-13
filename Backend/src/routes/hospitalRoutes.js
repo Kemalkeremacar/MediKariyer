@@ -151,6 +151,9 @@ router.put(
  */
 router.get('/profile/completion', hospitalController.getProfileCompletion);
 
+// Hesabı pasif hale getir
+router.post('/account/deactivate', hospitalController.deactivateAccount);
+
 // ============================================================================
 // İŞ İLANI YÖNETİMİ ROUTE'LARI (hospitalService içinde)
 // ============================================================================

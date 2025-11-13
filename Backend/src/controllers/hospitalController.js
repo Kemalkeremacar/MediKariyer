@@ -525,13 +525,20 @@ const getDashboard = catchAsync(async (req, res, next) => {
  * Body: { newStatus: "closed", oldStatus: "open" }
  */
 const sendJobStatusChangeNotification = catchAsync(async (req, res) => {
-  const { jobId } = req.params;
-  const { newStatus, oldStatus } = req.body;
+  const result = await hospitalService.sendJobStatusChangeNotification(
+    req.params.jobId,
+    req.body.newStatus,
+    req.body.oldStatus
+  );
 
-  const result = await hospitalService.sendJobStatusChangeNotification(jobId, newStatus, oldStatus);
-  
-  logger.info(`Job status change notification sent for job ${jobId} by admin ${req.user.id}`);
-  return sendSuccess(res, 'İlan durumu değişikliği bildirimi gönderildi', result);
+  logger.info(`Hospital job status change notification sent for job ${req.params.jobId}`);
+  return sendSuccess(res, 'İlan durumu değişikliği bildirimi gönderildi', result, 200);
+});
+
+const deactivateAccount = catchAsync(async (req, res) => {
+  await hospitalService.deactivateAccount(req.user.id);
+  logger.info(`Hospital account deactivated: ${req.user.email}`);
+  return sendSuccess(res, 'Hesabınız başarıyla kapatıldı', null, 200);
 });
 
 // ============================================================================
@@ -616,5 +623,6 @@ module.exports = {
   
   // Doktor profil görüntüleme
   getDoctorProfiles,
-  getDoctorProfileDetail
+  getDoctorProfileDetail,
+  deactivateAccount
 };

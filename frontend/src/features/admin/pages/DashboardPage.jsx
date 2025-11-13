@@ -25,7 +25,7 @@ import {
   Stethoscope,
   Building2
 } from 'lucide-react';
-import { useDashboard } from '../api/useAdmin';
+import { useDashboard, useUsers, useAdminJobs, usePhotoRequests } from '../api/useAdmin';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
 const DashboardPage = () => {
@@ -35,6 +35,23 @@ const DashboardPage = () => {
 
   // Analytics hooks
   const { data: dashboardData, isLoading, refetch: refetchDashboard, error } = useDashboard();
+  
+  // Bekleyen sayıları almak için ayrı query'ler
+  const { data: pendingDoctorsData } = useUsers({ role: 'doctor', isApproved: false, limit: 1 });
+  const { data: pendingHospitalsData } = useUsers({ role: 'hospital', isApproved: false, limit: 1 });
+  const { data: pendingJobsData } = useAdminJobs({ status: 1, limit: 1 });
+  const { data: pendingPhotosData } = usePhotoRequests({ status: 'pending', limit: 1 });
+
+  // Bekleyen sayıları hesapla
+  const pendingDoctorsCount = pendingDoctorsData?.data?.data?.pagination?.total || 
+                               pendingDoctorsData?.data?.pagination?.total || 0;
+  const pendingHospitalsCount = pendingHospitalsData?.data?.data?.pagination?.total || 
+                                pendingHospitalsData?.data?.pagination?.total || 0;
+  const pendingJobsCount = pendingJobsData?.data?.data?.data?.pagination?.total || 
+                           pendingJobsData?.data?.data?.pagination?.total || 
+                           pendingJobsData?.data?.pagination?.total || 0;
+  const pendingPhotosCount = pendingPhotosData?.data?.data?.pagination?.total || 
+                             pendingPhotosData?.data?.pagination?.total || 0;
   
   // Debug logging - removed for production
 
@@ -59,69 +76,47 @@ const DashboardPage = () => {
     }
   };
 
-  const quickActions = [
+  // Onay bekleyenler için hızlı erişim butonları (başvurular kaldırıldı)
+  const pendingApprovalActions = [
     {
-      title: 'Doktorlar',
-      description: 'Doktor kullanıcılarını yönetin',
+      title: 'Onay bekleyen doktorlar',
       icon: Stethoscope,
-      color: 'from-blue-500 to-blue-600',
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
-      href: '/admin/users'
+      borderColor: 'border-blue-200',
+      hoverBgColor: 'hover:bg-blue-100',
+      href: '/admin/users?isApproved=false',
+      count: pendingDoctorsCount
     },
     {
-      title: 'Hastaneler',
-      description: 'Hastane kullanıcılarını yönetin',
+      title: 'Onay bekleyen hastaneler',
       icon: Building2,
-      color: 'from-green-500 to-green-600',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
-      href: '/admin/hospitals'
+      borderColor: 'border-green-200',
+      hoverBgColor: 'hover:bg-green-100',
+      href: '/admin/hospitals?isApproved=false',
+      count: pendingHospitalsCount
     },
     {
-      title: 'Fotoğraf Onayları',
-      description: 'Doktor profil fotoğrafı değişiklik taleplerini onaylayın',
-      icon: Camera,
-      color: 'from-purple-500 to-purple-600',
-      bgColor: 'bg-purple-50',
-      iconColor: 'text-purple-600',
-      href: '/admin/photo-approvals'
-    },
-    {
-      title: 'İş İlanı Yönetimi',
-      description: 'İş ilanlarını görüntüleyin ve yönetin',
+      title: 'Onay bekleyen iş ilanları',
       icon: Briefcase,
-      color: 'from-orange-500 to-orange-600',
       bgColor: 'bg-orange-50',
       iconColor: 'text-orange-600',
-      href: '/admin/jobs'
+      borderColor: 'border-orange-200',
+      hoverBgColor: 'hover:bg-orange-100',
+      href: '/admin/jobs?status=1',
+      count: pendingJobsCount
     },
     {
-      title: 'Başvuru Yönetimi',
-      description: 'İş başvurularını inceleyin ve yönetin',
-      icon: FileText,
-      color: 'from-red-500 to-red-600',
-      bgColor: 'bg-red-50',
-      iconColor: 'text-red-600',
-      href: '/admin/applications'
-    },
-    {
-      title: 'Bildirimler',
-      description: 'Sistem bildirimlerini yönetin',
-      icon: Bell,
-      color: 'from-purple-500 to-purple-600',
+      title: 'Onay bekleyen fotoğraf onayları',
+      icon: Camera,
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
-      href: '/admin/notifications'
-    },
-    {
-      title: 'İletişim Mesajları',
-      description: 'Gelen iletişim mesajlarını görüntüleyin',
-      icon: FileText,
-      color: 'from-green-500 to-green-600',
-      bgColor: 'bg-green-50',
-      iconColor: 'text-green-600',
-      href: '/admin/contact-messages'
+      borderColor: 'border-purple-200',
+      hoverBgColor: 'hover:bg-purple-100',
+      href: '/admin/photo-approvals?status=pending',
+      count: pendingPhotosCount
     },
   ];
 
@@ -159,25 +154,27 @@ const DashboardPage = () => {
     );
   };
 
-  const QuickActionCard = ({ title, description, icon: Icon, color, bgColor, iconColor, href }) => (
-    <div 
-      className={`${bgColor} rounded-xl p-6 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105 border border-gray-100`}
+  // İnce uzun buton komponenti - Bekleyen sayısı ile
+  const PendingActionButton = ({ title, icon: Icon, bgColor, iconColor, borderColor, hoverBgColor, href, count = 0 }) => (
+    <button
       onClick={() => navigate(href)}
+      className={`w-full ${bgColor} ${borderColor} ${hoverBgColor} border-2 rounded-lg p-4 flex items-center justify-between transition-all duration-200 hover:shadow-md group`}
     >
-      <div className="flex items-start space-x-4">
-        <div className={`p-3 rounded-lg bg-white shadow-sm`}>
-          <Icon className={`h-6 w-6 ${iconColor}`} />
+      <div className="flex items-center space-x-3 flex-1">
+        <div className={`p-2 rounded-lg bg-white shadow-sm group-hover:scale-110 transition-transform`}>
+          <Icon className={`h-5 w-5 ${iconColor}`} />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900 mb-1">{title}</h3>
-          <p className="text-sm text-gray-600 mb-3">{description}</p>
-          <div className="flex items-center text-sm font-medium text-gray-700">
-            <span>Yönet</span>
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </div>
+          <span className="font-medium text-gray-900 text-left block">{title}</span>
+          {count > 0 && (
+            <span className={`text-sm font-semibold ${iconColor} mt-1 block`}>
+              {count} bekleyen
+            </span>
+          )}
         </div>
       </div>
-    </div>
+      <ArrowRight className={`h-5 w-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all flex-shrink-0 ml-2`} />
+    </button>
   );
 
   return (
@@ -300,31 +297,27 @@ const DashboardPage = () => {
           )}
 
 
-          {/* Hızlı Erişim Kartları */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quickActions.map((action, index) => {
-              const Icon = action.icon;
-              return (
-                <div 
+          {/* Onay Bekleyenler - Hızlı Erişim Butonları */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Clock className="h-6 w-6 mr-2 text-yellow-600" />
+              Onay Bekleyenler
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pendingApprovalActions.map((action, index) => (
+                <PendingActionButton
                   key={index}
-                  className={`admin-card p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group ${action.size || ''}`}
-                  onClick={() => navigate(action.href)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className={`w-12 h-12 ${action.bgColor} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                        <Icon className={`h-6 w-6 ${action.iconColor}`} />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">
-                        {action.title}
-                      </h3>
-                      <p className="text-sm text-gray-600">{action.description}</p>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all duration-200" />
-                  </div>
-                </div>
-              );
-            })}
+                  title={action.title}
+                  icon={action.icon}
+                  bgColor={action.bgColor}
+                  iconColor={action.iconColor}
+                  borderColor={action.borderColor}
+                  hoverBgColor={action.hoverBgColor}
+                  href={action.href}
+                  count={action.count}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

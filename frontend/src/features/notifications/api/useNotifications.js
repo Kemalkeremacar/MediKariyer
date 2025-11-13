@@ -15,28 +15,71 @@ import { ENDPOINTS, API_BASE_URL } from '@config/api.js';
 import useAuthStore from '@/store/authStore';
 
 // Bildirimler listesi
-export const useNotifications = (filters = {}) => {
+export const useNotifications = (filters = {}, options = {}) => {
+  const { enabled = true } = options;
+  const user = useAuthStore((state) => state.user);
+  const userId = user?.id || null;
+  const userRole = user?.role || null;
+
   return useQuery({
-    queryKey: ['notifications', filters],
+    queryKey: ['notifications', userId, userRole, filters],
     queryFn: () => {
-      const queryString = new URLSearchParams(filters).toString();
+      // Boş string'leri ve undefined/null değerleri filtrele
+      const cleanFilters = Object.entries(filters).reduce((acc, [key, value]) => {
+        // Boş string, null, undefined değerleri atla
+        if (value !== '' && value !== null && value !== undefined) {
+          // limit 0 ise atla (dropdown kapalıyken)
+          if (key === 'limit' && value === 0) {
+            return acc;
+          }
+          // isRead için boolean'ı string'e çevir (URLSearchParams boolean'ı string'e çevirir ama backend boolean bekliyor)
+          if (key === 'isRead') {
+            if (typeof value === 'boolean') {
+              acc[key] = value ? 'true' : 'false';
+            } else if (typeof value === 'string') {
+              // Zaten string ise olduğu gibi bırak
+              acc[key] = value;
+            }
+          } else {
+            acc[key] = value;
+          }
+        }
+        return acc;
+      }, {});
+      
+      // URLSearchParams boolean'ları string'e çevirir, backend boolean bekliyor
+      // Bu yüzden query string'i manuel oluşturuyoruz
+      const queryParams = new URLSearchParams();
+      Object.entries(cleanFilters).forEach(([key, value]) => {
+        if (key === 'isRead' && typeof value === 'boolean') {
+          queryParams.append(key, value ? 'true' : 'false');
+        } else {
+          queryParams.append(key, String(value));
+        }
+      });
+      
+      const queryString = queryParams.toString();
       return apiRequest.get(`${ENDPOINTS.NOTIFICATIONS.LIST}${queryString ? `?${queryString}` : ''}`);
     },
+    enabled: enabled && !!userId && (filters.limit === undefined || filters.limit > 0), // limit 0 ise query çalışmasın
     staleTime: 30 * 1000, // 30 saniye (bildirimler için kısa)
-    keepPreviousData: true,
+    keepPreviousData: !!filters?.page && filters.page > 1,
   });
 };
 
 // Okunmamış bildirim sayısı
 export const useUnreadNotificationCount = () => {
+  const user = useAuthStore((state) => state.user);
+  const userId = user?.id || null;
+
   return useQuery({
-    queryKey: ['notifications', 'unread-count'],
+    queryKey: ['notifications', 'unread-count', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT),
     staleTime: 30 * 1000, // 30 saniye
     refetchInterval: false, // SSE ile real-time güncelleniyor, polling kaldırıldı
     retry: 1, // Sadece 1 kez retry yap
     retryDelay: 5000, // 5 saniye bekle
-    enabled: true, // Her zaman çalışsın ama error'da durur
+    enabled: !!userId, // Kullanıcı yoksa çalışmasın
   });
 };
 
@@ -154,59 +197,64 @@ export const useNotificationStream = () => {
         console.log('[SSE] 📨 Yeni bildirim alındı:', notification);
         
         // React Query cache'ini güncelle
-        // 1. Bildirimler listesine ekle
-        queryClient.setQueryData(['notifications'], (oldData) => {
-          // Cache yapısı: { data: { data: [...], pagination: {...} } }
-          if (!oldData) {
-            // Cache yoksa, yeni bir yapı oluştur
-            return {
-              data: {
-                data: [notification],
-                pagination: {
-                  current_page: 1,
-                  per_page: 20,
-                  total: 1,
-                  total_pages: 1
-                }
-              }
-            };
-          }
-          
-          // Mevcut cache yapısını koru
-          const existingData = oldData?.data?.data || oldData?.data || [];
-          
-          return {
-            ...oldData,
-            data: {
-              ...oldData.data,
-              data: [notification, ...existingData],
-              pagination: {
-                ...oldData.data?.pagination,
-                total: (oldData.data?.pagination?.total || 0) + 1
-              }
+        // 1. Bildirimler listesine ekle (yalnızca aktif kullanıcıya ait query'ler)
+        const notificationQueries = queryClient
+          .getQueryCache()
+          .findAll({ queryKey: ['notifications'], exact: false })
+          .filter((query) => {
+            const key = query.queryKey;
+            // ['notifications', 'unread-count', userId] veya ['notifications', 'settings'] gibi query'leri hariç tut
+            if (!Array.isArray(key) || key.length < 2) return false;
+            if (key[1] === 'unread-count' || key[1] === 'settings') return false;
+            // key şemasında userId ikinci pozisyonda
+            return key[1] === user.id;
+          });
+
+        notificationQueries.forEach((query) => {
+          queryClient.setQueryData(query.queryKey, (oldData) => {
+            if (!oldData) {
+              return {
+                data: {
+                  data: [notification],
+                  pagination: {
+                    current_page: 1,
+                    per_page: 20,
+                    total: 1,
+                    total_pages: 1,
+                  },
+                },
+              };
             }
-          };
+
+            const existingData = oldData?.data?.data || oldData?.data || [];
+
+            return {
+              ...oldData,
+              data: {
+                ...oldData.data,
+                data: [notification, ...existingData],
+                pagination: {
+                  ...oldData.data?.pagination,
+                  total: (oldData.data?.pagination?.total || 0) + 1,
+                },
+              },
+            };
+          });
         });
 
         // 2. Okunmamış sayısını artır (navbar bell için)
-        queryClient.setQueryData(['notifications', 'unread-count'], (oldData) => {
-          // Eğer cache'de data yoksa, yeni bir response oluştur
-          if (!oldData) {
-            return {
-              data: {
-                count: 1
-              }
-            };
-          }
-          
-          // Eğer count yoksa veya 0 ise, 1 yap
-          const currentCount = oldData?.data?.count || 0;
-          
+        queryClient.setQueryData(['notifications', 'unread-count', user.id], (oldData) => {
+          const currentCount = oldData?.data?.data?.count || 0;
+          const nextCount = currentCount + 1;
+
           return {
-            ...oldData,
             data: {
-              count: currentCount + 1
-            }
+              success: true,
+              message: 'Okunmamış bildirim sayısı güncellendi',
+              data: {
+                count: nextCount,
+              },
+            },
           };
         });
 
@@ -304,6 +352,7 @@ export const useMarkAsRead = () => {
     onSuccess: () => {
       // Bildirimler listesini yenile
       queryClient.invalidateQueries(['notifications']);
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'], exact: false });
     },
     onError: (error) => {
       console.error('Mark as read error:', error);
@@ -320,6 +369,7 @@ export const useMarkAllAsRead = () => {
     onSuccess: () => {
       // Tüm bildirim query'lerini yenile
       queryClient.invalidateQueries(['notifications']);
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'], exact: false });
     },
     onError: (error) => {
       console.error('Mark all as read error:', error);
@@ -339,6 +389,7 @@ export const useDeleteNotification = () => {
     onSuccess: () => {
       // Bildirimler listesini yenile
       queryClient.invalidateQueries(['notifications']);
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'], exact: false });
     },
     onError: (error) => {
       console.error('Delete notification error:', error);

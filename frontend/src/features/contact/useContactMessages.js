@@ -51,9 +51,12 @@ export const useContactMessages = (filters = {}) => {
       return apiRequest.get(`${ENDPOINTS.ADMIN.CONTACT_MESSAGES}${queryString}`);
     },
     select: (res) => res.data,
-    staleTime: 2 * 60 * 1000, // 2 dakika
+    staleTime: 0, // Her zaman fresh data
     keepPreviousData: true,
-    refetchInterval: 30 * 1000, // 30 saniyede bir yenile
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchInterval: 5 * 1000, // Dinamik güncelleme: Her 5 saniyede bir otomatik yenile
     refetchIntervalInBackground: true,
   });
 };

@@ -64,6 +64,7 @@ export const ROUTE_CONFIG = {
     APPLICATIONS: '/admin/applications',
     APPLICATION_DETAIL: '/admin/applications/:id',
     NOTIFICATIONS: '/admin/notifications',
+    NOTIFICATION_SEND: '/admin/notifications/send',
     CONTACT_MESSAGES: '/admin/contact-messages',
     PHOTO_APPROVALS: '/admin/photo-approvals',
     LOGS: '/admin/logs',
@@ -80,6 +81,7 @@ export const ROUTE_CONFIG = {
     JOB_DETAIL: '/doctor/jobs/:jobId',
     APPLICATIONS: '/doctor/applications',
     APPLICATION_DETAIL: '/doctor/applications/:applicationId',
+    NOTIFICATIONS: '/doctor/notifications',
     SETTINGS: '/doctor/settings',
   },
   
@@ -90,10 +92,13 @@ export const ROUTE_CONFIG = {
     DASHBOARD: '/hospital',
     PROFILE: '/hospital/profile',
     JOBS: '/hospital/jobs',
+    JOB_DETAIL: '/hospital/jobs/:jobId',
     JOB_CREATE: '/hospital/jobs/new',
     APPLICATIONS: '/hospital/applications',
     APPLICATION_DETAIL: '/hospital/applications/:applicationId',
     DOCTORS: '/hospital/doctors',
+    NOTIFICATIONS: '/hospital/notifications',
+    SETTINGS: '/hospital/settings',
   },
   
   // ============================================================================

@@ -17,9 +17,9 @@ import { useNavigate } from 'react-router-dom';
 import { 
   FileText, Building, MapPin, Calendar, Clock, 
   CheckCircle, XCircle, AlertCircle, Eye,
-  X, Trash2, Filter, XCircle as XIcon
+  X, Filter, XCircle as XIcon
 } from 'lucide-react';
-import { useMyApplications, useWithdrawApplication, useDeleteApplication } from '../api/useDoctor.js';
+import { useMyApplications, useWithdrawApplication } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -46,7 +46,6 @@ const DoctorApplicationsPage = () => {
   });
 
   const withdrawMutation = useWithdrawApplication();
-  const deleteMutation = useDeleteApplication();
   const lastScrollPositionRef = useRef(null);
 
   const captureScrollPosition = useCallback(() => {
@@ -190,37 +189,6 @@ const DoctorApplicationsPage = () => {
     }
   }, [captureScrollPosition, restoreScrollPosition, withdrawMutation, refetchApplications, currentPage]);
 
-  const handleDelete = useCallback(async (applicationId) => {
-    const currentScroll = captureScrollPosition();
-    const confirmed = await showToast.confirm({
-      title: "Başvuruyu Sil",
-      message: "Bu başvuruyu kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!",
-      type: "danger",
-      destructive: true,
-      confirmText: "Sil",
-      cancelText: "İptal",
-    });
-    
-    if (!confirmed) {
-      restoreScrollPosition();
-      return;
-    }
-
-    try {
-      await deleteMutation.mutateAsync(applicationId);
-      // Toast mesajı mutation'ın onSuccess'inde gösteriliyor
-      if (currentScroll >= 0) {
-        sessionStorage.setItem('applicationsPageScrollPosition', String(currentScroll));
-        sessionStorage.setItem('applicationsPageCurrentPage', currentPage.toString());
-      }
-      await refetchApplications();
-      restoreScrollPosition();
-    } catch (error) {
-      console.error('Delete error:', error);
-      // Toast mesajı mutation'ın onError'unda gösteriliyor
-      restoreScrollPosition();
-    }
-  }, [captureScrollPosition, restoreScrollPosition, deleteMutation, refetchApplications, currentPage]);
 
   // Status helper functions (component dışına çıkar - her render'da yeniden oluşturulmasın)
   const getStatusText = useCallback((statusId) => {
@@ -467,10 +435,11 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
     onWithdrawClick(application.id);
   };
 
-  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif veya hastane pasif)
+  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif, hastane pasif veya silinmiş)
   const jobStatusId = application.job_status_id;
   const jobStatus = application.job_status || '';
   const hospitalIsActive = application.hospital_is_active !== false && application.hospital_is_active !== 0 && application.hospital_is_active !== '0';
+  const jobDeletedAt = application.job_deleted_at; // İş ilanı silinme tarihi
   const isJobPassive = 
     jobStatusId === 4 ||
     jobStatusId === '4' ||
@@ -480,7 +449,8 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive')) ||
-    !hospitalIsActive; // Hastane pasifse ilan da pasif gibi görünsün
+    !hospitalIsActive || // Hastane pasifse ilan da pasif gibi görünsün
+    !!jobDeletedAt; // İş ilanı silinmişse (yayından kaldırılmış) pasif gibi görünsün
 
   // Pasif ilan için özel görünüm
   if (isJobPassive) {

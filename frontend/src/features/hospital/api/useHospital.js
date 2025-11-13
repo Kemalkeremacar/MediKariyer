@@ -538,6 +538,12 @@ export const useDeleteHospitalContact = () => {
   });
 };
 
+export const useDeactivateHospitalAccount = () => {
+  return useMutation({
+    mutationFn: () => apiRequest.post(ENDPOINTS.HOSPITAL.ACCOUNT_DEACTIVATE),
+  });
+};
+
 // ============================================================================
 // DOKTOR PROFİL GÖRÜNTÜLEME HOOKS - hospitalService doktor fonksiyonları ile uyumlu
 // ============================================================================
@@ -630,6 +636,7 @@ const useHospital = {
   useCreateHospitalContact,
   useUpdateHospitalContact,
   useDeleteHospitalContact,
+  useDeactivateHospitalAccount,
   
   // Doctor Profiles
   useHospitalDoctorProfiles,

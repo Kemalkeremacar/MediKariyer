@@ -184,6 +184,7 @@ export const ENDPOINTS = {
     DOCTOR_PROFILES: '/hospital/doctor-profiles', // GET - Doktor profilleri listesi (alias)
     DOCTOR_PROFILE_DETAIL: '/hospital/doctor-profiles/:id', // GET - Doktor profil detayı (alias)
     DOCTOR_SEARCH: '/hospital/doctor-search', // GET - Doktor arama
+    ACCOUNT_DEACTIVATE: '/hospital/account/deactivate', // POST - Hastane hesabını pasif et
   },
 
   // ==================== ADMIN ENDPOINTS (Backend: /api/admin/*) ====================
@@ -214,6 +215,7 @@ export const ENDPOINTS = {
     APPLICATIONS: '/admin/applications', // GET - Tüm başvurular
     APPLICATION_DETAIL: '/admin/applications/:id', // GET - Başvuru detayı
     APPLICATION_STATUS: '/admin/applications/:id/status', // PATCH - Başvuru durumu
+    APPLICATION_DELETE: '/admin/applications/:id', // DELETE - Başvuru silme
     
     // Dashboard ve istatistikler
     DASHBOARD: '/admin/dashboard', // GET - Admin dashboard verileri
@@ -264,8 +266,9 @@ export const ENDPOINTS = {
     LIST: '/notifications', // GET - Bildirim listesi
     DETAIL: '/notifications/:id', // GET - Bildirim detayı
     MARK_READ: '/notifications/:id/read', // PATCH - Bildirim okundu işaretle
-    MARK_ALL_READ: '/notifications/read-all', // PATCH - Tüm bildirimleri okundu işaretle
+    MARK_ALL_READ: '/notifications/mark-all-read', // PATCH - Tüm bildirimleri okundu işaretle
     DELETE: '/notifications/:id', // DELETE - Bildirim sil
+    SEND: '/notifications/send', // POST - Bildirim gönder (admin only)
     SETTINGS: '/notifications/settings', // GET/PATCH - Bildirim ayarları
     UNREAD_COUNT: '/notifications/unread-count', // GET - Okunmamış bildirim sayısı
     STREAM: '/notifications/stream', // GET - SSE real-time bildirim stream

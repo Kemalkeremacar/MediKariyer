@@ -432,6 +432,30 @@ const createJob = async (userId, jobData) => {
 
     logger.info(`Job created with ID: ${jobId}, status_id: 1 (Onay Bekliyor)`);
 
+    // Admin'lere yeni iş ilanı bildirimi gönder
+    try {
+      const hospitalInfo = await db('hospital_profiles')
+        .where('id', hospitalProfile.id)
+        .select('institution_name')
+        .first();
+      
+      await notificationService.sendAdminSystemNotification({
+        type: 'info',
+        title: 'Yeni İş İlanı',
+        body: `${hospitalInfo?.institution_name || 'Hastane'} tarafından yeni bir iş ilanı oluşturuldu. Onay bekliyor.`,
+        data: {
+          job_id: jobId,
+          hospital_id: hospitalProfile.id,
+          hospital_name: hospitalInfo?.institution_name || 'Hastane',
+          job_title: jobData.title || 'İş İlanı',
+          status: 'pending_approval'
+        }
+      });
+    } catch (notificationError) {
+      logger.warn('Admin notification failed for new job:', notificationError);
+      // Bildirim hatası iş ilanı oluşturmayı engellemez
+    }
+
     // Oluşturulan iş ilanını ID ile getir
     const job = await db('jobs as j')
       .join('job_statuses as js', 'j.status_id', 'js.id')
@@ -935,7 +959,7 @@ const getApplications = async (userId, jobId, params = {}) => {
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('a.job_id', jobId)
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+      .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
 
     if (status) {
       // Status parametresi sayı mı kontrol et
@@ -1683,6 +1707,42 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
   }
 };
 
+/**
+ * Hesap kapatma (deactivate)
+ * Kullanıcının hesabını pasif hale getirir ve refresh token'ları siler
+ */
+const deactivateAccount = async (userId) => {
+  try {
+    await db.transaction(async (trx) => {
+      const user = await trx('users').where('id', userId).first();
+      if (!user) {
+        throw new AppError('Kullanıcı bulunamadı', 404);
+      }
+
+      if (user.is_active === false) {
+        throw new AppError('Hesabınız zaten pasif durumda', 400);
+      }
+
+      await trx('users')
+        .where('id', userId)
+        .update({
+          is_active: false,
+          updated_at: trx.fn.now()
+        });
+
+      await trx('refresh_tokens').where('user_id', userId).del();
+    });
+
+    return true;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    logger.error('Hospital account deactivate error:', error);
+    throw new AppError('Hesap kapatılamadı', 500);
+  }
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -1716,5 +1776,8 @@ module.exports = {
   
   // Doktor profil görüntüleme
   getDoctorProfiles,
-  getDoctorProfileDetail
+  getDoctorProfileDetail,
+  
+  // Hesap yönetimi
+  deactivateAccount
 };

@@ -31,10 +31,11 @@ const DoctorApplicationDetailPage = () => {
 
   const withdrawMutation = useWithdrawApplication();
 
-  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif veya hastane pasif)
+  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif, hastane pasif veya silinmiş)
   const jobStatusId = application?.job_status_id;
   const jobStatus = application?.job_status || '';
   const hospitalIsActive = application?.hospital_is_active !== false && application?.hospital_is_active !== 0 && application?.hospital_is_active !== '0';
+  const jobDeletedAt = application?.job_deleted_at; // İş ilanı silinme tarihi
   const isJobPassive = 
     jobStatusId === 4 ||
     jobStatusId === '4' ||
@@ -44,7 +45,8 @@ const DoctorApplicationDetailPage = () => {
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive')) ||
-    !hospitalIsActive; // Hastane pasifse ilan da pasif gibi görünsün
+    !hospitalIsActive || // Hastane pasifse ilan da pasif gibi görünsün
+    !!jobDeletedAt; // İş ilanı silinmişse (yayından kaldırılmış) pasif gibi görünsün
 
   // Status helper functions
   const getStatusText = (statusId) => {

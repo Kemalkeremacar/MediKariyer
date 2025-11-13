@@ -1325,6 +1325,7 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
       'j.specialty_id',
       'j.status_id as job_status_id', // İş ilanı durumu ID'si
       'js.name as job_status', // İş ilanı durumu adı
+      'j.deleted_at as job_deleted_at', // İş ilanı silinme tarihi (yayından kaldırılmış kontrolü için)
       'c.name as job_city',
       'hp.institution_name as hospital_name',
       's.name as specialty_name',
@@ -1338,8 +1339,8 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .where('a.doctor_profile_id', doctorProfileId)
-    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
-    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
+    .whereNull('a.deleted_at'); // Soft delete: Silinmiş başvuruları gösterme
+    // NOT: j.deleted_at filtresi kaldırıldı - silinen iş ilanlarına ait başvurular gösterilecek ama "yayından kaldırılmış" olarak işaretlenecek
     // NOT: hospital_users.is_active filtresi kaldırıldı - pasif hastane ilanları da gösterilecek ama pasif ilan gibi görünecek
     // NOT: status_id = 3 filtresi kaldırıldı - pasif ilanları da gösteriyoruz
 
@@ -1363,8 +1364,8 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .where('a.doctor_profile_id', doctorProfileId)
-    .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları sayma
-    .whereNull('j.deleted_at'); // Soft delete: Silinmiş iş ilanlarına ait başvuruları sayma
+    .whereNull('a.deleted_at'); // Soft delete: Silinmiş başvuruları sayma
+    // NOT: j.deleted_at filtresi kaldırıldı - silinen iş ilanlarına ait başvurular sayılacak
     // NOT: hospital_users.is_active filtresi kaldırıldı - pasif hastane ilanları da sayılacak
     // NOT: status_id = 3 filtresi kaldırıldı - pasif ilanları da sayıyoruz
 
@@ -1465,6 +1466,7 @@ const getApplicationById = async (applicationId, doctorProfileId = null) => {
           'j.subspecialty_id',
           'j.status_id as job_status_id', // İş ilanı durumu ID'si
           'js.name as job_status', // İş ilanı durumu adı
+          'j.deleted_at as job_deleted_at', // İş ilanı silinme tarihi (yayından kaldırılmış kontrolü için)
           'c.name as city',
           's.name as specialty_name',
           'ss.name as subspecialty_name',
@@ -1499,6 +1501,7 @@ const getApplicationById = async (applicationId, doctorProfileId = null) => {
           hospital_email: job.hospital_email,
           job_status_id: job.job_status_id, // İş ilanı durumu ID'si
           job_status: job.job_status, // İş ilanı durumu adı
+          job_deleted_at: job.job_deleted_at, // İş ilanı silinme tarihi (yayından kaldırılmış kontrolü için)
           hospital_is_active: job.hospital_is_active // Hastane aktiflik durumu
         });
       }
@@ -1563,6 +1566,11 @@ const withdrawApplication = async (applicationId, doctorProfileId, reason = '') 
   // Zaten geri çekilmiş mi kontrol et (status_id = 5)
   if (application.status_id === 5) { // 5 = Geri Çekildi
     throw new AppError('Başvuru zaten geri çekilmiş', 400);
+  }
+
+  // Sadece "Başvuruldu" (status_id = 1) durumundaki başvurular geri çekilebilir
+  if (application.status_id !== 1) { // 1 = Başvuruldu
+    throw new AppError('Sadece "Başvuruldu" durumundaki başvurular geri çekilebilir', 400);
   }
 
   // Başvuruyu geri çek (status_id = 5: Geri Çekildi)
@@ -1632,35 +1640,10 @@ const withdrawApplication = async (applicationId, doctorProfileId, reason = '') 
 };
 
 /**
- * Doktorlar için başvuruyu kalıcı olarak sil
- * @description Doktorlar için başvuruyu kalıcı olarak siler.
- * @param {number} applicationId - Başvuru kimliği
- * @param {number} doctorProfileId - Doktor profili kimliği
- * @returns {Promise<Object>} Silme sonucu
- * @throws {AppError} Başvuru bulunamadı, sahiplik hatası
- * 
- * @example
- * const result = await deleteApplication(123, 456);
+ * Doktorlar için başvuruyu silme işlemi kaldırıldı
+ * @description Doktorlar başvuruyu silemez, sadece geri çekebilir (withdrawApplication)
+ * @deprecated Bu fonksiyon artık kullanılmıyor. Doktorlar sadece "Başvuruldu" durumundaki başvuruları geri çekebilir.
  */
-const deleteApplication = async (applicationId, doctorProfileId) => {
-  // Başvuru varlık ve sahiplik kontrolü
-  const application = await db('applications')
-    .where('id', applicationId)
-    .where('doctor_profile_id', doctorProfileId)
-    .first();
-
-  if (!application) {
-    throw new AppError('Başvuru bulunamadı veya bu başvuruya erişim yetkiniz yok', 404);
-  }
-
-  // Başvuruyu kalıcı olarak sil
-  await db('applications')
-    .where('id', applicationId)
-    .where('doctor_profile_id', doctorProfileId)
-    .del();
-  
-  return { success: true, message: 'Başvuru kalıcı olarak silindi' };
-};
 
 /**
  * Doktorlar için başvuru istatistiklerini getir
@@ -2193,10 +2176,31 @@ const requestProfilePhotoChange = async (userId, fileUrl) => {
     });
   
   // Son eklenen kaydı getir (SQL Server IDENTITY değeri için)
-  return await db('doctor_profile_photo_requests')
+  const photoRequest = await db('doctor_profile_photo_requests')
     .where('doctor_profile_id', profile.id)
     .orderBy('created_at', 'desc')
     .first();
+
+  // Admin'lere yeni fotoğraf talebi bildirimi gönder
+  try {
+    await notificationService.sendAdminSystemNotification({
+      type: 'info',
+      title: 'Yeni Fotoğraf Talebi',
+      body: `${profile.first_name} ${profile.last_name} adlı doktor profil fotoğrafı değişikliği için onay talebinde bulundu.`,
+      data: {
+        request_id: photoRequest.id,
+        doctor_profile_id: profile.id,
+        user_id: userId,
+        doctor_name: `${profile.first_name} ${profile.last_name}`,
+        status: 'pending'
+      }
+    });
+  } catch (notificationError) {
+    logger.warn('Admin notification failed for photo request:', notificationError);
+    // Bildirim hatası talep oluşturmayı engellemez
+  }
+
+  return photoRequest;
 };
 
 /**
@@ -2334,7 +2338,6 @@ module.exports = {
   getMyApplications,
   getApplicationById,
   withdrawApplication,
-  deleteApplication,
   resolveApplicationStatusId,
   
   // Başvuru istatistikleri (applicationService'den taşındı)

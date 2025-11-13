@@ -319,6 +319,22 @@ const Header = () => {
                             <ClipboardList size={18} className="text-gray-500" />
                             <span className="text-sm font-medium">Başvurular</span>
                           </Link>
+                          <Link
+                            to={ROUTE_CONFIG.HOSPITAL.NOTIFICATIONS}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <Bell size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium">Bildirimler</span>
+                          </Link>
+                          <Link
+                            to={ROUTE_CONFIG.HOSPITAL.SETTINGS}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <Settings size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium">Ayarlar</span>
+                          </Link>
                           <hr className="my-2 border-gray-200" />
                           <button
                             onClick={() => {
@@ -392,16 +408,22 @@ const Header = () => {
                             <FileText size={18} className="text-gray-500" />
                             <span className="text-sm font-medium">Başvurularım</span>
                           </Link>
-                          <div className="px-4 py-2">
-                            <Link
-                              to={ROUTE_CONFIG.DOCTOR.SETTINGS}
-                              onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors duration-200"
-                            >
-                              <Settings size={16} className="mr-2" />
-                              Ayarlar
-                            </Link>
-                          </div>
+                          <Link
+                            to={ROUTE_CONFIG.DOCTOR.NOTIFICATIONS}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <Bell size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium">Bildirimler</span>
+                          </Link>
+                          <Link
+                            to={ROUTE_CONFIG.DOCTOR.SETTINGS}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <Settings size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium">Ayarlar</span>
+                          </Link>
                           <hr className="my-2 border-gray-200" />
                           <button
                             onClick={() => {
@@ -548,17 +570,53 @@ const Header = () => {
                     </div>
                   )}
 
-                  {/* Logout for logged in users */}
-                  {user && (
+                  {/* Doctor specific menu items */}
+                  {user && user.role === 'doctor' && (
                     <div className="px-2 py-2 border-t border-gray-200">
+                      <Link
+                        to={ROUTE_CONFIG.DOCTOR.NOTIFICATIONS}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                      >
+                        <Bell size={18} className="text-gray-500" />
+                        <span className="text-sm font-medium">Bildirimler</span>
+                      </Link>
                       <Link
                         to={ROUTE_CONFIG.DOCTOR.SETTINGS}
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors duration-200"
+                        className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
-                        <Settings size={16} className="mr-2" />
-                        Ayarlar
+                        <Settings size={18} className="text-gray-500" />
+                        <span className="text-sm font-medium">Ayarlar</span>
                       </Link>
+                    </div>
+                  )}
+
+                  {/* Hospital specific menu items */}
+                  {user && user.role === 'hospital' && (
+                    <div className="px-2 py-2 border-t border-gray-200">
+                      <Link
+                        to={ROUTE_CONFIG.HOSPITAL.NOTIFICATIONS}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                      >
+                        <Bell size={18} className="text-gray-500" />
+                        <span className="text-sm font-medium">Bildirimler</span>
+                      </Link>
+                      <Link
+                        to={ROUTE_CONFIG.HOSPITAL.SETTINGS}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                      >
+                        <Settings size={18} className="text-gray-500" />
+                        <span className="text-sm font-medium">Ayarlar</span>
+                      </Link>
+                    </div>
+                  )}
+
+                  {/* Logout for logged in users */}
+                  {user && (
+                    <div className="px-2 py-2 border-t border-gray-200">
                       <button
                         onClick={() => {
                           logout();

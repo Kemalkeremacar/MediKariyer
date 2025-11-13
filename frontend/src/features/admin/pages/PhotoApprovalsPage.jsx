@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   CheckCircle, 
   XCircle, 
@@ -26,20 +27,21 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 
 const PhotoApprovalsPage = () => {
+  const [searchParams] = useSearchParams();
   const [selectedStatus, setSelectedStatus] = useState('pending');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // API hooks
-  const { data: photoRequestsData, isLoading, refetch } = usePhotoRequests({ 
+  // API hooks - Dinamik güncelleme için refetchInterval eklenmiş
+  const { data: photoRequestsData, isLoading } = usePhotoRequests({ 
     status: selectedStatus,
     page: currentPage,
     limit: 10
   });
   
-  // Bekleyen taleplerin sayısını almak için ayrı query
+  // Bekleyen taleplerin sayısını almak için ayrı query - Dinamik güncelleme
   const { data: pendingRequestsData } = usePhotoRequests({ 
     status: 'pending',
     page: 1,
@@ -47,6 +49,14 @@ const PhotoApprovalsPage = () => {
   });
   
   const reviewPhotoRequestMutation = useReviewPhotoRequest();
+
+  // URL parametrelerini kontrol et ve filtreleri ayarla
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setSelectedStatus(statusParam);
+    }
+  }, [searchParams]);
 
   const photoRequests = Array.isArray(photoRequestsData?.data?.data)
     ? photoRequestsData.data.data
@@ -166,14 +176,6 @@ const PhotoApprovalsPage = () => {
               </p>
             </div>
             
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => refetch()}
-                className="admin-btn admin-btn-primary"
-              >
-                Yenile
-              </button>
-            </div>
           </div>
         </div>
 

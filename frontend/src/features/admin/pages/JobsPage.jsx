@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAdminJobs } from '../api/useAdmin';
 import { useLookup } from '../../../hooks/useLookup';
 import { useJobStatuses } from '../../../hooks/useLookup';
@@ -16,6 +16,7 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
 const AdminJobsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({
     title_search: '',
     hospital_search: '',
@@ -54,6 +55,17 @@ const AdminJobsPage = () => {
   const filteredSubspecialties = filters.specialty_id 
     ? subspecialties.filter(sub => sub.specialty_id === parseInt(filters.specialty_id))
     : [];
+
+  // URL parametrelerini kontrol et ve filtreleri ayarla
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setFilters(prev => ({
+        ...prev,
+        status: statusParam
+      }));
+    }
+  }, [searchParams]);
 
   // Scroll pozisyonunu kaydet
   useEffect(() => {

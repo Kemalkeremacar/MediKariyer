@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApplications } from '../api/useAdmin';
 import { showToast } from '@/utils/toastUtils';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -27,6 +27,7 @@ import { useLookup } from '../../../hooks/useLookup';
 
 const ApplicationsPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState({
     status: '',
     doctor_search: '',
@@ -49,6 +50,17 @@ const ApplicationsPage = () => {
   const hospitalScrollPositionRef = useRef(null);
   const shouldRestoreDoctorFocusRef = useRef(false);
   const shouldRestoreHospitalFocusRef = useRef(false);
+
+  // URL parametrelerini kontrol et ve filtreleri ayarla
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setFilters(prev => ({
+        ...prev,
+        status: statusParam
+      }));
+    }
+  }, [searchParams]);
 
   // Scroll pozisyonunu kaydet
   useEffect(() => {
