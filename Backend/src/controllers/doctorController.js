@@ -864,8 +864,14 @@ const getJobs = catchAsync(async (req, res) => {
  */
 const getJobById = catchAsync(async (req, res) => {
   const { id } = req.params;
+
+  let doctorProfileId = null;
+  if (req.user?.id) {
+    const profile = await doctorService.getProfile(req.user.id);
+    doctorProfileId = profile?.id || null;
+  }
   
-  const job = await doctorService.getJobById(id);
+  const job = await doctorService.getJobById(id, doctorProfileId);
   
   return sendSuccess(res, 'İş ilanı detayları getirildi', job);
 });

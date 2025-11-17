@@ -10,6 +10,8 @@ import { Bell, Settings, Users, MessageSquare, FileText, BarChart3 } from 'lucid
 import { Link, useNavigate } from 'react-router-dom';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import useAuthStore from '@/store/authStore';
+import apiRequest from '@/services/http/client';
+import { showToast } from '@/utils/toastUtils';
 
 const NavbarNotificationBell = () => {
   const { user } = useAuthStore();
@@ -211,11 +213,53 @@ const NavbarNotificationBell = () => {
                     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
                   };
 
-                  const handleClick = () => {
+                  const handleClick = async () => {
                     setIsOpen(false);
-                    const targetRoute = resolveNotificationNavigation(notification);
-                    if (targetRoute) {
-                      navigate(targetRoute);
+                    
+                    // Fotoğraf onay/red bildirimi - Profil Fotoğrafı Yönetimi sayfasına git
+                    if (notification.data?.request_id && notification.data?.action && user?.role === 'doctor') {
+                      navigate('/doctor/photo-management');
+                      return;
+                    }
+                    
+                    // İş ilanı bildirimi için önce kontrol et
+                    if (notification.data?.job_id) {
+                      try {
+                        // Rol bazlı API endpoint (apiRequest base URL'de zaten /api var)
+                        const endpoint = user?.role === 'doctor' 
+                          ? `/doctor/jobs/${notification.data.job_id}`
+                          : user?.role === 'hospital'
+                          ? `/hospital/jobs/${notification.data.job_id}`
+                          : `/admin/jobs/${notification.data.job_id}`;
+                        
+                        await apiRequest.get(endpoint);
+                        // İlan var, yönlendir
+                        const targetRoute = resolveNotificationNavigation(notification);
+                        if (targetRoute) {
+                          navigate(targetRoute);
+                        }
+                      } catch (error) {
+                        if (error?.response?.status === 404) {
+                          // İlan silinmiş veya pasif (doktor için)
+                          if (user?.role === 'doctor') {
+                            showToast.info('Bu iş ilanı pasife alınmış veya kaldırılmış.');
+                          } else {
+                            showToast.warning('Bu iş ilanı artık mevcut değil.');
+                          }
+                        } else {
+                          // Başka hata - yine de yönlendir
+                          const targetRoute = resolveNotificationNavigation(notification);
+                          if (targetRoute) {
+                            navigate(targetRoute);
+                          }
+                        }
+                      }
+                    } else {
+                      // İlan bildirimi değilse direkt yönlendir
+                      const targetRoute = resolveNotificationNavigation(notification);
+                      if (targetRoute) {
+                        navigate(targetRoute);
+                      }
                     }
                   };
 

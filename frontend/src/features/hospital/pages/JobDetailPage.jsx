@@ -146,8 +146,8 @@ const JobDetailPage = () => {
     refetch: refetchJob
   } = useHospitalJobById(jobId);
 
-  const updateStatusMutation = useUpdateHospitalJobStatus();
-  const resubmitJobMutation = useResubmitHospitalJob();
+  const updateStatusMutation = useUpdateHospitalJobStatus({ enableToast: false });
+  const resubmitJobMutation = useResubmitHospitalJob({ enableToast: false });
 
   // UI Store kaldırıldı: onaylar showToast.confirm ile yönetilecek
 

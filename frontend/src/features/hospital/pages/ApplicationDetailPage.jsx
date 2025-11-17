@@ -106,7 +106,7 @@ const HospitalApplicationDetailPage = () => {
   // Status management
   const [selectedStatus, setSelectedStatus] = useState(application?.status_id?.toString() || '1');
   const [notes, setNotes] = useState(application?.notes || '');
-  const updateStatusMutation = useUpdateApplicationStatus();
+  const updateStatusMutation = useUpdateApplicationStatus({ enableToast: false });
 
   // Application değiştiğinde state'i güncelle
   useEffect(() => {

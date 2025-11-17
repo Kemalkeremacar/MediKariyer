@@ -230,9 +230,9 @@ const DoctorApplicationDetailPage = () => {
                 İş İlanı Bilgileri
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white/5 rounded-xl p-4">
+                <div className="bg-white/5 rounded-xl p-4 md:col-span-2">
                   <div className="text-gray-400 text-sm mb-1">İlan Başlığı</div>
-                  <div className="text-white font-medium">{applicationDetail?.title || application?.job_title}</div>
+                  <div className="text-white font-medium text-lg">{applicationDetail?.title || application?.job_title}</div>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
                   <div className="text-gray-400 text-sm mb-1">Hastane</div>
@@ -243,16 +243,19 @@ const DoctorApplicationDetailPage = () => {
                   <div className="text-white font-medium">{applicationDetail?.city || application?.job_city}</div>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Uzmanlık</div>
+                  <div className="text-gray-400 text-sm mb-1">Uzmanlık Alanı</div>
                   <div className="text-white font-medium">{applicationDetail?.specialty_name || 'Belirtilmemiş'}</div>
+                  {applicationDetail?.subspecialty_name && (
+                    <div className="text-blue-300 text-sm mt-1">Yan Dal: {applicationDetail.subspecialty_name}</div>
+                  )}
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
                   <div className="text-gray-400 text-sm mb-1">Çalışma Türü</div>
                   <div className="text-white font-medium">{applicationDetail?.employment_type || 'Belirtilmemiş'}</div>
                 </div>
-                {applicationDetail?.min_experience_years && (
+                {applicationDetail?.min_experience_years !== null && applicationDetail?.min_experience_years !== undefined && (
                   <div className="bg-white/5 rounded-xl p-4">
-                    <div className="text-gray-400 text-sm mb-1">Minimum Deneyim</div>
+                    <div className="text-gray-400 text-sm mb-1">Min. Deneyim</div>
                     <div className="text-white font-medium">{applicationDetail.min_experience_years} yıl</div>
                   </div>
                 )}

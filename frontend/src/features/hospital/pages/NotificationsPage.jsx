@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ROUTE_CONFIG } from '@config/routes.js';
+import apiRequest from '@/services/http/client';
 
 /**
  * Notification Card Component
@@ -301,7 +302,7 @@ const HospitalNotificationsPage = () => {
     }
   };
 
-  const handleViewDetail = (notification) => {
+  const handleViewDetail = async (notification) => {
     // Bildirimi okundu işaretle
     if (!notification.isRead) {
       handleMarkAsRead(notification.id);
@@ -310,13 +311,46 @@ const HospitalNotificationsPage = () => {
     // Yönlendirme URL'i varsa oraya git
     if (notification.data?.redirect_url) {
       navigate(notification.data.redirect_url);
-    } else if (notification.data?.application_id) {
+      return;
+    }
+    
+    // Başvuru detayına git
+    if (notification.data?.application_id) {
       navigate(`/hospital/applications/${notification.data.application_id}`);
-    } else if (notification.data?.job_id) {
-      navigate(`/hospital/jobs/${notification.data.job_id}`);
-    } else {
-      // Yönlendirme yoksa bildirimler sayfasında kal
-      // (Zaten bildirimler sayfasındayız)
+      return;
+    }
+    
+    // İş ilanı için önce kontrol et, sonra yönlendir
+    if (notification.data?.job_id) {
+      try {
+        // API'ye istek at, ilan var mı kontrol et
+        await apiRequest.get(`/hospital/jobs/${notification.data.job_id}`);
+        // İlan var, yönlendir
+        navigate(`/hospital/jobs/${notification.data.job_id}`);
+      } catch (error) {
+        if (error?.response?.status === 404) {
+          // ✅ DEBUG: Toast çağrısını kontrol et
+          console.log('🚨 404 Hatası! Toast çağrılıyor...');
+          
+          // İlan silinmiş, yönlendirme yapma
+          showToast.warning('Bu iş ilanı artık mevcut değil.');
+          
+          // ✅ DEBUG: Toast çağrıldı, container'ı kontrol et
+          setTimeout(() => {
+            const container = document.getElementById('toast-portal-root');
+            console.log('Toast Container:', container);
+            console.log('Toast sayısı:', container?.children.length);
+            if (container) {
+              console.log('Container position:', window.getComputedStyle(container).position);
+              console.log('Container bottom:', window.getComputedStyle(container).bottom);
+              console.log('Container zIndex:', window.getComputedStyle(container).zIndex);
+            }
+          }, 100);
+        } else {
+          // Başka bir hata - yine de yönlendir, detay sayfası halledecek
+          navigate(`/hospital/jobs/${notification.data.job_id}`);
+        }
+      }
     }
   };
 

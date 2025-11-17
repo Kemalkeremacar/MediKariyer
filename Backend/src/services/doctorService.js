@@ -2008,7 +2008,7 @@ const getJobs = async (filters = {}) => {
  * @example
  * const job = await getJobById(123);
  */
-const getJobById = async (id) => {
+const getJobById = async (id, doctorProfileId = null) => {
   // Jobs tablosundan verileri lookup tablolarıyla birlikte çekelim
   const jobs = await db('jobs as j')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
@@ -2023,7 +2023,7 @@ const getJobById = async (id) => {
       'js.name as status_name'
     )
     .where('j.id', id)
-    .where('j.status_id', 3) // Sadece onaylanmış (Approved) ilanlar
+    .where('j.status_id', 3) // Sadece onaylanmış (Approved) ilanlar - Doktorlar sadece aktif ilanlara erişebilir
     .whereNull('j.deleted_at') // Silinmemiş ilanlar
     .first();
 
@@ -2051,6 +2051,25 @@ const getJobById = async (id) => {
     
     if (hospitals) {
       Object.assign(job, hospitals);
+    }
+  }
+
+  job.has_active_application = false;
+  if (doctorProfileId) {
+    const activeApplication = await db('applications as a')
+      .leftJoin('application_statuses as ast', 'a.status_id', 'ast.id')
+      .select('a.id', 'a.status_id', 'ast.name as status_name')
+      .where('a.job_id', id)
+      .where('a.doctor_profile_id', doctorProfileId)
+      .whereNull('a.deleted_at')
+      .whereNot('a.status_id', 5) // 5 = Geri çekildi
+      .orderBy('a.applied_at', 'desc')
+      .first();
+
+    if (activeApplication) {
+      job.has_active_application = true;
+      job.active_application_status_id = activeApplication.status_id;
+      job.active_application_status = activeApplication.status_name;
     }
   }
 

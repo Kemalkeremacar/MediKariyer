@@ -392,15 +392,37 @@ apiClient.interceptors.response.use(
      * - HTTP status, statusText
      * - Response data
      * - İstek süresi
+     * 
+     * 404 hatalarını loglama (beklenen durumlar):
+     * - Silinmiş/bulunamayan iş ilanları
+     * - Silinmiş/bulunamayan başvurular
+     * - Diğer bulunamayan kaynaklar
      */
-    logger.captureError(error, 'API Response', {
-      url: originalRequest.url,
-      method: originalRequest.method,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      duration
-    });
+    const is404Error = error.response?.status === 404;
+    const isJobDetailRequest = originalRequest.url?.includes('/jobs/') && originalRequest.method === 'get';
+    const isApplicationDetailRequest = originalRequest.url?.includes('/applications/') && originalRequest.method === 'get';
+    
+    // 404 hatalarını sadece debug modda logla (production'da loglama)
+    if (is404Error && (isJobDetailRequest || isApplicationDetailRequest)) {
+      // Debug mode'da logla
+      if (process.env.NODE_ENV === 'development') {
+        logger.debug(`404 Not Found: ${originalRequest.url}`, {
+          url: originalRequest.url,
+          method: originalRequest.method,
+          status: 404
+        });
+      }
+    } else {
+      // Diğer hataları normal şekilde logla
+      logger.captureError(error, 'API Response', {
+        url: originalRequest.url,
+        method: originalRequest.method,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        duration
+      });
+    }
     
     /**
      * 401 Unauthorized - Token refresh denemesi

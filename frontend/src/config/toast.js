@@ -1,143 +1,14 @@
 /**
  * @file toast.js
- * @description Toast Configuration - Bildirim toast ayarları ve konfigürasyonları
+ * @description Toast Mesaj Şablonları - Merkezi mesaj yönetimi
  * 
- * Bu dosya, uygulama genelinde kullanılan toast (bildirim) bileşeninin
- * konfigürasyonlarını içerir. Sonner kütüphanesi kullanılarak toast bildirimleri
- * gösterilir. Light ve dark tema desteği sağlanır.
- * 
- * Ana Özellikler:
- * - Toast pozisyonu: Alt orta (bottom-center)
- * - Rich colors: Daha canlı renkler
- * - Close button: Kapatma butonu desteği
- * - Expand: Uzun mesajlarda kutunun genişlemesi
- * - Duration: Varsayılan 5 saniye gösterim süresi
- * - Offset: Viewport'un altından 20px boşluk
- * - Visible toasts: Maksimum 5 toast aynı anda görünür
- * - Glassmorphism: Modern blur efekti
- * - Fixed position: Sabit pozisyon ile scroll'dan bağımsız
- * - Theme support: Light ve dark tema desteği
- * 
- * Tema Desteği:
- * - Light mode: Açık arka plan, koyu metin
- * - Dark mode: Koyu arka plan, açık metin
- * - Auto mode: Sistem temasına göre otomatik seçim
- * 
- * Kullanım:
- * ```jsx
- * import { toastConfig, darkToastConfig, getToastConfig } from '@config/toast';
- * 
- * // Light tema için
- * <Toaster {...toastConfig} />
- * 
- * // Dark tema için
- * <Toaster {...darkToastConfig} />
- * 
- * // Otomatik tema seçimi
- * <Toaster {...getToastConfig('auto')} />
- * ```
+ * Custom toast sistemi kullanılıyor (Sonner yerine)
+ * Tüm toast mesajları burada merkezi olarak yönetilir
  * 
  * @author MediKariyer Development Team
- * @version 2.0.0
+ * @version 4.0.0 (Custom Toast System)
  * @since 2024
  */
-
-/**
- * ============================================================================
- * TOAST CONFIGURATION - Light tema toast ayarları
- * ============================================================================
- * 
- * Sonner Toaster bileşeni için varsayılan (light tema) ayarlar
- */
-export const toastConfig = {
-  // position kaldırıldı - CSS ile tam kontrol sağlıyoruz
-  richColors: true, // daha canlı renkler
-  closeButton: true,
-  expand: true, // uzun mesajlarda kutuyu büyüt
-  duration: 5000, // Varsayılan süre 5 saniye
-  offset: "20px", // Viewport'tan 20px boşluk
-  // Toast'ların sabit kalması için
-  visibleToasts: 5, // Maksimum görünür toast sayısı
-  // Duplicate toast'ları önlemek için
-  dedupe: true, // Aynı mesajı tekrar gösterme
-  toastOptions: {
-    style: {
-      borderRadius: "12px",
-      boxShadow: "0 8px 32px rgba(0, 0, 0, 0.12)",
-      backdropFilter: "blur(10px)",
-      backgroundColor: "rgba(255, 255, 255, 0.95)",
-      border: "1px solid rgba(255, 255, 255, 0.2)",
-      transition: "all 0.3s ease",
-      maxWidth: "400px", // Daha kompakt
-      minWidth: "300px", // Daha kompakt
-      fontSize: "14px", // Biraz küçük font
-      padding: "12px 16px", // Daha az padding
-      // position: "fixed" kaldırıldı - Container zaten fixed, her toast için gerekli değil
-      zIndex: 9999, // En üstte kalması için
-    },
-  },
-};
-
-/**
- * ============================================================================
- * DARK TOAST CONFIGURATION - Dark tema toast ayarları
- * ============================================================================
- * 
- * Dark mode için özelleştirilmiş toast konfigürasyonu
- * Light tema ayarlarını extend eder ve dark tema stillerini uygular
- */
-export const darkToastConfig = {
-  ...toastConfig,
-  // Duplicate toast'ları önlemek için
-  dedupe: true, // Aynı mesajı tekrar gösterme
-  toastOptions: {
-    ...toastConfig.toastOptions,
-    style: {
-      ...toastConfig.toastOptions.style,
-      backgroundColor: "rgba(31, 41, 55, 0.95)", // Dark background
-      border: "1px solid rgba(75, 85, 99, 0.3)",
-      color: "rgba(243, 244, 246, 0.9)", // Light text
-      // position: "fixed" kaldırıldı - Container zaten fixed, her toast için gerekli değil
-      zIndex: 9999, // En üstte kalması için
-    },
-  },
-};
-
-/**
- * ============================================================================
- * TOAST CONFIG HELPER - Tema bazlı toast konfigürasyonu getirme
- * ============================================================================
- * 
- * Belirtilen temaya göre uygun toast konfigürasyonunu döndürür
- * 
- * Parametreler:
- * @param {string} theme - Tema tipi ('light', 'dark', 'auto')
- *                        - 'light': Açık tema konfigürasyonu
- *                        - 'dark': Koyu tema konfigürasyonu
- *                        - 'auto': Sistem temasına göre otomatik seçim (varsayılan)
- * 
- * Dönüş:
- * @returns {object} Toast konfigürasyon objesi
- * 
- * Örnek:
- * ```jsx
- * const config = getToastConfig('dark');
- * <Toaster {...config} />
- * ```
- */
-export const getToastConfig = (theme = 'auto') => {
-  if (theme === 'dark') {
-    return darkToastConfig;
-  }
-  
-  if (theme === 'auto') {
-    // Sistem temasını kontrol et
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    return isDark ? darkToastConfig : toastConfig;
-  }
-  
-  return toastConfig;
-};
 
 // ============================================================================
 // TOAST MESAJ ŞABLONLARI - Merkezi mesaj yönetimi
@@ -150,9 +21,7 @@ export const getToastConfig = (theme = 'auto') => {
  * Merkezi bir yerden yönetilir, tutarlılık sağlar
  */
 export const toastMessages = {
-  // ============================================================================
   // PROFİL MESAJLARI
-  // ============================================================================
   profile: {
     updateSuccess: 'Profil başarıyla güncellendi',
     updateError: 'Profil güncellenemedi',
@@ -162,9 +31,7 @@ export const toastMessages = {
     completionUpdateError: 'Profil tamamlanma oranı güncellenemedi',
   },
 
-  // ============================================================================
   // İŞ İLANI MESAJLARI
-  // ============================================================================
   job: {
     createSuccess: 'İş ilanı başarıyla oluşturuldu',
     createError: 'İş ilanı oluşturulamadı',
@@ -193,9 +60,7 @@ export const toastMessages = {
     statusUpdateSuccessGeneric: 'Durum başarıyla güncellendi',
   },
 
-  // ============================================================================
   // BAŞVURU MESAJLARI
-  // ============================================================================
   application: {
     createSuccess: 'Başvurunuz başarıyla gönderildi!',
     createError: 'Başvuru yapılırken bir hata oluştu. Lütfen tekrar deneyin.',
@@ -211,9 +76,7 @@ export const toastMessages = {
     deleteError: 'Başvuru silinemedi',
   },
 
-  // ============================================================================
   // EĞİTİM MESAJLARI
-  // ============================================================================
   education: {
     createSuccess: 'Eğitim eklendi',
     createError: 'Eğitim eklenemedi',
@@ -223,9 +86,7 @@ export const toastMessages = {
     deleteError: 'Eğitim silinemedi',
   },
 
-  // ============================================================================
   // DENEYİM MESAJLARI
-  // ============================================================================
   experience: {
     createSuccess: 'Deneyim eklendi',
     createError: 'Deneyim eklenemedi',
@@ -235,9 +96,7 @@ export const toastMessages = {
     deleteError: 'Deneyim silinemedi',
   },
 
-  // ============================================================================
   // SERTİFİKA MESAJLARI
-  // ============================================================================
   certificate: {
     createSuccess: 'Sertifika eklendi',
     createError: 'Sertifika eklenemedi',
@@ -247,9 +106,7 @@ export const toastMessages = {
     deleteError: 'Sertifika silinemedi',
   },
 
-  // ============================================================================
   // DİL MESAJLARI
-  // ============================================================================
   language: {
     createSuccess: 'Dil eklendi',
     createError: 'Dil eklenemedi',
@@ -259,9 +116,7 @@ export const toastMessages = {
     deleteError: 'Dil silinemedi',
   },
 
-  // ============================================================================
   // DEPARTMAN MESAJLARI
-  // ============================================================================
   department: {
     createSuccess: 'Departman başarıyla eklendi',
     createError: 'Departman eklenemedi',
@@ -271,9 +126,7 @@ export const toastMessages = {
     deleteError: 'Departman silinemedi',
   },
 
-  // ============================================================================
   // İLETİŞİM MESAJLARI
-  // ============================================================================
   contact: {
     createSuccess: 'İletişim bilgisi başarıyla eklendi',
     createError: 'İletişim bilgisi eklenemedi',
@@ -283,9 +136,7 @@ export const toastMessages = {
     deleteError: 'İletişim bilgisi silinemedi',
   },
 
-  // ============================================================================
   // KULLANICI MESAJLARI
-  // ============================================================================
   user: {
     approveSuccess: 'Kullanıcı onaylandı',
     approveRemoved: 'Kullanıcı onayı kaldırıldı',
@@ -295,9 +146,7 @@ export const toastMessages = {
     statusUpdateError: 'Durum güncellenirken hata oluştu',
   },
 
-  // ============================================================================
   // FOTOĞRAF MESAJLARI
-  // ============================================================================
   photo: {
     uploadSuccess: 'Fotoğraf yüklendi! Admin onayı bekleniyor.',
     uploadError: 'Fotoğraf yükleme başarısız',
@@ -307,17 +156,13 @@ export const toastMessages = {
     fileFormatError: 'Sadece JPEG, PNG ve WebP formatları desteklenir',
   },
 
-  // ============================================================================
   // HESAP MESAJLARI
-  // ============================================================================
   account: {
     deactivateSuccess: 'Hesabınız silindi',
     deactivateError: 'Hesap kapatma işlemi sırasında bir hata oluştu',
   },
 
-  // ============================================================================
   // GENEL MESAJLAR
-  // ============================================================================
   general: {
     loading: 'İşlem devam ediyor, lütfen bekleyin...',
     success: 'İşlem başarılı',
@@ -340,9 +185,7 @@ export const toastMessages = {
     exportSuccess: 'Veriler export edildi',
   },
 
-  // ============================================================================
   // VALİDASYON MESAJLARI
-  // ============================================================================
   validation: {
     required: 'Bu alan zorunludur',
     minLength: (min) => `En az ${min} karakter olmalıdır`,
@@ -358,9 +201,7 @@ export const toastMessages = {
     fileFormatError: 'Sadece resim dosyaları yüklenebilir',
   },
 
-  // ============================================================================
   // LOG MESAJLARI
-  // ============================================================================
   log: {
     exportSuccess: 'Loglar export edildi',
     exportNoData: 'Export edilecek log bulunamadı',
@@ -368,9 +209,7 @@ export const toastMessages = {
     loadError: 'Log detayı yüklenirken hata oluştu',
   },
 
-  // ============================================================================
   // MESAJ MESAJLARI (Contact Messages)
-  // ============================================================================
   message: {
     sendSuccess: 'Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.',
     sendError: 'Mesaj gönderilemedi. Lütfen tekrar deneyin.',
@@ -384,9 +223,7 @@ export const toastMessages = {
     bulkDeleteError: 'Toplu mesaj silme başarısız',
   },
 
-  // ============================================================================
   // BİLDİRİM MESAJLARI (Notifications)
-  // ============================================================================
   notification: {
     updateError: 'Bildirim güncellenirken hata oluştu',
     markAllReadSuccess: 'Tüm bildirimler okundu olarak işaretlendi',
@@ -397,16 +234,12 @@ export const toastMessages = {
     deleteError: 'Bildirim silinirken hata oluştu',
   },
 
-  // ============================================================================
   // FOTOĞRAF ONAY MESAJLARI
-  // ============================================================================
   photoApproval: {
     rejectReasonRequired: 'Red nedeni gereklidir',
   },
 
-  // ============================================================================
   // FOTOĞRAF YÖNETİMİ MESAJLARI
-  // ============================================================================
   photoManagement: {
     fileFormatError: 'Lütfen JPG veya PNG formatında bir dosya seçiniz.',
     fileSizeError: 'Dosya boyutu en fazla 10MB olabilir.',
@@ -425,10 +258,6 @@ export const toastMessages = {
  * @param {Error|string} error - Hata objesi veya mesaj
  * @param {string} defaultMessage - Varsayılan mesaj
  * @returns {string} Formatlanmış hata mesajı
- * 
- * @example
- * formatErrorMessage(error, 'İşlem başarısız')
- * formatErrorMessage('Hata mesajı', 'Varsayılan mesaj')
  */
 export const formatErrorMessage = (error, defaultMessage = 'Bir hata oluştu') => {
   if (typeof error === 'string') {
@@ -453,10 +282,6 @@ export const formatErrorMessage = (error, defaultMessage = 'Bir hata oluştu') =
  * @param {string} entity - Varlık adı (job, application, profile, vb.)
  * @param {boolean} success - Başarılı mı?
  * @returns {string} Mesaj
- * 
- * @example
- * getOperationMessage('create', 'İş ilanı', true) // 'İş ilanı eklendi'
- * getOperationMessage('update', 'Profil', false) // 'Profil güncellenemedi'
  */
 export const getOperationMessage = (type, entity, success = true) => {
   const actionMap = {
@@ -472,5 +297,3 @@ export const getOperationMessage = (type, entity, success = true) => {
 
   return `${entity} ${prefix ? prefix + ' ' : ''}${action}`;
 };
-
-export default toastConfig;

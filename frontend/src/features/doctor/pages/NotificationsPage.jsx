@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ROUTE_CONFIG } from '@config/routes.js';
+import apiRequest from '@/services/http/client';
 
 /**
  * Notification Card Component
@@ -303,7 +304,7 @@ const DoctorNotificationsPage = () => {
     }
   };
 
-  const handleViewDetail = (notification) => {
+  const handleViewDetail = async (notification) => {
     // Bildirimi okundu işaretle
     if (!notification.isRead) {
       handleMarkAsRead(notification.id);
@@ -312,13 +313,37 @@ const DoctorNotificationsPage = () => {
     // Yönlendirme URL'i varsa oraya git
     if (notification.data?.redirect_url) {
       navigate(notification.data.redirect_url);
-    } else if (notification.data?.application_id) {
+      return;
+    }
+    
+    // Fotoğraf onay/red bildirimi - Profil Fotoğrafı Yönetimi sayfasına git
+    if (notification.data?.request_id && notification.data?.action) {
+      navigate('/doctor/photo-management');
+      return;
+    }
+    
+    // Başvuru detayına git
+    if (notification.data?.application_id) {
       navigate(`/doctor/applications/${notification.data.application_id}`);
-    } else if (notification.data?.job_id) {
-      navigate(`/doctor/jobs/${notification.data.job_id}`);
-    } else {
-      // Yönlendirme yoksa bildirimler sayfasında kal
-      // (Zaten bildirimler sayfasındayız)
+      return;
+    }
+    
+    // İş ilanı için önce kontrol et, sonra yönlendir
+    if (notification.data?.job_id) {
+      try {
+        // API'ye istek at, ilan var mı kontrol et
+        await apiRequest.get(`/doctor/jobs/${notification.data.job_id}`);
+        // İlan aktif ve var, yönlendir
+        navigate(`/doctor/jobs/${notification.data.job_id}`);
+      } catch (error) {
+        if (error?.response?.status === 404) {
+          // İlan pasif veya silinmiş, yönlendirme yapma
+          showToast.info('Bu iş ilanı pasife alınmış veya kaldırılmış.');
+        } else {
+          // Başka bir hata - yine de yönlendir, detay sayfası halledecek
+          navigate(`/doctor/jobs/${notification.data.job_id}`);
+        }
+      }
     }
   };
 

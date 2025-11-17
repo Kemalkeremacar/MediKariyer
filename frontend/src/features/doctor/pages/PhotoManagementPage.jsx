@@ -199,10 +199,10 @@ const PhotoManagementPage = () => {
   useEffect(() => {
     let intervalId;
     if (statusObjStatus === 'pending' || awaitingApproval) {
-      // Poll status while pending
+      // Poll status while pending - 15 saniyede bir (daha az sıklıkta)
       intervalId = setInterval(() => {
         refetchStatus();
-      }, 5000);
+      }, 15000); // 5000'den 15000'e çıkarıldı
     } else if (statusObjStatus === 'approved' || statusObjStatus === 'rejected') {
       // Karar verildi: profil ve geçmişi yenile, sağ tarafı sıfırla
       refetchProfile();
@@ -303,30 +303,32 @@ const PhotoManagementPage = () => {
     }
   };
 
-  // Loading + skeletons
-  if (isProfileLoading || isStatusLoading) {
+  // Loading state - Sadece profil yüklenene kadar bekle, status arka planda yüklenebilir
+  if (isProfileLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-slate-900 animate-pulse">
-        <RefreshCw className="w-12 h-12 text-blue-400 animate-spin mb-8" />
-        <div className="w-full max-w-xl bg-white/10 rounded-2xl p-14 shadow-xl">
-          <div className="h-10 bg-gray-400/20 rounded mb-4 w-2/3"></div>
-          <div className="h-32 w-32 bg-gray-400/20 rounded-full mx-auto mb-4"></div>
-          <div className="h-6 bg-gray-400/10 rounded mb-5 w-full"></div>
-          <div className="h-12 bg-blue-400/20 rounded-xl mb-3"></div>
-          <div className="h-5 bg-gray-300/20 rounded w-2/4 mx-auto"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-center min-h-screen">
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 text-center">
+            <RefreshCw className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
+            <p className="text-white text-lg">Profil yükleniyor...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 to-slate-900 flex flex-col items-center py-8 px-2 md:px-4">
-      <div className="w-full max-w-5xl">
-        <div className="sticky top-0 z-20 flex justify-between items-center mb-3 bg-transparent">
-          <button onClick={() => navigate('/doctor/profile')} className="flex items-center gap-2 text-blue-400 hover:text-blue-600 font-bold text-base bg-white/5 rounded-full px-4 py-2">
-            <ArrowLeft className="w-5 h-5" /> Profile Dön
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="w-full max-w-7xl mx-auto">
+        {/* Header - Geri butonu */}
+        <div className="mb-6 flex items-center gap-4">
+          <button 
+            onClick={() => navigate('/doctor/profile')} 
+            className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
+          >
+            <ArrowLeft className="w-4 w-4" />
+            <span className="font-medium">Profile Dön</span>
           </button>
-          {/* Otomatik yenileniyor */}
         </div>
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-7 shadow-xl border border-white/20 animate-in fade-in duration-200">
           <div className="mb-6">

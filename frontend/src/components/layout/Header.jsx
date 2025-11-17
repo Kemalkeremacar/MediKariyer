@@ -151,17 +151,23 @@ const Header = () => {
       to={to}
       end={exact}
       className={({ isActive }) =>
-        `relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+        `group relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
           isActive 
-            ? 'text-blue-300 bg-white/10 shadow-sm' 
-            : 'text-white/80 hover:text-blue-300 hover:bg-white/10'
+            ? 'bg-blue-500/20 shadow-sm'
+            : 'hover:bg-white/10'
         }`
       }
       {...props}
     >
       {({ isActive }) => (
         <>
-          {text}
+          <span
+            className={`transition-colors ${
+              isActive ? 'text-white' : 'text-white/90 group-hover:text-white'
+            }`}
+          >
+            {text}
+          </span>
           {isActive && (
             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-300 rounded-full"></div>
           )}

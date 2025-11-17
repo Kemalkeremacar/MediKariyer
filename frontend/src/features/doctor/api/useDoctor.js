@@ -25,10 +25,10 @@ export const useDoctorProfile = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
     enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
-    staleTime: 30 * 1000, // 30 saniye cache - profil sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - profil sık değişmez
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Cache'den kullan, gereksiz yere refetch yapma
+    refetchOnWindowFocus: false, // Pencere focus'unda refetch yapma
     refetchOnReconnect: true,
   });
 };
@@ -43,10 +43,10 @@ export const useDoctorCompleteProfile = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
     enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
-    staleTime: 30 * 1000, // 30 saniye cache - profil sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - profil sık değişmez
+    cacheTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -116,10 +116,10 @@ export const useDoctorProfileCompletion = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETION),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { completion_percentage, ... } }
     enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
-    staleTime: 30 * 1000, // 30 saniye cache - tamamlanma oranı sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - tamamlanma oranı sık değişmez
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Cache'den kullan
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -134,10 +134,10 @@ export const useDoctorEducations = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.EDUCATIONS),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { educations } }
     enabled: !!userId,
-    staleTime: 30 * 1000, // 30 saniye cache - eğitimler sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - eğitimler sık değişmez
+    cacheTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -212,10 +212,10 @@ export const useDoctorExperiences = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.EXPERIENCES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { experiences } }
     enabled: !!userId,
-    staleTime: 30 * 1000, // 30 saniye cache - deneyimler sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - deneyimler sık değişmez
+    cacheTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -290,10 +290,10 @@ export const useDoctorCertificates = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.CERTIFICATES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { certificates } }
     enabled: !!userId,
-    staleTime: 30 * 1000, // 30 saniye cache - sertifikalar sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - sertifikalar sık değişmez
+    cacheTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -368,10 +368,10 @@ export const useDoctorLanguages = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.LANGUAGES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { languages } }
     enabled: !!userId,
-    staleTime: 30 * 1000, // 30 saniye cache - diller sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - diller sık değişmez
+    cacheTime: 5 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -446,10 +446,10 @@ export const useDoctorDashboard = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.DASHBOARD),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { dashboard } }
     enabled: isDoctor, // Sadece doktor rolünde çalıştır
-    staleTime: 0, // Fresh data - dashboard istatistikleri kritik
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 30 * 1000, // 30 saniye cache - dashboard için yeterli
+    cacheTime: 60 * 1000, // 1 dakika cache
+    refetchOnMount: false, // Cache'den kullan
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -468,11 +468,11 @@ export const useDoctorJobs = (params = {}) => {
     queryKey: ['doctor', 'jobs', cleanParams],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.JOBS, { params: cleanParams }),
     select: (res) => res.data?.data,
-    staleTime: 0, // Fresh data - iş ilanları kritik (pasif durumları için)
-    cacheTime: 0,
+    staleTime: 30 * 1000, // 30 saniye cache - iş ilanları için yeterli
+    cacheTime: 2 * 60 * 1000, // 2 dakika cache
     retry: 1,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    refetchOnMount: false, // Cache'den kullan
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -486,11 +486,19 @@ export const useDoctorJobDetail = (jobId) => {
     },
     select: (res) => res.data?.data, // Backend response: { success, message, data: job }
     enabled: !!jobId,
-    staleTime: 0, // Fresh data - iş ilanı detayı kritik (pasif durumları için)
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000, // 1 dakika cache - iş ilanı detayı için yeterli
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Cache'den kullan
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
+    retry: (failureCount, error) => {
+      // 404 hatalarında retry yapma (ilan silinmiş/bulunamıyor)
+      if (error?.response?.status === 404) {
+        return false;
+      }
+      // Diğer hatalarda maksimum 2 retry
+      return failureCount < 2;
+    },
   });
 };
 
@@ -499,10 +507,11 @@ export const useApplyToJob = () => {
   return useMutation({
     mutationFn: (data) => apiRequest.post(ENDPOINTS.DOCTOR.APPLICATIONS, data),
     onSuccess: () => {
-      // Cache'leri invalidate et
-      qc.invalidateQueries(['doctor', 'applications']);
-      qc.invalidateQueries(['doctor', 'dashboard']);
-      qc.invalidateQueries(['doctor', 'jobs']); // İş ilanları için de invalidate (başvuru durumu değişebilir)
+      // Cache'leri invalidate et (filtreli sorgular dahil)
+      qc.invalidateQueries({ queryKey: ['doctor', 'applications'], exact: false });
+      qc.invalidateQueries({ queryKey: ['doctor', 'dashboard'], exact: false });
+      qc.invalidateQueries({ queryKey: ['doctor', 'jobs'], exact: false }); // İş ilanları için de invalidate (başvuru durumu değişebilir)
+      qc.invalidateQueries({ queryKey: ['doctor', 'job'], exact: false }); // Tekil iş ilanı detayını tazele
       // showToast.success burada kaldırıldı - her sayfa kendi toast mesajını yönetiyor
     },
     // onError kaldırıldı - her sayfa kendi hata yönetimini yapıyor
@@ -522,8 +531,8 @@ export const useMyApplications = (params = {}) => {
     queryKey: ['doctor', 'applications', cleanParams],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.APPLICATIONS_ME, { params: cleanParams }),
     select: (res) => res.data?.data,
-    staleTime: 0, // Fresh data - başvurular kritik
-    cacheTime: 0,
+    staleTime: 0, // her ziyaret taze veri
+    cacheTime: 2 * 60 * 1000,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -539,10 +548,10 @@ export const useApplicationDetail = (applicationId) => {
     },
     select: (res) => res.data?.data, // Backend response: { success, message, data: { application } }
     enabled: !!applicationId,
-    staleTime: 0, // Fresh data - başvuru detayı kritik
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 60 * 1000, // 1 dakika cache - başvuru detayı için yeterli
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Cache'den kullan
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
 };
@@ -638,12 +647,12 @@ export const usePhotoRequestStatus = () => {
       const response = await apiRequest.get(ENDPOINTS.DOCTOR.PHOTO_STATUS);
       return response.data;
     },
-    staleTime: 30 * 1000, // 30 saniye cache - fotoğraf durumu sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache - fotoğraf durumu sık değişmez
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Cache'den kullan, gereksiz yere refetch yapma
+    refetchOnWindowFocus: false, // Pencere focus'unda refetch yapma
     refetchOnReconnect: true,
-    retry: 2
+    retry: 1 // 1 retry yeterli
   });
 };
 
@@ -657,10 +666,10 @@ export const usePhotoRequestHistory = () => {
       const response = await apiRequest.get(ENDPOINTS.DOCTOR.PHOTO_HISTORY);
       return response.data;
     },
-    staleTime: 0, // Fresh data - fotoğraf geçmişi kritik
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika cache
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Cache'den kullan
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     retry: 1
   });

@@ -42,11 +42,11 @@ export const useHospitalDashboard = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.HOSPITAL.DASHBOARD),
     select: (res) => res.data,
     enabled: !!userId,
-    staleTime: 0, // Fresh data - dashboard istatistikleri kritik
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika - Dashboard sık güncellenmez
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Performans iyileştirmesi
+    refetchOnWindowFocus: false, // Gereksiz refetch'leri engelle
+    refetchOnReconnect: true, // Bağlantı yenilenmesinde güncelle
   });
 };
 
@@ -68,11 +68,11 @@ export const useHospitalProfile = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.HOSPITAL.PROFILE),
     select: (res) => res.data,
     enabled: !!userId,
-    staleTime: 30 * 1000, // 30 saniye cache - profil sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika - Profil sık değişmez
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Performans iyileştirmesi
+    refetchOnWindowFocus: false, // Gereksiz refetch'leri engelle
+    refetchOnReconnect: true, // Bağlantı yenilenmesinde güncelle
   });
 };
 
@@ -110,11 +110,11 @@ export const useHospitalProfileCompletion = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.HOSPITAL.PROFILE_COMPLETION),
     select: (res) => res.data,
     enabled: !!userId,
-    staleTime: 30 * 1000, // 30 saniye cache - tamamlanma oranı sık değişmez
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 2 * 60 * 1000, // 2 dakika - Tamamlanma oranı sık değişmez
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: false, // Performans iyileştirmesi
+    refetchOnWindowFocus: false, // Gereksiz refetch'leri engelle
+    refetchOnReconnect: true, // Bağlantı yenilenmesinde güncelle
   });
 };
 
@@ -222,7 +222,7 @@ export const useUpdateHospitalJob = () => {
  * Backend: PATCH /api/hospital/jobs/:jobId/status
  * hospitalService.updateJobStatus() ile uyumlu
  */
-export const useUpdateHospitalJobStatus = () => {
+export const useUpdateHospitalJobStatus = ({ enableToast = true } = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ jobId, status_id, reason }) => {
@@ -234,10 +234,14 @@ export const useUpdateHospitalJobStatus = () => {
       queryClient.invalidateQueries(['hospital', 'jobs']);
       queryClient.invalidateQueries(['hospital', 'dashboard']);
       queryClient.invalidateQueries(['hospital', 'applications']); // Başvuru sayfasını güncelle
-      showToast.success(toastMessages.job.statusUpdateSuccess);
+      if (enableToast) {
+        showToast.success(toastMessages.job.statusUpdateSuccess);
+      }
     },
     onError: (err) => {
-      showToast.error(err, { defaultMessage: toastMessages.job.statusUpdateError });
+      if (enableToast) {
+        showToast.error(err, { defaultMessage: toastMessages.job.statusUpdateError });
+      }
     },
   });
 };
@@ -247,7 +251,7 @@ export const useUpdateHospitalJobStatus = () => {
  * Backend: POST /api/hospital/jobs/:jobId/resubmit
  * hospitalService.resubmitJob() ile uyumlu
  */
-export const useResubmitHospitalJob = () => {
+export const useResubmitHospitalJob = ({ enableToast = true } = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (jobId) => {
@@ -258,10 +262,14 @@ export const useResubmitHospitalJob = () => {
       queryClient.setQueryData(['hospital', 'job', jobId], response);
       queryClient.invalidateQueries(['hospital', 'jobs']);
       queryClient.invalidateQueries(['hospital', 'dashboard']);
-      showToast.success(toastMessages.job.resubmitSuccess);
+      if (enableToast) {
+        showToast.success(toastMessages.job.resubmitSuccess);
+      }
     },
     onError: (err) => {
-      showToast.error(err, { defaultMessage: toastMessages.job.resubmitError });
+      if (enableToast) {
+        showToast.error(err, { defaultMessage: toastMessages.job.resubmitError });
+      }
     },
   });
 };
@@ -345,7 +353,7 @@ export const useHospitalJobApplications = (jobId, filters = {}) => {
  * hospitalService.updateApplicationStatus() ile uyumlu
  * Backend status_id (integer) ve notes (string) bekliyor - Admin modülüyle uyumlu
  */
-export const useUpdateApplicationStatus = () => {
+export const useUpdateApplicationStatus = ({ enableToast = true } = {}) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ applicationId, status_id, notes }) => {
@@ -358,10 +366,14 @@ export const useUpdateApplicationStatus = () => {
       queryClient.invalidateQueries(['hospital', 'applications']);
       queryClient.invalidateQueries(['hospital', 'job-applications']);
       queryClient.invalidateQueries(['hospital', 'dashboard']);
-      showToast.success(toastMessages.application.updateStatusSuccess);
+      if (enableToast) {
+        showToast.success(toastMessages.application.updateStatusSuccess);
+      }
     },
     onError: (err) => {
-      showToast.error(err, { defaultMessage: toastMessages.application.updateStatusError });
+      if (enableToast) {
+        showToast.error(err, { defaultMessage: toastMessages.application.updateStatusError });
+      }
     },
   });
 };

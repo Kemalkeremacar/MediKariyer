@@ -1748,87 +1748,14 @@ select:-webkit-autofill:focus {
 }
 
 /* ======================================== */
-/* TOAST STILLERİ - Dinamik pozisyon (scroll pozisyonuna göre) */
+/* CUSTOM TOAST SİSTEMİ - Viewport Aware */
 /* ======================================== */
 
-/* Sonner Toast Container - Portal ile body seviyesinde, scroll pozisyonuna göre dinamik */
-[data-sonner-toaster] {
-  position: fixed !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  /* Dinamik pozisyon - JavaScript ile scroll pozisyonuna göre ayarlanacak */
-  /* bottom ve top değerleri JavaScript tarafından setProperty ile ayarlanır */
-  right: auto !important;
-  z-index: 9999 !important;
-  pointer-events: auto !important;
-  max-width: 400px !important;
-  /* Portal ile body'de render edildiği için her zaman viewport içinde görünür */
-  /* JavaScript ile scroll pozisyonuna göre dinamik olarak ayarlanır */
-  transition: top 0.3s ease, bottom 0.3s ease !important;
-}
-
-/* Toast mesajları - Sabit kalması için */
-[data-sonner-toast] {
-  position: relative !important;
-  z-index: 9999 !important;
-  margin-bottom: 8px !important;
-  pointer-events: auto !important;
-}
-
-/* Toast içeriği */
-[data-sonner-toast] > div {
-  position: relative !important;
-  z-index: 9999 !important;
-}
-
-/* Toast animasyonları için */
-[data-sonner-toast][data-mounted="true"] {
-  animation: slideInRight 0.3s ease-out !important;
-}
-
-[data-sonner-toast][data-removed="true"] {
-  animation: slideOutRight 0.3s ease-in !important;
-}
-
-/* Toast animasyon keyframes */
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOutRight {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-}
-
-/* Dark mode toast stilleri */
-@media (prefers-color-scheme: dark) {
-  [data-sonner-toast] {
-    background-color: rgba(31, 41, 55, 0.95) !important;
-    border: 1px solid rgba(75, 85, 99, 0.3) !important;
-    color: rgba(243, 244, 246, 0.9) !important;
-  }
-}
-
-/* Toast'ların scroll ile birlikte hareket etmemesi için */
-html, body {
-  overflow-x: hidden;
-}
-
-/* Toast artık portal ile body seviyesinde render ediliyor */
-/* position: fixed ile her zaman viewport içinde görünür */
+/**
+ * Custom Toast System
+ * Portal ile body'ye render edilir, viewport'ta sabit durur
+ * CSS gereksiz - component kendi stilini yönetiyor
+ */
 
 /* ================================================================ */
 /* MODÜLER SAYFA STİLLERİ - Ortak bileşen stilleri */

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ROUTE_CONFIG } from '@config/routes.js';
+import apiRequest from '@/services/http/client';
 
 /**
  * Notification Card Component
@@ -301,7 +302,7 @@ const AdminNotificationsPage = () => {
     }
   };
 
-  const handleViewDetail = (notification) => {
+  const handleViewDetail = async (notification) => {
     // Bildirimi okundu işaretle
     if (!notification.isRead) {
       handleMarkAsRead(notification.id);
@@ -309,19 +310,42 @@ const AdminNotificationsPage = () => {
 
     const data = notification.data || {};
     
-    // Yönlendirme mantığı
+    // Kullanıcı yönlendirmeleri (genelde silinmez)
     if (data.user_id && data.role === 'doctor') {
       navigate(`/admin/users/${data.user_id}`);
+      return;
     } else if (data.user_id && data.role === 'hospital') {
       navigate(`/admin/users/${data.user_id}`);
-    } else if (data.job_id) {
-      navigate(`/admin/jobs/${data.job_id}`);
-    } else if (data.request_id) {
-      navigate(`/admin/photo-approvals`);
-    } else if (data.contact_message_id) {
-      navigate(`/admin/contact-messages/${data.contact_message_id}`);
+      return;
     }
-    // Yönlendirme yoksa sayfada kal
+    
+    // İş ilanı için önce kontrol et
+    if (data.job_id) {
+      try {
+        await apiRequest.get(`/admin/jobs/${data.job_id}`);
+        navigate(`/admin/jobs/${data.job_id}`);
+      } catch (error) {
+        if (error?.response?.status === 404) {
+          showToast.warning('Bu iş ilanı artık mevcut değil.');
+        } else {
+          // Başka bir hata - yine de yönlendir
+          navigate(`/admin/jobs/${data.job_id}`);
+        }
+      }
+      return;
+    }
+    
+    // Fotoğraf onay talebi (hem yeni talep hem de onay/red sonucu)
+    if (data.request_id || (data.action && ['approve', 'reject'].includes(data.action))) {
+      navigate(`/admin/photo-approvals`);
+      return;
+    }
+    
+    // İletişim mesajı
+    if (data.contact_message_id) {
+      navigate(`/admin/contact-messages/${data.contact_message_id}`);
+      return;
+    }
   };
 
   if (error) {

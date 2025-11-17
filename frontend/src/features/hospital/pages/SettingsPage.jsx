@@ -74,7 +74,7 @@ const HospitalSettingsPage = () => {
     setConfirmModalOpen(false);
     deactivateAccountMutation.mutate(undefined, {
       onSuccess: (res) => {
-        const message = res?.message || toastMessages.account.deactivateSuccess || 'Hesabınız başarıyla kapatıldı.';
+        const message = res?.message || toastMessages.account.deactivateSuccess;
         showToast.success(message);
         logout();
         navigate(ROUTE_CONFIG.PUBLIC.LOGIN, {
@@ -123,14 +123,29 @@ const HospitalSettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto space-y-10">
-        <div className="text-center space-y-3">
-          <p className="text-blue-200/80 text-sm font-semibold tracking-[0.4em] uppercase">Hastane Ayarları</p>
-          <h1 className="text-3xl md:text-4xl font-bold text-white">Hesap ve Güvenlik</h1>
-          <p className="text-blue-100/80 text-sm md:text-base max-w-2xl mx-auto">
-            Şifrenizi güncelleyin, güvenlik tercihlerinizi yönetin ve hesabınızı kontrol altında tutun.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Hero Section */}
+        <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 p-8 shadow-[0_20px_60px_-30px_rgba(30,64,175,0.45)]">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20" />
+          </div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                <Lock className="w-8 h-8 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-blue-200/80 text-sm font-semibold tracking-wider uppercase">Hastane Ayarları</p>
+                <h1 className="text-3xl font-bold text-white">Hesap ve Güvenlik</h1>
+              </div>
+            </div>
+            <p className="text-blue-100/80 text-base">
+              Şifrenizi güncelleyin, güvenlik tercihlerinizi yönetin ve hesabınızı kontrol altında tutun.
+            </p>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
@@ -180,9 +195,9 @@ const HospitalSettingsPage = () => {
                 <ShieldOff className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold text-slate-900">Hesabımı Kapat</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Hesabımı Sil</h2>
                 <p className="text-sm text-slate-600">
-                  Hesabınızı kapattığınızda giriş yapamazsınız. Tekrar açmak için destek ekibimizle iletişime geçmeniz gerekir.
+                  Hesabınızı sildiğinizde giriş yapamazsınız. Tekrar açmak için destek ekibimizle iletişime geçmeniz gerekir.
                 </p>
               </div>
             </div>
@@ -200,7 +215,7 @@ const HospitalSettingsPage = () => {
               disabled={deactivateAccountMutation.isLoading}
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-6 py-3 text-white font-semibold shadow-lg shadow-red-600/30 transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {deactivateAccountMutation.isLoading ? 'İşlem yapılıyor...' : 'Hesabımı Kapat'}
+              {deactivateAccountMutation.isLoading ? 'İşlem yapılıyor...' : 'Hesabımı Sil'}
             </button>
           </section>
         </div>
@@ -210,13 +225,13 @@ const HospitalSettingsPage = () => {
         <ModalContainer
           isOpen={confirmModalOpen}
           onClose={() => setConfirmModalOpen(false)}
-          title="Hesabı Kapat"
+          title="Hesabı Sil"
           align="center"
           size="small"
         >
           <div className="space-y-4">
             <p className="text-sm text-slate-600">
-              Hesabınızı kapatmak üzeresiniz. Bu işlemden sonra giriş yapamazsınız. Devam etmek istiyor musunuz?
+              Hesabınızı silmek üzeresiniz. Bu işlemden sonra giriş yapamazsınız. Devam etmek istiyor musunuz?
             </p>
             <div className="flex justify-end gap-3">
               <button

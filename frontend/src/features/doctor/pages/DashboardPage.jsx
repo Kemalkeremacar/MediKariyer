@@ -6,15 +6,12 @@
 import React from 'react';
 import { 
   Activity, 
-  ArrowRight, 
   Briefcase, 
   Calendar, 
   MapPin, 
-  Target,
-  User
+  Target
 } from 'lucide-react';
 import { useDoctorDashboard, useDoctorProfile } from '../api/useDoctor';
-import { Link } from 'react-router-dom';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 
 const DoctorDashboard = () => {
@@ -102,16 +99,7 @@ const DoctorDashboard = () => {
                       Kariyerinizi ileriye taşıyacak fırsatları keşfedin ve başvurularınızı takip edin.
                     </p>
                   </div>
-                  <div className="w-full flex-shrink-0 md:w-auto">
-                    <Link
-                      to="/doctor/profile"
-                      className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 px-6 py-3 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-20px_rgba(37,99,235,0.55)] md:w-auto"
-                    >
-                      <User className="h-5 w-5" />
-                      Profili Düzenle
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                  </div>
+                  {/* Profil düzenle butonu kaldırıldı */}
                 </div>
               </div>
             </div>
@@ -127,42 +115,41 @@ const DoctorDashboard = () => {
                     <Activity className="h-6 w-6 text-blue-400" />
                     Son Başvurular
                   </h2>
-                  <Link
-                    to="/doctor/applications"
-                    className="group inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20"
-                  >
-                    Tümünü Gör
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
+                  {/* Tümünü gör butonu kaldırıldı */}
                 </div>
               </div>
               <div className="pt-6">
                 {recentApplications.length > 0 ? (
                   <div className="space-y-4">
                     {recentApplications.map((application) => (
-                      <div key={application.id} className="cursor-default rounded-2xl border border-white/20 bg-white/5 p-6 transition-all duration-300 hover:border-blue-400 hover:bg-white/10">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white">{application.job_title}</h3>
-                          <p className="mt-1 text-gray-300">{application.hospital_name}</p>
-                          <div className="mt-3 flex items-center gap-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              application.status_id === 1 ? 'border border-amber-200 bg-amber-100 text-amber-800' :
-                              application.status_id === 2 ? 'border border-blue-200 bg-blue-100 text-blue-800' :
-                              application.status_id === 3 ? 'border border-emerald-200 bg-emerald-100 text-emerald-800' :
-                              application.status_id === 4 ? 'border border-rose-200 bg-rose-100 text-rose-800' :
-                              application.status_id === 5 ? 'border border-gray-200 bg-gray-100 text-gray-700' :
-                              'border border-gray-200 bg-gray-100 text-gray-700'
-                            }`}>
-                              {application.status_id === 1 ? 'Başvuruldu' :
-                               application.status_id === 2 ? 'İnceleniyor' :
-                               application.status_id === 3 ? 'Kabul Edildi' :
-                               application.status_id === 4 ? 'Red Edildi' :
-                               application.status_id === 5 ? 'Geri Çekildi' :
-                               application.status || 'Bilinmiyor'}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {new Date(application.applied_at || application.created_at).toLocaleDateString('tr-TR')}
-                            </span>
+                      <div
+                        key={application.id}
+                        className="rounded-2xl border border-white/20 bg-white/5 p-6"
+                      >
+                        <div className="flex items-start">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-white">{application.job_title}</h3>
+                            <p className="mt-1 text-gray-300">{application.hospital_name}</p>
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                application.status_id === 1 ? 'border border-amber-200 bg-amber-100 text-amber-800' :
+                                application.status_id === 2 ? 'border border-blue-200 bg-blue-100 text-blue-800' :
+                                application.status_id === 3 ? 'border border-emerald-200 bg-emerald-100 text-emerald-800' :
+                                application.status_id === 4 ? 'border border-rose-200 bg-rose-100 text-rose-800' :
+                                application.status_id === 5 ? 'border border-gray-200 bg-gray-100 text-gray-700' :
+                                'border border-gray-200 bg-gray-100 text-gray-700'
+                              }`}>
+                                {application.status_id === 1 ? 'Başvuruldu' :
+                                 application.status_id === 2 ? 'İnceleniyor' :
+                                 application.status_id === 3 ? 'Kabul Edildi' :
+                                 application.status_id === 4 ? 'Red Edildi' :
+                                 application.status_id === 5 ? 'Geri Çekildi' :
+                                 application.status || 'Bilinmiyor'}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {new Date(application.applied_at || application.created_at).toLocaleDateString('tr-TR')}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -173,14 +160,7 @@ const DoctorDashboard = () => {
                     <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
                       <Activity className="h-10 w-10 text-blue-400" />
                     </div>
-                    <p className="mb-4 text-lg text-gray-300">Henüz başvuru yapmadınız</p>
-                    <Link
-                      to="/doctor/jobs"
-                      className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-20px_rgba(37,99,235,0.6)]"
-                    >
-                      İş İlanlarını Keşfedin
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
+                    <p className="text-lg text-gray-300">Henüz başvuru yapmadınız</p>
                   </div>
                 )}
               </div>
@@ -194,30 +174,27 @@ const DoctorDashboard = () => {
                     <Target className="h-6 w-6 text-blue-400" />
                     Önerilen İş İlanları
                   </h2>
-                  <Link
-                    to="/doctor/jobs"
-                    className="group inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/20"
-                  >
-                    Tümünü Gör
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
+                  {/* Tümünü gör butonu kaldırıldı */}
                 </div>
               </div>
               <div className="pt-6">
                 {recentJobs.length > 0 ? (
                   <div className="space-y-4">
                     {recentJobs.map((job) => (
-                      <div key={job.id} className="cursor-default rounded-2xl border border-white/20 bg-white/5 p-6 transition-all duration-300 hover:border-blue-400 hover:bg-white/10">
+                      <div 
+                        key={job.id} 
+                        className="rounded-2xl border border-white/20 bg-white/5 p-6"
+                      >
                         <div className="flex items-start">
                           <div className="flex-1">
                             <h3 className="text-lg font-semibold text-white">{job.title}</h3>
                             <p className="mt-1 text-gray-300">{job.hospital_name}</p>
-                            <div className="mt-3 flex items-center gap-4">
-                              <div className="flex items-center gap-1 text-sm text-gray-400">
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                              <div className="flex items-center gap-1 text-xs text-gray-400">
                                 <MapPin className="h-4 w-4" />
                                 {job.city}
                               </div>
-                              <div className="flex items-center gap-1 text-sm text-gray-400">
+                              <div className="flex items-center gap-1 text-xs text-gray-400">
                                 <Calendar className="h-4 w-4" />
                                 {new Date(job.created_at).toLocaleDateString('tr-TR')}
                               </div>
@@ -232,14 +209,7 @@ const DoctorDashboard = () => {
                     <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
                       <Briefcase className="h-10 w-10 text-blue-400" />
                     </div>
-                    <p className="mb-4 text-lg text-gray-300">Önerilen iş ilanı bulunamadı</p>
-                    <Link
-                      to="/doctor/jobs"
-                      className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-20px_rgba(37,99,235,0.6)]"
-                    >
-                      Tüm İş İlanlarını Görün
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
+                    <p className="text-lg text-gray-300">Önerilen iş ilanı bulunamadı</p>
                   </div>
                 )}
               </div>

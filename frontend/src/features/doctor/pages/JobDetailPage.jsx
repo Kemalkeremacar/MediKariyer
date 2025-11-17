@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Briefcase, Building, FileText, CheckCircle, Send, ArrowLeft, Clock
+  Briefcase, Building, FileText, CheckCircle, Send, ArrowLeft, Clock, AlertCircle
 } from 'lucide-react';
 import { useDoctorJobDetail, useApplyToJob } from '../api/useDoctor.js';
 import { useDoctorJobs } from '../api/useDoctor.js';
@@ -23,6 +23,7 @@ const DoctorJobDetailPage = () => {
   const location = useLocation();
   const [coverLetter, setCoverLetter] = useState('');
   const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
 
   // Job detail fetch
   const { data: jobDetail, isLoading: jobDetailLoading, isError: jobDetailError } = useDoctorJobDetail(parseInt(jobId || '0'));
@@ -35,6 +36,21 @@ const DoctorJobDetailPage = () => {
   const job = jobDetail || jobs.find(j => j.id === parseInt(jobId || '0'));
 
   const applyToJobMutation = useApplyToJob();
+  // Eğer backend job detayında aktif başvuru bilgisi gönderiyorsa butonu otomatik kilitle
+  useEffect(() => {
+    if (!jobDetail) return;
+    const alreadyApplied =
+      Boolean(
+        jobDetail.has_active_application ||
+        jobDetail.hasExistingApplication ||
+        jobDetail.alreadyApplied ||
+        jobDetail.application_status // backend'den dönen truthy değer
+      );
+    if (alreadyApplied) {
+      setHasApplied(true);
+    }
+  }, [jobDetail]);
+
 
   const jobsScrollPositionRef = useRef(null);
   const jobsPageRef = useRef(null);
@@ -48,6 +64,12 @@ const DoctorJobDetailPage = () => {
       || sessionStorage.getItem('jobsLastVisitedUrl')
       || '/doctor/jobs';
   }, [location]);
+
+  useEffect(() => {
+    if (jobDetail && typeof jobDetail.has_active_application !== 'undefined') {
+      setHasApplied(Boolean(jobDetail.has_active_application));
+    }
+  }, [jobDetail?.has_active_application]);
 
   const handleBackToJobs = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -98,15 +120,17 @@ const DoctorJobDetailPage = () => {
       });
       
       closeApplicationModal();
-      showToast.success(toastMessages.application.createSuccess);
-      navigate('/doctor/applications');
+      setHasApplied(true);
+      showToast.success(
+        `${toastMessages.application.createSuccess} Başvurularım sayfasından süreci takip edebilirsiniz.`
+      );
     } catch (error) {
       const errorMessage = error.response?.data?.message;
       
       if (errorMessage === 'Bu ilana daha önce başvuru yapılmış') {
         closeApplicationModal();
+        setHasApplied(true);
         showToast.warning(toastMessages.application.alreadyExists);
-        navigate('/doctor/applications');
       } else if (errorMessage === 'Validasyon hatası') {
         const details = error.response?.data?.details;
         if (details && details.length > 0) {
@@ -132,13 +156,20 @@ const DoctorJobDetailPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-white mb-4">İlan bulunamadı</h2>
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-white/10 border border-white/20">
+              <Briefcase className="h-12 w-12 text-blue-400" />
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-4">İlan Bulunamadı</h2>
+            <p className="text-gray-300 mb-8 text-center max-w-md">
+              Aradığınız iş ilanı artık mevcut değil veya kaldırılmış olabilir.
+            </p>
             <button
               onClick={handleBackToJobs}
-              className="text-blue-400 hover:text-blue-300 font-medium"
+              className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-3 font-medium text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_45px_-20px_rgba(37,99,235,0.6)]"
             >
-              İlanlar sayfasına dön
+              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              İlanlar Sayfasına Dön
             </button>
           </div>
         </div>
@@ -341,13 +372,35 @@ const DoctorJobDetailPage = () => {
                   onClick={() => {
                     setShowApplicationModal(true);
                   }}
-                  disabled={((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif')}
-                  className={`flex-1 px-6 py-4 rounded-2xl transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2 ${((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif') ? 'bg-white/10 text-gray-400 border border-white/20 cursor-not-allowed' : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'}`}
+                  disabled={
+                    ((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif') ||
+                    hasApplied ||
+                    applyToJobMutation.isPending
+                  }
+                  className={`flex-1 px-6 py-4 rounded-2xl transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2 ${
+                    ((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif') || hasApplied
+                      ? 'bg-white/10 text-gray-400 border border-white/20 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'
+                  }`}
                 >
                   <Send className="w-4 h-4" />
-                  Başvuru Yap
+                  {hasApplied ? 'Başvurunuz Bulunuyor' : 'Başvuru Yap'}
                 </button>
               </div>
+              {hasApplied && (
+                <div className="mt-4 flex items-start gap-3 rounded-xl border border-green-400/30 bg-green-500/10 p-4 text-sm text-green-200">
+                  <AlertCircle className="w-4 h-4 text-green-300 mt-0.5" />
+                  <div className="flex-1">
+                    Bu ilana zaten bir başvurunuz var. Detayları <button
+                      type="button"
+                      onClick={() => navigate('/doctor/applications')}
+                      className="underline text-green-300 hover:text-green-200 font-semibold ml-1"
+                    >
+                      Başvurularım
+                    </button> sayfasından takip edebilirsiniz.
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

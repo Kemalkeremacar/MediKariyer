@@ -96,15 +96,10 @@ function App() {
     closeAllModals();
   }, [location.pathname, closeAllModals]);
 
-  // Tema değişikliğinde Toaster'ı güncelle
+  // Tema değişikliğini localStorage'a kaydet (gelecekte dark mode için hazır)
   useEffect(() => {
-    const toasterRoot = document.getElementById('toaster-root');
-    if (toasterRoot) {
-      // Tema değişikliğini localStorage'a kaydet
+    if (theme) {
       localStorage.setItem('theme', theme);
-      // Toaster'ı yeniden render et (main.jsx'deki root'u kullan)
-      const event = new CustomEvent('theme-changed', { detail: { theme } });
-      window.dispatchEvent(event);
     }
   }, [theme]);
 

@@ -712,13 +712,14 @@ const getJobById = async (userId, jobId) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // İş ilanını getir
+    // İş ilanını getir (TÜM statuslerde - Pasif, Beklemede, Onaylandı, Reddedildi)
     const job = await db('jobs as j')
       .join('job_statuses as js', 'j.status_id', 'js.id')
       .join('specialties as s', 'j.specialty_id', 's.id')
       .leftJoin('cities as c', 'j.city_id', 'c.id')
       .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
       .where({ 'j.id': jobId, 'j.hospital_id': hospitalProfile.id })
+      .whereNull('j.deleted_at') // Sadece fiziksel silinmemiş ilanlar - Hastane tüm statuslerde görebilir
       .select(
         'j.*',
         'js.name as status',
