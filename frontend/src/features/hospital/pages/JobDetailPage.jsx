@@ -403,27 +403,28 @@ const allRevisionEntries = useMemo(() => {
   };
 
   // Status badge component - Türkçe status'lar için güncellendi
-  const StatusBadge = ({ status, statusId }) => {
-    // Artık backend'den Türkçe geliyor, çeviri gereksiz
+  const StatusBadge = ({ status }) => {
+    const normalized = status?.toString().trim().toLowerCase();
     const statusConfig = {
-      'Onay Bekliyor': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: Hourglass },
-      'Revizyon Gerekli': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: RefreshCw },
-      'Onaylandı': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: CheckCircle },
-      'Pasif': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: Clock },
-      'Reddedildi': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: XCircle },
-      // Geriye uyumluluk için eski İngilizce isimler
-      'Pending Approval': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: Hourglass },
-      'Needs Revision': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: RefreshCw },
-      'Approved': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: CheckCircle },
-      'Passive': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: Clock },
-      'Rejected': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: XCircle }
+      'onay bekliyor': { classes: 'border border-amber-200 bg-amber-100 text-amber-800', icon: Hourglass },
+      'pending approval': { classes: 'border border-amber-200 bg-amber-100 text-amber-800', icon: Hourglass },
+      'revizyon gerekli': { classes: 'border border-orange-200 bg-orange-100 text-orange-800', icon: RefreshCw },
+      'needs revision': { classes: 'border border-orange-200 bg-orange-100 text-orange-800', icon: RefreshCw },
+      'onaylandı': { classes: 'border border-emerald-200 bg-emerald-100 text-emerald-800', icon: CheckCircle },
+      'approved': { classes: 'border border-emerald-200 bg-emerald-100 text-emerald-800', icon: CheckCircle },
+      'pasif': { classes: 'border border-gray-200 bg-gray-100 text-gray-700', icon: Clock },
+      'passive': { classes: 'border border-gray-200 bg-gray-100 text-gray-700', icon: Clock },
+      'reddedildi': { classes: 'border border-rose-200 bg-rose-100 text-rose-800', icon: XCircle },
+      'rejected': { classes: 'border border-rose-200 bg-rose-100 text-rose-800', icon: XCircle },
+      'taslak': { classes: 'border border-slate-200 bg-slate-100 text-slate-700', icon: Clock },
+      'draft': { classes: 'border border-slate-200 bg-slate-100 text-slate-700', icon: Clock },
     };
 
-    const config = statusConfig[status] || statusConfig['Pasif'];
+    const config = statusConfig[normalized] || { classes: 'border border-gray-200 bg-gray-100 text-gray-700', icon: Clock };
     const IconComponent = config.icon;
 
     return (
-      <span className={`px-4 py-2 rounded-xl text-sm font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center justify-center gap-2 w-[160px]`}>
+      <span className={`px-4 py-2 rounded-xl text-sm font-medium ${config.classes} inline-flex items-center justify-center gap-2 w-[160px]`}>
         <IconComponent className="w-4 h-4 flex-shrink-0" />
         <span className="text-center truncate">{status}</span>
       </span>

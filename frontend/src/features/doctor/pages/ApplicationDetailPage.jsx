@@ -62,12 +62,12 @@ const DoctorApplicationDetailPage = () => {
 
   const getStatusColor = (statusId) => {
     switch (statusId) {
-      case 1: return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-      case 2: return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
-      case 3: return 'bg-green-500/20 text-green-300 border-green-500/30';
-      case 4: return 'bg-red-500/20 text-red-300 border-red-500/30';
-      case 5: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
-      default: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+      case 1: return 'border border-amber-200 bg-amber-100 text-amber-800';
+      case 2: return 'border border-blue-200 bg-blue-100 text-blue-800';
+      case 3: return 'border border-emerald-200 bg-emerald-100 text-emerald-800';
+      case 4: return 'border border-rose-200 bg-rose-100 text-rose-800';
+      case 5: return 'border border-gray-200 bg-gray-100 text-gray-700';
+      default: return 'border border-gray-200 bg-gray-100 text-gray-700';
     }
   };
 
@@ -97,19 +97,19 @@ const DoctorApplicationDetailPage = () => {
 
   if (!application && !detailLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
-        <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-10 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-2xl border border-blue-100 p-10 text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="w-12 h-12 text-white" />
+              <AlertCircle className="w-12 h-12 text-gray-900" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-4">Başvuru bulunamadı</h2>
-            <p className="text-gray-300 mb-6 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Başvuru bulunamadı</h2>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
               Aradığınız başvuru bulunamadı veya erişim yetkiniz bulunmuyor.
             </p>
             <button
               onClick={() => navigate('/doctor/applications')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 font-medium rounded-xl transition-all border border-blue-500/30"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-blue-600 hover:text-white font-medium rounded-xl transition-all border shadow-md"
             >
               <ArrowLeft className="w-4 h-4" />
               Başvurular sayfasına dön
@@ -123,28 +123,28 @@ const DoctorApplicationDetailPage = () => {
   // Pasif ilan için erişimi engelle
   if (application && isJobPassive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
-        <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
-          <div className="mb-8 flex items-center gap-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6 flex items-center gap-4">
             <button
               onClick={() => navigate('/doctor/applications')}
-              className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-100 rounded-xl text-gray-700 hover:bg-blue-50 transition-all duration-300 shadow-sm"
             >
               <ArrowLeft className="w-5 h-5" />
               Geri
             </button>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-10 text-center">
+          <div className="bg-white rounded-2xl border border-blue-100 p-10 text-center">
             <div className="w-24 h-24 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <XCircle className="w-12 h-12 text-white" />
+              <XCircle className="w-12 h-12 text-gray-900" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-4">Yayından Kaldırıldı</h2>
-            <p className="text-gray-300 mb-6 max-w-md mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Yayından Kaldırıldı</h2>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
               Bu ilan yayından kaldırıldığı için başvuru detayları görüntülenemez.
             </p>
             <button
               onClick={() => navigate('/doctor/applications')}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 hover:text-blue-200 font-medium rounded-xl transition-all border border-blue-500/30"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-blue-600 hover:text-white font-medium rounded-xl transition-all border shadow-md"
             >
               <ArrowLeft className="w-4 h-4" />
               Başvurular sayfasına dön
@@ -156,26 +156,26 @@ const DoctorApplicationDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
-      <div className="max-w-7xl mx-auto flex-1">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header - Geri butonu ve başlık */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 flex items-center gap-4">
           <button
             onClick={() => {
               // ApplicationsPage'deki scroll pozisyonu zaten kaydedilmişti (detay sayfasına giderken)
               // Sadece geri dönüş yap, scroll pozisyonu ApplicationsPage tarafından restore edilecek
               navigate('/doctor/applications');
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-100 rounded-xl text-gray-700 hover:bg-blue-50 transition-all duration-300 shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
             Geri
           </button>
           <div className="flex-1">
             {detailLoading ? (
-              <div className="h-8 bg-white/10 rounded-xl animate-pulse" />
+              <div className="h-8 bg-white rounded-xl animate-pulse" />
             ) : (
-              <h1 className="text-2xl md:text-3xl font-bold text-white">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
                 Başvuru Detayı
               </h1>
             )}
@@ -190,15 +190,15 @@ const DoctorApplicationDetailPage = () => {
         ) : (
           <div className="space-y-6">
             {/* Başvuru Durumu ve Tarihi */}
-            <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-2xl p-6 border border-green-500/30">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-green-400" />
+            <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
                 Başvuru Bilgileri
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Başvuru Tarihi</div>
-                  <div className="text-white font-medium">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <div className="text-gray-600 text-sm mb-1">Başvuru Tarihi</div>
+                  <div className="text-gray-900 font-medium">
                     {new Date(application?.created_at || application?.applied_at).toLocaleDateString('tr-TR', {
                       day: 'numeric',
                       month: 'long',
@@ -206,15 +206,15 @@ const DoctorApplicationDetailPage = () => {
                     })}
                   </div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Durum</div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <div className="text-gray-600 text-sm mb-1">Durum</div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`inline-block px-4 py-2 rounded-full text-sm font-medium border ${getStatusColor(application?.status_id)}`}>
                       {getStatusText(application?.status_id)}
                     </span>
                     {/* İş ilanı pasifse veya hastane pasifse "Yayından Kaldırıldı" badge'i göster */}
                     {isJobPassive && (
-                      <span className="inline-block px-4 py-2 rounded-full text-sm font-medium border bg-gray-500/20 text-gray-300 border-gray-500/30">
+                      <span className="inline-block px-4 py-2 rounded-full text-sm font-medium border bg-gray-100 text-gray-700 border-gray-200">
                         Yayından Kaldırıldı
                       </span>
                     )}
@@ -224,39 +224,39 @@ const DoctorApplicationDetailPage = () => {
             </div>
 
             {/* İş İlanı Bilgileri */}
-            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-6 border border-blue-500/30">
-              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-blue-400" />
+            <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-lg">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-blue-600" />
                 İş İlanı Bilgileri
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white/5 rounded-xl p-4 md:col-span-2">
-                  <div className="text-gray-400 text-sm mb-1">İlan Başlığı</div>
-                  <div className="text-white font-medium text-lg">{applicationDetail?.title || application?.job_title}</div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 md:col-span-2">
+                  <div className="text-gray-600 text-sm mb-1">İlan Başlığı</div>
+                  <div className="text-gray-900 font-medium text-lg">{applicationDetail?.title || application?.job_title}</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Hastane</div>
-                  <div className="text-white font-medium">{applicationDetail?.hospital_name || application?.hospital_name}</div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <div className="text-gray-600 text-sm mb-1">Hastane</div>
+                  <div className="text-gray-900 font-medium">{applicationDetail?.hospital_name || application?.hospital_name}</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Şehir</div>
-                  <div className="text-white font-medium">{applicationDetail?.city || application?.job_city}</div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <div className="text-gray-600 text-sm mb-1">Şehir</div>
+                  <div className="text-gray-900 font-medium">{applicationDetail?.city || application?.job_city}</div>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Uzmanlık Alanı</div>
-                  <div className="text-white font-medium">{applicationDetail?.specialty_name || 'Belirtilmemiş'}</div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <div className="text-gray-600 text-sm mb-1">Uzmanlık Alanı</div>
+                  <div className="text-gray-900 font-medium">{applicationDetail?.specialty_name || 'Belirtilmemiş'}</div>
                   {applicationDetail?.subspecialty_name && (
-                    <div className="text-blue-300 text-sm mt-1">Yan Dal: {applicationDetail.subspecialty_name}</div>
+                    <div className="text-blue-600 text-sm mt-1">Yan Dal: {applicationDetail.subspecialty_name}</div>
                   )}
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Çalışma Türü</div>
-                  <div className="text-white font-medium">{applicationDetail?.employment_type || 'Belirtilmemiş'}</div>
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <div className="text-gray-600 text-sm mb-1">Çalışma Türü</div>
+                  <div className="text-gray-900 font-medium">{applicationDetail?.employment_type || 'Belirtilmemiş'}</div>
                 </div>
                 {applicationDetail?.min_experience_years !== null && applicationDetail?.min_experience_years !== undefined && (
-                  <div className="bg-white/5 rounded-xl p-4">
-                    <div className="text-gray-400 text-sm mb-1">Min. Deneyim</div>
-                    <div className="text-white font-medium">{applicationDetail.min_experience_years} yıl</div>
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                    <div className="text-gray-600 text-sm mb-1">Min. Deneyim</div>
+                    <div className="text-gray-900 font-medium">{applicationDetail.min_experience_years} yıl</div>
                   </div>
                 )}
               </div>
@@ -264,13 +264,13 @@ const DoctorApplicationDetailPage = () => {
 
             {/* İş Açıklaması */}
             {applicationDetail?.description && (
-              <div className="bg-gradient-to-r from-orange-900/30 to-red-900/30 rounded-2xl p-6 border border-orange-500/30">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-orange-400" />
+              <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
                   İş Tanımı
                 </h3>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
                     {applicationDetail.description}
                   </p>
                 </div>
@@ -279,13 +279,13 @@ const DoctorApplicationDetailPage = () => {
 
             {/* Ön Yazı */}
             {applicationDetail?.cover_letter && (
-              <div className="bg-gradient-to-r from-indigo-900/30 to-blue-900/30 rounded-2xl p-6 border border-indigo-500/30">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-indigo-400" />
+              <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
                   Ön Yazı
                 </h3>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
                     {applicationDetail.cover_letter}
                   </p>
                 </div>
@@ -294,13 +294,13 @@ const DoctorApplicationDetailPage = () => {
 
             {/* Hastane Notu */}
             {applicationDetail?.notes && (
-              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-2xl p-6 border border-purple-500/30">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-purple-400" />
+              <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
                   Hastane Notu
                 </h3>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                  <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
                     {applicationDetail.notes}
                   </p>
                 </div>
@@ -308,7 +308,7 @@ const DoctorApplicationDetailPage = () => {
             )}
 
             {/* Butonlar */}
-            <div className="sticky bottom-4 bg-slate-900/95 backdrop-blur-lg border border-white/20 rounded-2xl p-4 shadow-2xl">
+            <div className="sticky bottom-4 bg-white/95 backdrop-blur-lg border border-blue-100 rounded-2xl p-4 shadow-2xl">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
@@ -316,7 +316,7 @@ const DoctorApplicationDetailPage = () => {
                     // Sadece geri dönüş yap, scroll pozisyonu ApplicationsPage tarafından restore edilecek
                     navigate('/doctor/applications');
                   }}
-                  className="flex-1 bg-white/10 border border-white/20 text-white px-6 py-4 rounded-2xl hover:bg-white/20 transition-all duration-300 font-medium"
+                  className="flex-1 bg-white border border-gray-200 text-gray-700 px-6 py-4 rounded-2xl hover:bg-blue-50 transition-all duration-300 font-medium shadow-sm"
                 >
                   Geri
                 </button>
@@ -324,7 +324,7 @@ const DoctorApplicationDetailPage = () => {
                   <button
                     onClick={handleWithdraw}
                     disabled={withdrawMutation.isPending}
-                    className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-2xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-4 rounded-2xl hover:from-red-700 hover:to-red-800 transition-all duration-300 font-medium shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {withdrawMutation.isPending ? (
                       <>

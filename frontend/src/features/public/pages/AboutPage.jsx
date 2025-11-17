@@ -62,14 +62,16 @@ const AboutPage = () => {
       style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}
     >
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 py-20 lg:py-32">
         <div className="absolute inset-0">
-          <div className="absolute top-[-14rem] right-[-8rem] h-[26rem] w-[26rem] rounded-full bg-blue-200/70 blur-3xl" />
-          <div className="absolute bottom-[-10rem] left-[-10rem] h-[24rem] w-[24rem] rounded-full bg-cyan-200/60 blur-3xl" />
-          <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 18% 18%, rgba(59,130,246,0.18) 0, transparent 55%)' }} />
+          <div className="absolute top-[-14rem] right-[-8rem] h-[26rem] w-[26rem] rounded-full bg-blue-300/40 blur-3xl" />
+          <div className="absolute bottom-[-10rem] left-[-10rem] h-[24rem] w-[24rem] rounded-full bg-cyan-300/30 blur-3xl" />
+          <div className="absolute inset-0 opacity-20" style={{ 
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.2'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }} />
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 py-16 lg:py-24">
+        <div className="relative z-10 container mx-auto px-4">
           <div className="grid items-start gap-16 lg:grid-cols-[1.15fr,0.85fr]">
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: 'easeOut' }}>
               <span className="inline-flex items-center rounded-full bg-blue-100 px-4 py-1 text-sm font-semibold uppercase tracking-wider text-blue-700">

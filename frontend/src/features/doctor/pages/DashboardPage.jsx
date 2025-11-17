@@ -20,12 +20,12 @@ const DoctorDashboard = () => {
 
   if (dashboardLoading || profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="mx-auto max-w-7xl">
-          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+          <SkeletonLoader className="h-12 w-80 bg-blue-100 rounded-2xl" />
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
-            <SkeletonLoader className="h-96 rounded-2xl bg-white/10" />
-            <SkeletonLoader className="h-96 rounded-2xl bg-white/10" />
+            <SkeletonLoader className="h-96 rounded-2xl bg-blue-100" />
+            <SkeletonLoader className="h-96 rounded-2xl bg-blue-100" />
           </div>
         </div>
       </div>
@@ -35,11 +35,11 @@ const DoctorDashboard = () => {
   // Error handling
   if (dashboardError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="mx-auto flex min-h-screen max-w-7xl items-center justify-center">
           <div className="text-center">
-            <h2 className="mb-4 text-2xl font-bold text-white">Dashboard Yüklenemedi</h2>
-            <p className="mb-6 text-blue-200">{dashboardError.message || 'Bir hata oluştu'}</p>
+            <h2 className="mb-4 text-2xl font-bold text-gray-900">Dashboard Yüklenemedi</h2>
+            <p className="mb-6 text-gray-600">{dashboardError.message || 'Bir hata oluştu'}</p>
             <button 
               onClick={() => window.location.reload()} 
               className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
@@ -66,13 +66,13 @@ const DoctorDashboard = () => {
   const fullName = `${title} ${firstName} ${lastName}`.trim();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
           {/* Hero Section */}
-          <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 p-8 shadow-[0_20px_60px_-30px_rgba(30,64,175,0.45)]">
+          <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20" />
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
             </div>
             
             <div className="relative z-10">
@@ -80,7 +80,7 @@ const DoctorDashboard = () => {
                 {/* Profil Fotoğrafı - Sol Taraf */}
                 {profilePhoto && (
                   <div className="flex-shrink-0">
-                    <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-blue-200 shadow-lg">
+                    <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-cyan-300/40 shadow-lg">
                       <img 
                         src={profilePhoto} 
                         alt={fullName}
@@ -93,9 +93,9 @@ const DoctorDashboard = () => {
                 {/* Metin ve Buton - Sağ Taraf */}
                 <div className="flex flex-1 flex-col items-start justify-between gap-6 md:flex-row md:items-center">
                   <div className="flex-1">
-                    <h1 className="mb-2 text-2xl font-bold text-white md:text-3xl">Hoş Geldiniz</h1>
-                    <h2 className="mb-4 text-xl font-semibold text-blue-300 md:text-2xl">{fullName}</h2>
-                    <p className="text-base leading-relaxed text-gray-300 md:text-lg">
+                    <h1 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl">Hoş Geldiniz</h1>
+                    <h2 className="mb-4 text-xl font-semibold text-cyan-700 md:text-2xl">{fullName}</h2>
+                    <p className="text-base leading-relaxed text-gray-700 md:text-lg">
                       Kariyerinizi ileriye taşıyacak fırsatları keşfedin ve başvurularınızı takip edin.
                     </p>
                   </div>
@@ -108,11 +108,11 @@ const DoctorDashboard = () => {
           {/* Ana İçerik */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Son Başvurular */}
-            <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-8 shadow-[0_16px_48px_-30px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1">
-              <div className="border-b border-white/20 pb-6">
+            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="border-b border-blue-100 pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-3 text-2xl font-bold text-white">
-                    <Activity className="h-6 w-6 text-blue-400" />
+                  <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
+                    <Activity className="h-6 w-6 text-blue-600" />
                     Son Başvurular
                   </h2>
                   {/* Tümünü gör butonu kaldırıldı */}
@@ -124,12 +124,12 @@ const DoctorDashboard = () => {
                     {recentApplications.map((application) => (
                       <div
                         key={application.id}
-                        className="rounded-2xl border border-white/20 bg-white/5 p-6"
+                        className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-start">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white">{application.job_title}</h3>
-                            <p className="mt-1 text-gray-300">{application.hospital_name}</p>
+                            <h3 className="text-lg font-semibold text-gray-900">{application.job_title}</h3>
+                            <p className="mt-1 text-gray-600">{application.hospital_name}</p>
                             <div className="mt-3 flex flex-wrap items-center gap-3">
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 application.status_id === 1 ? 'border border-amber-200 bg-amber-100 text-amber-800' :
@@ -146,7 +146,7 @@ const DoctorDashboard = () => {
                                  application.status_id === 5 ? 'Geri Çekildi' :
                                  application.status || 'Bilinmiyor'}
                               </span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-500">
                                 {new Date(application.applied_at || application.created_at).toLocaleDateString('tr-TR')}
                               </span>
                             </div>
@@ -157,21 +157,21 @@ const DoctorDashboard = () => {
                   </div>
                 ) : (
                   <div className="py-12 text-center">
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
-                      <Activity className="h-10 w-10 text-blue-400" />
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                      <Activity className="h-10 w-10 text-blue-600" />
                     </div>
-                    <p className="text-lg text-gray-300">Henüz başvuru yapmadınız</p>
+                    <p className="text-lg text-gray-600">Henüz başvuru yapmadınız</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Önerilen İş İlanları */}
-            <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-8 shadow-[0_16px_48px_-30px_rgba(15,23,42,0.45)] transition-all duration-300 hover:-translate-y-1">
-              <div className="border-b border-white/20 pb-6">
+            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="border-b border-blue-100 pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-3 text-2xl font-bold text-white">
-                    <Target className="h-6 w-6 text-blue-400" />
+                  <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
+                    <Target className="h-6 w-6 text-blue-600" />
                     Önerilen İş İlanları
                   </h2>
                   {/* Tümünü gör butonu kaldırıldı */}
@@ -183,18 +183,18 @@ const DoctorDashboard = () => {
                     {recentJobs.map((job) => (
                       <div 
                         key={job.id} 
-                        className="rounded-2xl border border-white/20 bg-white/5 p-6"
+                        className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 hover:shadow-md transition-shadow"
                       >
                         <div className="flex items-start">
                           <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white">{job.title}</h3>
-                            <p className="mt-1 text-gray-300">{job.hospital_name}</p>
+                            <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                            <p className="mt-1 text-gray-600">{job.hospital_name}</p>
                             <div className="mt-3 flex flex-wrap items-center gap-3">
-                              <div className="flex items-center gap-1 text-xs text-gray-400">
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
                                 <MapPin className="h-4 w-4" />
                                 {job.city}
                               </div>
-                              <div className="flex items-center gap-1 text-xs text-gray-400">
+                              <div className="flex items-center gap-1 text-xs text-gray-600">
                                 <Calendar className="h-4 w-4" />
                                 {new Date(job.created_at).toLocaleDateString('tr-TR')}
                               </div>
@@ -206,10 +206,10 @@ const DoctorDashboard = () => {
                   </div>
                 ) : (
                   <div className="py-12 text-center">
-                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/10">
-                      <Briefcase className="h-10 w-10 text-blue-400" />
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                      <Briefcase className="h-10 w-10 text-blue-600" />
                     </div>
-                    <p className="text-lg text-gray-300">Önerilen iş ilanı bulunamadı</p>
+                    <p className="text-lg text-gray-600">Önerilen iş ilanı bulunamadı</p>
                   </div>
                 )}
               </div>

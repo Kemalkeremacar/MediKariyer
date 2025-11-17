@@ -1,140 +1,189 @@
 /**
  * @file Footer.jsx
- * @description Footer Bileşeni - Uygulama alt bilgi çubuğu
- * 
- * Bu bileşen, uygulama genelinde kullanılan alt bilgi çubuğunu sağlar.
- * İletişim bilgileri, hızlı linkler, sosyal medya linkleri ve telif hakları
- * bilgilerini içerir.
- * 
- * Ana Özellikler:
- * - Logo ve açıklama: Uygulama logosu ve kısa açıklama
- * - Sosyal medya linkleri: Facebook, Twitter, LinkedIn, Instagram
- * - Hızlı linkler: Ana Sayfa, Hakkımızda, İletişim
- * - İletişim bilgileri: Adres, telefon, e-posta
- * - Telif hakları: Yıl ve uygulama adı
- * - Responsive: Grid layout ile mobil uyumlu
- * - Glassmorphism: Modern blur efekti
- * 
- * Layout Yapısı:
- * - 1 sütun (mobil): Logo, Hızlı Linkler, İletişim (alt alta)
- * - 2 sütun (tablet): Logo + Hızlı Linkler, İletişim
- * - 3 sütun (desktop): Logo, Hızlı Linkler, İletişim (yan yana)
- * 
- * Kullanım:
- * Sadece belirli sayfalarda gösterilir (Home, Public sayfalar).
- * Admin, Doctor, Hospital ve Auth sayfalarında gösterilmez.
- * 
- * @author MediKariyer Development Team
- * @version 2.0.0
- * @since 2024
+ * @description Footer Bileşeni - Modern ve responsive footer
  */
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
-import { FiFacebook, FiTwitter, FiLinkedin, FiInstagram, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import logoImage from '../../assets/logo.jpg';
 
-/**
- * ============================================================================
- * FOOTER COMPONENT
- * ============================================================================
- */
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
+  const footerLinks = {
+    kurumsal: [
+      { text: 'Hakkımızda', to: ROUTE_CONFIG.PUBLIC.ABOUT },
+      { text: 'İletişim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
+      { text: 'Gizlilik Politikası', to: '#' },
+      { text: 'Kullanım Şartları', to: '#' },
+    ],
+    hizmetler: [
+      { text: 'Doktorlar İçin', to: ROUTE_CONFIG.PUBLIC.REGISTER },
+      { text: 'Hastaneler İçin', to: ROUTE_CONFIG.PUBLIC.REGISTER },
+      { text: 'İş İlanları', to: '#' },
+      { text: 'Kariyer Fırsatları', to: '#' },
+    ],
+    destek: [
+      { text: 'SSS', to: '#' },
+      { text: 'Yardım Merkezi', to: '#' },
+      { text: 'İletişim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
+      { text: 'Geri Bildirim', to: '#' },
+    ],
+  };
+
+  const socialLinks = [
+    { icon: Facebook, href: '#', label: 'Facebook' },
+    { icon: Twitter, href: '#', label: 'Twitter' },
+    { icon: Instagram, href: '#', label: 'Instagram' },
+    { icon: Linkedin, href: '#', label: 'LinkedIn' },
+    { icon: Youtube, href: '#', label: 'YouTube' },
+  ];
+
   return (
-    <footer className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white border-t border-white/10 mt-auto">
-      <div className="container mx-auto px-4 py-4">
-        {/* Ana Footer İçeriği */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-          {/* Logo ve Açıklama */}
-          <div className="lg:col-span-1">
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-5 h-5 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xs">M</span>
+    <footer className="bg-gradient-to-b from-gray-900 to-gray-950 text-gray-300">
+      {/* Main Footer Content */}
+      <div className="container mx-auto px-4 py-12 lg:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
+          {/* Brand Section */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center overflow-hidden shadow-lg">
+                <img 
+                  src={logoImage} 
+                  alt="MediKariyer Logo" 
+                  className="w-full h-full object-cover rounded-xl"
+                />
               </div>
-              <span className="text-base font-bold text-white">
-                {APP_CONFIG.APP_NAME}
+              <span className="text-2xl font-black lowercase text-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                {APP_CONFIG.APP_NAME.toLowerCase()}
               </span>
             </div>
-            <p className="text-white/80 leading-relaxed mb-2 text-xs">
-              Sağlık sektöründe kariyerinizi şekillendiren platform.
+            <p className="text-gray-400 mb-6 leading-relaxed max-w-md">
+              Türkiye'nin en güvenilir sağlık kariyer platformu. Doktorlar ve sağlık kurumlarını bir araya getiriyoruz.
             </p>
-            <div className="flex space-x-2">
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" 
-                 className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-blue-500 transition-colors duration-300">
-                <FiTwitter className="w-3 h-3" />
-              </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" 
-                 className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-300">
-                <FiLinkedin className="w-3 h-3" />
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" 
-                 className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-cyan-500 transition-colors duration-300">
-                <FiInstagram className="w-3 h-3" />
-              </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" 
-                 className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors duration-300">
-                <FiFacebook className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
-
-          {/* Hızlı Linkler */}
-          <div>
-            <h3 className="text-sm font-bold mb-2 text-white">Hızlı Linkler</h3>
-            <ul className="space-y-1">
-              <li>
-                <Link to={ROUTE_CONFIG.PUBLIC.HOME} className="text-white/80 hover:text-blue-300 transition-colors duration-300 text-sm">
-                  Ana Sayfa
-                </Link>
-              </li>
-              <li>
-                <Link to={ROUTE_CONFIG.PUBLIC.ABOUT} className="text-white/80 hover:text-blue-300 transition-colors duration-300 text-sm">
-                  Hakkımızda
-                </Link>
-              </li>
-              <li>
-                <Link to={ROUTE_CONFIG.PUBLIC.CONTACT} className="text-white/80 hover:text-blue-300 transition-colors duration-300 text-sm">
-                  İletişim
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* İletişim Bilgileri */}
-          <div>
-            <h3 className="text-sm font-bold mb-2 text-white">İletişim</h3>
-            <ul className="space-y-2">
-              <li className="flex items-start space-x-3">
-                <FiMapPin className="w-4 h-4 text-cyan-300 mt-1 flex-shrink-0" />
-                <span className="text-white/80 text-xs">
+            
+            {/* Contact Info */}
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 text-sm">
+                <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+                <span className="text-gray-400">
                   Atatürk Mah. Turgut Özal Bulv. Gardenya 1 Plaza<br />
                   İş Merkezi, D:42/B Kat:5 Ataşehir-İstanbul
                 </span>
-              </li>
-              <li className="flex items-center space-x-3">
-                <FiPhone className="w-4 h-4 text-cyan-300 flex-shrink-0" />
-                <span className="text-white/80 text-xs">+90 212 227 80 20</span>
-              </li>
-              <li className="flex items-center space-x-3">
-                <FiMail className="w-4 h-4 text-cyan-300 flex-shrink-0" />
-                <span className="text-white/80 text-xs">info@monassist.com</span>
-              </li>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <Phone className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                <a href="tel:+902122278020" className="text-gray-400 hover:text-white transition-colors">
+                  +90 212 227 80 20
+                </a>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
+                <a href="mailto:info@medikariyer.com" className="text-gray-400 hover:text-white transition-colors">
+                  info@medikariyer.com
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Kurumsal Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4 text-lg">Kurumsal</h3>
+            <ul className="space-y-2">
+              {footerLinks.kurumsal.map((link, index) => (
+                <li key={index}>
+                  <Link
+                    to={link.to}
+                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Hizmetler Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4 text-lg">Hizmetler</h3>
+            <ul className="space-y-2">
+              {footerLinks.hizmetler.map((link, index) => (
+                <li key={index}>
+                  <Link
+                    to={link.to}
+                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Destek Links */}
+          <div>
+            <h3 className="text-white font-semibold mb-4 text-lg">Destek</h3>
+            <ul className="space-y-2">
+              {footerLinks.destek.map((link, index) => (
+                <li key={index}>
+                  <Link
+                    to={link.to}
+                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
+                  >
+                    {link.text}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
+      </div>
 
-        {/* Alt Çizgi */}
-        <div className="border-t border-white/10 pt-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-white/60 text-xs mb-1 md:mb-0">
-              &copy; {currentYear} {APP_CONFIG.APP_NAME}. Tüm hakları saklıdır.
-            </p>
-            <p className="text-white/60 text-xs">
-              Türkiye'nin en güvenilir sağlık kariyer platformu
-            </p>
+      {/* Bottom Bar */}
+      <div className="border-t border-gray-800">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            {/* Copyright */}
+            <div className="text-sm text-gray-400">
+              © {currentYear} <span className="lowercase font-semibold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>{APP_CONFIG.APP_NAME.toLowerCase()}</span>. Tüm hakları saklıdır.
+            </div>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-4">
+              {socialLinks.map((social, index) => {
+                const Icon = social.icon;
+                return (
+                  <a
+                    key={index}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-blue-600 flex items-center justify-center transition-all duration-300 hover:scale-110"
+                  >
+                    <Icon className="w-4 h-4 text-gray-400 group-hover:text-white" />
+                  </a>
+                );
+              })}
+            </div>
+
+            {/* Additional Links */}
+            <div className="flex items-center gap-4 text-sm">
+              <Link to="#" className="text-gray-400 hover:text-white transition-colors">
+                Gizlilik
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link to="#" className="text-gray-400 hover:text-white transition-colors">
+                Çerezler
+              </Link>
+              <span className="text-gray-600">•</span>
+              <Link to="#" className="text-gray-400 hover:text-white transition-colors">
+                Şartlar
+              </Link>
+            </div>
           </div>
         </div>
       </div>

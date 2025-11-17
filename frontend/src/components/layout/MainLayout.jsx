@@ -70,7 +70,7 @@ const MainLayout = () => {
   // Doktor sayfaları için özel layout (Footer olmadan)
   if (isDoctorPage) {
     return (
-      <div className="flex flex-col w-full min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="flex flex-col w-full min-h-screen bg-white">
         {/* Üst Navigasyon */}
         <Header />
 
@@ -87,7 +87,7 @@ const MainLayout = () => {
   // Hastane sayfaları için özel layout (Footer olmadan)
   if (isHospitalPage) {
     return (
-      <div className="flex flex-col w-full bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="flex flex-col w-full min-h-screen bg-white">
         {/* Üst Navigasyon */}
         <Header />
 
@@ -103,7 +103,7 @@ const MainLayout = () => {
   
   if (isHomePage) {
     return (
-      <div className="flex flex-col w-full bg-gradient-to-br from-white via-gray-50 to-blue-50">
+      <div className="flex flex-col w-full min-h-screen bg-white">
         {/* Üst Navigasyon */}
         <Header />
 
@@ -176,9 +176,9 @@ const MainLayout = () => {
 
   // Diğer tüm sayfalar için normal layout
   return (
-    <div className={`flex flex-col w-full ${
+    <div className={`flex flex-col w-full min-h-screen ${
       isPublicPage 
-        ? 'bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-800' 
+        ? 'bg-white' 
         : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
     }`}>
       {/* Üst Navigasyon */}
@@ -189,8 +189,8 @@ const MainLayout = () => {
         <Outlet />
       </main>
 
-      {/* Footer */}
-      <Footer />
+      {/* Footer - Sadece public sayfalarda göster */}
+      {isPublicPage && <Footer />}
     </div>
   );
 };

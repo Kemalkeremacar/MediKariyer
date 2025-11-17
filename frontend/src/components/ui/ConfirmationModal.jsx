@@ -213,45 +213,53 @@ const ConfirmationModal = ({ modalId = 'confirmation', config, closeModal }) => 
       offsetDistance={offsetDistance}
       containerClassName={`relative overflow-visible ${sizeClassName}`}
     >
-      <div ref={modalRef} className={`relative ${isCompact ? 'p-3 md:p-5' : 'p-2 md:p-4'}`}>
-        <button
-          onClick={handleCancel}
-          className={`absolute top-2 right-2 md:top-0 md:right-0 text-gray-400 hover:text-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-full ${isCompact ? 'p-1' : 'p-1.5'}`}
-          aria-label="Modalı kapat"
-        >
-          <X className={isCompact ? 'h-5 w-5' : 'h-6 w-6'} />
-        </button>
-
-        <div className={`text-center ${isCompact ? 'pt-4 md:pt-2' : 'pt-6 md:pt-4'}`}>
-          <div className={`flex justify-center ${isCompact ? 'mb-4' : 'mb-6'}`}>
+      <div ref={modalRef} className={`relative ${isCompact ? 'p-6' : 'p-8'}`}>
+        <div className={`text-center`}>
+          <div className={`flex justify-center ${isCompact ? 'mb-5' : 'mb-6'}`}>
             {destructive
-              ? (isCompact
-                ? <AlertTriangle className="h-14 w-14 text-red-600" />
-                : destructiveStyles.icon)
-              : (isCompact
-                ? React.cloneElement(icon, { className: 'h-14 w-14 ' + (icon.props.className || '') })
-                : icon)}
+              ? (
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="h-10 w-10 text-red-600" />
+                </div>
+              )
+              : (
+                <div className={`${
+                  type === 'danger' ? 'bg-red-100' :
+                  type === 'success' ? 'bg-green-100' :
+                  type === 'warning' ? 'bg-amber-100' :
+                  'bg-blue-100'
+                } w-16 h-16 rounded-full flex items-center justify-center`}>
+                  {React.cloneElement(icon, { 
+                    className: `h-10 w-10 ${
+                      type === 'danger' ? 'text-red-600' :
+                      type === 'success' ? 'text-green-600' :
+                      type === 'warning' ? 'text-amber-600' :
+                      'text-blue-600'
+                    }`
+                  })}
+                </div>
+              )}
           </div>
 
           <h3
             id="modal-title"
-            className={`${isCompact ? 'text-xl md:text-2xl' : 'text-2xl md:text-3xl'} font-bold text-white ${isCompact ? 'mb-3' : 'mb-4'}`}
+            className={`${isCompact ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 ${isCompact ? 'mb-3' : 'mb-4'}`}
           >
             {title}
           </h3>
 
           <p
             id="modal-description"
-            className={`${isCompact ? 'text-base md:text-lg' : 'text-lg'} text-gray-300 ${isCompact ? 'mb-6' : 'mb-8'} leading-relaxed`}
+            className={`${isCompact ? 'text-sm' : 'text-base'} text-gray-600 ${isCompact ? 'mb-6' : 'mb-8'} leading-relaxed`}
           >
             {message}
           </p>
 
-          <div className={`flex flex-col sm:flex-row ${isCompact ? 'sm:space-x-3 gap-2 sm:gap-0' : 'sm:space-x-4 gap-3 sm:gap-0'} justify-center`}>
+          <div className={`flex flex-col-reverse sm:flex-row ${isCompact ? 'gap-3' : 'gap-3'} justify-center`}>
             <button
               ref={cancelButtonRef}
               onClick={handleCancel}
-              className={`${isCompact ? 'px-5 py-2.5 text-sm md:text-base rounded-lg' : 'px-8 py-4 rounded-xl text-lg'} font-semibold transition-all duration-200 bg-white/10 border border-white/20 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-gray-500`}
+              className={`${isCompact ? 'px-6 py-2.5 text-sm' : 'px-8 py-3 text-base'} font-semibold rounded-lg transition-all duration-200 bg-white border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2`}
               aria-label="İşlemi iptal et"
             >
               {cancelText}
@@ -260,7 +268,15 @@ const ConfirmationModal = ({ modalId = 'confirmation', config, closeModal }) => 
             <button
               ref={confirmButtonRef}
               onClick={handleConfirm}
-              className={`${isCompact ? 'px-5 py-2.5 text-sm md:text-base rounded-lg' : 'px-8 py-4 rounded-xl text-lg'} font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 ${destructive ? (isCompact ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500 text-white' : destructiveStyles.confirmButton) : buttonStyles.confirm}`}
+              className={`${isCompact ? 'px-6 py-2.5 text-sm' : 'px-8 py-3 text-base'} font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md ${
+                destructive || type === 'danger'
+                  ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white focus:ring-red-500'
+                  : type === 'success'
+                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white focus:ring-green-500'
+                  : type === 'warning'
+                  ? 'bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white focus:ring-amber-500'
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white focus:ring-blue-500'
+              }`}
               aria-label="İşlemi onayla"
             >
               {confirmText}

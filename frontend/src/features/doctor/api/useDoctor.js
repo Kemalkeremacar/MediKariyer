@@ -25,10 +25,10 @@ export const useDoctorProfile = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
     enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - profil sık değişmez
+    staleTime: 0, // Her zaman fresh data çek (profil fotoğrafı değişebilir)
     cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Cache'den kullan, gereksiz yere refetch yapma
-    refetchOnWindowFocus: false, // Pencere focus'unda refetch yapma
+    refetchOnMount: true, // Her mount'ta yenile (profil fotoğrafı vs)
+    refetchOnWindowFocus: true, // Pencere focus'unda refetch yap (admin onayladıysa görsün)
     refetchOnReconnect: true,
   });
 };
@@ -446,10 +446,10 @@ export const useDoctorDashboard = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.DASHBOARD),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { dashboard } }
     enabled: isDoctor, // Sadece doktor rolünde çalıştır
-    staleTime: 30 * 1000, // 30 saniye cache - dashboard için yeterli
+    staleTime: 0, // Her zaman fresh data (başvurular değişebilir)
     cacheTime: 60 * 1000, // 1 dakika cache
-    refetchOnMount: false, // Cache'den kullan
-    refetchOnWindowFocus: false,
+    refetchOnMount: true, // Her mount'ta yenile
+    refetchOnWindowFocus: true, // Pencere focus'unda yenile
     refetchOnReconnect: true,
   });
 };
@@ -468,10 +468,10 @@ export const useDoctorJobs = (params = {}) => {
     queryKey: ['doctor', 'jobs', cleanParams],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.JOBS, { params: cleanParams }),
     select: (res) => res.data?.data,
-    staleTime: 30 * 1000, // 30 saniye cache - iş ilanları için yeterli
+    staleTime: 0, // Her zaman fresh data (yeni ilanlar olabilir)
     cacheTime: 2 * 60 * 1000, // 2 dakika cache
     retry: 1,
-    refetchOnMount: false, // Cache'den kullan
+    refetchOnMount: true, // Her mount'ta yenile
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
@@ -647,10 +647,10 @@ export const usePhotoRequestStatus = () => {
       const response = await apiRequest.get(ENDPOINTS.DOCTOR.PHOTO_STATUS);
       return response.data;
     },
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - fotoğraf durumu sık değişmez
+    staleTime: 0, // Her zaman fresh data (admin onayladığında hemen görsün)
     cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Cache'den kullan, gereksiz yere refetch yapma
-    refetchOnWindowFocus: false, // Pencere focus'unda refetch yapma
+    refetchOnMount: true, // Her mount'ta yenile (durum değişmiş olabilir)
+    refetchOnWindowFocus: true, // Pencere focus'unda refetch yap (admin onayladıysa görsün)
     refetchOnReconnect: true,
     retry: 1 // 1 retry yeterli
   });

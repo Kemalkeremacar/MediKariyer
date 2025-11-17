@@ -8,13 +8,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Global scroll düzeltmesi */
+/* Global scroll düzeltmesi ve smooth scroll */
 html {
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
   overflow-x: hidden;
+}
+
+/* Hero ve full-screen section'lar için optimize edilmiş background */
+@supports (object-fit: cover) {
+  .hero-image {
+    object-fit: cover;
+    object-position: center;
+  }
 }
 
 /* CSS değişkenleri - Renk paleti ve tema ayarları */

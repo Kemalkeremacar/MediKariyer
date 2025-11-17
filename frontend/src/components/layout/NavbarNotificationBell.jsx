@@ -148,9 +148,9 @@ const NavbarNotificationBell = () => {
       {/* Bell button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
+        className="relative p-2 rounded-full hover:bg-orange-50 transition-colors duration-200"
       >
-        <Bell className="w-6 h-6 text-white/90" />
+        <Bell className="w-6 h-6 text-orange-500" />
         {unreadCount > 0 && (
           <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-[22px] items-center justify-center rounded-full bg-gradient-to-br from-red-500 via-rose-500 to-pink-500 px-1.5 text-[11px] font-semibold text-white shadow-[0_6px_14px_rgba(244,63,94,0.45)] ring-2 ring-white/80">
             <span className="leading-none">{unreadCount > 99 ? '99+' : unreadCount}</span>

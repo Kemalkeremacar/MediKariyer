@@ -685,14 +685,12 @@ export function usePhotoRequests(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`/admin/photo-requests${queryString}`);
     },
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
+    staleTime: 0, // Her zaman fresh data (yeni talepler hemen görünsün)
+    cacheTime: 5 * 60 * 1000, // 5 dakika cache
+    refetchOnMount: true, // Her mount'ta yenile (yeni talepler olabilir)
+    refetchOnWindowFocus: true, // Pencere focus'unda refetch yap
     refetchOnReconnect: true,
-    // Dinamik güncelleme: Her 5 saniyede bir otomatik yenile
-    refetchInterval: 5000,
-    retry: 2
+    retry: 1
   });
 }
 

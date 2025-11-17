@@ -24,7 +24,9 @@ import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { 
   Bell, CheckCircle, Filter, Trash2, 
-  X, CheckCircle2, Trash, CheckCheck
+  X, CheckCircle2, Trash, CheckCheck,
+  FileText, Calendar, Briefcase, MessageSquare,
+  Settings, Clock, AlertTriangle, XCircle, Info
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ROUTE_CONFIG } from '@config/routes.js';
@@ -36,15 +38,19 @@ import apiRequest from '@/services/http/client';
  */
 const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, isSelected, onToggleSelect }) => {
   const getIcon = (type) => {
-    const icons = {
-      application_status: '📋',
-      interview_scheduled: '📅',
-      job_match: '💼',
-      message: '💬',
-      system: '⚙️',
-      reminder: '⏰',
+    const iconMap = {
+      application_status: { icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-200' },
+      interview_scheduled: { icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-200' },
+      job_match: { icon: Briefcase, color: 'text-emerald-600', bg: 'bg-emerald-100', border: 'border-emerald-200' },
+      message: { icon: MessageSquare, color: 'text-cyan-600', bg: 'bg-cyan-100', border: 'border-cyan-200' },
+      system: { icon: Settings, color: 'text-gray-600', bg: 'bg-gray-100', border: 'border-gray-200' },
+      reminder: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-amber-200' },
+      success: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', border: 'border-green-200' },
+      warning: { icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-100', border: 'border-orange-200' },
+      error: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100', border: 'border-red-200' },
+      info: { icon: Info, color: 'text-indigo-600', bg: 'bg-indigo-100', border: 'border-indigo-200' },
     };
-    return icons[type] || '📢';
+    return iconMap[type] || { icon: Bell, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-200' };
   };
 
   const formatDate = (dateString) => {
@@ -104,9 +110,15 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
 
       <div className="flex items-start gap-4 pr-8">
         {/* Icon */}
-        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-2xl">
-          {getIcon(notification.type)}
-        </div>
+        {(() => {
+          const iconConfig = getIcon(notification.type);
+          const IconComponent = iconConfig.icon;
+          return (
+            <div className={`flex-shrink-0 w-12 h-12 rounded-xl ${iconConfig.bg} border ${iconConfig.border} flex items-center justify-center shadow-sm`}>
+              <IconComponent className={`w-6 h-6 ${iconConfig.color}`} />
+            </div>
+          );
+        })()}
 
         {/* Content */}
         <div className="flex-1 min-w-0">
@@ -460,7 +472,7 @@ const HospitalNotificationsPage = () => {
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">Durum</label>
               <select
-                value={filters.isRead || ''}
+                value={filters.isRead === undefined ? '' : String(filters.isRead)}
                 onChange={(e) => {
                   const value = e.target.value;
                   setFilters((prev) => {

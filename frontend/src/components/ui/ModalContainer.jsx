@@ -278,10 +278,10 @@ export const ModalContainer = ({
     : 'fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] animate-in fade-in duration-200';
 
   const modalClasses = [
-    'bg-slate-800/95 rounded-2xl shadow-2xl w-full',
+    'bg-white rounded-2xl shadow-2xl w-full',
     sizeConfig[size],
     containerResponsive,
-    'flex flex-col animate-in zoom-in-95 duration-300 border border-white/20',
+    'flex flex-col animate-in zoom-in-95 duration-300 border border-blue-100',
     containerClassName
   ].filter(Boolean).join(' ');
 
@@ -341,16 +341,16 @@ export const ModalContainer = ({
         >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10 bg-gradient-to-r from-slate-800 to-slate-900 flex-shrink-0">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0 rounded-t-2xl">
             {title && (
-              <h2 id={labelledById} className="text-xl md:text-2xl font-bold text-white">
+              <h2 id={labelledById} className="text-xl md:text-2xl font-bold text-gray-900">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg"
+                className="text-gray-500 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
                 aria-label="Modalı kapat"
               >
                 <X className="w-6 h-6" />

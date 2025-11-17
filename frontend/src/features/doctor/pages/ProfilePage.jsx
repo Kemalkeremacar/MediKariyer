@@ -390,10 +390,10 @@ const DoctorProfile = () => {
 
   if (profileLoading || lookupLoading.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl mb-8" />
-          <SkeletonLoader className="h-96 bg-white/10 rounded-2xl" />
+          <SkeletonLoader className="h-12 w-80 bg-gray-200 rounded-2xl mb-8" />
+          <SkeletonLoader className="h-96 bg-gray-200 rounded-2xl" />
         </div>
       </div>
     );
@@ -418,41 +418,41 @@ const DoctorProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 mb-8">
+          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-3xl p-8 mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30"></div>
             </div>
             
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 <div className="flex-1">
-                  <h1 className="text-2xl lg:text-3xl font-bold text-white mb-3">
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
                     {profile?.profile?.title || 'Dr.'} {profile?.profile?.first_name || ''} {profile?.profile?.last_name || ''}
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-1 text-xl">
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 mt-1 text-xl">
                       Profil Düzenle
                     </span>
                   </h1>
-                  <p className="text-base text-gray-300 max-w-2xl leading-relaxed">
+                <p className="text-base text-gray-700 max-w-2xl leading-relaxed">
                     Profesyonel bilgilerinizi güncelleyin ve kariyerinizi ileriye taşıyın.
                   </p>
                 </div>
                 
-                {/* Profil Tamamlanma Kartı */}
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-5 min-w-[280px]">
+              {/* Profil Tamamlanma Kartı */}
+              <div className="bg-white rounded-2xl border border-blue-100 p-5 min-w-[280px] shadow-xl">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-gray-300">Profil Tamamlanma</div>
-                      <div className={`text-2xl font-bold bg-gradient-to-r ${getCompletionColor(completionPercentage)} bg-clip-text text-transparent`}>
+                    <div className="text-sm font-medium text-gray-500">Profil Tamamlanma</div>
+                    <div className={`text-2xl font-bold bg-gradient-to-r ${getCompletionColor(completionPercentage)} bg-clip-text text-transparent`}>
                         {completionPercentage}%
                       </div>
                     </div>
                     
                     {/* Progress Bar */}
-                    <div className="w-full bg-white/20 rounded-full h-2.5 overflow-hidden">
+                  <div className="w-full bg-blue-100 rounded-full h-2.5 overflow-hidden">
                       <div 
                         className={`h-2.5 rounded-full transition-all duration-700 ease-out bg-gradient-to-r ${getCompletionColor(completionPercentage)}`}
                         style={{ width: `${completionPercentage}%` }}
@@ -460,14 +460,14 @@ const DoctorProfile = () => {
                     </div>
                     
                     {/* Mesaj */}
-                    <div className="text-xs text-gray-300 text-center">
+                  <div className="text-xs text-gray-600 text-center">
                       {getCompletionMessage(completionPercentage)}
                     </div>
                     
                     {/* Eksik Bölümler */}
                     {missingSections.length > 0 && completionPercentage < 100 && (
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <div className="text-xs text-gray-400 mb-1">Eksik Bölümler:</div>
+                    <div className="mt-3 pt-3 border-t border-blue-100">
+                      <div className="text-xs text-gray-500 mb-1">Eksik Bölümler:</div>
                         <div className="flex flex-wrap gap-1">
                           {missingSections.map((section, index) => {
                             const sectionNames = {
@@ -487,7 +487,7 @@ const DoctorProfile = () => {
                             return (
                               <span
                                 key={index}
-                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30"
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200"
                               >
                                 {sectionNames[section] || section}
                               </span>
@@ -503,8 +503,8 @@ const DoctorProfile = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
-            <div className="border-b border-white/20">
+          <div className="bg-white rounded-2xl border border-blue-100 shadow-lg">
+            <div className="border-b border-gray-100">
               <nav className="flex flex-wrap gap-2 p-6">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
@@ -514,8 +514,8 @@ const DoctorProfile = () => {
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-medium text-sm transition-all duration-300 ${
                         activeTab === tab.id
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10 hover:text-white'
+                          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
+                          : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
                       }`}
                     >
                       <Icon className="w-5 h-5" />
@@ -838,16 +838,16 @@ const PhotoManagementModal = ({
 
           {/* Yeni Fotoğraf Yükleme */}
           {(!hasPendingRequest || pendingRequest.status !== 'pending') && (
-            <div className="border-2 border-dashed border-white/30 rounded-xl p-6 hover:border-blue-500 hover:bg-white/5 transition-all duration-300 bg-white/5">
+            <div className="border-2 border-dashed border-blue-200 rounded-xl p-6 hover:border-blue-400 bg-blue-50 transition-all duration-300">
               <label className="cursor-pointer block text-center">
-                <div className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full w-14 h-14 mx-auto mb-3 flex items-center justify-center">
-                  <Upload className="w-7 h-7 text-blue-400" />
+                <div className="bg-blue-100 rounded-full w-14 h-14 mx-auto mb-3 flex items-center justify-center">
+                  <Upload className="w-7 h-7 text-blue-600" />
                 </div>
-                <span className="text-base text-white font-bold block mb-2">Yeni Fotoğraf Yükle</span>
-                <span className="text-xs text-gray-400 block mb-4">
+                <span className="text-base text-gray-900 font-bold block mb-2">Yeni Fotoğraf Yükle</span>
+                <span className="text-xs text-gray-500 block mb-4">
                   Max 5MB • JPEG, PNG, WebP
                 </span>
-                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 text-sm">
+                <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg hover:scale-105 text-sm">
                   <Camera className="w-4 h-4" />
                   Dosya Seç
                 </div>
@@ -889,17 +889,17 @@ const ProfilePhotoButton = ({ photoRequestStatus, onOpenModal }) => {
   const hasPendingRequest = pendingRequest?.status === 'pending';
 
   return (
-    <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 backdrop-blur-sm rounded-2xl p-6 border-2 border-blue-500/30 shadow-xl">
+    <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-lg">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-500/20 rounded-xl">
-            <Camera className="w-8 h-8 text-blue-400" />
+          <div className="p-3 bg-blue-50 rounded-xl">
+            <Camera className="w-8 h-8 text-blue-600" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-white">Profil Fotoğrafı</h3>
-            <p className="text-sm text-gray-400 mt-1">
+            <h3 className="text-xl font-bold text-gray-900">Profil Fotoğrafı</h3>
+            <p className="text-sm text-gray-600 mt-1">
               {hasPendingRequest ? (
-                <span className="text-yellow-400 flex items-center gap-2">
+                <span className="text-amber-600 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   Onay bekleyen talebiniz var
                 </span>
@@ -913,15 +913,15 @@ const ProfilePhotoButton = ({ photoRequestStatus, onOpenModal }) => {
           onClick={() => {
             onOpenModal?.();
           }}
-          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl hover:scale-105 flex items-center gap-2"
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-md hover:shadow-lg hover:scale-105 flex items-center gap-2"
         >
           <Camera className="w-5 h-5" />
           Fotoğraf Yönetimi
         </button>
       </div>
       {hasPendingRequest && (
-        <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-          <p className="text-xs text-yellow-300 flex items-center gap-2">
+        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-xs text-amber-700 flex items-center gap-2">
             <AlertCircle className="w-4 h-4" />
             Fotoğraf değişiklik talebiniz admin onayı bekliyor. Detayları görmek için "Fotoğraf Yönetimi" butonuna tıklayın.
           </p>
@@ -1029,10 +1029,10 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
   };
 
   return (
-    <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-      <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
-        <div className="p-2 bg-green-500/20 rounded-xl">
-          <User className="w-6 h-6 text-green-400" />
+    <div className="bg-white rounded-2xl p-6 border border-blue-100 shadow-lg">
+      <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+        <div className="p-2 bg-green-100 rounded-xl">
+          <User className="w-6 h-6 text-green-600" />
         </div>
         Kişisel Bilgiler
       </h3>
@@ -1041,50 +1041,50 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Satır 1: Ad - Soyad */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-3">
+            <label className="block text-sm font-medium text-gray-600 mb-3">
               Ad *
             </label>
             <input
               type="text"
               value={formData.first_name}
               onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-              className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+              className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
               required
             />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             Soyad *
           </label>
           <input
             type="text"
             value={formData.last_name}
             onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
             required
           />
         </div>
         
         {/* Satır 2: Ünvan - Doğum Tarihi */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             Ünvan *
           </label>
           <select
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
             required
           >
-            <option value="Dr." className="bg-slate-900 text-white">Dr.</option>
-            <option value="Uz. Dr." className="bg-slate-900 text-white">Uz. Dr.</option>
-            <option value="Dr. Öğr. Üyesi" className="bg-slate-900 text-white">Dr. Öğr. Üyesi</option>
-            <option value="Doç. Dr." className="bg-slate-900 text-white">Doç. Dr.</option>
-            <option value="Prof. Dr." className="bg-slate-900 text-white">Prof. Dr.</option>
+            <option value="Dr.">Dr.</option>
+            <option value="Uz. Dr.">Uz. Dr.</option>
+            <option value="Dr. Öğr. Üyesi">Dr. Öğr. Üyesi</option>
+            <option value="Doç. Dr.">Doç. Dr.</option>
+            <option value="Prof. Dr.">Prof. Dr.</option>
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             Doğum Tarihi
           </label>
           <input
@@ -1092,13 +1092,13 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
             value={formData.dob}
             onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
             max={new Date().toISOString().split('T')[0]}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
           />
         </div>
         
         {/* Satır 3: Uzmanlık - Yan Dal Uzmanlığı */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             Uzmanlık *
           </label>
           <select
@@ -1108,69 +1108,69 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
               setFormData({ ...formData, specialty_id: newSpecialtyId, subspecialty_id: '' });
               setSelectedSpecialtyId(newSpecialtyId ? parseInt(newSpecialtyId) : null);
             }}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
             required
           >
-            <option value="" className="bg-slate-900 text-white">Uzmanlık Seçiniz</option>
+            <option value="">Uzmanlık Seçiniz</option>
             {specialties.map(specialty => (
-              <option key={specialty.id} value={specialty.id} className="bg-slate-900 text-white">
+              <option key={specialty.id} value={specialty.id}>
                 {specialty.name}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             Yan Dal Uzmanlığı
           </label>
           <select
             value={formData.subspecialty_id}
             onChange={(e) => setFormData({ ...formData, subspecialty_id: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
             disabled={!formData.specialty_id || filteredSubspecialties.length === 0}
           >
-            <option value="" className="bg-slate-900 text-white">Yan Dal Seçiniz (Opsiyonel)</option>
+            <option value="">Yan Dal Seçiniz (Opsiyonel)</option>
             {filteredSubspecialties.map(subspecialty => (
-              <option key={subspecialty.id} value={subspecialty.id} className="bg-slate-900 text-white">
+              <option key={subspecialty.id} value={subspecialty.id}>
                 {subspecialty.name}
               </option>
             ))}
           </select>
           {formData.specialty_id && filteredSubspecialties.length === 0 && (
-            <p className="text-xs text-gray-400 mt-1">Bu uzmanlık için yan dal bulunmuyor</p>
+            <p className="text-xs text-gray-500 mt-1">Bu uzmanlık için yan dal bulunmuyor</p>
           )}
         </div>
         
         {/* Satır 4: Doğum Yeri - İkamet Yeri */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             Doğum Yeri
           </label>
           <select
             value={formData.birth_place_id}
             onChange={(e) => setFormData({ ...formData, birth_place_id: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
           >
-            <option value="" className="bg-slate-900 text-white">Şehir seçin</option>
+            <option value="">Şehir seçin</option>
             {cities.map(city => (
-              <option key={city.value} value={city.value.toString()} className="bg-slate-900 text-white">
+              <option key={city.value} value={city.value.toString()}>
                 {city.label}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             İkamet Yeri
           </label>
           <select
             value={formData.residence_city_id}
             onChange={(e) => setFormData({ ...formData, residence_city_id: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
           >
-            <option value="" className="bg-slate-900 text-white">Şehir seçin</option>
+            <option value="">Şehir seçin</option>
             {cities.map(city => (
-              <option key={city.value} value={city.value.toString()} className="bg-slate-900 text-white">
+              <option key={city.value} value={city.value.toString()}>
                 {city.label}
               </option>
             ))}
@@ -1179,29 +1179,29 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
         
         {/* Satır 5: Telefon - E-Mail */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             Telefon
           </label>
           <input
             type="tel"
             value={formData.phone}
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+            className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
             placeholder="+90 5XX XXX XX XX"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">
+          <label className="block text-sm font-medium text-gray-600 mb-3">
             E-Mail
           </label>
           <input
             type="email"
             value={formData.email}
             disabled
-            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-gray-300 cursor-not-allowed backdrop-blur-sm"
+            className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
             placeholder="ornek@email.com"
           />
-          <p className="text-xs text-gray-400 mt-1">E-mail adresi değiştirilemez</p>
+          <p className="text-xs text-gray-500 mt-1">E-mail adresi değiştirilemez</p>
         </div>
         </div>
 
@@ -1227,19 +1227,19 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
 // Eğitim Tab Component
 const EducationTab = ({ educations, isLoading, onAdd, onEdit, onDelete, educationTypes = [] }) => {
   if (isLoading) {
-    return <SkeletonLoader className="h-64 bg-white/10 rounded-2xl" />;
+    return <SkeletonLoader className="h-64 bg-gray-200 rounded-2xl" />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-          <GraduationCap className="w-6 h-6 text-blue-400" />
+        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <GraduationCap className="w-6 h-6 text-blue-600" />
           Eğitim Bilgileri
         </h3>
         <button
           onClick={onAdd}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 flex items-center gap-2 shadow-lg"
+          className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-300 flex items-center gap-2 shadow-md"
         >
           <Plus className="w-5 h-5" />
           Yeni Ekle
@@ -1247,25 +1247,37 @@ const EducationTab = ({ educations, isLoading, onAdd, onEdit, onDelete, educatio
       </div>
       <div className="space-y-4">
         {educations?.map((education) => (
-          <div key={education.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
+          <div key={education.id} className="bg-white rounded-2xl p-6 border border-blue-100 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="font-semibold text-white text-lg">
-                  {education.education_type_name || education.education_type || 'Eğitim'}
-                </h4>
-                <p className="text-gray-300 mt-1">{education.education_institution}</p>
-                <p className="text-gray-400 text-sm mt-2">{education.field} • {education.graduation_year}</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h4 className="font-semibold text-gray-900 text-lg">
+                    {education.education_institution}
+                  </h4>
+                </div>
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                    {education.education_type_name || education.education_type || 'Eğitim'}
+                  </span>
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                    {education.field}
+                  </span>
+                </div>
+                <div className="text-gray-500 text-sm mt-3 flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-blue-400" />
+                  <span>Mezuniyet: {education.graduation_year}</span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onEdit(education)}
-                  className="p-3 text-blue-400 hover:bg-blue-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 border border-transparent hover:border-blue-100"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => onDelete(education.id)}
-                  className="p-3 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all duration-300 border border-transparent hover:border-rose-100"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -1275,10 +1287,10 @@ const EducationTab = ({ educations, isLoading, onAdd, onEdit, onDelete, educatio
         ))}
         {educations?.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <GraduationCap className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <GraduationCap className="w-10 h-10 text-blue-600" />
             </div>
-            <p className="text-gray-300 text-lg">Henüz eğitim bilgisi eklenmemiş</p>
+            <p className="text-gray-600 text-lg">Henüz eğitim bilgisi eklenmemiş</p>
           </div>
         )}
       </div>
@@ -1289,7 +1301,7 @@ const EducationTab = ({ educations, isLoading, onAdd, onEdit, onDelete, educatio
 // Deneyim Tab Component
 const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
   if (isLoading) {
-    return <SkeletonLoader className="h-64 bg-white/10 rounded-2xl" />;
+    return <SkeletonLoader className="h-64 bg-gray-200 rounded-2xl" />;
   }
 
   const [expanded, setExpanded] = React.useState({});
@@ -1300,13 +1312,13 @@ const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Briefcase className="w-6 h-6 text-green-400" />
+        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <Briefcase className="w-6 h-6 text-emerald-600" />
           Deneyim Bilgileri
         </h3>
         <button
           onClick={onAdd}
-          className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-2 shadow-lg"
+          className="bg-gradient-to-r from-emerald-600 to-emerald-700 text-white px-6 py-3 rounded-xl font-medium hover:from-emerald-700 hover:to-emerald-800 transition-all duration-300 flex items-center gap-2 shadow-md"
         >
           <Plus className="w-5 h-5" />
           Yeni Ekle
@@ -1320,23 +1332,23 @@ const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 flex-wrap">
-                <h4 className="font-semibold text-white text-lg">{experience.role_title}</h4>
-                  <span className="text-gray-300">• {experience.organization}</span>
+                <h4 className="font-semibold text-gray-900 text-lg">{experience.role_title}</h4>
+                  <span className="text-gray-600">• {experience.organization}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-3 flex-wrap">
                   {experience.specialty_name && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                       {experience.specialty_name}
                     </span>
                   )}
                   {experience.subspecialty_name && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
                       {experience.subspecialty_name}
                     </span>
                   )}
                 </div>
-                <div className="text-gray-400 text-sm mt-3 flex items-center gap-2 flex-wrap">
-                  <Calendar className="w-4 h-4" />
+                <div className="text-gray-500 text-sm mt-3 flex items-center gap-2 flex-wrap">
+                  <Calendar className="w-4 h-4 text-blue-400" />
                   <span>
                     {formatDate(experience.start_date)} - {experience.is_current ? 'Devam ediyor' : formatDate(experience.end_date)}
                   </span>
@@ -1345,13 +1357,13 @@ const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onEdit(experience)}
-                  className="p-3 text-blue-400 hover:bg-blue-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 border border-transparent hover:border-blue-100"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => onDelete(experience.id)}
-                  className="p-3 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all duration-300 border border-transparent hover:border-rose-100"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -1363,15 +1375,15 @@ const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
           const short = desc.length > 180 ? `${desc.slice(0, 180)}...` : desc;
 
           return (
-            <div key={experience.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
+            <div key={experience.id} className="bg-white rounded-2xl p-6 border border-blue-100 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
               {header}
               {desc && (
                 <div className="mt-4">
-                  <p className="text-gray-300 text-sm leading-relaxed">
+                  <p className="text-gray-600 text-sm leading-relaxed">
                     {isOpen ? desc : short}
                   </p>
                   {desc.length > 180 && (
-                    <button onClick={() => toggle(experience.id)} className="mt-2 text-blue-300 hover:text-blue-200 text-sm font-medium">
+                    <button onClick={() => toggle(experience.id)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium">
                       {isOpen ? 'Daha az göster' : 'Devamını oku'}
                     </button>
                   )}
@@ -1383,10 +1395,10 @@ const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
 
         {experiences?.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Briefcase className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Briefcase className="w-10 h-10 text-emerald-600" />
             </div>
-            <p className="text-gray-300 text-lg">Henüz deneyim bilgisi eklenmemiş</p>
+            <p className="text-gray-600 text-lg">Henüz deneyim bilgisi eklenmemiş</p>
           </div>
         )}
       </div>
@@ -1397,19 +1409,19 @@ const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
 // Sertifika Tab Component
 const CertificateTab = ({ certificates, isLoading, onAdd, onEdit, onDelete }) => {
   if (isLoading) {
-    return <SkeletonLoader className="h-64 bg-white/10 rounded-2xl" />;
+    return <SkeletonLoader className="h-64 bg-gray-200 rounded-2xl" />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Award className="w-6 h-6 text-yellow-400" />
+        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <Award className="w-6 h-6 text-amber-600" />
           Sertifika Bilgileri
         </h3>
         <button
           onClick={onAdd}
-          className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-6 py-3 rounded-xl font-medium hover:from-yellow-600 hover:to-orange-700 transition-all duration-300 flex items-center gap-2 shadow-lg"
+          className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-medium hover:from-amber-600 hover:to-orange-700 transition-all duration-300 flex items-center gap-2 shadow-md"
         >
           <Plus className="w-5 h-5" />
           Yeni Ekle
@@ -1417,27 +1429,34 @@ const CertificateTab = ({ certificates, isLoading, onAdd, onEdit, onDelete }) =>
       </div>
       <div className="space-y-4">
         {certificates?.map((certificate) => (
-          <div key={certificate.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                <div className="flex items-start justify-between">
+          <div key={certificate.id} className="bg-white rounded-2xl p-6 border border-blue-100 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
+            <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h4 className="font-semibold text-white text-lg">{certificate.certificate_name || 'Sertifika'}</h4>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h4 className="font-semibold text-gray-900 text-lg">{certificate.certificate_name || 'Sertifika'}</h4>
                 </div>
-                <p className="text-gray-300 mt-2">{certificate.institution}</p>
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                    {certificate.institution}
+                  </span>
+                </div>
                 {certificate.certificate_year && (
-                  <p className="text-gray-400 text-sm mt-2">Yıl: {certificate.certificate_year}</p>
+                  <div className="text-gray-500 text-sm mt-3 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-amber-400" />
+                    <span>{certificate.certificate_year}</span>
+                  </div>
                 )}
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onEdit(certificate)}
-                  className="p-3 text-blue-400 hover:bg-blue-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 border border-transparent hover:border-blue-100"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => onDelete(certificate.id)}
-                  className="p-3 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all duration-300 border border-transparent hover:border-rose-100"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -1447,10 +1466,10 @@ const CertificateTab = ({ certificates, isLoading, onAdd, onEdit, onDelete }) =>
         ))}
         {certificates?.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Award className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Award className="w-10 h-10 text-amber-600" />
             </div>
-            <p className="text-gray-300 text-lg">Henüz sertifika bilgisi eklenmemiş</p>
+            <p className="text-gray-600 text-lg">Henüz sertifika bilgisi eklenmemiş</p>
           </div>
         )}
       </div>
@@ -1461,19 +1480,19 @@ const CertificateTab = ({ certificates, isLoading, onAdd, onEdit, onDelete }) =>
 // Dil Tab Component
 const LanguageTab = ({ languages, isLoading, onAdd, onEdit, onDelete }) => {
   if (isLoading) {
-    return <SkeletonLoader className="h-64 bg-white/10 rounded-2xl" />;
+    return <SkeletonLoader className="h-64 bg-gray-200 rounded-2xl" />;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-2xl font-bold text-white flex items-center gap-3">
-          <Globe className="w-6 h-6 text-purple-400" />
+        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+          <Globe className="w-6 h-6 text-purple-600" />
           Dil Bilgileri
         </h3>
         <button
           onClick={onAdd}
-          className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-xl font-medium hover:from-purple-600 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 shadow-lg"
+          className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 shadow-md"
         >
           <Plus className="w-5 h-5" />
           Yeni Ekle
@@ -1481,22 +1500,28 @@ const LanguageTab = ({ languages, isLoading, onAdd, onEdit, onDelete }) => {
       </div>
       <div className="space-y-4">
         {languages?.map((language) => (
-          <div key={language.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
+          <div key={language.id} className="bg-white rounded-2xl p-6 border border-blue-100 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h4 className="font-semibold text-white text-lg">{language.language}</h4>
-                <p className="text-gray-300 mt-1">{language.level}</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h4 className="font-semibold text-gray-900 text-lg">{language.language}</h4>
+                </div>
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                    {language.level}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => onEdit(language)}
-                  className="p-3 text-blue-400 hover:bg-blue-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 border border-transparent hover:border-blue-100"
                 >
                   <Edit className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => onDelete(language.id)}
-                  className="p-3 text-red-400 hover:bg-red-500/20 rounded-xl transition-all duration-300"
+                  className="p-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-all duration-300 border border-transparent hover:border-rose-100"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -1506,10 +1531,10 @@ const LanguageTab = ({ languages, isLoading, onAdd, onEdit, onDelete }) => {
         ))}
         {languages?.length === 0 && (
           <div className="text-center py-12">
-            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Globe className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Globe className="w-10 h-10 text-purple-600" />
             </div>
-            <p className="text-gray-300 text-lg">Henüz dil bilgisi eklenmemiş</p>
+            <p className="text-gray-600 text-lg">Henüz dil bilgisi eklenmemiş</p>
           </div>
         )}
       </div>
@@ -1615,9 +1640,9 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
         <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className="p-4 md:p-6 space-y-5">
           {fields.map((field) => (
             <div key={field.name} className="space-y-2">
-              <label className="block text-sm font-medium text-gray-300">
+              <label className="block text-sm font-medium text-gray-600">
                 {field.label}
-                {field.required && <span className="text-red-400 ml-1">*</span>}
+                {field.required && <span className="text-rose-500 ml-1">*</span>}
               </label>
               {field.type === 'select' ? (
                 <select
@@ -1630,16 +1655,15 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                       onChange({ ...data, [field.name]: e.target.value });
                     }
                   }}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 text-sm"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-sm"
                   required={field.required}
                   disabled={field.disabled || false}
                 >
-                    <option value="" className="bg-slate-800 text-white">Seçiniz</option>
+                    <option value="">Seçiniz</option>
                   {field.options.map((option) => (
                     <option 
                       key={option.value || option.id || option} 
-                      value={option.value || option.id || option} 
-                      className="bg-slate-800 text-white"
+                      value={option.value || option.id || option}
                     >
                       {option.label || option.name || option}
                     </option>
@@ -1658,15 +1682,15 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                       }
                       onChange(newData);
                     }}
-                    className="w-4 h-4 text-blue-600 bg-white/5 border-white/20 rounded focus:ring-blue-500 cursor-pointer"
+                  className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                   />
-                  <label className="ml-2.5 text-sm text-gray-300 cursor-pointer">{field.label}</label>
+                <label className="ml-2.5 text-sm text-gray-600 cursor-pointer">{field.label}</label>
                 </div>
               ) : field.type === 'textarea' ? (
                 <textarea
                   value={data[field.name] || ''}
                   onChange={(e) => onChange({ ...data, [field.name]: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm min-h-[100px] resize-y transition-all hover:bg-white/10 text-sm"
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y transition-all outline-none text-sm"
                   placeholder={field.placeholder || ''}
                   required={field.required}
                   rows={4}
@@ -1676,7 +1700,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                   type="number"
                   value={data[field.name] || ''}
                   onChange={(e) => onChange({ ...data, [field.name]: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-sm [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
                   placeholder={field.placeholder || ''}
                   required={field.required}
                   min={field.min || undefined}
@@ -1688,7 +1712,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
                   type={field.type}
                   value={data[field.name] || ''}
                   onChange={(e) => onChange({ ...data, [field.name]: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                   placeholder={field.placeholder || ''}
                   required={field.required}
                   disabled={field.disabled || false}
@@ -1702,12 +1726,12 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
       </div>
       
       {/* Footer Buttons */}
-      <div className="border-t border-white/10 p-4 md:p-6">
+      <div className="border-t border-gray-100 p-4 md:p-6">
         <div className="flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 text-sm font-medium text-gray-300 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-200"
+            className="px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:text-blue-600 transition-all duration-200"
           >
             İptal
           </button>
@@ -1715,7 +1739,7 @@ const FormModal = ({ type, data, onChange, onSubmit, onClose, isEditing, isLoadi
             type="button"
             disabled={isLoading}
             onClick={onSubmit}
-            className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium shadow-lg"
+            className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium shadow-md"
           >
             {isLoading ? (
               <>
@@ -1762,12 +1786,12 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading, type }
     >
       <div className="p-4 md:p-6">
         <div className="flex items-start gap-4 mb-6">
-          <div className="flex-shrink-0 w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
-            <AlertCircle className="w-6 h-6 text-red-400" />
+          <div className="flex-shrink-0 w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center">
+            <AlertCircle className="w-6 h-6 text-rose-600" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-white mb-2">Emin misiniz?</h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Emin misiniz?</h3>
+            <p className="text-sm text-gray-600 leading-relaxed">
               {getTypeLabel()} silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
             </p>
           </div>
@@ -1778,7 +1802,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, isLoading, type }
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2.5 text-sm font-medium text-gray-300 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-all duration-200 disabled:opacity-50"
+            className="px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:text-blue-600 transition-all duration-200 disabled:opacity-50"
           >
             İptal
           </button>

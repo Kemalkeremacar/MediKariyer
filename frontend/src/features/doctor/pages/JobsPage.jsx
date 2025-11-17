@@ -17,7 +17,7 @@ import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, MapPin, Building, 
   Clock, X, Send,
-  Briefcase, DollarSign, CheckCircle, ArrowRight, FileText, Filter, XCircle as XIcon
+  Briefcase, DollarSign, CheckCircle, ArrowRight, FileText, Filter, XCircle as XIcon, Target
 } from 'lucide-react';
 import { useDoctorJobs } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
@@ -473,31 +473,31 @@ const DoctorJobsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
           {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 mb-8">
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-3xl p-8 mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30"></div>
             </div>
             
             <div className="relative z-10">
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-white mb-3">
+                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
                     İş İlanları
-                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-1">
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 mt-1">
                       Kariyer Fırsatları
                     </span>
                   </h1>
-                  <p className="text-base text-gray-300 max-w-2xl leading-relaxed">
+                  <p className="text-base text-gray-700 max-w-2xl leading-relaxed">
                   Size uygun iş ilanlarını keşfedin ve başvurun.
                   </p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 w-32 h-24 flex items-center justify-center">
+                <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-4 w-32 h-24 flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-sm font-medium text-gray-300 mb-1">Toplam İlan</div>
-                    <div className="text-2xl font-bold text-white">{pagination.total || 0}</div>
+                    <div className="text-sm font-medium text-gray-500 mb-1">Toplam İlan</div>
+                    <div className="text-2xl font-bold text-blue-900">{pagination.total || 0}</div>
                   </div>
                 </div>
               </div>
@@ -505,17 +505,17 @@ const DoctorJobsPage = () => {
           </div>
 
         {/* Filtre Paneli */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 mb-6">
+        <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filtreler
-            </h2>
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Filtreler</h3>
+            </div>
             {activeFiltersCount > 0 && (
               <button
                 type="button"
                 onClick={clearFilters}
-                className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
                 Filtreleri Temizle
               </button>
@@ -533,17 +533,17 @@ const DoctorJobsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             {/* Şehir */}
                 <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                     Şehir
                   </label>
                   <select
                 value={cityId}
                 onChange={(e) => setCityId(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-500"
                   >
-                    <option value="" className="bg-slate-800">Tüm Şehirler</option>
+                    <option value="">Tüm Şehirler</option>
                     {cities.map((city) => (
-                  <option key={city.id} value={city.id} className="bg-slate-800">
+                  <option key={city.id} value={city.id}>
                     {city.name}
                   </option>
                     ))}
@@ -552,17 +552,17 @@ const DoctorJobsPage = () => {
 
             {/* Ana Dal */}
                 <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Ana Dal
                   </label>
                   <select
                 value={specialtyId}
                 onChange={(e) => setSpecialtyId(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-500"
               >
-                <option value="" className="bg-slate-800">Tüm Ana Dallar</option>
+                <option value="">Tüm Ana Dallar</option>
                     {specialties.map((specialty) => (
-                  <option key={specialty.id} value={specialty.id} className="bg-slate-800">
+                  <option key={specialty.id} value={specialty.id}>
                     {specialty.name}
                   </option>
                 ))}
@@ -571,18 +571,18 @@ const DoctorJobsPage = () => {
 
             {/* Yan Dal */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Yan Dal
               </label>
               <select
                 value={subspecialtyId}
                 onChange={(e) => setSubspecialtyId(e.target.value)}
                 disabled={!specialtyId}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <option value="" className="bg-slate-800">Tüm Yan Dallar</option>
+                <option value="">Tüm Yan Dallar</option>
                 {filteredSubspecialties.map((subspecialty) => (
-                  <option key={subspecialty.id} value={subspecialty.id} className="bg-slate-800">
+                  <option key={subspecialty.id} value={subspecialty.id}>
                     {subspecialty.name}
                   </option>
                 ))}
@@ -591,17 +591,17 @@ const DoctorJobsPage = () => {
 
             {/* Çalışma Türü */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Çalışma Türü
               </label>
               <select
                 value={employmentType}
                 onChange={(e) => setEmploymentType(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-500"
               >
-                <option value="" className="bg-slate-800">Tüm Çalışma Türleri</option>
+                <option value="">Tüm Çalışma Türleri</option>
                 {employmentTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-slate-800">
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                     ))}
@@ -611,7 +611,7 @@ const DoctorJobsPage = () => {
 
           {/* Arama */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-600 mb-2">
               Arama (İlan Başlığı, Hastane Adı)
             </label>
             <div className="relative">
@@ -654,7 +654,7 @@ const DoctorJobsPage = () => {
                   }
                 }}
                 placeholder="İlan başlığı veya hastane adı ara..."
-                className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
@@ -663,64 +663,64 @@ const DoctorJobsPage = () => {
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {cityId && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded-full text-blue-300 text-sm">
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-blue-700 text-sm">
                   <span>Şehir: {cities.find(c => c.id === parseInt(cityId, 10))?.name}</span>
                   <button
                     type="button"
                     onClick={() => setCityId('')}
-                    className="hover:text-blue-200"
+                    className="text-blue-600 hover:text-blue-800"
                   >
                     <XIcon className="w-4 h-4" />
                   </button>
                 </div>
               )}
               {specialtyId && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-sm">
+                <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 border border-purple-200 rounded-full text-purple-700 text-sm">
                   <span>Ana Dal: {specialties.find(s => s.id === parseInt(specialtyId, 10))?.name}</span>
                   <button
                     type="button"
                     onClick={() => setSpecialtyId('')}
-                    className="hover:text-purple-200"
+                    className="text-purple-600 hover:text-purple-800"
                   >
                     <XIcon className="w-4 h-4" />
                   </button>
                 </div>
               )}
               {subspecialtyId && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-pink-500/20 border border-pink-500/30 rounded-full text-pink-300 text-sm">
+                <div className="flex items-center gap-2 px-3 py-1 bg-pink-50 border border-pink-200 rounded-full text-pink-700 text-sm">
                   <span>Yan Dal: {filteredSubspecialties.find(s => s.id === parseInt(subspecialtyId, 10))?.name}</span>
                   <button
                     type="button"
                     onClick={() => setSubspecialtyId('')}
-                    className="hover:text-pink-200"
+                    className="text-pink-600 hover:text-pink-800"
                   >
                     <XIcon className="w-4 h-4" />
                   </button>
                 </div>
               )}
               {employmentType && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-green-300 text-sm">
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-full text-green-700 text-sm">
                   <span>Çalışma Türü: {employmentType}</span>
                   <button
                     type="button"
                     onClick={() => setEmploymentType('')}
-                    className="hover:text-green-200"
+                    className="text-green-600 hover:text-green-800"
                   >
                     <XIcon className="w-4 h-4" />
                   </button>
                 </div>
               )}
               {searchQuery && (
-                <div className="flex items-center gap-2 px-3 py-1 bg-orange-500/20 border border-orange-500/30 rounded-full text-orange-300 text-sm">
+                <div className="flex items-center gap-2 px-3 py-1 bg-orange-50 border border-orange-200 rounded-full text-orange-700 text-sm">
                   <span>Arama: {searchQuery}</span>
-                <button
+                  <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="hover:text-orange-200"
-                >
+                    className="text-orange-600 hover:text-orange-800"
+                  >
                     <XIcon className="w-4 h-4" />
-                </button>
-              </div>
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -751,18 +751,18 @@ const JobsList = memo(({ jobs, pagination, onJobClick, currentPage, onPageChange
   if (!Array.isArray(jobs) || jobs.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Briefcase className="w-10 h-10 text-white" />
+        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Briefcase className="w-10 h-10 text-blue-600" />
         </div>
-        <h3 className="text-xl font-semibold text-white mb-2">İlan Bulunamadı</h3>
-        <p className="text-gray-400 mb-6">Aradığınız kriterlere uygun iş ilanı bulunamadı.</p>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">İlan Bulunamadı</h3>
+        <p className="text-gray-500 mb-6">Aradığınız kriterlere uygun iş ilanı bulunamadı.</p>
         <button
           onClick={onClearFilters}
-          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium"
+          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-md"
         >
           Filtreleri Temizle
         </button>
-            </div>
+      </div>
     );
   }
 
@@ -817,7 +817,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
                   <button
         onClick={handlePrev}
                     disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+                    className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Önceki
                   </button>
@@ -844,10 +844,10 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
                       <button
                         key={page}
             onClick={() => handlePage(page)}
-                        className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm ${
+                        className={`px-4 py-2 text-sm font-medium rounded-xl ${
                           isCurrentPage
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-                            : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                            : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'
                         }`}
                       >
                         {page}
@@ -858,7 +858,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
                   <button
         onClick={handleNext}
         disabled={currentPage === totalPages}
-                    className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+                    className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Sonraki
                   </button>
@@ -877,40 +877,44 @@ const JobCard = memo(({ job, onClick }) => {
   return (
     <div 
       onClick={handleClick}
-      className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300 cursor-pointer group min-h-[200px] flex flex-col"
+      className="bg-white rounded-2xl border border-blue-100 p-6 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer group min-h-[200px] flex flex-col"
     >
       {/* Başlık */}
-      <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-300 transition-colors line-clamp-2">
+      <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
             {job.title}
           </h3>
 
       {/* Uzmanlık / Yan Dal */}
-      <div className="text-sm text-blue-300 bg-blue-500/15 border border-blue-500/20 w-fit px-3 py-1 rounded-full mb-3">
-            {job.specialty_name}
-            {job.subspecialty_name && (
-              <span className="ml-1 text-blue-200">({job.subspecialty_name})</span>
-            )}
-          </div>
+      <div className="space-y-1.5 mb-4">
+        <div className="flex items-center text-gray-600 text-sm">
+          <Target className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" />
+          <span className="truncate font-medium">{job.specialty_name}</span>
+        </div>
+        <div className="flex items-center text-gray-600 text-sm">
+          <Target className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0" />
+          <span className="truncate">{job.subspecialty_name || '-'}</span>
+        </div>
+      </div>
 
       {/* Şehir ve Hastane */}
-      <div className="space-y-1 mb-4">
-        <div className="flex items-center text-gray-300 text-sm">
-          <MapPin className="w-4 h-4 mr-2" />
+      <div className="space-y-1.5 mb-4">
+        <div className="flex items-center text-gray-600 text-sm">
+          <MapPin className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" />
           <span className="truncate">{job.city}</span>
-          </div>
-        <div className="flex items-center text-gray-300 text-sm">
-          <Building className="w-4 h-4 mr-2" />
+        </div>
+        <div className="flex items-center text-gray-600 text-sm">
+          <Building className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" />
           <span className="truncate">{job.hospital_name}</span>
         </div>
       </div>
 
       {/* Alt Bilgi - Çalışma Türü */}
-      <div className="mt-auto pt-2 border-t border-white/10">
-        <div className="flex items-center text-sm text-gray-400">
-            <Clock className="w-4 h-4 mr-1" />
+      <div className="mt-auto pt-2 border-t border-gray-100">
+        <div className="flex items-center text-sm text-gray-500">
+            <Clock className="w-4 h-4 mr-1 text-blue-500 flex-shrink-0" />
             {job.employment_type}
           </div>
-        <div className="text-xs text-gray-400 mt-1">
+        <div className="text-xs text-gray-500 mt-1">
           {new Date(job.created_at).toLocaleDateString('tr-TR')}
         </div>
       </div>

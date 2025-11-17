@@ -252,35 +252,44 @@ const PhotoManagementPage = () => {
 
   const handlePhotoUpload = async () => {
     if (!selectedFile) return;
+    if (awaitingApproval || statusObjStatus === 'pending') {
+      showToast.warning('Zaten bekleyen bir talebiniz var. Önce iptal edin.');
+      return;
+    }
+    
     setIsUploading(true);
+    
+    // ⚡ OPTIMISTIC UPDATE: UI'ı hemen güncelle (backend'den cevap beklemeden)
+    setAwaitingApproval(true);
+    setSubmissionMessage({ type: 'success', text: 'Değiştirme talebiniz gönderildi. Admin onayı bekleniyor.' });
+    
+    // Geçici olarak localStorage'a kaydet (sayfa yenileme için)
     try {
+      const maybePreview = typeof photoPreview === 'string' && photoPreview.length <= 300000 ? photoPreview : null;
+      localStorage.setItem(
+        getStorageKey(),
+        JSON.stringify({ 
+          isPending: true, 
+          created_at: new Date().toISOString(), 
+          file_url: maybePreview 
+        })
+      );
+    } catch (_) {}
+    
+    try {
+      // Backend'e gönder (arka planda)
       await requestPhotoChangeMutation.mutateAsync(selectedFile);
       showToast.success(toastMessages.photoManagement.requestSuccess);
       
-      // Pending state'ini ayarla (backend'den veri gelene kadar)
-      setAwaitingApproval(true);
-      
-      // Geçici olarak localStorage'a kaydet (backend response gelene kadar)
-      try {
-        const maybePreview = typeof photoPreview === 'string' && photoPreview.length <= 300000 ? photoPreview : null;
-        localStorage.setItem(
-          getStorageKey(),
-          JSON.stringify({ 
-            isPending: true, 
-            created_at: new Date().toISOString(), 
-            file_url: maybePreview 
-          })
-        );
-      } catch (_) {}
-      
-      // Backend'den güncel verileri çek (pending durumu ve history güncellenecek)
-      await refetchStatus();
+      // Backend'den güncel verileri çek (arka planda, silent)
+      refetchStatus();
       refetchProfile();
-      
-      setSubmissionMessage({ type: 'success', text: 'Değiştirme talebiniz gönderildi. Admin onayı bekleniyor.' });
     } catch (error) {
-      showToast.error(toastMessages.photoManagement.uploadError);
+      // ❌ HATA: Optimistic update'i geri al
+      setAwaitingApproval(false);
       setSubmissionMessage({ type: 'error', text: 'Fotoğraf yüklenemedi. Lütfen dosya türü/boyutunu ve bağlantınızı kontrol edin.' });
+      try { localStorage.removeItem(getStorageKey()); } catch (_) {}
+      showToast.error(toastMessages.photoManagement.uploadError);
     }
     setIsUploading(false);
   };
@@ -306,11 +315,11 @@ const PhotoManagementPage = () => {
   // Loading state - Sadece profil yüklenene kadar bekle, status arka planda yüklenebilir
   if (isProfileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto flex items-center justify-center min-h-screen">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 text-center">
-            <RefreshCw className="w-12 h-12 text-blue-400 animate-spin mx-auto mb-4" />
-            <p className="text-white text-lg">Profil yükleniyor...</p>
+          <div className="bg-white rounded-2xl border border-blue-100 p-8 text-center shadow-md">
+            <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <p className="text-gray-700 text-lg">Profil yükleniyor...</p>
           </div>
         </div>
       </div>
@@ -318,29 +327,29 @@ const PhotoManagementPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="w-full max-w-7xl mx-auto">
         {/* Header - Geri butonu */}
         <div className="mb-6 flex items-center gap-4">
           <button 
             onClick={() => navigate('/doctor/profile')} 
-            className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white hover:bg-white/20 transition-all duration-300 backdrop-blur-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-700 hover:border-blue-400 hover:text-blue-600 transition-all duration-300 shadow-sm"
           >
             <ArrowLeft className="w-4 w-4" />
             <span className="font-medium">Profile Dön</span>
           </button>
         </div>
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-7 shadow-xl border border-white/20 animate-in fade-in duration-200">
+        <div className="bg-white rounded-2xl p-7 shadow-xl border border-blue-100 animate-in fade-in duration-200">
           <div className="mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
-              <Camera className="w-8 h-8 text-blue-300" /> Profil Fotoğrafı Yönetimi
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <Camera className="w-8 h-8 text-blue-600" /> Profil Fotoğrafı Yönetimi
             </h2>
-            <p className="mt-1 text-blue-100/90 text-sm flex items-center gap-2"><Info className="w-4 h-4 text-blue-300" /> Profil fotoğrafınız; başvurularda, ilanlarda ve hastane profillerinde görünür. Net bir yüz fotoğrafı seçiniz.</p>
+            <p className="mt-1 text-gray-600 text-sm flex items-center gap-2"><Info className="w-4 h-4 text-blue-500" /> Profil fotoğrafınız; başvurularda, ilanlarda ve hastane profillerinde görünür. Net bir yüz fotoğrafı seçiniz.</p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* SOL: Mevcut Fotoğraf */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-blue-300" /> Mevcut Fotoğraf</h3>
+            <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-md">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-blue-600" /> Mevcut Fotoğraf</h3>
               <div className="flex flex-col items-center gap-3">
                 <div className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-400/10 to-indigo-700/20 border-[4px] border-blue-500/30 shadow-xl flex items-center justify-center overflow-hidden">
                   {profile.profile_photo ? (
@@ -349,13 +358,13 @@ const PhotoManagementPage = () => {
                     <Camera className="w-16 h-16 text-gray-500" />
                   )}
                 </div>
-                <p className="text-gray-400 text-xs mt-1">Son onaylı fotoğrafınız</p>
+                <p className="text-gray-500 text-xs mt-1">Son onaylı fotoğrafınız</p>
               </div>
             </div>
 
             {/* SAĞ: Yeni Fotoğraf / Yükleme */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-              <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2"><Upload className="w-4 h-4 text-green-300" /> Yeni Fotoğraf Seç / Yükle</h3>
+            <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-md">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2"><Upload className="w-4 h-4 text-emerald-600" /> Yeni Fotoğraf Seç / Yükle</h3>
               <div className="flex flex-col items-center">
                 <div className="w-36 h-36 rounded-full bg-gradient-to-br from-green-400/10 to-emerald-700/20 border-[4px] border-green-500/30 shadow-xl flex items-center justify-center overflow-hidden mb-3">
                   {photoPreview ? (
@@ -365,39 +374,39 @@ const PhotoManagementPage = () => {
                   )}
                 </div>
                 {hasPendingRequest && (
-                  <div className="w-full mb-3 p-3 flex items-center gap-2 rounded-lg border-l-4 border-yellow-500 bg-yellow-500/10 text-yellow-200">
+                  <div className="w-full mb-3 p-3 flex items-center gap-2 rounded-lg border-l-4 border-amber-400 bg-amber-50 text-amber-700">
                     <Clock className="w-4 h-4 flex-shrink-0" />
                     <span>Onay bekleyen talebiniz var. Yeni yükleme için önce iptal edin.</span>
-                    <button onClick={handleCancelRequest} className="ml-auto px-3 py-1 bg-yellow-600/70 hover:bg-yellow-700 text-white text-xs rounded-md">İptal Et</button>
+                    <button onClick={handleCancelRequest} className="ml-auto px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-md">İptal Et</button>
                   </div>
                 )}
                 {!hasPendingRequest && (
                   <>
                     <label className="block w-full">
                       <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={isUploading} />
-                      <span className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-xl px-6 py-3 mb-2 cursor-pointer text-base shadow-lg transition-all duration-150">
+                      <span className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl px-6 py-3 mb-2 cursor-pointer text-base shadow-md transition-all duration-150">
                         <Upload className="w-5 h-5 mr-2" /> Yeni Fotoğraf Seç
                       </span>
                     </label>
                     {selectedFile && (
                       <button
                         onClick={handlePhotoUpload}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-xl text-white font-semibold shadow-lg text-base transition-all"
-                        disabled={isUploading}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-xl text-white font-semibold shadow-md text-base transition-all"
+                        disabled={isUploading || awaitingApproval || statusObjStatus === 'pending'}
                       >
                         {isUploading ? (
                           <RefreshCw className="w-5 h-5 animate-spin" />
                         ) : (
                           <Camera className="w-5 h-5" />
                         )}
-                        Değiştirme Talebi Gönder
+                        {awaitingApproval || statusObjStatus === 'pending' ? 'Onay Bekleniyor...' : 'Değiştirme Talebi Gönder'}
                       </button>
                     )}
                   </>
                 )}
-                <p className="text-gray-400 text-xs mt-3 flex items-center gap-1"><Info className="w-4 h-4" /> JPG veya PNG • Maksimum 10MB</p>
+                <p className="text-gray-500 text-xs mt-3 flex items-center gap-1"><Info className="w-4 h-4 text-blue-500" /> JPG veya PNG • Maksimum 10MB</p>
                 {submissionMessage && (
-                  <div className={`mt-3 w-full text-xs rounded-lg p-3 border ${submissionMessage.type === 'success' ? 'bg-green-500/10 text-green-200 border-green-500/30' : 'bg-red-500/10 text-red-200 border-red-500/30'}`}>
+                  <div className={`mt-3 w-full text-xs rounded-lg p-3 border ${submissionMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
                     {submissionMessage.text}
                   </div>
                 )}
@@ -409,18 +418,18 @@ const PhotoManagementPage = () => {
 
           {/* Geçmiş Kayıtlar */}
           <div className="mt-6">
-            <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2"><History className="w-4 h-4 text-purple-300" /> Geçmiş Kayıtlar</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2"><History className="w-4 h-4 text-purple-600" /> Geçmiş Kayıtlar</h3>
             {localHistory.length > 0 ? (
               <div className="max-h-56 overflow-y-auto space-y-3 pr-1">
                 {localHistory.map((item, idx) => (
-                  <div key={item.id || idx} className="p-3 rounded-lg border border-white/10 bg-white/5 flex items-start gap-3">
+                  <div key={item.id || idx} className="p-3 rounded-lg border border-blue-100 bg-white flex items-start gap-3 shadow-sm">
                     <div className="mt-0.5">
-                      {item.status === 'approved' && <CheckCircle className="w-4 h-4 text-green-300" />}
-                      {item.status === 'pending' && <Clock className="w-4 h-4 text-yellow-300" />}
-                      {item.status === 'rejected' && <XCircle className="w-4 h-4 text-red-300" />}
+                      {item.status === 'approved' && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                      {item.status === 'pending' && <Clock className="w-4 h-4 text-amber-500" />}
+                      {item.status === 'rejected' && <XCircle className="w-4 h-4 text-rose-600" />}
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 text-xs text-gray-200">
+                      <div className="flex items-center gap-2 text-xs text-gray-700">
                         <span className="font-semibold">
                           {(() => {
                             switch (item.status) {
@@ -432,14 +441,14 @@ const PhotoManagementPage = () => {
                             }
                           })()}
                         </span>
-                        <span className="text-gray-400">• {item.created_at ? new Date(item.created_at).toLocaleString('tr-TR') : '-'}</span>
+                        <span className="text-gray-500">• {item.created_at ? new Date(item.created_at).toLocaleString('tr-TR') : '-'}</span>
                       </div>
                       {item.reason && (
-                        <div className="mt-1 text-xs text-red-200">Red Nedeni: {item.reason}</div>
+                        <div className="mt-1 text-xs text-rose-600">Red Nedeni: {item.reason}</div>
                       )}
                       {item.file_url && (
                         <div className="mt-2">
-                          <img src={item.file_url} alt="Geçmiş Fotoğraf" className="w-14 h-14 rounded-lg object-cover border border-white/10" />
+                          <img src={item.file_url} alt="Geçmiş Fotoğraf" className="w-14 h-14 rounded-lg object-cover border border-blue-50" />
                         </div>
                       )}
                     </div>
@@ -447,7 +456,7 @@ const PhotoManagementPage = () => {
                 ))}
               </div>
             ) : (
-              <div className="p-4 rounded-xl border border-white/10 bg-white/5 text-gray-300 text-sm">
+              <div className="p-4 rounded-xl border border-blue-100 bg-white text-gray-600 text-sm shadow-sm">
                 Geçmiş kayıt bulunamadı.
               </div>
             )}
@@ -455,12 +464,12 @@ const PhotoManagementPage = () => {
 
           {/* Bilgilendirme */}
           <div className="mt-8 mb-2 flex flex-col gap-3">
-            <div className="text-xs text-gray-400 flex items-center gap-1">
-              <AlertCircle className="w-4 h-4 text-yellow-300" />
+            <div className="text-xs text-gray-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4 text-amber-500" />
               Gerçek ve güncel bir yüz fotoğrafı kullanmanız başvurunuzun hızlanmasına ve güvenilirliğinize katkı sağlar. Yüklemeleriniz admin onayından sonra her yere otomatik yansır.
             </div>
-            <div className="text-xs text-gray-400 flex items-center gap-1">
-              <AlertCircle className="w-4 h-4 text-blue-300" />
+            <div className="text-xs text-gray-600 flex items-center gap-1">
+              <AlertCircle className="w-4 h-4 text-blue-500" />
               Sistem tarafından red veya eksik dosya seçimi durumunda size hemen bildirim gösterilir.
             </div>
           </div>

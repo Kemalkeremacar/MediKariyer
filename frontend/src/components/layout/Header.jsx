@@ -146,46 +146,49 @@ const Header = () => {
     navigate('/', { replace: true });
   };
 
-  const NavLinkItem = ({ to, text, exact = false, ...props }) => (
-    <NavLink
-      to={to}
-      end={exact}
-      className={({ isActive }) =>
-        `group relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-          isActive 
-            ? 'bg-blue-500/20 shadow-sm'
-            : 'hover:bg-white/10'
-        }`
-      }
-      {...props}
-    >
-      {({ isActive }) => (
-        <>
-          <span
-            className={`transition-colors ${
-              isActive ? 'text-white' : 'text-white/90 group-hover:text-white'
-            }`}
-          >
-            {text}
-          </span>
-          {isActive && (
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-300 rounded-full"></div>
-          )}
-        </>
-      )}
-    </NavLink>
-  );
+  const NavLinkItem = ({ to, text, exact = false, ...props }) => {
+    return (
+      <NavLink
+        to={to}
+        end={exact}
+        className={({ isActive }) =>
+          `group relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+            isActive 
+              ? 'bg-blue-500/10 text-blue-600' 
+              : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+          }`
+        }
+        {...props}
+      >
+        {({ isActive }) => (
+          <>
+            <span className="transition-colors">
+              {text}
+            </span>
+            {isActive && (
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full"></div>
+            )}
+          </>
+        )}
+      </NavLink>
+    );
+  };
 
   /**
    * Header renk şeması fonksiyonu
-   * Tüm roller için aynı renk şeması kullanılır (doktor renk şeması)
+   * Tüm sayfalar için aynı modern beyaz header
    */
   const getHeaderColors = () => {
-    return 'bg-gradient-to-r from-blue-900/95 via-blue-800/95 to-blue-700/95';
+    // Tüm sayfalar için modern beyaz header with glassmorphism
+    return 'bg-white/95 backdrop-blur-lg shadow-sm';
+  };
+
+  const getTextColor = () => {
+    return 'text-gray-900';
   };
 
   return (
-    <header className={`${getHeaderColors()} backdrop-blur-md shadow-lg sticky top-0 z-40 border-b border-white/10`}>
+    <header className={`${getHeaderColors()} backdrop-blur-md shadow-lg sticky top-0 z-40 border-b border-gray-200`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo - 4 Parametre Planına Göre */}
@@ -203,8 +206,8 @@ const Header = () => {
                 />
               </div>
               {/* Logo Text - 4 Parametre Planına Göre */}
-              <span className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
-                {APP_CONFIG.APP_NAME}
+              <span className="text-2xl sm:text-3xl font-black lowercase text-blue-700 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                {APP_CONFIG.APP_NAME.toLowerCase()}
               </span>
             </button>
           </div>
@@ -230,7 +233,7 @@ const Header = () => {
                     <div className="relative">
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center space-x-2 px-4 py-2 text-white/90 hover:text-blue-300 hover:bg-white/10 rounded-lg transition-all duration-300"
+                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
                       >
                         <User size={18} />
                         <span className="text-sm font-medium">
@@ -281,7 +284,7 @@ const Header = () => {
                     <div className="relative">
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center space-x-2 px-4 py-2 text-white/90 hover:text-blue-300 hover:bg-white/10 rounded-lg transition-all duration-300"
+                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
                       >
                         <Building2 size={18} />
                         <span className="text-sm font-medium">
@@ -367,7 +370,7 @@ const Header = () => {
                     <div className="relative">
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center space-x-2 px-4 py-2 text-white/90 hover:text-blue-300 hover:bg-white/10 rounded-lg transition-all duration-300"
+                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
                       >
                         <User size={18} />
                         <span className="text-sm font-medium">
@@ -450,10 +453,15 @@ const Header = () => {
               </>
             ) : (
               <>
-                <NavLinkItem to={ROUTE_CONFIG.PUBLIC.LOGIN} text="Giriş Yap" />
+                <Link
+                  to={ROUTE_CONFIG.PUBLIC.LOGIN}
+                  className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition-all duration-300"
+                >
+                  Giriş Yap
+                </Link>
                 <Link
                   to={ROUTE_CONFIG.PUBLIC.REGISTER}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white px-6 py-2 rounded-xl text-sm font-medium hover:from-blue-600 hover:to-cyan-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
                 >
                   Kayıt Ol
                 </Link>
@@ -475,7 +483,7 @@ const Header = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 text-white/80 hover:text-blue-300 focus:outline-none p-2"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none p-2"
                   aria-label="Menüyü aç"
                   style={{ minWidth: '44px', minHeight: '44px' }}
                 >

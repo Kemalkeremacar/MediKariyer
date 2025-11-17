@@ -219,27 +219,28 @@ const HospitalJobs = () => {
     pendingScrollRef.current = null;
   }, [jobsLoading, jobs.length]);
 
-  // Status badge component - Türkçe status'lar için güncellendi
-  const StatusBadge = ({ status, statusId }) => {
-    // Artık backend'den Türkçe geliyor, çeviri gereksiz
+  // Status badge component - pastel renk paleti
+  const StatusBadge = ({ status }) => {
+    const normalized = status?.toString().trim().toLowerCase();
     const statusConfig = {
-      'Onay Bekliyor': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: '⏳' },
-      'Revizyon Gerekli': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: '🔄' },
-      'Onaylandı': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: '✓' },
-      'Pasif': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: '⏸' },
-      'Reddedildi': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: '✗' },
-      // Geriye uyumluluk için eski İngilizce isimler
-      'Pending Approval': { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', icon: '⏳' },
-      'Needs Revision': { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30', icon: '🔄' },
-      'Approved': { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', icon: '✓' },
-      'Passive': { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', icon: '⏸' },
-      'Rejected': { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', icon: '✗' }
+      'onay bekliyor': { classes: 'border border-amber-200 bg-amber-100 text-amber-800', icon: '⏳' },
+      'pending approval': { classes: 'border border-amber-200 bg-amber-100 text-amber-800', icon: '⏳' },
+      'revizyon gerekli': { classes: 'border border-orange-200 bg-orange-100 text-orange-800', icon: '🔄' },
+      'needs revision': { classes: 'border border-orange-200 bg-orange-100 text-orange-800', icon: '🔄' },
+      'onaylandı': { classes: 'border border-emerald-200 bg-emerald-100 text-emerald-800', icon: '✓' },
+      'approved': { classes: 'border border-emerald-200 bg-emerald-100 text-emerald-800', icon: '✓' },
+      'pasif': { classes: 'border border-gray-200 bg-gray-100 text-gray-700', icon: '⏸' },
+      'passive': { classes: 'border border-gray-200 bg-gray-100 text-gray-700', icon: '⏸' },
+      'reddedildi': { classes: 'border border-rose-200 bg-rose-100 text-rose-800', icon: '✗' },
+      'rejected': { classes: 'border border-rose-200 bg-rose-100 text-rose-800', icon: '✗' },
+      'taslak': { classes: 'border border-slate-200 bg-slate-100 text-slate-700', icon: '📝' },
+      'draft': { classes: 'border border-slate-200 bg-slate-100 text-slate-700', icon: '📝' },
     };
 
-    const config = statusConfig[status] || statusConfig['Pasif'];
+    const config = statusConfig[normalized] || { classes: 'border border-gray-200 bg-gray-100 text-gray-700', icon: 'ℹ️' };
 
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text} ${config.border} border inline-flex items-center justify-center gap-1 w-[140px]`}>
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${config.classes} inline-flex items-center justify-center gap-1 w-[140px]`}>
         <span className="flex-shrink-0">{config.icon}</span>
         <span className="text-center truncate">{status}</span>
       </span>

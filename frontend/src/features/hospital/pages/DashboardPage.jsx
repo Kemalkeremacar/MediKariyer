@@ -52,17 +52,17 @@ const HospitalDashboard = () => {
   // Loading state - skeleton loader
   if (dashboardLoading || profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+          <SkeletonLoader className="h-12 w-80 bg-white rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <SkeletonLoader key={i} className="h-32 bg-white/10 rounded-2xl" />
+              <SkeletonLoader key={i} className="h-32 bg-white rounded-2xl" />
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <SkeletonLoader className="lg:col-span-2 h-96 bg-white/10 rounded-3xl" />
-            <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
+            <SkeletonLoader className="lg:col-span-2 h-96 bg-white rounded-3xl" />
+            <SkeletonLoader className="h-96 bg-white rounded-3xl" />
           </div>
         </div>
       </div>
@@ -72,17 +72,17 @@ const HospitalDashboard = () => {
   // Error handling - gelişmiş hata yönetimi
   if (dashboardError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
+          <div className="text-center bg-white backdrop-blur-sm rounded-3xl p-8 border border-blue-200">
             <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <RefreshCw className="w-8 h-8 text-red-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-4">Dashboard Yüklenemedi</h2>
-            <p className="text-gray-300 mb-6">{dashboardError.message || 'Bir hata oluştu'}</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Dashboard Yüklenemedi</h2>
+            <p className="text-gray-600 mb-6">{dashboardError.message || 'Bir hata oluştu'}</p>
             <button 
               onClick={() => refetchDashboard()} 
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-gray-900 px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Yeniden Dene
@@ -105,11 +105,25 @@ const HospitalDashboard = () => {
   console.log('📋 Recent Applications:', recentApplications);
   console.log('📋 Recent Jobs:', recentJobs);
 
+  const getJobStatusClasses = (status) => {
+    const normalized = status?.toString().trim().toLowerCase();
+    const map = {
+      'aktif': 'border border-emerald-200 bg-emerald-100 text-emerald-800',
+      'onaylandı': 'border border-emerald-200 bg-emerald-100 text-emerald-800',
+      'pasif': 'border border-gray-200 bg-gray-100 text-gray-700',
+      'reddedildi': 'border border-rose-200 bg-rose-100 text-rose-800',
+      'onay bekliyor': 'border border-amber-200 bg-amber-100 text-amber-800',
+      'revizyon gerekli': 'border border-orange-200 bg-orange-100 text-orange-800',
+      'taslak': 'border border-slate-200 bg-slate-100 text-slate-700',
+    };
+    return map[normalized] || 'border border-gray-200 bg-gray-100 text-gray-700';
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8">
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 border border-white/20 shadow-[0_20px_60px_-30px_rgba(30,64,175,0.45)]">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-20">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
@@ -120,7 +134,7 @@ const HospitalDashboard = () => {
                 {/* Logo - Sol Taraf */}
                 {profile?.logo && (
                   <div className="flex-shrink-0">
-                    <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-blue-400/30 shadow-lg">
+                    <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-white/20 shadow-lg">
                       <img 
                         src={profile.logo} 
                         alt={institutionName}
@@ -134,7 +148,7 @@ const HospitalDashboard = () => {
                 <div className="flex-1 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                   <div className="flex-1">
                     <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{institutionName}</h1>
-                    <h2 className="text-xl md:text-2xl font-semibold text-blue-400 mb-4">
+                    <h2 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">
                       İşe Alım ve Başvuru Yönetimi
                     </h2>
                     <p className="text-gray-300 text-base md:text-lg leading-relaxed">
@@ -158,111 +172,94 @@ const HospitalDashboard = () => {
 
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Son Başvurular */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 hover:bg-white/15 transition-all duration-300">
-              <div className="p-8 border-b border-white/20">
+            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="border-b border-blue-100 pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Activity className="w-6 h-6 text-blue-400" />
+                  <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
+                    <Activity className="h-6 w-6 text-blue-600" />
                     Son Başvurular
                   </h2>
-                  <Link
-                    to="/hospital/applications"
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all duration-300 flex items-center gap-2 group"
-                  >
-                    Tümünü Gör
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
                 </div>
               </div>
-              <div className="p-8">
+              <div className="pt-6">
                 {recentApplications.length > 0 ? (
                   <div className="space-y-4">
                     {recentApplications.map((application) => (
-                      <div key={application.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-white text-lg">{application.job_title}</h3>
-                          <p className="text-gray-300 mt-1">
-                            {application.first_name && application.last_name 
-                              ? `${application.first_name} ${application.last_name}`
-                              : 'Doktor'
-                            }
-                          </p>
-                          <div className="flex items-center gap-4 mt-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                              application.status_id === 1 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30' :
-                              application.status_id === 3 ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                              application.status_id === 4 ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
-                              'bg-gray-500/20 text-gray-300 border border-gray-500/30'
-                            }`}>
-                              {application.status_id === 1 ? 'Başvuruldu' :
-                               application.status_id === 2 ? 'İnceleniyor' :
-                               application.status_id === 3 ? 'Kabul Edildi' :
-                               application.status_id === 4 ? 'Reddedildi' :
-                               application.status_id === 5 ? 'Geri Çekildi' :
-                               application.status}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {application.applied_at ? new Date(application.applied_at).toLocaleDateString('tr-TR') : 'Tarih yok'}
-                            </span>
+                      <div key={application.id} className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 hover:shadow-md transition-shadow">
+                        <div className="flex items-start">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-gray-900">{application.job_title}</h3>
+                            <p className="mt-1 text-gray-600">
+                              {application.first_name && application.last_name 
+                                ? `${application.first_name} ${application.last_name}`
+                                : 'Doktor'
+                              }
+                            </p>
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                application.status_id === 1 ? 'border border-amber-200 bg-amber-100 text-amber-800' :
+                                application.status_id === 2 ? 'border border-blue-200 bg-blue-100 text-blue-800' :
+                                application.status_id === 3 ? 'border border-emerald-200 bg-emerald-100 text-emerald-800' :
+                                application.status_id === 4 ? 'border border-rose-200 bg-rose-100 text-rose-800' :
+                                application.status_id === 5 ? 'border border-gray-200 bg-gray-100 text-gray-700' :
+                                'border border-gray-200 bg-gray-100 text-gray-700'
+                              }`}>
+                                {application.status_id === 1 ? 'Başvuruldu' :
+                                 application.status_id === 2 ? 'İnceleniyor' :
+                                 application.status_id === 3 ? 'Kabul Edildi' :
+                                 application.status_id === 4 ? 'Red Edildi' :
+                                 application.status_id === 5 ? 'Geri Çekildi' :
+                                 application.status || 'Bilinmiyor'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {application.applied_at ? new Date(application.applied_at).toLocaleDateString('tr-TR') : 'Tarih yok'}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Activity className="w-10 h-10 text-white" />
+                  <div className="py-12 text-center">
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                      <Activity className="h-10 w-10 text-blue-600" />
                     </div>
-                    <p className="text-gray-300 text-lg mb-4">Henüz başvuru bulunmuyor</p>
-                    <p className="text-gray-400 text-sm">İş ilanı oluşturarak başvuru almaya başlayın</p>
+                    <p className="text-lg text-gray-600">Henüz başvuru bulunmuyor</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* İş İlanlarım */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 hover:bg-white/15 transition-all duration-300">
-              <div className="p-8 border-b border-white/20">
+            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="border-b border-blue-100 pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Target className="w-6 h-6 text-purple-400" />
+                  <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
+                    <Target className="h-6 w-6 text-blue-600" />
                     İş İlanlarım
                   </h2>
-                  <Link
-                    to="/hospital/jobs"
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition-all duration-300 flex items-center gap-2 group"
-                  >
-                    Tümünü Gör
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
                 </div>
               </div>
-              <div className="p-8">
+              <div className="pt-6">
                 {recentJobs.length > 0 ? (
                   <div className="space-y-4">
                     {recentJobs.map((job) => (
-                      <div key={job.id} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 group">
+                      <div key={job.id} className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 p-6 hover:shadow-md transition-shadow">
                         <div className="flex items-start">
                           <div className="flex-1">
-                            <h3 className="font-semibold text-white text-lg">{job.title}</h3>
-                            <p className="text-gray-300 mt-1">{job.specialty}</p>
-                            <div className="flex items-center gap-4 mt-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                job.status === 'Aktif' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                                job.status === 'Pasif' ? 'bg-red-500/20 text-red-300 border border-red-500/30' :
-                                'bg-gray-500/20 text-gray-300 border border-gray-500/30'
-                              }`}>
-                                {job.status === 'Aktif' ? 'Aktif' :
-                                 job.status === 'Pasif' ? 'Pasif' :
-                                 job.status}
+                            <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                            <p className="mt-1 text-gray-600">{job.specialty}</p>
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getJobStatusClasses(job.status)}`}>
+                                {job.status || 'Durum Yok'}
                               </span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-500">
                                 {job.city ? job.city : 'Şehir belirtilmemiş'}
                               </span>
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs text-gray-500">
                                 {new Date(job.created_at).toLocaleDateString('tr-TR')}
                               </span>
                             </div>
@@ -272,12 +269,11 @@ const HospitalDashboard = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Briefcase className="w-10 h-10 text-white" />
+                  <div className="py-12 text-center">
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                      <Briefcase className="h-10 w-10 text-blue-600" />
                     </div>
-                    <p className="text-gray-300 text-lg mb-4">Henüz iş ilanı oluşturmadınız</p>
-                    <p className="text-gray-400 text-sm">İş İlanları sayfasından yeni ilan ekleyebilirsiniz</p>
+                    <p className="text-lg text-gray-600">Henüz iş ilanı oluşturmadınız</p>
                   </div>
                 )}
               </div>

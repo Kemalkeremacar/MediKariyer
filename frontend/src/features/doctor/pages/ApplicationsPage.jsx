@@ -204,12 +204,12 @@ const DoctorApplicationsPage = () => {
 
   const getStatusColor = useCallback((statusId) => {
     switch (statusId) {
-      case 1: return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
-      case 2: return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
-      case 3: return 'bg-green-500/20 text-green-300 border-green-500/30';
-      case 4: return 'bg-red-500/20 text-red-300 border-red-500/30';
-      case 5: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
-      default: return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+      case 1: return 'border border-amber-200 bg-amber-100 text-amber-800';
+      case 2: return 'border border-blue-200 bg-blue-100 text-blue-800';
+      case 3: return 'border border-emerald-200 bg-emerald-100 text-emerald-800';
+      case 4: return 'border border-rose-200 bg-rose-100 text-rose-800';
+      case 5: return 'border border-gray-200 bg-gray-100 text-gray-700';
+      default: return 'border border-gray-200 bg-gray-100 text-gray-700';
     }
   }, []);
 
@@ -229,13 +229,13 @@ const DoctorApplicationsPage = () => {
 
   if (applicationsLoading || lookupLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-        <div className="space-y-8 p-6">
-          <SkeletonLoader className="h-12 w-80 bg-white/10" />
-          <SkeletonLoader className="h-48 bg-white/10 rounded-3xl" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
+        <div className="space-y-8 p-6 max-w-7xl mx-auto">
+          <SkeletonLoader className="h-12 w-80 bg-gray-200 rounded-2xl" />
+          <SkeletonLoader className="h-48 bg-gray-200 rounded-3xl" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <SkeletonLoader className="h-32 bg-white/10 rounded-2xl" />
-            <SkeletonLoader className="h-32 bg-white/10 rounded-2xl" />
+            <SkeletonLoader className="h-32 bg-gray-200 rounded-2xl" />
+            <SkeletonLoader className="h-32 bg-gray-200 rounded-2xl" />
           </div>
         </div>
       </div>
@@ -243,31 +243,31 @@ const DoctorApplicationsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 mb-8">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
+        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-3xl p-8 mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30"></div>
           </div>
           
           <div className="relative z-10">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-white mb-3">
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-3">
                   Başvurularım
-                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 mt-1">
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600 mt-1">
                     Başvuru Takibi
                   </span>
                 </h1>
-                <p className="text-base text-gray-300 max-w-2xl leading-relaxed">
+                <p className="text-base text-gray-700 max-w-2xl leading-relaxed">
                   Yaptığınız başvuruları takip edin ve yönetin.
                 </p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 w-32 h-24 flex items-center justify-center">
+              <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-4 w-32 h-24 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-sm font-medium text-gray-300 mb-1">Toplam Başvuru</div>
-                  <div className="text-2xl font-bold text-white">{pagination.total || 0}</div>
+                  <div className="text-sm font-medium text-gray-500 mb-1">Toplam Başvuru</div>
+                  <div className="text-2xl font-bold text-blue-900">{pagination.total || 0}</div>
                 </div>
               </div>
             </div>
@@ -275,41 +275,41 @@ const DoctorApplicationsPage = () => {
         </div>
 
         {/* Modern Filtreleme Paneli */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 mb-6">
+        <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Filter className="w-5 h-5 text-blue-400" />
-              <h2 className="text-xl font-bold text-white">Filtrele</h2>
-              {activeFiltersCount > 0 && (
-                <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs font-medium border border-blue-500/30">
-                  {activeFiltersCount} Aktif
-                </span>
-              )}
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Filtreler</h3>
             </div>
             {activeFiltersCount > 0 && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 rounded-xl transition-all border border-white/10"
-              >
-                <XIcon className="w-4 h-4" />
-                Filtreleri Temizle
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-200">
+                  {activeFiltersCount} Aktif
+                </span>
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-blue-700 bg-white border border-gray-200 rounded-xl transition-all hover:border-blue-400"
+                >
+                  <XIcon className="w-4 h-4" />
+                  Filtreleri Temizle
+                </button>
+              </div>
             )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Durum Filtresi */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Durum
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
                 {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value} className="bg-slate-800">
+                  <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
                 ))}
@@ -318,18 +318,18 @@ const DoctorApplicationsPage = () => {
 
             {/* Şehir Filtresi */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Şehir
               </label>
               <select
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={lookupLoading}
               >
-                <option value="" className="bg-slate-800">Tüm Şehirler</option>
+                <option value="">Tüm Şehirler</option>
                 {cities.map((city) => (
-                  <option key={city.id} value={city.name} className="bg-slate-800">
+                  <option key={city.id} value={city.name}>
                     {city.name}
                   </option>
                 ))}
@@ -339,25 +339,25 @@ const DoctorApplicationsPage = () => {
 
           {/* Aktif Filtreler (Chip'ler) */}
           {activeFiltersCount > 0 && (
-            <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="flex flex-wrap gap-2">
                 {statusFilter && (
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 text-blue-300 rounded-lg text-sm border border-blue-500/30">
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm border border-blue-200">
                     Durum: {statusOptions.find(opt => opt.value === statusFilter)?.label}
                     <button
                       onClick={() => setStatusFilter('')}
-                      className="hover:bg-blue-500/30 rounded p-0.5 transition-colors"
+                      className="text-blue-600 hover:text-blue-800"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
                   </span>
                 )}
                 {cityFilter && (
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-300 rounded-lg text-sm border border-purple-500/30">
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full text-sm border border-purple-200">
                     Şehir: {cityFilter}
                     <button
                       onClick={() => setCityFilter('')}
-                      className="hover:bg-purple-500/30 rounded p-0.5 transition-colors"
+                      className="text-purple-600 hover:text-purple-800"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -377,13 +377,13 @@ const DoctorApplicationsPage = () => {
           ) : applications?.length === 0 ? (
             <div className="min-h-[400px] flex items-center justify-center">
               <div className="text-center max-w-md">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FileText className="w-10 h-10 text-white" />
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileText className="w-10 h-10 text-blue-600" />
                 </div>
-                <h3 className="text-lg md:text-xl font-semibold text-gray-300 mb-2">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
                   {activeFiltersCount > 0 ? 'Filtreye uygun başvuru bulunamadı' : 'Başvuru bulunamadı'}
                 </h3>
-                <p className="text-gray-400 text-sm md:text-base px-4">
+                <p className="text-gray-500 text-sm md:text-base px-4">
                   {activeFiltersCount > 0 
                     ? 'Filtreleri değiştirip tekrar deneyin.' 
                     : 'Henüz hiç başvuru yapmadınız.'}
@@ -455,39 +455,39 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
   // Pasif ilan için özel görünüm
   if (isJobPassive) {
     return (
-      <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
+      <div className="bg-white rounded-2xl border border-blue-100 p-6 shadow-md">
         <div className="flex flex-col gap-4">
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3">
               <div className="flex-1">
-                <h3 className="text-lg md:text-xl font-semibold text-white mb-2">{application.job_title}</h3>
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 text-sm md:text-base">
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">{application.job_title}</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 text-sm md:text-base">
                   <div className="flex items-center gap-2">
-                    <Building className="w-4 h-4" />
+                    <Building className="w-4 h-4 text-blue-400" />
                     <span>{application.hospital_name || 'Hastane adı yok'}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
+                    <MapPin className="w-4 h-4 text-blue-400" />
                     <span>{application.job_city || 'Şehir belirtilmemiş'}</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="px-3 py-1 rounded-full text-xs md:text-sm font-medium border bg-gray-500/20 text-gray-300 border-gray-500/30">
+                <span className="px-3 py-1 rounded-full text-xs md:text-sm font-medium border border-rose-200 bg-rose-100 text-rose-700">
                   Yayından Kaldırıldı
                 </span>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs md:text-sm text-gray-400 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs md:text-sm text-gray-500 mb-4">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4 text-blue-400" />
                 <span>Başvuru: {new Date(application.created_at || application.applied_at).toLocaleDateString('tr-TR')}</span>
               </div>
             </div>
             
-            <div className="bg-gray-500/10 border border-gray-500/30 rounded-xl p-4 mt-4">
-              <p className="text-gray-400 text-sm text-center">
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mt-4">
+              <p className="text-gray-600 text-sm text-center">
                 Bu ilan yayından kaldırıldığı için başvuru detayları görüntülenemez.
               </p>
             </div>
@@ -498,38 +498,38 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300">
+    <div className="bg-white rounded-2xl border border-blue-100 p-6 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
       <div className="flex flex-col gap-4">
         <div className="flex-1">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3">
             <div className="flex-1">
-              <h3 className="text-lg md:text-xl font-semibold text-white mb-2">{application.job_title}</h3>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-300 text-sm md:text-base">
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">{application.job_title}</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-gray-600 text-sm md:text-base">
                 <div className="flex items-center gap-2">
-                  <Building className="w-4 h-4" />
+                  <Building className="w-4 h-4 text-blue-400" />
                   <span>{application.hospital_name || 'Hastane adı yok'}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4 text-blue-400" />
                   <span>{application.job_city || 'Şehir belirtilmemiş'}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium border ${getStatusColor(application.status_id)}`}>
+              <span className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium ${getStatusColor(application.status_id)}`}>
                 {getStatusText(application.status_id)}
               </span>
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs md:text-sm text-gray-400 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs md:text-sm text-gray-500 mb-4">
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-4 h-4 text-blue-400" />
               <span>Başvuru: {new Date(application.created_at || application.applied_at).toLocaleDateString('tr-TR')}</span>
             </div>
             {application.updated_at !== application.created_at && (
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
+                <Clock className="w-4 h-4 text-blue-400" />
                 <span>Güncelleme: {new Date(application.updated_at).toLocaleDateString('tr-TR')}</span>
               </div>
             )}
@@ -539,7 +539,7 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <button
             onClick={handleView}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base shadow-sm"
           >
             <Eye className="w-4 h-4" />
             Başvuru Detayı
@@ -550,7 +550,7 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
             <button
               onClick={handleWithdraw}
               disabled={isWithdrawing}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm md:text-base"
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-50 text-sm md:text-base shadow-sm"
             >
               <X className="w-4 h-4" />
               Geri Çek
@@ -600,7 +600,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handlePrev}
         disabled={currentPage === 1}
-        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+        className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         Önceki
       </button>
@@ -627,10 +627,10 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
           <button
             key={page}
             onClick={() => handlePage(page)}
-            className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm transition-all ${
+            className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
               isCurrentPage
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'
             }`}
           >
             {page}
@@ -641,7 +641,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handleNext}
         disabled={currentPage === totalPages}
-        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+        className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         Sonraki
       </button>

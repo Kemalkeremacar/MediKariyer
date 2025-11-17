@@ -42,10 +42,10 @@ export const useHospitalDashboard = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.HOSPITAL.DASHBOARD),
     select: (res) => res.data,
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika - Dashboard sık güncellenmez
+    staleTime: 0, // Her zaman fresh data (başvurular değişebilir)
     cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Performans iyileştirmesi
-    refetchOnWindowFocus: false, // Gereksiz refetch'leri engelle
+    refetchOnMount: true, // Her mount'ta yenile
+    refetchOnWindowFocus: true, // Pencere focus'unda yenile
     refetchOnReconnect: true, // Bağlantı yenilenmesinde güncelle
   });
 };
@@ -68,10 +68,10 @@ export const useHospitalProfile = () => {
     queryFn: () => apiRequest.get(ENDPOINTS.HOSPITAL.PROFILE),
     select: (res) => res.data,
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika - Profil sık değişmez
+    staleTime: 0, // Her zaman fresh data (logo değişebilir)
     cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Performans iyileştirmesi
-    refetchOnWindowFocus: false, // Gereksiz refetch'leri engelle
+    refetchOnMount: true, // Her mount'ta yenile
+    refetchOnWindowFocus: true, // Pencere focus'unda yenile
     refetchOnReconnect: true, // Bağlantı yenilenmesinde güncelle
   });
 };

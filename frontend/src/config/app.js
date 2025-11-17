@@ -48,7 +48,7 @@ export const APP_CONFIG = {
   /**
    * Uygulama adı, versiyon, açıklama ve slogan bilgileri
    */
-  APP_NAME: 'MediKariyer',
+  APP_NAME: 'MediKariyer.Net',
   APP_VERSION: '1.0.0',
   APP_DESCRIPTION: 'Medical Career Platform - Doktor ve Hastane Buluşma Platformu',
   APP_TAGLINE: 'Sağlık sektöründe kariyerinizi şekillendirin',

@@ -124,12 +124,12 @@ const icons = {
 };
 
 const colors = {
-  success: 'bg-gradient-to-r from-green-500 to-emerald-600',
-  error: 'bg-gradient-to-r from-red-500 to-rose-600',
-  warning: 'bg-gradient-to-r from-amber-500 to-orange-600',
-  info: 'bg-gradient-to-r from-blue-500 to-indigo-600',
-  loading: 'bg-gradient-to-r from-slate-500 to-gray-600',
-  custom: 'bg-white border border-gray-200',
+  success: 'bg-gradient-to-r from-emerald-500 to-green-600 shadow-lg shadow-emerald-500/30',
+  error: 'bg-gradient-to-r from-rose-500 to-red-600 shadow-lg shadow-rose-500/30',
+  warning: 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-lg shadow-amber-500/30',
+  info: 'bg-gradient-to-r from-blue-500 to-cyan-600 shadow-lg shadow-blue-500/30',
+  loading: 'bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30',
+  custom: 'bg-white border border-gray-200 shadow-xl',
 };
 
 const ToastItem = ({ toast: t, onDismiss }) => {
@@ -141,10 +141,12 @@ const ToastItem = ({ toast: t, onDismiss }) => {
     <div
       className={`
         ${colorClass} ${textColor}
-        flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl
+        flex items-center gap-3 px-5 py-4 rounded-xl
         min-w-[320px] max-w-[500px] w-full
         backdrop-blur-sm
         pointer-events-auto
+        transform transition-all duration-300 hover:scale-[1.02]
+        border border-white/20
       `}
       role="alert"
       aria-live="polite"
@@ -153,11 +155,11 @@ const ToastItem = ({ toast: t, onDismiss }) => {
         className={`w-5 h-5 flex-shrink-0 ${t.type === 'loading' ? 'animate-spin' : ''}`}
         aria-hidden="true"
       />
-      <p className="flex-1 text-sm font-medium">{t.message}</p>
+      <p className="flex-1 text-sm font-semibold">{t.message}</p>
       {t.duration !== Infinity && (
         <button
           onClick={() => onDismiss(t.id)}
-          className="flex-shrink-0 hover:bg-white/20 rounded p-1 transition-colors"
+          className="flex-shrink-0 hover:bg-white/30 rounded-lg p-1.5 transition-colors"
           aria-label="Kapat"
         >
           <X className="w-4 h-4" />

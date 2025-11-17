@@ -46,22 +46,27 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="w-full homepage-bg overflow-x-hidden" style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}>
+    <div className="w-full overflow-x-hidden bg-white" style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}>
       {/* Header Section */}
-      <section className="relative py-4 sm:py-8 lg:py-12 overflow-hidden white-section">
+      <section className="relative py-20 lg:py-28 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50/30">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}></div>
+        <div className="absolute inset-0">
+          <div className="absolute top-[-10rem] right-[-10rem] h-[24rem] w-[24rem] rounded-full bg-blue-300/30 blur-3xl" />
+          <div className="absolute bottom-[-8rem] left-[-8rem] h-[20rem] w-[20rem] rounded-full bg-cyan-300/20 blur-3xl" />
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.2'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          }}></div>
+        </div>
         
         <div className="container mx-auto px-4 text-center relative z-10">
-          <div>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-blue-900 mb-6 leading-relaxed py-6 text-center">
-              <span className="text-blue-900">
-                İletişime Geçin
-              </span>
+          <div className="max-w-3xl mx-auto">
+            <span className="inline-block px-4 py-2 mb-6 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full">
+              Bize Ulaşın
+            </span>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-blue-900 mb-6 leading-tight">
+              İletişime Geçin
             </h1>
-            <p className="modern-text-primary text-center max-w-4xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
               Projeleriniz için profesyonel destek, danışmanlık ve çözüm önerilerimiz hakkında 
               detaylı bilgi almak için bizimle iletişime geçin.
             </p>
@@ -70,72 +75,74 @@ const ContactPage = () => {
       </section>
 
       {/* Contact Form and Info Section */}
-      <section className="py-16 sm:py-20 relative gray-section">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-pattern-dots"></div>
-        
+      <section className="py-20 sm:py-24 relative bg-white">
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch max-w-7xl mx-auto">
             {/* Contact Info */}
-            <div className="modern-card p-8 h-full flex flex-col">
-              <h2 className="modern-heading-secondary mb-6">İletişim Bilgileri</h2>
-              <div className="space-y-6">
-                <div className="modern-card p-6 hover-scale transition-transform duration-300">
-                  <div className="flex items-start">
-                    <div className="modern-icon-container">
-                      <FiMapPin className="modern-icon" />
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50/30 rounded-3xl p-8 h-full flex flex-col border border-blue-100 shadow-xl">
+              <h2 className="text-3xl font-bold text-blue-900 mb-8">İletişim Bilgileri</h2>
+              <div className="space-y-4 flex-1">
+                <div className="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 border border-blue-100">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                      <FiMapPin className="w-6 h-6 text-white" />
                     </div>
-                    <div>
-                      <h4 className="modern-heading-tertiary">Adres</h4>
-                      <p className="modern-text-primary">Atatürk Mah. Turgut Özal Bulv. Gardenya 1 Plaza<br />İş Merkezi, D:42/B Kat:5 Ataşehir-İstanbul</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="modern-card p-6 hover-scale transition-transform duration-300">
-                  <div className="flex items-start">
-                    <div className="modern-icon-container">
-                      <FiMail className="modern-icon" />
-                    </div>
-                    <div>
-                      <h4 className="modern-heading-tertiary">E-posta</h4>
-                      <p className="modern-text-primary">info@medikariyer.com</p>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold text-blue-900 mb-2">Adres</h4>
+                      <p className="text-gray-600 leading-relaxed">
+                        Atatürk Mah. Turgut Özal Bulv. Gardenya 1 Plaza<br />
+                        İş Merkezi, D:42/B Kat:5 Ataşehir-İstanbul
+                      </p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="modern-card p-6 hover-scale transition-transform duration-300">
-                  <div className="flex items-start">
-                    <div className="modern-icon-container">
-                      <FiPhone className="modern-icon" />
+                <div className="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 border border-blue-100">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <FiMail className="w-6 h-6 text-white" />
                     </div>
-                    <div>
-                      <h4 className="modern-heading-tertiary">Telefon</h4>
-                      <p className="modern-text-primary">+90 212 227 80 20</p>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold text-blue-900 mb-2">E-posta</h4>
+                      <p className="text-gray-600">info@medikariyer.com</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300 border border-blue-100">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <FiPhone className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold text-blue-900 mb-2">Telefon</h4>
+                      <p className="text-gray-600">+90 212 227 80 20</p>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div className="modern-card p-6 mt-8">
-                <div className="flex items-center mb-4">
-                  <div className="modern-icon-container">
-                    <FiClock className="modern-icon" />
+              <div className="bg-white rounded-2xl p-6 mt-6 border border-blue-100 shadow-lg">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <FiClock className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="modern-heading-tertiary">Çalışma Saatleri</h3>
+                  <h3 className="text-lg font-semibold text-blue-900">Çalışma Saatleri</h3>
                 </div>
-                <p className="modern-text-primary">Hafta içi: 09:00 - 18:00</p>
-                <p className="modern-text-primary">Hafta sonu: Kapalı</p>
+                <div className="ml-16 space-y-1">
+                  <p className="text-gray-600"><span className="font-medium text-gray-700">Hafta içi:</span> 09:00 - 18:00</p>
+                  <p className="text-gray-600"><span className="font-medium text-gray-700">Hafta sonu:</span> Kapalı</p>
+                </div>
               </div>
             </div>
 
             {/* Contact Form */}
-            <div className="modern-card p-8 h-full flex flex-col">
-              <h2 className="modern-heading-secondary mb-6">Mesaj Gönderin</h2>
-              <form onSubmit={handleSubmit} className="space-y-6 flex-1 flex flex-col">
-                <div className="flex-1 space-y-6">
+            <div className="bg-white rounded-3xl p-8 h-full flex flex-col border border-blue-100 shadow-xl">
+              <h2 className="text-3xl font-bold text-blue-900 mb-8">Mesaj Gönderin</h2>
+              <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
+                <div className="flex-1 space-y-5">
                   <div>
-                    <label htmlFor="name" className="modern-form-label">Adınız Soyadınız</label>
+                    <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">Adınız Soyadınız</label>
                     <input
                       type="text"
                       id="name"
@@ -143,13 +150,13 @@ const ContactPage = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="modern-form-input"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                       placeholder="Adınızı ve soyadınızı girin"
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="email" className="modern-form-label">E-posta Adresiniz</label>
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">E-posta Adresiniz</label>
                     <input
                       type="email"
                       id="email"
@@ -157,13 +164,13 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="modern-form-input"
-                      placeholder="E-posta adresinizi girin"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                      placeholder="ornek@email.com"
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="subject" className="modern-form-label">Konu</label>
+                    <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">Konu</label>
                     <input
                       type="text"
                       id="subject"
@@ -171,21 +178,21 @@ const ContactPage = () => {
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="modern-form-input"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                       placeholder="Mesaj konusunu girin"
                     />
                   </div>
                   
-                  <div>
-                    <label htmlFor="message" className="modern-form-label">Mesajınız</label>
+                  <div className="flex-1 flex flex-col">
+                    <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">Mesajınız</label>
                     <textarea
                       id="message"
                       name="message"
-                      rows="4"
+                      rows="6"
                       value={formData.message}
                       onChange={handleChange}
                       required
-                      className="modern-form-input resize-none flex-1"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none resize-none flex-1"
                       placeholder="Mesajınızı buraya yazın..."
                     />
                   </div>
@@ -194,7 +201,7 @@ const ContactPage = () => {
                 <button
                   type="submit"
                   disabled={sendMessage.isPending}
-                  className="w-full modern-btn-primary text-base inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {sendMessage.isPending ? (
                     <>
@@ -203,7 +210,7 @@ const ContactPage = () => {
                     </>
                   ) : (
                     <>
-                      <FiSend className="mr-2" />
+                      <FiSend className="mr-2 text-xl" />
                       Mesajı Gönder
                     </>
                   )}

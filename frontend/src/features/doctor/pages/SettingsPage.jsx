@@ -123,26 +123,26 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 p-8 shadow-[0_20px_60px_-30px_rgba(30,64,175,0.45)]">
+        <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
           {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20" />
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
           </div>
           
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                <Lock className="w-8 h-8 text-blue-400" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                <Lock className="w-8 h-8 text-cyan-600" />
               </div>
               <div>
-                <p className="text-blue-200/80 text-sm font-semibold tracking-wider uppercase">Doktor Ayarları</p>
-                <h1 className="text-3xl font-bold text-white">Hesap ve Güvenlik</h1>
+                <p className="text-cyan-700/80 text-sm font-semibold tracking-wider uppercase">Doktor Ayarları</p>
+                <h1 className="text-3xl font-bold text-gray-900">Hesap ve Güvenlik</h1>
               </div>
             </div>
-            <p className="text-blue-100/80 text-base">
+            <p className="text-gray-700/80 text-base">
               Şifrenizi güncelleyin, güvenlik tercihlerinizi yönetin ve hesabınızı kontrol altında tutun.
             </p>
           </div>
