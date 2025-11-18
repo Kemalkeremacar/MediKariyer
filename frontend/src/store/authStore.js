@@ -122,6 +122,10 @@ import { ENDPOINTS } from '@config/api.js';
  */
 import logger from '../utils/logger';
 
+// React Query client'ı import et (cache temizliği için)
+// Ama circular dependency olmaması için lazy import yapılacak
+let queryClientInstance = null;
+
 // ============================================================================
 // AUTH STORE - Kimlik doğrulama state yönetimi
 // ============================================================================
@@ -405,6 +409,47 @@ const useAuthStore = create(
         
         try {
           /**
+           * ⚠️ CRITICAL: Önceki kullanıcının localStorage cache'lerini temizle
+           * Yeni kullanıcı login olduğunda önceki kullanıcının verileri kalmamalı
+           */
+          try {
+            const allKeys = Object.keys(localStorage);
+            allKeys.forEach(key => {
+              // Photo management cache'lerini temizle (başka kullanıcıya ait olabilir)
+              if (key.startsWith('doctor-photo-')) {
+                localStorage.removeItem(key);
+              }
+            });
+          } catch (_) {
+            logger.warn('Failed to clear user-specific localStorage cache');
+          }
+          
+          /**
+           * React Query cache'ini temizle
+           * Önceki kullanıcının cache'leri yeni kullanıcıda görünmesin
+           */
+          try {
+            if (!queryClientInstance) {
+              // Lazy import: React Query client'ı ilk kullanımda yükle
+              import('@tanstack/react-query').then(({ QueryClient }) => {
+                // queryClient'a erişim için window global'den al (main.jsx'te tanımlanmış)
+                queryClientInstance = window.__REACT_QUERY_CLIENT__;
+                if (queryClientInstance) {
+                  queryClientInstance.clear(); // Tüm cache'leri temizle
+                  logger.info('React Query cache cleared on login');
+                }
+              }).catch((err) => {
+                logger.warn('Failed to import QueryClient', { error: err });
+              });
+            } else if (queryClientInstance) {
+              queryClientInstance.clear();
+              logger.info('React Query cache cleared on login');
+            }
+          } catch (_) {
+            logger.warn('Failed to clear React Query cache on login');
+          }
+          
+          /**
            * localStorage quota kontrolü
            * 
            * localStorage'a yazmadan önce quota kontrolü yap
@@ -495,6 +540,36 @@ const useAuthStore = create(
          */
         const currentState = get();
         if (!currentState.isAuthenticated) return;
+        
+        /**
+         * ⚠️ CRITICAL: Kullanıcıya özel tüm localStorage cache'lerini temizle
+         */
+        try {
+          const allKeys = Object.keys(localStorage);
+          allKeys.forEach(key => {
+            // Photo management cache'lerini temizle
+            if (key.startsWith('doctor-photo-')) {
+              localStorage.removeItem(key);
+            }
+          });
+        } catch (_) {
+          logger.warn('Failed to clear user-specific localStorage cache on logout');
+        }
+        
+        /**
+         * React Query cache'ini tamamen temizle
+         */
+        try {
+          if (queryClientInstance) {
+            queryClientInstance.clear();
+            logger.info('React Query cache cleared on logout');
+          } else if (window.__REACT_QUERY_CLIENT__) {
+            window.__REACT_QUERY_CLIENT__.clear();
+            logger.info('React Query cache cleared on logout (via window global)');
+          }
+        } catch (_) {
+          logger.warn('Failed to clear React Query cache on logout');
+        }
         
         /**
          * Auth state'ini temizle

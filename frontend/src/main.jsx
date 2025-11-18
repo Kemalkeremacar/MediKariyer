@@ -20,11 +20,11 @@ import { CustomToaster } from './components/ui/CustomToast.jsx';
 import App from './App.jsx';
 
 // React Query client - API çağrıları için cache ve state yönetimi
+// NOT: Global default'lar minimal - her hook kendi stratejisini belirler (queryConfig.js)
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 dakika - veri fresh kalma süresi
-      cacheTime: 10 * 60 * 1000, // 10 dakika - cache'de kalma süresi
+      // Minimal global defaults - hook'lar kendi config'lerini kullanır
       retry: (failureCount, error) => {
         // Auth hatalarında retry yapma
         if (error?.response?.status === 401 || error?.response?.status === 403) {
@@ -32,10 +32,11 @@ const queryClient = new QueryClient({
         }
         return failureCount < 2; // Maksimum 2 retry
       },
-      refetchOnWindowFocus: false, // Pencere focus'unda yeniden çekme
-      refetchInterval: false, // Otomatik yenileme kapalı
+      refetchInterval: false, // Otomatik polling kapalı (manuel olarak eklenir)
+      // staleTime, cacheTime, refetchOnMount, refetchOnWindowFocus → hook'larda belirlenir
     },
     mutations: {
+      retry: 0, // Mutation'larda retry yapma
       onError: (error) => {
         console.error('Mutation error:', error);
       },
@@ -46,6 +47,7 @@ const queryClient = new QueryClient({
 // QueryClient'ı global olarak erişilebilir yap (auth store için)
 if (typeof window !== 'undefined') {
   window.queryClient = queryClient;
+  window.__REACT_QUERY_CLIENT__ = queryClient; // Alternatif key (authStore için)
 }
 
 // Ana uygulama root'u

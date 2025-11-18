@@ -25,6 +25,7 @@ import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, buildEndpoint, buildQueryString } from '@config/api.js';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
+import { adminQueryConfig, detailQueryConfig } from '@/config/queryConfig.js';
 
 // 🔹 Public: Mesaj Gönderme Hook'u
 export const useSendMessage = () => {
@@ -51,13 +52,7 @@ export const useContactMessages = (filters = {}) => {
       return apiRequest.get(`${ENDPOINTS.ADMIN.CONTACT_MESSAGES}${queryString}`);
     },
     select: (res) => res.data,
-    staleTime: 0, // Her zaman fresh data
-    keepPreviousData: true,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchInterval: 5 * 1000, // Dinamik güncelleme: Her 5 saniyede bir otomatik yenile
-    refetchIntervalInBackground: true,
+    ...adminQueryConfig({ keepPreviousData: true }), // REALTIME: Admin mesajları hemen görmeli
   });
 };
 
@@ -70,8 +65,7 @@ export const useContactMessageById = (messageId) => {
       return apiRequest.get(endpoint);
     },
     select: (res) => res.data,
-    enabled: !!messageId,
-    staleTime: 5 * 60 * 1000, // 5 dakika
+    ...detailQueryConfig({ enabled: !!messageId }), // SEMI_REALTIME: Detay sayfası
   });
 };
 

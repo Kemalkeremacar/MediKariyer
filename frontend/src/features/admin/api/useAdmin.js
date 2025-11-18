@@ -3,13 +3,17 @@
  * Backend adminService.js'e birebir uygun olarak tasarlanmış
  * Tüm admin işlemleri için React Query hooks
  * 
+ * Cache Stratejisi:
+ * - REALTIME: Fotoğraf istekleri, Kullanıcılar, İş ilanları, Başvurular → Her zaman fresh
+ * - Admin her değişikliği anında görmeli
+ * 
  * Backend Uyumluluğu:
  * - adminService.js'deki tüm fonksiyonlarla eşleşir
  * - adminController.js'deki tüm endpoint'lerle uyumlu
  * - adminSchemas.js'deki validation kurallarına uygun
  * 
  * @author MediKariyer Development Team
- * @version 4.0.0
+ * @version 4.1.0
  * @since 2024
  */
 
@@ -18,6 +22,7 @@ import { apiRequest } from '../../../services/http/client';
 import { ENDPOINTS, buildEndpoint, buildQueryString } from '@config/api.js';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages, formatErrorMessage } from '@/config/toast';
+import { adminQueryConfig, listQueryConfig, photoQueryConfig, liveQueryConfig } from '@/config/queryConfig.js';
 
 // Query Keys - Backend adminService.js'ye birebir uygun
 export const QUERY_KEYS = {
@@ -78,12 +83,7 @@ export function useUsers(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`${ENDPOINTS.ADMIN.USERS}${queryString}`);
     },
-    keepPreviousData: true,
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...adminQueryConfig({ keepPreviousData: true }), // REALTIME: Admin kullanıcıları hemen görmeli
   });
 }
 
@@ -99,12 +99,7 @@ export function useUserById(userId) {
       const response = await apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.USER_DETAIL, { id: userId }));
       return response.data; // Axios response'dan data'yı çıkar
     },
-    enabled: !!userId,
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...adminQueryConfig({ enabled: !!userId }), // REALTIME: Admin kullanıcı detayı hemen görmeli
   });
 }
 
@@ -226,11 +221,12 @@ export function useAdminJobs(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`${ENDPOINTS.ADMIN.JOBS}${queryString}`);
     },
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...adminQueryConfig({
+      keepPreviousData: false,
+      cacheTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    }), // REALTIME: Admin iş ilanlarını her açılışta yenile
   });
 }
 
@@ -249,12 +245,12 @@ export function useJobById(jobId) {
   return useQuery({
     queryKey: [QUERY_KEYS.JOB_DETAIL, jobIdClean],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_DETAIL, { id: jobIdClean })),
-    enabled: !!jobIdClean,
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...adminQueryConfig({
+      enabled: !!jobIdClean,
+      cacheTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    }), // REALTIME: Admin iş ilanı detayı her açılışta güncellensin
   });
 }
 
@@ -425,12 +421,12 @@ export function useJobHistory(jobId) {
   return useQuery({
     queryKey: [QUERY_KEYS.JOB_HISTORY, jobId],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.JOB_HISTORY, { id: jobId })),
-    enabled: !!jobId,
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...adminQueryConfig({
+      enabled: !!jobId,
+      cacheTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    }), // REALTIME: İş ilanı geçmişi her açıldığında güncellensin
   });
 }
 
@@ -450,11 +446,7 @@ export function useApplications(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`${ENDPOINTS.ADMIN.APPLICATIONS}${queryString}`);
     },
-    staleTime: 0, // Her zaman fresh data
-    cacheTime: 0, // Cache'i devre dışı bırak
-    refetchOnMount: 'always', // Mount olduğunda her zaman refetch
-    refetchOnWindowFocus: true, // Window focus olduğunda refetch
-    refetchOnReconnect: true, // Reconnect olduğunda refetch
+    ...liveQueryConfig({ keepPreviousData: false }),
   });
 }
 
@@ -467,12 +459,7 @@ export function useApplicationById(applicationId) {
   return useQuery({
     queryKey: [QUERY_KEYS.APPLICATION_DETAIL, applicationId],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.APPLICATION_DETAIL, { id: applicationId })),
-    enabled: !!applicationId,
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...liveQueryConfig({ enabled: !!applicationId, keepPreviousData: false }),
   });
 }
 
@@ -547,11 +534,7 @@ export function useAdminNotifications(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`${ENDPOINTS.ADMIN.NOTIFICATIONS}${queryString}`);
     },
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...adminQueryConfig(), // REALTIME: Admin bildirimleri hemen görmeli
   });
 }
 
@@ -564,12 +547,7 @@ export function useNotificationById(notificationId) {
   return useQuery({
     queryKey: [QUERY_KEYS.NOTIFICATION_DETAIL, notificationId],
     queryFn: () => apiRequest.get(buildEndpoint(ENDPOINTS.ADMIN.NOTIFICATION_DETAIL, { id: notificationId })),
-    enabled: !!notificationId,
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...adminQueryConfig({ enabled: !!notificationId }), // REALTIME: Bildirim detayı
   });
 }
 
@@ -623,12 +601,7 @@ export function useDashboard(filters = {}) {
       const response = await apiRequest.get(`${ENDPOINTS.ADMIN.DASHBOARD}${queryString}`);
       return response.data; // Axios response'dan data'yı çıkar
     },
-    staleTime: 0,
-    cacheTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchInterval: 5 * 60 * 1000, // 5 dakikada bir yenile
+    ...adminQueryConfig({ refetchInterval: 5 * 60 * 1000 }), // REALTIME + 5 dakika polling
   });
 }
 
@@ -685,12 +658,12 @@ export function usePhotoRequests(filters = {}) {
       const queryString = buildQueryString(filters);
       return apiRequest.get(`/admin/photo-requests${queryString}`);
     },
-    staleTime: 0, // Her zaman fresh data (yeni talepler hemen görünsün)
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: true, // Her mount'ta yenile (yeni talepler olabilir)
-    refetchOnWindowFocus: true, // Pencere focus'unda refetch yap
-    refetchOnReconnect: true,
-    retry: 1
+    ...photoQueryConfig({
+      keepPreviousData: true,
+      cacheTime: 0,
+      refetchOnMount: 'always',
+      refetchOnWindowFocus: true,
+    }), // REALTIME: Fotoğraf talepleri her açılışta güncellensin
   });
 }
 
@@ -709,24 +682,41 @@ export function useReviewPhotoRequest() {
       });
     },
     onSuccess: (data, variables) => {
-      // Photo requests listesini yenile
+      // ⚡ HEMEN güncelle: Admin onayladığında doktor fotoğrafı anında değişsin
+      
+      // 1. Photo requests listesini yenile
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.PHOTO_REQUESTS] });
       
-      // Doktor profil cache'lerini yenile (fotoğraf her yerde güncellensin)
+      // 2. Doktor profil cache'lerini yenile (fotoğraf her yerde güncellensin)
       queryClient.invalidateQueries({ queryKey: ['doctor', 'profile'] });
       queryClient.invalidateQueries({ queryKey: ['doctor', 'photo-request-status'] });
+      
+      // 3. Admin ve hastane tarafındaki tüm cache'leri yenile
       queryClient.invalidateQueries({ queryKey: ['admin', 'user'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'applications'] });
       queryClient.invalidateQueries({ queryKey: ['hospital', 'applications'] });
       queryClient.invalidateQueries({ queryKey: ['hospital', 'application'] });
       queryClient.invalidateQueries({ queryKey: ['hospital', 'doctors'] });
+      queryClient.invalidateQueries({ queryKey: ['hospital', 'doctor-profile'] });
       
-      const actionText = variables.action === 'approve' ? 'onaylandı' : 'reddedildi';
-      const message = variables.action === 'approve' 
-        ? `Fotoğraf talebi ${actionText}. Yeni fotoğraf otomatik olarak her yerde güncellendi.`
-        : `Fotoğraf talebi ${actionText}.`;
-      showToast.success(message);
+      // 4. Ekstra önlem: Tüm query'leri refetch et (agresif yaklaşım)
+      if (variables.action === 'approve') {
+        // Sadece approve durumunda - fotoğraf değişmiş demektir
+        queryClient.refetchQueries({ 
+          predicate: (query) => {
+            const key = query.queryKey;
+            // Doktor profil veya photo ile ilgili tüm query'leri refetch et
+            return key.includes('profile') || key.includes('photo') || key.includes('doctor');
+          },
+          type: 'active', // Sadece aktif query'ler
+        });
+      }
+      
+      // Sadece reddetme durumunda toast göster, onay durumunda gösterme (gereksiz bildirim)
+      if (variables.action === 'reject') {
+        showToast.info('Fotoğraf talebi reddedildi.');
+      }
     },
     onError: (error) => {
       console.error('Review photo request error:', error);

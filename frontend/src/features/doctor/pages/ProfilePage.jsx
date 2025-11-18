@@ -665,36 +665,32 @@ const PhotoManagementModal = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Dosya boyutu kontrolü (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showToast.error(toastMessages.photo.fileSizeError);
-      return;
-    }
-
-    // Dosya tipi kontrolü
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      showToast.error(toastMessages.photo.fileFormatError);
+    // TUTARLILIK: imageUtils kullanarak validation
+    const validation = validateImage(file, { 
+      maxSizeMB: 5,
+      allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    });
+    if (!validation.valid) {
+      showToast.error(validation.error || toastMessages.photo.fileFormatError);
       return;
     }
 
     try {
-    const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          await requestPhotoChangeMutation.mutateAsync(reader.result);
-          showToast.success(toastMessages.photo.uploadSuccess);
-          // Dosya input'unu temizle
-          e.target.value = '';
-        } catch (error) {
-          console.error('Photo upload error:', error);
-          showToast.error(error, { defaultMessage: toastMessages.photo.uploadError });
-        }
-    };
-    reader.readAsDataURL(file);
+      // TUTARLILIK: Compression ekle (PhotoManagementPage ile aynı)
+      const compressedBase64 = await compressImage(file, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.85,
+        maxSizeMB: 2
+      });
+      
+      await requestPhotoChangeMutation.mutateAsync(compressedBase64);
+      showToast.success(toastMessages.photo.uploadSuccess);
+      // Dosya input'unu temizle
+      e.target.value = '';
     } catch (error) {
       console.error('Photo upload error:', error);
-      showToast.error(error, { defaultMessage: toastMessages.photo.uploadError });
+      showToast.error(error.message || toastMessages.photo.uploadError);
     }
   };
 

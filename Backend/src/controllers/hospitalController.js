@@ -592,6 +592,22 @@ const getDoctorProfileDetail = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Doktor profil detayı getirildi', result);
 });
 
+const getApplicationById = catchAsync(async (req, res) => {
+  const hospitalUserId = req.user.id;
+  const { applicationId } = req.params;
+  
+  // applicationId'yi integer'a çevir
+  const applicationIdInt = parseInt(applicationId, 10);
+  if (isNaN(applicationIdInt)) {
+    throw new AppError('Geçersiz başvuru ID', 400);
+  }
+
+  const result = await hospitalService.getApplicationById(hospitalUserId, applicationIdInt);
+  logger.info(`Hospital ${hospitalUserId} fetched application ${applicationIdInt}`);
+
+  return sendSuccess(res, 'Başvuru detayı getirildi', { application: result });
+});
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -624,5 +640,6 @@ module.exports = {
   // Doktor profil görüntüleme
   getDoctorProfiles,
   getDoctorProfileDetail,
+  getApplicationById,
   deactivateAccount
 };

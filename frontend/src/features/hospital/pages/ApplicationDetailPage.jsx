@@ -36,7 +36,7 @@ import {
   ChevronUp, XCircle
 } from 'lucide-react';
 import { useFloating, autoUpdate, offset, shift, FloatingPortal } from '@floating-ui/react';
-import { useHospitalApplications, useUpdateApplicationStatus, useHospitalDoctorProfileDetail } from '../api/useHospital';
+import { useHospitalApplicationDetail, useUpdateApplicationStatus, useHospitalDoctorProfileDetail } from '../api/useHospital';
 import { useApplicationStatuses } from '@/hooks/useLookup';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
@@ -68,14 +68,15 @@ const HospitalApplicationDetailPage = () => {
     }, 100);
   };
 
-  // Application'ı bulmak için tüm applications'ı fetch et
-  const { data: applicationsData, isLoading: applicationsLoading } = useHospitalApplications({ page: 1, limit: 100 });
-  const applications = applicationsData?.data?.applications || [];
-  const application = applications.find(a => a.id === parseInt(applicationId || '0'));
+  // Tek başvuruyu direkt fetch et
+  const { data: applicationData, isLoading: applicationsLoading } = useHospitalApplicationDetail(parseInt(applicationId || '0'));
+  const application = applicationData?.application || null;
 
   // Doktor aktif değilse (false, 0, null, undefined) profil bilgilerine erişim yok
   // Aktif edildiğinde (true, 1) profil bilgileri tekrar görünür olacak
-  const isDoctorInactive = !application?.doctor_is_active || application?.doctor_is_active === false || application?.doctor_is_active === 0;
+  // SQL Server bit tipi 1/0 olarak gelebilir, bu yüzden kontrol ediyoruz
+  const doctorIsActive = application?.doctor_is_active === true || application?.doctor_is_active === 1 || application?.doctor_is_active === '1';
+  const isDoctorInactive = !doctorIsActive;
   const doctorProfileId = isDoctorInactive ? null : application?.doctor_profile_id;
   const { data: doctorProfileData, isLoading: doctorProfileLoading } = useHospitalDoctorProfileDetail(doctorProfileId);
   

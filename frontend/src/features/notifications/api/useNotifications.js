@@ -3,8 +3,11 @@
  * Service katmanı kaldırıldı - API çağrıları doğrudan hook'larda
  * Bildirim işlemleri için React Query hooks
  * 
+ * Cache Stratejisi:
+ * - REALTIME: Bildirimler ve unread count → SSE ile real-time güncelleniyor
+ * 
  * @author MediKariyer Development Team
- * @version 2.2.0 - SSE real-time bildirim desteği eklendi
+ * @version 2.3.0 - Merkezi cache config eklendi
  * @since 2024
  */
 
@@ -13,6 +16,7 @@ import { useEffect, useRef } from 'react';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, API_BASE_URL } from '@config/api.js';
 import useAuthStore from '@/store/authStore';
+import { notificationQueryConfig } from '@/config/queryConfig.js';
 
 // Bildirimler listesi
 export const useNotifications = (filters = {}, options = {}) => {
@@ -61,9 +65,10 @@ export const useNotifications = (filters = {}, options = {}) => {
       const queryString = queryParams.toString();
       return apiRequest.get(`${ENDPOINTS.NOTIFICATIONS.LIST}${queryString ? `?${queryString}` : ''}`);
     },
-    enabled: enabled && !!userId && (filters.limit === undefined || filters.limit > 0), // limit 0 ise query çalışmasın
-    staleTime: 30 * 1000, // 30 saniye (bildirimler için kısa)
-    keepPreviousData: !!filters?.page && filters.page > 1,
+    ...notificationQueryConfig({
+      enabled: enabled && !!userId && (filters.limit === undefined || filters.limit > 0),
+      keepPreviousData: !!filters?.page && filters.page > 1,
+    }),
   });
 };
 
@@ -75,11 +80,11 @@ export const useUnreadNotificationCount = () => {
   return useQuery({
     queryKey: ['notifications', 'unread-count', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT),
-    staleTime: 30 * 1000, // 30 saniye
-    refetchInterval: false, // SSE ile real-time güncelleniyor, polling kaldırıldı
-    retry: 1, // Sadece 1 kez retry yap
-    retryDelay: 5000, // 5 saniye bekle
-    enabled: !!userId, // Kullanıcı yoksa çalışmasın
+    ...notificationQueryConfig({
+      enabled: !!userId,
+      refetchInterval: false, // SSE ile real-time güncelleniyor
+      retryDelay: 5000,
+    }),
   });
 };
 
@@ -402,7 +407,7 @@ export const useNotificationSettings = () => {
   return useQuery({
     queryKey: ['notifications', 'settings'],
     queryFn: () => apiRequest.get(ENDPOINTS.NOTIFICATIONS.SETTINGS),
-    staleTime: 10 * 60 * 1000, // 10 dakika
+    ...notificationQueryConfig(), // REALTIME: Ayarlar hemen güncel olmalı
   });
 };
 

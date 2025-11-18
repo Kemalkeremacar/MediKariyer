@@ -15,6 +15,7 @@ import { APP_CONFIG } from '@config/app.js';
 import { registerDoctorSchema, registerHospitalSchema } from '@config/validation.js';
 import { useLookup } from '@/hooks/useLookup';
 import { ModalContainer } from '@/components/ui/ModalContainer';
+import { compressImage, validateImage } from '@/utils/imageUtils';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ const RegisterPage = () => {
   });
   const [photoPreview, setPhotoPreview] = useState(null);
   const [errorModal, setErrorModal] = useState({ show: false, message: '', description: '' });
+  const [formErrors, setFormErrors] = useState({});
   
   // Hook'ları userType'a göre seç
   const registerDoctorMutation = useRegisterDoctor();
@@ -84,32 +86,41 @@ const RegisterPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    if (formErrors[name]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
-  // Fotoğraf yükleme
+  // Fotoğraf yükleme - OPTİMİZASYON: Compression ile
   const handlePhotoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Dosya boyutu kontrolü (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showToast.error(toastMessages.validation.fileSizeError);
+    // Validation
+    const validation = validateImage(file, { maxSizeMB: 5 });
+    if (!validation.valid) {
+      showToast.error(validation.error || toastMessages.validation.fileFormatError);
       return;
     }
 
-    // Dosya tipi kontrolü
-    if (!file.type.startsWith('image/')) {
-      showToast.error(toastMessages.validation.fileFormatError);
-      return;
+    try {
+      // OPTİMİZASYON: Image compression (max 800x800, quality 0.85, max 2MB)
+      const compressedBase64 = await compressImage(file, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.85,
+        maxSizeMB: 2
+      });
+      
+      setPhotoPreview(compressedBase64);
+      setFormData(prev => ({ ...prev, profile_photo: compressedBase64 }));
+    } catch (error) {
+      showToast.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
     }
-
-    // Preview oluştur
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPhotoPreview(reader.result);
-      setFormData(prev => ({ ...prev, profile_photo: reader.result }));
-    };
-    reader.readAsDataURL(file);
   };
 
   // Kamera ile fotoğraf çekme (mobil)
@@ -117,29 +128,32 @@ const RegisterPage = () => {
     handlePhotoUpload(e);
   };
 
-  // Logo yükleme
+  // Logo yükleme - OPTİMİZASYON: Compression ile
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Dosya boyutu kontrolü (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showToast.error(toastMessages.validation.fileSizeError);
+    // Validation
+    const validation = validateImage(file, { maxSizeMB: 5 });
+    if (!validation.valid) {
+      showToast.error(validation.error || toastMessages.validation.fileFormatError);
       return;
     }
 
-    // Dosya tipi kontrolü
-    if (!file.type.startsWith('image/')) {
-      showToast.error(toastMessages.validation.fileFormatError);
-      return;
+    try {
+      // OPTİMİZASYON: Image compression (max 1000x1000, quality 0.8, max 2MB)
+      const compressedBase64 = await compressImage(file, {
+        maxWidth: 1000,
+        maxHeight: 1000,
+        quality: 0.8,
+        maxSizeMB: 2
+      });
+      
+      setFormData(prev => ({ ...prev, logo: compressedBase64 }));
+      showToast.success('Logo başarıyla yüklendi ve optimize edildi');
+    } catch (error) {
+      showToast.error(error.message || 'Logo yüklenirken bir hata oluştu');
     }
-
-    // Preview oluştur
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, logo: reader.result }));
-    };
-    reader.readAsDataURL(file);
   };
 
   const clearForm = () => {
@@ -167,6 +181,7 @@ const RegisterPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    setFormErrors({});
     try {
       // UserType'a göre doğru schema'yı kullan
       if (userType === 'doctor') {
@@ -180,7 +195,16 @@ const RegisterPage = () => {
           subspecialty_id: formData.subspecialty_id ? parseInt(formData.subspecialty_id) : undefined,
           profile_photo: formData.profile_photo,
         });
-        registerDoctorMutation.mutate(validatedData);
+        registerDoctorMutation.mutate(validatedData, {
+          onError: (error) => {
+            const message = error?.response?.data?.message || error?.response?.data?.error || error?.message || '';
+            if (message.toLowerCase().includes('zaten kayıtlı')) {
+              const emailError = 'Bu e-posta adresi zaten kullanımda. Lütfen farklı bir e-posta seçin.';
+              setFormErrors((prev) => ({ ...prev, email: emailError }));
+              showToast.error(emailError);
+            }
+          }
+        });
       } else if (userType === 'hospital') {
         const validatedData = registerHospitalSchema.parse({
           email: formData.email,
@@ -276,6 +300,9 @@ const RegisterPage = () => {
                   required
                 />
               </div>
+              {formErrors.email && (
+                <p className="text-xs text-rose-600 mt-1">{formErrors.email}</p>
+              )}
             </div>
 
             {/* Password */}

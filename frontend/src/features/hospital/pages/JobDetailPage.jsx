@@ -71,7 +71,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Briefcase, Edit3, Users, MapPin, Calendar, 
   Target, AlertCircle, ArrowLeft, Building, CheckCircle, Clock, Settings,
-  Hourglass, RefreshCw, XCircle, FileText, History
+  Hourglass, RefreshCw, XCircle, FileText, History, PauseCircle
 } from 'lucide-react';
 import { useHospitalJobById, useUpdateHospitalJobStatus, useResubmitHospitalJob } from '../api/useHospital';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
@@ -758,26 +758,50 @@ const allRevisionEntries = useMemo(() => {
           align="center"
           backdropClassName="bg-black/40 backdrop-blur-sm"
         >
-          <div className="space-y-4">
-            <p className="text-gray-200 leading-relaxed">
-              {statusModal.targetStatus === 3
-                ? `"${job?.title}" ilanını tekrar aktif hale getirmek istediğinizden emin misiniz? İlan aktif olduğunda doktorlar tarafından görüntülenebilir ve başvuru yapılabilir.`
-                : `"${job?.title}" ilanını pasif yapmak istediğinizden emin misiniz? Pasif ilanlar doktorlar tarafından görüntülenmez ve yeni başvuru alınmaz.`}
-            </p>
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 text-sm text-blue-200">
-              <strong>Bilgi:</strong> Dilerseniz daha sonra ilan durumunu tekrar değiştirebilirsiniz.
+          <div className="space-y-6">
+            <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-sky-50 border border-blue-200 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/70 border border-blue-200 flex items-center justify-center">
+                  {statusModal.targetStatus === 3 ? (
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  ) : (
+                    <PauseCircle className="w-6 h-6 text-indigo-600" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-gray-900 mb-2">
+                    {statusModal.targetStatus === 3
+                      ? `"${job?.title}" ilanını yeniden aktif hale getirmek üzeresiniz`
+                      : `"${job?.title}" ilanını pasif duruma almak üzeresiniz`}
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {statusModal.targetStatus === 3
+                      ? 'Aktif ilanlar doktorlar tarafından görüntülenir ve başvuru alır.'
+                      : 'Pasif ilanlar doktorlara kapatılır ve yeni başvuru kabul etmez.'}
+                  </p>
+                </div>
+              </div>
+            </section>
+            <div className="bg-white border border-blue-100 rounded-2xl p-4 shadow-sm">
+              <p className="text-sm text-gray-600">
+                Dilerseniz daha sonra ilan durumunu tekrar değiştirebilirsiniz.
+              </p>
             </div>
             <div className="flex justify-end gap-3">
               <button
                 onClick={closeStatusModal}
-                className="px-5 py-2 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20 transition-colors"
+                className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
               >
-                İptal
+                Vazgeç
               </button>
               <button
                 onClick={handleConfirmStatusChange}
                 disabled={updateStatusMutation.isPending}
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-5 py-2 rounded-xl text-white font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                  statusModal.targetStatus === 3
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700'
+                    : 'bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700'
+                }`}
               >
                 {updateStatusMutation.isPending
                   ? 'Güncelleniyor...'
@@ -799,21 +823,33 @@ const allRevisionEntries = useMemo(() => {
           maxHeight="80vh"
           backdropClassName="bg-black/40 backdrop-blur-sm"
         >
-          <div className="space-y-4">
-            <p className="text-gray-200 leading-relaxed">
-              "{job?.title}" ilanını revizyonları tamamlayarak tekrar admin onayına göndermek üzeresiniz. Onaylanana kadar ilan doktorlar tarafından görünmeyecektir.
-            </p>
+          <div className="space-y-6">
+            <section className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/70 border border-emerald-200 flex items-center justify-center">
+                  <RefreshCw className="w-6 h-6 text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-gray-900 mb-2">
+                    "{job?.title}" ilanını yeniden incelemeye göndermek üzeresiniz
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Revizyonları tamamladıysanız ilanı tekrar admin onayına gönderebilirsiniz. Onaylanana kadar ilan doktorlara kapalı kalır.
+                  </p>
+                </div>
+              </div>
+            </section>
             <div className="flex justify-end gap-3">
               <button
                 onClick={closeResubmitModal}
-                className="px-5 py-2 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20 transition-colors"
+                className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
               >
-                İptal
+                Vazgeç
               </button>
               <button
                 onClick={handleResubmitJob}
                 disabled={resubmitJobMutation.isPending}
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-green-700 transition-all disabled:opacity-50"
               >
                 {resubmitJobMutation.isPending ? 'Gönderiliyor...' : 'Tekrar Gönder'}
               </button>

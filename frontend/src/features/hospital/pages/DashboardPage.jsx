@@ -100,10 +100,6 @@ const HospitalDashboard = () => {
   // Dashboard verileri
   const recentApplications = (dashboardData?.data?.recent_applications || []).slice(0, 5);
   const recentJobs = (dashboardData?.data?.recent_jobs || []).slice(0, 5);
-  
-  console.log('🎯 Hospital Dashboard Data:', dashboardData);
-  console.log('📋 Recent Applications:', recentApplications);
-  console.log('📋 Recent Jobs:', recentJobs);
 
   const getJobStatusClasses = (status) => {
     const normalized = status?.toString().trim().toLowerCase();
@@ -121,20 +117,20 @@ const HospitalDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="mx-auto max-w-7xl">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8 border border-white/20 shadow-[0_20px_60px_-30px_rgba(30,64,175,0.45)]">
+          <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
             </div>
             
             <div className="relative z-10">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center">
                 {/* Logo - Sol Taraf */}
                 {profile?.logo && (
                   <div className="flex-shrink-0">
-                    <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-white/20 shadow-lg">
+                    <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-cyan-300/40 shadow-lg">
                       <img 
                         src={profile.logo} 
                         alt={institutionName}
@@ -145,20 +141,20 @@ const HospitalDashboard = () => {
                 )}
                 
                 {/* Metin ve Buton - Sağ Taraf */}
-                <div className="flex-1 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="flex flex-1 flex-col items-start justify-between gap-6 md:flex-row md:items-center">
                   <div className="flex-1">
-                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{institutionName}</h1>
-                    <h2 className="text-xl md:text-2xl font-semibold text-blue-300 mb-4">
+                    <h1 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl">{institutionName}</h1>
+                    <h2 className="mb-4 text-xl font-semibold text-cyan-700 md:text-2xl">
                       İşe Alım ve Başvuru Yönetimi
                     </h2>
-                    <p className="text-gray-300 text-base md:text-lg leading-relaxed">
+                    <p className="text-base leading-relaxed text-gray-700 md:text-lg">
                       İş ilanlarınızı yönetin, başvuruları değerlendirin ve en iyi doktorları keşfedin.
                     </p>
                   </div>
                   <div className="flex-shrink-0 w-full md:w-auto">
                     <Link
                       to="/hospital/profile"
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
                     >
                       <User className="w-5 h-5" />
                       Profil Yönetimi

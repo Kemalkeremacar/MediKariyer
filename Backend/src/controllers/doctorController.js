@@ -688,18 +688,14 @@ const getDashboard = catchAsync(async (req, res) => {
   
   const doctorProfileId = profile.id;
   
-  // Paralel olarak 4 servisten verileri al
+  // Paralel olarak 2 servisten verileri al (profil tamamlama ve istatistikler kaldırıldı)
   // Limit artırıldı: 5 → 100 (tüm başvurular ve ilanlar için)
-  const [profileCompletion, applicationStats, recentApplications, recentJobs] = await Promise.all([
-    doctorService.getProfileCompletion(userId),
-    doctorService.getDoctorApplicationStats(doctorProfileId),
+  const [recentApplications, recentJobs] = await Promise.all([
     doctorService.getDoctorRecentApplications(doctorProfileId, 100),
     doctorService.getDoctorRecentJobs(doctorProfileId, 100)
   ]);
   
   const dashboardData = {
-    profile_completion: profileCompletion,
-    application_stats: applicationStats,
     recent_applications: recentApplications,
     recent_jobs: recentJobs
   };

@@ -3,77 +3,134 @@
  * @description Fotoğraf Yönetimi Sayfası - Profil fotoğrafı yükleme ve değiştirme işlemleri
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, ArrowLeft, Clock, AlertCircle, Info, Upload, RefreshCw, CheckCircle, XCircle, Image as ImageIcon, History } from 'lucide-react';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { useDoctorProfile, usePhotoRequestStatus, useRequestPhotoChange, useCancelPhotoRequest } from '../api/useDoctor.js';
 import useAuthStore from '@/store/authStore';
+import { compressImage, validateImage } from '@/utils/imageUtils';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+// TUTARLILIK: Tüm yerlerde 5MB limit (RegisterPage ile aynı)
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+const getPendingStorageKey = (userId) => `doctor-photo-pending-${userId || 'anon'}`;
+const getHistoryStorageKey = (userId) => `doctor-photo-history-${userId || 'anon'}`;
+
+const loadPendingCache = (userId) => {
+  if (!userId) return null;
+  try {
+    let saved = localStorage.getItem(getPendingStorageKey(userId));
+    if (!saved) {
+      const legacy = localStorage.getItem('doctor-photo-pending-anon');
+      if (legacy) {
+        localStorage.setItem(getPendingStorageKey(userId), legacy);
+        localStorage.removeItem('doctor-photo-pending-anon');
+        saved = legacy;
+      }
+    }
+    if (!saved) return null;
+    const pending = JSON.parse(saved);
+    if (pending?.isPending && (!pending.userId || pending.userId === userId)) {
+      return pending;
+    }
+  } catch (_) {}
+  return null;
+};
+
+const loadHistoryCache = (userId) => {
+  if (!userId) return [];
+  try {
+    const saved = localStorage.getItem(getHistoryStorageKey(userId));
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+    const filtered = parsed.filter((item) => !item.userId || item.userId === userId);
+    if (filtered.length === 0 && parsed.length > 0) {
+      localStorage.removeItem(getHistoryStorageKey(userId));
+    }
+    return filtered;
+  } catch (_) {}
+  return [];
+};
 
 const PhotoManagementPage = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const userId = user?.id;
   const { data: profileData, isLoading: isProfileLoading, refetch: refetchProfile } = useDoctorProfile();
   const profile = profileData?.profile || {};
   const { data: photoRequestStatus, isLoading: isStatusLoading, refetch: refetchStatus } = usePhotoRequestStatus();
   const requestPhotoChangeMutation = useRequestPhotoChange();
   const cancelPhotoRequestMutation = useCancelPhotoRequest();
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const pendingCache = useMemo(() => loadPendingCache(userId), [userId]);
+  const historyCache = useMemo(() => loadHistoryCache(userId), [userId]);
+
+  const [photoPreview, setPhotoPreview] = useState(pendingCache?.file_url || null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [submissionMessage, setSubmissionMessage] = useState(null);
-  const [awaitingApproval, setAwaitingApproval] = useState(false);
+  const [awaitingApproval, setAwaitingApproval] = useState(Boolean(pendingCache?.isPending));
   const fileInputRef = useRef(null);
   const prevProfilePhotoRef = useRef(profile?.profile_photo || null);
+  const prevUserIdRef = useRef(userId);
   // Persist pending state across refreshes (key depends on current user)
-  const getStorageKey = () => `doctor-photo-pending-${user?.id || 'anon'}`;
+  const getStorageKey = () => getPendingStorageKey(userId);
   // Local history cache key per user
-  const getHistoryKey = () => `doctor-photo-history-${user?.id || 'anon'}`;
-  const [localHistory, setLocalHistory] = useState([]);
+  const getHistoryKey = () => getHistoryStorageKey(userId);
+  
+  // İlk render'da localStorage'dan history yükle (senkron)
+  const [localHistory, setLocalHistory] = useState(historyCache);
 
-  // Sayfa ilk yüklendiğinde localStorage'dan pending request'i yükle
+  // Kullanıcı değiştiğinde (logout vs) diğer kullanıcıya ait cache'leri temizle
+  useEffect(() => {
+    const prevUserId = prevUserIdRef.current;
+    if (prevUserId && !userId) {
+      try {
+        const allKeys = Object.keys(localStorage);
+        allKeys.forEach((key) => {
+          if (key.startsWith('doctor-photo-')) {
+            localStorage.removeItem(key);
+          }
+        });
+      } catch (_) {}
+    }
+    prevUserIdRef.current = userId;
+  }, [userId]);
+
+  // Sayfa ilk yüklendiğinde localStorage'dan pending request'i ve history'yi HEMEN yükle
   // Backend verisi gelene kadar geçici olarak göster
   useEffect(() => {
-    if (!user?.id) return;
+    if (!userId) return;
     
     try {
-      let saved = localStorage.getItem(getStorageKey());
-      // Eski/yanlış anahtar (anon) kalmış olabilir: migrate et
-      if (!saved) {
-        const legacy = localStorage.getItem('doctor-photo-pending-anon');
-        if (legacy && user?.id) {
-          localStorage.setItem(getStorageKey(), legacy);
-          localStorage.removeItem('doctor-photo-pending-anon');
-          saved = legacy;
+      // ⚠️ CRITICAL: Önce tüm başka kullanıcılara ait cache'leri temizle
+      const allKeys = Object.keys(localStorage);
+      allKeys.forEach(key => {
+        if (key.startsWith('doctor-photo-') && !key.includes(`-${userId}`)) {
+          // Bu key başka kullanıcıya ait, temizle
+          localStorage.removeItem(key);
         }
+      });
+      
+      // Local history cache'ini HEMEN yükle - KİŞİYE ÖZEL KONTROL (Backend gelmeden önce göster)
+      const historyFromCache = loadHistoryCache(userId);
+      if (historyFromCache.length > 0) {
+        setLocalHistory(historyFromCache);
       }
       
-      // localStorage'dan pending request'i yükle (backend verisi gelene kadar)
-      if (saved) {
-        const pending = JSON.parse(saved);
-        if (pending && pending.isPending) {
-          // Backend verisi henüz gelmediyse geçici olarak göster
-          // Backend verisi geldiğinde bu useEffect'teki state güncellenecek
-          setAwaitingApproval(true);
-          if (pending.file_url) {
-            setPhotoPreview(pending.file_url);
-          }
+      const pendingFromCache = loadPendingCache(userId);
+      if (pendingFromCache?.isPending) {
+        setAwaitingApproval(true);
+        if (pendingFromCache.file_url) {
+          setPhotoPreview(pendingFromCache.file_url);
         }
-      }
-      
-      // Local history cache'ini yükle
-      const savedHistory = localStorage.getItem(getHistoryKey());
-      if (savedHistory) {
-        const parsed = JSON.parse(savedHistory);
-        if (Array.isArray(parsed)) setLocalHistory(parsed);
       }
     } catch (_) {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [userId]);
 
   // Backend'den gelen veriyi normalize et
   // Backend formatı: { data: { status: {...}, history: [...] } }
@@ -96,26 +153,6 @@ const PhotoManagementPage = () => {
 
   // Backend'den gelen pending request'i tespit et ve state'i güncelle
   useEffect(() => {
-    if (!statusObj) {
-      // Backend'de pending request yok
-      if (statusObjStatus !== 'pending') {
-        // Eğer başka bir durumdaysa (approved/rejected) ve localStorage'da pending varsa temizle
-        try {
-          const saved = localStorage.getItem(getStorageKey());
-          if (saved) {
-            const pending = JSON.parse(saved);
-            // Eğer backend'de approved/rejected durumu varsa ve localStorage'daki pending daha eskiyse temizle
-            if (statusObjStatus === 'approved' || statusObjStatus === 'rejected') {
-              localStorage.removeItem(getStorageKey());
-              setAwaitingApproval(false);
-              setPhotoPreview(null);
-            }
-          }
-        } catch (_) {}
-      }
-      return;
-    }
-
     // Backend'de pending request var
     if (statusObjStatus === 'pending') {
       setAwaitingApproval(true);
@@ -134,12 +171,46 @@ const PhotoManagementPage = () => {
           getStorageKey(),
           JSON.stringify({
             isPending: true,
+            userId: user?.id, // Kişiye özel
             created_at: statusObj.created_at || new Date().toISOString(),
             file_url: maybePreview,
             id: statusObj.id // ID'yi de kaydet duplicate kontrolü için
           })
         );
       } catch (_) {}
+      return; // Early return - pending durumunda işlem bitti
+    }
+
+    // Backend approved/rejected döndü → Temizle
+    if (statusObjStatus === 'approved' || statusObjStatus === 'rejected') {
+      setAwaitingApproval(false);
+      setPhotoPreview(null);
+      try {
+        localStorage.removeItem(getStorageKey());
+      } catch (_) {}
+      return;
+    }
+
+    // Backend null döndü (hiç talep yok)
+    // ⚠️ Optimistic update sırasında da null dönebilir, bu yüzden localStorage kontrol edelim
+    if (!statusObj) {
+      try {
+        const saved = localStorage.getItem(getStorageKey());
+        if (saved) {
+          const pending = JSON.parse(saved);
+          // LocalStorage'da pending var ve kişiye ait → Optimistic update devam ediyor, dokunma
+          if (pending?.isPending && (!pending?.userId || pending.userId === user?.id)) {
+            return; // Optimistic update sürecinde, backend henüz kaydetmedi
+          }
+        }
+        // LocalStorage boş veya başka kullanıcıya ait → Temizle
+        setAwaitingApproval(false);
+        setPhotoPreview(null);
+        localStorage.removeItem(getStorageKey());
+      } catch (_) {
+        setAwaitingApproval(false);
+        setPhotoPreview(null);
+      }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusObj, statusObjStatus, user?.id]);
@@ -156,6 +227,7 @@ const PhotoManagementPage = () => {
       };
       
       const map = new Map();
+      const hasPendingFromBackend = historyList.some((it) => it?.status === 'pending');
       
       // Önce backend'den gelen history'yi ekle (birincil kaynak)
       historyList.forEach((it) => {
@@ -166,6 +238,9 @@ const PhotoManagementPage = () => {
       // Sonra localHistory'yi ekle (cache)
       localHistory.forEach((it) => {
         if (!it) return;
+        if (hasPendingFromBackend && (it.optimistic || (!it.id && it.status === 'pending'))) {
+          return;
+        }
         // Backend'den gelen bir kayıtla aynı değilse ekle
         const key = keyFn(it);
         if (!map.has(key)) {
@@ -175,14 +250,15 @@ const PhotoManagementPage = () => {
       
       // tempHistory artık kullanılmıyor - backend'den gelen veri birincil kaynak
       
-      // Sırala ve limit uygula
+      // Sırala ve limit uygula (en yeni tarih en başta)
       const merged = Array.from(map.values())
         .sort((a, b) => {
-          const dateA = new Date(a.created_at || 0);
-          const dateB = new Date(b.created_at || 0);
-          return dateB - dateA;
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA; // En yeni (dateB) - En eski (dateA) = büyükten küçüğe
         })
-        .slice(0, 50);
+        .slice(0, 50)
+        .map(item => ({ ...item, userId: user?.id })); // Her item'a userId ekle (kişiye özel cache)
       
       setLocalHistory(merged);
       localStorage.setItem(getHistoryKey(), JSON.stringify(merged));
@@ -199,19 +275,21 @@ const PhotoManagementPage = () => {
   useEffect(() => {
     let intervalId;
     if (statusObjStatus === 'pending' || awaitingApproval) {
-      // Poll status while pending - 15 saniyede bir (daha az sıklıkta)
+      // Poll status while pending - 3 saniyede bir (admin onayladığında HEMEN görsün)
       intervalId = setInterval(() => {
         refetchStatus();
-      }, 15000); // 5000'den 15000'e çıkarıldı
+        refetchProfile(); // Profili de yenile (fotoğraf değişmişse görsün)
+      }, 3000); // Admin onayı için daha reaktif
     } else if (statusObjStatus === 'approved' || statusObjStatus === 'rejected') {
-      // Karar verildi: profil ve geçmişi yenile, sağ tarafı sıfırla
-      refetchProfile();
+      // ✅ Karar verildi: profil ve geçmişi yenile, sağ tarafı sıfırla
+      refetchProfile(); // Fotoğraf değişmişse hemen yükle
       setSelectedFile(null);
       setPhotoPreview(null);
       setIsUploading(false);
       setSubmissionMessage(null);
       setAwaitingApproval(false);
       try { localStorage.removeItem(getStorageKey()); } catch (_) {}
+      
     }
     return () => {
       if (intervalId) clearInterval(intervalId);
@@ -232,22 +310,35 @@ const PhotoManagementPage = () => {
     }
   }, [profile?.profile_photo]);
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const photoFile = e.target.files[0];
     setSelectedFile(null);
     if (!photoFile) return;
-    if (!ALLOWED_TYPES.includes(photoFile.type)) {
-      showToast.error(toastMessages.photoManagement.fileFormatError);
+
+    // TUTARLILIK: imageUtils kullanarak validation
+    const validation = validateImage(photoFile, { 
+      maxSizeMB: 5,
+      allowedTypes: ALLOWED_TYPES
+    });
+    if (!validation.valid) {
+      showToast.error(validation.error || toastMessages.photoManagement.fileFormatError);
       return;
     }
-    if (photoFile.size > MAX_FILE_SIZE) {
-      showToast.error(toastMessages.photoManagement.fileSizeError);
-      return;
+
+    try {
+      // TUTARLILIK: Compression ekle (RegisterPage ile aynı)
+      const compressedBase64 = await compressImage(photoFile, {
+        maxWidth: 800,
+        maxHeight: 800,
+        quality: 0.85,
+        maxSizeMB: 2
+      });
+      
+      setSelectedFile(photoFile); // Orijinal file'ı sakla (backend'e gönderilecek)
+      setPhotoPreview(compressedBase64); // Compressed preview göster
+    } catch (error) {
+      showToast.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
     }
-    setSelectedFile(photoFile);
-    const reader = new FileReader();
-    reader.onload = () => setPhotoPreview(reader.result);
-    reader.readAsDataURL(photoFile);
   };
 
   const handlePhotoUpload = async () => {
@@ -256,48 +347,67 @@ const PhotoManagementPage = () => {
       showToast.warning('Zaten bekleyen bir talebiniz var. Önce iptal edin.');
       return;
     }
-    
-    setIsUploading(true);
-    
-    // ⚡ OPTIMISTIC UPDATE: UI'ı hemen güncelle (backend'den cevap beklemeden)
+
+    // TUTARLILIK: Compression ile base64 oluştur (photoPreview zaten compressed)
+    let base64ToSend = photoPreview;
+    if (!base64ToSend && selectedFile) {
+      try {
+        base64ToSend = await compressImage(selectedFile, {
+          maxWidth: 800,
+          maxHeight: 800,
+          quality: 0.85,
+          maxSizeMB: 2
+        });
+      } catch (error) {
+        showToast.error(error.message || 'Fotoğraf işlenirken bir hata oluştu');
+        return;
+      }
+    }
+
+    // ⚡ OPTIMISTIC UPDATE: UI'ı HEMEN güncelle (backend'den cevap beklemeden)
     setAwaitingApproval(true);
     setSubmissionMessage({ type: 'success', text: 'Değiştirme talebiniz gönderildi. Admin onayı bekleniyor.' });
-    
-    // Geçici olarak localStorage'a kaydet (sayfa yenileme için)
+
+    // Geçici olarak localStorage'a kaydet (sayfa yenileme için - KİŞİYE ÖZEL KEY)
     try {
-      const maybePreview = typeof photoPreview === 'string' && photoPreview.length <= 300000 ? photoPreview : null;
+      const maybePreview = typeof base64ToSend === 'string' && base64ToSend.length <= 300000 ? base64ToSend : null;
       localStorage.setItem(
-        getStorageKey(),
-        JSON.stringify({ 
-          isPending: true, 
-          created_at: new Date().toISOString(), 
-          file_url: maybePreview 
-        })
+        getStorageKey(), // user?.id içeren kişiye özel key
+        JSON.stringify({
+          isPending: true,
+          userId: user?.id, // Ekstra güvenlik: user ID'yi de sakla
+          created_at: new Date().toISOString(),
+          file_url: maybePreview,
+        }),
       );
     } catch (_) {}
-    
+
+    setIsUploading(true);
+
     try {
-      // Backend'e gönder (arka planda)
-      await requestPhotoChangeMutation.mutateAsync(selectedFile);
+      // Backend'e gönder (compressed base64 string)
+      await requestPhotoChangeMutation.mutateAsync(base64ToSend);
       showToast.success(toastMessages.photoManagement.requestSuccess);
-      
-      // Backend'den güncel verileri çek (arka planda, silent)
-      refetchStatus();
+
+      // Backend'den güncel verileri çek (pending durumu ve history güncellenecek)
+      await refetchStatus();
       refetchProfile();
+
     } catch (error) {
       // ❌ HATA: Optimistic update'i geri al
       setAwaitingApproval(false);
       setSubmissionMessage({ type: 'error', text: 'Fotoğraf yüklenemedi. Lütfen dosya türü/boyutunu ve bağlantınızı kontrol edin.' });
       try { localStorage.removeItem(getStorageKey()); } catch (_) {}
       showToast.error(toastMessages.photoManagement.uploadError);
+    } finally {
+      setIsUploading(false);
     }
-    setIsUploading(false);
   };
 
   const handleCancelRequest = async () => {
     try {
       await cancelPhotoRequestMutation.mutateAsync();
-      showToast.success(toastMessages.photoManagement.cancelSuccess);
+      // Toast mesajı useCancelPhotoRequest hook'u içinde gösteriliyor, burada tekrar göstermeye gerek yok
       // UI ve yerel durumu hemen senkronize et
       setAwaitingApproval(false);
       setSelectedFile(null);
@@ -308,7 +418,8 @@ const PhotoManagementPage = () => {
       refetchStatus();
       refetchProfile();
     } catch (error) {
-      showToast.error(toastMessages.photoManagement.cancelError);
+      // Hata toast'ı da hook içinde gösteriliyor
+      console.error('Cancel photo request error:', error);
     }
   };
 
@@ -404,7 +515,7 @@ const PhotoManagementPage = () => {
                     )}
                   </>
                 )}
-                <p className="text-gray-500 text-xs mt-3 flex items-center gap-1"><Info className="w-4 h-4 text-blue-500" /> JPG veya PNG • Maksimum 10MB</p>
+                <p className="text-gray-500 text-xs mt-3 flex items-center gap-1"><Info className="w-4 h-4 text-blue-500" /> JPG, PNG veya WEBP • Maksimum 5MB (otomatik optimize edilir)</p>
                 {submissionMessage && (
                   <div className={`mt-3 w-full text-xs rounded-lg p-3 border ${submissionMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
                     {submissionMessage.text}

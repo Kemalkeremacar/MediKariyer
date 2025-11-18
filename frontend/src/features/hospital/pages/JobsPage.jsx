@@ -293,22 +293,22 @@ const HospitalJobs = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 rounded-3xl p-8">
+          <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20"></div>
+            <div className="absolute inset-0 opacity-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
             </div>
             
             <div className="relative z-10">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center">
                 {/* Metin ve Buton */}
-                <div className="flex-1 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div className="flex flex-1 flex-col items-start justify-between gap-6 md:flex-row md:items-center">
                   <div className="flex-1">
-                    <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">İş İlanları</h1>
-                    <h2 className="text-xl md:text-2xl font-semibold text-blue-400 mb-4">
+                    <h1 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl">İş İlanları</h1>
+                    <h2 className="mb-4 text-xl font-semibold text-cyan-700 md:text-2xl">
                       İlan Yönetimi ve Yayınlama
                     </h2>
-                    <p className="text-gray-300 text-base md:text-lg leading-relaxed">
+                    <p className="text-base leading-relaxed text-gray-700 md:text-lg">
                       İş ilanlarınızı oluşturun, yönetin ve nitelikli doktorlara ulaşın.
                     </p>
                   </div>
@@ -316,7 +316,7 @@ const HospitalJobs = () => {
                     <Link
                       to="/hospital/jobs/new"
                       onClick={storeListState}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
                     >
                       <Plus className="w-5 h-5" />
                       Yeni İlan Oluştur

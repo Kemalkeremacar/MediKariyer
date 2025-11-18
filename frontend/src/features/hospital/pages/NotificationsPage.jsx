@@ -26,7 +26,8 @@ import {
   Bell, CheckCircle, Filter, Trash2, 
   X, CheckCircle2, Trash, CheckCheck,
   FileText, Calendar, Briefcase, MessageSquare,
-  Settings, Clock, AlertTriangle, XCircle, Info
+  Settings, Clock, AlertTriangle, XCircle, Info,
+  ExternalLink
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ROUTE_CONFIG } from '@config/routes.js';
@@ -86,9 +87,9 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
     <div
       className={`group relative rounded-2xl border ${
         isRead 
-          ? 'border-white/10 bg-white/5' 
-          : 'border-blue-400/50 bg-blue-500/10'
-      } p-6 transition-all duration-300 hover:border-blue-400 hover:bg-white/10 cursor-pointer`}
+          ? 'border-gray-100 bg-white shadow-sm' 
+          : 'border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-md'
+      } p-6 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer`}
       onClick={handleClick}
     >
       {/* Selection Checkbox */}
@@ -99,12 +100,12 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
           onToggleSelect(notification.id);
         }}
       >
-        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
           isSelected 
-            ? 'bg-blue-500 border-blue-500' 
-            : 'border-white/30 bg-white/5 hover:border-blue-400'
+            ? 'bg-blue-600 border-blue-600 text-white' 
+            : 'border-gray-300 bg-white hover:border-blue-400 text-transparent'
         }`}>
-          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+          {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
         </div>
       </div>
 
@@ -123,15 +124,15 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 mb-2">
-            <h4 className={`font-semibold text-lg ${isRead ? 'text-gray-300' : 'text-white'}`}>
+            <h4 className={`font-semibold text-lg ${isRead ? 'text-gray-800' : 'text-blue-900'}`}>
               {notification.title}
             </h4>
             {!isRead && (
-              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-400"></div>
+              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500"></div>
             )}
           </div>
           
-          <p className={`text-sm leading-relaxed mb-3 ${isRead ? 'text-gray-400' : 'text-gray-300'}`}>
+          <p className={`text-sm leading-relaxed mb-3 ${isRead ? 'text-gray-600' : 'text-gray-700'}`}>
             {message}
           </p>
 
@@ -142,7 +143,8 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
             </span>
             
             {notification.data?.redirect_url && (
-              <div className="flex items-center gap-2 text-xs text-blue-400">
+              <div className="flex items-center gap-2 text-xs text-blue-600 font-medium">
+                <ExternalLink className="w-3.5 h-3.5" />
                 <span>Detaylara Git</span>
               </div>
             )}
@@ -157,7 +159,7 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
                 e.stopPropagation();
                 onMarkAsRead(notification.id);
               }}
-              className="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 transition-colors"
+              className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-100 transition-colors"
               title="Okundu işaretle"
             >
               <CheckCircle className="w-4 h-4" />
@@ -168,7 +170,7 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
               e.stopPropagation();
               onDelete(notification.id);
             }}
-            className="p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-colors"
+            className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 transition-colors"
             title="Sil"
           >
             <Trash2 className="w-4 h-4" />
@@ -368,14 +370,14 @@ const HospitalNotificationsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto flex items-center justify-center min-h-screen">
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-8 text-center">
-            <h2 className="text-white font-bold text-xl mb-4">Hata Oluştu</h2>
-            <p className="text-gray-300 mb-6">Bildirimler yüklenirken bir hata oluştu.</p>
+          <div className="bg-white rounded-2xl border border-blue-100 p-8 text-center shadow-md">
+            <h2 className="text-gray-900 font-bold text-xl mb-4">Hata Oluştu</h2>
+            <p className="text-gray-600 mb-6">Bildirimler yüklenirken bir hata oluştu.</p>
             <button 
               onClick={() => window.location.reload()}
-              className="bg-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-700 hover:to-blue-800 transition-colors"
             >
               Tekrar Dene
             </button>
@@ -386,24 +388,24 @@ const HospitalNotificationsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="relative mb-8 overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 p-8 shadow-[0_20px_60px_-30px_rgba(30,64,175,0.45)]">
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-blue-500/20" />
+        <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
           </div>
           
           <div className="relative z-10">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                  <Bell className="w-8 h-8 text-blue-400" />
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center">
+                  <Bell className="w-8 h-8 text-cyan-600" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">Bildirimler</h1>
+                  <h1 className="text-3xl font-bold text-gray-900 mb-2">Bildirimler</h1>
                   {totalUnreadCount > 0 && (
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-300 border border-red-500/30">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-500/20 text-red-700 border border-red-500/30">
                       {totalUnreadCount} okunmamış bildirim
                     </span>
                   )}
@@ -428,23 +430,23 @@ const HospitalNotificationsPage = () => {
 
         {/* Bulk Actions Bar */}
         {showBulkActions && selectedNotifications.size > 0 && (
-          <div className="mb-6 rounded-2xl border border-blue-400/50 bg-blue-500/10 p-4 flex items-center justify-between">
+          <div className="mb-6 rounded-2xl border border-blue-200 bg-white p-4 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
-              <span className="text-white font-medium">
+              <span className="text-gray-900 font-medium">
                 {selectedNotifications.size} bildirim seçildi
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleBulkMarkAsRead}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors shadow-sm"
               >
                 <CheckCircle className="w-4 h-4" />
                 Okundu İşaretle
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-medium transition-colors shadow-sm"
               >
                 <Trash className="w-4 h-4" />
                 Sil
@@ -454,7 +456,7 @@ const HospitalNotificationsPage = () => {
                   setSelectedNotifications(new Set());
                   setShowBulkActions(false);
                 }}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+                className="p-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors border border-gray-200"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -463,14 +465,14 @@ const HospitalNotificationsPage = () => {
         )}
 
         {/* Filters */}
-        <div className="mb-6 rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm p-6">
+        <div className="mb-6 rounded-2xl border border-blue-100 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <Filter className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-semibold text-white">Filtreler</h3>
+            <Filter className="w-5 h-5 text-blue-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Filtreler</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Durum</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Durum</label>
               <select
                 value={filters.isRead === undefined ? '' : String(filters.isRead)}
                 onChange={(e) => {
@@ -485,16 +487,16 @@ const HospitalNotificationsPage = () => {
                     return newFilters;
                   });
                 }}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
-                <option value="" className="bg-slate-900">Tüm Bildirimler</option>
-                <option value="false" className="bg-slate-900">Okunmamış</option>
-                <option value="true" className="bg-slate-900">Okunmuş</option>
+                <option value="">Tüm Bildirimler</option>
+                <option value="false">Okunmamış</option>
+                <option value="true">Okunmuş</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Tür</label>
+              <label className="block text-sm font-medium text-gray-600 mb-2">Tür</label>
               <select
                 value={filters.type || ''}
                 onChange={(e) => {
@@ -509,20 +511,20 @@ const HospitalNotificationsPage = () => {
                     return newFilters;
                   });
                 }}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm"
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               >
-                <option value="" className="bg-slate-900">Tüm Türler</option>
-                <option value="info" className="bg-slate-900">Bilgi</option>
-                <option value="warning" className="bg-slate-900">Uyarı</option>
-                <option value="success" className="bg-slate-900">Başarı</option>
-                <option value="error" className="bg-slate-900">Hata</option>
+                <option value="">Tüm Türler</option>
+                <option value="info">Bilgi</option>
+                <option value="warning">Uyarı</option>
+                <option value="success">Başarı</option>
+                <option value="error">Hata</option>
               </select>
             </div>
 
             <div className="flex items-end">
               <button
                 onClick={handleSelectAll}
-                className="w-full px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium transition-colors"
+                className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium shadow-sm hover:from-blue-700 hover:to-blue-800 transition-colors"
               >
                 {selectedNotifications.size === notifications.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}
               </button>
@@ -531,22 +533,22 @@ const HospitalNotificationsPage = () => {
         </div>
 
         {/* Notifications List */}
-        <div className="rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm">
+        <div className="rounded-2xl border border-blue-100 bg-white shadow-lg">
           {isLoading ? (
             <div className="p-8">
               <div className="space-y-4">
                 {Array.from({ length: 5 }, (_, i) => (
-                  <SkeletonLoader key={i} className="h-32 rounded-2xl bg-white/10" />
+                  <SkeletonLoader key={i} className="h-32 rounded-2xl bg-gray-200" />
                 ))}
               </div>
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-6">
-                <Bell className="w-12 h-12 text-gray-400" />
+              <div className="w-24 h-24 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-6 border border-blue-100">
+                <Bell className="w-12 h-12 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Bildirim bulunmuyor</h3>
-              <p className="text-gray-400">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Bildirim bulunmuyor</h3>
+              <p className="text-gray-500">
                 {filters.isRead === false
                   ? 'Okunmamış bildiriminiz yok.'
                   : filters.isRead === true
@@ -572,7 +574,7 @@ const HospitalNotificationsPage = () => {
 
               {/* Pagination */}
               {pagination.total_pages > 1 && (
-                <div className="bg-white/5 px-6 py-4 flex items-center justify-between border-t border-white/10">
+                <div className="bg-blue-50 px-6 py-4 flex items-center justify-between border-t border-blue-100">
                   <button
                     onClick={() =>
                       setFilters((prev) => ({
@@ -581,14 +583,14 @@ const HospitalNotificationsPage = () => {
                       }))
                     }
                     disabled={filters.page === 1}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-blue-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   >
                     Önceki
                   </button>
 
-                  <div className="text-sm text-gray-300">
+                  <div className="text-sm text-gray-700 font-medium">
                     Sayfa {filters.page} / {pagination.total_pages}{' '}
-                    <span className="ml-2">
+                    <span className="ml-2 text-gray-600">
                       (Toplam {pagination.total || pagination.total_count || 0} bildirim)
                     </span>
                   </div>
@@ -601,7 +603,7 @@ const HospitalNotificationsPage = () => {
                       }))
                     }
                     disabled={filters.page === pagination.total_pages}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-blue-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   >
                     Sonraki
                   </button>

@@ -2,8 +2,11 @@
  * @file useLogs.js
  * @description Log yönetimi için React Query hooks
  * 
+ * Cache Stratejisi:
+ * - SEMI_REALTIME: Loglar → 30s cache (log sayfaları için yeterli)
+ * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import { useMemo } from 'react';
@@ -11,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import http from '@/services/http/client';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
+import { listQueryConfig } from '@/config/queryConfig.js';
 
 // Mock data for testing
 const mockApplicationLogs = {
@@ -173,10 +177,7 @@ export const useApplicationLogs = (filters = {}, enabled = true) => {
         throw error;
       }
     },
-    staleTime: 30000, // 30 saniye
-    enabled: enabled,
-    refetchOnWindowFocus: false, // Window focus'ta refetch yapma
-    refetchOnMount: false // Mount'ta refetch yapma (sadece enabled değiştiğinde)
+    ...listQueryConfig({ enabled }), // SEMI_REALTIME: Loglar
   });
 };
 
@@ -225,8 +226,7 @@ export const useAuditLogs = (filters = {}, enabled = true) => {
         throw error;
       }
     },
-    staleTime: 30000,
-    enabled: enabled
+    ...listQueryConfig({ enabled }), // SEMI_REALTIME: Audit loglar
   });
 };
 
@@ -275,8 +275,7 @@ export const useSecurityLogs = (filters = {}, enabled = true) => {
         throw error;
       }
     },
-    staleTime: 30000,
-    enabled: enabled
+    ...listQueryConfig({ enabled }), // SEMI_REALTIME: Audit loglar
   });
 };
 
@@ -311,10 +310,7 @@ export const useLogStatistics = (options = {}, enabled = false) => {
         throw error;
       }
     },
-    staleTime: 60000, // 1 dakika
-    enabled: enabled,
-    refetchOnWindowFocus: false, // Window focus'ta refetch yapma
-    refetchOnMount: false // Mount'ta refetch yapma
+    ...listQueryConfig({ enabled }), // SEMI_REALTIME: İstatistikler
   });
 };
 

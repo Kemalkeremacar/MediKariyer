@@ -1335,21 +1335,33 @@ const AdminJobDetailPage = () => {
             maxHeight="85vh"
             backdropClassName="bg-black/40 backdrop-blur-sm"
           >
-            <div className="space-y-4">
-              <p className="text-gray-200">
-                "{job.title}" ilanını onaylamak istediğinizden emin misiniz? İlan onaylandıktan sonra yayına girecek ve doktorlar tarafından görülebilecek.
-              </p>
+            <div className="space-y-6">
+              <section className="bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/70 border border-emerald-200 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-gray-900 mb-2">
+                      İlanı onaylamak üzeresiniz
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      "{job.title}" ilanı onaylandığında yayına alınır ve doktorlar tarafından görüntülenebilir.
+                    </p>
+                  </div>
+                </div>
+              </section>
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={closeApprovalModal}
-                  className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
+                  className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
                 >
-                  İptal
+                  Vazgeç
                 </button>
                 <button
                   onClick={handleApproveJob}
                   disabled={approveJobMutation.isPending}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 text-white font-bold shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-green-700 transition-all disabled:opacity-50"
                 >
                   {approveJobMutation.isPending ? 'Onaylanıyor...' : 'Onayla'}
                 </button>
@@ -1369,45 +1381,65 @@ const AdminJobDetailPage = () => {
             maxHeight="85vh"
             backdropClassName="bg-black/40 backdrop-blur-sm"
           >
-            <div className="space-y-4">
+            <div className="space-y-6">
               {job?.status_id === 2 ? (
-                <>
-                  <div className="bg-orange-500/10 border border-orange-500/40 rounded-lg p-4">
-                    <p className="text-orange-100 whitespace-pre-wrap">{job.revision_note}</p>
+                <section className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-full bg-white/70 border border-amber-200 flex items-center justify-center">
+                      <RefreshCw className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-base font-semibold text-gray-900 mb-2">Revizyon Notu</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                        {job.revision_note}
+                      </p>
+                    </div>
                   </div>
-                </>
+                </section>
               ) : (
                 <>
-                  <p className="text-gray-200 mb-4">
-                    "{job.title}" ilanı için revizyon talep ediyorsunuz. Lütfen revizyon notunu girin:
-                  </p>
+                  <section className="bg-gradient-to-br from-orange-50 to-rose-50 border border-orange-200 rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 rounded-full bg-white/70 border border-orange-200 flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-base font-semibold text-gray-900 mb-2">
+                          Revizyon talep etmek üzeresiniz
+                        </p>
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                          "{job.title}" ilanı için açıklayıcı bir revizyon notu girin.
+                        </p>
+                      </div>
+                    </div>
+                  </section>
                   <textarea
                     value={revisionNote}
                     onChange={(e) => setRevisionNote(e.target.value)}
                     placeholder="Revizyon notunu buraya yazın... (En az 10 karakter)"
-                    className="w-full min-h-[150px] px-4 py-3 rounded-lg bg-slate-900/60 text-gray-100 placeholder-gray-500 border border-white/15 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+                    className="w-full min-h-[150px] px-4 py-3 rounded-2xl bg-white text-gray-900 placeholder-gray-400 border-2 border-orange-200 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 shadow-sm resize-none"
                     required
                     minLength={10}
                     maxLength={1000}
                   />
-                  <div className="flex items-center justify-between text-sm text-gray-400">
-                    <span className={revisionNote.trim().length < 10 ? 'text-red-400' : 'text-gray-400'}>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className={revisionNote.trim().length < 10 ? 'text-red-600' : 'text-gray-500'}>
                       {revisionNote.trim().length < 10 
                         ? `En az ${10 - revisionNote.trim().length} karakter daha gerekli` 
                         : `${revisionNote.trim().length}/1000 karakter`}
                     </span>
                   </div>
                   <div className="flex gap-3 justify-end">
-                  <button
-                    onClick={closeRevisionModal}
-                    className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
-                  >
-                    İptal
-                  </button>
+                    <button
+                      onClick={closeRevisionModal}
+                      className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
+                    >
+                      İptal
+                    </button>
                     <button
                       onClick={handleRequestRevision}
                       disabled={requestRevisionMutation.isPending || revisionNote.trim().length < 10}
-                      className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-amber-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {requestRevisionMutation.isPending ? 'Gönderiliyor...' : 'Revizyon İste'}
                     </button>
@@ -1429,24 +1461,36 @@ const AdminJobDetailPage = () => {
             maxHeight="85vh"
             backdropClassName="bg-black/40 backdrop-blur-sm"
           >
-            <div className="space-y-4">
-              <p className="text-gray-200">
-                "{job.title}" ilanını reddetmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-              </p>
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="space-y-6">
+              <section className="bg-gradient-to-br from-rose-50 to-red-50 border border-rose-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/70 border border-rose-200 flex items-center justify-center">
+                    <XCircle className="w-6 h-6 text-rose-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-gray-900 mb-2">
+                      "{job.title}" ilanını reddetmek üzeresiniz
+                    </p>
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      Bu işlem geri alınamaz. Gerekirse reddetme sebebini paylaşın.
+                    </p>
+                  </div>
+                </div>
+              </section>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-800">
                   Red Sebebi (Opsiyonel)
                 </label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Red sebebini buraya yazın... (En az 5 karakter)"
-                  className="w-full min-h-[100px] px-4 py-3 rounded-lg bg-slate-900/60 text-gray-100 placeholder-gray-500 border border-white/15 focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  className="w-full min-h-[100px] px-4 py-3 rounded-2xl bg-white text-gray-900 placeholder-gray-400 border-2 border-rose-200 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 shadow-sm resize-none"
                   maxLength={500}
                 />
                 {rejectionReason.trim() && (
                   <div className="flex items-center justify-between text-sm mt-1">
-                    <span className={rejectionReason.trim().length < 5 ? 'text-red-400' : 'text-gray-400'}>
+                    <span className={rejectionReason.trim().length < 5 ? 'text-red-600' : 'text-gray-500'}>
                       {rejectionReason.trim().length < 5 
                         ? `En az ${5 - rejectionReason.trim().length} karakter daha gerekli` 
                         : `${rejectionReason.trim().length}/500 karakter`}
@@ -1457,14 +1501,14 @@ const AdminJobDetailPage = () => {
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={closeRejectModal}
-                  className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
+                  className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
                 >
                   İptal
                 </button>
                 <button
                   onClick={handleRejectJob}
                   disabled={rejectJobMutation.isPending}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold shadow-lg hover:shadow-xl hover:from-red-700 hover:to-rose-700 transition-all disabled:opacity-50"
                 >
                   {rejectJobMutation.isPending ? 'Reddediliyor...' : 'Reddet'}
                 </button>
@@ -1483,23 +1527,35 @@ const AdminJobDetailPage = () => {
         align="center"
         backdropClassName="bg-black/40 backdrop-blur-sm"
       >
-        <div className="space-y-4">
-          <p className="text-gray-200 leading-relaxed">
-            "{job.title}" ilanını kalıcı olarak silmek üzeresiniz. Bu işlem geri alınamaz ve ilgili tüm başvurular etkilenebilir.
-          </p>
+        <div className="space-y-6">
+          <section className="bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-full bg-white/70 border border-rose-200 flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-rose-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-base font-semibold text-gray-900 mb-2">
+                  "{job.title}" ilanını kalıcı olarak silmek üzeresiniz
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  Bu işlem geri alınamaz ve ilgili başvuruları etkileyebilir.
+                </p>
+              </div>
+            </div>
+          </section>
           <div className="flex justify-end gap-3">
             <button
               onClick={closeDeleteModal}
-              className="px-5 py-2 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20 transition-colors"
+              className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
             >
-              İptal
+              Vazgeç
             </button>
             <button
               onClick={confirmDeleteJob}
               disabled={deleteJobMutation.isPending}
-              className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white font-bold shadow-lg hover:shadow-xl hover:from-red-700 hover:to-rose-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {deleteJobMutation.isPending ? 'Siliniyor...' : 'Sil'}
+              {deleteJobMutation.isPending ? 'Siliniyor...' : 'Evet, Sil'}
             </button>
           </div>
         </div>
@@ -1517,26 +1573,36 @@ const AdminJobDetailPage = () => {
             maxHeight="85vh"
             backdropClassName="bg-black/40 backdrop-blur-sm"
           >
-            <div className="space-y-4">
-              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                <p className="text-blue-100 font-medium">
-                  Durum: <span className="font-bold">{getTurkishStatusName(job?.status)}</span> → <span className="font-bold">{statusOptions.find(s => s.id === selectedStatusId)?.name}</span>
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="space-y-6">
+              <section className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-5 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white/70 border border-blue-200 flex items-center justify-center">
+                    <RefreshCw className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-base font-semibold text-gray-900 mb-2">
+                      Yeni Durum: {statusOptions.find(s => s.id === selectedStatusId)?.name}
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      Mevcut durum: {getTurkishStatusName(job?.status)}
+                    </p>
+                  </div>
+                </div>
+              </section>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-800">
                   Değişiklik Notu (Opsiyonel)
                 </label>
                 <textarea
                   value={statusChangeReason}
                   onChange={(e) => setStatusChangeReason(e.target.value)}
                   placeholder="Durum değişikliği için bir not ekleyin..."
-                  className="w-full min-h-[100px] px-4 py-3 rounded-lg bg-slate-900/60 text-gray-100 placeholder-gray-500 border border-white/15 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                  className="w-full min-h-[100px] px-4 py-3 rounded-2xl bg-white text-gray-900 placeholder-gray-400 border-2 border-indigo-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm resize-none"
                   maxLength={500}
                 />
                 {statusChangeReason.trim() && (
-                  <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="text-gray-400">
+                  <div className="flex items-center justify-between text-sm mt-1 text-gray-500">
+                    <span>
                       {statusChangeReason.trim().length}/500 karakter
                     </span>
                   </div>
@@ -1545,7 +1611,7 @@ const AdminJobDetailPage = () => {
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={closeStatusChangeModal}
-                  className="px-4 py-2 bg-white/10 text-gray-200 rounded-lg hover:bg-white/20 transition-colors"
+                  className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
                 >
                   İptal
                 </button>
@@ -1558,7 +1624,7 @@ const AdminJobDetailPage = () => {
                     showToast.success(toastMessages.job.statusUpdateSuccessGeneric);
                   }}
                   disabled={updateStatusMutation.isPending}
-                  className="px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-bold shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {updateStatusMutation.isPending ? 'Güncelleniyor...' : 'Durumu Değiştir'}
                 </button>

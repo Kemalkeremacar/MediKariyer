@@ -837,18 +837,6 @@ const updateUserApproval = async (userId, approved, rejectionReason = null) => {
     updated_at: db.fn.now()
   });
 
-  // Bildirim gönder (durum değiştiyse)
-  if (oldApprovalStatus !== approved) {
-    try {
-      const action = approved ? 'approved' : 'approval_removed';
-      await notificationService.sendUserStatusNotification(userId, action, rejectionReason);
-      logger.info(`User approval status notification sent to user ${userId}, action: ${action}`);
-    } catch (notificationError) {
-      logger.warn('User approval notification failed:', notificationError);
-      // Bildirim hatası ana işlemi engellemez
-    }
-  }
-
   return true;
 };
 
@@ -880,18 +868,6 @@ const updateUserStatus = async (userId, isActive, reason = null) => {
   };
 
   await db('users').where('id', userId).update(updateData);
-
-  // Bildirim gönder (durum değiştiyse)
-  if (oldActiveStatus !== isActive) {
-    try {
-      const action = isActive ? 'activated' : 'deactivated';
-      await notificationService.sendUserStatusNotification(userId, action, reason);
-      logger.info(`User status notification sent to user ${userId}, action: ${action}`);
-    } catch (notificationError) {
-      logger.warn('User status notification failed:', notificationError);
-      // Bildirim hatası ana işlemi engellemez
-    }
-  }
 
   return true;
 };
@@ -932,17 +908,6 @@ const deactivateUser = async (userId, reason = null) => {
     // Refresh token'ları temizle (güvenlik için)
     await db('refresh_tokens').where('user_id', userId).del();
 
-    // Bildirim gönder (durum değiştiyse)
-    if (oldActiveStatus !== false) {
-      try {
-        await notificationService.sendUserStatusNotification(userId, 'deactivated', reason);
-        logger.info(`User deactivation notification sent to user ${userId}`);
-      } catch (notificationError) {
-        logger.warn('User deactivation notification failed:', notificationError);
-        // Bildirim hatası ana işlemi engellemez
-      }
-    }
-
     return true;
   } catch (error) {
     logger.error('Deactivate user error:', error);
@@ -975,17 +940,6 @@ const activateUser = async (userId, reason = null) => {
       updated_at: db.fn.now()
     });
 
-    // Bildirim gönder (durum değiştiyse)
-    if (oldActiveStatus !== true) {
-      try {
-        await notificationService.sendUserStatusNotification(userId, 'activated', reason);
-        logger.info(`User activation notification sent to user ${userId}`);
-      } catch (notificationError) {
-        logger.warn('User activation notification failed:', notificationError);
-        // Bildirim hatası ana işlemi engellemez
-      }
-    }
-
     return true;
   } catch (error) {
     logger.error('Activate user error:', error);
@@ -1007,10 +961,16 @@ const updateApplicationStatus = async (applicationId, statusId, reason = null) =
   const application = await db('applications').where('id', applicationId).first();
   if (!application) return null;
 
+  const normalizedReason = typeof reason === 'string' ? reason.trim() : null;
+  const notesToPersist = normalizedReason && normalizedReason.length > 0
+    ? normalizedReason
+    : application.notes;
+
   // Not: applied_at güncellenmez - bu ilk başvuru tarihi olarak kalır
   // Sadece status_id ve updated_at güncellenir
   await db('applications').where('id', applicationId).update({
     status_id: statusId,
+    notes: notesToPersist,
     updated_at: db.fn.now()
     // applied_at değiştirilmez - ilk başvuru tarihi korunur
   });
@@ -1055,7 +1015,7 @@ const updateApplicationStatus = async (applicationId, statusId, reason = null) =
         application_id: applicationId,
         job_title: updatedApplication.job_title || 'İş İlanı',
         hospital_name: hospitalInfo?.institution_name || 'Hastane',
-        notes: reason
+        notes: notesToPersist
       });
       
       logger.info(`[Admin Service] Application status change notification sent to doctor ${doctorUser.user_id}`);

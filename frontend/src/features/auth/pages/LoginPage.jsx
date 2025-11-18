@@ -3,25 +3,29 @@
  * @description Giriş Sayfası - Kullanıcı kimlik doğrulama sayfası
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { FiEye, FiEyeOff, FiMail, FiLock, FiArrowLeft, FiClock } from 'react-icons/fi';
+import { FiEye, FiEyeOff, FiMail, FiLock, FiArrowLeft } from 'react-icons/fi';
 import { useLogin } from '../api/useAuth';
 import useAuthStore from '@/store/authStore';
 import useUiStore from '@/store/uiStore';
 import { ROUTE_CONFIG } from '@config/routes.js';
-import { APP_CONFIG } from '@config/app.js';
 import { loginSchema } from '@config/validation.js';
 import { ButtonSpinner } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
-import { showToast } from '@/utils/toastUtils';
 import logger from '@/utils/logger';
+
+const INITIAL_MODAL_STATE = {
+  show: false,
+  message: '',
+  description: ''
+};
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuthStore();
-  const { showSuccess, showError } = useUiStore();
+  const { showSuccess } = useUiStore();
   const loginMutation = useLogin();
 
   const [formData, setFormData] = useState({
@@ -29,20 +33,27 @@ const LoginPage = () => {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [pendingToastId, setPendingToastId] = useState(null);
-  const [errorModal, setErrorModal] = useState({ show: false, message: '', description: '' });
+  const [errorModal, setErrorModal] = useState(INITIAL_MODAL_STATE);
   const [formError, setFormError] = useState('');
+
+  const closeModal = useCallback(() => {
+    setErrorModal(INITIAL_MODAL_STATE);
+  }, []);
+
+  const openPendingApprovalModal = useCallback(() => {
+    setErrorModal({
+      show: true,
+      message: '⚠️ Admin Onayı Bekleniyor!',
+      description: 'Hesabınız onaylandıktan sonra sisteme erişebilirsiniz.'
+    });
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
     
     // Location state'ten gelen pendingApproval kontrolü - sadece admin olmayan kullanıcılar için
     if (location.state?.pendingApproval && (!user || user.role !== 'admin')) {
-      setErrorModal({
-        show: true,
-        message: '⚠️ Admin Onayı Bekleniyor!',
-        description: 'Hesabınız onaylandıktan sonra sisteme erişebilirsiniz.'
-      });
+      openPendingApprovalModal();
       
       // Location state'i temizle
       navigate(location.pathname, { replace: true });
@@ -55,11 +66,7 @@ const LoginPage = () => {
       if (!user.is_approved && user.role !== 'admin') {
         // Modal göster
         if (!errorModal.show) {
-          setErrorModal({
-            show: true,
-            message: '⚠️ Admin Onayı Bekleniyor!',
-            description: 'Hesabınız onaylandıktan sonra sisteme erişebilirsiniz.'
-          });
+          openPendingApprovalModal();
         }
         // Login sayfasında kal, yönlendirme yapma
         return;
@@ -108,14 +115,14 @@ const LoginPage = () => {
         }
       }
     }
-  }, [isAuthenticated, user, navigate, location.state]);
+  }, [isAuthenticated, user, navigate, location.state, openPendingApprovalModal, errorModal.show]);
 
   // Cleanup modal when component unmounts
   useEffect(() => {
     return () => {
-      setErrorModal({ show: false, message: '', description: '' });
+      closeModal();
     };
-  }, []);
+  }, [closeModal]);
 
   // Success message from redirect
   useEffect(() => {
@@ -146,7 +153,7 @@ const LoginPage = () => {
       
       // Önceki modal'ı temizle
       if (errorModal.show) {
-        setErrorModal({ show: false, message: '', description: '' });
+        closeModal();
       }
       
       // Giriş yapmaya çalışırken auth state'ini temizle
@@ -172,7 +179,8 @@ const LoginPage = () => {
           setErrorModal({
             show: true,
             message: '❌ Giriş Hatası!',
-            description: 'Bu e-posta adresi sistemde kayıtlı değil. Lütfen kayıt olun veya doğru e-posta adresini girin.'
+            description: 'Bu e-posta adresi sistemde kayıtlı değil. Lütfen kayıt olun veya doğru e-posta adresini girin.',
+            variant: 'default'
           });
         } else {
           // Diğer hatalar için form hatası göster
@@ -360,18 +368,18 @@ const LoginPage = () => {
 
       <ModalContainer
         isOpen={errorModal.show}
-        onClose={() => setErrorModal({ show: false, message: '', description: '' })}
+        onClose={closeModal}
         title={errorModal.message || 'Bilgi'}
         size="small"
         align="center"
       >
         <div className="space-y-6">
-          <p className="text-blue-100 leading-relaxed">
+          <p className="text-gray-700 leading-relaxed text-base">
             {errorModal.description || 'Lütfen bilgilerinizi kontrol edip tekrar deneyin.'}
           </p>
           <div className="flex justify-end">
             <button
-              onClick={() => setErrorModal({ show: false, message: '', description: '' })}
+              onClick={closeModal}
               className="px-6 py-2 rounded-lg font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
             >
               Tamam

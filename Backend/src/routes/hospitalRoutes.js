@@ -206,12 +206,13 @@ router.get('/jobs/:jobId/applications', hospitalController.getJobApplications);
  * Başvuru Yönetimi Routes
  */
 
-// Hastanenin tüm ilanlarına gelen başvuruları getir
-// GET /me/hospital/applications
+// ÖNEMLİ: Spesifik route'lar önce tanımlanmalı (Express route matching için)
+
+// Başvuru detayını getir
+// GET /me/hospital/applications/:applicationId
 router.get(
-  '/applications', 
-  validate(applicationsQuerySchema, 'query'), 
-  hospitalController.getAllApplications
+  '/applications/:applicationId',
+  hospitalController.getApplicationById
 );
 
 // Başvuru durumunu güncelle
@@ -220,6 +221,14 @@ router.put(
   '/applications/:applicationId/status', 
   validate(applicationStatusSchema, 'body'), 
   hospitalController.updateApplicationStatus
+);
+
+// Hastanenin tüm ilanlarına gelen başvuruları getir
+// GET /me/hospital/applications
+router.get(
+  '/applications', 
+  validate(applicationsQuerySchema, 'query'), 
+  hospitalController.getAllApplications
 );
 
 // ============================================================================

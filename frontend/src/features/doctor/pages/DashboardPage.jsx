@@ -4,12 +4,15 @@
  */
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Activity, 
   Briefcase, 
   Calendar, 
   MapPin, 
-  Target
+  Target,
+  ArrowRight,
+  User
 } from 'lucide-react';
 import { useDoctorDashboard, useDoctorProfile } from '../api/useDoctor';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -99,7 +102,16 @@ const DoctorDashboard = () => {
                       Kariyerinizi ileriye taşıyacak fırsatları keşfedin ve başvurularınızı takip edin.
                     </p>
                   </div>
-                  {/* Profil düzenle butonu kaldırıldı */}
+                  <div className="flex-shrink-0 w-full md:w-auto">
+                    <Link
+                      to="/doctor/profile"
+                      className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
+                    >
+                      <User className="w-5 h-5" />
+                      Profil Yönetimi
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

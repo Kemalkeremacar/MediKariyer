@@ -1148,23 +1148,35 @@ const AdminApplicationDetailPage = () => {
           align="center"
           backdropClassName="bg-black/40 backdrop-blur-sm"
         >
-          <div className="space-y-4">
-            <p className="text-gray-200 leading-relaxed">
-              "{application.first_name} {application.last_name} - {application.job_title}" başvurusunu kalıcı olarak silmek üzeresiniz. Bu işlem geri alınamaz.
-            </p>
+          <div className="space-y-6">
+            <section className="bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full bg-white/70 border border-rose-200 flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-rose-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-semibold text-gray-900 mb-2">
+                    Başvuruyu kalıcı olarak silmek üzeresiniz
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    "{application.first_name} {application.last_name} - {application.job_title}" başvurusu tamamen silinecek ve bu işlem geri alınamaz.
+                  </p>
+                </div>
+              </div>
+            </section>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="px-5 py-2 rounded-lg bg-white/10 text-gray-200 hover:bg-white/20 transition-colors"
+                className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
               >
-                İptal
+                Vazgeç
               </button>
               <button
                 onClick={handleDeleteApplication}
                 disabled={deleteApplicationMutation.isPending}
-                className="px-5 py-2 rounded-lg bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-700 hover:to-rose-700 transition-all font-bold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {deleteApplicationMutation.isPending ? 'Siliniyor...' : 'Sil'}
+                {deleteApplicationMutation.isPending ? 'Siliniyor...' : 'Evet, Sil'}
               </button>
             </div>
           </div>

@@ -559,9 +559,10 @@ const updateLastLogin = async (userId) => {
 const isEmailRegistered = async (email) => {
   // Email'i normalize et (trim ve lowercase)
   const normalizedEmail = email ? email.trim().toLowerCase() : '';
-  // Case-insensitive email araması için LOWER() kullan
+  // OPTİMİZASYON: Email zaten unique index'e sahip, direkt email ile arama yap (LOWER() index'i bypass eder)
+  // Email'ler zaten normalize edilerek kaydedildiği için direkt karşılaştırma yapabiliriz
   const user = await db('users')
-    .whereRaw('LOWER(email) = ?', [normalizedEmail])
+    .where('email', normalizedEmail)
     .first();
   return !!user;
 };
@@ -906,31 +907,34 @@ const registerHospital = async (registrationData) => {
     const profile = await trx('hospital_profiles').where('user_id', userId).first();
     const profileId = profile.id;
 
-    // Admin'lere yeni hastane kaydı bildirimi gönder
-    try {
-      const notificationService = require('./notificationService');
-      await notificationService.sendAdminSystemNotification({
-        type: 'info',
-        title: 'Yeni Hastane Kaydı',
-        body: `${institution_name} (${normalizedEmail}) adlı hastane sisteme kayıt oldu. Onay bekliyor.`,
-        data: {
-          user_id: userId,
-          role: 'hospital',
-          hospital_profile_id: profileId,
-          institution_name: institution_name,
-          email: normalizedEmail
-        }
-      });
-    } catch (notificationError) {
-      logger.warn('Admin notification failed for new hospital registration:', notificationError);
-      // Bildirim hatası kayıt işlemini engellemez
-    }
+    // Oluşturulan verileri transaction içinde al (commit'ten önce)
+    const createdUser = await trx('users').where('id', userId).first();
+    const createdProfile = await trx('hospital_profiles').where('id', profileId).first();
 
     await trx.commit();
 
-    // Oluşturulan verileri getir
-    const createdUser = await db('users').where('id', userId).first();
-    const createdProfile = await db('hospital_profiles').where('id', profileId).first();
+    // OPTİMİZASYON: Admin'lere yeni hastane kaydı bildirimi gönder (async, fire-and-forget)
+    // Transaction commit'ten sonra yapılır, kayıt işlemini yavaşlatmaz
+    setImmediate(async () => {
+      try {
+        const notificationService = require('./notificationService');
+        await notificationService.sendAdminSystemNotification({
+          type: 'info',
+          title: 'Yeni Hastane Kaydı',
+          body: `${institution_name} (${normalizedEmail}) adlı hastane sisteme kayıt oldu. Onay bekliyor.`,
+          data: {
+            user_id: userId,
+            role: 'hospital',
+            hospital_profile_id: profileId,
+            institution_name: institution_name,
+            email: normalizedEmail
+          }
+        });
+      } catch (notificationError) {
+        logger.warn('Admin notification failed for new hospital registration:', notificationError);
+        // Bildirim hatası kayıt işlemini engellemez
+      }
+    });
 
     return { user: createdUser, profile: createdProfile };
   } catch (error) {

@@ -2,8 +2,13 @@
  * Doctor Hooks - React Query ile doktor işlemleri
  * Service katmanı kaldırıldı - API çağrıları doğrudan hook'larda
  * 
+ * Cache Stratejisi:
+ * - REALTIME: Profil, Dashboard, Foto Durumu → Her zaman fresh
+ * - SEMI_REALTIME: İş ilanları, Başvurular → 30s cache
+ * - STATIC: Lookup veriler → 30dk cache
+ * 
  * @author MediKariyer Development Team
- * @version 2.1.0
+ * @version 2.2.0
  * @since 2024
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,8 +18,17 @@ import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import useAuthStore from '@/store/authStore';
 import logger from '@/utils/logger';
+import { 
+  profileQueryConfig, 
+  dashboardQueryConfig, 
+  listQueryConfig,
+  detailQueryConfig,
+  photoQueryConfig,
+  liveQueryConfig,
+  createConditionalQueryConfig 
+} from '@/config/queryConfig.js';
 
-// 🔹 Profil Bilgileri - Kullanıcı bazlı cache key
+// 🔹 Profil Bilgileri - REALTIME stratejisi
 export const useDoctorProfile = () => {
   const { user } = useAuthStore();
   const userId = user?.id;
@@ -24,12 +38,7 @@ export const useDoctorProfile = () => {
     queryKey: ['doctor', 'profile', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
-    enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
-    staleTime: 0, // Her zaman fresh data çek (profil fotoğrafı değişebilir)
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: true, // Her mount'ta yenile (profil fotoğrafı vs)
-    refetchOnWindowFocus: true, // Pencere focus'unda refetch yap (admin onayladıysa görsün)
-    refetchOnReconnect: true,
+    ...profileQueryConfig({ enabled: !!userId && isDoctor }),
   });
 };
 
@@ -42,12 +51,7 @@ export const useDoctorCompleteProfile = () => {
     queryKey: ['doctor', 'profile', 'complete', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETE),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { profile } }
-    enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - profil sık değişmez
-    cacheTime: 5 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...profileQueryConfig({ enabled: !!userId && isDoctor }),
   });
 };
 
@@ -115,12 +119,7 @@ export const useDoctorProfileCompletion = () => {
     queryKey: ['doctor', 'profile', 'completion', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.PROFILE_COMPLETION),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { completion_percentage, ... } }
-    enabled: !!userId && isDoctor, // Sadece doktor rolünde ve kullanıcı varsa çalıştır
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - tamamlanma oranı sık değişmez
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Cache'den kullan
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...listQueryConfig({ enabled: !!userId && isDoctor }), // SEMI_REALTIME: 30s cache, ağır hesaplama
   });
 };
 
@@ -133,12 +132,7 @@ export const useDoctorEducations = () => {
     queryKey: ['doctor', 'educations', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.EDUCATIONS),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { educations } }
-    enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - eğitimler sık değişmez
-    cacheTime: 5 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...listQueryConfig({ enabled: !!userId }), // SEMI_REALTIME: Eğitimler sık değişmez
   });
 };
 
@@ -211,12 +205,7 @@ export const useDoctorExperiences = () => {
     queryKey: ['doctor', 'experiences', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.EXPERIENCES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { experiences } }
-    enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - deneyimler sık değişmez
-    cacheTime: 5 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...listQueryConfig({ enabled: !!userId }), // SEMI_REALTIME: Deneyimler sık değişmez
   });
 };
 
@@ -289,12 +278,7 @@ export const useDoctorCertificates = () => {
     queryKey: ['doctor', 'certificates', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.CERTIFICATES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { certificates } }
-    enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - sertifikalar sık değişmez
-    cacheTime: 5 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...listQueryConfig({ enabled: !!userId }), // SEMI_REALTIME: Sertifikalar sık değişmez
   });
 };
 
@@ -367,12 +351,7 @@ export const useDoctorLanguages = () => {
     queryKey: ['doctor', 'languages', userId],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.LANGUAGES),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { languages } }
-    enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 dakika cache - diller sık değişmez
-    cacheTime: 5 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...listQueryConfig({ enabled: !!userId }), // SEMI_REALTIME: Diller sık değişmez
   });
 };
 
@@ -436,7 +415,7 @@ export const useDeleteLanguage = () => {
   });
 };
 
-// 🔹 Dashboard
+// 🔹 Dashboard - REALTIME stratejisi
 export const useDoctorDashboard = () => {
   const { user } = useAuthStore();
   const isDoctor = user?.role === 'doctor';
@@ -445,17 +424,12 @@ export const useDoctorDashboard = () => {
     queryKey: ['doctor', 'dashboard'],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.DASHBOARD),
     select: (res) => res.data?.data, // Backend response: { success, message, data: { dashboard } }
-    enabled: isDoctor, // Sadece doktor rolünde çalıştır
-    staleTime: 0, // Her zaman fresh data (başvurular değişebilir)
-    cacheTime: 60 * 1000, // 1 dakika cache
-    refetchOnMount: true, // Her mount'ta yenile
-    refetchOnWindowFocus: true, // Pencere focus'unda yenile
-    refetchOnReconnect: true,
+    ...dashboardQueryConfig({ enabled: isDoctor }),
   });
 };
 
 
-// 🔹 İş İlanları (Doktor için)
+// 🔹 İş İlanları (Doktor için) - SEMI_REALTIME stratejisi
 export const useDoctorJobs = (params = {}) => {
   // Boş parametreleri filtrele
   const cleanParams = Object.fromEntries(
@@ -468,12 +442,7 @@ export const useDoctorJobs = (params = {}) => {
     queryKey: ['doctor', 'jobs', cleanParams],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.JOBS, { params: cleanParams }),
     select: (res) => res.data?.data,
-    staleTime: 0, // Her zaman fresh data (yeni ilanlar olabilir)
-    cacheTime: 2 * 60 * 1000, // 2 dakika cache
-    retry: 1,
-    refetchOnMount: true, // Her mount'ta yenile
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...listQueryConfig(), // 30s cache, performans odaklı
   });
 };
 
@@ -485,20 +454,14 @@ export const useDoctorJobDetail = (jobId) => {
       return apiRequest.get(endpoint);
     },
     select: (res) => res.data?.data, // Backend response: { success, message, data: job }
-    enabled: !!jobId,
-    staleTime: 60 * 1000, // 1 dakika cache - iş ilanı detayı için yeterli
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Cache'den kullan
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: (failureCount, error) => {
-      // 404 hatalarında retry yapma (ilan silinmiş/bulunamıyor)
-      if (error?.response?.status === 404) {
-        return false;
-      }
-      // Diğer hatalarda maksimum 2 retry
-      return failureCount < 2;
-    },
+    ...detailQueryConfig({ 
+      enabled: !!jobId,
+      retry: (failureCount, error) => {
+        // 404 hatalarında retry yapma (ilan silinmiş/bulunamıyor)
+        if (error?.response?.status === 404) return false;
+        return failureCount < 2;
+      },
+    }),
   });
 };
 
@@ -518,7 +481,7 @@ export const useApplyToJob = () => {
   });
 };
 
-// 🔹 Başvurular
+// 🔹 Başvurular - REALTIME stratejisi (durum değişiklikleri hemen görünsün)
 export const useMyApplications = (params = {}) => {
   // Boş parametreleri filtrele
   const cleanParams = Object.fromEntries(
@@ -531,11 +494,7 @@ export const useMyApplications = (params = {}) => {
     queryKey: ['doctor', 'applications', cleanParams],
     queryFn: () => apiRequest.get(ENDPOINTS.DOCTOR.APPLICATIONS_ME, { params: cleanParams }),
     select: (res) => res.data?.data,
-    staleTime: 0, // her ziyaret taze veri
-    cacheTime: 2 * 60 * 1000,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    ...liveQueryConfig({ keepPreviousData: false }),
   });
 };
 
@@ -547,12 +506,7 @@ export const useApplicationDetail = (applicationId) => {
       return apiRequest.get(endpoint);
     },
     select: (res) => res.data?.data, // Backend response: { success, message, data: { application } }
-    enabled: !!applicationId,
-    staleTime: 60 * 1000, // 1 dakika cache - başvuru detayı için yeterli
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Cache'den kullan
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
+    ...liveQueryConfig({ enabled: !!applicationId, keepPreviousData: false }),
   });
 };
 
@@ -610,20 +564,60 @@ export const useDeleteApplication = () => {
  */
 export const useRequestPhotoChange = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const userId = user?.id;
+
+  const applyOptimisticPending = () => {
+    if (!userId) return;
+    queryClient.setQueryData(['doctor', 'photo-request-status', userId], (old) => {
+      const base = old?.data ? old.data : (old || {});
+      const now = new Date().toISOString();
+
+      const optimisticStatus = {
+        ...(base?.status || {}),
+        status: 'pending',
+        created_at: now,
+        updated_at: now,
+      };
+
+      const nextData = {
+        ...base,
+        status: optimisticStatus,
+      };
+
+      return old?.data ? { ...old, data: nextData } : nextData;
+    });
+  };
   
   return useMutation({
-    mutationFn: async (file) => {
+    mutationFn: async (fileOrBase64) => {
+      // TUTARLILIK: Artık base64 string veya File objesi kabul ediyor
+      // PhotoManagementPage ve ProfilePage'den compressed base64 gönderiliyor
+      let dataUrl;
+      if (typeof fileOrBase64 === 'string') {
+        // Zaten base64 string
+        dataUrl = fileOrBase64;
+      } else {
+        // File objesi (geriye uyumluluk için)
+        dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(fileOrBase64);
+        });
+      }
       // Backend JSON bekliyor: { file_url: base64String }
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
       const response = await apiRequest.post(ENDPOINTS.DOCTOR.PHOTO, { file_url: dataUrl });
       return response.data;
     },
-    onSuccess: () => {
+    onMutate: () => {
+      applyOptimisticPending();
+    },
+    onSuccess: (response) => {
+      const responseData = response?.data || response;
+      if (userId && responseData) {
+        queryClient.setQueryData(['doctor', 'photo-request-status', userId], responseData);
+      }
       // Photo request status'u yenile
       queryClient.invalidateQueries({ queryKey: ['doctor', 'photo-request-status'] });
       // Profili de yenile (fotoğraf onaylandığında güncellenir)
@@ -631,6 +625,9 @@ export const useRequestPhotoChange = () => {
     },
     onError: (error) => {
       logger.error('Photo change request failed:', error);
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ['doctor', 'photo-request-status', userId] });
+      }
     }
   });
 };
@@ -640,19 +637,19 @@ export const useRequestPhotoChange = () => {
  * @description Doktorun son fotoğraf talep durumunu getirir
  * @returns {Object} Query hook
  */
+// Fotoğraf talep durumu - REALTIME stratejisi
 export const usePhotoRequestStatus = () => {
+  const { user } = useAuthStore();
+  const userId = user?.id;
+  const isDoctor = user?.role === 'doctor';
+
   return useQuery({
-    queryKey: ['doctor', 'photo-request-status'],
+    queryKey: ['doctor', 'photo-request-status', userId],
     queryFn: async () => {
       const response = await apiRequest.get(ENDPOINTS.DOCTOR.PHOTO_STATUS);
       return response.data;
     },
-    staleTime: 0, // Her zaman fresh data (admin onayladığında hemen görsün)
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: true, // Her mount'ta yenile (durum değişmiş olabilir)
-    refetchOnWindowFocus: true, // Pencere focus'unda refetch yap (admin onayladıysa görsün)
-    refetchOnReconnect: true,
-    retry: 1 // 1 retry yeterli
+    ...photoQueryConfig({ enabled: !!userId && isDoctor }), // REALTIME: Admin onayladığında hemen görsün
   });
 };
 
@@ -660,18 +657,21 @@ export const usePhotoRequestStatus = () => {
  * Fotoğraf talep geçmişini getir
  */
 export const usePhotoRequestHistory = () => {
+  const { user } = useAuthStore();
+  const userId = user?.id;
+  const isDoctor = user?.role === 'doctor';
+
   return useQuery({
-    queryKey: ['doctor', 'photo-request-history'],
+    queryKey: ['doctor', 'photo-request-history', userId],
     queryFn: async () => {
       const response = await apiRequest.get(ENDPOINTS.DOCTOR.PHOTO_HISTORY);
       return response.data;
     },
-    staleTime: 2 * 60 * 1000, // 2 dakika cache
-    cacheTime: 5 * 60 * 1000, // 5 dakika cache
-    refetchOnMount: false, // Cache'den kullan
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    retry: 1
+    ...photoQueryConfig({
+      enabled: !!userId && isDoctor,
+      keepPreviousData: false,
+      cacheTime: 0,
+    }), // REALTIME: Fotoğraf geçmişi her açıldığında güncellensin
   });
 };
 

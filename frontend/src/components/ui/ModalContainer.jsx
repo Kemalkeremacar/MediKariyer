@@ -274,14 +274,14 @@ export const ModalContainer = ({
     : '';
 
   const overlayClasses = hasAnchor
-    ? 'fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-start justify-start p-0 animate-in fade-in duration-200'
-    : 'fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] animate-in fade-in duration-200';
+    ? 'fixed inset-0 bg-slate-950/55 backdrop-blur-[3px] z-[100] flex items-start justify-start p-0 animate-in fade-in duration-200'
+    : 'fixed inset-0 bg-slate-950/55 backdrop-blur-[3px] z-[100] animate-in fade-in duration-200';
 
   const modalClasses = [
-    'bg-white rounded-2xl shadow-2xl w-full',
+    'bg-white/95 backdrop-blur-2xl rounded-[28px] shadow-[0_30px_120px_rgba(15,23,42,0.18)] ring-1 ring-white/50 w-full',
     sizeConfig[size],
     containerResponsive,
-    'flex flex-col animate-in zoom-in-95 duration-300 border border-blue-100',
+    'flex flex-col animate-in zoom-in-95 duration-300 border border-white/60',
     containerClassName
   ].filter(Boolean).join(' ');
 
@@ -341,27 +341,30 @@ export const ModalContainer = ({
         >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0 rounded-t-2xl">
+          <div className="relative flex items-center justify-between gap-4 p-5 md:p-6 border-b border-white/70 bg-gradient-to-r from-blue-50 via-indigo-50 to-slate-50/80 flex-shrink-0">
             {title && (
-              <h2 id={labelledById} className="text-xl md:text-2xl font-bold text-gray-900">
+              <h2 id={labelledById} className="relative text-xl md:text-2xl font-semibold text-slate-900 tracking-tight">
                 {title}
               </h2>
             )}
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="text-gray-500 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                className="relative text-slate-400 hover:text-slate-900 transition-colors p-2 rounded-full hover:bg-white/70 focus:outline-none focus:ring-2 focus:ring-blue-200/70"
                 aria-label="Modalı kapat"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             )}
           </div>
         )}
 
         {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-5 md:p-8 bg-gradient-to-b from-white via-white to-slate-50 relative">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.08),transparent_45%)]" />
+          <div className="relative">
           {children}
+          </div>
         </div>
       </div>
       </div>

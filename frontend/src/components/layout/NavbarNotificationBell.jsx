@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useUnreadNotificationCount, useNotifications } from '@/features/notifications/api/useNotifications';
+import { useUnreadNotificationCount, useNotifications, useMarkAsRead } from '@/features/notifications/api/useNotifications';
 import { Bell, Settings, Users, MessageSquare, FileText, BarChart3 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ROUTE_CONFIG } from '@config/routes.js';
@@ -17,6 +17,7 @@ const NavbarNotificationBell = () => {
   const { user } = useAuthStore();
   const { data, isLoading, error } = useUnreadNotificationCount();
   const navigate = useNavigate();
+  const markAsReadMutation = useMarkAsRead();
   const unreadCount = data?.data?.data?.count ?? 0;
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -215,6 +216,16 @@ const NavbarNotificationBell = () => {
 
                   const handleClick = async () => {
                     setIsOpen(false);
+                    
+                    // Bildirimi okundu işaretle (eğer okunmamışsa)
+                    if (!isRead) {
+                      try {
+                        await markAsReadMutation.mutateAsync(notification.id);
+                      } catch (error) {
+                        console.error('Mark as read failed:', error);
+                        // Hata olsa bile yönlendirmeyi engellemiyoruz
+                      }
+                    }
                     
                     // Fotoğraf onay/red bildirimi - Profil Fotoğrafı Yönetimi sayfasına git
                     if (notification.data?.request_id && notification.data?.action && user?.role === 'doctor') {
