@@ -32,8 +32,8 @@ const { startJobExpirationCron, stopJobExpirationCron } = require('./src/utils/j
 // Yeni bir Express uygulaması oluşturulur.
 const app = express();
 
-// Sunucunun çalışacağı port. .env dosyasından alınır, eğer tanımlı değilse varsayılan olarak 3000 kullanılır.
-const PORT = process.env.PORT || 3000;
+// Sunucunun çalışacağı port. .env dosyasından alınır, eğer tanımlı değilse varsayılan olarak 3100 kullanılır.
+const PORT = process.env.PORT || 3100;
 
 // Not: Temel güvenlik middleware'leri (Helmet, CORS, Rate Limiting) expressLoader içinde yönetilmektedir.
 

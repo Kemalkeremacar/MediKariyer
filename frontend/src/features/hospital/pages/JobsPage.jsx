@@ -32,6 +32,22 @@ import { useJobStatuses, useSpecialties, useSubspecialties } from '@/hooks/useLo
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { hospitalTheme } from '../theme';
+
+const {
+  pageWrapper,
+  heroCard,
+  panelCard,
+  filterLabel,
+  filterSelect,
+  chipBase,
+  statsText,
+  ghostButton,
+  paginationButton,
+  sectionWrapper,
+  listCard,
+} = hospitalTheme;
+const hospitalPageWrapper = `hospital-light ${pageWrapper}`;
 
 const HospitalJobs = () => {
   const location = useLocation();
@@ -250,12 +266,12 @@ const HospitalJobs = () => {
   // Loading state
   if (jobsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className={hospitalPageWrapper}>
         <div className="max-w-7xl mx-auto space-y-8">
-          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+          <SkeletonLoader className="h-12 w-80 bg-blue-100 rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <SkeletonLoader key={i} className="h-64 bg-white/10 rounded-2xl" />
+              <SkeletonLoader key={i} className="h-64 bg-blue-100 rounded-2xl" />
             ))}
           </div>
         </div>
@@ -266,15 +282,17 @@ const HospitalJobs = () => {
   // Error state
   if (jobsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className={hospitalPageWrapper}>
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-4">İş İlanları Yüklenemedi</h2>
-            <p className="text-gray-300 mb-6">{jobsError.message || 'Bir hata oluştu'}</p>
+          <div className="text-center bg-white rounded-3xl p-8 border border-red-100 shadow-xl max-w-lg">
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">İş İlanları Yüklenemedi</h2>
+            <p className="text-gray-600 mb-6">{jobsError.message || 'Bir hata oluştu'}</p>
             <button 
               onClick={() => refetchJobs()} 
-              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hospital-keep-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
               Yeniden Dene
@@ -290,304 +308,293 @@ const HospitalJobs = () => {
   const institutionName = profile?.institution_name || 'Hastaneniz';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-          {/* Hero Section */}
-          <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
-            </div>
-            
-            <div className="relative z-10">
-              <div className="flex flex-col gap-6 md:flex-row md:items-center">
-                {/* Metin ve Buton */}
-                <div className="flex flex-1 flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-                  <div className="flex-1">
-                    <h1 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl">İş İlanları</h1>
-                    <h2 className="mb-4 text-xl font-semibold text-cyan-700 md:text-2xl">
-                      İlan Yönetimi ve Yayınlama
-                    </h2>
-                    <p className="text-base leading-relaxed text-gray-700 md:text-lg">
-                      İş ilanlarınızı oluşturun, yönetin ve nitelikli doktorlara ulaşın.
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0 w-full md:w-auto">
-                    <Link
-                      to="/hospital/jobs/new"
-                      onClick={storeListState}
-                      className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-6 py-3 rounded-xl font-medium hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Yeni İlan Oluştur
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </div>
+    <div className={hospitalPageWrapper}>
+      <div className={sectionWrapper}>
+        {/* Hero Section */}
+        <div className={heroCard}>
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
+          </div>
+          
+          <div className="relative z-10">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center">
+              <div className="flex flex-1 flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+                <div className="flex-1">
+                  <h1 className="mb-2 text-2xl font-bold text-gray-900 md:text-3xl">İş İlanları</h1>
+                  <h2 className="mb-4 text-xl font-semibold text-cyan-700 md:text-2xl">
+                    İlan Yönetimi ve Yayınlama
+                  </h2>
+                  <p className="text-base leading-relaxed text-gray-700 md:text-lg">
+                    İş ilanlarınızı oluşturun, yönetin ve nitelikli doktorlara ulaşın.
+                  </p>
+                </div>
+                <div className="flex-shrink-0 w-full md:w-auto">
+                  <Link
+                    to="/hospital/jobs/new"
+                    onClick={storeListState}
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white hospital-keep-white px-6 py-3 rounded-xl font-medium hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 inline-flex items-center gap-2 group w-full md:w-auto justify-center"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Yeni İlan Oluştur
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Filters */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Filter className="w-5 h-5" />
-                Filtreler
-              </h2>
-              {activeFiltersCount > 0 && (
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
-                >
-                  Filtreleri Temizle
-                </button>
-              )}
-            </div>
-
-            {/* Filter Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Status Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  İlan Durumu
-                </label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
-                >
-                  <option value="" className="bg-slate-800">Tüm İlanlar</option>
-                  {statusOptions.map((status) => (
-                    <option key={status.value} value={status.value} className="bg-slate-800">
-                      {status.label || status.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Specialty Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Ana Dal
-                </label>
-                <select
-                  value={specialtyId}
-                  onChange={(e) => setSpecialtyId(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
-                >
-                  <option value="" className="bg-slate-800">Tüm Ana Dallar</option>
-                  {specialties?.map((specialty) => (
-                    <option key={specialty.id} value={specialty.id} className="bg-slate-800">
-                      {specialty.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Subspecialty Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Yan Dal
-                </label>
-                <select
-                  value={subspecialtyId}
-                  onChange={(e) => setSubspecialtyId(e.target.value)}
-                  disabled={!specialtyId}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="" className="bg-slate-800">Tüm Yan Dallar</option>
-                  {filteredSubspecialties.map((subspecialty) => (
-                    <option key={subspecialty.id} value={subspecialty.id} className="bg-slate-800">
-                      {subspecialty.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Active Filters Chips */}
+        {/* Filters */}
+        <div className={`${panelCard} p-6`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <Filter className="w-5 h-5 text-blue-600" />
+              Filtreler
+            </h2>
             {activeFiltersCount > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {statusFilter && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-green-300 text-sm">
-                    <span>Durum: {statusOptions.find(s => s.value.toString() === statusFilter.toString())?.label || statusFilter}</span>
-                    <button
-                      onClick={() => setStatusFilter('')}
-                      className="hover:text-green-200"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                {specialtyId && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-purple-300 text-sm">
-                    <span>Ana Dal: {specialties?.find(s => s.id === parseInt(specialtyId, 10))?.name}</span>
-                    <button
-                      onClick={() => setSpecialtyId('')}
-                      className="hover:text-purple-200"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                {subspecialtyId && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-pink-500/20 border border-pink-500/30 rounded-full text-pink-300 text-sm">
-                    <span>Yan Dal: {filteredSubspecialties.find(s => s.id === parseInt(subspecialtyId, 10))?.name}</span>
-                    <button
-                      onClick={() => setSubspecialtyId('')}
-                      className="hover:text-pink-200"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                onClick={clearFilters}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Filtreleri Temizle
+              </button>
             )}
           </div>
 
-          {/* Results Summary */}
-          <div className="flex items-center justify-between">
-            <p className="text-gray-300">
-              {paginationData.total || 0} iş ilanı bulundu
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">Sayfa:</span>
-              <span className="text-white font-medium">
-                {paginationData.page || 1} / {paginationData.pages || 1}
-              </span>
+          {/* Filter Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className={filterLabel}>
+                İlan Durumu
+              </label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className={filterSelect}
+              >
+                <option value="">Tüm İlanlar</option>
+                {statusOptions.map((status) => (
+                  <option key={status.value} value={status.value}>
+                    {status.label || status.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={filterLabel}>
+                Ana Dal
+              </label>
+              <select
+                value={specialtyId}
+                onChange={(e) => setSpecialtyId(e.target.value)}
+                className={filterSelect}
+              >
+                <option value="">Tüm Ana Dallar</option>
+                {specialties?.map((specialty) => (
+                  <option key={specialty.id} value={specialty.id}>
+                    {specialty.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className={filterLabel}>
+                Yan Dal
+              </label>
+              <select
+                value={subspecialtyId}
+                onChange={(e) => setSubspecialtyId(e.target.value)}
+                disabled={!specialtyId}
+                className={filterSelect}
+              >
+                <option value="">Tüm Yan Dallar</option>
+                {filteredSubspecialties.map((subspecialty) => (
+                  <option key={subspecialty.id} value={subspecialty.id}>
+                    {subspecialty.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Jobs Grid */}
-          {jobs.length > 0 ? (
-            <div className="flex flex-col gap-6">
-              {jobs.map((job, index) => (
-                <StaggeredAnimation key={job.id} delay={index * 50}>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 hover:bg-white/15 transition-all duration-300 p-6 group flex flex-row items-stretch gap-6">
-                    {/* Left Section - Job Info */}
-                    <div className="flex-1 flex flex-col min-w-0">
-                      {/* Job Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
-                            {job.title}
-                          </h3>
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <StatusBadge status={job.status} statusId={job.status_id} />
-                            <span className="text-sm text-gray-400">
-                              {job.application_count || 0} başvuru
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+          {/* Active Filters Chips */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {statusFilter && (
+                <div className={`${chipBase} border-green-200 bg-green-50 text-green-700`}>
+                  <span>Durum: {statusOptions.find(s => s.value.toString() === statusFilter.toString())?.label || statusFilter}</span>
+                  <button
+                    onClick={() => setStatusFilter('')}
+                    className="text-green-600 hover:text-green-800"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              {specialtyId && (
+                <div className={`${chipBase} border-purple-200 bg-purple-50 text-purple-700`}>
+                  <span>Ana Dal: {specialties?.find(s => s.id === parseInt(specialtyId, 10))?.name}</span>
+                  <button
+                    onClick={() => setSpecialtyId('')}
+                    className="text-purple-600 hover:text-purple-800"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              {subspecialtyId && (
+                <div className={`${chipBase} border-pink-200 bg-pink-50 text-pink-700`}>
+                  <span>Yan Dal: {filteredSubspecialties.find(s => s.id === parseInt(subspecialtyId, 10))?.name}</span>
+                  <button
+                    onClick={() => setSubspecialtyId('')}
+                    className="text-pink-600 hover:text-pink-800"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-                      {/* Job Details */}
-                      <div className="space-y-3 flex-1">
-                        <div className="flex items-start gap-2 text-gray-300">
-                          <Target className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                          <div className="min-w-0 flex-1">
-                            <span className="text-sm break-words block">{job.specialty}</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-2 text-gray-300">
-                          <Target className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                          <div className="min-w-0 flex-1">
-                            <span className="text-sm text-blue-200 break-words block">
-                              {job.subspecialty_name || '-'}
-                            </span>
-                          </div>
-                        </div>
+        {/* Results Summary */}
+        <div className="flex items-center justify-between">
+          <p className="text-gray-600">
+            {paginationData.total || 0} iş ilanı bulundu
+          </p>
+          <div className="flex items-center gap-2">
+            <span className={statsText}>Sayfa:</span>
+            <span className="text-gray-900 font-semibold">
+              {paginationData.page || 1} / {paginationData.pages || 1}
+            </span>
+          </div>
+        </div>
 
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Calendar className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                          <span className="text-sm">
-                            İlan Tarihi: {new Date(job.created_at).toLocaleDateString('tr-TR')}
+        {/* Jobs Grid */}
+        {jobs.length > 0 ? (
+          <div className="flex flex-col gap-6">
+            {jobs.map((job, index) => (
+              <StaggeredAnimation key={job.id} delay={index * 50}>
+                <div className={listCard}>
+                  {/* Left Section */}
+                  <div className="flex-1 flex flex-col min-w-0">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                          {job.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <StatusBadge status={job.status} statusId={job.status_id} />
+                          <span className={statsText}>
+                            {job.application_count || 0} başvuru
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Right Section - Actions */}
-                    <div className="flex items-center gap-4 flex-shrink-0 border-l border-white/10 pl-6">
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/hospital/jobs/${job.id}`}
-                          onClick={storeListState}
-                          state={{ from: location.pathname }}
-                          className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-3 py-2 rounded-lg hover:bg-blue-500/30 transition-all duration-300 flex-shrink-0"
-                          title="Detayları Görüntüle"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                        
-                        
-                        {/* Sadece Needs Revision durumunda edit butonu göster */}
-                        {job.status_id === 2 && (
-                          <Link
-                            to={`/hospital/jobs/${job.id}/edit`}
-                            onClick={storeListState}
-                            state={{ from: location.pathname }}
-                            className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-3 py-2 rounded-lg hover:bg-yellow-500/30 transition-all duration-300 flex-shrink-0"
-                            title="Düzenle"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </Link>
-                        )}
+                    <div className="space-y-3 flex-1">
+                      <div className="flex items-start gap-2 text-gray-600">
+                        <Target className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm break-words block">{job.specialty}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-2 text-gray-600">
+                        <Target className="w-4 h-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm text-gray-700 break-words block">
+                            {job.subspecialty_name || '-'}
+                          </span>
+                        </div>
                       </div>
 
-                      <Link
-                        to={`/hospital/applications?jobIds=${job.id}`}
-                        onClick={storeListState}
-                        className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 group flex-shrink-0 whitespace-nowrap"
-                      >
-                        Başvurular
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                      </Link>
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                        <span className="text-sm">
+                          İlan Tarihi: {new Date(job.created_at).toLocaleDateString('tr-TR')}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </StaggeredAnimation>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Briefcase className="w-12 h-12 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-4">
-                Henüz İş İlanı Yok
-              </h3>
-              <p className="text-gray-300 mb-8">
-                İlk iş ilanınızı oluşturarak başlayın ve nitelikli doktorlara ulaşın.
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Link
-                  to="/hospital/jobs/new"
-                  onClick={storeListState}
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
-                >
-                  <Plus className="w-5 h-5" />
-                  İlk İş İlanını Oluştur
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          )}
 
-          {/* Pagination */}
-          {paginationData.pages > 1 && (
-            <div className="mt-8">
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={paginationData.pages}
-                onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
-              />
-            </div>
-          )}
-        </div>
+                  {/* Right Section */}
+                  <div className="flex items-center gap-4 flex-shrink-0 border-l border-gray-100 pl-6">
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/hospital/jobs/${job.id}`}
+                        onClick={storeListState}
+                        state={{ from: location.pathname }}
+                        className={`${ghostButton} border-blue-200 text-blue-600 hover:bg-blue-50`}
+                        title="Detayları Görüntüle"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                      
+                      {job.status_id === 2 && (
+                        <Link
+                          to={`/hospital/jobs/${job.id}/edit`}
+                          onClick={storeListState}
+                          state={{ from: location.pathname }}
+                          className={`${ghostButton} border-amber-200 text-amber-600 hover:bg-amber-50`}
+                          title="Düzenle"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </Link>
+                      )}
+                    </div>
 
-        {/* ConfirmationModal global olarak App.jsx içinde render ediliyor */}
+                    <Link
+                      to={`/hospital/applications?jobIds=${job.id}`}
+                      onClick={storeListState}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 group flex-shrink-0 whitespace-nowrap"
+                    >
+                      Başvurular
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
+                </div>
+              </StaggeredAnimation>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Briefcase className="w-12 h-12 text-white hospital-keep-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              Henüz İş İlanı Yok
+            </h3>
+            <p className="text-gray-600 mb-8">
+              İlk iş ilanınızı oluşturarak başlayın ve nitelikli doktorlara ulaşın.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link
+                to="/hospital/jobs/new"
+                onClick={storeListState}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 text-white hospital-keep-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
+              >
+                <Plus className="w-5 h-5" />
+                İlk İş İlanını Oluştur
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {paginationData.pages > 1 && (
+          <div className="mt-8">
+            <Pagination
+              currentPage={pagination.page}
+              totalPages={paginationData.pages}
+              onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -611,7 +618,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handlePrev}
         disabled={currentPage === 1}
-        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+        className={`${paginationButton} text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         Önceki
       </button>
@@ -638,10 +645,10 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
           <button
             key={page}
             onClick={() => handlePage(page)}
-            className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm transition-all ${
+            className={`${paginationButton} ${
               isCurrentPage
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hospital-keep-white shadow-md'
+                : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'
             }`}
           >
             {page}
@@ -652,7 +659,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handleNext}
         disabled={currentPage === totalPages}
-        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+        className={`${paginationButton} text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         Sonraki
       </button>
@@ -663,3 +670,5 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
 Pagination.displayName = 'Pagination';
 
 export default HospitalJobs;
+
+

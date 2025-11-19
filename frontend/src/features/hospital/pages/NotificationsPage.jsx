@@ -618,3 +618,4 @@ const HospitalNotificationsPage = () => {
 };
 
 export default HospitalNotificationsPage;
+

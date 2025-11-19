@@ -102,12 +102,12 @@ import useAuthStore from '../../store/authStore';
  * Base URL - API base URL'i
  * 
  * Environment variable'dan alınır (VITE_API_URL)
- * Fallback: localhost için 'http://localhost:3000/api'
- * Fallback: diğer durumlar için 'http://192.168.1.198:3000/api'
+ * Fallback: localhost için 'http://localhost:3100/api'
+ * Fallback: prod için 'https://mkapi.monassist.com/api'
  * 
  * Tüm API istekleri bu base URL'e göre yapılır
  */
-const BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'http://192.168.1.198:3000/api');
+const BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3100/api' : 'https://mkapi.monassist.com/api');
 
 /**
  * Public endpoint'ler - Token gerektirmeyen endpoint'ler

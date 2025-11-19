@@ -119,7 +119,7 @@ const JobCreatePage = () => {
 
   if (lookupLoading.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
         <TransitionWrapper>
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center">
@@ -136,7 +136,7 @@ const JobCreatePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <TransitionWrapper>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -407,3 +407,4 @@ const JobCreatePage = () => {
 };
 
 export default JobCreatePage;
+

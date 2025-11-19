@@ -257,3 +257,4 @@ const HospitalSettingsPage = () => {
 };
 
 export default HospitalSettingsPage;
+

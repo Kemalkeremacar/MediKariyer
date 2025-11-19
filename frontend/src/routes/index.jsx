@@ -698,6 +698,20 @@ const AppRoutes = () => {
               </ErrorBoundary>
             }
           />
+          <Route
+            path="hospital/doctors"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['hospital']}>
+                    <ApprovalGuard>
+                      <HospitalDoctors />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
 
           <Route
             path="hospital/notifications"

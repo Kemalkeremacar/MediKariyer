@@ -399,6 +399,88 @@ p, h1, h2, h3, h4, h5, h6, div, span, li, td, th {
   }
 }
 
+/* ================================================================ */
+/* Hospital Light Theme Overrides */
+/* ================================================================ */
+@layer components {
+  .hospital-light {
+    color: #0f172a;
+  }
+
+  .hospital-light .text-white:not(.hospital-keep-white) {
+    color: #0f172a !important;
+  }
+
+  .hospital-light .text-gray-300 {
+    color: #475467 !important;
+  }
+
+  .hospital-light .text-gray-400 {
+    color: #5f6c7b !important;
+  }
+
+  .hospital-light .text-gray-500 {
+    color: #667085 !important;
+  }
+
+  .hospital-light .bg-white\/5,
+  .hospital-light .bg-white\/10,
+  .hospital-light .bg-white\/15,
+  .hospital-light .bg-white\/20 {
+    background-color: #ffffff !important;
+    color: #0f172a;
+  }
+
+  .hospital-light .border-white\/10,
+  .hospital-light .border-white\/20,
+  .hospital-light .border-white\/30 {
+    border-color: #dbeafe !important;
+  }
+
+  .hospital-light .bg-slate-800 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .hospital-light .bg-blue-500\/20 {
+    background-color: rgba(59, 130, 246, 0.12) !important;
+    color: #1d4ed8;
+  }
+
+  .hospital-light .bg-gray-500\/20 {
+    background-color: rgba(107, 114, 128, 0.12) !important;
+    color: #4b5563;
+  }
+
+  .hospital-light .bg-green-500\/20 {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    color: #047857;
+  }
+
+  .hospital-light .bg-purple-500\/20 {
+    background-color: rgba(139, 92, 246, 0.12) !important;
+    color: #6d28d9;
+  }
+
+  .hospital-light .bg-orange-500\/20 {
+    background-color: rgba(249, 115, 22, 0.15) !important;
+    color: #c2410c;
+  }
+
+  .hospital-light .bg-blue-500\/30 {
+    background-color: rgba(59, 130, 246, 0.18) !important;
+  }
+
+  .hospital-keep-white {
+    color: #fff !important;
+  }
+
+  .hospital-light .bg-gradient-to-r.text-white,
+  .hospital-light .bg-gradient-to-br.text-white {
+    color: #fff !important;
+  }
+}
+
 @media (max-width: 480px) {
   .medical-icon-elite {
     font-size: clamp(0.8rem, 2.5vw, 3rem);

@@ -91,6 +91,7 @@ const Header = () => {
       { to: ROUTE_CONFIG.HOSPITAL.PROFILE, text: 'Profilim' },
       { to: ROUTE_CONFIG.HOSPITAL.JOBS, text: 'İlan Yönetimi' },
       { to: ROUTE_CONFIG.HOSPITAL.APPLICATIONS, text: 'Başvurular' },
+      { to: ROUTE_CONFIG.HOSPITAL.DOCTORS, text: 'Doktorlar' },
     ],
   };
 
@@ -327,6 +328,14 @@ const Header = () => {
                           >
                             <ClipboardList size={18} className="text-gray-500" />
                             <span className="text-sm font-medium">Başvurular</span>
+                          </Link>
+                          <Link
+                            to={ROUTE_CONFIG.HOSPITAL.DOCTORS}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <Stethoscope size={18} className="text-gray-500" />
+                            <span className="text-sm font-medium">Doktorlar</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.HOSPITAL.NOTIFICATIONS}
@@ -616,6 +625,14 @@ const Header = () => {
                       >
                         <Bell size={18} className="text-gray-500" />
                         <span className="text-sm font-medium">Bildirimler</span>
+                      </Link>
+                      <Link
+                        to={ROUTE_CONFIG.HOSPITAL.DOCTORS}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                      >
+                        <Stethoscope size={18} className="text-gray-500" />
+                        <span className="text-sm font-medium">Doktorlar</span>
                       </Link>
                       <Link
                         to={ROUTE_CONFIG.HOSPITAL.SETTINGS}

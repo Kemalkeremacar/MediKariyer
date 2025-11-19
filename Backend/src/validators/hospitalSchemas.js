@@ -398,6 +398,76 @@ const applicationsQuerySchema = Joi.object({
 });
 
 /**
+ * Hastane doktor profili listeleme sorgu parametreleri şeması
+ * @description /api/hospital/doctors endpoint'i için query doğrulaması
+ */
+const doctorProfilesQuerySchema = Joi.object({
+  page: Joi.number()
+    .integer()
+    .min(1)
+    .default(1)
+    .messages({
+      'number.base': 'Sayfa numarası sayı olmalıdır',
+      'number.integer': 'Sayfa numarası tam sayı olmalıdır',
+      'number.min': 'Sayfa numarası 1\'den küçük olamaz'
+    }),
+
+  limit: Joi.number()
+    .integer()
+    .min(1)
+    .max(100)
+    .default(20)
+    .messages({
+      'number.base': 'Sayfa limiti sayı olmalıdır',
+      'number.integer': 'Sayfa limiti tam sayı olmalıdır',
+      'number.min': 'Sayfa limiti 1\'den küçük olamaz',
+      'number.max': 'Sayfa limiti 100\'den büyük olamaz'
+    }),
+
+  search: Joi.string()
+    .trim()
+    .min(2)
+    .max(100)
+    .optional()
+    .messages({
+      'string.min': 'Arama terimi en az 2 karakter olmalıdır',
+      'string.max': 'Arama terimi en fazla 100 karakter olabilir'
+    }),
+
+  specialty: Joi.alternatives()
+    .try(
+      Joi.number().integer().positive(),
+      Joi.string().trim().min(1).max(100)
+    )
+    .optional()
+    .messages({
+      'alternatives.match': 'Uzmanlık filtresi sayı veya metin olmalıdır',
+      'string.min': 'Uzmanlık filtresi en az 1 karakter olmalıdır',
+      'string.max': 'Uzmanlık filtresi en fazla 100 karakter olabilir'
+    }),
+
+  city: Joi.alternatives()
+    .try(
+      Joi.number().integer().positive(),
+      Joi.string().trim().min(1).max(100)
+    )
+    .optional()
+    .messages({
+      'alternatives.match': 'Şehir filtresi sayı veya metin olmalıdır',
+      'string.min': 'Şehir filtresi en az 1 karakter olmalıdır',
+      'string.max': 'Şehir filtresi en fazla 100 karakter olabilir'
+    }),
+
+  appliedOnly: Joi.boolean()
+    .optional()
+    .default(false),
+
+  applied_only: Joi.boolean()
+    .optional()
+    .default(false)
+});
+
+/**
  * Job ID Parameter Schema
  * @description URL parametresi olarak gelen job ID'si için validation
  */
@@ -466,5 +536,6 @@ module.exports = {
   applicationStatusSchema,
   
   // Query parametreleri validation
-  applicationsQuerySchema
+  applicationsQuerySchema,
+  doctorProfilesQuerySchema
 };

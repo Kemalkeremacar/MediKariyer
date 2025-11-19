@@ -153,7 +153,7 @@ const JobEditPage = () => {
   // Loading state
   if (jobLoading || lookupLoading.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <TransitionWrapper>
           <div className="max-w-7xl mx-auto space-y-8">
             <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
@@ -167,7 +167,7 @@ const JobEditPage = () => {
   // Error state
   if (jobError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
         <TransitionWrapper>
           <div className="flex items-center justify-center min-h-screen">
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
@@ -189,7 +189,7 @@ const JobEditPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <TransitionWrapper>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -443,4 +443,5 @@ const JobEditPage = () => {
 };
 
 export default JobEditPage;
+
 

@@ -61,7 +61,8 @@ const {
   jobStatusChangeSchema,
   jobResubmitSchema,
   applicationStatusSchema,
-  applicationsQuerySchema
+  applicationsQuerySchema,
+  doctorProfilesQuerySchema
 } = require('../validators/hospitalSchemas');
 
 // ============================================================================
@@ -309,6 +310,7 @@ router.post('/jobs/:jobId/notify-status-change',
  * @returns {Object} 500 - Sunucu hatası
  */
 router.get('/doctors',
+  validate(doctorProfilesQuerySchema, 'query'),
   hospitalController.getDoctorProfiles
 );
 

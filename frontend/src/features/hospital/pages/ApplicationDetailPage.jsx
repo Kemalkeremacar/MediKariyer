@@ -161,7 +161,7 @@ const HospitalApplicationDetailPage = () => {
 
   if (applicationsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           <SkeletonLoader count={6} />
         </div>
@@ -171,7 +171,7 @@ const HospitalApplicationDetailPage = () => {
 
   if (!application) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-white mb-4">Başvuru bulunamadı</h2>
@@ -189,7 +189,7 @@ const HospitalApplicationDetailPage = () => {
 
   if (isDoctorInactive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8 flex flex-col">
         <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
           <div className="flex items-center gap-4 mb-8">
             <button
@@ -229,7 +229,7 @@ const HospitalApplicationDetailPage = () => {
 
   if (isJobPassive) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8 flex flex-col">
         <div className="max-w-7xl mx-auto flex-1 flex flex-col justify-center">
           <div className="flex items-center gap-4 mb-8">
             <button
@@ -263,7 +263,7 @@ const HospitalApplicationDetailPage = () => {
   const doctorProfile = doctorProfileData?.data?.profile;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8 flex flex-col overflow-x-hidden">
+    <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8 flex flex-col overflow-x-hidden">
       <div className="max-w-7xl mx-auto space-y-8 flex-1 w-full min-w-0">
         {/* Header */}
         <div className="flex items-center gap-4">

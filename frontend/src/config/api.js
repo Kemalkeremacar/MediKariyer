@@ -57,9 +57,9 @@ import { APP_CONFIG } from './app.js';
 /**
  * API Base URL - Environment variable'dan veya varsayılan değerden alınır
  */
-export const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'http://192.168.1.198:3000/api');
+export const API_BASE_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3100/api' : 'https://mkapi.monassist.com/api');
 
-/**
+/**https://mkapi.monassist.com
  * API Request Timeout - 30 saniye
  */
 export const API_TIMEOUT = 30000;

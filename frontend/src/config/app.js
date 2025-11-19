@@ -32,7 +32,7 @@
  * ```
  * 
  * Environment Variables:
- * - VITE_API_BASE_URL: API base URL'i (varsayılan: localhost:3000/api)
+ * - VITE_API_BASE_URL: API base URL'i (varsayılan: localhost:3100/api)
  * 
  * @author MediKariyer Development Team
  * @version 2.0.0
@@ -57,7 +57,7 @@ export const APP_CONFIG = {
   /**
    * API base URL ve timeout ayarları
    */
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'http://192.168.1.198:3000/api'),
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3100/api' : 'https://mkapi.monassist.com/api'),
   API_TIMEOUT: 30000, // 30 saniye
   
   // ==================== SAYFALAMA AYARLARI ====================

@@ -488,7 +488,7 @@ const HospitalApplications = () => {
   // Diğer veriler (statuses, jobs) arka planda yüklenebilir
   if (applicationsLoading && !applicationsData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
           <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
           <div className="grid grid-cols-1 gap-6">
@@ -504,7 +504,7 @@ const HospitalApplications = () => {
   // Error state
   if (applicationsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
             <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
@@ -528,7 +528,7 @@ const HospitalApplications = () => {
   // const institutionName = profile?.institution_name || 'Hastaneniz';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto space-y-8">
           {/* Hero Section */}
           <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
@@ -1497,3 +1497,4 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
 Pagination.displayName = 'Pagination';
 
 export default HospitalApplications;
+

@@ -21,7 +21,8 @@ const CORS_OPTIONS = {
       'http://127.0.0.1:5000',
       'http://127.0.0.1:3000',
       'http://192.168.1.198:5000', // Network IP - Frontend
-      'http://192.168.1.198:3000'  // Network IP - Backend
+      'http://192.168.1.198:3100',  // Network IP - Backend
+      'https://mk.monassist.com' // Production Frontend Domain
     ];
     
     // Kaynağı olmayan isteklere (mobil uygulamalar, Postman gibi araçlar) izin ver.

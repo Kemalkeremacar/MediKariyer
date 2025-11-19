@@ -144,7 +144,7 @@ DB_PASSWORD=YourSQLPassword123!
 JWT_SECRET=YourJWTSecretKey
 JWT_REFRESH_SECRET=YourRefreshSecretKey
 
-PORT=3000
+PORT=3100
 CORS_ORIGIN=http://localhost:5000
 NODE_ENV=development
 ```
@@ -164,7 +164,7 @@ npm run dev
 npm start
 ```
 
-Backend şimdi `http://localhost:3000` adresinde çalışıyor.
+Backend şimdi `http://localhost:3100` adresinde çalışıyor.
 
 ### Frontend Kurulumu
 
@@ -185,7 +185,7 @@ cp env.example.txt .env
 
 4. **`.env` dosyasını düzenleyin:**
 ```env
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:3100/api
 ```
 
 5. **Frontend'i başlatın:**
@@ -223,7 +223,7 @@ Frontend şimdi `http://localhost:5000` adresinde çalışıyor.
 
 ### Base URL
 ```
-http://localhost:3000/api
+http://localhost:3100/api
 ```
 
 ### Ana Endpoint'ler

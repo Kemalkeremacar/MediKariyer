@@ -1440,8 +1440,59 @@ const getRecentJobs = async (userId, limit = 5) => {
  */
 const getDoctorProfiles = async (hospitalUserId, params = {}) => {
   try {
-    const { page = 1, limit = 20, search, specialty, city } = params;
-    const offset = (page - 1) * limit;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      specialty,
+      city,
+      appliedOnly,
+      applied_only
+    } = params;
+
+    const parsedLimit = parseInt(limit, 10);
+    const safeLimit = Number.isNaN(parsedLimit) ? 20 : Math.min(Math.max(parsedLimit, 1), 100);
+    const parsedPage = parseInt(page, 10);
+    const safePage = Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : parsedPage;
+    const offset = (safePage - 1) * safeLimit;
+
+    const parseBooleanParam = (value) => {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'number') return value === 1;
+      if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+        if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+      }
+      return false;
+    };
+
+    const showOnlyApplicants = parseBooleanParam(appliedOnly ?? applied_only ?? false);
+
+    const isNumericFilter = (value) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      if (typeof value === 'number') {
+        return Number.isFinite(value);
+      }
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return false;
+        return /^\d+$/.test(trimmed);
+      }
+
+      return false;
+    };
+
+    const normalizeText = (value) => {
+      if (typeof value === 'string') {
+        return value.trim();
+      }
+      return value;
+    };
 
     // Hastane profilini kontrol et
     const hospitalProfile = await db('hospital_profiles')
@@ -1452,18 +1503,74 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
       throw new AppError('Hastane profili bulunamadı', 404);
     }
 
-    // Doktor profillerini getir - GÜVENLİK: Sadece bu hastaneye başvuran doktorlar
-    let query = db('doctor_profiles as dp')
-      .join('users as u', 'dp.user_id', 'u.id')
-      .join('applications as a', 'dp.id', 'a.doctor_profile_id') // Sadece başvuran doktorlar
-      .join('jobs as j', 'a.job_id', 'j.id') // İlanlar
-      .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
-      .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
-      .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
-      .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
-      .where('j.hospital_id', hospitalProfile.id) // GÜVENLİK: Sadece bu hastaneye ait ilanlar
-      .whereNull('a.deleted_at') // Silinmiş başvuruları gösterme
-      .whereNull('j.deleted_at') // Silinmiş ilanları gösterme
+    const buildFilterQuery = () => {
+      let base = db('doctor_profiles as dp')
+        .join('users as u', 'dp.user_id', 'u.id')
+        .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
+        .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
+        .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
+        .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
+        .where('u.is_approved', true)
+        .where('u.is_active', true);
+
+      if (showOnlyApplicants) {
+        base = base.whereExists(function () {
+          this.select(1)
+            .from('applications as a')
+            .join('jobs as j', 'a.job_id', 'j.id')
+            .whereRaw('a.doctor_profile_id = dp.id')
+            .where('j.hospital_id', hospitalProfile.id)
+            .whereNull('a.deleted_at')
+            .whereNull('j.deleted_at');
+        });
+      }
+
+      const trimmedSearch = normalizeText(search);
+      if (trimmedSearch) {
+        base = base.where(function () {
+          this.where('dp.first_name', 'like', `%${trimmedSearch}%`)
+            .orWhere('dp.last_name', 'like', `%${trimmedSearch}%`)
+            .orWhere('u.email', 'like', `%${trimmedSearch}%`);
+        });
+      }
+
+      if (specialty) {
+        if (isNumericFilter(specialty)) {
+          base = base.where('dp.specialty_id', parseInt(specialty, 10));
+        } else {
+          const specialtyText = normalizeText(specialty);
+          base = base.where(function () {
+            this.where('s.name', 'like', `%${specialtyText}%`)
+              .orWhere('ss.name', 'like', `%${specialtyText}%`);
+          });
+        }
+      }
+
+      if (city) {
+        if (isNumericFilter(city)) {
+          base = base.where('dp.residence_city_id', parseInt(city, 10));
+        } else {
+          const cityText = normalizeText(city);
+          base = base.where('rc.name', 'like', `%${cityText}%`);
+        }
+      }
+
+      return base;
+    };
+
+    const baseFilterQuery = buildFilterQuery();
+
+    const totalResult = await baseFilterQuery
+      .clone()
+      .clearSelect()
+      .countDistinct('dp.id as count');
+
+    const total = parseInt(totalResult?.[0]?.count || 0, 10);
+
+    const isMssql = db?.client?.config?.client === 'mssql';
+
+    const doctorRowsQuery = baseFilterQuery
+      .clone()
       .select(
         'dp.id',
         'dp.first_name',
@@ -1484,75 +1591,52 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
         'u.email',
         'u.is_approved',
         'u.is_active',
-        'u.created_at'
+        'u.created_at',
+        'dp.created_at as created_at'
       )
-      .where('u.is_approved', true)
-      .where('u.is_active', true)
-      .distinct('dp.id'); // Aynı doktor birden fazla başvuru yapmışsa tekrar gösterme
-
-    // Arama filtresi
-    if (search) {
-      query = query.where(function() {
-        this.where('dp.first_name', 'like', `%${search}%`)
-          .orWhere('dp.last_name', 'like', `%${search}%`)
-          .orWhere('u.email', 'like', `%${search}%`);
-      });
-    }
-
-    // Uzmanlık filtresi - specialty_id ile
-    if (specialty) {
-      query = query.where('dp.specialty_id', specialty);
-    }
-
-    // Şehir filtresi - residence_city_id ile
-    if (city) {
-      query = query.where('dp.residence_city_id', city);
-    }
-
-    // Sayfalama
-    const doctors = await query
-      .limit(limit)
-      .offset(offset)
       .orderBy('dp.created_at', 'desc');
 
-    // Toplam sayı - GÜVENLİK: Sadece bu hastaneye başvuran doktorlar
-    let totalQuery = db('doctor_profiles as dp')
-      .join('users as u', 'dp.user_id', 'u.id')
-      .join('applications as a', 'dp.id', 'a.doctor_profile_id') // Sadece başvuran doktorlar
-      .join('jobs as j', 'a.job_id', 'j.id') // İlanlar
-      .where('j.hospital_id', hospitalProfile.id) // GÜVENLİK: Sadece bu hastaneye ait ilanlar
-      .whereNull('a.deleted_at') // Silinmiş başvuruları gösterme
-      .whereNull('j.deleted_at') // Silinmiş ilanları gösterme
-      .where('u.is_approved', true)
-      .where('u.is_active', true)
-      .distinct('dp.id'); // Aynı doktor birden fazla başvuru yapmışsa tekrar sayma
+    const doctorRowsRaw = isMssql
+      ? await doctorRowsQuery
+      : await doctorRowsQuery.offset(offset).limit(safeLimit);
 
-    if (search) {
-      totalQuery = totalQuery.where(function() {
-        this.where('dp.first_name', 'like', `%${search}%`)
-          .orWhere('dp.last_name', 'like', `%${search}%`)
-          .orWhere('u.email', 'like', `%${search}%`);
-      });
+    const doctorRows = isMssql
+      ? doctorRowsRaw.slice(offset, offset + safeLimit)
+      : doctorRowsRaw;
+
+    let doctors = doctorRows.map((doctor) => ({
+      ...doctor,
+      specialties: doctor.specialty_name || null,
+      work_type: doctor.work_type ?? null,
+      photo_status: doctor.photo_status ?? null,
+      region: doctor.region ?? null
+    }));
+
+    if (doctors.length > 0) {
+      const doctorIds = doctors.map((doctor) => doctor.id);
+      const appliedDoctors = await db('applications as a')
+        .join('jobs as j', 'a.job_id', 'j.id')
+        .whereIn('a.doctor_profile_id', doctorIds)
+        .where('j.hospital_id', hospitalProfile.id)
+        .whereNull('a.deleted_at')
+        .whereNull('j.deleted_at')
+        .distinct('a.doctor_profile_id');
+
+      const appliedSet = new Set(appliedDoctors.map((row) => row.doctor_profile_id));
+
+      doctors = doctors.map((doctor) => ({
+        ...doctor,
+        has_applied: appliedSet.has(doctor.id)
+      }));
     }
-
-    if (specialty) {
-      totalQuery = totalQuery.where('dp.specialty_id', specialty);
-    }
-
-    if (city) {
-      totalQuery = totalQuery.where('dp.residence_city_id', city);
-    }
-
-    const totalResult = await totalQuery.count('dp.id as count').first();
-    const total = parseInt(totalResult.count);
 
     return {
       doctors,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: safePage,
+        limit: safeLimit,
         total,
-        pages: Math.ceil(total / limit)
+        pages: total > 0 ? Math.ceil(total / safeLimit) : 0
       }
     };
   } catch (error) {
@@ -1606,18 +1690,15 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
       throw new AppError('Doktor profili bulunamadı', 404);
     }
 
-    // GÜVENLİK: Bu doktorun bu hastaneye başvurmuş olup olmadığını kontrol et
-    const hasApplication = await db('applications as a')
+    const doctorApplication = await db('applications as a')
       .join('jobs as j', 'a.job_id', 'j.id')
       .where('a.doctor_profile_id', doctorProfileId)
       .where('j.hospital_id', hospitalProfile.id)
       .whereNull('a.deleted_at')
       .whereNull('j.deleted_at')
       .first();
-    
-    if (!hasApplication) {
-      throw new AppError('Bu doktor profiline erişim yetkiniz yok', 403);
-    }
+
+    const hasApplied = Boolean(doctorApplication);
 
     // Doktor için ek bilgileri getir - lookup tablolarıyla JOIN (Soft delete kontrolü ile)
     const educations = await db('doctor_educations as de')
@@ -1663,7 +1744,10 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
       );
 
     return {
-      profile: doctorProfile,
+      profile: {
+        ...doctorProfile,
+        has_applied: hasApplied
+      },
       educations,
       experiences,
       certificates,

@@ -1,117 +1,249 @@
 /**
- * Hospital Doctors Sayfası
- * 
- * Modern doktor profil listesi ve görüntüleme sayfası
- * Backend hospitalService.js ile tam entegrasyon
- * 
- * Özellikler:
- * - Doktor profillerini listeleme ve filtreleme
- * - Doktor profil detayları görüntüleme
- * - Uzmanlık alanına göre filtreleme
- * - Şehir bazlı filtreleme
- * - Arama fonksiyonu
- * - Modern glassmorphism dark theme
- * - Responsive tasarım
- * - Türkçe yorum satırları
- * 
- * @author MediKariyer Development Team
- * @version 2.2.0
- * @since 2024
+ * Hospital Doctors Page - AI destekli modern deneyim
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  User, Search, Filter, MapPin, Calendar, Award, 
-  Eye, Phone, Mail, GraduationCap, Briefcase, 
-  ArrowRight, RefreshCw, AlertCircle, Target,
-  Building, Users, Star, CheckCircle
+import {
+  User,
+  MapPin,
+  Calendar,
+  Eye,
+  Phone,
+  Mail,
+  RefreshCw,
+  AlertCircle,
+  Target,
+  Users,
+  CheckCircle,
+  Bot,
+  Send,
+  Sparkles,
+  Compass,
+  BrainCircuit,
 } from 'lucide-react';
 import { useHospitalDoctorProfiles } from '../api/useHospital';
 import TransitionWrapper, { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { hospitalTheme } from '../theme';
+
+const {
+  pageWrapper,
+  sectionWrapper,
+  paginationButton,
+  heroCard,
+  panelCard,
+  listCard,
+  ghostButton,
+} = hospitalTheme;
+const hospitalPageWrapper = `hospital-light ${pageWrapper}`;
+
+const defaultFilters = {
+  page: 1,
+  limit: 20,
+  search: '',
+  specialty: '',
+  city: '',
+  appliedOnly: false,
+};
+
+const aiFilterTemplate = {
+  specialty_id: null,
+  subspecialty_id: null,
+  city_id: null,
+  region: null,
+  min_age: null,
+  max_age: null,
+  min_experience_years: null,
+  work_type: null,
+};
+
+const cityKeywords = ['istanbul', 'izmir', 'ankara', 'adana', 'antalya', 'bursa'];
+const specialtyKeywords = [
+  { key: 'ftr', label: 'Fizik Tedavi ve Rehabilitasyon' },
+  { key: 'fizik tedavi', label: 'Fizik Tedavi ve Rehabilitasyon' },
+  { key: 'kardiyoloji', label: 'Kardiyoloji' },
+  { key: 'ortopedi', label: 'Ortopedi' },
+  { key: 'dahiliye', label: 'Dahiliye' },
+  { key: 'göz', label: 'Göz Hastalıkları' },
+  { key: 'nöroloji', label: 'Nöroloji' },
+];
+
+const normalizeText = (value) => value?.toString().trim() || '';
+
+const parsePromptToFilters = (prompt) => {
+  const normalized = normalizeText(prompt).toLowerCase();
+  const filters = { ...aiFilterTemplate };
+  const derivedQuery = { search: '', city: '', specialty: '' };
+
+  if (!normalized) {
+    return { filters, derivedQuery };
+  }
+
+  if (normalized.includes('anadolu')) {
+    filters.region = 'anadolu';
+  } else if (normalized.includes('avrupa')) {
+    filters.region = 'europa';
+  }
+
+  if (/tam\s*zamanl[ıi]|full\s*time/.test(normalized)) {
+    filters.work_type = 'fulltime';
+  } else if (/yar[ıi]\s*zamanl[ıi]|part\s*time/.test(normalized)) {
+    filters.work_type = 'parttime';
+  } else if (/sözleşmeli|geçici|contract/.test(normalized)) {
+    filters.work_type = 'contract';
+  }
+
+  if (normalized.includes('genç')) {
+    filters.max_age = 30;
+  }
+  if (normalized.includes('tecrübeli')) {
+    filters.min_experience_years = 3;
+  }
+  if (normalized.includes('kıdemli')) {
+    filters.min_experience_years = Math.max(filters.min_experience_years || 0, 7);
+  }
+
+  const ageRangeMatch = normalized.match(/(\d{2})\s*-\s*(\d{2})\s*yaş/);
+  if (ageRangeMatch) {
+    filters.min_age = Number(ageRangeMatch[1]);
+    filters.max_age = Number(ageRangeMatch[2]);
+  } else {
+    const minAgeMatch = normalized.match(/(\d{2})\s*\+?\s*yaş/);
+    if (minAgeMatch) {
+      filters.min_age = Number(minAgeMatch[1]);
+    }
+  }
+
+  const expMatch = normalized.match(/en az\s*(\d+)\s*y[ıi]l/i);
+  if (expMatch) {
+    filters.min_experience_years = Number(expMatch[1]);
+  }
+
+  const matchedCity = cityKeywords.find((city) => normalized.includes(city));
+  if (matchedCity) {
+    derivedQuery.city = matchedCity;
+  }
+
+  const matchedSpecialty = specialtyKeywords.find((spec) => normalized.includes(spec.key));
+  if (matchedSpecialty) {
+    derivedQuery.specialty = matchedSpecialty.label;
+    derivedQuery.search = matchedSpecialty.label;
+  }
+
+  if (!derivedQuery.search && normalized.length <= 60) {
+    derivedQuery.search = prompt;
+  }
+
+  return { filters, derivedQuery };
+};
+
+const getInitials = (firstName = '', lastName = '') =>
+  `${firstName.charAt(0)}${lastName.charAt(0)}`.trim().toUpperCase() || 'DR';
+
+const formatSpecialties = (specialties) => {
+  if (!specialties) return 'Belirtilmemiş';
+  if (typeof specialties === 'string') return specialties;
+  if (Array.isArray(specialties)) return specialties.join(', ');
+  return 'Belirtilmemiş';
+};
+
+const calculateAge = (dob) => {
+  if (!dob) return null;
+  const today = new Date();
+  const birthDate = new Date(dob);
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+};
 
 const HospitalDoctors = () => {
-  // State management
-  const [filters, setFilters] = useState({
-    search: '',
-    specialty: '',
-    city: '',
-    page: 1,
-    limit: 20
-  });
-  const [showFilters, setShowFilters] = useState(false);
+  const [queryParams, setQueryParams] = useState(defaultFilters);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiFilters, setAiFilters] = useState(null);
+  const [aiStatus, setAiStatus] = useState('idle');
+  const [aiError, setAiError] = useState('');
 
-  // API hook'ları
-  const { 
-    data: doctorsData, 
-    isLoading: doctorsLoading, 
+  const {
+    data: doctorsData,
+    isLoading: doctorsLoading,
     error: doctorsError,
-    refetch: refetchDoctors
-  } = useHospitalDoctorProfiles(filters);
+    refetch: refetchDoctors,
+  } = useHospitalDoctorProfiles(queryParams);
 
-  // Veri parsing
   const doctors = doctorsData?.data?.doctors || [];
   const pagination = doctorsData?.data?.pagination || {};
 
-  // Filter handlers
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
+  const stats = useMemo(
+    () => [
+      {
+        label: 'Kayıtlı Doktor',
+        value: pagination.total ?? doctors.length,
+        description: 'Sistemde görünür profil',
+      },
+      {
+        label: 'Yeni Profil',
+        value: doctors.slice(0, 5).length,
+        description: 'Son eklenen başvurular',
+      },
+      {
+        label: 'AI Araması',
+        value: aiFilters ? 'Aktif' : 'Hazır',
+        description: aiFilters ? 'Filtre uygulandı' : 'Komut bekleniyor',
+      },
+    ],
+    [pagination.total, doctors, aiFilters],
+  );
+
+  const handlePageChange = (page) => {
+    setQueryParams((prev) => ({
       ...prev,
-      [key]: value,
-      page: key === 'page' ? value : 1
+      page,
     }));
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    handleFilterChange('search', e.target.search.value);
+  const clearAiFilters = () => {
+    setAiFilters(null);
+    setQueryParams(defaultFilters);
+    setAiPrompt('');
   };
 
-  const clearFilters = () => {
-    setFilters({
-      search: '',
-      specialty: '',
-      city: '',
-      page: 1,
-      limit: 20
-    });
-  };
-
-  // Helper functions
-  const getInitials = (firstName, lastName) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
-  };
-
-  const formatSpecialties = (specialties) => {
-    if (!specialties) return 'Belirtilmemiş';
-    if (typeof specialties === 'string') return specialties;
-    if (Array.isArray(specialties)) return specialties.join(', ');
-    return 'Belirtilmemiş';
-  };
-
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-    const today = new Date();
-    const birthDate = new Date(dob);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  const handleAiSubmit = (event) => {
+    event.preventDefault();
+    setAiError('');
+    if (!aiPrompt.trim()) {
+      setAiError('Lütfen bir arama isteği yazın.');
+      return;
     }
-    return age;
+
+    setAiStatus('loading');
+
+    setTimeout(() => {
+      const { filters, derivedQuery } = parsePromptToFilters(aiPrompt);
+      setAiFilters(filters);
+      setQueryParams((prev) => ({
+        ...prev,
+        page: 1,
+        search: derivedQuery.search,
+        specialty: derivedQuery.specialty,
+        city: derivedQuery.city,
+      }));
+      setAiStatus('success');
+    }, 350);
   };
 
-  // Loading state
   if (doctorsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+      <div className={hospitalPageWrapper}>
         <TransitionWrapper>
-          <div className="max-w-7xl mx-auto space-y-8">
-            <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+          <div className={sectionWrapper}>
+            <SkeletonLoader className="h-12 w-72 bg-blue-100 rounded-2xl" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <SkeletonLoader key={i} className="h-80 bg-white/10 rounded-2xl" />
+                <SkeletonLoader key={`skeleton-${i}`} className="h-64 bg-blue-100 rounded-2xl" />
               ))}
             </div>
           </div>
@@ -120,18 +252,19 @@ const HospitalDoctors = () => {
     );
   }
 
-  // Error state
   if (doctorsError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+      <div className={hospitalPageWrapper}>
         <TransitionWrapper>
           <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-              <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-4">Doktorlar Yüklenemedi</h2>
-              <p className="text-gray-300 mb-6">{doctorsError.message || 'Bir hata oluştu'}</p>
-              <button 
-                onClick={() => refetchDoctors()} 
+            <div className="text-center bg-white rounded-3xl p-8 border border-red-100 shadow-xl max-w-lg">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Doktorlar Yüklenemedi</h2>
+              <p className="text-gray-600 mb-6">{doctorsError.message || 'Bir hata oluştu'}</p>
+              <button
+                onClick={() => refetchDoctors()}
                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
@@ -145,297 +278,295 @@ const HospitalDoctors = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 p-4 md:p-8">
+    <div className={hospitalPageWrapper}>
       <TransitionWrapper>
-        <div className="max-w-7xl mx-auto space-y-8">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Doktor Profilleri</h1>
-              <p className="text-gray-300 mt-2">Nitelikli doktorları keşfedin ve bağlantı kurun</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link
-                to="/hospital/jobs"
-                className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-xl hover:bg-white/20 transition-all duration-300 inline-flex items-center gap-2"
-              >
-                <Briefcase className="w-5 h-5" />
-                İş İlanları
-              </Link>
+        <div className={sectionWrapper}>
+          <div className={`${heroCard} space-y-6`}>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-cyan-700 bg-white/70 px-3 py-1 rounded-full">
+                  <Sparkles className="w-3 h-3" />
+                  AI destekli deneyim
+                </p>
+                <h1 className="mt-3 text-3xl font-bold text-slate-900">Doktor Profilleri</h1>
+                <p className="mt-2 text-slate-600">
+                  Hastane tarafında kayıtlı tüm onaylı doktor profillerine erişin, başvuru durumlarını görün ve AI’dan destek alın.
+                </p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full lg:w-auto">
+                {stats.map((stat) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-[0_8px_30px_rgba(15,118,110,0.08)]"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-wide text-cyan-600">{stat.label}</p>
+                    <p className="mt-2 text-2xl font-bold text-slate-900">{stat.value ?? '—'}</p>
+                    <p className="text-xs text-slate-600">{stat.description}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-white">Filtreler</h2>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="bg-white/10 border border-white/20 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300 flex items-center gap-2"
-              >
-                <Filter className="w-4 h-4" />
-                {showFilters ? 'Gizle' : 'Göster'}
-              </button>
-            </div>
+          <div className="grid gap-6 lg:grid-cols-[minmax(320px,380px)_1fr]">
+            <div className={`${panelCard} p-6`}>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white">
+                  <Bot className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-violet-600">Beta</p>
+                  <h2 className="text-2xl font-bold text-gray-900">AI Doktor Bulucu</h2>
+                  <p className="text-sm text-gray-500">Doğal dilde isteğini yaz, filtreleri AI uygulasın.</p>
+                </div>
+              </div>
 
-            {showFilters && (
-              <div className="space-y-4">
-                {/* Search */}
-                <form onSubmit={handleSearch} className="flex gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      name="search"
-                      placeholder="Doktor adı veya e-posta ara..."
-                      defaultValue={filters.search}
-                      className="w-full bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-3 rounded-xl hover:bg-blue-500/30 transition-all duration-300 flex items-center gap-2"
-                  >
-                    <Search className="w-4 h-4" />
-                    Ara
-                  </button>
-                </form>
-
-                {/* Specialty and City Filters */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Uzmanlık Alanı:</label>
-                    <input
-                      type="text"
-                      placeholder="Uzmanlık alanı girin"
-                      value={filters.specialty}
-                      onChange={(e) => handleFilterChange('specialty', e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Şehir:</label>
-                    <input
-                      type="text"
-                      placeholder="Şehir girin"
-                      value={filters.city}
-                      onChange={(e) => handleFilterChange('city', e.target.value)}
-                      className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    />
+              <form onSubmit={handleAiSubmit} className="mt-6 space-y-3">
+                <label htmlFor="aiPrompt" className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                  Örnek: “Anadolu yakasında genç FTR uzmanı”
+                </label>
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 focus-within:ring-2 focus-within:ring-violet-200">
+                  <textarea
+                    id="aiPrompt"
+                    rows={3}
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder='Sor: "Anadolu yakasında FTR uzmanı bul"'
+                    className="w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none"
+                  />
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Sparkles className="w-4 h-4 text-violet-500" />
+                      Yapay zeka destekli arama
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={aiStatus === 'loading'}
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-violet-200 hover:shadow-violet-300 transition disabled:opacity-60"
+                    >
+                      {aiStatus === 'loading' ? 'Analiz ediliyor...' : 'Gönder'}
+                      <Send className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
+                {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+              </form>
 
-                {/* Clear Filters */}
-                {(filters.search || filters.specialty || filters.city) && (
-                  <button
-                    onClick={clearFilters}
-                    className="bg-gray-500/20 text-gray-300 border border-gray-500/30 px-4 py-2 rounded-xl hover:bg-gray-500/30 transition-all duration-300 flex items-center gap-2"
-                  >
-                    <AlertCircle className="w-4 h-4" />
-                    Filtreleri Temizle
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Results Summary */}
-          <div className="flex items-center justify-between">
-            <p className="text-gray-300">
-              {pagination.total || 0} doktor bulundu
-              {filters.search && ` - "${filters.search}" için`}
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">Sayfa:</span>
-              <span className="text-white font-medium">
-                {pagination.page || 1} / {pagination.pages || 1}
-              </span>
-            </div>
-          </div>
-
-          {/* Doctors Grid */}
-          {doctors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {doctors.map((doctor, index) => (
-                <StaggeredAnimation key={doctor.id} delay={index * 100}>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 hover:bg-white/15 transition-all duration-300 p-6 group">
-                    {/* Doctor Header */}
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        {doctor.first_name || doctor.last_name ? (
-                          <span className="text-white font-bold text-lg">
-                            {getInitials(doctor.first_name, doctor.last_name)}
-                          </span>
-                        ) : (
-                          <User className="w-8 h-8 text-white" />
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white group-hover:text-blue-300 transition-colors">
-                          {doctor.first_name && doctor.last_name 
-                            ? `${doctor.first_name} ${doctor.last_name}`
-                            : 'Doktor'
-                          }
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                          <span className="text-sm text-green-300">Onaylı Profil</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Doctor Details */}
-                    <div className="space-y-3 mb-6">
-                      <div className="flex items-center gap-2 text-gray-300">
-                        <Target className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm">{formatSpecialties(doctor.specialties)}</span>
-                      </div>
-                      
-                      {doctor.residence_city_name && (
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <MapPin className="w-4 h-4 text-green-400" />
-                          <span className="text-sm">{doctor.residence_city_name}</span>
-                        </div>
-                      )}
-
-                      {doctor.experience_years && (
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Briefcase className="w-4 h-4 text-purple-400" />
-                          <span className="text-sm">{doctor.experience_years} yıl deneyim</span>
-                        </div>
-                      )}
-
-                      {doctor.dob && (
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Calendar className="w-4 h-4 text-orange-400" />
-                          <span className="text-sm">
-                            {calculateAge(doctor.dob)} yaşında
-                          </span>
-                        </div>
-                      )}
-
-                      {doctor.phone && (
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Phone className="w-4 h-4 text-cyan-400" />
-                          <span className="text-sm">{doctor.phone}</span>
-                        </div>
-                      )}
-
-                      {doctor.email && (
-                        <div className="flex items-center gap-2 text-gray-300">
-                          <Mail className="w-4 h-4 text-pink-400" />
-                          <span className="text-sm truncate">{doctor.email}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bio Preview */}
-                    {doctor.bio && (
-                      <div className="mb-6">
-                        <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
-                          {doctor.bio}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                      <div className="flex items-center gap-2 text-sm text-gray-400">
-                        <Calendar className="w-4 h-4" />
-                        <span>
-                          {new Date(doctor.created_at).toLocaleDateString('tr-TR')}
-                        </span>
-                      </div>
-                      
-                      <Link
-                        to={`/hospital/doctors/${doctor.id}`}
-                        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Profili Gör
-                        <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
+              {aiFilters && (
+                <div className="mt-5 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
+                      <Compass className="w-4 h-4 text-violet-500" />
+                      AI → otomatik filtreleme
+                    </span>
+                    <span className="text-slate-400">{doctors.length} doktor listelendi</span>
                   </div>
-                </StaggeredAnimation>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Users className="w-12 h-12 text-white" />
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-4">
-                {filters.search || filters.specialty || filters.city ? 'Sonuç Bulunamadı' : 'Henüz Doktor Yok'}
-              </h3>
-              <p className="text-gray-300 mb-8">
-                {filters.search || filters.specialty || filters.city 
-                  ? 'Arama kriterlerinize uygun doktor bulunamadı. Filtreleri değiştirmeyi deneyin.'
-                  : 'Sistemde henüz kayıtlı doktor bulunmuyor.'
-                }
-              </p>
-              <div className="flex gap-4 justify-center">
-                {filters.search || filters.specialty || filters.city ? (
+                  <pre className="bg-slate-900 text-slate-100 text-xs rounded-2xl p-4 overflow-auto">
+                    {JSON.stringify(aiFilters, null, 2)}
+                  </pre>
                   <button
-                    onClick={clearFilters}
-                    className="bg-gray-500/20 text-gray-300 border border-gray-500/30 px-6 py-3 rounded-xl hover:bg-gray-500/30 transition-all duration-300"
+                    onClick={clearAiFilters}
+                    className="text-xs font-semibold text-violet-600 hover:text-violet-700"
                   >
-                    Filtreleri Temizle
+                    AI filtresini temizle
                   </button>
-                ) : (
-                  <Link
-                    to="/hospital/jobs"
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 inline-flex items-center gap-2 group"
-                  >
-                    <Briefcase className="w-5 h-5" />
-                    İş İlanı Oluştur
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                </div>
+              )}
+            </div>
+
+            <div className={`${panelCard} p-6`}>
+              <div className="flex flex-wrap items-center gap-3 justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest">Liste</p>
+                  <h2 className="text-2xl font-bold text-gray-900">Güncel Doktorlar</h2>
+                  <p className="text-sm text-slate-500">
+                    {queryParams.city || queryParams.specialty
+                      ? `AI filtresi: ${[queryParams.city, queryParams.specialty].filter(Boolean).join(' · ')}`
+                      : queryParams.appliedOnly
+                        ? 'Sadece size başvurmuş doktorlar listeleniyor'
+                        : 'Sistemde kayıtlı tüm onaylı doktorlar listeleniyor'}
+                  </p>
+                </div>
+                {aiFilters && (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 px-3 py-1 rounded-full">
+                    <BrainCircuit className="w-3 h-3" />
+                    AI etkin
+                  </span>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {pagination.pages > 1 && (
-            <div className="flex items-center justify-center gap-4 mt-8">
-              <button
-                onClick={() => handleFilterChange('page', pagination.page - 1)}
-                disabled={pagination.page <= 1}
-                className="bg-white/10 border border-white/20 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Önceki
-              </button>
-              
-              <div className="flex items-center gap-2">
-                {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                  const page = i + 1;
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => handleFilterChange('page', page)}
-                      className={`px-4 py-2 rounded-xl transition-all duration-300 ${
-                        page === pagination.page
-                          ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                          : 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQueryParams((prev) => ({
+                      ...prev,
+                      page: 1,
+                      appliedOnly: !prev.appliedOnly,
+                    }))
+                  }
+                  className={`${ghostButton} border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600`}
+                >
+                  {queryParams.appliedOnly ? 'Sadece başvuranlar' : 'Tüm doktorlar'}
+                </button>
               </div>
 
-              <button
-                onClick={() => handleFilterChange('page', pagination.page + 1)}
-                disabled={pagination.page >= pagination.pages}
-                className="bg-white/10 border border-white/20 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Sonraki
-              </button>
+              {doctors.length > 0 ? (
+                <div className="mt-6 space-y-4">
+                  {doctors.map((doctor, index) => (
+                    <StaggeredAnimation key={doctor.id} delay={index * 80}>
+                      <article className={`${listCard} flex-col space-y-4`}>
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center text-white">
+                              {doctor.first_name || doctor.last_name ? (
+                                <span className="text-lg font-semibold">{getInitials(doctor.first_name, doctor.last_name)}</span>
+                              ) : (
+                                <User className="w-6 h-6" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h3 className="text-lg font-semibold text-slate-900">
+                                  {doctor.first_name && doctor.last_name
+                                    ? `${doctor.first_name} ${doctor.last_name}`
+                                    : 'Bilinmeyen Doktor'}
+                                </h3>
+                                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                  <CheckCircle className="w-3 h-3" />
+                                  Onaylı
+                                </span>
+                                {typeof doctor.has_applied !== 'undefined' && (
+                                  <span
+                                    className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
+                                      doctor.has_applied
+                                        ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                                        : 'bg-slate-50 text-slate-500 border border-slate-100'
+                                    }`}
+                                  >
+                                    {doctor.has_applied ? 'Başvurusu var' : 'Henüz başvurmadı'}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-slate-500">{formatSpecialties(doctor.specialties)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <Calendar className="w-3 h-3" />
+                            {doctor.created_at ? new Date(doctor.created_at).toLocaleDateString('tr-TR') : '—'}
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 text-sm text-slate-600 md:grid-cols-3">
+                          <div className="flex items-center gap-2">
+                            <Target className="w-4 h-4 text-violet-500" />
+                            <span>{doctor.title || 'Uzman Doktor'}</span>
+                          </div>
+                          {doctor.residence_city_name && (
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-rose-500" />
+                              <span>{doctor.residence_city_name}</span>
+                            </div>
+                          )}
+                          {doctor.phone && (
+                            <div className="flex items-center gap-2">
+                              <Phone className="w-4 h-4 text-emerald-500" />
+                              <span>{doctor.phone}</span>
+                            </div>
+                          )}
+                          {doctor.email && (
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4 text-blue-500" />
+                              <span className="truncate">{doctor.email}</span>
+                            </div>
+                          )}
+                          {doctor.dob && (
+                            <div className="flex items-center gap-2">
+                              <Compass className="w-4 h-4 text-amber-500" />
+                              <span>{calculateAge(doctor.dob)} yaş</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between pt-4 border-t border-slate-100">
+                          <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+                            <span className="px-3 py-1 rounded-full bg-white border border-slate-100">
+                              Başvuru #{doctor.id}
+                            </span>
+                            {doctor.region && (
+                              <span className="px-3 py-1 rounded-full bg-white border border-slate-100">
+                                Bölge: {doctor.region}
+                              </span>
+                            )}
+                          </div>
+                          <Link
+                            to={`/hospital/doctors/${doctor.id}`}
+                            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-violet-600 text-white text-sm font-semibold px-5 py-2 rounded-xl hover:shadow-lg hover:shadow-blue-200 transition"
+                          >
+                            Profili Gör
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                        </div>
+                      </article>
+                    </StaggeredAnimation>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg text-white">
+                    <Users className="w-12 h-12" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">Kriterlere uygun doktor bulunamadı</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    AI filtresini sıfırlayabilir veya farklı bir arama komutu deneyebilirsiniz.
+                  </p>
+                  <button
+                    onClick={clearAiFilters}
+                    className={`${ghostButton} border-slate-200 text-slate-600 hover:border-violet-400 hover:text-violet-600`}
+                  >
+                    Filtreyi Temizle
+                  </button>
+                </div>
+              )}
+
+              {pagination.pages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-10">
+                  <button
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                    disabled={pagination.page <= 1}
+                    className={`${paginationButton} text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    Önceki
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                      const page = i + 1;
+                      const isCurrent = page === pagination.page;
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`${paginationButton} ${
+                            isCurrent
+                              ? 'bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-md'
+                              : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                    disabled={pagination.page >= pagination.pages}
+                    className={`${paginationButton} text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    Sonraki
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </TransitionWrapper>
     </div>
@@ -443,3 +574,5 @@ const HospitalDoctors = () => {
 };
 
 export default HospitalDoctors;
+
+
