@@ -291,9 +291,11 @@ export const useHospitalApplications = (filters = {}) => {
       return apiRequest.get(`${ENDPOINTS.HOSPITAL.APPLICATIONS}${queryString}`);
     },
     select: (res) => res.data,
-    ...liveQueryConfig({ 
+    // OPTİMİZE: liveQueryConfig yerine listQueryConfig kullan (cache ile hızlandırma)
+    // SEMI_REALTIME strateji: 30s cache, refetchOnMount: false, refetchOnWindowFocus: false
+    ...listQueryConfig({ 
       enabled: !!userId, 
-      keepPreviousData: false,
+      keepPreviousData: true, // Filtre değiştiğinde önceki veriyi göster (daha iyi UX)
     }),
   });
 };

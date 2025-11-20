@@ -1,67 +1,17 @@
 /**
  * @file ModalContainer.jsx
- * @description Modal Container Component - Merkezi modal yönetim bileşeni
- * 
- * Bu bileşen, uygulama genelinde kullanılan tüm modal'lar için merkezi bir container sağlar.
- * Dark theme varsayılan olarak ayarlanmıştır ve modern glassmorphism tasarım kullanır.
- * 
- * Ana Özellikler:
- * - Body scroll kilitleme: Modal açıkken arka plan scroll'u engellenir
- * - ESC tuşu desteği: Klavye ile modal kapatma
- * - Backdrop click: Arka plana tıklayarak kapatma
- * - Focus trap: Modal içinde odak yönetimi (Tab tuşu ile)
- * - Responsive tasarım: Mobil ve desktop uyumlu
- * - Scroll pozisyon koruma: Modal açılıp kapanırken scroll pozisyonu korunur
- * - Erişilebilirlik (A11y): ARIA atributları, role="dialog", aria-modal
- * - Animasyonlar: Fade-in ve zoom-in efektleri
- * - Hizalama seçenekleri: center, top, bottom (varsayılan: bottom)
- * - Boyut seçenekleri: small, medium, large, xl (varsayılan: medium)
- * 
- * Kullanım Örnekleri:
- * ```jsx
- * <ModalContainer
- *   isOpen={isOpen}
- *   onClose={handleClose}
- *   title="Başlık"
- *   size="medium"
- *   align="bottom"
- * >
- *   <p>Modal içeriği</p>
- * </ModalContainer>
- * ```
- * 
- * Teknik Detaylar:
- * - useRef kullanarak scroll pozisyonu kaydedilir (closure sorunu önlenir)
- * - requestAnimationFrame ile güvenli scroll restore
- * - Event listener cleanup ile memory leak önlenir
- * - Portal kullanılmaz, direkt DOM'da render edilir
- * 
- * @author MediKariyer Development Team
- * @version 2.0.0
- * @since 2024
+ * @description Viewport merkezli global modal bileşeni
  */
 
-import React, { useEffect, useRef, useCallback, useMemo, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import {
-  useFloating,
-  flip,
-  shift,
-  offset,
-  autoUpdate
-} from '@floating-ui/react';
 
 let bodyLockCount = 0;
-let savedScrollY = 0;
 
 const lockBodyScroll = () => {
   if (typeof document === 'undefined') return;
   if (bodyLockCount === 0) {
-    savedScrollY = window.scrollY || window.pageYOffset;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${savedScrollY}px`;
-    document.body.style.width = '100%';
     document.body.style.overflow = 'hidden';
   }
   bodyLockCount += 1;
@@ -72,71 +22,118 @@ const unlockBodyScroll = () => {
   if (bodyLockCount === 0) return;
   bodyLockCount -= 1;
   if (bodyLockCount === 0) {
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
     document.body.style.overflow = '';
-    const scrollToRestore = savedScrollY;
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollToRestore);
-    });
   }
 };
 
-const getModalRoot = () => {
-  if (typeof document === 'undefined') return null;
-  return document.getElementById('modal-root');
-};
-
-export const ModalContainer = ({ 
-  isOpen, 
-  onClose, 
-  children, 
+export const ModalContainer = ({
+  isOpen,
+  onClose,
+  children,
   title,
   size = 'medium',
   closeOnBackdrop = true,
-  maxHeight = '90vh',
+  maxHeight = '85vh',
   showCloseButton = true,
-  align = 'bottom',
+  align = 'center',
   initialFocusRef,
   fullScreenOnMobile = false,
-  anchorRect = null,
-  placement = 'bottom',
-  offsetDistance = 16,
   backdropClassName = '',
-  containerClassName = ''
+  containerClassName = '',
 }) => {
   const modalRef = useRef(null);
+  const overlayRef = useRef(null);
+  const rafIdRef = useRef(null);
   const labelledByIdRef = useRef(null);
   if (!labelledByIdRef.current) {
     labelledByIdRef.current = `modal-title-${Math.random().toString(36).slice(2)}`;
   }
   const labelledById = labelledByIdRef.current;
-  const modalRoot = getModalRoot();
 
-  const hasAnchor = Boolean(anchorRect);
-
-  const virtualReference = useMemo(() => {
-    if (!anchorRect) return null;
-    return {
-      getBoundingClientRect: () => anchorRect
+  // Modal'ın her zaman viewport'un görünür alanında kalmasını sağla
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) {
+      return;
+    }
+    
+    const adjustModal = () => {
+      const modalElement = modalRef.current;
+      if (!modalElement) return;
+      
+      // Viewport bilgilerini al
+      const viewportHeight = window.innerHeight || 0;
+      const padding = 16; // Overlay padding'i (p-4 = 16px)
+      
+      // maxHeight prop'u varsa onu dikkate al, yoksa viewport'a göre hesapla
+      let maxModalHeight;
+      if (typeof maxHeight === 'string' && maxHeight.endsWith('vh')) {
+        const vhValue = parseFloat(maxHeight);
+        maxModalHeight = (viewportHeight * vhValue) / 100;
+      } else {
+        maxModalHeight = viewportHeight - (padding * 2);
+      }
+      
+      // Viewport'a sığmayacak kadar büyükse, viewport'a göre ayarla
+      const viewportMaxHeight = viewportHeight - (padding * 2);
+      if (maxModalHeight > viewportMaxHeight) {
+        maxModalHeight = viewportMaxHeight;
+      }
+      
+      // Modal'ın max-height'ını ayarla
+      modalElement.style.maxHeight = `${maxModalHeight}px`;
+      
+      // Modal içeriğinin scroll edilebilir olduğundan emin ol
+      const contentElement = modalElement.querySelector('[class*="overflow-y-auto"]');
+      if (contentElement) {
+        const headerHeight = 80; // Yaklaşık header yüksekliği
+        const contentMaxHeight = maxModalHeight - headerHeight;
+        contentElement.style.maxHeight = `${contentMaxHeight}px`;
+      }
+      
+      // Modal'ı overlay içinde görünür alana getir
+      // Overlay overflow-y-auto olduğu için, modal'ı overlay'in scroll pozisyonuna göre ayarlıyoruz
+      if (overlayRef.current) {
+        // Modal render edildikten sonra, modal'ı overlay içinde görünür alana scroll et
+        const modalRect = modalElement.getBoundingClientRect();
+        const overlayRect = overlayRef.current.getBoundingClientRect();
+        
+        // Modal'ın overlay içindeki pozisyonunu hesapla
+        const modalTopRelativeToOverlay = modalRect.top - overlayRect.top + overlayRef.current.scrollTop;
+        
+        // Modal'ı overlay'in görünür alanına getir
+        // Eğer modal overlay'in üstündeyse veya altındaysa, scroll yap
+        const padding = 16;
+        const desiredScrollTop = modalTopRelativeToOverlay - padding;
+        
+        if (desiredScrollTop > 0 && Math.abs(overlayRef.current.scrollTop - desiredScrollTop) > 10) {
+          overlayRef.current.scrollTo({
+            top: desiredScrollTop,
+            behavior: 'smooth'
+          });
+        }
+      }
     };
-  }, [anchorRect]);
-
-  const {
-    refs,
-    floatingStyles,
-    update
-  } = useFloating({
-    placement,
-    middleware: [
-      offset(offsetDistance),
-      flip({ padding: 16 }),
-      shift({ padding: 16 })
-    ],
-    strategy: 'fixed',
-    whileElementsMounted: hasAnchor ? autoUpdate : undefined
-  });
+    
+    // İlk ayarlama - render tamamlandıktan sonra
+    const timeoutId = setTimeout(adjustModal, 100);
+    
+    // Resize ve orientation change event'lerini dinle
+    window.addEventListener('resize', adjustModal);
+    window.addEventListener('orientationchange', adjustModal);
+    
+    // Modal içeriği değiştiğinde yeniden ayarla
+    const observer = new ResizeObserver(adjustModal);
+    if (modalRef.current) {
+      observer.observe(modalRef.current);
+    }
+    
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', adjustModal);
+      window.removeEventListener('orientationchange', adjustModal);
+      observer.disconnect();
+    };
+  }, [isOpen, maxHeight]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -146,202 +143,139 @@ export const ModalContainer = ({
     };
   }, [isOpen]);
 
-  const calculateViewportPosition = useCallback(() => {
-    if (typeof window === 'undefined') {
-      return {
-        center: 0,
-        top: 0,
-        bottom: 0
-      };
-    }
-    const scrollY = window.scrollY || window.pageYOffset;
-    const innerHeight = window.innerHeight;
-    const topPadding = Math.min(innerHeight / 4, 160);
-    return {
-      center: scrollY + innerHeight / 2,
-      top: scrollY + topPadding,
-      bottom: scrollY + innerHeight - topPadding
-    };
-  }, []);
-
-  const [viewportPosition, setViewportPosition] = useState(() => calculateViewportPosition());
-
   useEffect(() => {
-    if (!isOpen || hasAnchor) return;
-    const handleReposition = () => {
-      setViewportPosition(calculateViewportPosition());
+    if (!isOpen) return;
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
     };
-    handleReposition();
-    window.addEventListener('scroll', handleReposition, { passive: true });
-    window.addEventListener('resize', handleReposition);
+
+    const handleKeyTrap = (e) => {
+      if (e.key !== 'Tab') return;
+      const root = modalRef.current;
+      if (!root) return;
+      const focusable = root.querySelectorAll(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        last.focus();
+        e.preventDefault();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        first.focus();
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    document.addEventListener('keydown', handleKeyTrap);
+
+    setTimeout(() => {
+      if (initialFocusRef?.current) {
+        initialFocusRef.current.focus();
+      }
+    }, 0);
+
     return () => {
-      window.removeEventListener('scroll', handleReposition);
-      window.removeEventListener('resize', handleReposition);
+      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener('keydown', handleKeyTrap);
     };
-  }, [isOpen, hasAnchor, calculateViewportPosition]);
-
-  useEffect(() => {
-    if (!isOpen || !virtualReference) return;
-    refs.setReference(virtualReference);
-    update?.();
-  }, [isOpen, virtualReference, refs, update]);
-
-  useEffect(() => {
-    if (!isOpen || !modalRoot) return;
-    const handleResize = () => {
-      update?.();
-    };
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('orientationchange', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('orientationchange', handleResize);
-    };
-  }, [isOpen, modalRoot, update]);
-
-  useEffect(() => {
-    if (isOpen) {
-      // ESC tuşu ile kapatma
-      const handleEscape = (e) => {
-        if (e.key === 'Escape') {
-          onClose();
-        }
-      };
-
-      // Focus trap (Tab tuşu için)
-      const handleKeyTrap = (e) => {
-        if (e.key !== 'Tab') return;
-        const root = modalRef.current;
-        if (!root) return;
-        const focusable = root.querySelectorAll(
-          'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])'
-        );
-        if (!focusable.length) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          last.focus();
-          e.preventDefault();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          first.focus();
-          e.preventDefault();
-        }
-      };
-
-      document.addEventListener('keydown', handleEscape);
-      document.addEventListener('keydown', handleKeyTrap);
-
-      // Initial focus
-      setTimeout(() => {
-        if (initialFocusRef?.current) {
-          initialFocusRef.current.focus();
-        }
-      }, 0);
-
-      return () => {
-        // Cleanup: body lock'u kaldır ve scroll pozisyonunu restore et
-        document.removeEventListener('keydown', handleEscape);
-        document.removeEventListener('keydown', handleKeyTrap);
-      };
-    }
   }, [isOpen, onClose, initialFocusRef]);
 
-  useLayoutEffect(() => {
-    if (hasAnchor && modalRef.current) {
-      refs.setFloating(modalRef.current);
-    }
-  }, [hasAnchor, refs]);
+  const handleBackdropClick = useCallback(
+    (e) => {
+      if (!closeOnBackdrop) return;
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    },
+    [closeOnBackdrop, onClose]
+  );
 
-  const handleBackdropClick = useCallback((e) => {
-    if (!closeOnBackdrop) return;
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [closeOnBackdrop, onClose]);
+  // Eğer DOM henüz hazır değilse null dön
+  if (typeof document === 'undefined') return null;
+  if (!isOpen) return null;
 
-  if (!isOpen || !modalRoot) return null;
-
-  // Size configuration
   const sizeConfig = {
     small: 'max-w-md',
     medium: 'max-w-3xl',
     large: 'max-w-5xl',
-    xl: 'max-w-7xl'
+    xl: 'max-w-7xl',
+  };
+
+  const alignmentClasses = {
+    center: 'items-center justify-center',
+    top: 'items-start justify-center pt-10',
+    bottom: 'items-end justify-center pb-10',
+    start: 'items-start justify-center pt-10',
+    end: 'items-end justify-center pb-10',
+    left: 'items-center justify-start pl-6',
+    right: 'items-center justify-end pr-6',
   };
 
   const containerResponsive = fullScreenOnMobile
     ? 'md:rounded-2xl md:max-w-[inherit] md:w-full md:h-auto h-screen max-w-none rounded-none'
     : '';
 
-  const overlayClasses = hasAnchor
-    ? 'fixed inset-0 bg-slate-950/55 backdrop-blur-[3px] z-[100] flex items-start justify-start p-0 animate-in fade-in duration-200'
-    : 'fixed inset-0 bg-slate-950/55 backdrop-blur-[3px] z-[100] animate-in fade-in duration-200';
+  // Overlay viewport'u kaplar (fixed inset-0) ve modal'ı üstten başlatır
+  // Overlay'e overflow-y-auto ekleyerek modal'ı overlay içinde scroll edilebilir yapıyoruz
+  // Böylece modal her zaman viewport'un görünür alanında kalır
+  // items-start kullanarak modal'ı overlay'in üstüne yerleştiriyoruz (center yerine)
+  const overlayClasses = [
+    'fixed inset-0 bg-slate-950/55 backdrop-blur-[3px] z-[100] animate-in fade-in duration-200 flex',
+    'items-start justify-center', // items-center yerine items-start - modal üstten başlasın
+    backdropClassName,
+    // Overlay içinde padding - modal her zaman görünür alanda kalır
+    'pt-4 md:pt-6 pb-4 md:pb-6 px-4 md:px-6',
+    // Overlay'e scroll ekle - modal viewport dışına taşırsa overlay içinde scroll edilebilir
+    'overflow-y-auto',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const modalClasses = [
-    'bg-white/95 backdrop-blur-2xl rounded-[28px] shadow-[0_30px_120px_rgba(15,23,42,0.18)] ring-1 ring-white/50 w-full',
+    'bg-white/95 backdrop-blur-2xl rounded-[28px] shadow-[0_30px_120px_rgba(15,23,42,0.18)] ring-1 ring-white/50 w-full pointer-events-auto',
     sizeConfig[size],
     containerResponsive,
     'flex flex-col animate-in zoom-in-95 duration-300 border border-white/60',
-    containerClassName
-  ].filter(Boolean).join(' ');
+    containerClassName,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-  let modalStyle;
-  if (hasAnchor) {
-    modalStyle = {
-      ...floatingStyles,
-      maxHeight,
-      overflow: 'hidden'
-    };
-  } else {
-    const { center, top, bottom } = viewportPosition;
-    let topValue = center;
-    let leftValue = '50%';
-    let transformValue = 'translate(-50%, -50%)';
-
-    if (align === 'top' || align === 'start') {
-      topValue = top;
-      transformValue = 'translate(-50%, 0)';
-    } else if (align === 'bottom' || align === 'end') {
-      topValue = bottom;
-      transformValue = 'translate(-50%, -100%)';
+  // maxHeight prop'unu viewport'a göre dinamik olarak ayarla
+  // Eğer vh birimiyse (örn: "85vh"), viewport'a göre hesapla
+  // Aksi halde prop değerini kullan
+  const getMaxHeight = () => {
+    if (typeof maxHeight === 'string' && maxHeight.endsWith('vh')) {
+      const vhValue = parseFloat(maxHeight);
+      const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+      return `${(viewportHeight * vhValue) / 100}px`;
     }
+    return maxHeight;
+  };
 
-    if (align === 'left') {
-      leftValue = '2rem';
-      transformValue = 'translate(0, -50%)';
-    } else if (align === 'right') {
-      leftValue = 'calc(100% - 2rem)';
-      transformValue = 'translate(-100%, -50%)';
-    }
+  const modalStyle = {
+    maxHeight: getMaxHeight(),
+    overflow: 'hidden',
+  };
 
-    modalStyle = {
-      position: 'absolute',
-      top: `${topValue}px`,
-      left: leftValue,
-      transform: transformValue,
-      maxHeight,
-      overflow: 'hidden'
-    };
-  }
-  
   return createPortal(
-    <div 
-      className={`${overlayClasses} ${backdropClassName}`.trim()}
-      onClick={handleBackdropClick}
-    >
-      <div className="relative z-[101] w-full h-full pointer-events-none">
-        <div
-          ref={modalRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={title ? labelledById : undefined}
-          className={`${modalClasses} pointer-events-auto`}
-          style={modalStyle}
-          onClick={(e) => e.stopPropagation()}
-        >
-        {/* Header */}
+    <div ref={overlayRef} className={overlayClasses} onClick={handleBackdropClick}>
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? labelledById : undefined}
+        className={modalClasses}
+        style={modalStyle}
+        onClick={(e) => e.stopPropagation()}
+      >
         {(title || showCloseButton) && (
-          <div className="relative flex items-center justify-between gap-4 p-5 md:p-6 border-b border-white/70 bg-gradient-to-r from-blue-50 via-indigo-50 to-slate-50/80 flex-shrink-0">
+          <div className="relative flex items-center justify-between gap-4 p-5 md:p-6 border-b border-white/70 bg-gradient-to-r from-blue-50 via-indigo-50 to-slate-50/80 flex-shrink-0 rounded-t-[28px]">
             {title && (
               <h2 id={labelledById} className="relative text-xl md:text-2xl font-semibold text-slate-900 tracking-tight">
                 {title}
@@ -359,16 +293,12 @@ export const ModalContainer = ({
           </div>
         )}
 
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-5 md:p-8 bg-gradient-to-b from-white via-white to-slate-50 relative">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-5 md:p-8 bg-gradient-to-b from-white via-white to-slate-50 relative rounded-b-[28px]">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.08),transparent_45%)]" />
-          <div className="relative">
-          {children}
-          </div>
+          <div className="relative">{children}</div>
         </div>
       </div>
-      </div>
     </div>,
-    modalRoot
+    document.body // DEĞİŞİKLİK: Modal'ı direkt body'ye bindir - #root'taki transform'dan etkilenmez
   );
 };

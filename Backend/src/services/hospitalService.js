@@ -893,24 +893,25 @@ const getApplications = async (userId, jobId, params = {}) => {
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
-        'a.*',
+        // OPTİMİZASYON: a.* yerine sadece kullanılan alanları seç
+        // cover_letter ve notes (nvarchar(max)) çok büyük olabilir - sadece detay sayfasında gösterilir
+        'a.id',
+        'a.job_id',
+        'a.doctor_profile_id',
+        'a.status_id',
+        'a.applied_at',
         // Pasif doktorlar için bilgileri gizle (SQL Server bit tipi için güvenli kontrol)
         // Aktif edildiğinde (is_active = 1) bilgiler tekrar görünür olacak
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.first_name END as first_name'),
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.last_name END as last_name'),
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.phone END as phone'),
-        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.profile_photo END as profile_photo'),
-        'dp.specialty_id',
+        // OPTİMİZASYON: profile_photo ve specialty_id kaldırıldı - liste sayfasında gerekli değil
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE u.email END as email'),
         'u.is_active as doctor_is_active',
         'ast.name as status',
         'j.title as job_title',
-        'j.min_experience_years',
-        'j.employment_type',
         'j.created_at as job_created_at',
-        'c.name as job_city',
-        's.name as specialty_name',
-        'j.status_id as job_status_id',
+        // OPTİMİZASYON: Kullanılmayan iş ilanı alanları kaldırıldı
         'js.name as job_status'
       );
 
@@ -1038,25 +1039,28 @@ const getAllApplications = async (userId, params = {}) => {
       .whereNull('a.deleted_at') // Soft delete: Silinmiş başvuruları gösterme
       .whereNull('j.deleted_at') // Soft delete: Silinmiş iş ilanlarına ait başvuruları gösterme
       .select(
-        'a.*',
+        // OPTİMİZASYON: a.* yerine sadece kullanılan alanları seç
+        // cover_letter ve notes (nvarchar(max)) çok büyük olabilir - sadece detay sayfasında gösterilir
+        'a.id',
+        'a.job_id',
+        'a.doctor_profile_id',
+        'a.status_id',
+        'a.applied_at',
         // Pasif doktorlar için bilgileri gizle (SQL Server bit tipi için güvenli kontrol)
         // Aktif edildiğinde (is_active = 1) bilgiler tekrar görünür olacak
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.first_name END as first_name'),
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.last_name END as last_name'),
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.phone END as phone'),
-        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.profile_photo END as profile_photo'),
-        'dp.specialty_id',
+        // OPTİMİZASYON: profile_photo ve specialty_id kaldırıldı - liste sayfasında gerekli değil
+        // 'dp.profile_photo' - base64 1-2 MB olabilir
+        // 'dp.specialty_id' - kullanılmıyor
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE u.email END as email'),
         'u.is_active as doctor_is_active',
         'ast.name as status',
         'j.title as job_title',
-        'j.id as job_id',
-        'j.min_experience_years',
-        'j.employment_type',
         'j.created_at as job_created_at',
-        'c.name as job_city',
-        's.name as specialty_name',
-        'j.status_id as job_status_id',
+        // OPTİMİZASYON: Kullanılmayan iş ilanı alanları kaldırıldı
+        // 'j.min_experience_years', 'j.employment_type', 'c.name as job_city', 's.name as specialty_name', 'j.status_id' kaldırıldı
         'js.name as job_status'
       );
 

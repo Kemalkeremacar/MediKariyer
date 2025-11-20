@@ -3,7 +3,7 @@
  * @description Fotoğraf Yönetimi Sayfası - Profil fotoğrafı yükleme ve değiştirme işlemleri
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, ArrowLeft, Clock, AlertCircle, Info, Upload, RefreshCw, CheckCircle, XCircle, Image as ImageIcon, History } from 'lucide-react';
 import { showToast } from '@/utils/toastUtils';
@@ -76,6 +76,7 @@ const PhotoManagementPage = () => {
   const fileInputRef = useRef(null);
   const prevProfilePhotoRef = useRef(profile?.profile_photo || null);
   const prevUserIdRef = useRef(userId);
+  const [pendingOverride, setPendingOverride] = useState(null);
   // Persist pending state across refreshes (key depends on current user)
   const getStorageKey = () => getPendingStorageKey(userId);
   // Local history cache key per user
@@ -83,6 +84,17 @@ const PhotoManagementPage = () => {
   
   // İlk render'da localStorage'dan history yükle (senkron)
   const [localHistory, setLocalHistory] = useState(historyCache);
+  const updateHistoryState = useCallback((updater) => {
+    setLocalHistory((prev) => {
+      const nextHistory = typeof updater === 'function' ? updater(prev) : updater;
+      if (userId) {
+        try {
+          localStorage.setItem(getHistoryStorageKey(userId), JSON.stringify(nextHistory));
+        } catch (_) {}
+      }
+      return nextHistory;
+    });
+  }, [userId]);
 
   // Kullanıcı değiştiğinde (logout vs) diğer kullanıcıya ait cache'leri temizle
   useEffect(() => {
@@ -153,6 +165,7 @@ const PhotoManagementPage = () => {
 
   // Backend'den gelen pending request'i tespit et ve state'i güncelle
   useEffect(() => {
+    setPendingOverride(null);
     // Backend'de pending request var
     if (statusObjStatus === 'pending') {
       setAwaitingApproval(true);
@@ -260,16 +273,19 @@ const PhotoManagementPage = () => {
         .slice(0, 50)
         .map(item => ({ ...item, userId: user?.id })); // Her item'a userId ekle (kişiye özel cache)
       
-      setLocalHistory(merged);
-      localStorage.setItem(getHistoryKey(), JSON.stringify(merged));
+      updateHistoryState(merged);
     } catch (_) {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photoRequestStatus, historyList.length, user?.id]);
+  }, [photoRequestStatus, historyList.length, user?.id, updateHistoryState]);
 
   // Sağ taraftaki önizleme başlangıçta boş kalmalı; sadece seçim yapılınca dolacak
 
   // Pending request durumunu kontrol et
-  const hasPendingRequest = statusObjStatus === 'pending' || awaitingApproval;
+  const hasPendingRequest = pendingOverride !== null
+    ? pendingOverride
+    : (statusObjStatus === 'pending' || awaitingApproval);
+  const isInitialStatusLoading = isStatusLoading && !photoRequestStatus;
+  const disableUploadActions = isInitialStatusLoading || hasPendingRequest || isUploading || requestPhotoChangeMutation.isPending;
 
   // On pending request status changes, auto-refresh and reset UI when completed
   useEffect(() => {
@@ -366,11 +382,13 @@ const PhotoManagementPage = () => {
 
     // ⚡ OPTIMISTIC UPDATE: UI'ı HEMEN güncelle (backend'den cevap beklemeden)
     setAwaitingApproval(true);
+    setPendingOverride(true);
     setSubmissionMessage({ type: 'success', text: 'Değiştirme talebiniz gönderildi. Admin onayı bekleniyor.' });
 
     // Geçici olarak localStorage'a kaydet (sayfa yenileme için - KİŞİYE ÖZEL KEY)
+    let maybePreview = null;
     try {
-      const maybePreview = typeof base64ToSend === 'string' && base64ToSend.length <= 300000 ? base64ToSend : null;
+      maybePreview = typeof base64ToSend === 'string' && base64ToSend.length <= 300000 ? base64ToSend : null;
       localStorage.setItem(
         getStorageKey(), // user?.id içeren kişiye özel key
         JSON.stringify({
@@ -381,6 +399,19 @@ const PhotoManagementPage = () => {
         }),
       );
     } catch (_) {}
+
+    updateHistoryState((prev) => {
+      const optimisticEntry = {
+        id: `pending-${Date.now()}`,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+        file_url: maybePreview,
+        optimistic: true,
+        userId: user?.id,
+      };
+      const withoutOldOptimistic = prev.filter((item) => !(item.optimistic && item.status === 'pending'));
+      return [optimisticEntry, ...withoutOldOptimistic].slice(0, 50);
+    });
 
     setIsUploading(true);
 
@@ -396,6 +427,7 @@ const PhotoManagementPage = () => {
     } catch (error) {
       // ❌ HATA: Optimistic update'i geri al
       setAwaitingApproval(false);
+      setPendingOverride(false);
       setSubmissionMessage({ type: 'error', text: 'Fotoğraf yüklenemedi. Lütfen dosya türü/boyutunu ve bağlantınızı kontrol edin.' });
       try { localStorage.removeItem(getStorageKey()); } catch (_) {}
       showToast.error(toastMessages.photoManagement.uploadError);
@@ -410,10 +442,27 @@ const PhotoManagementPage = () => {
       // Toast mesajı useCancelPhotoRequest hook'u içinde gösteriliyor, burada tekrar göstermeye gerek yok
       // UI ve yerel durumu hemen senkronize et
       setAwaitingApproval(false);
+      setPendingOverride(false);
       setSelectedFile(null);
       setPhotoPreview(null);
       setSubmissionMessage(null);
       try { localStorage.removeItem(getStorageKey()); } catch (_) {}
+      updateHistoryState((prev) => {
+        let updated = false;
+        const mapped = prev.map((item) => {
+          if (!updated && item.status === 'pending') {
+            updated = true;
+            return {
+              ...item,
+              status: 'cancelled',
+              updated_at: new Date().toISOString(),
+              optimistic: false,
+            };
+          }
+          return item;
+        });
+        return mapped;
+      });
       // Sunucu durumunu tazele
       refetchStatus();
       refetchProfile();
@@ -484,17 +533,36 @@ const PhotoManagementPage = () => {
                     <Camera className="w-16 h-16 text-gray-500" />
                   )}
                 </div>
-                {hasPendingRequest && (
+                {isInitialStatusLoading && (
+                  <div className="w-full mb-3 p-3 flex items-center gap-2 rounded-lg border-l-4 border-blue-400 bg-blue-50 text-blue-700">
+                    <RefreshCw className="w-4 h-4 flex-shrink-0 animate-spin" />
+                    <span>Fotoğraf talep durumu yükleniyor. Lütfen birkaç saniye bekleyin.</span>
+                  </div>
+                )}
+                {hasPendingRequest && !isInitialStatusLoading && (
                   <div className="w-full mb-3 p-3 flex items-center gap-2 rounded-lg border-l-4 border-amber-400 bg-amber-50 text-amber-700">
                     <Clock className="w-4 h-4 flex-shrink-0" />
                     <span>Onay bekleyen talebiniz var. Yeni yükleme için önce iptal edin.</span>
-                    <button onClick={handleCancelRequest} className="ml-auto px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-md">İptal Et</button>
+                    <button
+                      onClick={handleCancelRequest}
+                      disabled={cancelPhotoRequestMutation.isPending}
+                      className={`ml-auto px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded-md ${cancelPhotoRequestMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    >
+                      {cancelPhotoRequestMutation.isPending ? 'İptal ediliyor...' : 'İptal Et'}
+                    </button>
                   </div>
                 )}
                 {!hasPendingRequest && (
                   <>
-                    <label className="block w-full">
-                      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={isUploading} />
+                    <label className={`block w-full ${disableUploadActions ? 'pointer-events-none opacity-60' : ''}`}>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handlePhotoChange}
+                        disabled={disableUploadActions}
+                      />
                       <span className="w-full flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl px-6 py-3 mb-2 cursor-pointer text-base shadow-md transition-all duration-150">
                         <Upload className="w-5 h-5 mr-2" /> Yeni Fotoğraf Seç
                       </span>
@@ -503,14 +571,22 @@ const PhotoManagementPage = () => {
                       <button
                         onClick={handlePhotoUpload}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-xl text-white font-semibold shadow-md text-base transition-all"
-                        disabled={isUploading || awaitingApproval || statusObjStatus === 'pending'}
+                        disabled={disableUploadActions}
                       >
                         {isUploading ? (
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                        ) : hasPendingRequest ? (
+                          <Clock className="w-5 h-5" />
+                        ) : disableUploadActions && isInitialStatusLoading ? (
                           <RefreshCw className="w-5 h-5 animate-spin" />
                         ) : (
                           <Camera className="w-5 h-5" />
                         )}
-                        {awaitingApproval || statusObjStatus === 'pending' ? 'Onay Bekleniyor...' : 'Değiştirme Talebi Gönder'}
+                        {disableUploadActions
+                          ? hasPendingRequest
+                            ? 'Onay Bekleniyor...'
+                            : 'Durum yükleniyor...'
+                          : 'Değiştirme Talebi Gönder'}
                       </button>
                     )}
                   </>

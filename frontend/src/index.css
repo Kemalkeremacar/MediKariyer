@@ -12,6 +12,7 @@
 html {
   overflow-x: hidden;
   scroll-behavior: smooth;
+  scrollbar-gutter: stable both-edges;
 }
 
 body {
@@ -768,11 +769,8 @@ body {
   background-color: #0f172a; /* Dark theme için koyu mavi-gri */
   color: var(--text-primary);
   line-height: 1.6;
-  /* Beyaz flash'ı önlemek için */
-  -webkit-transform: translateZ(0);
-  -moz-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  transform: translateZ(0);
+  /* NOT: transform: translateZ(0) kaldırıldı - position: fixed elementleri bozuyordu */
+  /* Beyaz flash'ı önlemek için backface-visibility yeterli */
   -webkit-backface-visibility: hidden;
   -moz-backface-visibility: hidden;
   -ms-backface-visibility: hidden;
@@ -790,10 +788,7 @@ body {
   scroll-padding-top: 0;
   scroll-behavior: smooth;
   min-height: 100vh;
-  -webkit-transform: translateZ(0);
-  -moz-transform: translateZ(0);
-  -ms-transform: translateZ(0);
-  transform: translateZ(0);
+  /* NOT: transform: translateZ(0) kaldırıldı - position: fixed elementleri bozuyordu */
 }
 
 /* SCROLL SORUNLARINI ÇÖZEN KURALLAR - TEMİZLENMİŞ */
@@ -917,11 +912,11 @@ textarea:-webkit-autofill,
 textarea:-webkit-autofill:hover,
 textarea:-webkit-autofill:focus,
 textarea:-webkit-autofill:active {
-  -webkit-text-fill-color: rgb(255, 255, 255) !important;
-  -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset !important;
-  box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.05) inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(248, 250, 252, 0.95) inset !important;
+  box-shadow: 0 0 0px 1000px rgba(248, 250, 252, 0.95) inset !important;
   transition: background-color 5000s ease-in-out 0s;
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background-color: rgba(248, 250, 252, 0.95) !important;
 }
 
 /* Autofill stilleri - Beyaz tema için (login, register pages) */
@@ -949,7 +944,7 @@ textarea:-webkit-autofill:active {
 .modern-card textarea:-webkit-autofill:hover,
 .modern-card textarea:-webkit-autofill:focus,
 .modern-card textarea:-webkit-autofill:active {
-  -webkit-text-fill-color: rgb(30, 58, 138) !important;
+  -webkit-text-fill-color: #0f172a !important;
   -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.95) inset !important;
   box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.95) inset !important;
   transition: background-color 5000s ease-in-out 0s;

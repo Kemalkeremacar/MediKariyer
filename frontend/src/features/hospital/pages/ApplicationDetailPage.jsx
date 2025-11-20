@@ -286,8 +286,8 @@ const HospitalApplicationDetailPage = () => {
           <div className="lg:col-span-2 space-y-6 min-w-0">
             {/* Doktor Bilgileri */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-400" />
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
                 Doktor Bilgileri
               </h2>
               
@@ -308,12 +308,12 @@ const HospitalApplicationDetailPage = () => {
                       </div>
                     )}
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-white">
+                      <h3 className="text-lg font-bold text-gray-900">
                         {doctorProfile.title} {doctorProfile.first_name} {doctorProfile.last_name}
                       </h3>
-                      <p className="text-gray-300 text-sm">{doctorProfile.specialty_name || 'Uzmanlık Belirtilmemiş'}</p>
+                      <p className="text-gray-700 text-sm font-medium">{doctorProfile.specialty_name || 'Uzmanlık Belirtilmemiş'}</p>
                       {doctorProfile.subspecialty_name && (
-                        <p className="text-gray-400 text-xs">Yan Dal: {doctorProfile.subspecialty_name}</p>
+                        <p className="text-gray-600 text-xs">Yan Dal: {doctorProfile.subspecialty_name}</p>
                       )}
                     </div>
                     <button
@@ -326,12 +326,12 @@ const HospitalApplicationDetailPage = () => {
                     </button>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                    <div className="flex items-center gap-2 text-gray-300">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-2 text-gray-700 font-medium">
                       <Phone className="w-4 h-4" />
                       <span>{application.phone || 'Belirtilmemiş'}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-300">
+                    <div className="flex items-center gap-2 text-gray-700 font-medium">
                       <Mail className="w-4 h-4" />
                       <span>{application.email || 'Belirtilmemiş'}</span>
                     </div>
@@ -354,32 +354,32 @@ const HospitalApplicationDetailPage = () => {
             )}
 
             {/* Doktor Ön Yazısı */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-green-400" />
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-md p-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-green-600" />
                 Doktor Ön Yazısı
               </h2>
               
               {application.cover_letter ? (
-                <div className="bg-gradient-to-r from-green-900/20 to-emerald-900/20 rounded-xl p-6 border border-green-500/30">
+                <div className="bg-green-50 rounded-xl p-6 border border-green-200">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
-                      <FileText className="w-4 h-4 text-green-300" />
+                    <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
+                      <FileText className="w-4 h-4 text-green-600" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                      <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
                         {application.cover_letter}
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-gray-900/30 to-slate-900/30 rounded-xl p-8 border border-gray-500/30 text-center">
-                  <div className="w-16 h-16 bg-gray-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="bg-gray-50 rounded-xl p-8 border border-gray-200 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                     <FileText className="w-8 h-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-300 mb-2">Ön Yazı Bulunamadı</h3>
-                  <p className="text-gray-400 text-sm">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Ön Yazı Bulunamadı</h3>
+                  <p className="text-gray-600 text-sm">
                     Bu başvuru için doktor ön yazısı eklenmemiş.
                   </p>
                 </div>
@@ -389,16 +389,16 @@ const HospitalApplicationDetailPage = () => {
 
           {/* Sağ Kolon - Durum Yönetimi */}
           <div className="space-y-6 min-w-0">
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 w-full max-w-full overflow-hidden">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-purple-400" />
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-md p-6 w-full max-w-full overflow-hidden">
+              <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-purple-600" />
                 Durum Yönetimi
               </h2>
 
               {/* Mevcut Durum */}
-              <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-xl p-4 mb-4 border border-blue-500/30 min-h-[100px]">
-                <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-400" />
+              <div className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-200 min-h-[100px]">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-600" />
                   Mevcut Durum
                 </h3>
                 <div className="flex items-center justify-between gap-4">
@@ -406,15 +406,15 @@ const HospitalApplicationDetailPage = () => {
                     <StatusBadge status_id={application.status_id} statusName={application.status} />
                   </div>
                   <div className="text-right flex-shrink-0 whitespace-nowrap">
-                    <span className="text-xs text-gray-400 block">Son Güncelleme</span>
-                    <span className="text-sm text-gray-300">
+                    <span className="text-xs text-gray-600 block font-medium">Son Güncelleme</span>
+                    <span className="text-sm text-gray-700 font-semibold">
                       {new Date(application.updated_at).toLocaleDateString('tr-TR')}
                     </span>
                   </div>
                 </div>
                 {isWithdrawn && (
                   <div className="mt-3 pt-3 border-t border-white/10">
-                    <div className="flex items-center gap-2 text-yellow-300 text-xs">
+                    <div className="flex items-center gap-2 text-orange-700 text-xs font-medium">
                       <AlertCircle className="w-4 h-4" />
                       <span>Geri çekilen başvurularda durum güncelleme yapılamaz.</span>
                     </div>
@@ -424,12 +424,12 @@ const HospitalApplicationDetailPage = () => {
 
               {/* Başvuru Bilgileri */}
               <div className="mb-4">
-                <div className="bg-white/5 rounded-xl p-4 mb-4">
+                <div className="bg-blue-50 rounded-xl p-4 mb-4 border border-blue-100">
                   <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-xs text-gray-400">Başvuru Tarihi</span>
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span className="text-xs text-gray-600 font-medium">Başvuru Tarihi</span>
                   </div>
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-gray-900 font-semibold">
                     {new Date(application.applied_at).toLocaleDateString('tr-TR')}
                   </span>
                 </div>
@@ -437,18 +437,18 @@ const HospitalApplicationDetailPage = () => {
 
               {/* Durum Seçimi */}
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                  <Target className="w-4 h-4 text-green-400" />
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Target className="w-4 h-4 text-green-600" />
                   Yeni Durum
                 </label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
                   disabled={isWithdrawn}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                 >
                   {statusOptions.map((status) => (
-                    <option key={status.value} value={status.value} className="bg-slate-800">
+                    <option key={status.value} value={status.value}>
                       {status.label}
                     </option>
                   ))}
@@ -457,8 +457,8 @@ const HospitalApplicationDetailPage = () => {
 
               {/* Not Alanı */}
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-orange-400" />
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-orange-600" />
                   Hastane Notu
                 </label>
                 <textarea
@@ -467,19 +467,19 @@ const HospitalApplicationDetailPage = () => {
                   placeholder="Değerlendirme notları ekleyin..."
                   rows={4}
                   disabled={isWithdrawn}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                 />
               </div>
 
               {/* Mevcut Not Gösterimi */}
               {application.notes && (
                 <div className="mb-4">
-                  <label className="block text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-yellow-400" />
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-yellow-600" />
                     Mevcut Not
                   </label>
-                  <div className="bg-gradient-to-r from-orange-900/30 to-red-900/30 rounded-xl p-4 border border-orange-500/30">
-                    <p className="text-gray-200 leading-relaxed whitespace-pre-wrap text-sm">{application.notes}</p>
+                  <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                    <p className="text-gray-800 leading-relaxed whitespace-pre-wrap text-sm">{application.notes}</p>
                   </div>
                 </div>
               )}
@@ -511,22 +511,22 @@ const HospitalApplicationDetailPage = () => {
                   
                   {/* Değişiklik yoksa buton gösterme */}
                   {!isStatusChanged && !isNotesChanged && (
-                    <p className="text-xs text-gray-400 text-center py-3">Değişiklik yapmak için yukarıdaki alanları düzenleyin</p>
+                    <p className="text-xs text-gray-600 text-center py-3 font-medium">Değişiklik yapmak için yukarıdaki alanları düzenleyin</p>
                   )}
                 </div>
               ) : (
                 <div className="pt-4 border-t border-white/10 min-h-[80px]">
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-yellow-300 text-sm font-medium mb-1">Durum Güncelleme Devre Dışı</p>
-                        <p className="text-yellow-200/80 text-xs">
-                          Geri çekilen başvurularda durum veya not güncellemesi yapılamaz.
-                        </p>
+                    <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-orange-700 text-sm font-semibold mb-1">Durum Güncelleme Devre Dışı</p>
+                          <p className="text-orange-600 text-xs">
+                            Geri çekilen başvurularda durum veya not güncellemesi yapılamaz.
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -596,11 +596,11 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
 
     if (isInline) {
       return (
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 animate-in fade-in zoom-in-95 duration-200 relative">
+        <div className="bg-white border border-blue-100 shadow-lg rounded-2xl p-6 animate-in fade-in zoom-in-95 duration-200 relative">
           {/* Kapatma Butonu - Sağ Üst Köşe */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 text-gray-400 hover:text-white transition-colors p-2 hover:bg-red-500/10 rounded-lg flex-shrink-0"
+            className="absolute top-4 right-4 z-10 text-gray-600 hover:text-gray-900 transition-colors p-2 hover:bg-red-100 rounded-lg flex-shrink-0"
             aria-label="Kapat"
           >
             <ChevronUp className="w-5 h-5 rotate-180" />
@@ -654,11 +654,11 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
 
     if (isInline) {
       return (
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 animate-in fade-in zoom-in-95 duration-200 relative">
+        <div className="bg-white border border-blue-100 shadow-lg rounded-2xl p-6 animate-in fade-in zoom-in-95 duration-200 relative">
           {/* Kapatma Butonu - Sağ Üst Köşe */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 text-gray-400 hover:text-white transition-colors p-2 hover:bg-red-500/10 rounded-lg flex-shrink-0"
+            className="absolute top-4 right-4 z-10 text-gray-600 hover:text-gray-900 transition-colors p-2 hover:bg-red-100 rounded-lg flex-shrink-0"
             aria-label="Kapat"
           >
             <ChevronUp className="w-5 h-5 rotate-180" />
@@ -694,12 +694,12 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
     <div
       ref={isInline ? null : floatingConfig.refs.setFloating}
       style={isInline ? {} : floatingConfig.floatingStyles}
-      className={`${isInline ? 'bg-white/10 backdrop-blur-sm' : 'z-50 bg-slate-800/95 backdrop-blur-md'} rounded-2xl border border-white/20 ${isInline ? '' : 'shadow-2xl'} animate-in fade-in zoom-in-95 duration-200 flex flex-col ${isInline ? 'max-h-[85vh]' : 'w-[600px] max-w-[calc(100vw-32px)] max-h-[85vh]'} relative`}
+      className={`${isInline ? 'bg-white border border-blue-100 shadow-lg' : 'z-50 bg-slate-800/95 backdrop-blur-md'} rounded-2xl ${isInline ? '' : 'border border-white/20 shadow-2xl'} animate-in fade-in zoom-in-95 duration-200 flex flex-col ${isInline ? 'max-h-[85vh]' : 'w-[600px] max-w-[calc(100vw-32px)] max-h-[85vh]'} relative`}
     >
         {/* Kapatma Butonu - Sağ Üst Köşe */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 text-gray-400 hover:text-white transition-colors p-2 hover:bg-red-500/10 rounded-lg flex-shrink-0"
+          className={`absolute top-4 right-4 z-10 ${isInline ? 'text-gray-600 hover:text-gray-900' : 'text-gray-400 hover:text-white'} transition-colors p-2 hover:bg-red-500/10 rounded-lg flex-shrink-0`}
           aria-label="Kapat"
         >
           <ChevronUp className="w-5 h-5 rotate-180" />
@@ -708,54 +708,54 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto overscroll-contain p-6">
           {/* Kişisel ve İletişim Bilgileri */}
-          <div className="bg-white/5 rounded-2xl p-4 mb-6">
-            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-400" />
+          <div className={`${isInline ? 'bg-blue-50' : 'bg-white/5'} rounded-2xl p-4 mb-6`}>
+            <h3 className={`text-lg font-semibold ${isInline ? 'text-gray-900' : 'text-white'} mb-3 flex items-center gap-2`}>
+              <User className={`w-5 h-5 ${isInline ? 'text-blue-600' : 'text-blue-400'}`} />
               Kişisel ve İletişim Bilgileri
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <span className="text-gray-400 text-sm">Ad Soyad</span>
-                <p className="text-white font-medium">
+                <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Ad Soyad</span>
+                <p className={`font-medium ${isInline ? 'text-gray-900' : 'text-white'}`}>
                   {profile.title} {profile.first_name} {profile.last_name}
                 </p>
               </div>
               <div>
-                <span className="text-gray-400 text-sm">Telefon</span>
-                <p className="text-white">{profile.phone || 'Belirtilmemiş'}</p>
+                <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Telefon</span>
+                <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.phone || 'Belirtilmemiş'}</p>
               </div>
               <div>
-                <span className="text-gray-400 text-sm">E-posta</span>
-                <p className="text-white">{profile.email || 'Belirtilmemiş'}</p>
+                <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>E-posta</span>
+                <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.email || 'Belirtilmemiş'}</p>
               </div>
               {profile.dob && (
                 <div>
-                  <span className="text-gray-400 text-sm">Doğum Tarihi</span>
-                  <p className="text-white">{new Date(profile.dob).toLocaleDateString('tr-TR')}</p>
+                  <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Doğum Tarihi</span>
+                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{new Date(profile.dob).toLocaleDateString('tr-TR')}</p>
                 </div>
               )}
               {profile.birth_place_name && (
                 <div>
-                  <span className="text-gray-400 text-sm">Doğum Yeri</span>
-                  <p className="text-white">{profile.birth_place_name}</p>
+                  <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Doğum Yeri</span>
+                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.birth_place_name}</p>
                 </div>
               )}
               {profile.residence_city_name && (
                 <div>
-                  <span className="text-gray-400 text-sm">İkamet Şehri</span>
-                  <p className="text-white">{profile.residence_city_name}</p>
+                  <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>İkamet Şehri</span>
+                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.residence_city_name}</p>
                 </div>
               )}
               {profile.specialty_name && (
                 <div>
-                  <span className="text-gray-400 text-sm">Uzmanlık Alanı</span>
-                  <p className="text-white">{profile.specialty_name}</p>
+                  <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Uzmanlık Alanı</span>
+                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.specialty_name}</p>
                 </div>
               )}
               {profile.subspecialty_name && (
                 <div>
-                  <span className="text-gray-400 text-sm">Yan Dal</span>
-                  <p className="text-white">{profile.subspecialty_name}</p>
+                  <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Yan Dal</span>
+                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.subspecialty_name}</p>
                 </div>
               )}
             </div>
@@ -763,28 +763,28 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
 
           {/* Eğitim Bilgileri */}
           {educations.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-green-400" />
+            <div className={`${isInline ? 'bg-green-50' : 'bg-white/5'} rounded-2xl p-4 mb-6`}>
+              <h3 className={`text-lg font-semibold ${isInline ? 'text-gray-900' : 'text-white'} mb-3 flex items-center gap-2`}>
+                <GraduationCap className={`w-5 h-5 ${isInline ? 'text-green-600' : 'text-green-400'}`} />
                 Eğitim Bilgileri
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {educations.map((edu, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 rounded-xl p-4 border border-green-500/30">
+                  <div key={idx} className={`${isInline ? 'bg-white border border-green-200' : 'bg-gradient-to-br from-green-900/20 to-emerald-900/20 border border-green-500/30'} rounded-xl p-4`}>
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-green-400" />
+                      <div className={`flex-shrink-0 w-10 h-10 ${isInline ? 'bg-green-100' : 'bg-green-500/20'} rounded-lg flex items-center justify-center`}>
+                        <GraduationCap className={`w-5 h-5 ${isInline ? 'text-green-600' : 'text-green-400'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-semibold text-sm mb-1">{edu.institution_name}</h4>
-                        <p className="text-gray-300 text-xs mb-1">{edu.field}</p>
-                        {edu.degree_type && <p className="text-gray-400 text-xs mb-2">{edu.degree_type}</p>}
+                        <h4 className={`font-semibold text-sm mb-1 ${isInline ? 'text-gray-900' : 'text-white'}`}>{edu.institution_name}</h4>
+                        <p className={`text-xs mb-1 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{edu.field}</p>
+                        {edu.degree_type && <p className={`text-xs mb-2 ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>{edu.degree_type}</p>}
                         <div className="flex items-center gap-2 mt-2">
-                          <span className="px-2 py-0.5 bg-green-500/20 text-green-300 rounded text-xs font-medium">
+                          <span className={`px-2 py-0.5 ${isInline ? 'bg-green-100 text-green-800' : 'bg-green-500/20 text-green-300'} rounded text-xs font-medium`}>
                             {edu.graduation_year}
                           </span>
                           {edu.education_type_name && (
-                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs font-medium">
+                            <span className={`px-2 py-0.5 ${isInline ? 'bg-blue-100 text-blue-800' : 'bg-blue-500/20 text-blue-300'} rounded text-xs font-medium`}>
                               {edu.education_type_name}
                             </span>
                           )}
@@ -799,42 +799,42 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
 
           {/* Deneyim Bilgileri */}
           {experiences.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-purple-400" />
+            <div className={`${isInline ? 'bg-purple-50' : 'bg-white/5'} rounded-2xl p-4 mb-6`}>
+              <h3 className={`text-lg font-semibold ${isInline ? 'text-gray-900' : 'text-white'} mb-3 flex items-center gap-2`}>
+                <Briefcase className={`w-5 h-5 ${isInline ? 'text-purple-600' : 'text-purple-400'}`} />
                 İş Deneyimi
               </h3>
               <div className="grid grid-cols-1 gap-3">
                 {experiences.map((exp, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 rounded-xl p-4 border border-purple-500/30">
+                  <div key={idx} className={`${isInline ? 'bg-white border border-purple-200' : 'bg-gradient-to-br from-purple-900/20 to-indigo-900/20 border border-purple-500/30'} rounded-xl p-4`}>
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-purple-400" />
+                      <div className={`flex-shrink-0 w-10 h-10 ${isInline ? 'bg-purple-100' : 'bg-purple-500/20'} rounded-lg flex items-center justify-center`}>
+                        <Briefcase className={`w-5 h-5 ${isInline ? 'text-purple-600' : 'text-purple-400'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
-                          <h4 className="text-white font-semibold text-sm">{exp.role_title}</h4>
+                          <h4 className={`font-semibold text-sm ${isInline ? 'text-gray-900' : 'text-white'}`}>{exp.role_title}</h4>
                           {exp.is_current && (
-                            <span className="px-2 py-0.5 bg-green-500/20 text-green-300 rounded text-xs font-medium ml-2 flex-shrink-0">
+                            <span className={`px-2 py-0.5 ${isInline ? 'bg-green-100 text-green-800' : 'bg-green-500/20 text-green-300'} rounded text-xs font-medium ml-2 flex-shrink-0`}>
                               Devam Ediyor
                             </span>
                           )}
                         </div>
-                        <p className="text-gray-300 text-xs mb-1">{exp.organization}</p>
+                        <p className={`text-xs mb-1 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{exp.organization}</p>
                         {exp.specialty_name && (
-                          <p className="text-gray-400 text-xs mb-2">
+                          <p className={`text-xs mb-2 ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>
                             Uzmanlık: {exp.specialty_name}
                             {exp.subspecialty_name && ` - ${exp.subspecialty_name}`}
                           </p>
                         )}
                         <div className="flex items-center gap-2 mt-2">
-                          <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-medium">
+                          <span className={`px-2 py-0.5 ${isInline ? 'bg-purple-100 text-purple-800' : 'bg-purple-500/20 text-purple-300'} rounded text-xs font-medium`}>
                             {new Date(exp.start_date).toLocaleDateString('tr-TR')} - 
                             {exp.is_current ? ' Devam Ediyor' : (exp.end_date ? new Date(exp.end_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş')}
                           </span>
                         </div>
                         {exp.description && (
-                          <p className="text-gray-300 text-xs mt-2 pt-2 border-t border-white/10">{exp.description}</p>
+                          <p className={`text-xs mt-2 pt-2 ${isInline ? 'text-gray-700 border-t border-gray-200' : 'text-gray-300 border-t border-white/10'}`}>{exp.description}</p>
                         )}
                       </div>
                     </div>
@@ -846,23 +846,23 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
 
           {/* Sertifikalar */}
           {certificates.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <Award className="w-5 h-5 text-yellow-400" />
+            <div className={`${isInline ? 'bg-yellow-50' : 'bg-white/5'} rounded-2xl p-4 mb-6`}>
+              <h3 className={`text-lg font-semibold ${isInline ? 'text-gray-900' : 'text-white'} mb-3 flex items-center gap-2`}>
+                <Award className={`w-5 h-5 ${isInline ? 'text-yellow-600' : 'text-yellow-400'}`} />
                 Sertifikalar ve Kurslar
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {certificates.map((cert, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 rounded-xl p-4 border border-yellow-500/30">
+                  <div key={idx} className={`${isInline ? 'bg-white border border-yellow-200' : 'bg-gradient-to-br from-yellow-900/20 to-orange-900/20 border border-yellow-500/30'} rounded-xl p-4`}>
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <Award className="w-5 h-5 text-yellow-400" />
+                      <div className={`flex-shrink-0 w-10 h-10 ${isInline ? 'bg-yellow-100' : 'bg-yellow-500/20'} rounded-lg flex items-center justify-center`}>
+                        <Award className={`w-5 h-5 ${isInline ? 'text-yellow-600' : 'text-yellow-400'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-semibold text-sm mb-1">{cert.certificate_name || 'Sertifika'}</h4>
-                        <p className="text-gray-300 text-xs mb-1">{cert.institution}</p>
+                        <h4 className={`font-semibold text-sm mb-1 ${isInline ? 'text-gray-900' : 'text-white'}`}>{cert.certificate_name || 'Sertifika'}</h4>
+                        <p className={`text-xs mb-1 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{cert.institution}</p>
                         <div className="flex items-center gap-2 mt-2">
-                          <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-300 rounded text-xs font-medium">
+                          <span className={`px-2 py-0.5 ${isInline ? 'bg-yellow-100 text-yellow-800' : 'bg-yellow-500/20 text-yellow-300'} rounded text-xs font-medium`}>
                             {cert.certificate_year}
                           </span>
                         </div>
@@ -876,23 +876,23 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
 
           {/* Dil Bilgileri */}
           {languages.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <Languages className="w-5 h-5 text-cyan-400" />
+            <div className={`${isInline ? 'bg-cyan-50' : 'bg-white/5'} rounded-2xl p-4 mb-6`}>
+              <h3 className={`text-lg font-semibold ${isInline ? 'text-gray-900' : 'text-white'} mb-3 flex items-center gap-2`}>
+                <Languages className={`w-5 h-5 ${isInline ? 'text-cyan-600' : 'text-cyan-400'}`} />
                 Dil Bilgileri
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {languages.map((lang, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 rounded-xl p-4 border border-cyan-500/30">
+                  <div key={idx} className={`${isInline ? 'bg-white border border-cyan-200' : 'bg-gradient-to-br from-cyan-900/20 to-blue-900/20 border border-cyan-500/30'} rounded-xl p-4`}>
                     <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                        <Languages className="w-5 h-5 text-cyan-400" />
+                      <div className={`flex-shrink-0 w-10 h-10 ${isInline ? 'bg-cyan-100' : 'bg-cyan-500/20'} rounded-lg flex items-center justify-center`}>
+                        <Languages className={`w-5 h-5 ${isInline ? 'text-cyan-600' : 'text-cyan-400'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-semibold text-sm mb-1">{lang.language_name}</h4>
-                        <p className="text-gray-300 text-xs mb-2">Seviye: {lang.level_name}</p>
+                        <h4 className={`font-semibold text-sm mb-1 ${isInline ? 'text-gray-900' : 'text-white'}`}>{lang.language_name}</h4>
+                        <p className={`text-xs mb-2 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>Seviye: {lang.level_name}</p>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 rounded text-xs font-medium">
+                          <span className={`px-2 py-0.5 ${isInline ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'} rounded text-xs font-medium`}>
                             {lang.level_name}
                           </span>
                         </div>

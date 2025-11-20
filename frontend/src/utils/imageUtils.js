@@ -13,19 +13,22 @@
  * Resize ve compress image
  * @param {File} file - Image file
  * @param {Object} options - Compression options
- * @param {number} options.maxWidth - Maximum width (default: 1000)
- * @param {number} options.maxHeight - Maximum height (default: 1000)
- * @param {number} options.quality - JPEG quality 0-1 (default: 0.8)
- * @param {number} options.maxSizeMB - Maximum file size in MB (default: 2)
+ * @param {number} options.maxWidth - Maximum width (default: 800) - OPTİMİZE: 1000'den 800'e düşürüldü
+ * @param {number} options.maxHeight - Maximum height (default: 800) - OPTİMİZE: 1000'den 800'e düşürüldü
+ * @param {number} options.quality - JPEG quality 0-1 (default: 0.7) - OPTİMİZE: 0.8'den 0.7'ye düşürüldü (daha küçük dosya)
+ * @param {number} options.maxSizeMB - Maximum file size in MB (default: 1) - OPTİMİZE: 2MB'den 1MB'ye düşürüldü
  * @returns {Promise<string>} Base64 string
+ * 
+ * @note Base64 fotoğraflar liste sayfalarında kullanılmamalı (çok büyük olur)
+ *       Bu compression profil fotoğrafları için yeterli (~200-300KB base64)
  */
 export const compressImage = (file, options = {}) => {
   return new Promise((resolve, reject) => {
     const {
-      maxWidth = 1000,
-      maxHeight = 1000,
-      quality = 0.8,
-      maxSizeMB = 2
+      maxWidth = 800,  // OPTİMİZE: 1000'den 800'e - profil için yeterli
+      maxHeight = 800, // OPTİMİZE: 1000'den 800'e - profil için yeterli
+      quality = 0.7,   // OPTİMİZE: 0.8'den 0.7'ye - daha küçük dosya
+      maxSizeMB = 1    // OPTİMİZE: 2MB'den 1MB'ye - base64 için yeterli
     } = options;
 
     // File size kontrolü

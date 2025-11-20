@@ -27,14 +27,14 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, memo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
-  FileText, Search, Filter, User, MapPin, Calendar, 
+  FileText, Search, Filter, MapPin, Calendar, 
   CheckCircle, X, Clock, Eye, AlertCircle, ArrowRight, 
   RefreshCw, Phone, Mail, Briefcase, Target, Building,
-  UserCheck, GraduationCap, Award, Languages, ExternalLink, Settings,
+  ExternalLink, Settings,
   ArrowLeft, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { useFloating, autoUpdate, offset, flip, shift, useDismiss, useInteractions, FloatingPortal, size } from '@floating-ui/react';
-import { useHospitalApplications, useUpdateApplicationStatus, useHospitalDoctorProfileDetail, useHospitalJobs } from '../api/useHospital';
+import { useHospitalApplications, useUpdateApplicationStatus, useHospitalJobs } from '../api/useHospital';
 import { useApplicationStatuses } from '@/hooks/useLookup';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
@@ -60,6 +60,7 @@ const HospitalApplications = () => {
   const cursorPositionRef = useRef(null); // Cursor pozisyonunu korumak için
   const jobFilterRef = useRef(null); // İlanlarım dropdown referansı
   const jobFilterButtonRef = useRef(null); // İlanlarım buton referansı
+  const isInitialMount = useRef(true); // İlk mount kontrolü için
 
   // Floating UI için dropdown konumlandırma
   const { refs, floatingStyles, context } = useFloating({
@@ -85,9 +86,6 @@ const HospitalApplications = () => {
   const dismiss = useDismiss(context);
   const { getFloatingProps } = useInteractions([dismiss]);
 
-  const [selectedDoctorId, setSelectedDoctorId] = useState(null);
-  const [popoverAnchor, setPopoverAnchor] = useState(null); // Buton referansı için
-
   // Scroll pozisyonunu kaydet
   const scrollPositionRef = useRef(null);
   
@@ -101,14 +99,17 @@ const HospitalApplications = () => {
 
   // Dışarı tıklanınca dropdown'ı kapat - Floating UI useDismiss hook'u ile yönetiliyor
 
-  // Sayfa yüklendiğinde scroll pozisyonunu geri yükle
+  // Sayfa yüklendiğinde scroll pozisyonunu geri yükle - requestAnimationFrame ile optimize edildi
   useEffect(() => {
     const savedScrollPosition = sessionStorage.getItem('hospital_applications_scroll');
     if (savedScrollPosition) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollPosition, 10));
-        sessionStorage.removeItem('hospital_applications_scroll');
-      }, 100);
+      // requestAnimationFrame kullanarak daha hızlı restore et
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(savedScrollPosition, 10));
+          sessionStorage.removeItem('hospital_applications_scroll');
+        });
+      });
     }
   }, []);
 
@@ -257,33 +258,29 @@ const HospitalApplications = () => {
   const urlPage = parseInt(searchParams.get('page') || '1', 10);
   const urlJobIds = searchParams.get('jobIds');
 
-  // URL'den gelen değerleri state'e senkronize et (sadece farklıysa)
-  // Doctor Jobs pattern'i - urlStatus, urlSearch, urlPage değerlerini dependency olarak kullan
+  // URL'den gelen değerleri state'e senkronize et - OPTİMİZE: Tek useEffect ile birleştirildi
   useEffect(() => {
+    // İlk mount'ta state'ler zaten URL'den okundu, bu yüzden senkronizasyon atlanabilir
+    // Sadece URL gerçekten değiştiğinde state'i güncelle
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      // İlk mount'ta state'ler zaten doğru, sadece input value'sunu set et
+      if (searchInputRef.current && urlSearch) {
+        searchInputRef.current.value = urlSearch;
+      }
+      return;
+    }
+    
+    // Status senkronizasyonu
     if (urlStatus !== statusFilter) {
       setStatusFilter(urlStatus);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlStatus]); // Doctor Jobs pattern'i
-  
-  useEffect(() => {
-    // Sadece URL'den gelen değer farklıysa ve kullanıcı input'ta değilse güncelle
-    // (Cursor pozisyonunu korumak için)
-    if (urlSearch !== searchQuery) {
-      // Eğer kullanıcı input'ta yazıyorsa, URL'den gelen değeri ignore et
-      // Çünkü kullanıcı henüz yazmaya devam ediyor olabilir
-      if (document.activeElement === searchInputRef.current) {
-        return;
-      }
-      
-      // URL'den gelen değer trim edilmiş olabilir, ama input'ta trim edilmemiş değer olabilir
-      // Bu durumda sadece URL değerini state'e yaz ama input'un value'sunu değiştirme
+    
+    // Search senkronizasyonu - sadece kullanıcı input'ta değilse
+    if (urlSearch !== searchQuery && document.activeElement !== searchInputRef.current) {
       setSearchQuery(urlSearch);
-      
-      // Input'un value'sunu sadece kullanıcı input'ta değilse güncelle
-      if (searchInputRef.current && document.activeElement !== searchInputRef.current) {
+      if (searchInputRef.current) {
         searchInputRef.current.value = urlSearch;
-        // Cursor pozisyonunu sona al (kullanıcı yazmıyorsa sorun değil)
         requestAnimationFrame(() => {
           if (searchInputRef.current && document.activeElement !== searchInputRef.current) {
             searchInputRef.current.setSelectionRange(urlSearch.length, urlSearch.length);
@@ -291,26 +288,26 @@ const HospitalApplications = () => {
         });
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlSearch]); // Doctor Jobs pattern'i
-  
-  useEffect(() => {
+    
+    // Page senkronizasyonu
     if (urlPage !== currentPage) {
       setCurrentPage(urlPage);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlPage]); // Doctor Jobs pattern'i
-
-  // URL'den jobIds'i state'e senkronize et
-  useEffect(() => {
+    
+    // JobIds senkronizasyonu
     if (urlJobIds) {
       const jobIdsArray = urlJobIds.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
-      setSelectedJobIds(jobIdsArray);
-    } else {
+      // Array karşılaştırması - JSON.stringify yerine daha hızlı yöntem
+      const arraysEqual = jobIdsArray.length === selectedJobIds.length && 
+        jobIdsArray.every((val, idx) => val === selectedJobIds[idx]);
+      if (!arraysEqual) {
+        setSelectedJobIds(jobIdsArray);
+      }
+    } else if (selectedJobIds.length > 0) {
       setSelectedJobIds([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [urlJobIds]);
+  }, [urlStatus, urlSearch, urlPage, urlJobIds]); // Tüm URL parametrelerini tek seferde dinle
 
   // 🔹 Adım 4: URL parametrelerini API parametrelerine dönüştür
   const applicationsParams = useMemo(() => {
@@ -360,12 +357,6 @@ const HospitalApplications = () => {
   });
   const jobs = jobsData?.data?.jobs || [];
   
-  // Doktor profil detayı için hook
-  const { 
-    data: doctorProfileData, 
-    isLoading: doctorProfileLoading 
-  } = useHospitalDoctorProfileDetail(selectedDoctorId);
-
   const updateStatusMutation = useUpdateApplicationStatus();
 
   // Veri parsing
@@ -448,17 +439,6 @@ const HospitalApplications = () => {
       console.error('Başvuru durumu güncelleme hatası:', error);
     }
   }, [updateStatusMutation]);
-
-  // Doktor profil görüntüleme - Popover için
-  const handleViewDoctorProfile = useCallback((doctorProfileId, buttonRef) => {
-    setSelectedDoctorId(doctorProfileId);
-    setPopoverAnchor(buttonRef);
-  }, []);
-
-  const handleClosePopover = useCallback(() => {
-    setSelectedDoctorId(null);
-    setPopoverAnchor(null);
-  }, []);
 
   // Modal açma fonksiyonları (kaldırılıyor - artık detay sayfasına yönlendiriliyor)
   // const handleOpenStatusModal = (application) => {
@@ -789,12 +769,12 @@ const HospitalApplications = () => {
 
           {/* Results Summary */}
           <div className="flex items-center justify-between">
-            <p className="text-gray-300">
+            <p className="text-gray-700 font-medium">
               {pagination.total || 0} başvuru bulundu
             </p>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-400">Sayfa:</span>
-              <span className="text-white font-medium">
+              <span className="text-sm text-gray-600">Sayfa:</span>
+              <span className="text-gray-900 font-semibold">
                 {currentPage} / {pagination.pages || 1}
               </span>
             </div>
@@ -809,7 +789,6 @@ const HospitalApplications = () => {
                   application={application}
                   statusOptions={statusOptions}
                   onStatusChange={handleStatusChange}
-                  onViewProfile={handleViewDoctorProfile}
                   onJobClick={handleJobClick}
                 />
               ))}
@@ -841,17 +820,6 @@ const HospitalApplications = () => {
             </div>
           )}
         </div>
-
-        {/* Doktor Profil Popover */}
-        {selectedDoctorId && popoverAnchor && (
-          <DoctorProfilePopover
-            doctorId={selectedDoctorId}
-            doctorData={doctorProfileData?.data}
-            isLoading={doctorProfileLoading}
-            anchorElement={popoverAnchor}
-            onClose={handleClosePopover}
-          />
-        )}
       </div>
   );
 };
@@ -859,11 +827,11 @@ const HospitalApplications = () => {
 // Status Badge Component (ApplicationCard'dan önce tanımlanmalı)
 export const StatusBadge = ({ status_id, statusName }) => {
   const statusConfig = {
-    1: { bg: 'bg-yellow-500/20', text: 'text-yellow-300', border: 'border-yellow-500/30', label: 'Beklemede', icon: Clock },
-    2: { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30', label: 'İnceleniyor', icon: Eye },
-    3: { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30', label: 'Kabul Edildi', icon: CheckCircle },
-    4: { bg: 'bg-red-500/20', text: 'text-red-300', border: 'border-red-500/30', label: 'Red Edildi', icon: X },
-    5: { bg: 'bg-gray-500/20', text: 'text-gray-300', border: 'border-gray-500/30', label: 'Geri Çekildi', icon: ArrowLeft }
+    1: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', label: 'Beklemede', icon: Clock },
+    2: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', label: 'İnceleniyor', icon: Eye },
+    3: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300', label: 'Kabul Edildi', icon: CheckCircle },
+    4: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300', label: 'Red Edildi', icon: X },
+    5: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300', label: 'Geri Çekildi', icon: ArrowLeft }
   };
 
   const config = statusConfig[status_id] || statusConfig[1];
@@ -878,9 +846,8 @@ export const StatusBadge = ({ status_id, statusName }) => {
 };
 
 // Application Card Component
-const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, onViewProfile, onJobClick }) => {
+const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, onJobClick }) => {
   const navigate = useNavigate();
-  const profileButtonRef = useRef(null);
 
   const handleViewDetails = () => {
     // Scroll pozisyonunu kaydet
@@ -897,45 +864,37 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
   const isDoctorInactive = !application.doctor_is_active || application.doctor_is_active === false || application.doctor_is_active === 0;
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-6 hover:bg-white/15 transition-all duration-300 min-h-[180px]">
+    <div className="bg-white rounded-2xl border border-blue-100 shadow-md p-6 hover:shadow-lg transition-all duration-300 min-h-[180px]">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-full">
         {/* Doktor Bilgileri - 4 kolon */}
         <div className="lg:col-span-4 flex flex-col min-w-0">
           <div className="flex items-start flex-1 min-w-0">
             <div className="flex-1 min-w-0">
               {isDoctorInactive ? (
-                <div className="bg-gray-500/20 border border-gray-500/30 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-gray-400 mb-2">
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-orange-700 mb-2">
                     <AlertCircle className="w-4 h-4" />
-                    <span className="text-sm font-medium">Kullanıcı Pasif</span>
+                    <span className="text-sm font-semibold">Kullanıcı Pasif</span>
                   </div>
-                  <p className="text-gray-500 text-xs">
+                  <p className="text-orange-600 text-xs">
                     Bu başvuruyu yapan doktor hesabını sildiği için profil bilgilerine erişilemiyor.
                   </p>
                 </div>
               ) : (
                 <>
-                  <h3 className="text-lg font-bold text-white mb-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
                     {application.first_name} {application.last_name}
                   </h3>
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-gray-300 text-sm">
+                    <div className="flex items-center gap-2 text-gray-700 text-sm">
                       <Phone className="w-3 h-3" />
                       <span className="truncate">{application.phone || 'Belirtilmemiş'}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-300 text-sm">
+                    <div className="flex items-center gap-2 text-gray-700 text-sm">
                       <Mail className="w-3 h-3" />
                       <span className="truncate">{application.email || 'Belirtilmemiş'}</span>
                     </div>
                   </div>
-                  <button
-                    ref={profileButtonRef}
-                    onClick={() => onViewProfile(application.doctor_profile_id, profileButtonRef.current)}
-                    className="mt-3 text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Profili Görüntüle
-                  </button>
                 </>
               )}
             </div>
@@ -946,15 +905,15 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
         <div className="lg:col-span-3 flex flex-col min-w-0">
           <div className="space-y-3 flex-1 min-w-0">
             <div>
-              <span className="text-gray-400 text-xs block mb-1">İş İlanı</span>
-              <p className="text-white font-medium mb-1">{application.job_title}</p>
+              <span className="text-gray-600 text-xs block mb-1 font-medium">İş İlanı</span>
+              <p className="text-gray-900 font-semibold mb-1">{application.job_title}</p>
               
               {/* İlan Tarihi */}
               {application.job_created_at && (
-                <div className="text-gray-300 text-xs mb-2 flex items-center gap-1">
+                <div className="text-gray-700 text-xs mb-2 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   <span>İlan Tarihi: {new Date(application.job_created_at).toLocaleDateString('tr-TR')}</span>
-              </div>
+                </div>
               )}
               
               {/* İş İlanı Durumu */}
@@ -965,37 +924,37 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
                   // Status'a göre stil belirle (artık backend'den Türkçe geliyor)
                   const getStatusStyles = (statusName) => {
                     if (statusName === 'Onay Bekliyor') {
-                      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+                      return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
                     }
                     if (statusName === 'Revizyon Gerekli') {
-                      return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+                      return 'bg-orange-100 text-orange-800 border border-orange-300';
                     }
                     if (statusName === 'Onaylandı') {
-                      return 'bg-green-500/20 text-green-300 border border-green-500/30';
+                      return 'bg-green-100 text-green-800 border border-green-300';
                     }
                     if (statusName === 'Pasif') {
-                      return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+                      return 'bg-gray-100 text-gray-800 border border-gray-300';
                     }
                     if (statusName === 'Reddedildi') {
-                      return 'bg-red-500/20 text-red-300 border border-red-500/30';
+                      return 'bg-red-100 text-red-800 border border-red-300';
                     }
                     // Geriye uyumluluk için eski İngilizce isimler
                     if (statusName === 'Pending Approval') {
-                      return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
+                      return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
                     }
                     if (statusName === 'Needs Revision') {
-                      return 'bg-orange-500/20 text-orange-300 border border-orange-500/30';
+                      return 'bg-orange-100 text-orange-800 border border-orange-300';
                     }
                     if (statusName === 'Approved' || statusName === 'Aktif') {
-                      return 'bg-green-500/20 text-green-300 border border-green-500/30';
+                      return 'bg-green-100 text-green-800 border border-green-300';
                     }
                     if (statusName === 'Passive') {
-                      return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+                      return 'bg-gray-100 text-gray-800 border border-gray-300';
                     }
                     if (statusName === 'Rejected') {
-                      return 'bg-red-500/20 text-red-300 border border-red-500/30';
+                      return 'bg-red-100 text-red-800 border border-red-300';
                     }
-                    return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
+                    return 'bg-gray-100 text-gray-800 border border-gray-300';
                   };
                   
                   return (
@@ -1019,7 +978,7 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
 
         {/* Durum Yönetimi - 5 kolon */}
         <div className="lg:col-span-5 flex flex-col min-w-0">
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10 flex-1 flex flex-col justify-between min-h-[120px] w-full">
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 flex-1 flex flex-col justify-between min-h-[120px] w-full">
             {isDoctorInactive ? (
               // Pasif doktor için disabled görünüm
               <>
@@ -1028,7 +987,7 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
                     Başvuru Durumu
                   </label>
                   <div className="flex items-center justify-center">
-                    <div className="bg-gray-500/10 border border-gray-500/20 text-gray-500 px-3 py-1.5 rounded-lg text-sm font-medium w-[140px] text-center">
+                    <div className="bg-orange-100 border border-orange-200 text-orange-700 px-3 py-1.5 rounded-lg text-sm font-semibold w-[140px] text-center">
                       Kullanıcı Pasif
                     </div>
                   </div>
@@ -1046,7 +1005,7 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
               <>
                 {/* Başvuru Durumu */}
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-300 block mb-2 text-center">
+                  <label className="text-sm font-medium text-gray-700 block mb-2 text-center">
                     Başvuru Durumu
                   </label>
                   <div className="flex items-center justify-center">
@@ -1076,355 +1035,10 @@ const applicationCardPropsAreEqual = (prev, next) => (
   prev.application === next.application &&
   prev.statusOptions === next.statusOptions &&
   prev.onStatusChange === next.onStatusChange &&
-  prev.onViewProfile === next.onViewProfile &&
   prev.onJobClick === next.onJobClick
 );
 
 const ApplicationCard = memo(ApplicationCardComponent, applicationCardPropsAreEqual);
-
-// Floating UI Popover Component
-const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, onClose }) => {
-  if (!doctorId || !anchorElement) return null;
-
-  const { refs, floatingStyles, context } = useFloating({
-    open: true,
-    onOpenChange: (open) => {
-      if (!open) onClose();
-    },
-    middleware: [
-      offset(12), // Butondan 12px uzaklık
-      shift({ padding: 16 }) // Viewport'tan taşmasın ama sağda kalır (flip yok)
-    ],
-    placement: 'right', // Butonun sağında açıl - sabit kalacak
-    whileElementsMounted: autoUpdate
-  });
-
-  const dismiss = useDismiss(context);
-  const { getFloatingProps } = useInteractions([dismiss]);
-
-  // Floating element'i anchor'a bağla
-  useEffect(() => {
-    if (anchorElement && refs.setReference) {
-      refs.setReference(anchorElement);
-    }
-  }, [anchorElement, refs]);
-
-  if (isLoading) {
-    return (
-      <FloatingPortal>
-        <div
-          ref={refs.setFloating}
-          style={floatingStyles}
-          {...getFloatingProps()}
-          className="z-50 w-[400px] max-w-[calc(100vw-32px)] bg-slate-800/95 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
-        >
-        <div className="flex items-center justify-center py-12">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-        </div>
-      </FloatingPortal>
-    );
-  }
-
-  const profile = doctorData?.profile;
-  const educations = doctorData?.educations || [];
-  const experiences = doctorData?.experiences || [];
-  const certificates = doctorData?.certificates || [];
-  const languages = doctorData?.languages || [];
-
-  if (!profile) {
-    return (
-      <FloatingPortal>
-        <div
-          ref={refs.setFloating}
-          style={floatingStyles}
-          {...getFloatingProps()}
-          className="z-50 w-[400px] max-w-[calc(100vw-32px)] bg-slate-800/95 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200"
-        >
-          <div className="p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-white mb-2">Profil Bulunamadı</h3>
-          <button
-            onClick={onClose}
-              className="mt-4 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-2 rounded-xl hover:bg-blue-500/30 transition-all"
-          >
-            Kapat
-          </button>
-        </div>
-        </div>
-      </FloatingPortal>
-    );
-  }
-
-  return (
-    <FloatingPortal>
-      <div
-        ref={refs.setFloating}
-        style={floatingStyles}
-        {...getFloatingProps()}
-        className="z-50 w-[600px] max-w-[calc(100vw-32px)] max-h-[85vh] bg-slate-800/95 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl animate-in fade-in zoom-in-95 duration-200 flex flex-col"
-      >
-        {/* Header - Sticky */}
-        <div className="flex items-start justify-between p-6 border-b border-white/10 bg-gradient-to-r from-slate-800 to-slate-900 flex-shrink-0">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-              {profile.profile_photo ? (
-                <img
-                  src={profile.profile_photo}
-                  alt={`${profile.first_name} ${profile.last_name}`}
-                className="w-16 h-16 rounded-full object-cover border-2 border-white/20 flex-shrink-0"
-                />
-              ) : (
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
-                  {profile.first_name?.[0]}{profile.last_name?.[0]}
-                </div>
-              )}
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-white mb-1 truncate">
-                  {profile.title} {profile.first_name} {profile.last_name}
-                </h2>
-              <p className="text-gray-300 font-medium text-sm truncate">{profile.specialty_name || 'Uzmanlık Belirtilmemiş'}</p>
-                {profile.subspecialty_name && (
-                <p className="text-gray-400 text-xs truncate">Yan Dal: {profile.subspecialty_name}</p>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-red-500/10 rounded-lg flex-shrink-0 ml-2"
-            aria-label="Kapat"
-            >
-            <X className="w-5 h-5" />
-            </button>
-          </div>
-
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-6">
-
-          {/* Kişisel ve İletişim Bilgileri */}
-          <div className="bg-white/5 rounded-2xl p-4 mb-6">
-            <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-              <User className="w-5 h-5 text-blue-400" />
-              Kişisel ve İletişim Bilgileri
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div>
-                <span className="text-gray-400 text-sm">Ad Soyad</span>
-                <p className="text-white font-medium">
-                  {profile.title} {profile.first_name} {profile.last_name}
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-400 text-sm">Telefon</span>
-                <p className="text-white">{profile.phone || 'Belirtilmemiş'}</p>
-              </div>
-              <div>
-                <span className="text-gray-400 text-sm">E-posta</span>
-                <p className="text-white">{profile.email || 'Belirtilmemiş'}</p>
-              </div>
-              {profile.dob && (
-                <div>
-                  <span className="text-gray-400 text-sm">Doğum Tarihi</span>
-                  <p className="text-white">{new Date(profile.dob).toLocaleDateString('tr-TR')}</p>
-                </div>
-              )}
-              {profile.birth_place_name && (
-                <div>
-                  <span className="text-gray-400 text-sm">Doğum Yeri</span>
-                  <p className="text-white">{profile.birth_place_name}</p>
-                </div>
-              )}
-              {profile.residence_city_name && (
-                <div>
-                  <span className="text-gray-400 text-sm">İkamet Şehri</span>
-                  <p className="text-white">{profile.residence_city_name}</p>
-                </div>
-              )}
-              {profile.specialty_name && (
-                <div>
-                  <span className="text-gray-400 text-sm">Uzmanlık Alanı</span>
-                  <p className="text-white">{profile.specialty_name}</p>
-                </div>
-              )}
-              {profile.subspecialty_name && (
-                <div>
-                  <span className="text-gray-400 text-sm">Yan Dal</span>
-                  <p className="text-white">{profile.subspecialty_name}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Eğitim Bilgileri */}
-          {educations.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-green-400" />
-                Eğitim Bilgileri
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {educations.map((edu, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 rounded-xl p-4 border border-green-500/30 hover:border-green-500/50 transition-all">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5 text-green-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">
-                          {edu.institution_name}
-                        </h4>
-                        <p className="text-gray-300 text-xs mb-1 line-clamp-2">
-                          {edu.field}
-                        </p>
-                        {edu.degree_type && (
-                          <p className="text-gray-400 text-xs mb-2">
-                            {edu.degree_type}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="px-2 py-0.5 bg-green-500/20 text-green-300 rounded text-xs font-medium">
-                            {edu.graduation_year}
-                          </span>
-                      {edu.education_type_name && (
-                            <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 rounded text-xs font-medium">
-                          {edu.education_type_name}
-                        </span>
-                      )}
-                    </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Deneyim Bilgileri */}
-          {experiences.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-purple-400" />
-                İş Deneyimi
-              </h3>
-              <div className="grid grid-cols-1 gap-3">
-                {experiences.map((exp, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 rounded-xl p-4 border border-purple-500/30 hover:border-purple-500/50 transition-all">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                        <Briefcase className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-2">
-                          <h4 className="text-white font-semibold text-sm line-clamp-2">
-                            {exp.role_title}
-                          </h4>
-                      {exp.is_current && (
-                            <span className="px-2 py-0.5 bg-green-500/20 text-green-300 rounded text-xs font-medium ml-2 flex-shrink-0">
-                          Devam Ediyor
-                        </span>
-                      )}
-                    </div>
-                        <p className="text-gray-300 text-xs mb-1 line-clamp-2">
-                          {exp.organization}
-                        </p>
-                    {exp.specialty_name && (
-                          <p className="text-gray-400 text-xs mb-2">
-                        Uzmanlık: {exp.specialty_name}
-                        {exp.subspecialty_name && ` - ${exp.subspecialty_name}`}
-                      </p>
-                    )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-medium">
-                      {new Date(exp.start_date).toLocaleDateString('tr-TR')} - 
-                      {exp.is_current ? ' Devam Ediyor' : (exp.end_date ? new Date(exp.end_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş')}
-                          </span>
-                        </div>
-                    {exp.description && (
-                          <p className="text-gray-300 text-xs mt-2 pt-2 border-t border-white/10 line-clamp-3">
-                        {exp.description}
-                      </p>
-                    )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Sertifikalar */}
-          {certificates.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <Award className="w-5 h-5 text-yellow-400" />
-                Sertifikalar ve Kurslar
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {certificates.map((cert, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-yellow-900/20 to-orange-900/20 rounded-xl p-4 border border-yellow-500/30 hover:border-yellow-500/50 transition-all">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <Award className="w-5 h-5 text-yellow-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-semibold text-sm mb-1 line-clamp-2">
-                          {cert.certificate_name || 'Sertifika'}
-                        </h4>
-                        <p className="text-gray-300 text-xs mb-1 flex items-center gap-1">
-                          <span className="text-yellow-400">📍</span>
-                          {cert.institution}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-300 rounded text-xs font-medium">
-                            {cert.certificate_year}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Dil Bilgileri */}
-          {languages.length > 0 && (
-            <div className="bg-white/5 rounded-2xl p-4 mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <Languages className="w-5 h-5 text-cyan-400" />
-                Dil Bilgileri
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {languages.map((lang, idx) => (
-                  <div key={idx} className="bg-gradient-to-br from-cyan-900/20 to-blue-900/20 rounded-xl p-4 border border-cyan-500/30 hover:border-cyan-500/50 transition-all">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                        <Languages className="w-5 h-5 text-cyan-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-white font-semibold text-sm mb-1">
-                          {lang.language_name}
-                        </h4>
-                        <p className="text-gray-300 text-xs mb-2">
-                          Seviye: {lang.level_name}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 rounded text-xs font-medium">
-                            {lang.level_name}
-                  </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          </div>
-          </div>
-    </FloatingPortal>
-  );
-};
 
 // Sayfalama Component (Memoized)
 const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {

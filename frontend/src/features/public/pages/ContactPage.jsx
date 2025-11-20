@@ -150,7 +150,7 @@ const ContactPage = () => {
                       value={formData.name}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-blue-900 placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                       placeholder="Adınızı ve soyadınızı girin"
                     />
                   </div>
@@ -164,7 +164,7 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-blue-900 placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                       placeholder="ornek@email.com"
                     />
                   </div>
@@ -178,7 +178,7 @@ const ContactPage = () => {
                       value={formData.subject}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-blue-900 placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none"
                       placeholder="Mesaj konusunu girin"
                     />
                   </div>
@@ -192,7 +192,7 @@ const ContactPage = () => {
                       value={formData.message}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none resize-none flex-1"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-blue-900 placeholder:text-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none resize-none flex-1"
                       placeholder="Mesajınızı buraya yazın..."
                     />
                   </div>

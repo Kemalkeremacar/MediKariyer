@@ -227,9 +227,9 @@ const HospitalProfile = () => {
             <div className="space-y-6">
               {/* Temel Bilgiler */}
               <div>
-                <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-8">
+                  <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white">Temel Bilgiler</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Temel Bilgiler</h2>
                     {!isEditing ? (
                       <button
                         onClick={() => setIsEditing(true)}
@@ -262,7 +262,7 @@ const HospitalProfile = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Kurum Adı *
                         </label>
                         <input
@@ -271,13 +271,13 @@ const HospitalProfile = () => {
                           value={formData.institution_name}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                           placeholder="Sağlık kuruluşu adını girin"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Şehir *
                         </label>
                         <select
@@ -285,11 +285,11 @@ const HospitalProfile = () => {
                           value={formData.city_id}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50 appearance-none"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                         >
                           <option value="">Şehir Seçiniz</option>
                           {cities.map(city => (
-                            <option key={city.value} value={city.value} className="bg-gray-800">
+                            <option key={city.value} value={city.value}>
                               {city.label}
                             </option>
                           ))}
@@ -297,7 +297,7 @@ const HospitalProfile = () => {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Adres
                         </label>
                         <textarea
@@ -306,13 +306,13 @@ const HospitalProfile = () => {
                           onChange={handleInputChange}
                           disabled={!isEditing}
                           rows={3}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50 resize-none"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 resize-none"
                           placeholder="Tam adres girin"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Telefon *
                         </label>
                         <input
@@ -321,26 +321,26 @@ const HospitalProfile = () => {
                           value={formData.phone}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                           placeholder="Telefon numarası"
                         />
                       </div>
 
                       {/* E-posta (kayıt sırasında girilen) - sadece görüntüleme (input yerine text) */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           E-posta
                         </label>
-                        <div className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-gray-300 select-text">
+                        <div className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg text-gray-600 select-text">
                           {formData.email || '-'}
                         </div>
-                        <p className="text-xs text-gray-400 mt-1">Üyelikte girilen e‑posta; değiştirilemez.</p>
+                        <p className="text-xs text-gray-500 mt-1">Üyelikte girilen e‑posta; değiştirilemez.</p>
                       </div>
 
                       {/* E-posta form alanı kaldırıldı; header'da gösteriliyor */}
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Web Sitesi
                         </label>
                         <input
@@ -349,7 +349,7 @@ const HospitalProfile = () => {
                           value={formData.website}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                           placeholder="https://example.com"
                         />
                       </div>
@@ -409,7 +409,7 @@ const HospitalProfile = () => {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Hakkında
                         </label>
                         <textarea
@@ -418,7 +418,7 @@ const HospitalProfile = () => {
                           onChange={handleInputChange}
                           disabled={!isEditing}
                           rows={4}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 disabled:opacity-50 resize-none"
+                          className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 resize-none"
                           placeholder="Hastane hakkında bilgi yazın"
                         />
                       </div>

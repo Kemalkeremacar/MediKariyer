@@ -167,10 +167,7 @@ const ConfirmationModal = ({ modalId = 'confirmation', config, closeModal }) => 
     type = 'info',
     size = 'medium',
     closeOnBackdrop = true,
-    destructive = false,
-    anchorRect = null,
-    placement = 'auto',
-    offsetDistance = 20
+    destructive = false
   } = confirmationModal.props;
 
   // Icon ve button style'ları al
@@ -208,9 +205,6 @@ const ConfirmationModal = ({ modalId = 'confirmation', config, closeModal }) => 
       maxHeight="85vh"
       closeOnBackdrop={closeOnBackdrop}
       showCloseButton={false}
-      anchorRect={anchorRect}
-      placement={placement}
-      offsetDistance={offsetDistance}
       containerClassName={`relative overflow-visible ${sizeClassName}`}
     >
       <div ref={modalRef} className={`relative ${isCompact ? 'p-6' : 'p-8'}`}>

@@ -482,33 +482,41 @@ const useUiStore = create((set, get) => ({
    * @param {Object} props - Modal props'ları
    */
   openModal: (modalId, props = {}) => set((state) => {
-    const plainAnchor = props.anchorRect
-      ? {
-          x: props.anchorRect.x,
-          y: props.anchorRect.y,
-          width: props.anchorRect.width,
-          height: props.anchorRect.height,
-          top: props.anchorRect.top,
-          left: props.anchorRect.left,
-          right: props.anchorRect.right,
-          bottom: props.anchorRect.bottom
-        }
-      : null;
+    const sanitizeAnchorRect = (rect) =>
+      rect
+        ? {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width,
+            height: rect.height,
+            top: rect.top,
+            left: rect.left,
+            right: rect.right,
+            bottom: rect.bottom,
+          }
+        : null;
+
+    const sanitizedProps = { ...props };
+
+    if (modalId === 'confirmation') {
+      delete sanitizedProps.anchorRect;
+      delete sanitizedProps.placement;
+      delete sanitizedProps.offsetDistance;
+    } else {
+      sanitizedProps.anchorRect = sanitizeAnchorRect(props.anchorRect);
+    }
 
     return {
       modals: {
         ...state.modals,
         [modalId]: {
           open: true,
-          props: {
-            ...props,
-            anchorRect: plainAnchor
-          }
-        }
+          props: sanitizedProps,
+        },
       },
       modalOrder: state.modalOrder.includes(modalId)
         ? state.modalOrder
-        : [...state.modalOrder, modalId]
+        : [...state.modalOrder, modalId],
     };
   }),
   

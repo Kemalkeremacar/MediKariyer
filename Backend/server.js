@@ -1,131 +1,120 @@
 /**
  * @file server.js
- * @description MediKariyer API sunucusunun ana giriş noktası.
- * Bu dosya, sunucuyu başlatır, temel güvenlik katmanlarını (Helmet, CORS, Rate Limiting) uygular,
- * Express ayarlarını ve route'ları yükler, global hata yakalama mekanizmalarını kurar
- * ve sunucunun düzgün bir şekilde kapatılmasını (graceful shutdown) yönetir.
+ * @description MediKariyer API sunucusunun ana giriş dosyası.
+ * Ortam yönetimi, Express yükleyicileri, cron görevleri, güvenli kapatma
+ * ve global hataların ele alınması bu dosyada yönetilir.
  */
 
 'use strict';
 
-// .env dosyasındaki ortam değişkenlerini yükler. Proje genelinde process.env üzerinden erişim sağlar.
-require('dotenv').config();
+const path = require('path');
 
-// Gerekli kütüphaneler
-const express = require('express'); // Node.js için web uygulama çatısı
-const cors = require('cors'); // Cross-Origin Resource Sharing (Farklı kaynaklardan gelen isteklere izin verme) middleware'i
-const helmet = require('helmet'); // HTTP başlıklarını güvenli hale getirerek çeşitli zafiyetlerden koruyan middleware
-const rateLimit = require('express-rate-limit'); // API'ye yapılan istekleri sınırlamak için kullanılan middleware (Brute-force saldırılarına karşı koruma)
+// ============================
+// 🌍 ENVIRONMENT LOADING
+// ============================
+if (process.env.NODE_ENV === 'production') {
+  require('dotenv').config({ path: path.join(__dirname, '.env.production') });
+  console.log("📦 [PROD] .env.production yüklendi");
+} else {
+  require('dotenv').config({ path: path.join(__dirname, '.env') });
+  console.log("📦 [DEV] .env yüklendi");
+}
 
-// Uygulama başlangıcında yüklenmesi gereken modüller (Loader'lar)
-// Bu yapı, başlangıç konfigürasyonlarını ana dosyadan ayırarak daha temiz bir kod yapısı sağlar.
-const expressLoader = require('./expressLoader'); // Express'in temel ayarlarını (body-parser, cookie-parser vb.) yükler.
-// Not: routeLoader kaldırıldı. Rota yükleme sorumluluğu expressLoader'a devredildi.
+// ============================
+// 📦 DEPENDENCIES
+// ============================
+const express = require('express');
+const logger = require('./src/utils/logger');
+const expressLoader = require('./expressLoader');
+const { testConnection } = require('./src/config/dbConfig');
 
-// Proje genelinde kullanılacak yardımcı modüller (Utilities)
-const logger = require('./src/utils/logger'); // Olayları (info, error, warning) kaydetmek için kullanılan Winston logger.
-const { testConnection } = require('./src/config/dbConfig'); // Veritabanı bağlantı testi
-const { startTokenCleanupScheduler, stopTokenCleanupScheduler } = require('./src/utils/tokenCleanup'); // Token temizleme sistemi
-const { startJobExpirationCron, stopJobExpirationCron } = require('./src/utils/jobExpirationCron'); // 30 günlük ilan süresi kontrolü
-// Not: globalErrorHandler kaldırıldı. Hata yönetimi sorumluluğu expressLoader'a devredildi.
+const {
+  startTokenCleanupScheduler,
+  stopTokenCleanupScheduler
+} = require('./src/utils/tokenCleanup');
 
-// Yeni bir Express uygulaması oluşturulur.
+const {
+  startJobExpirationCron,
+  stopJobExpirationCron
+} = require('./src/utils/jobExpirationCron');
+
+// ============================
+// 🚀 EXPRESS APP
+// ============================
 const app = express();
-
-// Sunucunun çalışacağı port. .env dosyasından alınır, eğer tanımlı değilse varsayılan olarak 3100 kullanılır.
+let server;
 const PORT = process.env.PORT || 3100;
 
-// Not: Temel güvenlik middleware'leri (Helmet, CORS, Rate Limiting) expressLoader içinde yönetilmektedir.
-
-// --- YÜKLEYİCİLER (LOADERS) ---
-
-// Başlatma fonksiyonu
-let server; // Server değişkenini dışarıda tanımla
-
+// ============================
+// 🔥 SERVER START FUNCTION
+// ============================
 const startServer = async () => {
   try {
-        // Veritabanı bağlantısını test et (3 retry ile)
-        const dbConnected = await testConnection();
-        if (!dbConnected) {
-            logger.warn('⚠️ Veritabanı bağlantısı başlangıçta kurulamadı, ancak sunucu başlatılıyor...');
-        }
+    // Veritabanı bağlantısını test et
+    const dbConnected = await testConnection();
+    if (!dbConnected) {
+      logger.warn('⚠️ Veritabanı bağlantısı testte başarısız. Sunucu yine de başlatılıyor…');
+    }
 
-    // Express uygulamasını yapılandır
+    // Express yükleyici (CORS, Helmet, ratelimit, routes vs.)
     expressLoader(app);
 
-    // Token temizleme sistemini başlat
+    // Scheduler – Token temizleme
     startTokenCleanupScheduler();
-    
-    // 30 günlük ilan süresi kontrolü cron job'ını başlat
+
+    // Scheduler – 30 günlük ilan süresi kontrolü
     startJobExpirationCron();
 
     // Sunucuyu başlat
     server = app.listen(PORT, () => {
-      logger.info(`🚀 MediKariyer API Sunucusu ${PORT} portunda çalışıyor.`);
-      logger.info(`📝 Ortam: ${process.env.NODE_ENV || 'development'}`);
-      logger.info(`🌐 API Ana URL: http://localhost:${PORT}${process.env.API_PREFIX || '/api'}`);
+      logger.info(`🚀 MediKariyer API ${PORT} portunda çalışıyor`);
+      logger.info(`🌐 Ortam: ${process.env.NODE_ENV}`);
+      logger.info(`🔗 API Base URL: http://localhost:${PORT}${process.env.API_PREFIX || '/api'}`);
     });
 
-    // Graceful shutdown handlers zaten dosyanın başında tanımlanmış
-
   } catch (error) {
-    logger.error('❌ Sunucu başlatma sırasında kritik hata:', error);
+    logger.error("❌ Sunucu başlatılamadı:", error);
     process.exit(1);
   }
 };
 
-// Sunucuyu başlat
+// Başlat
 startServer();
 
-// --- DÜZGÜN KAPATMA (GRACEFUL SHUTDOWN) ---
-// Sunucunun beklenmedik bir şekilde kapanması yerine, mevcut işlemleri bitirip güvenli bir şekilde sonlanmasını sağlar.
-// Bu, özellikle production ortamlarında veri kaybını önlemek için önemlidir.
+// ============================
+// 🧹 GRACEFUL SHUTDOWN
+// ============================
+const shutdown = (signal) => {
+  logger.info(`${signal} sinyali alındı. Sunucu kapatılıyor...`);
 
-// SIGTERM sinyali (genellikle process manager'lar tarafından gönderilir, örn: PM2, Docker)
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM sinyali alındı, sunucu düzgün bir şekilde kapatılıyor.');
   stopTokenCleanupScheduler();
   stopJobExpirationCron();
+
   if (server) {
     server.close(() => {
-      logger.info('İşlem sonlandırıldı.');
+      logger.info("Sunucu bağlantıları kapatıldı. Çıkılıyor...");
       process.exit(0);
     });
   } else {
     process.exit(0);
   }
-});
+};
 
-// SIGINT sinyali (genellikle Ctrl+C ile manuel olarak gönderilir)
-process.on('SIGINT', () => {
-  logger.info('SIGINT sinyali alındı, sunucu düzgün bir şekilde kapatılıyor.');
-  stopTokenCleanupScheduler();
-  stopJobExpirationCron();
-  if (server) {
-    server.close(() => {
-      logger.info('İşlem sonlandırıldı.');
-      process.exit(0);
-    });
-  } else {
-    process.exit(0);
-  }
-});
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
-// --- YAKALANAMAYAN HATALAR (UNCAUGHT EXCEPTIONS & UNHANDLED REJECTIONS) ---
-// Kodun herhangi bir yerinde try-catch bloğu ile yakalanamayan hataları yönetir.
-// Bu tür hatalar genellikle uygulamanın kararsız bir duruma geldiğini gösterir, bu yüzden en güvenli yol uygulamayı yeniden başlatmaktır.
-
-// Yakalanamayan senkron hatalar
+// ============================
+// ⚠️ GLOBAL ERROR HANDLERS
+// ============================
 process.on('uncaughtException', (err) => {
-  logger.error('Yakalanamayan Hata (Uncaught Exception):', err);
-  process.exit(1); // Hata sonrası uygulamayı sonlandır. Process manager (PM2) yeniden başlatacaktır.
+  logger.error("💥 Uncaught Exception:", err);
+  process.exit(1);
 });
 
-// Yakalanamayan asenkron (Promise) hataları
 process.on('unhandledRejection', (err) => {
-  logger.error('İşlenmeyen Promise Reddi (Unhandled Rejection):', err);
-  process.exit(1); // Hata sonrası uygulamayı sonlandır.
+  logger.error("💥 Unhandled Rejection:", err);
+  process.exit(1);
 });
 
-// Testler için uygulamayı dışa aktar.
+// Testler için app export edilir
 module.exports = app;
