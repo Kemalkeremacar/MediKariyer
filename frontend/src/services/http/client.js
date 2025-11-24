@@ -1474,26 +1474,6 @@ export const hospitalApiRequest = {
    */
   
   /**
-   * Sistemdeki doktor profillerini getirir (filtreleme ile)
-   * 
-   * @param {Object} filters - Filtre objesi
-   * @returns {Promise} Doctor profiles data promise
-   */
-  getDoctorProfiles: (filters = {}) => {
-    /**
-     * Query parametrelerini oluştur
-     */
-    const params = new URLSearchParams();
-    Object.keys(filters).forEach(key => {
-      if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
-        params.append(key, filters[key]);
-      }
-    });
-    const queryString = params.toString();
-    return apiRequest.get(`/hospital/doctors${queryString ? '?' + queryString : ''}`);
-  },
-  
-  /**
    * Doktor profil detayını getirir
    * 
    * @param {number} doctorId - Doktor ID'si

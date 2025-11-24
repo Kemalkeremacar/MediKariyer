@@ -179,9 +179,7 @@ export const ENDPOINTS = {
     APPLICATION_STATS: '/hospital/application-stats', // GET - Başvuru istatistikleri
     
     // Doktor profil görüntüleme
-    DOCTORS: '/hospital/doctors', // GET - Doktor profilleri listesi
     DOCTOR_DETAIL: '/hospital/doctors/:doctorId', // GET - Doktor profil detayı
-    DOCTOR_PROFILES: '/hospital/doctor-profiles', // GET - Doktor profilleri listesi (alias)
     DOCTOR_PROFILE_DETAIL: '/hospital/doctor-profiles/:id', // GET - Doktor profil detayı (alias)
     DOCTOR_SEARCH: '/hospital/doctor-search', // GET - Doktor arama
     ACCOUNT_DEACTIVATE: '/hospital/account/deactivate', // POST - Hastane hesabını pasif et

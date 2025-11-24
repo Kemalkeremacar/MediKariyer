@@ -32,22 +32,8 @@ import { useJobStatuses, useSpecialties, useSubspecialties } from '@/hooks/useLo
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
-import { hospitalTheme } from '../theme';
 
-const {
-  pageWrapper,
-  heroCard,
-  panelCard,
-  filterLabel,
-  filterSelect,
-  chipBase,
-  statsText,
-  ghostButton,
-  paginationButton,
-  sectionWrapper,
-  listCard,
-} = hospitalTheme;
-const hospitalPageWrapper = `hospital-light ${pageWrapper}`;
+const hospitalPageWrapper = 'hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8';
 
 const HospitalJobs = () => {
   const location = useLocation();
@@ -309,9 +295,9 @@ const HospitalJobs = () => {
 
   return (
     <div className={hospitalPageWrapper}>
-      <div className={sectionWrapper}>
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Hero Section */}
-        <div className={heroCard}>
+        <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
           </div>
@@ -345,7 +331,7 @@ const HospitalJobs = () => {
         </div>
 
         {/* Filters */}
-        <div className={`${panelCard} p-6`}>
+        <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
               <Filter className="w-5 h-5 text-blue-600" />
@@ -364,13 +350,13 @@ const HospitalJobs = () => {
           {/* Filter Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className={filterLabel}>
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 İlan Durumu
               </label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className={filterSelect}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Tüm İlanlar</option>
                 {statusOptions.map((status) => (
@@ -382,13 +368,13 @@ const HospitalJobs = () => {
             </div>
 
             <div>
-              <label className={filterLabel}>
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Ana Dal
               </label>
               <select
                 value={specialtyId}
                 onChange={(e) => setSpecialtyId(e.target.value)}
-                className={filterSelect}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Tüm Ana Dallar</option>
                 {specialties?.map((specialty) => (
@@ -400,14 +386,14 @@ const HospitalJobs = () => {
             </div>
 
             <div>
-              <label className={filterLabel}>
+              <label className="block text-sm font-medium text-gray-600 mb-2">
                 Yan Dal
               </label>
               <select
                 value={subspecialtyId}
                 onChange={(e) => setSubspecialtyId(e.target.value)}
                 disabled={!specialtyId}
-                className={filterSelect}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Tüm Yan Dallar</option>
                 {filteredSubspecialties.map((subspecialty) => (
@@ -423,7 +409,7 @@ const HospitalJobs = () => {
           {activeFiltersCount > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
               {statusFilter && (
-                <div className={`${chipBase} border-green-200 bg-green-50 text-green-700`}>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm border border-green-200 bg-green-50 text-green-700">
                   <span>Durum: {statusOptions.find(s => s.value.toString() === statusFilter.toString())?.label || statusFilter}</span>
                   <button
                     onClick={() => setStatusFilter('')}
@@ -434,7 +420,7 @@ const HospitalJobs = () => {
                 </div>
               )}
               {specialtyId && (
-                <div className={`${chipBase} border-purple-200 bg-purple-50 text-purple-700`}>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm border border-purple-200 bg-purple-50 text-purple-700">
                   <span>Ana Dal: {specialties?.find(s => s.id === parseInt(specialtyId, 10))?.name}</span>
                   <button
                     onClick={() => setSpecialtyId('')}
@@ -445,7 +431,7 @@ const HospitalJobs = () => {
                 </div>
               )}
               {subspecialtyId && (
-                <div className={`${chipBase} border-pink-200 bg-pink-50 text-pink-700`}>
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full text-sm border border-pink-200 bg-pink-50 text-pink-700">
                   <span>Yan Dal: {filteredSubspecialties.find(s => s.id === parseInt(subspecialtyId, 10))?.name}</span>
                   <button
                     onClick={() => setSubspecialtyId('')}
@@ -465,7 +451,7 @@ const HospitalJobs = () => {
             {paginationData.total || 0} iş ilanı bulundu
           </p>
           <div className="flex items-center gap-2">
-            <span className={statsText}>Sayfa:</span>
+            <span className="text-sm text-gray-500">Sayfa:</span>
             <span className="text-gray-900 font-semibold">
               {paginationData.page || 1} / {paginationData.pages || 1}
             </span>
@@ -477,7 +463,7 @@ const HospitalJobs = () => {
           <div className="flex flex-col gap-6">
             {jobs.map((job, index) => (
               <StaggeredAnimation key={job.id} delay={index * 50}>
-                <div className={listCard}>
+                <div className="bg-white rounded-3xl border border-blue-100 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300 p-6 group flex flex-row items-stretch gap-6">
                   {/* Left Section */}
                   <div className="flex-1 flex flex-col min-w-0">
                     <div className="flex items-start justify-between mb-4">
@@ -487,7 +473,7 @@ const HospitalJobs = () => {
                         </h3>
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <StatusBadge status={job.status} statusId={job.status_id} />
-                          <span className={statsText}>
+                          <span className="text-sm text-gray-500">
                             {job.application_count || 0} başvuru
                           </span>
                         </div>
@@ -527,7 +513,7 @@ const HospitalJobs = () => {
                         to={`/hospital/jobs/${job.id}`}
                         onClick={storeListState}
                         state={{ from: location.pathname }}
-                        className={`${ghostButton} border-blue-200 text-blue-600 hover:bg-blue-50`}
+                        className="px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1 border-blue-200 text-blue-600 hover:bg-blue-50"
                         title="Detayları Görüntüle"
                       >
                         <Eye className="w-4 h-4" />
@@ -538,7 +524,7 @@ const HospitalJobs = () => {
                           to={`/hospital/jobs/${job.id}/edit`}
                           onClick={storeListState}
                           state={{ from: location.pathname }}
-                          className={`${ghostButton} border-amber-200 text-amber-600 hover:bg-amber-50`}
+                          className="px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1 border-amber-200 text-amber-600 hover:bg-amber-50"
                           title="Düzenle"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -618,7 +604,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handlePrev}
         disabled={currentPage === 1}
-        className={`${paginationButton} text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
+        className="px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Önceki
       </button>
@@ -645,7 +631,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
           <button
             key={page}
             onClick={() => handlePage(page)}
-            className={`${paginationButton} ${
+            className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
               isCurrentPage
                 ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hospital-keep-white shadow-md'
                 : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'
@@ -659,7 +645,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handleNext}
         disabled={currentPage === totalPages}
-        className={`${paginationButton} text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed`}
+        className="px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Sonraki
       </button>

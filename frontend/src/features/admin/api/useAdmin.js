@@ -697,7 +697,6 @@ export function useReviewPhotoRequest() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'applications'] });
       queryClient.invalidateQueries({ queryKey: ['hospital', 'applications'] });
       queryClient.invalidateQueries({ queryKey: ['hospital', 'application'] });
-      queryClient.invalidateQueries({ queryKey: ['hospital', 'doctors'] });
       queryClient.invalidateQueries({ queryKey: ['hospital', 'doctor-profile'] });
       
       // 4. Ekstra önlem: Tüm query'leri refetch et (agresif yaklaşım)

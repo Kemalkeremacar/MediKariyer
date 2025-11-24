@@ -96,7 +96,6 @@ export const ROUTE_CONFIG = {
     JOB_CREATE: '/hospital/jobs/new',
     APPLICATIONS: '/hospital/applications',
     APPLICATION_DETAIL: '/hospital/applications/:applicationId',
-    DOCTORS: '/hospital/doctors',
     NOTIFICATIONS: '/hospital/notifications',
     SETTINGS: '/hospital/settings',
   },

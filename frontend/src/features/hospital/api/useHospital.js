@@ -14,7 +14,7 @@
  * - Başvuru yönetimi hooks (hospitalService.getApplications, getAllApplications, updateApplicationStatus)
  * - Departman yönetimi hooks (hospitalService.getDepartments, addDepartment, updateDepartment, deleteDepartment)
  * - İletişim bilgisi yönetimi hooks (hospitalService.getContacts, addContact, updateContact, deleteContact)
- * - Doktor profil görüntüleme hooks (hospitalService.getDoctorProfiles, getDoctorProfileDetail)
+ * - Doktor profil görüntüleme hooks (hospitalService.getDoctorProfileDetail)
  * 
  * @author MediKariyer Development Team
  * @version 2.3.0
@@ -623,32 +623,6 @@ export const useDeactivateHospitalAccount = () => {
 // ============================================================================
 
 /**
- * Hastane tarafından doktor profillerini listeler
- * Backend: GET /api/hospital/doctors
- * hospitalService.getDoctorProfiles() ile uyumlu
- */
-export const useHospitalDoctorProfiles = (filters = {}) => {
-  // Boş parametreleri filtrele
-  const cleanParams = Object.fromEntries(
-    Object.entries(filters).filter(([key, value]) => 
-      value !== '' && value !== null && value !== undefined
-    )
-  );
-
-  return useQuery({
-    queryKey: ['hospital', 'doctor-profiles', cleanParams],
-    queryFn: () => {
-      const queryString = buildQueryString(cleanParams);
-      return apiRequest.get(`${ENDPOINTS.HOSPITAL.DOCTORS}${queryString}`);
-    },
-    select: (res) => res.data,
-    ...listQueryConfig({ 
-      keepPreviousData: true,
-    }), // SEMI_REALTIME: Doktor profilleri
-  });
-};
-
-/**
  * Hastane tarafından tek doktor profilini detaylı görüntüleme
  * Backend: GET /api/hospital/doctors/:doctorId
  * hospitalService.getDoctorProfileDetail() ile uyumlu
@@ -657,7 +631,7 @@ export const useHospitalDoctorProfileDetail = (doctorId) => {
   return useQuery({
     queryKey: ['hospital', 'doctor-profile', doctorId],
     queryFn: () => {
-      const endpoint = buildEndpoint(`${ENDPOINTS.HOSPITAL.DOCTORS}/:doctorId`, { doctorId });
+      const endpoint = buildEndpoint(ENDPOINTS.HOSPITAL.DOCTOR_DETAIL, { doctorId });
       return apiRequest.get(endpoint);
     },
     select: (res) => res.data,
@@ -705,7 +679,6 @@ const useHospital = {
   useDeactivateHospitalAccount,
   
   // Doctor Profiles
-  useHospitalDoctorProfiles,
   useHospitalDoctorProfileDetail,
 };
 

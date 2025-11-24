@@ -82,10 +82,9 @@ export const useUpdateDoctorProfile = () => {
       qc.invalidateQueries(['admin', 'users']);
       qc.invalidateQueries(['admin', 'applications']); // Admin başvurular sayfası
       
-      // Hastane cache'ini invalidate et (hastane başvurular ve doktor listesi için)
+      // Hastane cache'ini invalidate et (hastane başvurular için)
       qc.invalidateQueries(['hospital', 'applications']);
       qc.invalidateQueries(['hospital', 'application']);
-      qc.invalidateQueries(['hospital', 'doctors']);
       
       showToast.success(toastMessages.profile.updateSuccess);
     },

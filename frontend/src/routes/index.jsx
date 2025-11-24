@@ -200,7 +200,6 @@ const HospitalJobDetail = lazy(() => import('@/features/hospital/pages/JobDetail
 const HospitalJobEdit = lazy(() => import('@/features/hospital/pages/JobEditPage'));
 const HospitalApplications = lazy(() => import('@/features/hospital/pages/ApplicationsPage'));
 const HospitalApplicationDetail = lazy(() => import('@/features/hospital/pages/ApplicationDetailPage'));
-const HospitalDoctors = lazy(() => import('@/features/hospital/pages/DoctorsPage'));
 const HospitalNotificationsPage = lazy(() => import('@/features/hospital/pages/NotificationsPage'));
 const HospitalSettingsPage = lazy(() => import('@/features/hospital/pages/SettingsPage'));
 
@@ -692,20 +691,6 @@ const AppRoutes = () => {
                   <RoleGuard allowedRoles={['hospital']}>
                     <ApprovalGuard>
                       <HospitalApplicationDetail />
-                    </ApprovalGuard>
-                  </RoleGuard>
-                </AuthGuard>
-              </ErrorBoundary>
-            }
-          />
-          <Route
-            path="hospital/doctors"
-            element={
-              <ErrorBoundary>
-                <AuthGuard>
-                  <RoleGuard allowedRoles={['hospital']}>
-                    <ApprovalGuard>
-                      <HospitalDoctors />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>
