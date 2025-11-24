@@ -54,5 +54,27 @@ router.use('/notifications', notificationRoutes);
 router.use('/contact', contactRoutes);
 router.use('/lookup', lookupRoutes);
 router.use('/logs', logRoutes);
+router.use('/mobile/auth', require('./mobile/mobileAuthRoutes'));
+router.use('/mobile/doctor', require('./mobile/mobileDoctorRoutes'));
+router.use('/mobile/jobs', require('./mobile/mobileJobRoutes'));
+router.use('/mobile/applications', require('./mobile/mobileApplicationRoutes'));
+router.use('/mobile/notifications', require('./mobile/mobileNotificationRoutes'));
+
+// Device Token endpoint (push notification için)
+// Not: Notification routes ile ilgili ama ayrı endpoint olarak eklendi
+const { authMiddleware } = require('../middleware/authMiddleware');
+const { requireDoctor } = require('../middleware/roleGuard');
+const { mobileErrorHandler, mobileErrorBoundary } = require('../middleware/mobileErrorHandler');
+const { validateBody } = require('../middleware/validationMiddleware');
+const { mobileDeviceTokenSchema } = require('../validators/mobileSchemas');
+const mobileNotificationController = require('../controllers/mobile/mobileNotificationController');
+
+const deviceTokenRouter = express.Router();
+deviceTokenRouter.use(mobileErrorHandler);
+deviceTokenRouter.use(authMiddleware);
+deviceTokenRouter.use(requireDoctor);
+deviceTokenRouter.post('/', validateBody(mobileDeviceTokenSchema), mobileNotificationController.registerDeviceToken);
+deviceTokenRouter.use(mobileErrorBoundary);
+router.use('/mobile/device-token', deviceTokenRouter);
 
 module.exports = router;

@@ -1,31 +1,50 @@
+Bu doküman, MediKariyer Doktor Mobil Uygulaması’nın MVP geliştirme stratejisini açıklar. 
+MVP tamamen ayrı bir mobile API layer üzerinde çalışacak, mevcut web sistemiyle 
+hiçbir çakışma olmayacaktır. React Native + Expo ile 6–8 hafta içinde canlıya çıkılabilir. 
+Push notification MVP’de Expo Push; production’da FCM olarak güncellenecektir.
+
+
+
+
 # 📱 MediKariyer Doktor Mobil Uygulama - MVP Geliştirme Yol Planı
 
 ## 📋 İçindekiler
 1. [Genel Bakış](#genel-bakış)
-2. [MVP Yaklaşımı](#mvp-yaklaşımı)
-3. [Teknoloji Stack (MVP)](#teknoloji-stack-mvp)
-4. [Backend: Mobile API Layer](#backend-mobile-api-layer)
-5. [Mimari Yapı](#mimari-yapı)
-6. [Authentication](#authentication)
-7. [Push Notification (MVP: Expo Push)](#push-notification-mvp-expo-push)
-8. [Offline Support (Basit)](#offline-support-basit)
-9. [Geliştirme Fazları (5-6 Hafta)](#geliştirme-fazları-5-6-hafta)
-10. [Production Öncesi (Sonra Yapılacaklar)](#production-öncesi-sonra-yapılacaklar)
+2. [🛡️ MEVCUT SİSTEM KORUMA GARANTİSİ](#️-mevcut-sistem-koruma-garantisi) ⚠️ ÇOK ÖNEMLİ
+3. [MVP Yaklaşımı](#mvp-yaklaşımı)
+4. [Teknoloji Stack (MVP)](#teknoloji-stack-mvp)
+5. [Backend: Mobile API Layer](#backend-mobile-api-layer)
+6. [Mimari Yapı](#mimari-yapı)
+7. [Authentication](#authentication)
+8. [Push Notification (MVP: Expo Push)](#push-notification-mvp-expo-push)
+9. [Offline Support (Basit)](#offline-support-basit)
+10. [Geliştirme Fazları (6-8 Hafta)](#geliştirme-fazları-6-8-hafta)
+11. [Production Öncesi (Sonra Yapılacaklar)](#production-öncesi-sonra-yapılacaklar)
 
 ---
 
 ## 🎯 Genel Bakış
 
 ### Mevcut Durum
-- **Backend**: Express.js + Node.js + SQL Server (Mevcut)
-- **Web Frontend**: React (Hastane & Admin için devam edecek)
+- **Backend**: Express.js + Node.js + SQL Server
+- **Web Frontend**: React (Hastane & Admin için)
 - **Mobil Uygulama**: MVP olarak geliştirilecek (Sadece Doktorlar için)
+
+### Proje Dizin Yapısı
+```
+MediKariyer/
+├── backend/              ← Backend API (Web + Mobile için)
+├── web-frontend/        ← Web Frontend (Hastane & Admin)
+└── mobile-app/          ← Mobile App (Doktorlar için)
+```
 
 ### Hedef Kullanıcı
 - ✅ Sadece **Doktorlar** mobil uygulamayı kullanacak
 - ❌ Hastane ve Admin web üzerinden devam edecek
 
-### MVP Kapsamı
+### MVP Kapsamı (İlk Canlı Versiyon)
+
+**MVP = Canlıya çıkacak ilk sürüm, gerçek kullanıcılar kullanacak:**
 - ✅ Login/Register (Doktor)
 - ✅ Dashboard (özet bilgiler)
 - ✅ Profil yönetimi (temel)
@@ -34,30 +53,86 @@
 - ✅ Bildirimler
 - ✅ Push notifications (Expo Push)
 
-### MVP'de Olmayacaklar (Sonra Eklenecek)
-- ❌ SSL Pinning (Production öncesi)
+### MVP'de Olmayacaklar (Sonraki Versiyonda Eklenecek)
+
+**Not:** MVP canlı ortamda çalışacak, ama bu özellikler sonraki versiyonda olacak:
+- ❌ SSL Pinning (Production versiyonunda eklenecek)
 - ❌ Gelişmiş offline queue
 - ❌ Complex offline sync
 - ❌ Advanced caching strategies
-- ❌ Firebase FCM (Expo Push kullanılacak)
+- ❌ Firebase FCM (MVP'de Expo Push, Production'da FCM'e geçilecek)
+
+---
+
+## 🛡️ MEVCUT SİSTEM KORUMA GARANTİSİ
+
+### ⚠️ Tek Satırda Özet: Mevcut Web Sistemi Hiç Etkilenmeyecek
+
+**Strateji:**
+- ❌ **Mevcut web dosyalarına dokunulmayacak** (route, controller, service dosyaları)
+- ✅ **Sadece yeni mobile klasörleri eklenecek** (`routes/mobile/`, `controllers/mobile/`, vb.)
+- ✅ **Web endpoint'leri değişmeyecek** (`/api/auth/*`, `/api/doctor/*` - prefix YOK)
+- ✅ **Mobile endpoint'leri yeni eklenecek** (`/api/mobile/*` - prefix VAR)
+- ✅ **`web-frontend/` klasörüne hiç dokunulmayacak**
+- ✅ **Sadece `routes/index.js` dosyasına mobile route'ları eklenecek**
+
+**Özet:**
+```
+Mevcut: Backend/src/routes/authRoutes.js      ← Değişmeyecek
+        Backend/src/controllers/...            ← Değişmeyecek
+        web-frontend/                          ← Hiç dokunulmayacak
+
+Yeni:   Backend/src/routes/mobile/...         ← Sadece bunlar eklenecek
+        Backend/src/controllers/mobile/...     ← Sadece bunlar eklenecek
+        mobile-app/                            ← Yeni klasör
+```
+
+**Not:** Bu garantiler dokümanda sadece bu bölümde açıklanmıştır. Detaylar için aşağıdaki "Backend Implementation" bölümüne bakın.
 
 ---
 
 ## 🚀 MVP Yaklaşımı
 
+### 📌 MVP Nedir? (Önemli Açıklama)
+
+**MVP = Minimum Viable Product (Minimum Çalışabilir Ürün)**
+
+**⚠️ ÖNEMLİ: MVP geliştirme ortamı DEĞİLDİR!**
+
+**MVP Ne Demek?**
+- ✅ **MVP = CANLIYA ÇIKACAK İLK SÜRÜM** (gerçek kullanıcılar kullanacak)
+- ✅ **MVP = Production ortamı** (canlı, çalışan uygulama)
+- ✅ Basit ama çalışır durumda
+- ❌ MVP = Test/Development ortamı **DEĞİLDİR**
+
+**Örnek:**
+```
+Geliştirme Ortamı → Test/Development (sadece geliştiriciler)
+         ↓
+      MVP → CANLIYA ÇIKIŞ (gerçek kullanıcılar)
+         ↓
+   Production → Gelişmiş özellikler eklendi
+```
+
+**MVP vs Production:**
+- **MVP:** Canlı, çalışan, ama basit özelliklerle (Expo Push)
+- **Production:** Canlı, çalışan, gelişmiş özelliklerle (Firebase FCM)
+
+**Sonuç:** MVP'yi geliştirirken production-ready düşün, ama önce basit özelliklerle canlıya çık.
+
 ### Felsefe: Hızlı, Yalın, İşlevsel
 
-**MVP'de Öncelik:**
+**MVP'de Öncelik (Canlıya Çıkacak İlk Versiyon):**
 1. Hızlı geliştirme (Expo ile)
 2. Minimal backend değişiklikleri
 3. Temel özellikler (login, dashboard, jobs, applications)
 4. Basit offline desteği (React Query cache)
 5. Expo Push (Firebase gerek yok)
 
-**Production Öncesi Yapılacaklar:**
+**Production'da Eklenebilecekler (Sonraki Aşama):**
 - SSL Pinning
 - Gelişmiş offline queue
-- Firebase FCM migration (opsiyonel)
+- Firebase FCM migration (Expo Push'tan geçiş)
 - Performance optimization
 - Advanced error handling
 
@@ -100,63 +175,59 @@
 
 ## 🏗 Mimari Yapı
 
-### Klasör Yapısı (React Native)
+### Mobile App Klasör Yapısı (Yeni Yapıya Göre)
 
 ```
 mobile-app/
+├── App.tsx
+├── app.json
+├── package.json
+├── metro.config.js
 ├── src/
 │   ├── api/
 │   │   ├── client.ts              # Axios instance + interceptors
 │   │   ├── endpoints.ts           # API endpoint definitions
-│   │   ├── services/
-│   │   │   ├── auth.service.ts
-│   │   │   ├── profile.service.ts
-│   │   │   ├── jobs.service.ts
-│   │   │   ├── applications.service.ts
-│   │   │   └── notifications.service.ts
-│   │   └── hooks/
-│   │       ├── useAuth.ts
-│   │       ├── useProfile.ts
-│   │       └── useJobs.ts
+│   │   └── services/
+│   │       ├── auth.service.ts
+│   │       ├── jobs.service.ts
+│   │       ├── applications.service.ts
+│   │       └── notifications.service.ts
+│   │
 │   ├── store/
-│   │   ├── authStore.ts          # Zustand store
-│   │   └── appStore.ts
+│   │   ├── authStore.ts          # Zustand (auth state)
+│   │   └── uiStore.ts            # Zustand (UI state)
+│   │
+│   ├── navigation/
+│   │   ├── AuthNavigator.tsx
+│   │   ├── MainNavigator.tsx
+│   │   └── RootNavigator.tsx
+│   │
 │   ├── screens/
 │   │   ├── auth/
 │   │   │   ├── LoginScreen.tsx
 │   │   │   └── RegisterScreen.tsx
 │   │   ├── dashboard/
 │   │   │   └── DashboardScreen.tsx
-│   │   ├── profile/
-│   │   │   ├── ProfileScreen.tsx
-│   │   │   ├── EditProfileScreen.tsx
-│   │   │   └── PhotoManagementScreen.tsx
 │   │   ├── jobs/
 │   │   │   ├── JobsListScreen.tsx
 │   │   │   └── JobDetailScreen.tsx
 │   │   ├── applications/
 │   │   │   ├── ApplicationsListScreen.tsx
 │   │   │   └── ApplicationDetailScreen.tsx
+│   │   ├── profile/
+│   │   │   ├── ProfileScreen.tsx
+│   │   │   └── EditProfileScreen.tsx
 │   │   └── notifications/
 │   │       └── NotificationsScreen.tsx
+│   │
 │   ├── components/
-│   │   ├── common/
-│   │   ├── forms/
-│   │   └── cards/
-│   ├── navigation/
-│   │   ├── AppNavigator.tsx
-│   │   ├── AuthNavigator.tsx
-│   │   └── MainNavigator.tsx
 │   ├── utils/
-│   │   ├── storage.ts            # AsyncStorage wrapper
-│   │   ├── token.ts              # Token management
-│   │   └── validation.ts         # Zod schemas
+│   ├── hooks/
 │   ├── types/
-│   │   └── index.ts              # TypeScript types
 │   └── constants/
-│       └── config.ts             # App config
-├── App.tsx
-└── package.json
+│
+└── docs/
+    └── openapi-mobile.yaml (Opsiyonel)
 ```
 
 ### State Management Stratejisi
@@ -188,13 +259,49 @@ mobile-app/
 
 ## 🔌 Backend: Mobile API Layer
 
-### Önemli: Mobile için Özel Endpoint Layer
+### Yeni Backend Yapısı (Web + Mobile Ayrımı)
 
-**Neden `/api/mobile/*` Layer Gerekli?**
+**Proje Dizin Yapısı:**
+```
+backend/
+├── src/
+│   ├── routes/
+│   │   ├── authRoutes.js         ← MEVCUT (değişmeyecek)
+│   │   ├── doctorRoutes.js       ← MEVCUT (değişmeyecek)
+│   │   ├── hospitalRoutes.js     ← MEVCUT (değişmeyecek)
+│   │   ├── adminRoutes.js        ← MEVCUT (değişmeyecek)
+│   │   │
+│   │   └── mobile/               ← YENİ (eklenecek)
+│   │       ├── mobileAuthRoutes.js
+│   │       ├── mobileDoctorRoutes.js
+│   │       ├── mobileJobRoutes.js
+│   │       └── mobileNotificationRoutes.js
+│   │
+│   ├── controllers/
+│   │   ├── authController.js     ← MEVCUT (değişmeyecek)
+│   │   ├── doctorController.js   ← MEVCUT (değişmeyecek)
+│   │   │
+│   │   └── mobile/               ← YENİ (eklenecek)
+│   │       ├── mobileDoctorController.js
+│   │       └── mobileJobController.js
+│   │
+│   ├── services/
+│   │   ├── authService.js        ← MEVCUT (değişmeyecek)
+│   │   ├── doctorService.js      ← MEVCUT (değişmeyecek)
+│   │   │
+│   │   └── mobile/               ← YENİ (eklenecek)
+│   │       ├── mobileDoctorService.js
+│   │       └── mobileJobService.js
+│   │
+│   └── mobile/                   ← YENİ (mobile utilities)
+│       └── transformers/         ← Response transformer'lar (MVP için yeterli)
+│           ├── jobTransformer.js
+│           └── profileTransformer.js
+```
 
-Web ve Mobile ihtiyaçları farklı:
+### Neden Ayrı Layer? (Web vs Mobile)
 
-**Web Response (Örnek):**
+**Web Response (Örnek - Detaylı):**
 ```json
 {
   "id": 123,
@@ -212,7 +319,7 @@ Web ve Mobile ihtiyaçları farklı:
 }
 ```
 
-**Mobile Response (Minimal):**
+**Mobile Response (Minimal - Optimize):**
 ```json
 {
   "id": 123,
@@ -226,137 +333,76 @@ Web ve Mobile ihtiyaçları farklı:
 }
 ```
 
-### Yeni Backend Yapısı
+**Fark:**
+- Web: Tüm metadata, admin bilgileri, revision history
+- Mobile: Sadece kullanıcının görmesi gereken minimal bilgi
+- Payload boyutu: Web ~5KB, Mobile ~500B (10x küçük!)
 
-```
-Backend/src/
-├── routes/
-│   ├── doctorRoutes.js       # Mevcut (Web için)
-│   └── mobileRoutes.js       # YENİ (Mobile için)
-├── controllers/
-│   ├── doctorController.js   # Mevcut
-│   └── mobileController.js   # YENİ
-└── services/
-    ├── doctorService.js      # Mevcut
-    └── mobileService.js      # YENİ (Mobile-optimized)
+### Backend Route Yapılandırması
+
+**Doğru Mimari:**
+- **Web (Primary API)**: Prefix YOK → `/api/auth`, `/api/doctor/*` (standart)
+- **Mobile (Secondary API)**: Prefix VAR → `/api/mobile/*`
+
+**Backend/src/routes/index.js:**
+```javascript
+const express = require('express');
+const router = express.Router();
+
+// ============================================================================
+// PRIMARY WEB API (Prefix YOK - Standart API)
+// Mevcut route'lar root'ta, değişmeyecek
+// ============================================================================
+router.use('/auth', authRoutes);              // POST /api/auth/login
+router.use('/doctor', doctorRoutes);          // GET /api/doctor/profile
+router.use('/hospital', hospitalRoutes);      // GET /api/hospital/jobs
+router.use('/admin', adminRoutes);            // GET /api/admin/users
+router.use('/notifications', notificationRoutes); // GET /api/notifications
+router.use('/contact', contactRoutes);        // POST /api/contact
+router.use('/lookup', lookupRoutes);          // GET /api/lookup/specialties
+router.use('/logs', logRoutes);               // GET /api/logs
+
+// ============================================================================
+// MOBILE API (Prefix VAR - /mobile/*)
+// ============================================================================
+router.use('/mobile/auth', require('./mobile/mobileAuthRoutes'));              // POST /api/mobile/auth/login
+router.use('/mobile/doctor', require('./mobile/mobileDoctorRoutes'));          // GET /api/mobile/doctor/dashboard
+router.use('/mobile/jobs', require('./mobile/mobileJobRoutes'));               // GET /api/mobile/jobs
+router.use('/mobile/applications', require('./mobile/mobileApplicationRoutes')); // GET /api/mobile/applications
+router.use('/mobile/notifications', require('./mobile/mobileNotificationRoutes')); // GET /api/mobile/notifications
+
+module.exports = router;
 ```
 
-### Mobile API Endpoints
+**Özet:** 
+- Web: Prefix yok → `/api/auth/*`, `/api/doctor/*` (standart API)
+- Mobile: Prefix var → `/api/mobile/*` (mobile özel API)
 
-#### Authentication (Mevcut Kullanılacak)
-```
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/refresh-token
-POST /api/auth/logout
-```
+**Detaylar:** Aşağıdaki "Adım 2" bölümüne bakın.
 
-#### Mobile-Specific Endpoints (YENİ)
+### Mobile API Endpoints (Özet)
 
-**Dashboard:**
-```
-GET /api/mobile/doctor/dashboard
-Response:
-{
-  "unread_notifications_count": 5,
-  "total_applications": 12,
-  "recommended_jobs_count": 8,
-  "profile_completion_percent": 75,
-  "recent_applications": [...], // Max 5
-  "recommended_jobs": [...]     // Max 5
-}
-```
+**Authentication:**
+- `POST /api/mobile/auth/login` - Token + minimal user bilgisi döner
+- `POST /api/mobile/auth/register` - Token + minimal user bilgisi döner
+- `POST /api/mobile/auth/refresh-token` - Yeni token döner
+- `POST /api/mobile/auth/logout` - Success response
+
+**Doctor:**
+- `GET /api/mobile/doctor/dashboard` - unread_count, recent_applications (max 5), recommended_jobs (max 5), profile_completion_percent
+- `GET /api/mobile/doctor/profile` - Minimal profile bilgisi
 
 **Jobs:**
-```
-GET /api/mobile/jobs?page=1&limit=20&specialty=Kardiyoloji&city=İstanbul
-
-Response (Minimal Payload):
-{
-  "data": [
-    {
-      "id": 123,
-      "title": "Kardiyoloji Uzmanı",
-      "city_name": "İstanbul",
-      "specialty": "Kardiyoloji",
-      "subspecialty": null,
-      "salary_range": "50000-70000",
-      "work_type": "Tam Zamanlı",
-      "created_at": "2024-01-15T10:00:00Z",
-      "is_applied": false,
-      "hospital_name": "ABC Hastanesi"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 45,
-    "pages": 3
-  }
-}
-
-GET /api/mobile/jobs/:id
-
-Response:
-{
-  "id": 123,
-  "title": "Kardiyoloji Uzmanı",
-  "city_name": "İstanbul",
-  "specialty": "Kardiyoloji",
-  "salary_range": "50000-70000",
-  "work_type": "Tam Zamanlı",
-  "description": "Kısa açıklama...", // Mobile için kısaltılmış
-  "requirements": ["..."],
-  "created_at": "2024-01-15T10:00:00Z",
-  "is_applied": false,
-  "application_id": null,
-  "hospital": {
-    "name": "ABC Hastanesi",
-    "city": "İstanbul"
-  }
-}
-```
+- `GET /api/mobile/jobs?page=1&limit=20&specialty=X&city=Y` - Minimal payload (id, title, city_name, specialty, salary_range, is_applied, pagination)
+- `GET /api/mobile/jobs/:id` - Detay (flat structure, nested object yok)
 
 **Applications:**
-```
-GET /api/mobile/applications?page=1&limit=20&status=pending
-
-Response:
-{
-  "data": [
-    {
-      "id": 456,
-      "job_id": 123,
-      "job_title": "Kardiyoloji Uzmanı",
-      "hospital_name": "ABC Hastanesi",
-      "status": "pending",
-      "status_label": "Onay Bekliyor",
-      "created_at": "2024-01-10T10:00:00Z"
-    }
-  ],
-  "pagination": {...}
-}
-```
+- `GET /api/mobile/applications?page=1&limit=20&status=X` - Minimal payload (id, job_id, job_title, hospital_name, status, created_at, pagination)
 
 **Notifications:**
-```
-GET /api/mobile/notifications?page=1&limit=20
+- `GET /api/mobile/notifications?page=1&limit=20` - Minimal payload (id, title, body, is_read, created_at, type, unread_count)
 
-Response:
-{
-  "data": [
-    {
-      "id": 789,
-      "title": "Başvuru Durumu Güncellendi",
-      "body": "ABC Hastanesi başvurunuzu değerlendiriyor",
-      "is_read": false,
-      "created_at": "2024-01-15T10:00:00Z",
-      "type": "application_status"
-    }
-  ],
-  "unread_count": 5
-}
-```
+**Not:** Tüm response'lar minimal payload, flat structure (1 seviye derinlik), pagination destekli. Detaylı örnekler backend implementation sırasında eklenir.
 
 **Profile (Minimal):**
 ```
@@ -386,149 +432,469 @@ Body:
 }
 ```
 
-### Backend Implementation (Örnek)
+### Backend Implementation (Yeni Yapıya Göre)
 
+## 📝 ADIM ADIM BACKEND MİGRATION PLANI
+
+### ⚠️ ÖNEMLİ: Mevcut Web Dosyalarına DOKUNULMAYACAK!
+
+**Strateji:** 
+- ❌ Mevcut web dosyalarına dokunulmayacak
+- ✅ Sadece yeni mobile klasörleri ve dosyaları eklenecek
+- ✅ Minimal risk, maksimum güvenlik
+
+### 📋 Mevcut Durum (Değişmeyecek!)
+
+```
+Backend/src/
+├── routes/
+│   ├── index.js              ← Sadece mobile route'ları eklenecek
+│   ├── authRoutes.js         ← DEĞİŞMEYECEK
+│   ├── doctorRoutes.js       ← DEĞİŞMEYECEK
+│   ├── hospitalRoutes.js     ← DEĞİŞMEYECEK
+│   ├── adminRoutes.js        ← DEĞİŞMEYECEK
+│   ├── notificationRoutes.js ← DEĞİŞMEYECEK
+│   ├── contactRoutes.js      ← DEĞİŞMEYECEK
+│   ├── lookupRoutes.js       ← DEĞİŞMEYECEK
+│   └── logRoutes.js          ← DEĞİŞMEYECEK
+├── controllers/
+│   ├── authController.js     ← DEĞİŞMEYECEK
+│   ├── doctorController.js   ← DEĞİŞMEYECEK
+│   └── ...                   ← DEĞİŞMEYECEK
+└── services/
+    ├── authService.js        ← DEĞİŞMEYECEK
+    ├── doctorService.js      ← DEĞİŞMEYECEK
+    └── ...                   ← DEĞİŞMEYECEK
+```
+
+### 🎯 Hedef Durum (Sadece Eklenecekler)
+
+```
+Backend/src/
+├── routes/
+│   ├── index.js              ← Sadece mobile route'ları eklenecek
+│   ├── authRoutes.js         ← DEĞİŞMEYECEK (mevcut)
+│   ├── doctorRoutes.js       ← DEĞİŞMEYECEK (mevcut)
+│   ├── ...                   ← Mevcut dosyalar olduğu gibi
+│   └── mobile/               ← YENİ KLASÖR (sadece bu eklenecek)
+│       ├── mobileAuthRoutes.js
+│       ├── mobileDoctorRoutes.js
+│       ├── mobileJobRoutes.js
+│       ├── mobileApplicationRoutes.js
+│       └── mobileNotificationRoutes.js
+│
+├── controllers/
+│   ├── authController.js     ← DEĞİŞMEYECEK (mevcut)
+│   ├── doctorController.js   ← DEĞİŞMEYECEK (mevcut)
+│   ├── ...                   ← Mevcut dosyalar olduğu gibi
+│   └── mobile/               ← YENİ KLASÖR (sadece bu eklenecek)
+│       ├── mobileAuthController.js
+│       ├── mobileDoctorController.js
+│       ├── mobileJobController.js
+│       ├── mobileApplicationController.js
+│       └── mobileNotificationController.js
+│
+├── services/
+│   ├── authService.js        ← DEĞİŞMEYECEK (mevcut)
+│   ├── doctorService.js      ← DEĞİŞMEYECEK (mevcut)
+│   ├── ...                   ← Mevcut dosyalar olduğu gibi
+│   └── mobile/               ← YENİ KLASÖR (sadece bu eklenecek)
+│       ├── mobileAuthService.js
+│       ├── mobileDoctorService.js
+│       ├── mobileJobService.js
+│       ├── mobileApplicationService.js
+│       └── mobileNotificationService.js
+│
+└── mobile/                   ← YENİ KLASÖR (src/ altında - sadeleştirilmiş)
+    └── transformers/         ← YENİ KLASÖR (MVP için Transformer yeterli, DTO production'da)
+        ├── jobTransformer.js
+        ├── applicationTransformer.js
+        ├── profileTransformer.js
+        └── notificationTransformer.js
+    
+    Not: Klasör yapısı sadeleştirildi - DTO klasörü MVP'de yok.
+```
+
+---
+
+### 🚀 Adım 1: Yeni Mobile Klasörlerini Oluştur
+
+**PowerShell Komutları:**
+```powershell
+# Backend/src dizinine git
+cd Backend\src
+
+# SADECE yeni mobile klasörlerini oluştur
+# Mevcut dosyalara dokunma!
+
+New-Item -ItemType Directory -Path "routes\mobile" -Force
+New-Item -ItemType Directory -Path "controllers\mobile" -Force
+New-Item -ItemType Directory -Path "services\mobile" -Force
+New-Item -ItemType Directory -Path "mobile\transformers" -Force
+
+# ✅ Bitti! Mevcut dosyalara dokunulmadı.
+```
+
+**Bash/Linux Komutları:**
+```bash
+cd Backend/src
+
+mkdir -p routes/mobile
+mkdir -p controllers/mobile
+mkdir -p services/mobile
+mkdir -p mobile/transformers
+```
+
+**✅ Kontrol:**
+- [ ] `routes/mobile/` klasörü oluşturuldu
+- [ ] `controllers/mobile/` klasörü oluşturuldu
+- [ ] `services/mobile/` klasörü oluşturuldu
+- [ ] `src/mobile/transformers/` klasörü oluşturuldu
+
+---
+
+### 🚀 Adım 2: routes/index.js Dosyasını Güncelle
+
+**Mevcut Dosya (Backend/src/routes/index.js):**
 ```javascript
-// Backend/src/routes/mobileRoutes.js
+router.use('/auth', authRoutes);
+router.use('/doctor', doctorRoutes);
+router.use('/hospital', hospitalRoutes);
+router.use('/admin', adminRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/contact', contactRoutes);
+router.use('/lookup', lookupRoutes);
+router.use('/logs', logRoutes);
+```
+
+**✅ Kontrol:**
+- [ ] `routes/index.js` dosyası güncellendi (üstteki "Backend Route Yapılandırması" bölümüne bakın)
+- [ ] Mevcut web route'ları değişmedi
+- [ ] Sadece mobile route'ları eklendi
+- [ ] `middleware/mobileErrorHandler.js` dosyası oluşturuldu (KRİTİK: Mobile için JSON-only error handler)
+- [ ] Tüm mobile route dosyalarına `mobileErrorHandler` middleware'i eklendi
+
+---
+
+### 🚀 Adım 3: Yeni Mobile Dosyalarını Oluştur
+
+#### 3.1. Mobile Route Dosyası Örneği
+
+**routes/mobile/mobileDoctorRoutes.js:**
+```javascript
 const express = require('express');
-const mobileController = require('../controllers/mobileController');
-const { authMiddleware } = require('../middleware/authMiddleware');
-const { requireRole } = require('../middleware/roleGuard');
+const mobileDoctorController = require('../../controllers/mobile/mobileDoctorController');
+const { authMiddleware } = require('../../middleware/authMiddleware');
+const { requireRole } = require('../../middleware/roleGuard');
+const { mobileErrorHandler } = require('../../middleware/mobileErrorHandler'); // KRİTİK: Mobile için JSON-only error handler
 
 const router = express.Router();
 
-// Mobile routes - sadece doktorlar
+// KRİTİK: Mobile route'larında TÜM hatalar JSON döndürmeli
+// Web tarafı HTML dönebilir ama Mobile JSON bekler - HTML dönerse "JSON Parse Error" çöker
+// Bu middleware route'lardan ÖNCE eklenmeli (tüm hataları yakalamak için)
+router.use(mobileErrorHandler); // Her zaman JSON döndürür
+
 router.use(authMiddleware);
-router.use(requireRole(['doctor']));
+// Not: RoleGuard opsiyonel - Mobile sadece doktor kullanıyor, ama güvenlik için eklenebilir
+router.use(requireRole(['doctor'])); // Opsiyonel: Fazladan overhead ama güvenlik açısından sorun yok
 
-// Dashboard
-router.get('/doctor/dashboard', mobileController.getDashboard);
-
-// Jobs
-router.get('/jobs', mobileController.getJobs);
-router.get('/jobs/:id', mobileController.getJobById);
-
-// Applications
-router.get('/applications', mobileController.getApplications);
-router.post('/applications', mobileController.createApplication);
-router.get('/applications/:id', mobileController.getApplicationById);
-
-// Notifications
-router.get('/notifications', mobileController.getNotifications);
-router.patch('/notifications/:id/read', mobileController.markAsRead);
-
-// Profile
-router.get('/profile', mobileController.getProfile);
-
-// Device token
-router.post('/device-token', mobileController.saveDeviceToken);
+router.get('/dashboard', mobileDoctorController.getDashboard);
+router.get('/profile', mobileDoctorController.getProfile);
 
 module.exports = router;
-
-// Backend/src/routes/index.js içine ekle:
-router.use('/mobile', mobileRoutes);
 ```
 
+**routes/mobile/mobileAuthRoutes.js:**
 ```javascript
-// Backend/src/services/mobileService.js (Örnek)
-const db = require('../config/dbConfig').db;
+const express = require('express');
+const mobileAuthController = require('../../controllers/mobile/mobileAuthController');
+const { mobileErrorHandler } = require('../../middleware/mobileErrorHandler'); // KRİTİK: Mobile için JSON-only error handler
 
-const getMobileDashboard = async (userId) => {
-  // Minimal data için optimize edilmiş query
-  const [profile] = await db('doctor_profiles')
-    .where('user_id', userId)
-    .select('id', 'first_name', 'last_name', 'profile_photo');
+const router = express.Router();
+
+// KRİTİK: Mobile route'larında TÜM hatalar JSON döndürmeli
+router.use(mobileErrorHandler); // Her zaman JSON döndürür
+
+router.post('/login', mobileAuthController.login);
+router.post('/register', mobileAuthController.register);
+router.post('/refresh-token', mobileAuthController.refreshToken);
+
+module.exports = router;
+```
+
+#### 3.2. Mobile Controller Dosyası Örneği
+
+**controllers/mobile/mobileDoctorController.js:**
+```javascript
+const mobileDoctorService = require('../../services/mobile/mobileDoctorService');
+const { sendSuccess } = require('../../utils/response');
+const { catchAsync } = require('../../utils/errorHandler');
+
+const getDashboard = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const dashboardData = await mobileDoctorService.getDashboard(userId);
+  return sendSuccess(res, 'Dashboard verileri', dashboardData);
+});
+
+const getProfile = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const profile = await mobileDoctorService.getProfile(userId);
+  return sendSuccess(res, 'Profil bilgileri', profile);
+});
+
+module.exports = {
+  getDashboard,
+  getProfile,
+};
+```
+
+#### 3.3. Mobile Service Dosyası Örneği
+
+**services/mobile/mobileDoctorService.js:**
+```javascript
+const db = require('../../config/dbConfig').db;
+const jobTransformer = require('../../mobile/transformers/jobTransformer');
+const profileTransformer = require('../../mobile/transformers/profileTransformer');
+
+const getDashboard = async (userId) => {
+  // Not: Mobile service'ler web kodlarına benziyor ama bu normal:
+  // - Mobil için farklı transformer kullanıyor
+  // - Farklı optimizasyon (minimal payload)
+  // - İleride tek servis mantığına geçilebilir (refactor)
+  // Şu an ayrı tutmak daha temiz ve güvenli
   
-  const unreadCount = await db('notifications')
+  const profile = await db('doctor_profiles')
+    .where('user_id', userId)
+    .first();
+  
+  // Unread notifications count
+  const [{ count: unreadCount }] = await db('notifications')
     .where('user_id', userId)
     .where('is_read', false)
-    .count('* as count')
-    .first();
+    .count('* as count');
   
-  const totalApplications = await db('applications')
+  // Total applications
+  const [{ count: totalApps }] = await db('applications')
     .where('doctor_profile_id', profile.id)
-    .count('* as count')
-    .first();
+    .count('* as count');
   
-  // Recommended jobs (basit algoritma)
+  // Recommended jobs (minimal data - mobile optimized)
   const recommendedJobs = await db('jobs as j')
-    .join('doctor_profiles as dp', 'dp.user_id', userId)
     .where('j.status', 'approved')
-    .where('j.specialty_id', db.raw('dp.specialty_id')) // Aynı uzmanlık
-    .select('j.id', 'j.title', 'j.city_name', 'j.specialty')
+    .select('j.*')
     .limit(5);
   
+  // Transformer ile minimal payload (MVP'de sadece gerekli alanlar)
   return {
-    unread_notifications_count: parseInt(unreadCount?.count || 0),
-    total_applications: parseInt(totalApplications?.count || 0),
-    recommended_jobs_count: recommendedJobs.length,
-    profile_completion_percent: 75, // Calculate from profile
-    recent_applications: [...], // Last 5
+    unread_notifications_count: parseInt(unreadCount),
+    recent_applications: await getRecentApplications(profile.id, 5), // Max 5 - minimal bilgi
+    recommended_jobs: recommendedJobs.map(jobTransformer.toMobile), // Max 5 - minimal payload
+    profile_completion_percent: 75, // MVP'de dummy olabilir (hesaplanmayabilir)
+    // Not: total_applications ve recommended_jobs_count MVP'de gereksiz (dashboard minimal olsun)
+  };
+};
+
+const getProfile = async (userId) => {
+  const profile = await db('doctor_profiles')
+    .where('user_id', userId)
+    .first();
+  
+  return profileTransformer.toMobile(profile);
+};
+
+module.exports = {
+  getDashboard,
+  getProfile,
+};
+```
+
+**Notlar:**
+- Mevcut service'lere dokunulmayacak, sadece yeni mobile service'ler oluşturulacak.
+- Mobile service'ler web kodlarına benziyor ama bu normal (farklı transformer, minimal payload). İleride refactor edilebilir.
+
+---
+
+### ✅ Kontrol Listesi (Minimal ve Güvenli)
+
+#### ✅ Yeni Klasörler (Sadece Mobile)
+- [ ] `routes/mobile/` klasörü oluşturuldu
+- [ ] `controllers/mobile/` klasörü oluşturuldu
+- [ ] `services/mobile/` klasörü oluşturuldu
+- [ ] `src/mobile/transformers/` klasörü oluşturuldu
+
+#### ✅ Dosya Güncellemeleri (Minimal)
+- [ ] `routes/index.js` güncellendi (sadece mobile route'ları eklendi)
+- [ ] `middleware/mobileErrorHandler.js` oluşturuldu (KRİTİK: Mobile için JSON-only error handler)
+- [ ] Tüm mobile route dosyalarına `mobileErrorHandler` middleware'i eklendi
+- [ ] Mevcut web dosyalarına dokunulmadı ✅
+
+#### ✅ Test
+- [ ] Mevcut web endpoint'leri çalışıyor mu? (`/api/auth/login`, `/api/doctor/profile`)
+- [ ] Backend server başlatılıyor mu?
+- [ ] Yeni mobile endpoint'leri çalışıyor mu? (`/api/mobile/auth/login`)
+
+#### ❌ YAPILMAYACAKLAR
+- ❌ Mevcut dosyalar taşınmayacak
+- ❌ Mevcut import'lar değiştirilmeyecek
+- ❌ `routes/web/` klasörü oluşturulmayacak
+- ❌ Mevcut dosyalara dokunulmayacak
+
+---
+
+#### 3.2. Mobile Controller Dosyası Örneği
+
+```javascript
+// backend/src/routes/mobile/mobileDoctorRoutes.js
+const express = require('express');
+const mobileDoctorController = require('../../controllers/mobile/mobileDoctorController');
+const { authMiddleware } = require('../../middleware/authMiddleware');
+const { requireRole } = require('../../middleware/roleGuard');
+
+const router = express.Router();
+
+// Mobile doctor routes - sadece doktorlar
+router.use(authMiddleware);
+// Not: RoleGuard opsiyonel - Mobile sadece doktor kullanıyor, ama güvenlik için eklenebilir
+router.use(requireRole(['doctor'])); // Opsiyonel: Fazladan overhead ama güvenlik açısından sorun yok
+
+router.get('/dashboard', mobileDoctorController.getDashboard);
+router.get('/profile', mobileDoctorController.getProfile);
+
+module.exports = router;
+```
+
+#### 3.3. Mobile Service Dosyası Örneği
+
+```javascript
+// backend/src/controllers/mobile/mobileDoctorController.js
+const mobileDoctorService = require('../../services/mobile/mobileDoctorService');
+const { sendSuccess, sendError } = require('../../utils/response');
+const { catchAsync } = require('../../utils/errorHandler');
+
+const getDashboard = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const dashboardData = await mobileDoctorService.getDashboard(userId);
+  return sendSuccess(res, 'Dashboard verileri', dashboardData);
+});
+
+const getProfile = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const profile = await mobileDoctorService.getProfile(userId);
+  return sendSuccess(res, 'Profil bilgileri', profile);
+});
+
+module.exports = {
+  getDashboard,
+  getProfile,
+};
+```
+
+#### 3.4. Transformer Dosyası Örneği
+
+```javascript
+// backend/src/services/mobile/mobileDoctorService.js
+const db = require('../../config/dbConfig').db;
+const jobTransformer = require('../../mobile/transformers/jobTransformer');
+const profileTransformer = require('../../mobile/transformers/profileTransformer');
+
+const getDashboard = async (userId) => {
+  // Web service'leri kullan ama transformer ile minimal data dön
+  const profile = await db('doctor_profiles')
+    .where('user_id', userId)
+    .first();
+  
+  // Unread notifications count
+  const [{ count: unreadCount }] = await db('notifications')
+    .where('user_id', userId)
+    .where('is_read', false)
+    .count('* as count');
+  
+  // Total applications
+  const [{ count: totalApps }] = await db('applications')
+    .where('doctor_profile_id', profile.id)
+    .count('* as count');
+  
+  // Recommended jobs (web service'ten al ama transform et)
+  const recommendedJobsRaw = await db('jobs as j')
+    .join('doctor_profiles as dp', 'dp.user_id', userId)
+    .where('j.status', 'approved')
+    .where('j.specialty_id', db.raw('dp.specialty_id'))
+    .select('j.*', 'h.institution_name as hospital_name')
+    .leftJoin('hospitals as h', 'h.user_id', 'j.hospital_user_id')
+    .limit(5);
+  
+  // Transform to mobile format
+  const recommendedJobs = recommendedJobsRaw.map(jobTransformer.toMobile);
+  
+  return {
+    unread_notifications_count: parseInt(unreadCount || 0),
+    // Not: total_applications ve recommended_jobs_count MVP'de opsiyonel
+    profile_completion_percent: calculateCompletion(profile),
+    recent_applications: await getRecentApplications(profile.id, 5),
     recommended_jobs: recommendedJobs
   };
 };
 
-const getMobileJobs = async (filters = {}) => {
-  // Minimal fields için optimize query
-  const query = db('jobs as j')
-    .where('j.status', 'approved')
-    .select(
-      'j.id',
-      'j.title',
-      'j.city_name',
-      'j.specialty',
-      'j.salary_range',
-      'j.work_type',
-      'j.created_at',
-      db.raw('h.institution_name as hospital_name')
-    )
-    .leftJoin('hospitals as h', 'h.user_id', 'j.hospital_user_id');
+const getProfile = async (userId) => {
+  const profile = await db('doctor_profiles')
+    .where('user_id', userId)
+    .first();
   
-  // Filters
-  if (filters.specialty) {
-    query.where('j.specialty', filters.specialty);
-  }
-  if (filters.city) {
-    query.where('j.city_name', filters.city);
-  }
-  
-  // Pagination
-  const page = filters.page || 1;
-  const limit = filters.limit || 20;
-  const offset = (page - 1) * limit;
-  
-  const jobs = await query.limit(limit).offset(offset);
-  
-  // Check if applied (for each job)
-  const jobIds = jobs.map(j => j.id);
-  const applications = await db('applications')
-    .whereIn('job_id', jobIds)
-    .select('job_id');
-  
-  const appliedJobIds = new Set(applications.map(a => a.job_id));
-  
-  const jobsWithApplied = jobs.map(job => ({
-    ...job,
-    is_applied: appliedJobIds.has(job.id)
-  }));
-  
+  // Transform to mobile format (minimal fields)
+  return profileTransformer.toMobile(profile);
+};
+
+module.exports = {
+  getDashboard,
+  getProfile,
+};
+```
+
+#### 3.4. Transformer Dosyası Örneği
+
+```javascript
+// backend/src/mobile/transformers/jobTransformer.js
+
+/**
+ * Web job response'unu mobile format'a çevir
+ */
+const toMobile = (job) => {
   return {
-    data: jobsWithApplied,
-    pagination: {
-      page,
-      limit,
-      total: await query.clone().count('* as count').first(),
-      pages: Math.ceil(total / limit)
-    }
+    id: job.id,
+    title: job.title,
+    city_name: job.city_name,
+    specialty: job.specialty,
+    subspecialty: job.subspecialty_name || null,
+    salary_range: job.salary_range,
+    work_type: job.work_type,
+    created_at: job.created_at,
+    is_applied: job.is_applied || false,
+    hospital_name: job.hospital_name || job.institution_name
+  };
+};
+
+/**
+ * Job detail için minimal format
+ */
+const toMobileDetail = (job) => {
+  return {
+    ...toMobile(job),
+    description: truncate(job.description, 200), // Mobile için kısaltılmış
+    requirements: job.requirements?.slice(0, 5) || [], // Max 5 requirement
+    // Admin metadata, revision history vs. EKLENMEZ
   };
 };
 
 module.exports = {
-  getMobileDashboard,
-  getMobileJobs,
-  // ... diğer fonksiyonlar
+  toMobile,
+  toMobileDetail,
 };
 ```
+
+---
+
+**Not:** MVP'de DTO gereksiz, Transformer yeterli. DTO production'da ihtiyaç halinde eklenebilir.
 
 ---
 
@@ -617,11 +983,14 @@ GET    /api/lookup/application-statuses
 // src/api/client.ts
 import axios from 'axios';
 import { Platform } from 'react-native';
-import * as Keychain from 'react-native-keychain';
+import * as SecureStore from 'expo-secure-store';
 
+// Mobile için backend endpoint
 const API_BASE_URL = __DEV__ 
-  ? 'http://localhost:3000/api'  // Development
-  : 'https://mk.monassist.com/api';  // Production
+  ? 'http://localhost:3100/api/mobile'  // Development - Mobile endpoints
+  : 'https://mk.monassist.com/api/mobile';  // Production - Mobile endpoints
+
+// Not: Web frontend '/api/*' kullanır (prefix yok), mobile '/api/mobile/*' kullanır (prefix var)
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -689,37 +1058,8 @@ export default apiClient;
 
 ```typescript
 // src/utils/token.ts
-import * as Keychain from 'react-native-keychain';
-
-export const TokenManager = {
-  async saveTokens(accessToken: string, refreshToken: string) {
-    // Refresh token'ı username, access token'ı password olarak kaydet
-    await Keychain.setGenericPassword(refreshToken, accessToken, {
-      accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      service: 'com.medikariyer.tokens',
-    });
-  },
-
-  async getAccessToken(): Promise<string | null> {
-    const credentials = await Keychain.getGenericPassword({
-      service: 'com.medikariyer.tokens',
-    });
-    return credentials ? credentials.password : null;
-  },
-
-  async getRefreshToken(): Promise<string | null> {
-    const credentials = await Keychain.getGenericPassword({
-      service: 'com.medikariyer.tokens',
-    });
-    return credentials ? credentials.username : null;
-  },
-
-  async clearTokens() {
-    await Keychain.resetGenericPassword({
-      service: 'com.medikariyer.tokens',
-    });
-  },
-};
+// NOT: Bu kod PRODUCTION'da kullanılacak (Keychain ile biometric auth için)
+// MVP'de Expo Secure Store kullan (yukarıdaki kod bloğuna bakın)
 ```
 
 ### Authentication Flow
@@ -743,8 +1083,8 @@ export const TokenManager = {
        │
        ▼
 ┌─────────────────────┐
-│ Keychain'e Kaydet   │
-│ (Secure Storage)    │
+│ Secure Store'a Kaydet │
+│ (Expo Secure Store)   │
 └──────┬──────────────┘
        │
        ▼
@@ -755,7 +1095,8 @@ export const TokenManager = {
 
 ### Güvenlik Best Practices
 
-1. **Token Storage**: Keychain/Keystore kullan (AsyncStorage değil!)
+1. **Token Storage (MVP)**: Expo Secure Store kullan (AsyncStorage değil!)
+2. **Token Storage (Production)**: react-native-keychain (biometric auth için)
 2. **SSL Pinning**: Production'da implement et
 3. **Certificate Validation**: Backend SSL sertifikası doğrulama
 4. **Biometric Auth**: Face ID / Fingerprint desteği (optional)
@@ -763,278 +1104,68 @@ export const TokenManager = {
 
 ---
 
-## 🔔 Push Notification (MVP: Expo Push)
+## 🔔 Push Notification
 
-### MVP Yaklaşımı: Expo Push Notifications
+### 📱 MVP Fazı: Expo Push (Firebase Gerekmez)
 
-**Neden Expo Push?**
-- ✅ Firebase gerekmez
-- ✅ Hızlı setup
-- ✅ Backend'de sadece HTTP POST
+**MVP'de Kullanılacak: Expo Push Notifications**
+
+**✅ MVP'de Ne Var:**
+- ✅ Mobile: Expo Push token al
+- ✅ Mobile: Token'ı backend'e gönder
+- ✅ Backend: Token'ı veritabanına kaydet
+- ✅ Backend: Expo Push endpoint'ine POST at (`https://exp.host/--/api/v2/push/send`)
+- ✅ Firebase kurmaya gerek yok!
+
+**❌ MVP'de Ne Yok:**
+- ❌ Firebase kurulumu
+- ❌ Firebase Admin SDK
+- ❌ FCM token'lar
+- ❌ Advanced notification features
+
+**Neden MVP'de Expo Push?**
+- ✅ Firebase kurmaya gerek yok
+- ✅ Hızlı setup (5 dakika)
+- ✅ Backend'de sadece HTTP POST atıyorsun
 - ✅ Production'a kadar yeterli
 - ✅ Sonradan FCM'e geçiş mümkün
 
-### Expo Push Mimari
+---
 
-#### Mobile Tarafı
+### 🚀 Production Fazı: Firebase FCM Migration
 
-```typescript
-// src/services/pushNotificationService.ts
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
-import apiClient from '../api/client';
+**⚠️ ÖNEMLİ: Bu Production'da yapılacak, MVP'de değil!**
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+**Production'da Yapılacaklar:**
+1. ⏳ Expo Push token → FCM token'a migrate
+2. ⏳ Firebase Admin SDK kurulumu
+3. ⏳ Advanced notification özellikleri (rich notifications, actions, etc.)
+4. ⏳ Analytics entegrasyonu
+5. ⏳ A/B testing için notification targeting
 
-class ExpoPushService {
-  async registerForPushNotifications() {
-    if (!Device.isDevice) {
-      console.warn('Push notifications only work on physical devices');
-      return null;
-    }
+**✅ Production'da Ne Var:**
+- ✅ Firebase Admin SDK
+- ✅ FCM token yönetimi
+- ✅ Rich notifications (images, actions)
+- ✅ Notification scheduling
+- ✅ Analytics & A/B testing
 
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
+**Not:** MVP'de Expo Push kullan, Production'da Firebase FCM'e geçiş yap.
 
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
+---
 
-    if (finalStatus !== 'granted') {
-      console.warn('Failed to get push token for push notification');
-      return null;
-    }
+## 📱 MVP: Expo Push Implementation
 
-    const token = (await Notifications.getExpoPushTokenAsync({
-      projectId: 'your-expo-project-id', // expo.json'dan alınacak
-    })).data;
+**Basit Özet:**
+- MVP'de Expo Push kullanılacak (Firebase gerektirmez)
+- Device token tablosu eklenecek (`device_tokens`)
+- Backend: Expo Push endpoint'ine POST atılacak (`https://exp.host/--/api/v2/push/send`)
+- Mobile: Expo Push token alınıp backend'e kaydedilecek
 
-    // Backend'e kaydet
-    await this.sendTokenToBackend(token);
+**Not:** Detaylı kod implementasyonu roadmap'ten çıkarıldı. Teknik implementasyon detayları için `docs/expo-push-implementation.md` dosyasına bakın.
 
-    // Notification listeners
-    this.setupNotificationHandlers();
+---
 
-    return token;
-  }
-
-  async sendTokenToBackend(expoPushToken: string) {
-    try {
-      const deviceId = await Device.modelId;
-      
-      await apiClient.post('/mobile/device-token', {
-        expo_push_token: expoPushToken,
-        device_id: deviceId,
-        platform: Platform.OS,
-      });
-    } catch (error) {
-      console.error('Failed to register device token:', error);
-    }
-  }
-
-  setupNotificationHandlers() {
-    // Foreground notifications
-    Notifications.addNotificationReceivedListener((notification) => {
-      console.log('Notification received:', notification);
-      // Update UI or show in-app notification
-    });
-
-    // User tapped notification
-    Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log('Notification tapped:', response);
-      // Navigate to relevant screen
-    });
-  }
-}
-
-export default new ExpoPushService();
-```
-
-#### Backend Tarafı
-
-**1. Database Schema:**
-
-```sql
--- Device tokens tablosu
-CREATE TABLE device_tokens (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    user_id INT NOT NULL,
-    expo_push_token VARCHAR(500) NOT NULL,
-    device_id VARCHAR(200) NULL,
-    platform VARCHAR(20) NOT NULL, -- 'ios' veya 'android'
-    is_active BIT DEFAULT 1,
-    created_at DATETIME DEFAULT GETDATE(),
-    updated_at DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_token (user_id, expo_push_token)
-);
-```
-
-**2. Backend Service:**
-
-```javascript
-// Backend/src/services/expoPushService.js
-const axios = require('axios');
-const db = require('../config/dbConfig').db;
-const logger = require('../utils/logger');
-
-const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
-
-/**
- * Device token kaydetme
- */
-const saveDeviceToken = async (userId, expoPushToken, deviceId, platform) => {
-  // Mevcut token'ı deaktif et
-  await db('device_tokens')
-    .where('user_id', userId)
-    .where('expo_push_token', expoPushToken)
-    .update({ is_active: 0 });
-
-  // Yeni token kaydet veya aktif et
-  const [existing] = await db('device_tokens')
-    .where('user_id', userId)
-    .where('expo_push_token', expoPushToken)
-    .select('*');
-
-  if (existing) {
-    await db('device_tokens')
-      .where('id', existing.id)
-      .update({
-        is_active: 1,
-        platform,
-        device_id: deviceId,
-        updated_at: new Date(),
-      });
-  } else {
-    await db('device_tokens').insert({
-      user_id: userId,
-      expo_push_token: expoPushToken,
-      device_id: deviceId,
-      platform,
-      is_active: 1,
-    });
-  }
-};
-
-/**
- * Expo Push Notification gönderme
- */
-const sendExpoPushNotification = async (expoPushTokens, title, body, data = {}) => {
-  const messages = expoPushTokens.map(token => ({
-    to: token,
-    sound: 'default',
-    title,
-    body,
-    data,
-    badge: 1,
-  }));
-
-  try {
-    const response = await axios.post(EXPO_PUSH_URL, messages, {
-      headers: {
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-    });
-
-    return { success: true, response: response.data };
-  } catch (error) {
-    logger.error('Expo push notification error:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-/**
- * Kullanıcıya push notification gönder
- */
-const sendPushToUser = async (userId, title, body, data = {}) => {
-  // Kullanıcının aktif device token'larını al
-  const tokens = await db('device_tokens')
-    .where('user_id', userId)
-    .where('is_active', 1)
-    .select('expo_push_token');
-
-  if (tokens.length === 0) {
-    logger.warn(`No active device tokens for user ${userId}`);
-    return { success: false, message: 'No active tokens' };
-  }
-
-  const expoPushTokens = tokens.map(t => t.expo_push_token);
-
-  return await sendExpoPushNotification(expoPushTokens, title, body, data);
-};
-
-module.exports = {
-  saveDeviceToken,
-  sendExpoPushNotification,
-  sendPushToUser,
-};
-```
-
-**3. Notification Service Entegrasyonu:**
-
-```javascript
-// Backend/src/services/notificationService.js içine ekle
-const expoPushService = require('./expoPushService');
-
-// Mevcut sendNotification fonksiyonunu güncelle
-const sendNotification = async (userId, title, body, data = {}) => {
-  // In-app notification kaydet (mevcut kod)
-  const [notification] = await db('notifications').insert({
-    user_id: userId,
-    title,
-    body,
-    data_json: JSON.stringify(data),
-    created_at: new Date(),
-  }).returning('*');
-
-  // Expo Push notification gönder
-  try {
-    await expoPushService.sendPushToUser(userId, title, body, {
-      ...data,
-      notificationId: notification.id.toString(),
-    });
-  } catch (error) {
-    logger.warn('Expo push notification failed:', error);
-  }
-
-  return notification;
-};
-```
-
-**4. API Endpoint:**
-
-```javascript
-// Backend/src/controllers/mobileController.js
-const expoPushService = require('../services/expoPushService');
-
-const saveDeviceToken = catchAsync(async (req, res) => {
-  const userId = req.user.id;
-  const { expo_push_token, device_id, platform } = req.body;
-
-  await expoPushService.saveDeviceToken(
-    userId,
-    expo_push_token,
-    device_id,
-    platform
-  );
-
-  return sendSuccess(res, 'Device token kaydedildi');
-});
-```
-
-### Firebase FCM'e Geçiş (Sonra Yapılacak)
-
-MVP sonrası isterseniz Firebase FCM'e geçiş yapabilirsiniz. Expo Push token'ları FCM token'lara migrate edebilirsiniz.
 
 ---
 
@@ -1043,74 +1174,23 @@ MVP sonrası isterseniz Firebase FCM'e geçiş yapabilirsiniz. Expo Push token'l
 ### MVP Yaklaşımı: React Query Cache
 
 **Kompleks offline queue yerine basit caching:**
+- React Query cache ile offline'da önbellekten okuma
+- Network status kontrolü (NetInfo)
+- Offline banner ile kullanıcıya bilgilendirme
+- Online olduğunda otomatik refetch
 
-```typescript
-// src/api/config.ts
-import { QueryClient } from '@tanstack/react-query';
-import NetInfo from '@react-native-community/netinfo';
+**MVP'de Ne Var:**
+- ✅ React Query cache (staleTime: 5 dk, cacheTime: 10 dk)
+- ✅ Offline banner component
+- ✅ Network status listener
+- ✅ Cache'den okuma (offline'da)
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 dakika
-      cacheTime: 10 * 60 * 1000, // 10 dakika
-      retry: 2, // Basit retry
-      networkMode: 'online', // MVP'de online-only (cache fallback ile)
-    },
-  },
-});
+**MVP'de Ne Yok:**
+- ❌ Advanced offline queue architecture
+- ❌ Action queue (offline'da yapılan işlemler)
+- ❌ Conflict resolution
 
-// Network status listener
-let isConnected = true;
-
-NetInfo.addEventListener(state => {
-  isConnected = state.isConnected;
-  
-  if (isConnected) {
-    // Online olduğunda stale queries'i refetch et
-    queryClient.refetchQueries({ stale: true });
-  }
-});
-
-export { queryClient, isConnected };
-```
-
-**Offline Feedback:**
-
-```typescript
-// src/components/OfflineBanner.tsx
-import { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
-import NetInfo from '@react-native-community/netinfo';
-
-export const OfflineBanner = () => {
-  const [isOnline, setIsOnline] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsOnline(state.isConnected ?? false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (isOnline) return null;
-
-  return (
-    <View style={{ backgroundColor: '#ff4444', padding: 8 }}>
-      <Text style={{ color: 'white', textAlign: 'center' }}>
-        İnternet bağlantınız yok
-      </Text>
-    </View>
-  );
-};
-```
-
-**Not:** MVP'de kompleks offline queue yok. Sadece cache'den okuma ve kullanıcıya offline durumu bildirme.
-
-### Gelişmiş Offline Queue (Production Öncesi)
-
-MVP sonrası offline queue architecture eklenebilir. Şimdilik React Query cache yeterli.
+**Not:** MVP'de offline queue yok. Sadece React Query cache + offline banner yeterli. Advanced offline queue architecture production'da eklenebilir.
 
 ---
 
@@ -1154,37 +1234,58 @@ export const TokenManager = {
 
 ## 🏗 Mimari Yapı
 
-### Klasör Yapısı (MVP - Sadeleştirilmiş)
+### Klasör Yapısı (Yeni Yapıya Göre)
 
 ```
 mobile-app/
+├── App.tsx
+├── app.json
+├── package.json
+├── metro.config.js
 ├── src/
 │   ├── api/
 │   │   ├── client.ts              # Axios instance
-│   │   ├── endpoints.ts           # API endpoints
+│   │   ├── endpoints.ts           # API endpoint tanımları
 │   │   └── services/
 │   │       ├── auth.service.ts
 │   │       ├── jobs.service.ts
 │   │       ├── applications.service.ts
 │   │       └── notifications.service.ts
+│   │
 │   ├── store/
-│   │   └── authStore.ts          # Zustand (sadece auth & minimal UI)
+│   │   ├── authStore.ts          # Zustand (auth state)
+│   │   └── uiStore.ts            # Zustand (UI state)
+│   │
+│   ├── navigation/
+│   │   ├── AuthNavigator.tsx
+│   │   ├── MainNavigator.tsx
+│   │   └── RootNavigator.tsx
+│   │
 │   ├── screens/
 │   │   ├── auth/
+│   │   │   ├── LoginScreen.tsx
+│   │   │   └── RegisterScreen.tsx
 │   │   ├── dashboard/
+│   │   │   └── DashboardScreen.tsx
 │   │   ├── jobs/
+│   │   │   ├── JobsListScreen.tsx
+│   │   │   └── JobDetailScreen.tsx
 │   │   ├── applications/
-│   │   └── profile/
-│   ├── navigation/
-│   │   └── AppNavigator.tsx
+│   │   │   ├── ApplicationsListScreen.tsx
+│   │   │   └── ApplicationDetailScreen.tsx
+│   │   ├── profile/
+│   │   │   ├── ProfileScreen.tsx
+│   │   │   └── EditProfileScreen.tsx
+│   │   └── notifications/
+│   │       └── NotificationsScreen.tsx
+│   │
+│   ├── components/
 │   ├── utils/
-│   │   ├── token.ts
-│   │   └── storage.ts
-│   └── types/
-│       └── index.ts
-├── App.tsx
-├── app.json
-└── package.json
+│   ├── hooks/
+│   ├── types/
+│   └── constants/
+└── docs/
+    └── openapi-mobile.yaml (Opsiyonel)
 ```
 
 ### State Management (MVP)
@@ -1207,37 +1308,31 @@ Zustand → Auth, UI, Session (minimal)
 React Query → Tüm server data (jobs, applications, etc.)
 ```
 
-```sql
--- Mevcut notifications tablosuna device token ekleyelim
-ALTER TABLE notifications 
-ADD COLUMN device_token VARCHAR(500) NULL,
-ADD COLUMN push_sent BIT DEFAULT 0,
-ADD COLUMN push_sent_at DATETIME NULL;
+---
 
--- Yeni device_tokens tablosu
-CREATE TABLE device_tokens (
-    id INT PRIMARY KEY IDENTITY(1,1),
-    user_id INT NOT NULL,
-    device_token VARCHAR(500) NOT NULL,
-    platform VARCHAR(20) NOT NULL, -- 'ios' veya 'android'
-    device_id VARCHAR(200) NULL,
-    app_version VARCHAR(20) NULL,
-    is_active BIT DEFAULT 1,
-    created_at DATETIME DEFAULT GETDATE(),
-    updated_at DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_device (user_id, device_token)
-);
+
+### Production Database Schema (FCM için)
+
+```sql
+-- Production'da FCM token eklemek için device_tokens tablosuna kolon ekle
+ALTER TABLE device_tokens
+ADD COLUMN fcm_token VARCHAR(500) NULL,
+ADD COLUMN token_type VARCHAR(20) DEFAULT 'expo'; -- 'expo' veya 'fcm'
+
+-- Index ekle
+CREATE INDEX idx_fcm_token ON device_tokens(fcm_token) WHERE fcm_token IS NOT NULL;
 ```
 
-#### 2. Backend Service Eklemeleri
+### Production Backend Service (Firebase Admin SDK)
 
 ```javascript
-// Backend/src/services/pushNotificationService.js
+// Backend/src/services/firebasePushService.js (PRODUCTION)
 
 const admin = require('firebase-admin');
+const db = require('../config/dbConfig').db;
+const logger = require('../utils/logger');
 
-// Firebase Admin SDK Initialize
+// Firebase Admin SDK Initialize (Production'da kurulacak)
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(require('../config/firebase-service-account.json')),
@@ -1245,19 +1340,19 @@ if (!admin.apps.length) {
 }
 
 /**
- * Device token kaydetme
+ * FCM token kaydetme (Production'da)
  */
-const saveDeviceToken = async (userId, deviceToken, platform, deviceId, appVersion) => {
-  // Mevcut token'ı deaktif et
+const saveFCMToken = async (userId, fcmToken, platform, deviceId, appVersion) => {
+  // Mevcut FCM token'ı deaktif et
   await db('device_tokens')
     .where('user_id', userId)
-    .where('device_token', deviceToken)
+    .where('fcm_token', fcmToken)
     .update({ is_active: 0 });
 
-  // Yeni token kaydet veya aktif et
+  // Yeni FCM token kaydet veya aktif et
   const [existing] = await db('device_tokens')
     .where('user_id', userId)
-    .where('device_token', deviceToken)
+    .where('fcm_token', fcmToken)
     .select('*');
 
   if (existing) {
@@ -1265,6 +1360,7 @@ const saveDeviceToken = async (userId, deviceToken, platform, deviceId, appVersi
       .where('id', existing.id)
       .update({
         is_active: 1,
+        token_type: 'fcm',
         platform,
         device_id: deviceId,
         app_version: appVersion,
@@ -1273,7 +1369,8 @@ const saveDeviceToken = async (userId, deviceToken, platform, deviceId, appVersi
   } else {
     await db('device_tokens').insert({
       user_id: userId,
-      device_token: deviceToken,
+      fcm_token: fcmToken,
+      token_type: 'fcm',
       platform,
       device_id: deviceId,
       app_version: appVersion,
@@ -1283,19 +1380,21 @@ const saveDeviceToken = async (userId, deviceToken, platform, deviceId, appVersi
 };
 
 /**
- * Push notification gönderme
+ * Firebase FCM ile push notification gönderme (Production'da)
  */
-const sendPushNotification = async (userId, title, body, data = {}) => {
-  // Kullanıcının aktif device token'larını al
+const sendFCMPushNotification = async (userId, title, body, data = {}) => {
+  // Kullanıcının aktif FCM token'larını al
   const tokens = await db('device_tokens')
     .where('user_id', userId)
     .where('is_active', 1)
-    .select('device_token', 'platform');
+    .where('token_type', 'fcm')
+    .whereNotNull('fcm_token')
+    .select('fcm_token', 'platform');
 
-  if (tokens.length === 0) return { success: false, message: 'No active tokens' };
+  if (tokens.length === 0) return { success: false, message: 'No active FCM tokens' };
 
-  const messages = tokens.map(({ device_token, platform }) => ({
-    token: device_token,
+  const messages = tokens.map(({ fcm_token, platform }) => ({
+    token: fcm_token,
     notification: {
       title,
       body,
@@ -1325,97 +1424,28 @@ const sendPushNotification = async (userId, title, body, data = {}) => {
     const response = await admin.messaging().sendEach(messages);
     return { success: true, response };
   } catch (error) {
-    logger.error('Push notification error:', error);
+    logger.error('FCM push notification error:', error);
     return { success: false, error: error.message };
   }
 };
 
 module.exports = {
-  saveDeviceToken,
-  sendPushNotification,
+  saveFCMToken,
+  sendFCMPushNotification,
 };
 ```
 
-#### 3. Notification Service Entegrasyonu
-
-```javascript
-// Backend/src/services/notificationService.js içine ekle
-
-const pushNotificationService = require('./pushNotificationService');
-
-// Mevcut sendNotification fonksiyonunu güncelle
-const sendNotification = async (userId, title, body, data = {}) => {
-  // In-app notification kaydet (mevcut kod)
-  const [notification] = await db('notifications').insert({
-    user_id: userId,
-    title,
-    body,
-    data_json: JSON.stringify(data),
-    created_at: new Date(),
-  }).returning('*');
-
-  // Push notification gönder
-  try {
-    await pushNotificationService.sendPushNotification(userId, title, body, {
-      ...data,
-      notificationId: notification.id.toString(),
-    });
-    
-    // Push gönderim durumunu güncelle
-    await db('notifications')
-      .where('id', notification.id)
-      .update({
-        push_sent: 1,
-        push_sent_at: new Date(),
-      });
-  } catch (error) {
-    logger.warn('Push notification failed:', error);
-  }
-
-  return notification;
-};
-```
-
-#### 4. Yeni API Endpoint
-
-```javascript
-// Backend/src/routes/doctorRoutes.js içine ekle
-
-/**
- * Device token kaydetme endpoint
- */
-router.post('/device-token',
-  validate(deviceTokenSchema, 'body'),
-  doctorController.saveDeviceToken
-);
-
-// Backend/src/controllers/doctorController.js
-const saveDeviceToken = catchAsync(async (req, res) => {
-  const userId = req.user.id;
-  const { deviceToken, platform, deviceId, appVersion } = req.body;
-
-  await pushNotificationService.saveDeviceToken(
-    userId,
-    deviceToken,
-    platform,
-    deviceId,
-    appVersion
-  );
-
-  return sendSuccess(res, 'Device token kaydedildi');
-});
-```
-
-### Mobil Uygulama Tarafı
+### Production Mobile Implementation (FCM)
 
 ```typescript
-// src/services/pushNotificationService.ts
+// src/services/firebasePushService.ts (PRODUCTION)
+
 import messaging from '@react-native-firebase/messaging';
 import { Platform, PermissionsAndroid } from 'react-native';
 import DeviceInfo from 'react-native-device-info';
 import apiClient from '../api/client';
 
-class PushNotificationService {
+class FirebasePushService {
   async requestPermission() {
     if (Platform.OS === 'ios') {
       const authStatus = await messaging().requestPermission();
@@ -1428,7 +1458,7 @@ class PushNotificationService {
     }
   }
 
-  async getToken() {
+  async getFCMToken() {
     const hasPermission = await this.requestPermission();
     if (!hasPermission) {
       console.warn('Push notification permission denied');
@@ -1439,24 +1469,24 @@ class PushNotificationService {
     return token;
   }
 
-  async registerToken() {
+  async registerFCMToken() {
     try {
-      const token = await this.getToken();
+      const token = await this.getFCMToken();
       if (!token) return;
 
       const deviceId = await DeviceInfo.getUniqueId();
       const appVersion = DeviceInfo.getVersion();
 
-      await apiClient.post('/doctor/device-token', {
-        deviceToken: token,
+      await apiClient.post('/mobile/device-token', {
+        fcm_token: token,
         platform: Platform.OS,
-        deviceId,
-        appVersion,
+        device_id: deviceId,
+        app_version: appVersion,
       });
 
-      console.log('Device token registered');
+      console.log('FCM token registered');
     } catch (error) {
-      console.error('Device token registration failed:', error);
+      console.error('FCM token registration failed:', error);
     }
   }
 
@@ -1490,110 +1520,11 @@ class PushNotificationService {
   }
 }
 
-export default new PushNotificationService();
-```
-
 ---
 
-## 📴 Offline Capability
+## 📅 Geliştirme Fazları (6-8 Hafta)
 
-### React Query ile Offline Support
-
-```typescript
-// src/api/config.ts
-import { QueryClient } from '@tanstack/react-query';
-import NetInfo from '@react-native-community/netinfo';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 dakika
-      cacheTime: 10 * 60 * 1000, // 10 dakika
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      networkMode: 'offlineFirst', // Offline mode
-    },
-  },
-});
-
-// Network status listener
-NetInfo.addEventListener(state => {
-  if (state.isConnected) {
-    // Online olduğunda tüm stale queries'i refetch et
-    queryClient.refetchQueries();
-  }
-});
-```
-
-### Offline Queue (Critical Actions)
-
-```typescript
-// src/utils/offlineQueue.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NetInfo from '@react-native-community/netinfo';
-
-class OfflineQueue {
-  private queueKey = '@medikariyer:offline_queue';
-
-  async addToQueue(action: {
-    type: string;
-    endpoint: string;
-    method: string;
-    data: any;
-    timestamp: number;
-  }) {
-    const queue = await this.getQueue();
-    queue.push(action);
-    await AsyncStorage.setItem(this.queueKey, JSON.stringify(queue));
-  }
-
-  async processQueue() {
-    const isConnected = (await NetInfo.fetch()).isConnected;
-    if (!isConnected) return;
-
-    const queue = await this.getQueue();
-    if (queue.length === 0) return;
-
-    const processed: any[] = [];
-    const failed: any[] = [];
-
-    for (const action of queue) {
-      try {
-        // Execute action
-        await this.executeAction(action);
-        processed.push(action);
-      } catch (error) {
-        failed.push(action);
-      }
-    }
-
-    // Remove processed actions
-    const remainingQueue = queue.filter(
-      item => !processed.find(p => p.timestamp === item.timestamp)
-    );
-    await AsyncStorage.setItem(this.queueKey, JSON.stringify(remainingQueue));
-
-    return { processed, failed };
-  }
-
-  private async executeAction(action: any) {
-    // API call implementation
-  }
-
-  private async getQueue(): Promise<any[]> {
-    const data = await AsyncStorage.getItem(this.queueKey);
-    return data ? JSON.parse(data) : [];
-  }
-}
-
-export default new OfflineQueue();
-```
-
----
-
-## 📅 Geliştirme Fazları (5-6 Hafta)
-
-### Faz 1: Temel Altyapı (1 hafta)
+### Faz 1: Setup & Temel Altyapı (1 hafta)
 **Hedef:** Proje kurulumu, auth flow, navigation
 
 - [ ] Expo projesi kurulumu
@@ -1608,7 +1539,7 @@ export default new OfflineQueue();
 
 ---
 
-### Faz 2: Core Features (2 hafta)
+### Faz 2: Core Features (2-3 hafta)
 **Hedef:** Temel özellikler (Dashboard, Jobs, Applications)
 
 **Hafta 1:**
@@ -1640,7 +1571,7 @@ export default new OfflineQueue();
 
 ---
 
-### Faz 4: Testing & Bug Fixes (1 hafta)
+### Faz 4: Testing & Bug Fixes (1-2 hafta)
 **Hedef:** Beta test, bug fixes, UI improvements
 
 - [ ] Unit tests (critical paths)
@@ -1652,7 +1583,7 @@ export default new OfflineQueue();
 
 ---
 
-### Faz 5: Production Prep (3-5 gün)
+### Faz 5: Production Prep (1 hafta)
 **Hedef:** Production build, store submission
 
 - [ ] App store assets (icons, screenshots)
@@ -1662,7 +1593,7 @@ export default new OfflineQueue();
 - [ ] TestFlight / Internal testing
 - [ ] Store submission (Apple App Store + Google Play)
 
-**Toplam Süre: ~5-6 hafta**
+**Toplam Süre: ~6-8 hafta** (Realist planlama - yalnız çalışma göz önünde bulundurularak)
 
 **Not:** Domain bilgin ve React/Node.js tecrüben hızlandırıcı faktörler.
 
@@ -1723,7 +1654,7 @@ export default new OfflineQueue();
 - [ ] Advanced token encryption
 
 ### Offline & Sync
-- [ ] Offline queue architecture
+- [ ] Advanced offline queue architecture (production öncesi)
 - [ ] Background sync
 - [ ] Conflict resolution
 - [ ] Advanced caching strategies
@@ -1772,11 +1703,29 @@ export default new OfflineQueue();
 ## 🎯 MVP Sonuç & Özet
 
 ### MVP Hedefleri
-1. ✅ Hızlı geliştirme (5-6 hafta)
+1. ✅ Realist geliştirme (6-8 hafta)
 2. ✅ Yalın mimari (gereksiz komplekslik yok)
 3. ✅ Temel özellikler (jobs, applications, profile, notifications)
 4. ✅ Expo Push (Firebase gerekmez)
 5. ✅ Minimal backend değişiklikleri (`/api/mobile/*` layer)
+6. ✅ **Mevcut sistem %100 korunur** (web-frontend ve backend/web değişmez)
+
+### Yeni Proje Yapısı
+```
+MediKariyer/
+├── backend/              ← Mevcut (sadece yeni klasörler eklenir)
+│   └── src/
+│       ├── routes/           ← MEVCUT (authRoutes.js, doctorRoutes.js, vb. root'ta)
+│       │   └── mobile/       ← YENİ (eklenir)
+│       ├── controllers/      ← MEVCUT (authController.js, doctorController.js, vb. root'ta)
+│       │   └── mobile/       ← YENİ (eklenir)
+│       └── services/         ← MEVCUT (authService.js, doctorService.js, vb. root'ta)
+│           └── mobile/       ← YENİ (eklenir)
+│
+├── web-frontend/         ← MEVCUT (hiç dokunulmaz)
+│
+└── mobile-app/           ← YENİ (sıfırdan oluşturulur)
+```
 
 ### Önerilen Stack (MVP)
 - **Framework**: React Native + Expo
@@ -1788,19 +1737,219 @@ export default new OfflineQueue();
 - **Navigation**: React Navigation
 
 ### İlk Adımlar
-1. **Backend**: `/api/mobile/*` layer'ını kur
-2. **Mobile**: Expo projesi setup
+1. **Backend**: `backend/src/routes/mobile/` klasör yapısını kur
+2. **Mobile**: `mobile-app/` klasöründe Expo projesi setup
 3. **Auth**: Login/Register flow
 4. **Core**: Dashboard, Jobs, Applications
 
-### Production Öncesi
+### 🛡️ Güvence
+- ✅ Mevcut sistem hiç etkilenmeyecek (yukarıdaki "🛡️ MEVCUT SİSTEM KORUMA GARANTİSİ" bölümüne bakın)
+
+---
+
+## 📝 Önemli Notlar
+
+### Token Storage Kararı
+- **MVP:** Expo Secure Store (biometric auth gerektirmez)
+- **Production:** react-native-keychain (biometric auth için)
+
+### DTO vs Transformer
+- **MVP:** Sadece Transformer kullan (DTO gereksiz)
+- **Production:** İhtiyaç halinde DTO eklenebilir
+
+### Offline Support
+- **MVP:** React Query cache + offline banner (yeterli)
+- **Production:** Advanced offline queue architecture (sonra eklenebilir)
+
+### RoleGuard Mobile'da
+- **Not:** Mobile sadece doktor kullanıyor (admin/hospital yok)
+- RoleGuard opsiyonel - Fazladan overhead ama güvenlik açısından sorun yok
+- İstenirse kaldırılabilir, sadece `authMiddleware` yeterli
+- Tercih: Güvenlik için kalsın (minimal overhead)
+
+### Mobile Controller/Service Kod Tekrarı
+- **Not:** Mobile service'ler web kodlarına benziyor ama bu şu an doğru:
+  - Mobil için farklı transformer kullanıyor
+  - Farklı optimizasyon (minimal payload)
+  - Daha iyi cache stratejisi
+  - Şu an ayrı tutmak daha temiz ve güvenli
+- İleride tek servis mantığına geçilebilir (refactor - production sonrası)
+
+---
+
+## 🔥 MVP İçin Öneriler (Production Hazırlığı)
+
+### 1. Mobile API Response Formatı (Stateless)
+
+**Her response şu formatta olmalı:**
+```json
+{
+  "success": true,
+  "data": {...},
+  "message": "..."
+}
+```
+**Not:** Mevcut backend'de zaten var, korunmalı.
+
+### 2. Mobile Login Response Minimal Olmalı
+
+- Web tarafındaki gereksiz alanlar gönderilmemeli
+- Sadece gerekli token ve minimal user bilgisi
+
+### 3. Response'larda Nested Complex Object Olmasın
+
+- JSON minimal olmalı
+- 1 seviye derinlik ideal
+- Gereksiz JOIN yapılmamalı
+- Örnek: `hospital: { name, city }` yerine `hospital_name`, `hospital_city` (flat structure)
+
+### 4. Infinite Scroll Zorunlu
+
+- Mobile kullanıcı 200+ ilan görebilir
+- Liste ekranlarında kesinlikle infinite scroll kullanılmalı
+- FlatList + `onEndReached` implementasyonu
+
+### 5. Image Upload Stratejisi
+
+- **MVP:** Backend üzerinden upload (küçük dosyalar için)
+- **Production hazırlığı:** Expo ImagePicker + presigned URL (S3 gibi)
+- SQL Server + backend üzerinden upload → yavaş (ilerisi için düşünülmeli)
+
+### 6. Hata Yönetimi (Error Handling) - KRİTİK ⚠️
+
+**🚨 Web vs Mobile Farkı:**
+- **Web:** HTML hata sayfası dönebilir (404.html, 500.html gibi)
+- **Mobile:** **KESİNLİKLE JSON döndürmeli** - HTML dönerse "JSON Parse Error" çöker
+
+**🔴 Zorunlu Kural:**
+- Mobile route'larındaki (`/api/mobile/*`) **TÜM error handler'lar JSON döndürmeli**
+- Middleware'lerdeki catch block'lar JSON response göndermeli
+- Controller'lardaki try-catch blokları `res.json()` kullanmalı (HTML değil)
+
+**💡 Çözüm: Mobile Error Handler Middleware**
+
+Her mobile route dosyasında `mobileErrorHandler` middleware'i kullanılmalı:
+
+**Örnek Middleware Dosyası:**
+```javascript
+// backend/src/middleware/mobileErrorHandler.js
+const { globalErrorHandler } = require('../utils/errorHandler');
+
+/**
+ * Mobile route'ları için özel error handler
+ * Web tarafı HTML dönebilir ama mobile JSON bekler - HTML dönerse "JSON Parse Error" çöker
+ */
+const mobileErrorHandler = (err, req, res, next) => {
+  // Mobile route'ları için her zaman JSON döndür
+  if (!res.headersSent) {
+    // Content-Type'ı JSON olarak ayarla (emin olmak için)
+    res.setHeader('Content-Type', 'application/json');
+    // Global error handler'ı çağır (zaten JSON döndürüyor ama garanti için)
+    return globalErrorHandler(err, req, res, next);
+  }
+  next(err);
+};
+
+module.exports = { mobileErrorHandler };
+```
+
+**Kullanım (Route Dosyalarında):**
+```javascript
+// routes/mobile/mobileDoctorRoutes.js
+const { mobileErrorHandler } = require('../../middleware/mobileErrorHandler');
+
+const router = express.Router();
+
+// KRİTİK: Mobile route'larında TÜM hatalar JSON döndürmeli
+router.use(mobileErrorHandler); // Her zaman JSON döndürür
+
+router.use(authMiddleware);
+router.get('/dashboard', mobileDoctorController.getDashboard);
+```
+
+**✅ Kontrol Listesi:**
+- [ ] `middleware/mobileErrorHandler.js` dosyası oluşturuldu
+- [ ] Tüm mobile route dosyalarına `mobileErrorHandler` eklendi
+- [ ] Controller'lardaki `catchAsync` ve `sendError` JSON döndürüyor (zaten doğru)
+- [ ] Test: Mobile route'larında hata oluşturulduğunda JSON döndüğü doğrulandı
+
+---
+
+## ✅ Genel Değerlendirme
+
+**📌 Bu roadmap profesyonel. Gerçek şirkette onay alır.**
+
+✅ **Uygulanabilir, risksiz, doğru parçalanmış.**  
+✅ **MVP → Production geçişi temiz düşünülmüş.**  
+✅ **Backend risk sıfır.**  
+✅ **Expo ile hızlı çıkılır.**
+
+---
+
+## 🔥 MVP İçin Öneriler (Production Hazırlığı)
+
+### 1. Mobile API Response Formatı (Stateless)
+
+**Her response şu formatta olmalı:**
+```json
+{
+  "success": true,
+  "data": {...},
+  "message": "..."
+}
+```
+**Not:** Mevcut backend'de zaten var, korunmalı.
+
+### 2. Mobile Login Response Minimal Olmalı
+
+- Web tarafındaki gereksiz alanlar gönderilmemeli
+- Sadece gerekli token ve minimal user bilgisi
+
+### 3. Response'larda Nested Complex Object Olmasın
+
+- JSON minimal olmalı
+- 1 seviye derinlik ideal
+- Gereksiz JOIN yapılmamalı
+- Örnek: `hospital: { name, city }` yerine `hospital_name`, `hospital_city` (flat structure)
+
+### 4. Infinite Scroll Zorunlu
+
+- Mobile kullanıcı 200+ ilan görebilir
+- Liste ekranlarında kesinlikle infinite scroll kullanılmalı
+- FlatList + `onEndReached` implementasyonu
+
+### 5. Image Upload Stratejisi
+
+- **MVP:** Backend üzerinden upload (küçük dosyalar için)
+- **Production hazırlığı:** Expo ImagePicker + presigned URL (S3 gibi)
+- SQL Server + backend üzerinden upload → yavaş (ilerisi için düşünülmeli)
+
+---
+
+## 🚀 Production Öncesi / Sonra Yapılacaklar
+
+### 1. Advanced Offline Queue Architecture
+- Offline action queue (kullanıcı offline'da yapılan işlemler)
+- Conflict resolution mekanizması
+- Sync strategy (merging, last-write-wins, vb.)
+- Detaylı implementasyon production öncesi yapılacak
+
+### 2. Firebase FCM Migration
+- Expo Push'tan FCM'e geçiş
+- Firebase Admin SDK kurulumu
+- FCM token yönetimi
+- Rich notifications (images, actions)
+- Notification scheduling
+- Analytics & A/B testing
+
+**Not:** Detaylı Firebase FCM implementation kodları ve adımlar production dokümanında bulunacak. MVP dokümanında sadece Expo Push yer alır.
+
+### 3. Diğer Production Özellikleri
 - SSL Pinning
-- Advanced offline support
-- Firebase FCM migration (opsiyonel)
 - Comprehensive testing
 - Monitoring & Analytics
 
-**Not:** Bu MVP yaklaşımı ile hızlı bir şekilde çalışan bir mobil uygulama geliştirebilir, sonra production-ready hale getirebilirsiniz.
+**Not:** Bu MVP yaklaşımı ile mevcut sisteminize **hiç dokunmadan** yeni bir mobil uygulama geliştirebilirsiniz.
 
 ---
 
