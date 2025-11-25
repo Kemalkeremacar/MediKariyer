@@ -18,10 +18,13 @@ const CORS_OPTIONS = {
       process.env.CORS_ORIGIN || 'http://localhost:5000',
       'http://localhost:5000', // Frontend - Vite dev server
       'http://localhost:3000',
+      'http://localhost:8081', // Expo web (metro port)
+      'http://127.0.0.1:8081',
       'http://127.0.0.1:5000',
       'http://127.0.0.1:3000',
       'http://192.168.1.198:5000', // Network IP - Frontend
       'http://192.168.1.198:3100',  // Network IP - Backend
+      'http://192.168.1.198:8081',
       'https://mk.monassist.com' // Production Frontend Domain
     ];
     

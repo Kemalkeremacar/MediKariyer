@@ -67,6 +67,8 @@ const login = async ({ email, password }, req) => {
       id: user.id,
       email: user.email,
       role: user.role,
+      is_approved: user.is_approved,
+      is_active: user.is_active,
       first_name: profile?.first_name || null,
       last_name: profile?.last_name || null
     },
@@ -84,7 +86,9 @@ const refresh = async (refreshToken) => {
     user: {
       id: result.user.id,
       email: result.user.email,
-      role: result.user.role
+      role: result.user.role,
+      is_approved: result.user.is_approved,
+      is_active: result.user.is_active
     }
   };
 };

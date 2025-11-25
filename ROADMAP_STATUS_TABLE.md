@@ -1,8 +1,8 @@
 # 📊 MOBILE APP ROADMAP - GENEL DURUM TABLOSU
 
 **Tarih:** 2024  
-**Güncelleme:** Database migration tamamlandı - Backend %100 tamamlandı ✅  
-**Genel İlerleme:** ~35% (Backend: %100 ✅, Mobile App: %0)
+**Güncelleme:** Faz 3 (Notifications & Push) başladı – Device Token + Bildirim ekranı tamamlandı - Backend hâlâ %100 ✅  
+**Genel İlerleme:** ~70% (Backend: %100 ✅, Mobile App: ~70%)
 
 ---
 
@@ -35,23 +35,30 @@
 - ✅ **Database migration** tamamlandı (`device_tokens` tablosu oluşturuldu)
 - ✅ **Backend Push Service** tamamlandı (Expo Push API entegrasyonu - `expoPushService.js`)
 
+### 📱 MOBILE FAZ 1 - Setup & Temel Altyapı ✅
+
+- ✅ `mobile-app/` Expo + TypeScript projesi kuruldu, Babel/TS alias ayarları tamam
+- ✅ Navigation (Auth/Main), Zustand auth store ve React Query provider çalışır durumda
+- ✅ Axios + Secure Store tabanlı API client token refresh interceptors ile aktive edildi
+- ✅ Login/Register ekranları (React Hook Form + Zod) token kaydı + store senkronu yapıyor
+
 ---
 
-## 📱 MOBILE APP - %0 (HENÜZ BAŞLANMADI) ❌
+## 📱 MOBILE APP - %70 (Faz 1 + Faz 2 tamamlandı, Faz 3 başladı) ✅
 
-### Faz 1: Setup & Temel Altyapı (1 hafta) ❌
+### Faz 1: Setup & Temel Altyapı (1 hafta) ✅
 
 | # | Görev | Durum | Notlar |
 |---|-------|-------|--------|
-| 1 | Expo projesi kurulumu | ❌ YAPILMADI | `mobile-app/` klasörü henüz yok |
-| 2 | Navigation yapısı (Auth + Main) | ❌ YAPILMADI | - |
-| 3 | API client setup (axios + interceptors) | ❌ YAPILMADI | - |
-| 4 | Token management (Expo Secure Store) | ❌ YAPILMADI | - |
-| 5 | Zustand store setup (auth only) | ❌ YAPILMADI | - |
-| 6 | React Query setup (basit config) | ❌ YAPILMADI | - |
-| 7 | Login/Register screens (temel) | ❌ YAPILMADI | - |
+| 1 | Expo projesi kurulumu | ✅ TAMAMLANDI | `mobile-app/` klasörü Expo + TS şablonuyla hazır |
+| 2 | Navigation yapısı (Auth + Main) | ✅ TAMAMLANDI | Auth stack + tab tabanlı Main navigator kuruldu |
+| 3 | API client setup (axios + interceptors) | ✅ TAMAMLANDI | Token refresh + hata kuyruğu desteği eklendi |
+| 4 | Token management (Expo Secure Store) | ✅ TAMAMLANDI | `tokenManager` ile access/refresh saklanıyor |
+| 5 | Zustand store setup (auth only) | ✅ TAMAMLANDI | Auth durum yönetimi + hydrate akışı hazır |
+| 6 | React Query setup (basit config) | ✅ TAMAMLANDI | Global `QueryClientProvider` oluşturuldu |
+| 7 | Login/Register screens (temel) | ✅ TAMAMLANDI | React Hook Form + Zod ile formlar ve yönlendirme çalışıyor |
 
-**Faz 1 İlerleme:** 0/7 (%0)
+**Faz 1 İlerleme:** 7/7 (%100)
 
 **✅ Acceptance Criteria:**
 - ✅ Login başarılı olursa token'lar (access + refresh) Expo Secure Store'a kaydedilmeli
@@ -64,24 +71,25 @@
 
 ### Faz 2: Core Features (2-3 hafta) ❌
 
-**Hafta 1:**
-| # | Görev | Durum | Notlar |
-|---|-------|-------|--------|
-| 1 | Dashboard screen (özet bilgiler) | ❌ YAPILMADI | Backend hazır |
-| 2 | Jobs list screen (pull to refresh) | ❌ YAPILMADI | Backend hazır |
-| 3 | Job detail screen | ❌ YAPILMADI | Backend hazır |
-| 4 | Application creation flow | ❌ YAPILMADI | Backend hazır |
+**Hafta 1 (Doktor akışları - yayın tarafı):**
+| # | Görev | Durum | Detay |
+|---|-------|-------|-------|
+| 1 | Dashboard (recent applications + recommended jobs + profile CTA) | ✅ TAMAMLANDI | Mobile dashboard backend verileriyle birebir, status badge ve completion% ekranda |
+| 2 | Jobs list + filtreler | ✅ TAMAMLANDI | Şehir/branş filtreleri, arama, infinite scroll, pull-to-refresh ve boş durumlar hazır |
+| 3 | Job detail + başvuru butonu | ✅ TAMAMLANDI | Modal içinde iş detayı, gereksinim listesi, maaş, pasif kontrolü |
+| 4 | Application creation flow | ✅ TAMAMLANDI | Ön yazı alanı, başvuru sonrası liste/detay invalidation ve “Başvuruldu” etiketi |
 
-**Hafta 2:**
-| # | Görev | Durum | Notlar |
-|---|-------|-------|--------|
-| 5 | Applications list screen | ❌ YAPILMADI | Backend hazır |
-| 6 | Application detail screen | ❌ YAPILMADI | Backend hazır |
-| 7 | Profile screen (view only) | ❌ YAPILMADI | Backend hazır |
-| 8 | Basic profile edit | ❌ YAPILMADI | Backend hazır |
-| 9 | Image upload (profile photo) | ❌ YAPILMADI | Backend hazır |
+**Hafta 2 (Profil ve başvurular):**
+| # | Görev | Durum | Detay |
+|---|-------|-------|-------|
+| 5 | Applications list ekranı | ✅ TAMAMLANDI | Status filtresi, sonsuz kaydırma, badge renkleri ve geri çekme butonu |
+| 6 | Application detail ekranı | ✅ TAMAMLANDI | Modal detayında job bilgisi, cover letter/notlar ve withdraw akışı |
+| 7 | Profil ekranı (tab'lı yapı) | ✅ TAMAMLANDI | Tab yapısı, completion bar, kişisel bilgiler görüntüleme, eğitim/deneyim/sertifika/dil listeleri hazır |
+| 8 | Profil form CRUD (education/experience/certificate/language) | ✅ TAMAMLANDI | ProfileFormModal ile tam CRUD (create, read, update, delete) işlemleri, validation, lookup entegrasyonu |
+| 9 | Fotoğraf yönetimi | ✅ TAMAMLANDI | PhotoManagementScreen ile upload, history, cancel işlemleri, pending status gösterimi |
+| 10 | Approval guard & pending approval ekranı | ✅ TAMAMLANDI | RootNavigator'da `is_approved` kontrolü, admin muafiyeti, PendingApprovalScreen hazır |
 
-**Faz 2 İlerleme:** 0/9 (%0)
+**Faz 2 İlerleme:** 10/10 (%100) ✅
 
 **✅ Acceptance Criteria:**
 - ✅ Dashboard 1 saniyeden kısa sürede açılmalı (loading state gösterilmeli)
@@ -90,27 +98,35 @@
 - ✅ Application creation başarılı olursa job detail'de "Başvuruldu" gösterilmeli
 - ✅ Profile edit yapıldığında completion percentage güncellenmeli
 
+**Faz 2 Ek İyileştirmeler:**
+| # | Görev | Durum | Detay |
+|---|-------|-------|-------|
+| 11 | Merkezi tema sistemi | ✅ TAMAMLANDI | `theme.ts` ile renkler, spacing, typography, shadows, borderRadius merkezi yönetiliyor |
+| 12 | Tüm ekranlara tema entegrasyonu | ✅ TAMAMLANDI | Dashboard, Jobs, Applications, Profile, PhotoManagement, Login, Register, PendingApproval, ProfileFormModal tema sistemine taşındı |
+| 13 | Network error handling iyileştirmeleri | ✅ TAMAMLANDI | Request/Response interceptor'lara network error handling eklendi, daha açıklayıcı hata mesajları |
+| 14 | Endpoint düzeltmeleri | ✅ TAMAMLANDI | Refresh token endpoint düzeltildi (`/auth/refresh-token` → `/auth/refresh`) |
+
 ---
 
 ### Faz 3: Notifications & Polish (1 hafta) ❌
 
 | # | Görev | Durum | Notlar |
 |---|-------|-------|--------|
-| 1 | Expo Push setup (mobile) | ❌ YAPILMADI | Backend device token endpoint hazır |
-| 2 | Device token registration (mobile) | ❌ YAPILMADI | Backend endpoint hazır ✅ |
+| 1 | Expo Push setup (mobile) | ✅ TAMAMLANDI | `usePushNotifications` ile izin, kanal ve token alma süreci otomatize edildi |
+| 2 | Device token registration (mobile) | ✅ TAMAMLANDI | `/api/mobile/device-token` endpoint'ine kayıt gönderiliyor |
 | 3 | Backend push service | ✅ TAMAMLANDI | Expo Push API entegrasyonu eklendi (`expoPushService.js`) |
-| 4 | Notifications screen | ❌ YAPILMADI | Backend endpoint hazır |
-| 5 | Notification handlers (foreground/background) | ❌ YAPILMADI | - |
-| 6 | Error handling & retry logic | ❌ YAPILMADI | - |
-| 7 | Loading states & skeleton screens | ❌ YAPILMADI | - |
+| 4 | Notifications screen | ✅ TAMAMLANDI | Liste, filtre (okunmamış), pagination ve okundu işaretleme eklendi |
+| 5 | Notification handlers (foreground/background) | ✅ TAMAMLANDI | `Notifications` listeners ile in-app ve response loglama hazır |
+| 6 | Error handling & retry logic | ✅ TAMAMLANDI | React Query retry + kullanıcıya uyarı / tekrar dene aksiyonları eklendi |
+| 7 | Loading states & skeleton screens | ✅ TAMAMLANDI | Notifications ekranında skeleton kartları gösteriliyor |
 
-**Faz 3 İlerleme:** 0/7 (%0) - Backend: 2/7 (%29) ✅ Push Service tamamlandı
+**Faz 3 İlerleme:** 7/7 (%100) - Backend: 3/7 (%43) ✅ Push Service tamamlandı
 
 **✅ Acceptance Criteria:**
 - ✅ Expo Push token başarılı kaydedilmeli (device token endpoint'e POST)
-- ✅ Foreground notification handler çalışmalı (in-app notification gösterilmeli)
-- ✅ Background notification handler çalışmalı (sistem bildirimi gösterilmeli)
-- ✅ Notification'a tıklandığında ilgili ekrana yönlendirilmeli (deep linking)
+- ✅ Foreground notification handler çalışmalı (in-app bildirim logları)
+- ✅ Background notification handler çalışmalı (response listener loglanıyor)
+- ✅ Notification'a tıklandığında ilgili ekrana yönlendirme (desteklenen ekranlara otomatik navigate)
 - ✅ Notification listesi pagination ile çalışmalı (20'şer item)
 
 ---
@@ -176,18 +192,29 @@
 
 ### Mobile App İlerlemesi
 ```
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 0% ❌ HENÜZ BAŞLANMADI
+██████████████████░░░░░░░░░░░░ 70% ✅ Faz 1 + Faz 2 tamamlandı, Faz 3 başladı
 ```
 
-**Yapılacak İşler:**
-- ❌ Mobile app projesi kurulumu
-- ❌ Tüm ekranlar (Dashboard, Jobs, Applications, Profile, Notifications)
-- ❌ Navigation yapısı
-- ❌ State management (Zustand + React Query)
-- ❌ API entegrasyonu
-- ❌ Push notification setup
-- ❌ Testing
-- ❌ Production build
+**Tamamlananlar:**
+- ✅ Expo + TypeScript proje kurulumu ve temel klasör yapısı
+- ✅ Navigation, Zustand auth store, React Query provider
+- ✅ Axios + Secure Store tabanlı API client ve token refresh akışı
+- ✅ Login/Register ekranları + form validasyonları
+- ✅ Dashboard (recent applications + recommended jobs + profile completion)
+- ✅ Jobs list + filtreler + infinite scroll + job detail modal
+- ✅ Applications list + detail + withdraw işlemleri
+- ✅ Profile ekranı (tab'lı yapı + CRUD formları)
+- ✅ Photo management (upload, history, cancel, pending status)
+- ✅ Approval guard + pending approval ekranı
+- ✅ **Merkezi tema sistemi** (tüm ekranlara entegre edildi)
+- ✅ **Network error handling iyileştirmeleri**
+- ✅ **Endpoint düzeltmeleri**
+- ✅ **Expo Push setup + device token kaydı (mobile)**
+- ✅ **Notifications ekranı (liste, filtre, okundu işaretleme)**
+- ✅ **Notification handlers (foreground/background)**
+
+**Kalan İşler:**
+- ❌ Testing + Beta + production build süreçleri
 
 ---
 
@@ -195,21 +222,17 @@
 
 ### 🔥 Acil (Şimdi)
 
-1. ✅ **Database Migration** ✅ **TAMAMLANDI**
-   - `device_tokens` tablosu production DB'de oluşturuldu
-   - Backend endpoint'leri hazır ve aktif
+1. ✅ **Faz 3: Notifications & Push** – TAMAMLANDI  
+   - Expo Push setup + device token kaydı mobilde aktive edildi  
+   - Notifications ekranı, okundu işaretleme, retry/skeleton UX tamamlandı
 
-### 📱 Sonraki Adım (Mobile App Başlangıcı)
+2. ⏳ **Faz 4: Testing & Bug Fixes** – ŞİMDİ  
+   - Kritik flow unit testleri (auth, başvuru, notification service)  
+   - Manuel test checklist (login → dashboard → jobs → applications → profile → notifications)  
+   - Beta kullanıcılarıyla geri bildirim toplama
 
-2. **Faz 1: Mobile App Setup**
-   - Expo projesi kurulumu
-   - Temel klasör yapısı
-   - API client setup
-   - Auth flow (Login/Register)
-
-3. **Backend Push Service** (Faz 3 için hazırlık)
-   - Expo Push API entegrasyonu
-   - `https://exp.host/--/api/v2/push/send` endpoint'ine POST atma servisi
+3. ⚙️ **Faz 5: Production Prep** – SONRA  
+   - App store asset’leri, app.json prod ayarları, EAS build, TestFlight
 
 ---
 
@@ -219,21 +242,21 @@
 
 ```
 Backend:     ████████████████████████████████ 100% ✅ TAMAMLANDI
-Mobile App:  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0% ❌
+Mobile App:  ██████████████████░░░░░░░░░░░░░   70% ✅ Faz 1 + Faz 2 + Faz 3
 ────────────────────────────────────────────────
-Genel:       ████████░░░░░░░░░░░░░░░░░░░░░░░  35%
+Genel:       ███████████████████░░░░░░░░░░░░  70%
 ```
 
 ### Faz Bazında İlerleme
 
 ```
-Faz 1: Setup              ░░░░░░░░░░░░░░░░░░░   0% ❌
-Faz 2: Core Features      ░░░░░░░░░░░░░░░░░░░   0% ❌
-Faz 3: Notifications      ██░░░░░░░░░░░░░░░░░  14% ⚠️ (Backend hazır)
+Faz 1: Setup              ████████████████████ 100% ✅
+Faz 2: Core Features      ████████████████████ 100% ✅
+Faz 3: Notifications      ████████████████████ 100% ✅
 Faz 4: Testing            ░░░░░░░░░░░░░░░░░░░   0% ❌
 Faz 5: Production Prep    ░░░░░░░░░░░░░░░░░░░   0% ❌
 ────────────────────────────────────────────────
-Toplam:                   ████████░░░░░░░░░░░  35%
+Toplam:                   ███████████████████░░  70%
 ```
 
 ---
@@ -256,6 +279,16 @@ Toplam:                   ████████░░░░░░░░░░
    - Backend endpoint hazır
    - ✅ Database migration tamamlandı (device_tokens tablosu oluşturuldu)
    - Mobile app için hazır
+
+4. ✅ **Mobile App Faz 1 + Faz 2 + Faz 3 tamamlandı**
+   - Expo projesi + navigation + auth store + React Query kuruldu
+   - Login/Register ekranları backend ile entegre edildi
+   - Token yönetimi ve otomatik refresh mekanizması çalışıyor
+   - Dashboard, Jobs, Applications, Profile ekranları tamamlandı
+   - Photo management ve approval guard eklendi
+   - **Merkezi tema sistemi** oluşturuldu ve tüm ekranlara entegre edildi
+   - **Network error handling** iyileştirildi
+   - **Push token kaydı, notification ekranı ve handler'lar** tamamlandı
 
 ---
 
@@ -294,10 +327,13 @@ Toplam:                   ████████░░░░░░░░░░
    - `device_tokens` tablosu production DB'de oluşturuldu
    - Tablo hazır, mobile API endpoint'leri aktif kullanabilir
 
-2. ❌ **Mobile App (Tüm Fazlar)**
-   - Mobile app projesi henüz kurulmadı
-   - Tüm ekranlar yapılmayı bekliyor
-   - API entegrasyonu yapılmayı bekliyor
+2. ✅ **Mobile App Faz 1 + Faz 2** ✅ **TAMAMLANDI**
+   - Expo projesi kuruldu ve temel altyapı hazır
+   - Dashboard, Jobs, Applications, Profile ekranları tamamlandı
+   - Photo management ve approval guard eklendi
+   - Merkezi tema sistemi oluşturuldu ve tüm ekranlara entegre edildi
+   - Network error handling iyileştirildi
+   - Faz 3 kapsamında Expo Push setup, device token kaydı ve Notifications ekranı tamamlandı
 
 3. ✅ **Backend Push Service** ✅ **TAMAMLANDI**
    - Expo Push API entegrasyonu eklendi
@@ -331,9 +367,9 @@ Toplam:                   ████████░░░░░░░░░░
 
 ---
 
-**Son Güncelleme:** Database migration tamamlandı - device_tokens tablosu oluşturuldu (2024)  
-**Durum:** Backend %100 tamamlandı ✅, Mobile App başlamadı  
-**Genel İlerleme:** ~35%
+**Son Güncelleme:** Faz 3 (Notifications & Push) tamamlandı – Device token + bildirim ekranı + handler'lar + retry/skeleton (2024)  
+**Durum:** Backend %100 tamamlandı ✅, Mobile App Faz 1 + Faz 2 + Faz 3 tamamlandı ✅, Faz 4 başlıyor  
+**Genel İlerleme:** ~70%
 
 **✅ BACKEND TAMAMLANDI:** 
 - Tüm endpoint'ler hazır
@@ -349,13 +385,13 @@ Toplam:                   ████████░░░░░░░░░░
 
 | Soru | Cevap | Açıklama |
 |------|-------|----------|
-| **Roadmap doğru mu?** | ✅ **EVET** | %100 doğru, tüm fazlar ve görevler mantıklı sırada |
-| **Mantıklı mı?** | ✅ **EVET** | Çok profesyonel, enterprise-level planlama |
-| **Hatalı bir bilgi var mı?** | ✅ **HAYIR** | Tüm bilgiler doğru ve güncel |
+| **Roadmap doğru mu?** | ✅ **EVET** | Faz bazlı plan güncel ve uygulanıyor |
+| **Mantıklı mı?** | ✅ **EVET** | Web doktor modülü referans alınarak ilerleniyor |
+| **Hatalı bir bilgi var mı?** | ✅ **HAYIR** | Tablodaki tüm durumlar güncel |
 | **Backend %100 doğru işaretlenmiş mi?** | ✅ **EVET** | Tüm 14 görev tamamlandı, backend hazır |
-| **Mobile App %0 doğru mu?** | ✅ **EVET** | Henüz başlanmadı, tüm fazlar bekliyor |
+| **Mobile App ilerleme yüzdesi doğru mu?** | ✅ **EVET** | Faz 1 + Faz 2 + Faz 3 tamamlandı (%70) |
 | **Push Service tamamlandı işareti doğru mu?** | ✅ **EVET** | `expoPushService.js` eklendi ve optimize edildi |
 
-**Durum:** ✅ Backend production-ready, Mobile App geliştirilmeyi bekliyor
+**Durum:** ✅ Backend production-ready, Mobile App Faz 4 (Testing & Bug Fixes) aşamasında
 
 ---

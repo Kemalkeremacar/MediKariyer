@@ -1,0 +1,29 @@
+export const endpoints = {
+  auth: {
+    login: '/auth/login',
+    registerDoctor: '/auth/registerDoctor',
+    refreshToken: '/auth/refresh',
+    logout: '/auth/logout',
+  },
+  doctor: {
+    dashboard: '/doctor/dashboard',
+    profile: '/doctor/profile',
+  },
+  jobs: {
+    list: '/jobs',
+    detail: (id: number) => `/jobs/${id}`,
+  },
+  applications: {
+    list: '/applications',
+    detail: (id: number) => `/applications/${id}`,
+    create: '/applications',
+    withdraw: (id: number) => `/applications/${id}/withdraw`,
+  },
+  notifications: {
+    list: '/notifications',
+    markAsRead: (id: number) => `/notifications/${id}/read`,
+    unreadCount: '/notifications/unread-count',
+  },
+  deviceToken: '/device-token',
+} as const;
+
