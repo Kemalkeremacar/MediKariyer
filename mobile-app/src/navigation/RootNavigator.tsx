@@ -7,6 +7,7 @@ import { PendingApprovalScreen } from '@/screens/auth/PendingApprovalScreen';
 import { useAuthStore } from '@/store/authStore';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { navigationRef } from '@/navigation/navigationRef';
+import { isApprovedFlag } from '@/utils/approval';
 
 enableScreens();
 
@@ -43,11 +44,7 @@ export const RootNavigator = () => {
       );
     }
 
-    // Onay durumu kontrolü: is_approved === true veya is_approved === 1 (backend uyumluluğu)
-    const isApproved =
-      user.is_approved === true ||
-      user.is_approved === 1 ||
-      String(user.is_approved) === '1';
+    const isApproved = isApprovedFlag(user.is_approved);
     if (!isApproved) {
       return (
         <NavigationContainer ref={navigationRef}>

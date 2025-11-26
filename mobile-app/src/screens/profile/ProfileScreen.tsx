@@ -16,6 +16,11 @@ import { lookupService } from '@/api/services/lookup.service';
 import { ProfileFormModal } from '@/components/profile/ProfileFormModal';
 import { PhotoManagementScreen } from './PhotoManagementScreen';
 import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import type {
   CompleteProfile,
   ProfileCompletion,
@@ -315,21 +320,29 @@ export const ProfileScreen = () => {
 
   if (isLoading || completionLoading) {
     return (
-      <View style={styles.centerContainer}>
+      <ScreenContainer
+        scrollable={false}
+        contentContainerStyle={styles.centerContainer}
+      >
         <ActivityIndicator size="large" color={colors.primary[600]} />
-        <Text style={styles.loadingText}>Profil yükleniyor...</Text>
-      </View>
+        <Typography variant="bodySecondary" style={styles.loadingText}>
+          Profil yükleniyor...
+        </Typography>
+      </ScreenContainer>
     );
   }
 
   if (isError || !profile) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Profil yüklenemedi</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-          <Text style={styles.retryText}>Tekrar dene</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenContainer
+        scrollable={false}
+        contentContainerStyle={styles.centerContainer}
+      >
+        <Typography variant="title" style={styles.errorText}>
+          Profil yüklenemedi
+        </Typography>
+        <Button label="Tekrar dene" onPress={() => refetch()} />
+      </ScreenContainer>
     );
   }
 
@@ -344,15 +357,17 @@ export const ProfileScreen = () => {
     updateLanguageMutation.isPending;
 
   return (
-    <View style={styles.container}>
-      {/* Completion Bar */}
+    <ScreenContainer
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
+    >
       {completion && (
-        <View style={styles.completionContainer}>
+        <Card padding="xl" shadow="md" style={styles.completionCard}>
           <View style={styles.completionHeader}>
-            <Text style={styles.completionLabel}>Profil Tamamlanma</Text>
-            <Text style={styles.completionPercent}>
+            <Typography variant="subtitle">Profil Tamamlanma</Typography>
+            <Typography variant="heading">
               {completion.completion_percent}%
-            </Text>
+            </Typography>
           </View>
           <View style={styles.progressBar}>
             <View
@@ -362,47 +377,48 @@ export const ProfileScreen = () => {
               ]}
             />
           </View>
-        </View>
+        </Card>
       )}
 
-      {/* Tab Navigation */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tabContainer}
-        contentContainerStyle={styles.tabContent}
-      >
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[
-              styles.tab,
-              activeTab === tab.key && styles.tabActive,
-            ]}
-            onPress={() => setActiveTab(tab.key)}
-          >
-            <Text
+      <Card style={styles.tabWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabContent}
+        >
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
               style={[
-                styles.tabText,
-                activeTab === tab.key && styles.tabTextActive,
+                styles.tab,
+                activeTab === tab.key && styles.tabActive,
               ]}
+              onPress={() => setActiveTab(tab.key)}
             >
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+              <Typography
+                variant="bodySecondary"
+                style={[
+                  styles.tabText,
+                  activeTab === tab.key && styles.tabTextActive,
+                ]}
+              >
+                {tab.label}
+              </Typography>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </Card>
 
-      {/* Tab Content */}
       <ScrollView
         style={styles.content}
+        contentContainerStyle={styles.contentContainer}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
       >
         {activeTab === 'personal' && (
-          <PersonalInfoTab 
-            profile={profile} 
+          <PersonalInfoTab
+            profile={profile}
             onPhotoManagement={() => setPhotoModalVisible(true)}
           />
         )}
@@ -440,7 +456,6 @@ export const ProfileScreen = () => {
         )}
       </ScrollView>
 
-      {/* Form Modal */}
       {formModalVisible && activeTab !== 'personal' && (
         <ProfileFormModal
           visible={formModalVisible}
@@ -460,92 +475,119 @@ export const ProfileScreen = () => {
         />
       )}
 
-      {/* Photo Management Modal */}
       {photoModalVisible && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+          <Card padding="xl" style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Fotoğraf Yönetimi</Text>
-              <TouchableOpacity
+              <Typography variant="title">Fotoğraf Yönetimi</Typography>
+              <Button
+                label="Kapat"
+                variant="ghost"
                 onPress={() => setPhotoModalVisible(false)}
-                style={styles.modalCloseButton}
-              >
-                <Text style={styles.modalCloseText}>✕</Text>
-              </TouchableOpacity>
+                size="md"
+              />
             </View>
             <PhotoManagementScreen />
-          </View>
+          </Card>
         </View>
       )}
 
-      {/* Delete Confirmation Modal */}
       {deleteModalVisible && deletingItem && (
         <View style={styles.deleteModalOverlay}>
-          <View style={styles.deleteModal}>
-            <Text style={styles.deleteModalTitle}>Emin misiniz?</Text>
-            <Text style={styles.deleteModalText}>
+          <Card padding="xl" style={styles.deleteModal}>
+            <Typography variant="title" style={styles.deleteModalTitle}>
+              Emin misiniz?
+            </Typography>
+            <Typography variant="bodySecondary" style={styles.deleteModalText}>
               Bu işlem geri alınamaz.
-            </Text>
+            </Typography>
             <View style={styles.deleteModalButtons}>
-              <TouchableOpacity
-                style={[styles.deleteModalButton, styles.deleteModalButtonCancel]}
+              <Button
+                label="İptal"
+                variant="ghost"
+                style={styles.deleteModalButton}
                 onPress={() => {
                   setDeleteModalVisible(false);
                   setDeletingItem(null);
                 }}
-              >
-                <Text style={styles.deleteModalButtonCancelText}>İptal</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.deleteModalButton, styles.deleteModalButtonConfirm]}
+              />
+              <Button
+                label="Sil"
+                variant="secondary"
+                style={styles.deleteModalButton}
                 onPress={handleConfirmDelete}
-              >
-                <Text style={styles.deleteModalButtonConfirmText}>Sil</Text>
-              </TouchableOpacity>
+              />
             </View>
-          </View>
+          </Card>
         </View>
       )}
-    </View>
+    </ScreenContainer>
   );
 };
 
 // Placeholder components - will be implemented next
-const PersonalInfoTab = ({ profile, onPhotoManagement }: { profile: CompleteProfile; onPhotoManagement: () => void }) => (
-  <View style={styles.tabContentContainer}>
-    <Text style={styles.sectionTitle}>Kişisel Bilgiler</Text>
-    <View style={styles.infoRow}>
-      <Text style={styles.infoLabel}>Ad Soyad:</Text>
-      <Text style={styles.infoValue}>
-        {profile.first_name} {profile.last_name}
-      </Text>
-    </View>
-    {profile.title && (
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Ünvan:</Text>
-        <Text style={styles.infoValue}>{profile.title}</Text>
+const PersonalInfoTab = ({
+  profile,
+  onPhotoManagement,
+}: {
+  profile: CompleteProfile;
+  onPhotoManagement: () => void;
+}) => {
+  const infoItems = [
+    {
+      label: 'Ad Soyad',
+      value: `${profile.first_name} ${profile.last_name}`,
+    },
+    profile.title
+      ? {
+          label: 'Ünvan',
+          value: profile.title,
+        }
+      : null,
+    profile.phone
+      ? {
+          label: 'Telefon',
+          value: profile.phone,
+        }
+      : null,
+    profile.specialty_name
+      ? {
+          label: 'Branş',
+          value: profile.specialty_name,
+        }
+      : null,
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  return (
+    <Card style={styles.sectionCard}>
+      <Typography variant="title" style={styles.sectionTitle}>
+        Kişisel Bilgiler
+      </Typography>
+      <View style={styles.infoList}>
+        {infoItems.map((item) => (
+          <View key={item.label} style={styles.infoRow}>
+            <Typography variant="bodySecondary" style={styles.infoLabel}>
+              {item.label}
+            </Typography>
+            <Typography variant="body" style={styles.infoValue}>
+              {item.value}
+            </Typography>
+          </View>
+        ))}
       </View>
-    )}
-    {profile.phone && (
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Telefon:</Text>
-        <Text style={styles.infoValue}>{profile.phone}</Text>
-      </View>
-    )}
-    {profile.specialty_name && (
-      <View style={styles.infoRow}>
-        <Text style={styles.infoLabel}>Branş:</Text>
-        <Text style={styles.infoValue}>{profile.specialty_name}</Text>
-      </View>
-    )}
-    <TouchableOpacity style={styles.photoManagementButton} onPress={onPhotoManagement}>
-      <Text style={styles.photoManagementButtonText}>📷 Fotoğraf Yönetimi</Text>
-    </TouchableOpacity>
-    <Text style={styles.placeholderText}>
-      Düzenleme formu yakında eklenecek
-    </Text>
-  </View>
-);
+      <Button
+        label="Fotoğraf Yönetimi"
+        variant="secondary"
+        onPress={onPhotoManagement}
+        fullWidth
+        style={styles.photoButton}
+      />
+      <Typography variant="caption" style={styles.placeholderText}>
+        Düzenleme formu yakında eklenecek
+      </Typography>
+    </Card>
+  );
+};
 
 const EducationTab = ({
   educations,
@@ -558,45 +600,55 @@ const EducationTab = ({
   onEdit: (item: DoctorEducation) => void;
   onDelete: (id: number) => void;
 }) => (
-  <View style={styles.tabContentContainer}>
+  <Card style={styles.sectionCard}>
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>Eğitim Bilgileri</Text>
-      <TouchableOpacity style={styles.addButton} onPress={onAdd}>
-        <Text style={styles.addButtonText}>+ Ekle</Text>
-      </TouchableOpacity>
+      <Typography variant="title">Eğitim Bilgileri</Typography>
+      <Button label="+ Ekle" variant="ghost" onPress={onAdd} size="md" />
     </View>
     {educations.length === 0 ? (
-      <Text style={styles.emptyText}>Henüz eğitim bilgisi eklenmemiş</Text>
+      <EmptyState
+        title="Eğitim bilgisi yok"
+        description="Eğitim geçmişini ekleyerek profili güçlendirebilirsin."
+      />
     ) : (
-      educations.map((edu) => (
-        <View key={edu.id} style={styles.itemCard}>
-          <View style={styles.itemCardHeader}>
-            <View style={styles.itemCardContent}>
-              <Text style={styles.itemTitle}>{edu.education_institution}</Text>
-              <Text style={styles.itemSubtitle}>{edu.field}</Text>
-              <Text style={styles.itemMeta}>{edu.graduation_year}</Text>
-            </View>
-            <View style={styles.itemCardActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
+      <View style={styles.itemList}>
+        {educations.map((edu) => (
+          <Card
+            key={edu.id}
+            padding="md"
+            shadow="none"
+            style={styles.itemCard}
+          >
+            <Typography variant="subtitle">
+              {edu.education_institution}
+            </Typography>
+            <Typography variant="bodySecondary" style={styles.itemSubtitle}>
+              {edu.field}
+            </Typography>
+            <Typography variant="caption" style={styles.itemMeta}>
+              {edu.graduation_year}
+            </Typography>
+            <View style={styles.itemActions}>
+              <Button
+                label="Düzenle"
+                variant="ghost"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onEdit(edu)}
-              >
-                <Text style={styles.actionButtonText}>Düzenle</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
+              />
+              <Button
+                label="Sil"
+                variant="secondary"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onDelete(edu.id)}
-              >
-                <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
-                  Sil
-                </Text>
-              </TouchableOpacity>
+              />
             </View>
-          </View>
-        </View>
-      ))
+          </Card>
+        ))}
+      </View>
     )}
-  </View>
+  </Card>
 );
 
 const ExperienceTab = ({
@@ -610,47 +662,54 @@ const ExperienceTab = ({
   onEdit: (item: DoctorExperience) => void;
   onDelete: (id: number) => void;
 }) => (
-  <View style={styles.tabContentContainer}>
+  <Card style={styles.sectionCard}>
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>Deneyim Bilgileri</Text>
-      <TouchableOpacity style={styles.addButton} onPress={onAdd}>
-        <Text style={styles.addButtonText}>+ Ekle</Text>
-      </TouchableOpacity>
+      <Typography variant="title">Deneyim Bilgileri</Typography>
+      <Button label="+ Ekle" variant="ghost" onPress={onAdd} size="md" />
     </View>
     {experiences.length === 0 ? (
-      <Text style={styles.emptyText}>Henüz deneyim bilgisi eklenmemiş</Text>
+      <EmptyState
+        title="Deneyim bilgisi yok"
+        description="Kurum ve görev bilgilerini girerek görünürlüğünü artır."
+      />
     ) : (
-      experiences.map((exp) => (
-        <View key={exp.id} style={styles.itemCard}>
-          <View style={styles.itemCardHeader}>
-            <View style={styles.itemCardContent}>
-              <Text style={styles.itemTitle}>{exp.organization}</Text>
-              <Text style={styles.itemSubtitle}>{exp.role_title}</Text>
-              <Text style={styles.itemMeta}>
-                {exp.start_date} - {exp.is_current ? 'Devam ediyor' : exp.end_date || '-'}
-              </Text>
-            </View>
-            <View style={styles.itemCardActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
+      <View style={styles.itemList}>
+        {experiences.map((exp) => (
+          <Card
+            key={exp.id}
+            padding="md"
+            shadow="none"
+            style={styles.itemCard}
+          >
+            <Typography variant="subtitle">{exp.organization}</Typography>
+            <Typography variant="bodySecondary" style={styles.itemSubtitle}>
+              {exp.role_title}
+            </Typography>
+            <Typography variant="caption" style={styles.itemMeta}>
+              {exp.start_date} -{' '}
+              {exp.is_current ? 'Devam ediyor' : exp.end_date || '-'}
+            </Typography>
+            <View style={styles.itemActions}>
+              <Button
+                label="Düzenle"
+                variant="ghost"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onEdit(exp)}
-              >
-                <Text style={styles.actionButtonText}>Düzenle</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
+              />
+              <Button
+                label="Sil"
+                variant="secondary"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onDelete(exp.id)}
-              >
-                <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
-                  Sil
-                </Text>
-              </TouchableOpacity>
+              />
             </View>
-          </View>
-        </View>
-      ))
+          </Card>
+        ))}
+      </View>
     )}
-  </View>
+  </Card>
 );
 
 const CertificateTab = ({
@@ -664,45 +723,55 @@ const CertificateTab = ({
   onEdit: (item: DoctorCertificate) => void;
   onDelete: (id: number) => void;
 }) => (
-  <View style={styles.tabContentContainer}>
+  <Card style={styles.sectionCard}>
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>Sertifika Bilgileri</Text>
-      <TouchableOpacity style={styles.addButton} onPress={onAdd}>
-        <Text style={styles.addButtonText}>+ Ekle</Text>
-      </TouchableOpacity>
+      <Typography variant="title">Sertifika Bilgileri</Typography>
+      <Button label="+ Ekle" variant="ghost" onPress={onAdd} size="md" />
     </View>
     {certificates.length === 0 ? (
-      <Text style={styles.emptyText}>Henüz sertifika eklenmemiş</Text>
+      <EmptyState
+        title="Sertifika eklenmemiş"
+        description="Katıldığın eğitimleri ekleyerek güvenilirliği artır."
+      />
     ) : (
-      certificates.map((cert) => (
-        <View key={cert.id} style={styles.itemCard}>
-          <View style={styles.itemCardHeader}>
-            <View style={styles.itemCardContent}>
-              <Text style={styles.itemTitle}>{cert.certificate_name}</Text>
-              <Text style={styles.itemSubtitle}>{cert.institution}</Text>
-              <Text style={styles.itemMeta}>{cert.certificate_year}</Text>
-            </View>
-            <View style={styles.itemCardActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
+      <View style={styles.itemList}>
+        {certificates.map((cert) => (
+          <Card
+            key={cert.id}
+            padding="md"
+            shadow="none"
+            style={styles.itemCard}
+          >
+            <Typography variant="subtitle">
+              {cert.certificate_name}
+            </Typography>
+            <Typography variant="bodySecondary" style={styles.itemSubtitle}>
+              {cert.institution}
+            </Typography>
+            <Typography variant="caption" style={styles.itemMeta}>
+              {cert.certificate_year}
+            </Typography>
+            <View style={styles.itemActions}>
+              <Button
+                label="Düzenle"
+                variant="ghost"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onEdit(cert)}
-              >
-                <Text style={styles.actionButtonText}>Düzenle</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
+              />
+              <Button
+                label="Sil"
+                variant="secondary"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onDelete(cert.id)}
-              >
-                <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
-                  Sil
-                </Text>
-              </TouchableOpacity>
+              />
             </View>
-          </View>
-        </View>
-      ))
+          </Card>
+        ))}
+      </View>
     )}
-  </View>
+  </Card>
 );
 
 const LanguageTab = ({
@@ -716,355 +785,230 @@ const LanguageTab = ({
   onEdit: (item: DoctorLanguage) => void;
   onDelete: (id: number) => void;
 }) => (
-  <View style={styles.tabContentContainer}>
+  <Card style={styles.sectionCard}>
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>Dil Bilgileri</Text>
-      <TouchableOpacity style={styles.addButton} onPress={onAdd}>
-        <Text style={styles.addButtonText}>+ Ekle</Text>
-      </TouchableOpacity>
+      <Typography variant="title">Dil Bilgileri</Typography>
+      <Button label="+ Ekle" variant="ghost" onPress={onAdd} size="md" />
     </View>
     {languages.length === 0 ? (
-      <Text style={styles.emptyText}>Henüz dil bilgisi eklenmemiş</Text>
+      <EmptyState
+        title="Dil bilgisi eklenmemiş"
+        description="Bildiğin dilleri ekleyerek recruiter'lara kendini tanıt."
+      />
     ) : (
-      languages.map((lang) => (
-        <View key={lang.id} style={styles.itemCard}>
-          <View style={styles.itemCardHeader}>
-            <View style={styles.itemCardContent}>
-              <Text style={styles.itemTitle}>{lang.language_name || 'Dil'}</Text>
-              <Text style={styles.itemSubtitle}>
-                {lang.level_name || 'Seviye'}
-              </Text>
-            </View>
-            <View style={styles.itemCardActions}>
-              <TouchableOpacity
-                style={styles.actionButton}
+      <View style={styles.itemList}>
+        {languages.map((lang) => (
+          <Card
+            key={lang.id}
+            padding="md"
+            shadow="none"
+            style={styles.itemCard}
+          >
+            <Typography variant="subtitle">
+              {lang.language_name || 'Dil'}
+            </Typography>
+            <Typography variant="bodySecondary" style={styles.itemSubtitle}>
+              {lang.level_name || 'Seviye'}
+            </Typography>
+            <View style={styles.itemActions}>
+              <Button
+                label="Düzenle"
+                variant="ghost"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onEdit(lang)}
-              >
-                <Text style={styles.actionButtonText}>Düzenle</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
+              />
+              <Button
+                label="Sil"
+                variant="secondary"
+                size="md"
+                style={styles.inlineButton}
                 onPress={() => onDelete(lang.id)}
-              >
-                <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
-                  Sil
-                </Text>
-              </TouchableOpacity>
+              />
             </View>
-          </View>
-        </View>
-      ))
+          </Card>
+        ))}
+      </View>
     )}
-  </View>
+  </Card>
 );
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-  },
   centerContainer: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing['2xl'],
+    gap: spacing.md,
   },
   loadingText: {
-    marginTop: spacing.md,
-    fontSize: typography.fontSize.base,
     color: colors.text.secondary,
   },
   errorText: {
-    fontSize: typography.fontSize.lg,
     color: colors.error[500],
-    marginBottom: spacing.lg,
   },
-  retryButton: {
-    paddingHorizontal: spacing['2xl'],
-    paddingVertical: spacing.md,
-    backgroundColor: colors.primary[600],
-    borderRadius: borderRadius.md,
+  screenContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing['3xl'],
+    gap: spacing.lg,
   },
-  retryText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  completionContainer: {
-    padding: spacing.lg,
-    backgroundColor: colors.background.secondary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
+  completionCard: {
+    gap: spacing.sm,
   },
   completionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  completionLabel: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
-    fontWeight: typography.fontWeight.medium,
-  },
-  completionPercent: {
-    fontSize: typography.fontSize.base,
-    color: colors.primary[600],
-    fontWeight: typography.fontWeight.semibold,
   },
   progressBar: {
     height: 8,
+    borderRadius: borderRadius.full,
     backgroundColor: colors.border.light,
-    borderRadius: borderRadius.xs,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
     backgroundColor: colors.primary[600],
-    borderRadius: borderRadius.xs,
   },
-  tabContainer: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
-    backgroundColor: colors.background.primary,
+  tabWrapper: {
+    paddingVertical: spacing.sm,
   },
   tabContent: {
-    paddingHorizontal: spacing.sm,
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   tab: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    marginHorizontal: spacing.xs,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.background.secondary,
   },
   tabActive: {
-    borderBottomColor: colors.primary[600],
+    backgroundColor: colors.primary[50],
   },
   tabText: {
-    fontSize: typography.fontSize.sm,
     color: colors.text.secondary,
-    fontWeight: typography.fontWeight.medium,
   },
   tabTextActive: {
-    color: colors.primary[600],
+    color: colors.primary[700],
     fontWeight: typography.fontWeight.semibold,
   },
   content: {
     flex: 1,
   },
-  tabContentContainer: {
-    padding: spacing.lg,
+  contentContainer: {
+    paddingVertical: spacing.lg,
+    gap: spacing.lg,
+  },
+  sectionCard: {
+    gap: spacing.md,
+  },
+  sectionTitle: {
+    marginBottom: spacing.xs,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    gap: spacing.md,
   },
-  sectionTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-  },
-  addButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.primary[600],
-    borderRadius: borderRadius.md,
-  },
-  addButtonText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
+  infoList: {
+    gap: spacing.sm,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.light,
   },
   infoLabel: {
-    fontSize: typography.fontSize.sm,
     color: colors.text.secondary,
-    fontWeight: typography.fontWeight.medium,
   },
   infoValue: {
-    fontSize: typography.fontSize.sm,
     color: colors.text.primary,
-    fontWeight: typography.fontWeight.normal,
-  },
-  itemCard: {
-    padding: spacing.lg,
-    backgroundColor: colors.background.secondary,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.md,
-  },
-  itemCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  itemCardContent: {
-    flex: 1,
-  },
-  itemCardActions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  itemTitle: {
-    fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
   },
-  itemSubtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
-    marginBottom: spacing.xs,
-  },
-  itemMeta: {
-    fontSize: typography.fontSize.xs,
-    color: colors.text.tertiary,
-  },
-  actionButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    backgroundColor: colors.primary[600],
-    borderRadius: borderRadius.xs,
-  },
-  actionButtonText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.medium,
-  },
-  deleteButton: {
-    backgroundColor: colors.error[500],
-  },
-  deleteButtonText: {
-    color: colors.text.inverse,
-  },
-  emptyText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.tertiary,
-    textAlign: 'center',
-    paddingVertical: spacing['2xl'],
+  photoButton: {
+    marginTop: spacing.sm,
   },
   placeholderText: {
-    fontSize: typography.fontSize.xs,
-    color: colors.text.tertiary,
-    fontStyle: 'italic',
-    marginTop: spacing.lg,
     textAlign: 'center',
-  },
-  deleteModalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: colors.background.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  deleteModal: {
-    backgroundColor: colors.background.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing['2xl'],
-    width: '80%',
-    maxWidth: 400,
-  },
-  deleteModalTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-    marginBottom: spacing.sm,
-  },
-  deleteModalText: {
-    fontSize: typography.fontSize.sm,
     color: colors.text.secondary,
-    marginBottom: spacing['2xl'],
   },
-  deleteModalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+  itemList: {
     gap: spacing.md,
   },
-  deleteModalButton: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+  itemCard: {
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.background.primary,
+    gap: spacing.xs,
   },
-  deleteModalButtonCancel: {
-    backgroundColor: colors.neutral[100],
+  itemSubtitle: {
+    color: colors.text.secondary,
   },
-  deleteModalButtonCancelText: {
-    color: colors.neutral[700],
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
+  itemMeta: {
+    color: colors.text.secondary,
   },
-  deleteModalButtonConfirm: {
-    backgroundColor: colors.error[500],
+  itemActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
   },
-  deleteModalButtonConfirmText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.semibold,
+  inlineButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
   },
   modalOverlay: {
     position: 'absolute',
     top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: colors.background.overlay,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
+    padding: spacing.lg,
   },
   modalContainer: {
-    backgroundColor: colors.background.primary,
-    borderRadius: borderRadius.lg,
-    width: '90%',
-    maxHeight: '90%',
-    overflow: 'hidden',
+    width: '100%',
+    maxHeight: '85%',
+    borderRadius: borderRadius.xl,
+    gap: spacing.md,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
   },
-  modalTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-  },
-  modalCloseButton: {
-    width: 32,
-    height: 32,
+  deleteModalOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: spacing.lg,
   },
-  modalCloseText: {
-    fontSize: typography.fontSize['2xl'],
+  deleteModal: {
+    gap: spacing.md,
+  },
+  deleteModalTitle: {
+    textAlign: 'center',
+  },
+  deleteModalText: {
+    textAlign: 'center',
     color: colors.text.secondary,
   },
-  photoManagementButton: {
-    backgroundColor: colors.primary[600],
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.md,
-    marginTop: spacing.lg,
-    alignItems: 'center',
+  deleteModalButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
-  photoManagementButtonText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
+  deleteModalButton: {
+    flex: 1,
   },
 });

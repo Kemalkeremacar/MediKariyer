@@ -23,9 +23,11 @@ import type {
   PhotoRequest,
 } from '@/types/profile';
 
+const WEB_BASE_URL = PRIMARY_API_BASE_URL.replace(/\/api\/?$/, '');
+
 // Web backend için ayrı axios instance (PRIMARY_API_BASE_URL)
 const webApiClient = axios.create({
-  baseURL: PRIMARY_API_BASE_URL,
+  baseURL: WEB_BASE_URL,
   timeout: REQUEST_TIMEOUT_MS,
   headers: {
     'Content-Type': 'application/json',

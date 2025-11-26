@@ -1,14 +1,5 @@
 import { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
@@ -18,8 +9,14 @@ import { useMutation } from '@tanstack/react-query';
 import { authService } from '@/api/services/auth.service';
 import { tokenManager } from '@/utils/tokenManager';
 import { useAuthStore } from '@/store/authStore';
-import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
+import { colors, spacing } from '@/constants/theme';
 import { AuthStackParamList } from '@/navigation/AuthNavigator';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { FormField } from '@/components/ui/FormField';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta girin'),
@@ -75,150 +72,107 @@ export const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <ScreenContainer
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
     >
-      <View style={styles.card}>
-        <Text style={styles.title}>MediKariyer Doktor</Text>
-        <Text style={styles.subtitle}>
-          Mobile deneyime hoş geldin. Lütfen giriş yap.
-        </Text>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.cardWrapper}>
+          <Card padding="2xl" shadow="md">
+            <Typography variant="heading">MediKariyer Doktor</Typography>
+            <Typography variant="bodySecondary" style={styles.subtitle}>
+              Mobile deneyime hoş geldin. Lütfen giriş yap.
+            </Typography>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>E-posta</Text>
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                autoCapitalize="none"
-                keyboardType="email-address"
-                placeholder="ornek@medikariyer.com"
-                style={styles.input}
-                onChangeText={onChange}
-                value={value}
+            <FormField
+              label="E-posta"
+              error={errors.email?.message as string}
+            >
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    placeholder="ornek@medikariyer.com"
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
               />
-            )}
-          />
-          {errors.email && (
-            <Text style={styles.errorText}>{errors.email.message}</Text>
-          )}
-        </View>
+            </FormField>
 
-        <View style={styles.formField}>
-          <Text style={styles.label}>Şifre</Text>
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, value } }) => (
-              <TextInput
-                placeholder="Şifreniz"
-                secureTextEntry
-                style={styles.input}
-                onChangeText={onChange}
-                value={value}
+            <FormField
+              label="Şifre"
+              error={errors.password?.message as string}
+            >
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    placeholder="Şifreniz"
+                    secureTextEntry
+                    value={value}
+                    onChangeText={onChange}
+                  />
+                )}
               />
+            </FormField>
+
+            {serverError && (
+              <Typography variant="caption" style={styles.serverError}>
+                {serverError}
+              </Typography>
             )}
-          />
-          {errors.password && (
-            <Text style={styles.errorText}>{errors.password.message}</Text>
-          )}
+
+            <Button
+              label="Giriş Yap"
+              onPress={handleSubmit(onSubmit)}
+              loading={loginMutation.isPending}
+              fullWidth
+              style={styles.buttonSpacing}
+            />
+            <Button
+              label="Hesabın yok mu? Kayıt ol"
+              variant="ghost"
+              fullWidth
+              onPress={() => navigation.navigate('Register')}
+            />
+          </Card>
         </View>
-
-        {serverError && <Text style={styles.errorText}>{serverError}</Text>}
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit(onSubmit)}
-          disabled={loginMutation.isPending}
-        >
-          {loginMutation.isPending ? (
-            <ActivityIndicator color="#ffffff" />
-          ) : (
-            <Text style={styles.buttonText}>Giriş Yap</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={() => navigation.navigate('Register')}
-        >
-          <Text style={styles.secondaryButtonText}>
-            Hesabın yok mu? Kayıt ol
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  screenContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing['2xl'],
-    backgroundColor: colors.background.tertiary,
   },
-  card: {
-    backgroundColor: colors.background.primary,
-    padding: spacing['2xl'],
-    borderRadius: borderRadius.lg,
-    ...shadows.md,
+  flex: {
+    flex: 1,
   },
-  title: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.semibold,
-    marginBottom: spacing.xs,
-    color: colors.text.primary,
+  cardWrapper: {
+    flex: 1,
+    justifyContent: 'center',
   },
   subtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
+    marginTop: spacing.xs,
     marginBottom: spacing['2xl'],
   },
-  formField: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    marginBottom: spacing.xs,
-    color: colors.text.primary,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border.light,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: typography.fontSize.base,
-    color: colors.text.primary,
-  },
-  errorText: {
-    marginTop: spacing.xs,
+  serverError: {
     color: colors.error[600],
-    fontSize: typography.fontSize.sm,
+    marginBottom: spacing.sm,
   },
-  button: {
-    backgroundColor: colors.primary[600],
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  buttonText: {
-    color: colors.text.inverse,
-    fontWeight: typography.fontWeight.semibold,
-    fontSize: typography.fontSize.base,
-  },
-  secondaryButton: {
-    marginTop: spacing.lg,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: colors.primary[600],
-    fontWeight: typography.fontWeight.medium,
+  buttonSpacing: {
+    marginBottom: spacing.sm,
   },
 });
 

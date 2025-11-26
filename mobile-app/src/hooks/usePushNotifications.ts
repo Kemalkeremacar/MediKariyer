@@ -7,6 +7,7 @@ import Constants from 'expo-constants';
 import { notificationService } from '@/api/services/notification.service';
 import { useAuthStore } from '@/store/authStore';
 import { navigate, navigationRef } from '@/navigation/navigationRef';
+import { isApprovedFlag } from '@/utils/approval';
 
 let notificationHandlerRegistered = false;
 
@@ -122,7 +123,13 @@ export const usePushNotifications = () => {
   }, []);
 
   useEffect(() => {
-    if (authStatus !== 'authenticated' || !user || user.role !== 'doctor') {
+    const isApprovedDoctor =
+      authStatus === 'authenticated' &&
+      user &&
+      user.role === 'doctor' &&
+      isApprovedFlag(user.is_approved);
+
+    if (!isApprovedDoctor) {
       hasRegisteredRef.current = false;
       return;
     }
@@ -184,6 +191,6 @@ export const usePushNotifications = () => {
     };
 
     registerDeviceToken();
-  }, [authStatus, user?.id, user?.role]);
+  }, [authStatus, user?.id, user?.role, user?.is_approved]);
 };
 

@@ -1,19 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { InfiniteData } from '@tanstack/react-query';
 import { notificationService } from '@/api/services/notification.service';
 import type { NotificationItem, NotificationsResponse } from '@/types/notification';
-import { colors, spacing, borderRadius, typography, shadows } from '@/constants/theme';
+import { colors, spacing, borderRadius, typography } from '@/constants/theme';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { Box, HStack, VStack, Spinner, Badge, BadgeText } from '@gluestack-ui/themed';
 
 const formatDate = (value?: string | null) => {
   if (!value) {
@@ -90,32 +87,43 @@ export const NotificationsScreen = () => {
 
   const renderItem = ({ item }: { item: NotificationItem }) => {
     const palette = typeColorMap[item.type] ?? typeColorMap.info;
+    const cardStyle = StyleSheet.flatten([
+      styles.card,
+      !item.is_read ? styles.unreadCard : {},
+    ]);
+
     return (
-      <View style={[styles.card, !item.is_read && styles.unreadCard]}>
-        <View style={styles.cardHeader}>
-          <View style={[styles.badge, { backgroundColor: palette.bg }]}>
-            <Text style={[styles.badgeText, { color: palette.text }]}>
-              {item.type?.toUpperCase() ?? 'BİLDİRİM'}
-            </Text>
-          </View>
-          <Text style={styles.dateText}>{formatDate(item.created_at)}</Text>
-        </View>
-        <Text style={styles.title}>{item.title || 'Bildirim'}</Text>
-        <Text style={styles.body}>{item.body || '-'}</Text>
-        {!item.is_read && (
-          <TouchableOpacity
-            style={styles.markReadButton}
-            onPress={() => markAsReadMutation.mutate(item.id)}
-            disabled={markAsReadMutation.isPending}
+      <Card style={cardStyle}>
+        <HStack justifyContent="space-between" alignItems="center" mb="$2">
+          <Badge
+            borderRadius="$full"
+            px="$2"
+            py="$1"
+            backgroundColor={palette.bg}
           >
-            {markAsReadMutation.isPending ? (
-              <ActivityIndicator size="small" color={colors.text.inverse} />
-            ) : (
-              <Text style={styles.markReadText}>Okundu işaretle</Text>
-            )}
-          </TouchableOpacity>
+            <BadgeText color={palette.text} fontSize="$xs">
+              {item.type?.toUpperCase() ?? 'BİLDİRİM'}
+            </BadgeText>
+          </Badge>
+          <Typography variant="caption" style={styles.dateText}>
+            {formatDate(item.created_at)}
+          </Typography>
+        </HStack>
+        <Typography variant="title">{item.title || 'Bildirim'}</Typography>
+        <Typography variant="bodySecondary" style={styles.body}>
+          {item.body || '-'}
+        </Typography>
+        {!item.is_read && (
+          <Button
+            label="Okundu işaretle"
+            variant="secondary"
+            onPress={() => markAsReadMutation.mutate(item.id)}
+            loading={markAsReadMutation.isPending}
+            fullWidth
+            style={styles.markReadButton}
+          />
         )}
-      </View>
+      </Card>
     );
   };
 
@@ -124,50 +132,47 @@ export const NotificationsScreen = () => {
   };
 
   const renderErrorState = () => (
-    <View style={styles.errorState}>
-      <Text style={styles.errorTitle}>Bildirimler yüklenemedi</Text>
-      <TouchableOpacity style={styles.retryButton} onPress={() => notificationsQuery.refetch()}>
-        <Text style={styles.retryText}>Tekrar dene</Text>
-      </TouchableOpacity>
-    </View>
+    <VStack style={styles.errorState}>
+      <Typography variant="title">Bildirimler yüklenemedi</Typography>
+      <Button label="Tekrar dene" onPress={() => notificationsQuery.refetch()} />
+    </VStack>
   );
 
   const renderSkeletons = () => (
-    <View style={styles.skeletonContainer}>
+    <VStack style={styles.skeletonContainer} space="md">
       {Array.from({ length: 3 }).map((_, index) => (
-        <View key={index} style={styles.skeletonCard}>
-          <View style={styles.skeletonBadge} />
-          <View style={styles.skeletonLineWide} />
-          <View style={styles.skeletonLine} />
-          <View style={styles.skeletonLineShort} />
-        </View>
+        <Card key={index}>
+          <Box height={20} width="30%" backgroundColor={colors.neutral[100]} borderRadius={borderRadius.md} mb="$3" />
+          <Box height={16} width="60%" backgroundColor={colors.neutral[100]} borderRadius={borderRadius.md} mb="$2" />
+          <Box height={12} width="80%" backgroundColor={colors.neutral[100]} borderRadius={borderRadius.md} />
+          <Box height={12} width="40%" backgroundColor={colors.neutral[100]} borderRadius={borderRadius.md} mt="$2" />
+        </Card>
       ))}
-    </View>
+    </VStack>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Bildirimler</Text>
-          <Text style={styles.headerSubtitle}>
+    <ScreenContainer scrollable={false}>
+      <Box style={styles.header}>
+        <VStack>
+          <Typography variant="heading">Bildirimler</Typography>
+          <Typography variant="bodySecondary">
             {showUnreadOnly ? 'Okunmamış' : 'Tüm'} bildirimleri görüntülüyorsun
-          </Text>
-        </View>
-        <TouchableOpacity
-          style={styles.toggleButton}
+          </Typography>
+        </VStack>
+        <Button
+          label={showUnreadOnly ? 'Tümünü göster' : 'Okunmamış'}
+          variant="ghost"
           onPress={() => setShowUnreadOnly((prev) => !prev)}
-        >
-          <Text style={styles.toggleText}>
-            {showUnreadOnly ? 'Tümünü göster' : 'Okunmamış'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+        />
+      </Box>
 
       {showUnreadOnly && (
-        <View style={styles.unreadInfo}>
-          <Text style={styles.unreadInfoText}>{unReadCount} okunmamış bildirim</Text>
-        </View>
+        <Card style={styles.unreadInfo}>
+          <Typography variant="subtitle">
+            {unReadCount} okunmamış bildirim
+          </Typography>
+        </Card>
       )}
 
       <FlatList
@@ -186,7 +191,7 @@ export const NotificationsScreen = () => {
         onEndReachedThreshold={0.5}
         ListFooterComponent={
           notificationsQuery.isFetchingNextPage ? (
-            <ActivityIndicator style={{ marginVertical: spacing.md }} />
+            <Spinner style={{ marginVertical: spacing.md }} color="$primary600" />
           ) : null
         }
         ListEmptyComponent={
@@ -195,57 +200,27 @@ export const NotificationsScreen = () => {
           ) : notificationsQuery.isError ? (
             renderErrorState()
           ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>Bildirim bulunamadı.</Text>
-            </View>
+            <EmptyState
+              title="Bildirim bulunamadı"
+              description="Yeni gelişmeler olduğunda burada görünecek."
+            />
           )
         }
       />
-    </View>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.secondary,
-  },
   header: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: typography.fontSize.xl,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-  },
-  headerSubtitle: {
-    color: colors.text.secondary,
-    marginTop: spacing.xs,
-  },
-  toggleButton: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary[600],
-  },
-  toggleText: {
-    color: colors.text.inverse,
-    fontWeight: typography.fontWeight.medium,
   },
   unreadInfo: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
-    padding: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.warning[100],
-  },
-  unreadInfoText: {
-    color: colors.warning[800],
-    fontWeight: typography.fontWeight.medium,
+    backgroundColor: colors.warning[50],
   },
   listContent: {
     padding: spacing.lg,
@@ -253,117 +228,30 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   card: {
-    backgroundColor: colors.background.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   unreadCard: {
-    borderWidth: 1,
     borderColor: colors.primary[200],
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  badge: {
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  badgeText: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
   },
   dateText: {
     fontSize: typography.fontSize.xs,
     color: colors.text.secondary,
   },
-  title: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
-  },
   body: {
-    color: colors.text.secondary,
-    lineHeight: typography.fontSize.base * 1.5,
+    marginTop: spacing.xs,
   },
   markReadButton: {
     marginTop: spacing.md,
-    backgroundColor: colors.primary[600],
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  markReadText: {
-    color: colors.text.inverse,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  emptyState: {
-    paddingVertical: spacing['3xl'],
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    color: colors.text.secondary,
   },
   errorState: {
     paddingVertical: spacing['3xl'],
     alignItems: 'center',
     gap: spacing.sm,
   },
-  errorTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-  },
-  retryButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primary[600],
-  },
-  retryText: {
-    color: colors.text.inverse,
-    fontWeight: typography.fontWeight.medium,
-  },
   skeletonContainer: {
-    gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing['2xl'],
-  },
-  skeletonCard: {
-    backgroundColor: colors.background.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.md,
-    ...shadows.sm,
-  },
-  skeletonBadge: {
-    width: 90,
-    height: 20,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.neutral[100],
-    marginBottom: spacing.sm,
-  },
-  skeletonLineWide: {
-    height: 16,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.neutral[100],
-    marginBottom: spacing.xs,
-  },
-  skeletonLine: {
-    height: 12,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.neutral[100],
-    marginBottom: spacing.xs,
-  },
-  skeletonLineShort: {
-    height: 12,
-    width: '60%',
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.neutral[100],
   },
 });
 

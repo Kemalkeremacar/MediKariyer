@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/auth.service';
-import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
-import { useNavigation } from '@react-navigation/native';
+import { colors, shadows, spacing, borderRadius } from '@/constants/theme';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
 
 export const PendingApprovalScreen = () => {
   const user = useAuthStore((state) => state.user);
   const markUnauthenticated = useAuthStore((state) => state.markUnauthenticated);
-  const navigation = useNavigation();
 
   const handleLogout = async () => {
     try {
@@ -21,66 +23,61 @@ export const PendingApprovalScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.icon}>⏳</Text>
-        <Text style={styles.title}>Onay Bekleniyor</Text>
-        <Text style={styles.message}>
+    <ScreenContainer
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
+    >
+      <Card padding="3xl" shadow="md" style={styles.card}>
+        <Typography variant="heading" style={styles.icon}>
+          ⏳
+        </Typography>
+        <Typography variant="heading">Onay Bekleniyor</Typography>
+        <Typography variant="bodySecondary" style={styles.message}>
           Hesabınız admin tarafından onaylanmayı bekliyor.
-        </Text>
+        </Typography>
         {user && (
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>
+            <Typography variant="title" style={styles.userName}>
               {user.first_name} {user.last_name}
-            </Text>
-            <Text style={styles.userEmail}>{user.email}</Text>
+            </Typography>
+            <Typography variant="bodySecondary" style={styles.userEmail}>
+              {user.email}
+            </Typography>
           </View>
         )}
-        <Text style={styles.subMessage}>
+        <Typography variant="bodySecondary" style={styles.subMessage}>
           Onaylandıktan sonra sisteme giriş yapabileceksiniz. Lütfen bekleyiniz.
-        </Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        </Typography>
+        <Button
+          label="Çıkış Yap"
+          variant="ghost"
+          onPress={handleLogout}
+          fullWidth
+        />
+      </Card>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background.secondary,
+  screenContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     padding: spacing['2xl'],
   },
-  content: {
-    backgroundColor: colors.background.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing['3xl'],
+  card: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 420,
+    alignSelf: 'center',
     alignItems: 'center',
-    ...shadows.md,
   },
   icon: {
     fontSize: 64,
     marginBottom: spacing.lg,
   },
-  title: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
   message: {
-    fontSize: typography.fontSize.base,
-    color: colors.text.secondary,
     textAlign: 'center',
     marginBottom: spacing['2xl'],
-    lineHeight: typography.lineHeight.relaxed,
   },
   userInfo: {
     width: '100%',
@@ -90,36 +87,15 @@ const styles = StyleSheet.create({
     marginBottom: spacing['2xl'],
   },
   userName: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   userEmail: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
     textAlign: 'center',
   },
   subMessage: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.tertiary,
     textAlign: 'center',
     marginBottom: spacing['2xl'],
-    lineHeight: typography.lineHeight.normal,
-  },
-  logoutButton: {
-    backgroundColor: colors.error[500],
-    paddingHorizontal: spacing['2xl'],
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    width: '100%',
-  },
-  logoutButtonText: {
-    color: colors.text.inverse,
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-    textAlign: 'center',
   },
 });
 

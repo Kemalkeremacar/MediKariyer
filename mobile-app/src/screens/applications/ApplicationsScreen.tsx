@@ -1,17 +1,12 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
   FlatList,
-  TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   Modal,
   ScrollView,
   Alert,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import {
   useInfiniteQuery,
   useMutation,
@@ -21,12 +16,27 @@ import {
 import type { InfiniteData } from '@tanstack/react-query';
 import { applicationService } from '@/api/services/application.service';
 import { lookupService } from '@/api/services/lookup.service';
-import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
+import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import type {
   ApplicationListItem,
   ApplicationDetail,
   ApplicationsResponse,
 } from '@/types/application';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import {
+  Box,
+  VStack,
+  HStack,
+  Spinner,
+  Badge,
+  BadgeText,
+} from '@gluestack-ui/themed';
+import { ApplicationFilterSheet } from '@/components/organisms/ApplicationFilterSheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 const useApplicationsQuery = (filters: { status: string }) =>
   useInfiniteQuery<
@@ -67,9 +77,18 @@ const useApplicationsQuery = (filters: { status: string }) =>
   });
 
 const StatusBadge = ({ status }: { status?: string | null }) => (
-  <View style={styles.badge}>
-    <Text style={styles.badgeText}>{status ?? 'Durum yok'}</Text>
-  </View>
+  <Badge
+    borderWidth={1}
+    borderColor={colors.primary[200]}
+    backgroundColor={colors.primary[100]}
+    rounded="$full"
+    px="$2"
+    py="$1"
+  >
+    <BadgeText color="$primary800" fontSize="$xs">
+      {status ?? 'Durum yok'}
+    </BadgeText>
+  </Badge>
 );
 
 const DetailsModal = ({
@@ -106,60 +125,65 @@ const DetailsModal = ({
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalContainer}>
-        <TouchableOpacity style={styles.modalClose} onPress={onClose}>
-          <Text style={styles.modalCloseText}>Kapat</Text>
-        </TouchableOpacity>
+      <Box flex={1} bg="$backgroundLight100">
+        <Button
+          label="Kapat"
+          variant="ghost"
+          onPress={onClose}
+          style={styles.modalClose}
+        />
         {isLoading && (
-          <View style={styles.modalLoader}>
-            <ActivityIndicator size="large" color={colors.primary[600]} />
-          </View>
+          <Box style={styles.modalLoader}>
+            <Spinner size="large" color="$primary600" />
+          </Box>
         )}
         {isError && (
-          <View style={styles.modalLoader}>
-            <Text style={styles.errorTitle}>Başvuru yüklenemedi</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
-              <Text style={styles.retryText}>Tekrar dene</Text>
-            </TouchableOpacity>
-          </View>
+          <Box style={styles.modalLoader}>
+            <Typography variant="title">Başvuru yüklenemedi</Typography>
+            <Button label="Tekrar dene" onPress={() => refetch()} />
+          </Box>
         )}
         {data && (
           <ScrollView contentContainerStyle={styles.modalContent}>
-            <Text style={styles.modalTitle}>{data.job_title ?? 'Başvuru'}</Text>
-            <Text style={styles.modalSubtitle}>
+            <Typography variant="heading">
+              {data.job_title ?? 'Başvuru'}
+            </Typography>
+            <Typography variant="bodySecondary" style={styles.modalSubtitle}>
               {data.hospital_name ?? 'Kurum bilgisi yok'}
-            </Text>
-            <View style={styles.modalMetaRow}>
+            </Typography>
+            <HStack mt="$2" justifyContent="space-between" alignItems="center">
               <StatusBadge status={data.status} />
-              <Text style={styles.metaText}>
+              <Typography variant="caption">
                 {new Date(data.created_at).toLocaleDateString('tr-TR')}
-              </Text>
-            </View>
-            <Text style={styles.sectionTitle}>Ön Yazı</Text>
-            <Text style={styles.modalDescription}>
+              </Typography>
+            </HStack>
+            <Typography variant="title" style={styles.sectionTitle}>
+              Ön Yazı
+            </Typography>
+            <Typography variant="body">
               {data.cover_letter || 'Ön yazı bulunmuyor.'}
-            </Text>
+            </Typography>
             {data.notes && (
               <>
-                <Text style={styles.sectionTitle}>Hastane Notu</Text>
-                <Text style={styles.modalDescription}>{data.notes}</Text>
+                <Typography variant="title" style={styles.sectionTitle}>
+                  Hastane Notu
+                </Typography>
+                <Typography variant="body">{data.notes}</Typography>
               </>
             )}
             {canWithdraw && (
-              <TouchableOpacity
-                style={styles.withdrawButton}
+              <Button
+                label="Başvuruyu Geri Çek"
+                variant="secondary"
                 onPress={() => withdrawMutation.mutate()}
-              >
-                {withdrawMutation.isPending ? (
-                  <ActivityIndicator color={colors.text.inverse} />
-                ) : (
-                  <Text style={styles.withdrawButtonText}>Başvuruyu Geri Çek</Text>
-                )}
-              </TouchableOpacity>
+                loading={withdrawMutation.isPending}
+                fullWidth
+                style={styles.withdrawButton}
+              />
             )}
           </ScrollView>
         )}
-      </View>
+      </Box>
     </Modal>
   );
 };
@@ -171,23 +195,24 @@ const renderApplicationCard = ({
   item: ApplicationListItem;
   onPress: () => void;
 }) => (
-  <TouchableOpacity style={styles.cardItem} onPress={onPress}>
-    <Text style={styles.itemTitle}>{item.job_title ?? 'Başvuru'}</Text>
-    <Text style={styles.itemSubtitle}>
+  <Card style={styles.cardItem} onPress={onPress}>
+    <Typography variant="title">{item.job_title ?? 'Başvuru'}</Typography>
+    <Typography variant="bodySecondary">
       {item.hospital_name ?? 'Kurum bilgisi yok'}
-    </Text>
-    <View style={styles.itemMeta}>
+    </Typography>
+    <HStack mt="$2" justifyContent="space-between" alignItems="center">
       <StatusBadge status={item.status} />
-      <Text style={styles.metaText}>
+      <Typography variant="caption">
         {new Date(item.created_at).toLocaleDateString('tr-TR')}
-      </Text>
-    </View>
-  </TouchableOpacity>
+      </Typography>
+    </HStack>
+  </Card>
 );
 
 export const ApplicationsScreen = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
+  const filterSheetRef = useRef<BottomSheetModal>(null);
 
   const { data: statuses = [] } = useQuery({
     queryKey: ['lookup', 'application-statuses'],
@@ -209,140 +234,123 @@ export const ApplicationsScreen = () => {
     }
   };
 
+  const openFilters = useCallback(() => {
+    filterSheetRef.current?.present();
+  }, []);
+
+  const handleApplyFilters = useCallback(() => {
+    filterSheetRef.current?.dismiss();
+    query.refetch();
+  }, [query]);
+
+  const handleResetFilters = useCallback(() => {
+    setSelectedStatus('');
+    filterSheetRef.current?.dismiss();
+    query.refetch();
+  }, [query]);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.filterCard}>
-        <Text style={styles.sectionTitle}>Filtreler</Text>
-        <View style={styles.pickerWrapper}>
-          <Picker
-            selectedValue={selectedStatus}
-            onValueChange={(value) => setSelectedStatus(value)}
-          >
-            <Picker.Item label="Tüm Durumlar" value="" />
-            {statuses.map((status) => (
-              <Picker.Item
-                key={status.id}
-                label={status.name}
-                value={status.name}
-              />
-            ))}
-          </Picker>
-        </View>
-      </View>
-
-      <FlatList
-        data={applications}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) =>
-          renderApplicationCard({
-            item,
-            onPress: () => setSelectedApplicationId(item.id),
-          })
-        }
-        refreshControl={
-          <RefreshControl
-            refreshing={query.isRefetching}
-            onRefresh={() => query.refetch()}
+    <ScreenContainer
+      scrollable={false}
+      contentContainerStyle={styles.screenContent}
+    >
+      <Box style={styles.container}>
+        <Card style={styles.filterCard}>
+          <Typography variant="subtitle">Başvuru Durumu</Typography>
+          <Typography variant="title">
+            {selectedStatus || 'Tüm durumlar'}
+          </Typography>
+          <Button
+            label="Filtreleri Aç"
+            variant="ghost"
+            fullWidth
+            onPress={openFilters}
           />
-        }
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          query.isFetchingNextPage ? (
-            <ActivityIndicator style={{ marginVertical: 16 }} />
-          ) : null
-        }
-        ListEmptyComponent={
-          query.isLoading ? (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color={colors.primary[600]} />
-            </View>
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyStateText}>Başvuru bulunamadı.</Text>
-            </View>
-          )
-        }
-        contentContainerStyle={{ paddingBottom: 32 }}
-      />
+        </Card>
 
-      <DetailsModal
-        applicationId={selectedApplicationId}
-        visible={selectedApplicationId !== null}
-        onClose={() => setSelectedApplicationId(null)}
-      />
-    </View>
+        <FlatList
+          data={applications}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) =>
+            renderApplicationCard({
+              item,
+              onPress: () => setSelectedApplicationId(item.id),
+            })
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={query.isRefetching}
+              onRefresh={() => query.refetch()}
+            />
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            query.isFetchingNextPage ? (
+              <Spinner style={styles.listLoader} color="$primary600" />
+            ) : null
+          }
+          ListEmptyComponent={
+            query.isLoading ? (
+              <Box style={styles.loader}>
+                <Spinner size="large" color="$primary600" />
+              </Box>
+            ) : (
+              <EmptyState
+                title="Başvuru bulunamadı"
+                description="Yeni ilanlara başvurarak bu alanı doldurabilirsin."
+              />
+            )
+          }
+          contentContainerStyle={styles.listContent}
+        />
+
+        <DetailsModal
+          applicationId={selectedApplicationId}
+          visible={selectedApplicationId !== null}
+          onClose={() => setSelectedApplicationId(null)}
+        />
+
+        <ApplicationFilterSheet
+          ref={filterSheetRef}
+          statuses={statuses}
+          selectedStatus={selectedStatus}
+          onStatusChange={setSelectedStatus}
+          onApply={handleApplyFilters}
+          onReset={handleResetFilters}
+        />
+      </Box>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
+  screenContent: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing['3xl'],
+  },
   container: {
     flex: 1,
-    backgroundColor: colors.background.secondary,
-    padding: spacing.lg,
   },
   filterCard: {
-    backgroundColor: colors.background.primary,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
     marginBottom: spacing.md,
-    ...shadows.sm,
-  },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: colors.border.light,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-    backgroundColor: colors.background.secondary,
+    gap: spacing.md,
   },
   cardItem: {
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border.light,
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.md,
-    backgroundColor: colors.background.primary,
-  },
-  itemTitle: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-  },
-  itemSubtitle: {
-    marginTop: spacing.xs,
-    color: colors.text.secondary,
-  },
-  itemMeta: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  metaText: {
-    color: colors.text.secondary,
-  },
-  badge: {
-    borderWidth: 1,
-    borderColor: colors.primary[200],
-    backgroundColor: colors.primary[100],
-    borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  badgeText: {
-    color: colors.primary[800],
-    fontWeight: typography.fontWeight.semibold,
   },
   loader: {
     paddingVertical: spacing['5xl'],
     alignItems: 'center',
   },
-  emptyState: {
-    paddingVertical: spacing['5xl'],
-    alignItems: 'center',
+  listLoader: {
+    marginVertical: spacing.lg,
   },
-  emptyStateText: {
-    color: colors.text.secondary,
+  listContent: {
+    paddingBottom: spacing['4xl'],
   },
   modalContainer: {
     flex: 1,
@@ -350,72 +358,28 @@ const styles = StyleSheet.create({
   },
   modalClose: {
     alignSelf: 'flex-end',
-    padding: spacing.lg,
-  },
-  modalCloseText: {
-    color: colors.primary[600],
-    fontWeight: typography.fontWeight.semibold,
+    margin: spacing.lg,
   },
   modalLoader: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
   modalContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing['3xl'],
     gap: spacing.md,
   },
-  modalTitle: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text.primary,
-  },
   modalSubtitle: {
     color: colors.text.secondary,
   },
-  modalMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-    alignItems: 'center',
-  },
-  modalDescription: {
-    color: colors.neutral[800],
-    lineHeight: typography.lineHeight.normal,
-  },
   sectionTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
     marginTop: spacing.lg,
-    marginBottom: spacing.xs,
   },
   withdrawButton: {
     marginTop: spacing.lg,
-    backgroundColor: colors.error[600],
-    borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  withdrawButtonText: {
-    color: colors.text.inverse,
-    fontWeight: typography.fontWeight.semibold,
-  },
-  errorTitle: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
-    marginBottom: spacing.md,
-  },
-  retryButton: {
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary[600],
-  },
-  retryText: {
-    color: colors.text.inverse,
-    fontWeight: typography.fontWeight.semibold,
   },
 });
 

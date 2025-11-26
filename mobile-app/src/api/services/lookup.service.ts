@@ -49,7 +49,7 @@ export const lookupService = {
 
   async getEducationTypes() {
     const response = await rootApiClient.get<ApiResponse<EducationType[]>>(
-      '/lookup/education-types',
+      '/lookup/doctor-education-types',
     );
     return unwrap(response.data);
   },

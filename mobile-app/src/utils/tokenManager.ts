@@ -4,23 +4,29 @@ import * as SecureStore from 'expo-secure-store';
 const ACCESS_TOKEN_KEY = 'medikariyer_access_token';
 const REFRESH_TOKEN_KEY = 'medikariyer_refresh_token';
 
+const canUseWebStorage =
+  __DEV__ &&
+  Platform.OS === 'web' &&
+  typeof window !== 'undefined' &&
+  typeof window.localStorage !== 'undefined';
+
 const storage = {
   async setItem(key: string, value: string) {
-    if (Platform.OS === 'web') {
-      localStorage.setItem(key, value);
+    if (canUseWebStorage) {
+      window.localStorage.setItem(key, value);
       return;
     }
     await SecureStore.setItemAsync(key, value);
   },
   async getItem(key: string) {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(key);
+    if (canUseWebStorage) {
+      return window.localStorage.getItem(key);
     }
     return SecureStore.getItemAsync(key);
   },
   async deleteItem(key: string) {
-    if (Platform.OS === 'web') {
-      localStorage.removeItem(key);
+    if (canUseWebStorage) {
+      window.localStorage.removeItem(key);
       return;
     }
     await SecureStore.deleteItemAsync(key);

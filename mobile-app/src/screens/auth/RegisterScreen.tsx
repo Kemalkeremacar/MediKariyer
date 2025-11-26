@@ -1,12 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
   Image,
   Alert,
 } from 'react-native';
@@ -20,9 +15,15 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { authService } from '@/api/services/auth.service';
 import { lookupService } from '@/api/services/lookup.service';
-import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
+import { colors, spacing, borderRadius } from '@/constants/theme';
 import type { AuthStackParamList } from '@/navigation/AuthNavigator';
 import type { DoctorRegistrationPayload } from '@/types/auth';
+import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { FormField } from '@/components/ui/FormField';
 
 const TITLE_OPTIONS = ['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'] as const;
 const REGION_VALUES = ['ist_avrupa', 'ist_anadolu', 'ankara', 'izmir', 'diger', 'yurtdisi'] as const;
@@ -195,26 +196,21 @@ export const RegisterScreen = () => {
     secure = false,
     autoCapitalize: 'none' | 'sentences' | 'words' = 'none',
   ) => (
-    <View style={styles.formField}>
-      <Text style={styles.label}>{label}</Text>
+    <FormField label={label} error={errors[name]?.message as string}>
       <Controller
         control={control}
         name={name}
         render={({ field: { onChange, value } }) => (
-          <TextInput
-            style={styles.input}
+          <Input
             onChangeText={onChange}
-            value={value as string}
+            value={(value ?? '') as string}
             keyboardType={keyboardType}
             secureTextEntry={secure}
             autoCapitalize={autoCapitalize}
           />
         )}
       />
-      {errors[name] && (
-        <Text style={styles.errorText}>{errors[name]?.message as string}</Text>
-      )}
-    </View>
+    </FormField>
   );
 
   const renderPickerField = (
@@ -223,8 +219,7 @@ export const RegisterScreen = () => {
     items: Array<{ label: string; value: string }>,
     enabled = true,
   ) => (
-    <View style={styles.formField}>
-      <Text style={styles.label}>{label}</Text>
+    <FormField label={label} error={errors[name]?.message as string}>
       <Controller
         control={control}
         name={name}
@@ -252,10 +247,7 @@ export const RegisterScreen = () => {
           </View>
         )}
       />
-      {errors[name] && (
-        <Text style={styles.errorText}>{errors[name]?.message as string}</Text>
-      )}
-    </View>
+    </FormField>
   );
 
   const onSubmit = (values: RegisterFormValues) => {
@@ -264,12 +256,12 @@ export const RegisterScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Doktor Kaydı</Text>
-        <Text style={styles.subtitle}>
+    <ScreenContainer>
+      <Card padding="2xl" shadow="md">
+        <Typography variant="heading">Doktor Kaydı</Typography>
+        <Typography variant="bodySecondary" style={styles.subtitle}>
           Bilgilerini doldur, hesabın admin onayına gönderilsin.
-        </Text>
+        </Typography>
 
         {renderTextField('first_name', 'Ad', 'default', false, 'words')}
         {renderTextField('last_name', 'Soyad', 'default', false, 'words')}
@@ -306,88 +298,50 @@ export const RegisterScreen = () => {
         )}
 
         <View style={styles.photoSection}>
-          <Text style={styles.label}>Profil Fotoğrafı</Text>
+          <Typography variant="subtitle">Profil Fotoğrafı</Typography>
           {photoPreview ? (
             <Image source={{ uri: photoPreview }} style={styles.photoPreview} />
           ) : (
             <View style={styles.photoPlaceholder}>
-              <Text style={styles.photoPlaceholderText}>
+              <Typography variant="caption" style={styles.photoPlaceholderText}>
                 1:1 oranında fotoğraf yükleyin
-              </Text>
+              </Typography>
             </View>
           )}
-          <TouchableOpacity
-            style={styles.secondaryButton}
+          <Button
+            label="Fotoğraf Seç"
+            variant="secondary"
             onPress={handleSelectPhoto}
-          >
-            <Text style={styles.secondaryButtonText}>Fotoğraf Seç</Text>
-          </TouchableOpacity>
+            fullWidth
+            style={styles.photoButton}
+          />
           {errors.profile_photo && (
-            <Text style={styles.errorText}>
+            <Typography variant="caption" style={styles.errorText}>
               {errors.profile_photo?.message}
-            </Text>
+            </Typography>
           )}
         </View>
 
-        {serverError && <Text style={styles.serverError}>{serverError}</Text>}
+        {serverError && (
+          <Typography variant="caption" style={styles.serverError}>
+            {serverError}
+          </Typography>
+        )}
 
-        <TouchableOpacity
-          style={styles.button}
+        <Button
+          label="Kayıt Ol"
           onPress={handleSubmit(onSubmit)}
-          disabled={registerMutation.isPending}
-        >
-          {registerMutation.isPending ? (
-            <ActivityIndicator color={colors.text.inverse} />
-          ) : (
-            <Text style={styles.buttonText}>Kayıt Ol</Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          loading={registerMutation.isPending}
+          fullWidth
+        />
+      </Card>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: spacing['2xl'],
-    backgroundColor: colors.background.tertiary,
-  },
-  card: {
-    backgroundColor: colors.background.primary,
-    padding: spacing['2xl'],
-    borderRadius: borderRadius.lg,
-    ...shadows.md,
-  },
-  title: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.semibold,
-    marginBottom: spacing.xs,
-    color: colors.text.primary,
-  },
   subtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
     marginBottom: spacing['2xl'],
-  },
-  formField: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    marginBottom: spacing.xs,
-    color: colors.text.primary,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border.light,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: typography.fontSize.base,
-    color: colors.text.primary,
   },
   pickerContainer: {
     borderWidth: 1,
@@ -401,7 +355,6 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: spacing.xs,
     color: colors.error[600],
-    fontSize: typography.fontSize.sm,
   },
   photoSection: {
     marginTop: spacing.sm,
@@ -425,33 +378,12 @@ const styles = StyleSheet.create({
   photoPlaceholderText: {
     color: colors.text.secondary,
   },
-  button: {
-    backgroundColor: colors.success[600],
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  buttonText: {
-    color: colors.text.inverse,
-    fontWeight: typography.fontWeight.semibold,
-    fontSize: typography.fontSize.base,
-  },
-  secondaryButton: {
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.text.primary,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: colors.text.primary,
-    fontWeight: typography.fontWeight.medium,
+  photoButton: {
+    marginBottom: spacing.xs,
   },
   serverError: {
     color: colors.error[600],
     marginBottom: spacing.md,
-    fontSize: typography.fontSize.sm,
   },
 });
 

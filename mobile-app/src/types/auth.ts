@@ -1,3 +1,5 @@
+import { DoctorProfile } from '@/types/profile';
+
 export type AuthStatus = 'idle' | 'authenticated' | 'unauthenticated';
 
 export interface AuthUser {
@@ -16,6 +18,7 @@ export interface AuthResponsePayload {
   accessToken: string;
   refreshToken: string;
   user: AuthUser;
+  profile?: DoctorProfile | null;
 }
 
 export interface LoginPayload {

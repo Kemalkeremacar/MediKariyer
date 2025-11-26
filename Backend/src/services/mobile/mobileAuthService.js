@@ -37,7 +37,7 @@ const profileTransformer = require('../../mobile/transformers/profileTransformer
 
 const ensureDoctorRole = (user) => {
   if (!user || user.role !== 'doctor') {
-    throw new AppError('Mobil uygulama sadece doktor kullanıcılar içindir', 403);
+    throw new AppError('Kullanıcı adı bulunamadı', 401);
   }
 };
 
