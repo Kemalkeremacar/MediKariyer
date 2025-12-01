@@ -1,4 +1,3 @@
-import { NavigationContainer } from '@react-navigation/native';
 import { enableScreens } from 'react-native-screens';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { AuthNavigator } from './AuthNavigator';
@@ -6,10 +5,18 @@ import { MainNavigator } from './MainNavigator';
 import { PendingApprovalScreen } from '@/screens/auth/PendingApprovalScreen';
 import { useAuthStore } from '@/store/authStore';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { navigationRef } from '@/navigation/navigationRef';
 import { isApprovedFlag } from '@/utils/approval';
 
-enableScreens();
+// Enable screens - safe to call with both old and new architecture
+// Note: With new architecture enabled, some warnings may appear but functionality works
+try {
+  enableScreens();
+} catch (error) {
+  // Silently fail if screens can't be enabled (e.g., in some test environments)
+  if (__DEV__) {
+    console.warn('Failed to enable screens:', error);
+  }
+}
 
 export const RootNavigator = () => {
   const authStatus = useAuthStore((state) => state.authStatus);
@@ -37,27 +44,15 @@ export const RootNavigator = () => {
   if (authStatus === 'authenticated' && user) {
     // Admin muafiyeti: Admin rolü için onay kontrolü yapılmaz
     if (user.role === 'admin') {
-      return (
-        <NavigationContainer ref={navigationRef}>
-          <MainNavigator />
-        </NavigationContainer>
-      );
+      return <MainNavigator />;
     }
 
     const isApproved = isApprovedFlag(user.is_approved);
     if (!isApproved) {
-      return (
-        <NavigationContainer ref={navigationRef}>
-          <PendingApprovalScreen />
-        </NavigationContainer>
-      );
+      return <PendingApprovalScreen />;
     }
   }
 
-  return (
-    <NavigationContainer ref={navigationRef}>
-      {authStatus === 'authenticated' ? <MainNavigator /> : <AuthNavigator />}
-    </NavigationContainer>
-  );
+  return authStatus === 'authenticated' ? <MainNavigator /> : <AuthNavigator />;
 };
 
