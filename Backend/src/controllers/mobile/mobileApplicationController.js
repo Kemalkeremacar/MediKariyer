@@ -31,14 +31,22 @@
 // DIŞ BAĞIMLILIKLAR
 // ============================================================================
 
-const { sendSuccess } = require('../../utils/response');
+const { sendPaginated, sendSuccess } = require('../../utils/response');
 const { catchAsync } = require('../../utils/errorHandler');
 const mobileApplicationService = require('../../services/mobile/mobileApplicationService');
 
 const listApplications = catchAsync(async (req, res) => {
   const { page, limit, status } = req.query;
-  const data = await mobileApplicationService.listApplications(req.user.id, { page, limit, status });
-  return sendSuccess(res, 'Başvurular listelendi', data);
+  const result = await mobileApplicationService.listApplications(req.user.id, { page, limit, status });
+  
+  // sendPaginated kullanarak standart pagination response formatı
+  // Response: { success, message, data: [...], pagination: {...}, timestamp }
+  return sendPaginated(
+    res,
+    'Başvurular listelendi',
+    result.data,
+    result.pagination
+  );
 });
 
 const getApplicationDetail = catchAsync(async (req, res) => {

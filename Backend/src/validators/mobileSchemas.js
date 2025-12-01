@@ -221,7 +221,7 @@ const mobileNotificationsQuerySchema = paginationQuerySchema.keys({
  * @description Job detail için params validasyonu
  */
 const mobileJobDetailParamsSchema = Joi.object({
-  id: Joi.number().integer().positive().required().messages({
+  jobId: Joi.number().integer().positive().required().messages({
     'number.base': 'Job ID sayı olmalıdır',
     'number.integer': 'Job ID tam sayı olmalıdır',
     'number.positive': 'Job ID pozitif bir sayı olmalıdır',
@@ -234,7 +234,7 @@ const mobileJobDetailParamsSchema = Joi.object({
  * @description Application detail için params validasyonu
  */
 const mobileApplicationDetailParamsSchema = Joi.object({
-  id: Joi.number().integer().positive().required().messages({
+  applicationId: Joi.number().integer().positive().required().messages({
     'number.base': 'Application ID sayı olmalıdır',
     'number.integer': 'Application ID tam sayı olmalıdır',
     'number.positive': 'Application ID pozitif bir sayı olmalıdır',

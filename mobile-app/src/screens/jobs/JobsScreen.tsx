@@ -5,30 +5,42 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
-  Modal,
   Alert,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import {
   useInfiniteQuery,
-  useMutation,
   useQuery,
-  useQueryClient,
 } from '@tanstack/react-query';
 import type { InfiniteData } from '@tanstack/react-query';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  Box,
+  HStack,
+  Text,
+  Input as GSInput,
+  InputField,
+  InputSlot,
+  InputIcon,
+} from '@gluestack-ui/themed';
+import { Search, Filter } from 'lucide-react-native';
 import { jobService } from '@/api/services/job.service';
 import { lookupService } from '@/api/services/lookup.service';
-import { colors, spacing, borderRadius, typography } from '@/constants/theme';
-import type { JobListItem, JobDetail, JobsResponse } from '@/types/job';
+import { colors, spacing, borderRadius } from '@/constants/theme';
+import type { JobListItem, JobsResponse } from '@/types/job';
+import { JobsStackParamList } from '@/navigation/JobsStackNavigator';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
-import { Card } from '@/components/ui/Card';
-import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { JobCard } from '@/components/molecules/JobCard';
 import { JobFilterSheet } from '@/components/organisms/JobFilterSheet';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+
+type NavigationProp = NativeStackNavigationProp<JobsStackParamList, 'JobsList'>;
 
 const useJobsQuery = (filters: {
   search: string;
@@ -56,151 +68,52 @@ const useJobsQuery = (filters: {
       if (!pagination) {
         return undefined;
       }
-      const current =
-        pagination.current_page ?? (pagination as any).page ?? 1;
-      if (pagination.next_page) {
-        return pagination.next_page;
-      }
-      if (pagination.has_next ?? pagination.has_next_page) {
-        return current + 1;
-      }
-      if (
-        pagination.total_pages &&
-        current < pagination.total_pages
-      ) {
-        return current + 1;
+      // Backend'den gelen pagination yapısı: { current_page, per_page, total, total_pages, has_next, has_prev }
+      if (pagination.has_next) {
+        return (pagination.current_page ?? 1) + 1;
       }
       return undefined;
     },
   });
 
-const DetailsModal = ({
-  jobId,
-  visible,
-  onClose,
+// FilterChip Component (Kariyer.net tarzı)
+const FilterChip = ({
+  label,
+  active,
+  onPress,
 }: {
-  jobId: number | null;
-  visible: boolean;
-  onClose: () => void;
-}) => {
-  const queryClient = useQueryClient();
-  const [coverLetter, setCoverLetter] = useState('');
-  const { data, isLoading, isError, refetch } = useQuery({
-    enabled: visible && Boolean(jobId),
-    queryKey: ['job', jobId],
-    queryFn: () => jobService.getJobDetail(jobId as number),
-  });
-
-  const applyMutation = useMutation({
-    mutationFn: ({ jobId: targetJobId }: { jobId: number }) =>
-      jobService.applyToJob({
-        jobId: targetJobId,
-        coverLetter: coverLetter.trim(),
-      }),
-    onSuccess: () => {
-      Alert.alert('Başvuru alındı', 'Başvurunuz başarıyla iletildi.');
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      refetch();
-    },
-    onError: () => {
-      Alert.alert('Hata', 'Başvuru yapılırken bir sorun oluştu.');
-    },
-  });
-
-  const job = data;
-
-  return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalContainer}>
-        <Button
-          label="Kapat"
-          variant="ghost"
-          onPress={onClose}
-          style={styles.modalClose}
-        />
-        {isLoading && (
-          <View style={styles.modalLoader}>
-            <ActivityIndicator size="large" color={colors.primary[600]} />
-          </View>
-        )}
-        {isError && (
-          <View style={styles.modalLoader}>
-            <Typography variant="title">İlan yüklenemedi</Typography>
-            <Button label="Tekrar dene" onPress={() => refetch()} />
-          </View>
-        )}
-        {job && (
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <Typography variant="heading">{job.title ?? 'İş İlanı'}</Typography>
-            <Typography variant="bodySecondary" style={styles.modalSubtitle}>
-              {job.hospital_name ?? 'Kurum bilgisi yok'}
-            </Typography>
-            <View style={styles.modalMetaRow}>
-              <Typography variant="caption" style={styles.metaText}>
-                {job.city_name ?? 'Şehir belirtilmedi'}
-              </Typography>
-              <Typography variant="caption" style={styles.metaText}>
-                {job.work_type ?? '-'}
-              </Typography>
-            </View>
-            {job.salary_range && (
-              <Typography variant="body" style={styles.metaHighlight}>
-                {job.salary_range}
-              </Typography>
-            )}
-            <Typography variant="title" style={styles.sectionTitle}>
-              İş Tanımı
-            </Typography>
-            <Typography variant="body">
-              {job.description ?? 'Paylaşılmadı.'}
-            </Typography>
-            {!!job.requirements?.length && (
-              <>
-                <Typography variant="title" style={styles.sectionTitle}>
-                  Gereksinimler
-                </Typography>
-                {job.requirements.map((req, index) => (
-                  <Typography
-                    key={`${req}-${index}`}
-                    variant="bodySecondary"
-                    style={styles.requirementItem}
-                  >
-                    • {req}
-                  </Typography>
-                ))}
-              </>
-            )}
-
-            <Typography variant="title" style={styles.sectionTitle}>
-              Ön Yazı (opsiyonel)
-            </Typography>
-            <Input
-              multiline
-              placeholder="Kendinden bahsetmek ister misin?"
-              value={coverLetter}
-              onChangeText={setCoverLetter}
-              containerStyle={styles.coverLetterInput}
-            />
-            <Button
-              label={job.is_applied ? 'Başvuruldu' : 'Başvuru Yap'}
-              onPress={() => job.id && applyMutation.mutate({ jobId: job.id })}
-              loading={applyMutation.isPending}
-              disabled={job.is_applied}
-              fullWidth
-              style={styles.applyButton}
-            />
-          </ScrollView>
-        )}
-      </View>
-    </Modal>
-  );
-};
+  label: string;
+  active: boolean;
+  onPress: () => void;
+}) => (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+    <Box
+      px="$4"
+      py="$2"
+      mr="$2"
+      borderRadius="$full"
+      bg={active ? '$primary100' : '$white'}
+      borderWidth={1}
+      borderColor={active ? '$primary500' : '$coolGray200'}
+      style={styles.chip}
+    >
+      <Text
+        fontSize="$xs"
+        color={active ? '$primary700' : '$coolGray600'}
+        fontWeight={active ? '600' : '400'}
+      >
+        {label}
+      </Text>
+    </Box>
+  </TouchableOpacity>
+);
 
 export const JobsScreen = () => {
+  const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [cityId, setCityId] = useState('');
   const [specialtyId, setSpecialtyId] = useState('');
-  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const filterSheetRef = useRef<BottomSheetModal>(null);
 
   const { data: cities = [] } = useQuery({
@@ -246,96 +159,173 @@ export const JobsScreen = () => {
     query.refetch();
   }, [query]);
 
+  // Seçili şehir ve uzmanlık isimlerini bul
+  const selectedCity = cities.find((c) => c.id.toString() === cityId);
+  const selectedSpecialty = specialties.find(
+    (s) => s.id.toString() === specialtyId,
+  );
+
   return (
-    <ScreenContainer
-      scrollable={false}
-      contentContainerStyle={styles.screenContent}
-    >
-      <View style={styles.container}>
-        <Card style={styles.searchSection}>
-          <Input
-            placeholder="İlan ara..."
+    <Box flex={1} bg="$backgroundLight50">
+      {/* Header & Search (Modern, Kariyer.net tarzı) */}
+      <Box
+        bg="$white"
+        px="$4"
+        pt={insets.top + spacing.md}
+        pb="$3"
+        style={styles.header}
+      >
+        <GSInput
+          variant="outline"
+          size="md"
+          borderRadius="$full"
+          bg="$coolGray50"
+          borderWidth={0}
+          style={styles.searchInput}
+        >
+          <InputSlot pl="$3">
+            <InputIcon as={Search} color="$coolGray400" />
+          </InputSlot>
+          <InputField
+            placeholder="İlan, şehir veya hastane ara..."
             value={search}
             onChangeText={setSearch}
             returnKeyType="search"
-            containerStyle={styles.searchInput}
           />
-          <Button
-            label="Filtreleri Aç"
-            variant="ghost"
-            fullWidth
-            onPress={openFilters}
-          />
-        </Card>
-
-        <FlatList
-          data={jobs}
-          keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => (
-            <JobCard item={item} onPress={() => setSelectedJobId(item.id)} />
+          {search.length > 0 && (
+            <InputSlot pr="$3">
+              <TouchableOpacity onPress={() => setSearch('')}>
+                <Text color="$coolGray400">✕</Text>
+              </TouchableOpacity>
+            </InputSlot>
           )}
-          refreshControl={
-            <RefreshControl refreshing={query.isRefetching} onRefresh={onRefresh} />
-          }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            query.isFetchingNextPage ? (
-              <ActivityIndicator style={styles.listLoader} />
-            ) : null
-          }
-          ListEmptyComponent={
-            query.isLoading ? (
-              <View style={styles.loader}>
-                <ActivityIndicator size="large" color={colors.primary[600]} />
-              </View>
-            ) : (
-              <EmptyState
-                title="İlan bulunamadı"
-                description="Filtreleri değiştirerek yeni ilanlara göz at."
-              />
-            )
-          }
-          contentContainerStyle={styles.listContent}
-        />
+        </GSInput>
 
-        <DetailsModal
-          visible={selectedJobId !== null}
-          jobId={selectedJobId}
-          onClose={() => setSelectedJobId(null)}
-        />
+        {/* Yatay Filtreler (Kariyer.net tarzı) */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScroll}
+          contentContainerStyle={styles.filterContainer}
+        >
+          <FilterChip
+            label="Tüm İlanlar"
+            active={!cityId && !specialtyId}
+            onPress={handleResetFilters}
+          />
+          {selectedCity && (
+            <FilterChip
+              label={selectedCity.name}
+              active={true}
+              onPress={openFilters}
+            />
+          )}
+          {selectedSpecialty && (
+            <FilterChip
+              label={selectedSpecialty.name}
+              active={true}
+              onPress={openFilters}
+            />
+          )}
+          <TouchableOpacity onPress={openFilters} activeOpacity={0.7}>
+            <Box
+              px="$4"
+              py="$2"
+              mr="$2"
+              borderRadius="$full"
+              bg="$white"
+              borderWidth={1}
+              borderColor="$primary500"
+              style={styles.filterButton}
+            >
+              <HStack space="xs" alignItems="center">
+                <Filter size={14} color={colors.primary[600]} />
+                <Text fontSize="$xs" color="$primary700" fontWeight="600">
+                  Filtrele
+                </Text>
+              </HStack>
+            </Box>
+          </TouchableOpacity>
+        </ScrollView>
+      </Box>
 
-        <JobFilterSheet
-          ref={filterSheetRef}
-          cities={cities}
-          specialties={specialties}
-          cityId={cityId}
-          specialtyId={specialtyId}
-          onCityChange={setCityId}
-          onSpecialtyChange={setSpecialtyId}
-          onApply={handleApplyFilters}
-          onReset={handleResetFilters}
-        />
-      </View>
-    </ScreenContainer>
+      {/* İlan Listesi */}
+      <FlatList
+        data={jobs}
+        keyExtractor={(item, index) => `job-${item.id}-${index}`}
+        renderItem={({ item }) => (
+          <JobCard
+            item={item}
+            onPress={() => navigation.navigate('JobDetail', { id: item.id })}
+          />
+        )}
+        refreshControl={
+          <RefreshControl refreshing={query.isRefetching} onRefresh={onRefresh} />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          query.isFetchingNextPage ? (
+            <ActivityIndicator style={styles.listLoader} />
+          ) : null
+        }
+        ListEmptyComponent={
+          query.isLoading ? (
+            <View style={styles.loader}>
+              <ActivityIndicator size="large" color={colors.primary[600]} />
+            </View>
+          ) : query.isError ? (
+            <ErrorMessage
+              error={query.error}
+              onRetry={() => query.refetch()}
+            />
+          ) : (
+            <EmptyState
+              title="İlan bulunamadı"
+              description="Filtreleri değiştirerek yeni ilanlara göz at."
+            />
+          )
+        }
+        contentContainerStyle={styles.listContent}
+      />
+
+      <JobFilterSheet
+        ref={filterSheetRef}
+        cities={cities}
+        specialties={specialties}
+        cityId={cityId}
+        specialtyId={specialtyId}
+        onCityChange={setCityId}
+        onSpecialtyChange={setSpecialtyId}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+      />
+    </Box>
   );
 };
 
 const styles = StyleSheet.create({
-  screenContent: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing['3xl'],
-  },
-  container: {
-    flex: 1,
-  },
-  searchSection: {
-    gap: spacing.md,
-    marginBottom: spacing.md,
+  header: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchInput: {
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  filterScroll: {
+    marginTop: spacing.sm,
+  },
+  filterContainer: {
+    paddingRight: spacing.lg,
+  },
+  chip: {
+    minHeight: 32,
+  },
+  filterButton: {
+    minHeight: 32,
   },
   loader: {
     paddingVertical: spacing['3xl'],
@@ -345,56 +335,8 @@ const styles = StyleSheet.create({
     marginVertical: spacing.lg,
   },
   listContent: {
+    padding: spacing.lg,
     paddingBottom: spacing['4xl'],
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.background.secondary,
-  },
-  modalClose: {
-    alignSelf: 'flex-end',
-    margin: spacing.lg,
-  },
-  modalLoader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
-  },
-  modalContent: {
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['3xl'],
-    gap: spacing.md,
-  },
-  modalSubtitle: {
-    color: colors.text.secondary,
-  },
-  modalMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-  },
-  metaText: {
-    color: colors.text.secondary,
-  },
-  metaHighlight: {
-    marginTop: spacing.sm,
-    color: colors.neutral[800],
-    fontWeight: typography.fontWeight.semibold,
-  },
-  requirementItem: {
-    color: colors.text.secondary,
-    marginBottom: spacing.xs,
-  },
-  coverLetterInput: {
-    marginTop: spacing.sm,
-  },
-  sectionTitle: {
-    marginTop: spacing.lg,
-  },
-  applyButton: {
-    marginTop: spacing.lg,
   },
 });
 

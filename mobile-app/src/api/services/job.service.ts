@@ -1,7 +1,7 @@
 import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
-import { ApiResponse } from '@/types/api';
-import { JobDetail, JobsResponse } from '@/types/job';
+import { ApiResponse, PaginationMeta } from '@/types/api';
+import { JobDetail, JobsResponse, JobListItem } from '@/types/job';
 
 export interface JobListParams {
   page?: number;
@@ -19,19 +19,25 @@ export interface ApplyJobPayload {
 
 export const jobService = {
   async listJobs(params: JobListParams = {}) {
-    const response = await apiClient.get<ApiResponse<JobsResponse>>(
-      endpoints.jobs.list,
-      {
-        params,
-      },
-    );
-    return response.data.data;
+    // Backend sendPaginated response formatı:
+    // { success, message, data: [...], pagination: {...}, timestamp }
+    const response = await apiClient.get<
+      ApiResponse<JobListItem[]> & { pagination?: PaginationMeta }
+    >(endpoints.jobs.list, {
+      params,
+    });
+    const responseData = response.data;
+    return {
+      data: responseData.data || [],
+      pagination: responseData.pagination || responseData.meta,
+    };
   },
 
-  async getJobDetail(id: number) {
+  async getJobDetail(id: number): Promise<JobDetail> {
     const response = await apiClient.get<ApiResponse<JobDetail>>(
       endpoints.jobs.detail(id),
     );
+    // Backend sendSuccess response formatı: { success, message, data: {...}, timestamp }
     return response.data.data;
   },
 

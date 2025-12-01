@@ -20,13 +20,14 @@ import { colors, spacing, borderRadius, typography } from '@/constants/theme';
 import type {
   ApplicationListItem,
   ApplicationDetail,
-  ApplicationsResponse,
 } from '@/types/application';
+import type { ApplicationsListResponse } from '@/api/services/application.service';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import {
   Box,
   VStack,
@@ -40,9 +41,9 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 const useApplicationsQuery = (filters: { status: string }) =>
   useInfiniteQuery<
-    ApplicationsResponse,
+    ApplicationsListResponse,
     Error,
-    ApplicationsResponse,
+    ApplicationsListResponse,
     ['applications', typeof filters],
     number
   >({
@@ -57,20 +58,13 @@ const useApplicationsQuery = (filters: { status: string }) =>
       });
     },
     getNextPageParam: (lastPage) => {
-      const pagination = lastPage.pagination;
+      const pagination = lastPage.meta; // Backend'den pagination olarak geliyor, service'de meta olarak map ediyoruz
       if (!pagination) {
         return undefined;
       }
-      const current =
-        pagination.current_page ?? (pagination as any).page ?? 1;
+      // Backend'den gelen pagination yapısı: { current_page, per_page, total, total_pages, has_next, has_prev }
       if (pagination.has_next) {
-        return current + 1;
-      }
-      if (
-        pagination.total_pages &&
-        current < pagination.total_pages
-      ) {
-        return current + 1;
+        return (pagination.current_page ?? 1) + 1;
       }
       return undefined;
     },
@@ -139,8 +133,13 @@ const DetailsModal = ({
         )}
         {isError && (
           <Box style={styles.modalLoader}>
-            <Typography variant="title">Başvuru yüklenemedi</Typography>
-            <Button label="Tekrar dene" onPress={() => refetch()} />
+            <Typography variant="title" style={{ color: colors.error[700], marginBottom: spacing.sm }}>
+              Başvuru yüklenemedi
+            </Typography>
+            <Typography variant="bodySecondary" style={{ marginBottom: spacing.md, textAlign: 'center' }}>
+              Lütfen internet bağlantınızı kontrol edip tekrar deneyin.
+            </Typography>
+            <Button label="Tekrar dene" onPress={() => refetch()} variant="primary" />
           </Box>
         )}
         {data && (
@@ -223,7 +222,7 @@ export const ApplicationsScreen = () => {
 
   const applications = useMemo(() => {
     const pages =
-      (query.data as InfiniteData<ApplicationsResponse, number> | undefined)
+      (query.data as InfiniteData<ApplicationsListResponse, number> | undefined)
         ?.pages ?? [];
     return pages.flatMap((page) => page.data);
   }, [query.data]);
@@ -270,7 +269,7 @@ export const ApplicationsScreen = () => {
 
         <FlatList
           data={applications}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item, index) => `app-${item.id}-${index}`}
           renderItem={({ item }) =>
             renderApplicationCard({
               item,
@@ -295,9 +294,15 @@ export const ApplicationsScreen = () => {
               <Box style={styles.loader}>
                 <Spinner size="large" color="$primary600" />
               </Box>
+            ) : query.isError ? (
+              <ErrorMessage
+                error={query.error}
+                onRetry={() => query.refetch()}
+              />
             ) : (
               <EmptyState
-                title="Başvuru bulunamadı"
+                type="jobs"
+                title="Henüz başvuru yapılmadı"
                 description="Yeni ilanlara başvurarak bu alanı doldurabilirsin."
               />
             )

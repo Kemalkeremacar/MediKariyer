@@ -305,10 +305,10 @@ export const ProfileFormModal: React.FC<ProfileFormModalProps> = ({
             enabled={!disabled}
             style={styles.picker}
           >
-            <Picker.Item label="Seçiniz" value="" />
-            {options.map((option) => (
+            <Picker.Item label="Seçiniz" value="" key={`${type}-option-select`} />
+            {options.map((option, index) => (
               <Picker.Item
-                key={option.id || option.value}
+                key={`${type}-option-${option.id || option.value || index}`}
                 label={option.name || option.label || String(option)}
                 value={String(option.id || option.value || option)}
               />

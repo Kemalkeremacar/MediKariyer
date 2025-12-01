@@ -1,3 +1,11 @@
+/**
+ * API Endpoints - Mobile API için endpoint tanımları
+ * 
+ * Not: Base URL zaten `/api/mobile` içeriyor (config.ts'de tanımlı)
+ * Bu yüzden burada sadece kaynak yollarını tanımlıyoruz
+ * 
+ * Örnek: `/doctor/profile` -> `/api/mobile/doctor/profile`
+ */
 export const endpoints = {
   auth: {
     login: '/auth/login',

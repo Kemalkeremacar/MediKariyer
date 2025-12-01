@@ -96,6 +96,7 @@ const getDashboard = async (userId) => {
     .first();
 
   const applications = await db('applications as a')
+    .distinct('a.id', 'a.job_id', 'a.applied_at', 'a.updated_at')
     .leftJoin('jobs as j', 'j.id', 'a.job_id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .leftJoin('application_statuses as st', 'st.id', 'a.status_id')
@@ -115,6 +116,7 @@ const getDashboard = async (userId) => {
     .limit(5);
 
   const recommendedJobs = await db('jobs as j')
+    .distinct('j.id', 'j.title', 'j.created_at', 'j.employment_type')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')

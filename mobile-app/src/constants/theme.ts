@@ -4,18 +4,18 @@
  */
 
 export const colors = {
-  // Primary - Ana marka rengi (Mavi tonları)
+  // Primary - Ana marka rengi (Kariyer.net benzeri modern mavi tonları)
   primary: {
-    50: '#eff6ff',
-    100: '#dbeafe',
-    200: '#bfdbfe',
-    300: '#93c5fd',
-    400: '#60a5fa',
-    500: '#3b82f6', // Ana primary
-    600: '#2563eb', // Hover/Active
-    700: '#1d4ed8',
-    800: '#1e40af',
-    900: '#1e3a8a',
+    50: '#f0f9ff',
+    100: '#e0f2fe',
+    200: '#bae6fd',
+    300: '#7dd3fc',
+    400: '#38bdf8',
+    500: '#0ea5e9', // Modern parlak mavi (Kariyer.net tonlarına yakın)
+    600: '#0284c7', // Hover/Active
+    700: '#0369a1',
+    800: '#075985',
+    900: '#0c4a6e',
   },
 
   // Secondary - İkincil renk (Cyan tonları)
@@ -74,25 +74,25 @@ export const colors = {
     900: '#7f1d1d',
   },
 
-  // Neutral - Gri tonları
+  // Neutral - Gri tonları (Modern, ferah görünüm için)
   neutral: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
+    50: '#f8fafc', // Arka plan için çok açık gri (Bembeyaz değil)
+    100: '#f1f5f9',
+    200: '#e2e8f0', // Border rengi
+    300: '#cbd5e1',
+    400: '#94a3b8',
+    500: '#64748b', // İkincil metinler
+    600: '#475569',
+    700: '#334155',
+    800: '#1e293b', // Ana metinler
+    900: '#0f172a',
   },
 
   // Background
   background: {
     primary: '#ffffff',
-    secondary: '#f9fafb',
-    tertiary: '#f3f4f6',
+    secondary: '#f8fafc', // Modern, ferah arka plan
+    tertiary: '#f1f5f9',
     overlay: 'rgba(0, 0, 0, 0.5)',
   },
 
@@ -123,7 +123,7 @@ export const gradients = {
   neutral: ['#6b7280', '#4b5563'],
 } as const;
 
-// Shadow stilleri
+// Shadow stilleri (Yumuşak gölgeler - Modern görünüm)
 export const shadows = {
   sm: {
     shadowColor: '#000',
@@ -135,7 +135,7 @@ export const shadows = {
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.1, // Biraz daha belirgin
     shadowRadius: 4,
     elevation: 3,
   },

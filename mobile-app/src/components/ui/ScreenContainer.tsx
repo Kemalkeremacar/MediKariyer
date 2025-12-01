@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  SafeAreaView,
   ScrollView,
   ScrollViewProps,
   StyleSheet,
@@ -8,6 +7,7 @@ import {
   ViewStyle,
   StyleProp,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from '@/constants/theme';
 
 interface ScreenContainerProps extends ScrollViewProps {

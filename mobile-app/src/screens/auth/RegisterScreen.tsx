@@ -235,12 +235,12 @@ export const RegisterScreen = () => {
               onValueChange={(itemValue) => onChange(itemValue)}
               enabled={enabled}
             >
-              <Picker.Item label="Seçiniz" value="" />
-              {items.map((item) => (
+              <Picker.Item label="Seçiniz" value="" key="register-select" />
+              {items.map((item, index) => (
                 <Picker.Item
                   label={item.label}
                   value={item.value}
-                  key={item.value}
+                  key={`register-${item.value}-${index}`}
                 />
               ))}
             </Picker>

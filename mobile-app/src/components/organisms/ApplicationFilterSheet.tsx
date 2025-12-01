@@ -50,10 +50,10 @@ export const ApplicationFilterSheet = forwardRef<
               onValueChange={onStatusChange}
               dropdownIconColor={colors.text.primary}
             >
-              <Picker.Item label="Tüm Durumlar" value="" />
+              <Picker.Item label="Tüm Durumlar" value="" key="app-status-all" />
               {statuses.map((status) => (
                 <Picker.Item
-                  key={status.id}
+                  key={`app-status-${status.id}`}
                   label={status.name}
                   value={status.name}
                 />

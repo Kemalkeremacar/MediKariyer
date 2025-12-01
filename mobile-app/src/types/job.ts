@@ -18,13 +18,12 @@ export interface JobDetail extends JobListItem {
 }
 
 export interface JobsPagination {
-  page?: number;
-  current_page?: number;
-  total_pages?: number;
-  total?: number;
-  has_next?: boolean;
-  has_next_page?: boolean;
-  next_page?: number | null;
+  current_page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
 }
 
 export interface JobsResponse {

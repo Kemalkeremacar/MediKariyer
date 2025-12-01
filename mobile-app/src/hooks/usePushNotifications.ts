@@ -62,7 +62,8 @@ const requestPermissionsAsync = async () => {
   return status;
 };
 
-const SUPPORTED_SCREENS = ['Dashboard', 'Jobs', 'Applications', 'Notifications', 'Profile'] as const;
+const SUPPORTED_SCREENS = ['Dashboard', 'JobsTab', 'Applications', 'Profile'] as const;
+type SupportedScreen = typeof SUPPORTED_SCREENS[number];
 
 const handleNotificationNavigation = (data: Record<string, unknown> | null | undefined) => {
   if (!data || typeof data !== 'object') {
@@ -73,7 +74,7 @@ const handleNotificationNavigation = (data: Record<string, unknown> | null | und
   if (!screen) {
     return;
   }
-  if (!SUPPORTED_SCREENS.includes(screen as any)) {
+  if (!SUPPORTED_SCREENS.includes(screen as SupportedScreen)) {
     console.warn(`Desteklenmeyen hedef ekran: ${screen}`);
     return;
   }
@@ -81,7 +82,15 @@ const handleNotificationNavigation = (data: Record<string, unknown> | null | und
     console.warn('Navigation hazır değil, bildirim yönlendirmesi ertelendi.');
     return;
   }
-  navigate(screen as any, params as any);
+  // Type-safe navigation
+  if (screen === 'JobsTab' && params && 'id' in params) {
+    navigate('JobsTab', {
+      screen: 'JobDetail',
+      params: { id: params.id as number },
+    } as any);
+  } else {
+    navigate(screen as any, params as any);
+  }
 };
 
 export const usePushNotifications = () => {

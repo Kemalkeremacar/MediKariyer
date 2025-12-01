@@ -1,43 +1,34 @@
 import React from 'react';
-import { TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import {
   Box,
   HStack,
   VStack,
-  Text,
   Badge,
   BadgeText,
   Icon,
 } from '@gluestack-ui/themed';
-import { MapPin, Briefcase, Building2, Bookmark, Clock } from 'lucide-react-native';
-import { formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { MapPin, Briefcase, Building2 } from 'lucide-react-native';
 import { Card } from '../ui/Card';
 import { Typography } from '../ui/Typography';
 import { colors, spacing } from '@/constants/theme';
 import type { JobListItem } from '@/types/job';
+import type { DashboardJob } from '@/types/dashboard';
 
-type JobCardProps = {
-  item: JobListItem;
+type JobCardHorizontalProps = {
+  item: JobListItem | DashboardJob;
   onPress: () => void;
 };
 
-export const JobCard = ({ item, onPress }: JobCardProps) => {
-  const timeAgo = item.created_at
-    ? formatDistanceToNow(new Date(item.created_at), {
-        addSuffix: true,
-        locale: tr,
-      })
-    : '';
-
+export const JobCardHorizontal = ({ item, onPress }: JobCardHorizontalProps) => {
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
       <Card variant="elevated" padding="md" style={styles.card}>
         <HStack space="md" alignItems="flex-start">
-          {/* Sol: Hastane Logosu (Kare Kutu içinde) */}
+          {/* Sol: Hastane Logosu */}
           <Box
-            w={60}
-            h={60}
+            w={50}
+            h={50}
             borderRadius="$lg"
             borderWidth={1}
             borderColor="$coolGray100"
@@ -46,35 +37,25 @@ export const JobCard = ({ item, onPress }: JobCardProps) => {
             bg="$white"
             style={styles.logoContainer}
           >
-            {item.hospital_name ? (
-              <Icon as={Building2} size="xl" color={colors.neutral[400]} />
-            ) : (
-              <Icon as={Building2} size="xl" color={colors.neutral[400]} />
-            )}
+            <Icon as={Building2} size="md" color={colors.primary[600]} />
           </Box>
 
           {/* Sağ: İçerik */}
           <VStack flex={1} space="xs">
-            <HStack justifyContent="space-between" alignItems="flex-start" mb="$1">
-              <Typography
-                variant="subtitle"
-                style={[styles.title, { flex: 1, marginRight: spacing.sm }]}
-              >
-                {item.title ?? 'İş İlanı'}
-              </Typography>
-              {/* Kaydet İkonu (Opsiyonel - şimdilik gizli) */}
-              {/* <Icon as={Bookmark} size="sm" color={colors.neutral[400]} /> */}
-            </HStack>
+            <Typography variant="subtitle" style={styles.title} numberOfLines={1}>
+              {item.title ?? 'İş İlanı'}
+            </Typography>
 
             <Typography
               variant="bodySecondary"
-              style={{ color: colors.primary[600], fontWeight: '500' }}
+              style={styles.company}
+              numberOfLines={1}
             >
               {item.hospital_name ?? 'Kurum bilgisi yok'}
             </Typography>
 
             {/* Alt Bilgiler: Lokasyon ve Tip */}
-            <HStack space="sm" mt="$2" alignItems="center" flexWrap="wrap">
+            <HStack space="sm" mt="$1" alignItems="center" flexWrap="wrap">
               <HStack space="xs" alignItems="center">
                 <Icon as={MapPin} size="xs" color={colors.neutral[400]} />
                 <Typography variant="caption" style={styles.metaText}>
@@ -83,8 +64,8 @@ export const JobCard = ({ item, onPress }: JobCardProps) => {
               </HStack>
 
               <Box
-                w={4}
-                h={4}
+                w={3}
+                h={3}
                 borderRadius="$full"
                 bg={colors.neutral[300]}
                 mx="$1"
@@ -98,24 +79,9 @@ export const JobCard = ({ item, onPress }: JobCardProps) => {
               </HStack>
             </HStack>
 
-            {/* Alt: Yayınlanma Tarihi ve Başvuru Durumu */}
-            <HStack
-              justifyContent="space-between"
-              alignItems="center"
-              mt="$2"
-            >
-              {timeAgo && (
-                <HStack space="xs" alignItems="center">
-                  <Icon as={Clock} size="xs" color={colors.neutral[400]} />
-                  <Typography
-                    variant="caption"
-                    style={[styles.timeText, { fontSize: 10 }]}
-                  >
-                    {timeAgo}
-                  </Typography>
-                </HStack>
-              )}
-              {item.is_applied && (
+            {/* Başvuru Durumu */}
+            {item.is_applied && (
+              <HStack mt="$1">
                 <Badge
                   action="success"
                   variant="solid"
@@ -125,8 +91,8 @@ export const JobCard = ({ item, onPress }: JobCardProps) => {
                 >
                   <BadgeText fontSize="$xs">Başvuruldu</BadgeText>
                 </Badge>
-              )}
-            </HStack>
+              </HStack>
+            )}
           </VStack>
         </HStack>
       </Card>
@@ -136,7 +102,8 @@ export const JobCard = ({ item, onPress }: JobCardProps) => {
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: spacing.md,
+    width: 280,
+    marginRight: spacing.md,
   },
   logoContainer: {
     shadowColor: '#000',
@@ -148,14 +115,16 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: '600',
     color: colors.text.primary,
+    fontSize: 14,
+  },
+  company: {
+    color: colors.primary[600],
+    fontWeight: '500',
+    fontSize: 12,
   },
   metaText: {
     color: colors.neutral[500],
-    fontSize: 12,
-  },
-  timeText: {
-    color: colors.neutral[400],
+    fontSize: 11,
   },
 });
-
 

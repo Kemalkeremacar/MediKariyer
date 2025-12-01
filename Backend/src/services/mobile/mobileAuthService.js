@@ -36,8 +36,11 @@ const { generateAccessToken, generateRefreshToken, createRefreshTokenRecord, rev
 const profileTransformer = require('../../mobile/transformers/profileTransformer');
 
 const ensureDoctorRole = (user) => {
-  if (!user || user.role !== 'doctor') {
-    throw new AppError('Kullanıcı adı bulunamadı', 401);
+  if (!user) {
+    throw new AppError('Kullanıcı bulunamadı', 401);
+  }
+  if (user.role !== 'doctor') {
+    throw new AppError('Bu uygulama sadece doktorlar için kullanılabilir', 403);
   }
 };
 

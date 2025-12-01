@@ -33,8 +33,10 @@
 
 const db = require('../../config/dbConfig').db;
 const { AppError } = require('../../utils/errorHandler');
+const logger = require('../../utils/logger');
 const jobTransformer = require('../../mobile/transformers/jobTransformer');
 const { getDoctorProfile } = require('./mobileDoctorService');
+const { buildPaginationSQL, normalizeRawResult, normalizeCountResult } = require('../../utils/queryHelper');
 
 const buildJobsBaseQuery = () => {
   return db('jobs as j')
@@ -48,7 +50,6 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
   const profile = await getDoctorProfile(userId);
   const currentPage = Math.max(Number(page) || 1, 1);
   const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
-  const offset = (currentPage - 1) * perPage;
 
   const baseQuery = buildJobsBaseQuery();
 
@@ -86,77 +87,17 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
     .orderBy('j.created_at', 'desc')
     .orderBy('j.id', 'desc');
 
-  // SQL Server için OFFSET ... ROWS FETCH NEXT ... ROWS ONLY syntax'ını manuel ekle
-  // Knex'in limit() çağrısı yapmadan SQL'i oluştur, sonra manuel OFFSET/FETCH ekle
-  const queryBuilder = dataQuery.toSQL();
-  let sql = queryBuilder.sql;
-  
-  // SQL boşsa veya undefined ise hata fırlat
-  if (!sql || sql.trim() === '') {
-    const logger = require('../../utils/logger');
-    logger.error('⚠️ [mobileJobService] SQL is empty! Query builder:', JSON.stringify(queryBuilder, null, 2));
-    throw new Error('SQL query is empty');
-  }
-  
-  // Debug: Orijinal SQL'i logla
-  const logger = require('../../utils/logger');
-  logger.error('🔍 [mobileJobService] Original SQL:', sql);
-  logger.error('🔍 [mobileJobService] Bindings:', queryBuilder.bindings);
-  
-  // SELECT TOP (@p0) veya SELECT TOP(@p0) veya SELECT TOP @p0 formatlarını kaldır
-  // SQL Server'da limit() çağrısı yapılmışsa Knex SELECT TOP üretir, bunu kaldırıyoruz
-  const beforeReplace = sql;
-  // Daha agresif regex: tüm SELECT TOP varyasyonlarını yakala (case-insensitive, whitespace-tolerant)
-  sql = sql.replace(/select\s+top\s*\(?\s*@p\d+\s*\)?\s*/gi, 'SELECT ');
-  // Eğer hala SELECT TOP varsa, daha basit bir regex dene
-  if (sql.includes('top') || sql.includes('TOP')) {
-    sql = sql.replace(/SELECT\s+TOP\s*\(?\s*@p\d+\s*\)?\s*/i, 'SELECT ');
-    sql = sql.replace(/select\s+top\s*\(?\s*@p\d+\s*\)?\s*/i, 'SELECT ');
-  }
-  
-  if (beforeReplace !== sql) {
-    logger.error('🔍 [mobileJobService] After TOP removal:', sql);
-  } else {
-    logger.error('⚠️ [mobileJobService] TOP removal failed! Original:', beforeReplace);
-  }
-  
-  // ORDER BY sonrasına OFFSET/FETCH ekle
-  // SQL Server için: ORDER BY ... OFFSET @pX ROWS FETCH NEXT @pY ROWS ONLY
-  let orderByPattern = /(order\s+by\s+\[j\]\.\[created_at\]\s+desc,\s+\[j\]\.\[id\]\s+desc)\s*$/i;
-  if (!orderByPattern.test(sql)) {
-    // Farklı formatları dene
-    orderByPattern = /(order\s+by\s+\[jobs\]\.\[created_at\]\s+desc,\s+\[jobs\]\.\[id\]\s+desc)\s*$/i;
-  }
-  if (!orderByPattern.test(sql)) {
-    // Daha basit pattern dene
-    orderByPattern = /(order\s+by\s+created_at\s+desc,\s+id\s+desc)\s*$/i;
-  }
-  
-  if (orderByPattern.test(sql)) {
-    // SQL Server'da db.raw() için ? placeholder kullan
-    sql = sql.replace(
-      orderByPattern,
-      `$1 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`
-    );
-    logger.error('🔍 [mobileJobService] After OFFSET/FETCH:', sql);
-  } else {
-    // ORDER BY pattern bulunamazsa, SQL'i logla ve hata fırlat
-    logger.error('⚠️ [mobileJobService] ORDER BY pattern not found! SQL:', sql);
-    throw new Error(`ORDER BY pattern not found in SQL: ${sql}`);
-  }
-  
-  // Bindings'e offset ve perPage ekle
-  const bindings = [...queryBuilder.bindings, offset, perPage];
-  logger.error('🔍 [mobileJobService] Final bindings:', bindings);
+  // SQL Server için pagination SQL'i oluştur
+  const { sql, bindings } = buildPaginationSQL(dataQuery, currentPage, perPage);
 
   const [countResult, rowsResult] = await Promise.all([
     countQuery,
     db.raw(sql, bindings)
   ]);
   
-  // SQL Server raw query sonucu array döner, ilk elemanı al
-  const rows = rowsResult.recordset || rowsResult;
-  const total = Number(countResult?.count ?? countResult?.[''] ?? 0) || 0;
+  // Sonuçları normalize et
+  const rows = normalizeRawResult(rowsResult);
+  const total = normalizeCountResult(countResult);
 
   return {
     data: rows.map((row) => jobTransformer.toListItem({

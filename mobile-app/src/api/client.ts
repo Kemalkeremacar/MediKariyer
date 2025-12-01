@@ -62,7 +62,20 @@ const attachInterceptors = (instance: AxiosInstance) => {
       }
 
       const originalRequest = error.config;
-      if (error.response?.status !== 401 || originalRequest._retry) {
+      const status = error.response?.status;
+      
+      // 403 (Forbidden) hatası - yetki hatası, refresh token yapmaya gerek yok
+      if (status === 403) {
+        if (error.response?.data?.message) {
+          const formattedError = new Error(error.response.data.message);
+          formattedError.name = 'ApiError';
+          return Promise.reject(formattedError);
+        }
+        return Promise.reject(error);
+      }
+      
+      // 401 (Unauthorized) hatası değilse veya zaten retry yapıldıysa
+      if (status !== 401 || originalRequest._retry) {
         // Format error message for better UX
         if (error.response?.data?.message) {
           const formattedError = new Error(error.response.data.message);

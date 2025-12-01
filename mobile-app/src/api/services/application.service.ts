@@ -1,9 +1,9 @@
 import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
-import { ApiResponse } from '@/types/api';
+import { ApiResponse, PaginationMeta } from '@/types/api';
 import {
   ApplicationDetail,
-  ApplicationsResponse,
+  ApplicationListItem,
 } from '@/types/application';
 
 export interface ApplicationListParams {
@@ -12,15 +12,25 @@ export interface ApplicationListParams {
   status?: string;
 }
 
+export interface ApplicationsListResponse {
+  data: ApplicationListItem[];
+  meta: PaginationMeta;
+}
+
 export const applicationService = {
   async listApplications(params: ApplicationListParams = {}) {
-    const response = await apiClient.get<ApiResponse<ApplicationsResponse>>(
-      endpoints.applications.list,
-      {
-        params,
-      },
-    );
-    return response.data.data;
+    // Backend sendPaginated response formatı:
+    // { success, message, data: [...], pagination: {...}, timestamp }
+    const response = await apiClient.get<
+      ApiResponse<ApplicationListItem[]> & { pagination?: PaginationMeta }
+    >(endpoints.applications.list, {
+      params,
+    });
+    const responseData = response.data;
+    return {
+      data: responseData.data || [],
+      meta: responseData.pagination || responseData.meta, // Backend'den pagination olarak geliyor, meta olarak map ediyoruz
+    };
   },
 
   async getApplicationDetail(id: number) {

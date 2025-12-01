@@ -37,7 +37,10 @@ const validate = (schema, source = 'body') => {
           value: detail.context?.value
         }));
 
-        logger.warn(`Validation failed for ${source}:`, errorMessages);
+        const errorDetails = errorMessages.map(e => `${e.field}: ${e.message}${e.value !== undefined ? ` (value: ${e.value})` : ''}`).join(', ');
+        logger.warn(`Validation failed for ${source}:`, JSON.stringify(errorMessages, null, 2));
+        logger.warn(`Validation failed details - Source: ${source}, Fields: ${errorDetails}`);
+        logger.debug(`Request ${source}:`, JSON.stringify(dataToValidate, null, 2));
         
         throw new AppError('Validasyon hatası', 400, errorMessages);
       }

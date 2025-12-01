@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { Box, HStack, VStack, Spinner, Badge, BadgeText } from '@gluestack-ui/themed';
 
 const formatDate = (value?: string | null) => {
@@ -132,16 +133,17 @@ export const NotificationsScreen = () => {
   };
 
   const renderErrorState = () => (
-    <VStack style={styles.errorState}>
-      <Typography variant="title">Bildirimler yüklenemedi</Typography>
-      <Button label="Tekrar dene" onPress={() => notificationsQuery.refetch()} />
-    </VStack>
+    <ErrorMessage
+      title="Bildirimler yüklenemedi"
+      message="Lütfen internet bağlantınızı kontrol edip tekrar deneyin."
+      onRetry={() => notificationsQuery.refetch()}
+    />
   );
 
   const renderSkeletons = () => (
     <VStack style={styles.skeletonContainer} space="md">
       {Array.from({ length: 3 }).map((_, index) => (
-        <Card key={index}>
+        <Card key={`skeleton-${index}`}>
           <Box height={20} width="30%" backgroundColor={colors.neutral[100]} borderRadius={borderRadius.md} mb="$3" />
           <Box height={16} width="60%" backgroundColor={colors.neutral[100]} borderRadius={borderRadius.md} mb="$2" />
           <Box height={12} width="80%" backgroundColor={colors.neutral[100]} borderRadius={borderRadius.md} />
@@ -177,7 +179,7 @@ export const NotificationsScreen = () => {
 
       <FlatList
         data={notifications}
-        keyExtractor={(item) => String(item.id)}
+        keyExtractor={(item, index) => `notif-${item.id}-${index}`}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -201,7 +203,8 @@ export const NotificationsScreen = () => {
             renderErrorState()
           ) : (
             <EmptyState
-              title="Bildirim bulunamadı"
+              type="notifications"
+              title="Henüz bildirim bulunmamaktadır."
               description="Yeni gelişmeler olduğunda burada görünecek."
             />
           )

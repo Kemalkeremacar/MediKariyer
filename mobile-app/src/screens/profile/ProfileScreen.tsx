@@ -10,17 +10,26 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { profileService } from '@/api/services/profile.service';
 import { lookupService } from '@/api/services/lookup.service';
 import { ProfileFormModal } from '@/components/profile/ProfileFormModal';
 import { PhotoManagementScreen } from './PhotoManagementScreen';
+import { SettingsScreen } from '@/screens/settings/SettingsScreen';
 import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import {
+  Box,
+  HStack,
+  Icon,
+} from '@gluestack-ui/themed';
+import { Settings } from 'lucide-react-native';
 import type {
   CompleteProfile,
   ProfileCompletion,
@@ -45,19 +54,26 @@ export const ProfileScreen = () => {
     data: profile,
     isLoading,
     isError,
+    error,
     refetch,
     isRefetching,
   } = useQuery({
     queryKey: ['profile', 'complete'],
     queryFn: () => profileService.getCompleteProfile(),
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const {
     data: completion,
     isLoading: completionLoading,
+    isError: completionError,
   } = useQuery({
     queryKey: ['profile', 'completion'],
     queryFn: () => profileService.getProfileCompletion(),
+    retry: 2,
+    retryDelay: 1000,
+    enabled: !isError, // Eğer profile yüklenemezse completion'ı da yükleme
   });
 
   // Lookup data
@@ -332,16 +348,19 @@ export const ProfileScreen = () => {
     );
   }
 
-  if (isError || !profile) {
+  if (isError || (!profile && !isLoading)) {
     return (
       <ScreenContainer
         scrollable={false}
         contentContainerStyle={styles.centerContainer}
       >
-        <Typography variant="title" style={styles.errorText}>
-          Profil yüklenemedi
-        </Typography>
-        <Button label="Tekrar dene" onPress={() => refetch()} />
+        <ErrorMessage
+          title="Profil yüklenemedi"
+          message="Profil bilgileriniz yüklenirken bir sorun oluştu. Lütfen tekrar deneyin."
+          onRetry={() => refetch()}
+          retryLabel="Tekrar dene"
+          error={error}
+        />
       </ScreenContainer>
     );
   }
@@ -356,73 +375,92 @@ export const ProfileScreen = () => {
     createLanguageMutation.isPending ||
     updateLanguageMutation.isPending;
 
-  return (
-    <ScreenContainer
-      scrollable={false}
-      contentContainerStyle={styles.screenContent}
-    >
-      {completion && (
-        <Card padding="xl" shadow="md" style={styles.completionCard}>
-          <View style={styles.completionHeader}>
-            <Typography variant="subtitle">Profil Tamamlanma</Typography>
-            <Typography variant="heading">
-              {completion.completion_percent}%
-            </Typography>
-          </View>
-          <View style={styles.progressBar}>
-            <View
-              style={[
-                styles.progressFill,
-                { width: `${completion.completion_percent}%` },
-              ]}
-            />
-          </View>
-        </Card>
-      )}
+  const insets = useSafeAreaInsets();
+  const [showSettings, setShowSettings] = useState(false);
 
-      <Card style={styles.tabWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabContent}
-        >
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[
-                styles.tab,
-                activeTab === tab.key && styles.tabActive,
-              ]}
-              onPress={() => setActiveTab(tab.key)}
-            >
-              <Typography
-                variant="bodySecondary"
-                style={[
-                  styles.tabText,
-                  activeTab === tab.key && styles.tabTextActive,
-                ]}
-              >
-                {tab.label}
-              </Typography>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </Card>
+  if (showSettings) {
+    return <SettingsScreen />;
+  }
+
+  return (
+    <Box flex={1} bg="$backgroundLight50">
+      {/* Header */}
+      <Box
+        bg="$white"
+        px="$4"
+        pt={insets.top + spacing.md}
+        pb="$3"
+        style={styles.header}
+      >
+        <HStack justifyContent="space-between" alignItems="center">
+          <Typography variant="heading">Hesabım</Typography>
+          <TouchableOpacity onPress={() => setShowSettings(true)}>
+            <Icon as={Settings} size="lg" color={colors.primary[600]} />
+          </TouchableOpacity>
+        </HStack>
+      </Box>
 
       <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
       >
-        {activeTab === 'personal' && (
+        {completion && (
+          <Card padding="xl" shadow="md" style={styles.completionCard}>
+            <View style={styles.completionHeader}>
+              <Typography variant="subtitle">Profil Tamamlanma</Typography>
+              <Typography variant="heading">
+                {completion.completion_percent}%
+              </Typography>
+            </View>
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${completion.completion_percent}%` },
+                ]}
+              />
+            </View>
+          </Card>
+        )}
+
+        <Card style={styles.tabWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabContent}
+          >
+            {tabs.map((tab) => (
+              <TouchableOpacity
+                key={tab.key}
+                style={[
+                  styles.tab,
+                  activeTab === tab.key && styles.tabActive,
+                ]}
+                onPress={() => setActiveTab(tab.key)}
+              >
+                <Typography
+                  variant="bodySecondary"
+                  style={[
+                    styles.tabText,
+                    activeTab === tab.key && styles.tabTextActive,
+                  ]}
+                >
+                  {tab.label}
+                </Typography>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </Card>
+
+        {activeTab === 'personal' && profile && (
           <PersonalInfoTab
             profile={profile}
             onPhotoManagement={() => setPhotoModalVisible(true)}
           />
         )}
-        {activeTab === 'education' && (
+        {activeTab === 'education' && profile && (
           <EducationTab
             educations={profile.educations || []}
             onAdd={() => handleAddItem('education')}
@@ -430,25 +468,25 @@ export const ProfileScreen = () => {
             onDelete={(id) => handleDeleteItem(id, 'education')}
           />
         )}
-        {activeTab === 'experience' && (
+        {activeTab === 'experience' && profile && (
           <ExperienceTab
-            experiences={profile.experiences || []} // Fixed: ensure experiences is an array
+            experiences={profile.experiences || []}
             onAdd={() => handleAddItem('experience')}
             onEdit={(item) => handleEditItem(item, 'experience')}
             onDelete={(id) => handleDeleteItem(id, 'experience')}
           />
         )}
-        {activeTab === 'certificate' && (
+        {activeTab === 'certificate' && profile && (
           <CertificateTab
-            certificates={profile.certificates}
+            certificates={profile.certificates || []}
             onAdd={() => handleAddItem('certificate')}
             onEdit={(item) => handleEditItem(item, 'certificate')}
             onDelete={(id) => handleDeleteItem(id, 'certificate')}
           />
         )}
-        {activeTab === 'language' && (
+        {activeTab === 'language' && profile && (
           <LanguageTab
-            languages={profile.languages}
+            languages={profile.languages || []}
             onAdd={() => handleAddItem('language')}
             onEdit={(item) => handleEditItem(item, 'language')}
             onDelete={(id) => handleDeleteItem(id, 'language')}
@@ -521,7 +559,7 @@ export const ProfileScreen = () => {
           </Card>
         </View>
       )}
-    </ScreenContainer>
+    </Box>
   );
 };
 
@@ -564,8 +602,8 @@ const PersonalInfoTab = ({
         Kişisel Bilgiler
       </Typography>
       <View style={styles.infoList}>
-        {infoItems.map((item) => (
-          <View key={item.label} style={styles.infoRow}>
+        {infoItems.map((item, index) => (
+          <View key={`${item.label}-${index}`} style={styles.infoRow}>
             <Typography variant="bodySecondary" style={styles.infoLabel}>
               {item.label}
             </Typography>
@@ -612,9 +650,9 @@ const EducationTab = ({
       />
     ) : (
       <View style={styles.itemList}>
-        {educations.map((edu) => (
+        {educations.map((edu, index) => (
           <Card
-            key={edu.id}
+            key={`edu-${edu.id}-${index}`}
             padding="md"
             shadow="none"
             style={styles.itemCard}
@@ -674,9 +712,9 @@ const ExperienceTab = ({
       />
     ) : (
       <View style={styles.itemList}>
-        {experiences.map((exp) => (
+        {experiences.map((exp, index) => (
           <Card
-            key={exp.id}
+            key={`exp-${exp.id}-${index}`}
             padding="md"
             shadow="none"
             style={styles.itemCard}
@@ -735,9 +773,9 @@ const CertificateTab = ({
       />
     ) : (
       <View style={styles.itemList}>
-        {certificates.map((cert) => (
+        {certificates.map((cert, index) => (
           <Card
-            key={cert.id}
+            key={`cert-${cert.id}-${index}`}
             padding="md"
             shadow="none"
             style={styles.itemCard}
@@ -797,9 +835,9 @@ const LanguageTab = ({
       />
     ) : (
       <View style={styles.itemList}>
-        {languages.map((lang) => (
+        {languages.map((lang, index) => (
           <Card
-            key={lang.id}
+            key={`lang-${lang.id}-${index}`}
             padding="md"
             shadow="none"
             style={styles.itemCard}
@@ -847,10 +885,16 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.error[500],
   },
-  screenContent: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing['3xl'],
+  header: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  scrollContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing['4xl'],
     gap: spacing.lg,
   },
   completionCard: {

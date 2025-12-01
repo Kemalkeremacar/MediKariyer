@@ -1,6 +1,6 @@
-import axios from 'axios';
-import { PRIMARY_API_BASE_URL, REQUEST_TIMEOUT_MS } from '@/constants/config';
-import { tokenManager } from '@/utils/tokenManager';
+import apiClient from '@/api/client';
+import { rootApiClient } from '@/api/client';
+import { endpoints } from '@/api/endpoints';
 import { ApiResponse } from '@/types/api';
 import type {
   CompleteProfile,
@@ -23,47 +23,47 @@ import type {
   PhotoRequest,
 } from '@/types/profile';
 
-const WEB_BASE_URL = PRIMARY_API_BASE_URL.replace(/\/api\/?$/, '');
-
-// Web backend için ayrı axios instance (PRIMARY_API_BASE_URL)
-const webApiClient = axios.create({
-  baseURL: WEB_BASE_URL,
-  timeout: REQUEST_TIMEOUT_MS,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Token interceptor
-webApiClient.interceptors.request.use(async (config) => {
-  const token = await tokenManager.getAccessToken();
-  if (token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+// Web backend için ayrı axios instance (detaylı profil işlemleri için)
+// Not: Eğitim, deneyim, sertifika gibi detaylı işlemler henüz mobile API'de yok
+// Bu yüzden web API kullanıyoruz. İleride mobile API'ye taşınabilir.
+const WEB_BASE_URL = process.env.EXPO_PUBLIC_PRIMARY_API_BASE_URL || 'https://mk.monassist.com';
+const webApiClient = rootApiClient; // rootApiClient zaten PRIMARY_API_BASE_URL kullanıyor
 
 export const profileService = {
-  // Profil GET işlemleri
+  // Profil GET işlemleri - Mobile API kullanıyor
   async getProfile(): Promise<DoctorProfile> {
-    const response = await webApiClient.get<ApiResponse<DoctorProfile>>(
-      '/api/doctor/profile',
+    const response = await apiClient.get<ApiResponse<DoctorProfile>>(
+      endpoints.doctor.profile,
     );
     return response.data.data;
   },
 
   async getCompleteProfile(): Promise<CompleteProfile> {
-    const response = await webApiClient.get<ApiResponse<CompleteProfile>>(
+    const response = await webApiClient.get<ApiResponse<{ profile: CompleteProfile }>>(
       '/api/doctor/profile/full',
     );
-    return response.data.data;
+    // Backend response formatı: { success, message, data: { profile: {...} } }
+    return response.data.data.profile || response.data.data;
   },
 
   async getProfileCompletion(): Promise<ProfileCompletion> {
-    const response = await webApiClient.get<ApiResponse<ProfileCompletion>>(
-      '/api/doctor/profile/completion',
-    );
-    return response.data.data;
+    const response = await webApiClient.get<
+      ApiResponse<{
+        completion_percentage: number;
+        missing_fields: string[];
+        sections?: any;
+        details?: any;
+      }>
+    >('/api/doctor/profile/completion');
+    // Backend response formatı: { success, message, data: { completion_percentage, ... } }
+    const data = response.data.data;
+    // Backend'den completion_percentage geliyor, frontend completion_percent bekliyor
+    return {
+      completion_percent: data.completion_percentage,
+      filled_fields: 0, // Backend'den gelmiyor, hesaplanabilir
+      total_fields: 0, // Backend'den gelmiyor, hesaplanabilir
+      missing_fields: data.missing_fields || [],
+    };
   },
 
   // Profil güncelleme

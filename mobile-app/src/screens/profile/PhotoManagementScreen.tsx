@@ -254,8 +254,8 @@ export const PhotoManagementScreen = () => {
             <Text style={styles.historyIcon}>📜</Text>
             <Text style={styles.sectionTitle}>Fotoğraf Geçmişi</Text>
           </View>
-          {photoHistory.map((item) => (
-            <View key={item.id} style={styles.historyItem}>
+          {photoHistory.map((item, index) => (
+            <View key={`photo-history-${item.id}-${index}`} style={styles.historyItem}>
               <View style={styles.historyItemHeader}>
                 <View style={styles.historyItemContent}>
                   <View style={styles.historyItemStatus}>

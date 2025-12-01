@@ -27,7 +27,8 @@ const toListItem = (notification = {}) => ({
   title: notification.title || '',
   body: notification.body || '',
   type: notification.type || 'info',
-  is_read: Boolean(notification.is_read),
+  // is_read: read_at IS NOT NULL kontrolü (database'de is_read field'ı yok, read_at var)
+  is_read: Boolean(notification.read_at),
   created_at: notification.created_at,
   data: notification.data || null
 });
