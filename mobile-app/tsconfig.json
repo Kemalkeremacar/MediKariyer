@@ -7,6 +7,13 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "metro.config.js", "babel.config.js"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "metro.config.js",
+    "babel.config.js"
+  ],
   "exclude": ["node_modules", "dist"]
 }
