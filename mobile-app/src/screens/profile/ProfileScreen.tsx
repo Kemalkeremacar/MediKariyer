@@ -424,7 +424,7 @@ export const ProfileScreen = () => {
         )}
         {activeTab === 'education' && (
           <EducationTab
-            educations={profile.educations}
+            educations={profile.educations || []}
             onAdd={() => handleAddItem('education')}
             onEdit={(item) => handleEditItem(item, 'education')}
             onDelete={(id) => handleDeleteItem(id, 'education')}
@@ -432,7 +432,7 @@ export const ProfileScreen = () => {
         )}
         {activeTab === 'experience' && (
           <ExperienceTab
-            experiences={profile.experiences}
+            experiences={profile.experiences || []} // Fixed: ensure experiences is an array
             onAdd={() => handleAddItem('experience')}
             onEdit={(item) => handleEditItem(item, 'experience')}
             onDelete={(id) => handleDeleteItem(id, 'experience')}

@@ -107,16 +107,12 @@ export const usePushNotifications = () => {
     );
 
     return () => {
-      if (notificationReceivedListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationReceivedListener.current as any,
-        );
+      if (notificationReceivedListener.current?.remove) {
+        notificationReceivedListener.current.remove();
         notificationReceivedListener.current = null;
       }
-      if (notificationResponseListener.current) {
-        Notifications.removeNotificationSubscription(
-          notificationResponseListener.current as any,
-        );
+      if (notificationResponseListener.current?.remove) {
+        notificationResponseListener.current.remove();
         notificationResponseListener.current = null;
       }
     };

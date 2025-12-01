@@ -108,7 +108,7 @@ const handleValidationError = (error) => {
  */
 const sendErrorDev = (err, res) => {
   // Detaylı hata loglama
-  logger.error('Development Error Details:', {
+  const fullError = {
     message: err.message,
     stack: err.stack,
     statusCode: err.statusCode,
@@ -120,7 +120,16 @@ const sendErrorDev = (err, res) => {
     userAgent: res.req?.get('User-Agent'),
     userId: res.req?.user?.id,
     userRole: res.req?.user?.role
-  });
+  };
+  
+  // SQL hatası için özel loglama
+  if (err.code === 'EREQUEST' || err.sql || err.sqlMessage) {
+    fullError.sql = err.sql || err.sqlMessage || err.originalError?.sql;
+    fullError.sqlState = err.sqlState;
+    fullError.code = err.code;
+  }
+  
+  logger.error('Development Error Details:', fullError);
 
   res.status(err.statusCode).json({
     success: false,

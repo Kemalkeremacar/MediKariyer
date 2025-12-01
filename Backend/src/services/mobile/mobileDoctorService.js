@@ -91,7 +91,7 @@ const getDashboard = async (userId) => {
 
   const unreadQuery = await db('notifications')
     .where({ user_id: userId })
-    .where('is_read', false)
+    .whereNull('read_at')
     .count({ count: '*' })
     .first();
 
@@ -102,7 +102,7 @@ const getDashboard = async (userId) => {
     .select(
       'a.id',
       'a.job_id',
-      'a.created_at',
+      'a.applied_at as created_at', // SQL'de applied_at var, created_at yok
       'a.updated_at',
       'j.title as job_title',
       'hp.institution_name as hospital_name',
@@ -110,7 +110,8 @@ const getDashboard = async (userId) => {
     )
     .where('a.doctor_profile_id', profile.id)
     .whereNull('a.deleted_at')
-    .orderBy('a.created_at', 'desc')
+    .orderBy('a.applied_at', 'desc') // SQL'de applied_at var, created_at yok
+    .orderBy('a.id', 'desc') // SQL Server için unique sıralama
     .limit(5);
 
   const recommendedJobs = await db('jobs as j')
@@ -126,10 +127,7 @@ const getDashboard = async (userId) => {
       'j.id',
       'j.title',
       'j.created_at',
-      'j.salary_min',
-      'j.salary_max',
-      'j.salary_currency',
-      'j.work_type',
+      'j.employment_type', // SQL'de work_type yok, employment_type var
       'c.name as city_name',
       's.name as specialty_name',
       'hp.institution_name as hospital_name',
@@ -137,6 +135,7 @@ const getDashboard = async (userId) => {
     )
     .whereNull('j.deleted_at')
     .orderBy('j.created_at', 'desc')
+    .orderBy('j.id', 'desc') // SQL Server için unique sıralama
     .limit(5);
 
   return {

@@ -77,20 +77,85 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
       'j.id',
       'j.title',
       'j.created_at',
-      'j.salary_min',
-      'j.salary_max',
-      'j.salary_currency',
-      'j.work_type',
+      'j.employment_type', // SQL'de work_type yok, employment_type var
       'c.name as city_name',
       's.name as specialty_name',
       'hp.institution_name as hospital_name',
       'a.id as application_id'
     )
     .orderBy('j.created_at', 'desc')
-    .limit(perPage)
-    .offset(offset);
+    .orderBy('j.id', 'desc');
 
-  const [countResult, rows] = await Promise.all([countQuery, dataQuery]);
+  // SQL Server için OFFSET ... ROWS FETCH NEXT ... ROWS ONLY syntax'ını manuel ekle
+  // Knex'in limit() çağrısı yapmadan SQL'i oluştur, sonra manuel OFFSET/FETCH ekle
+  const queryBuilder = dataQuery.toSQL();
+  let sql = queryBuilder.sql;
+  
+  // SQL boşsa veya undefined ise hata fırlat
+  if (!sql || sql.trim() === '') {
+    const logger = require('../../utils/logger');
+    logger.error('⚠️ [mobileJobService] SQL is empty! Query builder:', JSON.stringify(queryBuilder, null, 2));
+    throw new Error('SQL query is empty');
+  }
+  
+  // Debug: Orijinal SQL'i logla
+  const logger = require('../../utils/logger');
+  logger.error('🔍 [mobileJobService] Original SQL:', sql);
+  logger.error('🔍 [mobileJobService] Bindings:', queryBuilder.bindings);
+  
+  // SELECT TOP (@p0) veya SELECT TOP(@p0) veya SELECT TOP @p0 formatlarını kaldır
+  // SQL Server'da limit() çağrısı yapılmışsa Knex SELECT TOP üretir, bunu kaldırıyoruz
+  const beforeReplace = sql;
+  // Daha agresif regex: tüm SELECT TOP varyasyonlarını yakala (case-insensitive, whitespace-tolerant)
+  sql = sql.replace(/select\s+top\s*\(?\s*@p\d+\s*\)?\s*/gi, 'SELECT ');
+  // Eğer hala SELECT TOP varsa, daha basit bir regex dene
+  if (sql.includes('top') || sql.includes('TOP')) {
+    sql = sql.replace(/SELECT\s+TOP\s*\(?\s*@p\d+\s*\)?\s*/i, 'SELECT ');
+    sql = sql.replace(/select\s+top\s*\(?\s*@p\d+\s*\)?\s*/i, 'SELECT ');
+  }
+  
+  if (beforeReplace !== sql) {
+    logger.error('🔍 [mobileJobService] After TOP removal:', sql);
+  } else {
+    logger.error('⚠️ [mobileJobService] TOP removal failed! Original:', beforeReplace);
+  }
+  
+  // ORDER BY sonrasına OFFSET/FETCH ekle
+  // SQL Server için: ORDER BY ... OFFSET @pX ROWS FETCH NEXT @pY ROWS ONLY
+  let orderByPattern = /(order\s+by\s+\[j\]\.\[created_at\]\s+desc,\s+\[j\]\.\[id\]\s+desc)\s*$/i;
+  if (!orderByPattern.test(sql)) {
+    // Farklı formatları dene
+    orderByPattern = /(order\s+by\s+\[jobs\]\.\[created_at\]\s+desc,\s+\[jobs\]\.\[id\]\s+desc)\s*$/i;
+  }
+  if (!orderByPattern.test(sql)) {
+    // Daha basit pattern dene
+    orderByPattern = /(order\s+by\s+created_at\s+desc,\s+id\s+desc)\s*$/i;
+  }
+  
+  if (orderByPattern.test(sql)) {
+    // SQL Server'da db.raw() için ? placeholder kullan
+    sql = sql.replace(
+      orderByPattern,
+      `$1 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`
+    );
+    logger.error('🔍 [mobileJobService] After OFFSET/FETCH:', sql);
+  } else {
+    // ORDER BY pattern bulunamazsa, SQL'i logla ve hata fırlat
+    logger.error('⚠️ [mobileJobService] ORDER BY pattern not found! SQL:', sql);
+    throw new Error(`ORDER BY pattern not found in SQL: ${sql}`);
+  }
+  
+  // Bindings'e offset ve perPage ekle
+  const bindings = [...queryBuilder.bindings, offset, perPage];
+  logger.error('🔍 [mobileJobService] Final bindings:', bindings);
+
+  const [countResult, rowsResult] = await Promise.all([
+    countQuery,
+    db.raw(sql, bindings)
+  ]);
+  
+  // SQL Server raw query sonucu array döner, ilk elemanı al
+  const rows = rowsResult.recordset || rowsResult;
   const total = Number(countResult?.count ?? countResult?.[''] ?? 0) || 0;
 
   return {

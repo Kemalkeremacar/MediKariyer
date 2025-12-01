@@ -31,6 +31,7 @@
 
 const db = require('../../config/dbConfig').db;
 const { AppError } = require('../../utils/errorHandler');
+const logger = require('../../utils/logger');
 const notificationTransformer = require('../../mobile/transformers/notificationTransformer');
 
 const listNotifications = async (userId, { page = 1, limit = 20 } = {}) => {
@@ -46,10 +47,74 @@ const listNotifications = async (userId, { page = 1, limit = 20 } = {}) => {
   const notificationsQuery = db('notifications')
     .where('user_id', userId)
     .orderBy('created_at', 'desc')
-    .limit(perPage)
-    .offset(offset);
+    .orderBy('id', 'desc');
 
-  const [countResult, notifications] = await Promise.all([countQuery, notificationsQuery]);
+  // SQL Server için OFFSET ... ROWS FETCH NEXT ... ROWS ONLY syntax'ını manuel ekle
+  // Knex'in limit() çağrısı yapmadan SQL'i oluştur, sonra manuel OFFSET/FETCH ekle
+  const queryBuilder = notificationsQuery.toSQL();
+  let sql = queryBuilder.sql;
+  
+  // Debug: Orijinal SQL'i logla
+  logger.error('🔍 [mobileNotificationService] Original SQL:', sql);
+  logger.error('🔍 [mobileNotificationService] Bindings:', queryBuilder.bindings);
+  
+  // SELECT TOP (@p0) veya SELECT TOP(@p0) veya SELECT TOP @p0 formatlarını kaldır
+  // SQL Server'da limit() çağrısı yapılmışsa Knex SELECT TOP üretir, bunu kaldırıyoruz
+  const beforeReplace = sql;
+  // Daha agresif regex: tüm SELECT TOP varyasyonlarını yakala (case-insensitive, whitespace-tolerant)
+  sql = sql.replace(/select\s+top\s*\(?\s*@p\d+\s*\)?\s*/gi, 'SELECT ');
+  // Eğer hala SELECT TOP varsa, daha basit bir regex dene
+  if (sql.includes('top') || sql.includes('TOP')) {
+    sql = sql.replace(/SELECT\s+TOP\s*\(?\s*@p\d+\s*\)?\s*/i, 'SELECT ');
+    sql = sql.replace(/select\s+top\s*\(?\s*@p\d+\s*\)?\s*/i, 'SELECT ');
+  }
+  
+  if (beforeReplace !== sql) {
+    logger.error('🔍 [mobileNotificationService] After TOP removal:', sql);
+  } else {
+    logger.error('⚠️ [mobileNotificationService] TOP removal failed! Original:', beforeReplace);
+  }
+  
+  // ORDER BY sonrasına OFFSET/FETCH ekle
+  // SQL Server için: ORDER BY ... OFFSET @pX ROWS FETCH NEXT @pY ROWS ONLY
+  // select * kullanıldığında ORDER BY pattern'i farklı olabilir (prefix olmayabilir)
+  let orderByPattern = /(order\s+by\s+\[notifications\]\.\[created_at\]\s+desc,\s+\[notifications\]\.\[id\]\s+desc)\s*$/i;
+  if (!orderByPattern.test(sql)) {
+    // Prefix olmadan dene (select * kullanıldığında)
+    orderByPattern = /(order\s+by\s+\[created_at\]\s+desc,\s+\[id\]\s+desc)\s*$/i;
+  }
+  if (!orderByPattern.test(sql)) {
+    // Daha basit pattern dene (prefix olmadan, bracket olmadan)
+    orderByPattern = /(order\s+by\s+created_at\s+desc,\s+id\s+desc)\s*$/i;
+  }
+  
+  if (orderByPattern.test(sql)) {
+    // SQL Server'da db.raw() için ? placeholder kullan
+    // @p0, @p1 gibi parametreleri ? ile değiştir
+    const offsetParamIndex = queryBuilder.bindings.length;
+    const limitParamIndex = queryBuilder.bindings.length + 1;
+    sql = sql.replace(
+      orderByPattern,
+      `$1 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`
+    );
+    logger.error('🔍 [mobileNotificationService] After OFFSET/FETCH:', sql);
+  } else {
+    // ORDER BY pattern bulunamazsa, SQL'i logla ve hata fırlat
+    logger.error('⚠️ [mobileNotificationService] ORDER BY pattern not found! SQL:', sql);
+    throw new Error(`ORDER BY pattern not found in SQL: ${sql}`);
+  }
+  
+  // Bindings'e offset ve perPage ekle
+  const bindings = [...queryBuilder.bindings, offset, perPage];
+  logger.error('🔍 [mobileNotificationService] Final bindings:', bindings);
+
+  const [countResult, notificationsResult] = await Promise.all([
+    countQuery,
+    db.raw(sql, bindings)
+  ]);
+  
+  // SQL Server raw query sonucu array döner, ilk elemanı al
+  const notifications = notificationsResult.recordset || notificationsResult;
   const total = Number(countResult?.count ?? countResult?.[''] ?? 0) || 0;
 
   return {
@@ -70,7 +135,6 @@ const markAsRead = async (userId, notificationId) => {
     .where('id', notificationId)
     .where('user_id', userId)
     .update({
-      is_read: true,
       read_at: db.fn.now()
     });
 

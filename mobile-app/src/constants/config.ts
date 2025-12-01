@@ -1,11 +1,9 @@
 // Development: Local development için localhost kullanın
-// Expo'da fiziksel cihaz veya emülatör kullanıyorsanız, localhost yerine bilgisayarınızın IP adresini kullanın
-// Örnek: http://192.168.1.100:3100/api/mobile
+// Android emülatörü için: 10.0.2.2 (emülatörün host makineye erişim IP'si, VPN'den bağımsız çalışır)
+// Fiziksel cihaz için: Bilgisayarınızın IP adresini kullanın (örnek: 192.168.1.124)
 // Environment variable ile override edebilirsiniz: EXPO_PUBLIC_API_BASE_URL
 const DEV_API_BASE_URL =
-  typeof window !== 'undefined'
-    ? 'http://localhost:3100/api/mobile'
-    : process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://192.168.1.198:3100/api/mobile';
+  process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://10.0.2.2:3100/api/mobile';
 
 const PROD_API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL ?? 'https://mk.monassist.com/api/mobile';
