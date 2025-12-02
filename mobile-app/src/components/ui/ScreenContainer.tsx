@@ -1,46 +1,25 @@
 import React from 'react';
-import {
-  ScrollView,
-  ScrollViewProps,
-  StyleSheet,
-  View,
-  ViewStyle,
-  StyleProp,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing } from '@/constants/theme';
 
-interface ScreenContainerProps extends ScrollViewProps {
+interface ScreenContainerProps {
   children: React.ReactNode;
   scrollable?: boolean;
-  contentContainerStyle?: StyleProp<ViewStyle>;
-  style?: StyleProp<ViewStyle>;
+  style?: ViewStyle;
 }
 
-export const ScreenContainer = ({
+export const ScreenContainer: React.FC<ScreenContainerProps> = ({
   children,
-  scrollable = true,
-  contentContainerStyle,
+  scrollable = false,
   style,
-  ...scrollProps
-}: ScreenContainerProps) => {
-  if (scrollable) {
-    return (
-      <SafeAreaView style={[styles.safeArea, style]}>
-        <ScrollView
-          contentContainerStyle={[styles.content, contentContainerStyle]}
-          keyboardShouldPersistTaps="handled"
-          {...scrollProps}
-        >
-          {children}
-        </ScrollView>
-      </SafeAreaView>
-    );
-  }
+}) => {
+  const Container = scrollable ? ScrollView : View;
 
   return (
-    <SafeAreaView style={[styles.safeArea, style]}>
-      <View style={[styles.content, contentContainerStyle]}>{children}</View>
+    <SafeAreaView style={styles.safeArea}>
+      <Container style={[styles.container, style]}>
+        {children}
+      </Container>
     </SafeAreaView>
   );
 };
@@ -48,12 +27,10 @@ export const ScreenContainer = ({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: '#FFFFFF',
   },
-  content: {
-    padding: spacing.lg,
-    gap: spacing.lg,
+  container: {
+    flex: 1,
+    padding: 16,
   },
 });
-
-

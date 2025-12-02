@@ -1,7 +1,7 @@
 {
   "name": "mobile-app",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -32,6 +32,7 @@
     "expo-constants": "~18.0.10",
     "expo-device": "~8.0.9",
     "expo-image-picker": "~17.0.8",
+    "expo-linear-gradient": "~15.0.7",
     "expo-notifications": "~0.32.13",
     "expo-secure-store": "~15.0.7",
     "expo-status-bar": "~3.0.8",

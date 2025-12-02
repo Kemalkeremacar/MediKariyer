@@ -1,14 +1,13 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { JobsScreen } from '@/screens/jobs/JobsScreen';
-import { JobDetailScreen } from '@/screens/jobs/JobDetailScreen';
-
-export type JobsStackParamList = {
-  JobsList: undefined;
-  JobDetail: { id: number };
-};
+import { JobsScreen, JobDetailScreen } from '@/features/jobs';
+import type { JobsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<JobsStackParamList>();
 
+/**
+ * JobsStackNavigator - Job browsing flow
+ * Nested stack navigator for jobs list and job details
+ */
 export const JobsStackNavigator = () => (
   <Stack.Navigator
     screenOptions={{

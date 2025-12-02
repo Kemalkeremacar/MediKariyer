@@ -1,84 +1,59 @@
-import React from 'react';
-import { StyleProp, ViewStyle, TouchableOpacity } from 'react-native';
-import { Box, Pressable } from '@gluestack-ui/themed';
-import { spacing, borderRadius, colors, shadows } from '@/constants/theme';
+import React, { useMemo } from 'react';
+import { View, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
+import { lightTheme } from '@/theme';
 
-type PaddingKey = keyof typeof spacing;
+type Theme = typeof lightTheme;
 
-interface CardProps {
+export interface CardProps {
   children: React.ReactNode;
-  padding?: PaddingKey;
-  variant?: 'elevated' | 'flat' | 'outlined'; // Modern variant sistemi
-  shadow?: 'none' | 'sm' | 'md' | 'lg'; // Eski shadow prop (backward compatibility)
-  style?: StyleProp<ViewStyle>;
+  variant?: 'elevated' | 'outlined' | 'filled';
+  padding?: keyof Theme['spacing'];
   onPress?: () => void;
+  style?: ViewStyle;
 }
 
-const SHADOWS: Record<Exclude<CardProps['shadow'], undefined>, ViewStyle | undefined> = {
-  none: undefined,
-  sm: shadows.sm,
-  md: shadows.md,
-  lg: shadows.lg,
-};
-
-export const Card = ({
+export const Card: React.FC<CardProps> = ({
   children,
-  padding = 'md',
-  variant = 'elevated', // Varsayılan modern gölgeli kart
-  shadow,
-  style,
+  variant = 'elevated',
+  padding = 'lg',
   onPress,
-}: CardProps) => {
-  // Variant sistemi ile shadow'u belirle
-  const effectiveShadow = shadow || (variant === 'elevated' ? 'md' : 'none');
+  style,
+}) => {
+  const { theme } = useTheme();
+  const Container = onPress ? TouchableOpacity : View;
+  
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const getVariantStyle = (): ViewStyle => {
-    switch (variant) {
-      case 'elevated':
-        return {
-          backgroundColor: colors.white,
-          borderWidth: 0,
-        };
-      case 'outlined':
-        return {
-          backgroundColor: colors.white,
-          borderWidth: 1,
-          borderColor: colors.neutral[200],
-        };
-      case 'flat':
-        return {
-          backgroundColor: colors.neutral[50],
-          borderWidth: 0,
-        };
-      default:
-        return {};
-    }
-  };
-
-  const baseStyle: ViewStyle = {
-    borderRadius: borderRadius.xl, // Daha modern, yuvarlak hatlar (16px)
-    padding: spacing[padding],
-    ...getVariantStyle(),
-  };
-
-  const content = (
-    <Box style={[baseStyle, SHADOWS[effectiveShadow], style]}>
+  return (
+    <Container
+      style={[
+        styles.base,
+        styles[variant],
+        { padding: theme.spacing[padding] },
+        style,
+      ]}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
       {children}
-    </Box>
+    </Container>
   );
-
-  if (onPress) {
-    return (
-      <Pressable
-        onPress={onPress}
-        style={{ borderRadius: borderRadius.xl }}
-        android_ripple={{ color: colors.neutral[100] }}
-      >
-        {content}
-      </Pressable>
-    );
-  }
-
-  return content;
 };
 
+const createStyles = (theme: Theme) => StyleSheet.create({
+  base: {
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.background.primary,
+  },
+  elevated: {
+    ...theme.shadows.md,
+  },
+  outlined: {
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  filled: {
+    backgroundColor: theme.colors.background.secondary,
+  },
+});

@@ -32,10 +32,15 @@ const toMobileProfile = (profile = {}) => ({
   specialty_name: profile.specialty_name || null,
   subspecialty_id: profile.subspecialty_id || null,
   subspecialty_name: profile.subspecialty_name || null,
-  city_name: profile.residence_city_name || profile.residence_city || null,
+  dob: profile.dob || null,
   phone: profile.phone || null,
   profile_photo: profile.profile_photo || null,
+  birth_place_id: profile.birth_place_id || null,
+  birth_place_name: profile.birth_place_name || null,
+  residence_city_id: profile.residence_city_id || null,
+  residence_city_name: profile.residence_city_name || null,
   completion_percent: profile.completion_percent ?? null,
+  created_at: profile.created_at || null,
   updated_at: profile.updated_at || null
 });
 

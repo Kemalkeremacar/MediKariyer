@@ -1,5 +1,10 @@
-import { config } from '@gluestack-ui/config';
+/**
+ * Gluestack UI Configuration
+ * Basic configuration for Gluestack UI components
+ */
 
-export const gluestackConfig = config;
+import { config as defaultConfig } from '@gluestack-ui/config';
 
-
+export const gluestackConfig = {
+  ...defaultConfig,
+};

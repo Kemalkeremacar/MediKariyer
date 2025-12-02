@@ -35,16 +35,23 @@ const { validateBody } = require('../../middleware/validationMiddleware');
 const {
   mobileLoginSchema,
   mobileRefreshTokenSchema,
-  mobileLogoutSchema
+  mobileLogoutSchema,
+  mobileRegisterDoctorSchema
 } = require('../../validators/mobileSchemas');
 
 const router = express.Router();
 
 router.use(mobileErrorHandler);
 
+router.post('/registerDoctor', validateBody(mobileRegisterDoctorSchema), mobileAuthController.registerDoctor);
 router.post('/login', validateBody(mobileLoginSchema), mobileAuthController.login);
 router.post('/refresh', validateBody(mobileRefreshTokenSchema), mobileAuthController.refreshToken);
 router.post('/logout', validateBody(mobileLogoutSchema), mobileAuthController.logout);
+
+// Protected routes (require authentication)
+const { authMiddleware } = require('../../middleware/authMiddleware');
+const { requireDoctor } = require('../../middleware/roleGuard');
+router.get('/me', authMiddleware, requireDoctor, mobileAuthController.getMe);
 
 router.use(mobileErrorBoundary);
 

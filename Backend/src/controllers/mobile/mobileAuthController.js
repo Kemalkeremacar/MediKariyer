@@ -33,6 +33,11 @@ const { sendSuccess } = require('../../utils/response');
 const { catchAsync } = require('../../utils/errorHandler');
 const mobileAuthService = require('../../services/mobile/mobileAuthService');
 
+const registerDoctor = catchAsync(async (req, res) => {
+  const result = await mobileAuthService.registerDoctor(req.body, req);
+  return sendSuccess(res, 'Kayıt başarılı, admin onayı bekleniyor', result, 201);
+});
+
 const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
   const result = await mobileAuthService.login({ email, password }, req);
@@ -51,9 +56,16 @@ const logout = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Çıkış yapıldı', { success: true });
 });
 
+const getMe = catchAsync(async (req, res) => {
+  const result = await mobileAuthService.getMe(req.user.id);
+  return sendSuccess(res, 'Kullanıcı bilgileri getirildi', result);
+});
+
 module.exports = {
+  registerDoctor,
   login,
   refreshToken,
-  logout
+  logout,
+  getMe
 };
 

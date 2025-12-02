@@ -39,30 +39,44 @@ export const profileService = {
   },
 
   async getCompleteProfile(): Promise<CompleteProfile> {
-    const response = await webApiClient.get<ApiResponse<{ profile: CompleteProfile }>>(
-      '/api/doctor/profile/full',
+    // Mobile için sadece mobile API kullan
+    const response = await apiClient.get<ApiResponse<DoctorProfile>>(
+      endpoints.doctor.profile,
     );
-    // Backend response formatı: { success, message, data: { profile: {...} } }
-    return response.data.data.profile || response.data.data;
+    
+    // Mobile API response'unu CompleteProfile formatına dönüştür
+    const basicProfile = response.data.data;
+    return {
+      ...basicProfile,
+      educations: [],
+      experiences: [],
+      certificates: [],
+      languages: [],
+    } as CompleteProfile;
   },
 
   async getProfileCompletion(): Promise<ProfileCompletion> {
-    const response = await webApiClient.get<
-      ApiResponse<{
-        completion_percentage: number;
-        missing_fields: string[];
-        sections?: any;
-        details?: any;
-      }>
-    >('/api/doctor/profile/completion');
-    // Backend response formatı: { success, message, data: { completion_percentage, ... } }
-    const data = response.data.data;
-    // Backend'den completion_percentage geliyor, frontend completion_percent bekliyor
+    // Mobile için basit completion hesaplama
+    const profile = await this.getProfile();
+    
+    const fields = [
+      profile.first_name,
+      profile.last_name,
+      profile.title,
+      profile.specialty_id,
+      profile.phone,
+      profile.profile_photo,
+    ];
+    
+    const filled = fields.filter(f => f !== null && f !== undefined).length;
+    const total = fields.length;
+    const percentage = Math.round((filled / total) * 100);
+    
     return {
-      completion_percent: data.completion_percentage,
-      filled_fields: 0, // Backend'den gelmiyor, hesaplanabilir
-      total_fields: 0, // Backend'den gelmiyor, hesaplanabilir
-      missing_fields: data.missing_fields || [],
+      completion_percent: percentage,
+      filled_fields: filled,
+      total_fields: total,
+      missing_fields: [],
     };
   },
 

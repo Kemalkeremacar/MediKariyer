@@ -1,14 +1,13 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { LoginScreen } from '@/screens/auth/LoginScreen';
-import { RegisterScreen } from '@/screens/auth/RegisterScreen';
-
-export type AuthStackParamList = {
-  Login: undefined;
-  Register: undefined;
-};
+import { LoginScreen, RegisterScreen } from '@/features/auth';
+import type { AuthStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
+/**
+ * AuthNavigator - Unauthenticated flow
+ * Handles login and registration screens
+ */
 export const AuthNavigator = () => (
   <Stack.Navigator
     screenOptions={{

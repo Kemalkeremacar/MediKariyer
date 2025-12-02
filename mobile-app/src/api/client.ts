@@ -1,12 +1,11 @@
 import axios, { AxiosInstance } from 'axios';
-import {
-  API_BASE_URL,
-  PRIMARY_API_BASE_URL,
-  REQUEST_TIMEOUT_MS,
-} from '@/constants/config';
+import { env } from '@/config/env';
+import { REQUEST_TIMEOUT_MS } from '@/config/constants';
 import { tokenManager } from '@/utils/tokenManager';
 import { useAuthStore } from '@/store/authStore';
 import { endpoints } from './endpoints';
+import { errorLogger } from '@/utils/errorLogger';
+import { getUserFriendlyErrorMessage } from '@/utils/errorHandler';
 
 type FailedRequest = {
   resolve: (value?: unknown) => void;
@@ -41,7 +40,10 @@ const attachInterceptors = (instance: AxiosInstance) => {
     },
     (error) => {
       // Request error (network error, timeout, etc.)
-      console.error('Request error:', error);
+      errorLogger.logError(error, {
+        type: 'request',
+        phase: 'interceptor',
+      });
       return Promise.reject(error);
     },
   );
@@ -51,13 +53,31 @@ const attachInterceptors = (instance: AxiosInstance) => {
     async (error) => {
       // Network error handling
       if (!error.response) {
-        // Network error (no response from server)
-        const networkError = new Error(
-          error.code === 'ECONNABORTED'
-            ? 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.'
-            : 'Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.',
-        );
+        // Determine specific network error message
+        let errorMessage = 'Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.';
+        
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
+        } else if (error.code === 'ECONNREFUSED') {
+          errorMessage = 'Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.';
+        } else if (error.code === 'ETIMEDOUT') {
+          errorMessage = 'Bağlantı zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.';
+        } else if (!error.request) {
+          errorMessage = 'İstek gönderilemedi. Lütfen tekrar deneyin.';
+        }
+        
+        const networkError = new Error(errorMessage);
         networkError.name = 'NetworkError';
+        
+        // Log network error with details
+        errorLogger.logNetworkError(networkError, error.config?.url);
+        errorLogger.logError(networkError, {
+          type: 'network',
+          code: error.code,
+          url: error.config?.url,
+          method: error.config?.method,
+        });
+        
         return Promise.reject(networkError);
       }
 
@@ -66,23 +86,27 @@ const attachInterceptors = (instance: AxiosInstance) => {
       
       // 403 (Forbidden) hatası - yetki hatası, refresh token yapmaya gerek yok
       if (status === 403) {
-        if (error.response?.data?.message) {
-          const formattedError = new Error(error.response.data.message);
-          formattedError.name = 'ApiError';
-          return Promise.reject(formattedError);
-        }
-        return Promise.reject(error);
+        const errorMessage = error.response?.data?.message || 'Bu işlem için yetkiniz yok';
+        const formattedError = new Error(errorMessage);
+        formattedError.name = 'ApiError';
+        
+        // Log API error
+        errorLogger.logApiError(formattedError, error.config?.url, status);
+        
+        return Promise.reject(formattedError);
       }
       
       // 401 (Unauthorized) hatası değilse veya zaten retry yapıldıysa
       if (status !== 401 || originalRequest._retry) {
         // Format error message for better UX
-        if (error.response?.data?.message) {
-          const formattedError = new Error(error.response.data.message);
-          formattedError.name = 'ApiError';
-          return Promise.reject(formattedError);
-        }
-        return Promise.reject(error);
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        const formattedError = new Error(errorMessage);
+        formattedError.name = 'ApiError';
+        
+        // Log API error
+        errorLogger.logApiError(formattedError, error.config?.url, status);
+        
+        return Promise.reject(formattedError);
       }
 
       if (isRefreshing) {
@@ -107,12 +131,19 @@ const attachInterceptors = (instance: AxiosInstance) => {
         useAuthStore.getState().markUnauthenticated();
         await tokenManager.clearTokens();
         isRefreshing = false;
+        
+        // Log authentication error
+        errorLogger.logError(new Error('No refresh token available'), {
+          type: 'auth',
+          action: 'token_refresh',
+        });
+        
         return Promise.reject(error);
       }
 
       try {
         const response = await axios.post(
-          `${API_BASE_URL}${endpoints.auth.refreshToken}`,
+          `${env.API_BASE_URL}${endpoints.auth.refreshToken}`,
           {
             refreshToken,
           },
@@ -137,6 +168,16 @@ const attachInterceptors = (instance: AxiosInstance) => {
         processQueue(refreshError, null);
         useAuthStore.getState().markUnauthenticated();
         await tokenManager.clearTokens();
+        
+        // Log token refresh failure
+        errorLogger.logError(
+          refreshError instanceof Error ? refreshError : new Error('Token refresh failed'),
+          {
+            type: 'auth',
+            action: 'token_refresh_failed',
+          }
+        );
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -149,14 +190,14 @@ const attachInterceptors = (instance: AxiosInstance) => {
 
 const apiClient = attachInterceptors(
   axios.create({
-    baseURL: API_BASE_URL,
+    baseURL: env.API_BASE_URL,
     timeout: REQUEST_TIMEOUT_MS,
   }),
 );
 
 const rootApiClient = attachInterceptors(
   axios.create({
-    baseURL: PRIMARY_API_BASE_URL,
+    baseURL: env.PRIMARY_API_BASE_URL,
     timeout: REQUEST_TIMEOUT_MS,
   }),
 );

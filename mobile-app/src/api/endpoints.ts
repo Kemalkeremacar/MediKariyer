@@ -12,6 +12,7 @@ export const endpoints = {
     registerDoctor: '/auth/registerDoctor',
     refreshToken: '/auth/refresh',
     logout: '/auth/logout',
+    me: '/auth/me',
   },
   doctor: {
     dashboard: '/doctor/dashboard',

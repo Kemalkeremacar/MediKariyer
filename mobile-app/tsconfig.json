@@ -4,9 +4,21 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"],
+      "@/components/*": ["src/components/*"],
+      "@/features/*": ["src/features/*"],
+      "@/api/*": ["src/api/*"],
+      "@/store/*": ["src/store/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/theme/*": ["src/theme/*"],
+      "@/types/*": ["src/types/*"],
+      "@/config/*": ["src/config/*"],
+      "@/navigation/*": ["src/navigation/*"],
+      "@/contexts/*": ["src/contexts/*"],
+      "@/ui": ["src/ui.tsx"],
+      "@/layouts": ["src/layouts.tsx"],
+      "@/animations": ["src/animations.tsx"]
     }
   },
   "include": [

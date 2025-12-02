@@ -76,6 +76,48 @@ const passwordSchema = Joi.string()
 // ==================== MOBILE AUTH SCHEMAS ====================
 
 /**
+ * Mobile Register Doctor Schema
+ * @description Mobile doktor kayıt endpoint için validasyon
+ */
+const mobileRegisterDoctorSchema = Joi.object({
+  email: emailSchema,
+  password: passwordSchema,
+  first_name: Joi.string().min(2).max(100).trim().required().messages({
+    'string.min': 'Ad en az 2 karakter olmalıdır',
+    'string.max': 'Ad en fazla 100 karakter olabilir',
+    'any.required': 'Ad zorunludur'
+  }),
+  last_name: Joi.string().min(2).max(100).trim().required().messages({
+    'string.min': 'Soyad en az 2 karakter olmalıdır',
+    'string.max': 'Soyad en fazla 100 karakter olabilir',
+    'any.required': 'Soyad zorunludur'
+  }),
+  title: Joi.string().valid('Dr', 'Uz.Dr', 'Dr.Öğr.Üyesi', 'Doç.Dr', 'Prof.Dr').required().messages({
+    'any.only': 'Ünvan Dr, Uz.Dr, Dr.Öğr.Üyesi, Doç.Dr veya Prof.Dr olmalıdır',
+    'any.required': 'Ünvan zorunludur'
+  }),
+  specialty_id: Joi.number().integer().positive().required().messages({
+    'number.base': 'Branş ID sayı olmalıdır',
+    'number.integer': 'Branş ID tam sayı olmalıdır',
+    'number.positive': 'Branş ID pozitif bir sayı olmalıdır',
+    'any.required': 'Branş zorunludur'
+  }),
+  subspecialty_id: Joi.number().integer().positive().allow(null).optional().messages({
+    'number.base': 'Yan dal ID sayı olmalıdır',
+    'number.integer': 'Yan dal ID tam sayı olmalıdır',
+    'number.positive': 'Yan dal ID pozitif bir sayı olmalıdır'
+  }),
+  region: Joi.string().valid('ist_avrupa', 'ist_anadolu', 'ankara', 'izmir', 'diger', 'yurtdisi').required().messages({
+    'any.only': 'Bölge ist_avrupa, ist_anadolu, ankara, izmir, diger veya yurtdisi olmalıdır',
+    'any.required': 'Bölge zorunludur'
+  }),
+  profile_photo: Joi.string().max(500).required().messages({
+    'string.max': 'Profil fotoğrafı URL en fazla 500 karakter olabilir',
+    'any.required': 'Profil fotoğrafı zorunludur'
+  })
+});
+
+/**
  * Mobile Login Schema
  * @description Mobile login endpoint için validasyon
  */
@@ -248,6 +290,7 @@ const mobileApplicationDetailParamsSchema = Joi.object({
 
 module.exports = {
   // Auth
+  mobileRegisterDoctorSchema,
   mobileLoginSchema,
   mobileRefreshTokenSchema,
   mobileLogoutSchema,

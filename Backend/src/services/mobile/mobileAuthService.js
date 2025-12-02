@@ -51,6 +51,44 @@ const buildTokenPayload = (user) => ({
   isActive: user.is_active
 });
 
+const registerDoctor = async (registrationData, req) => {
+  const { email, password, first_name, last_name, title, specialty_id, subspecialty_id, region, profile_photo } = registrationData;
+
+  // AuthService ile doktor kaydı yap (web ile aynı mantık)
+  const result = await authService.registerDoctor({
+    email,
+    password,
+    first_name,
+    last_name,
+    title,
+    specialty_id,
+    subspecialty_id,
+    region,
+    profile_photo
+  });
+
+  // Mobile için minimal response döndür
+  return {
+    user: {
+      id: result.user.id,
+      email: result.user.email,
+      role: result.user.role,
+      is_approved: result.user.is_approved,
+      is_active: result.user.is_active
+    },
+    profile: {
+      id: result.profile.id,
+      first_name: result.profile.first_name,
+      last_name: result.profile.last_name,
+      title: result.profile.title,
+      specialty_id: result.profile.specialty_id,
+      subspecialty_id: result.profile.subspecialty_id,
+      region: result.profile.region,
+      profile_photo: result.profile.profile_photo
+    }
+  };
+};
+
 const login = async ({ email, password }, req) => {
   const user = await authService.loginUnified(email, password, req);
   ensureDoctorRole(user);
@@ -104,13 +142,40 @@ const logout = async (refreshToken) => {
   return { success: true };
 };
 
+const getMe = async (userId) => {
+  const profile = await doctorService.getProfile(userId);
+  
+  if (!profile) {
+    throw new AppError('Profil bulunamadı', 404);
+  }
+
+  // SQL Server bit tipini boolean'a çevir
+  const isApproved = profile.is_approved === 1 || profile.is_approved === true;
+  const isActive = profile.is_active === 1 || profile.is_active === true;
+
+  return {
+    user: {
+      id: profile.user_id,
+      email: profile.email || null,
+      role: 'doctor',
+      is_approved: isApproved,
+      is_active: isActive,
+      first_name: profile.first_name,
+      last_name: profile.last_name
+    },
+    profile: profileTransformer.toMobileProfile(profile)
+  };
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
 
 module.exports = {
+  registerDoctor,
   login,
   refresh,
-  logout
+  logout,
+  getMe
 };
 

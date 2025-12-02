@@ -1,11 +1,11 @@
+import React from 'react';
 import { enableScreens } from 'react-native-screens';
 import { View, ActivityIndicator, Text } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthNavigator } from './AuthNavigator';
-import { MainNavigator } from './MainNavigator';
-import { PendingApprovalScreen } from '@/screens/auth/PendingApprovalScreen';
+import { AppNavigator } from './AppNavigator';
 import { useAuthStore } from '@/store/authStore';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { isApprovedFlag } from '@/utils/approval';
+import type { RootStackParamList } from './types';
 
 // Enable screens - safe to call with both old and new architecture
 // Note: With new architecture enabled, some warnings may appear but functionality works
@@ -18,11 +18,16 @@ try {
   }
 }
 
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+/**
+ * RootNavigator - Top-level navigator
+ * Handles routing between authenticated and unauthenticated flows
+ * Also manages special states like pending approval and disabled accounts
+ */
 export const RootNavigator = () => {
   const authStatus = useAuthStore((state) => state.authStatus);
   const isHydrating = useAuthStore((state) => state.isHydrating);
-  const user = useAuthStore((state) => state.user);
-  usePushNotifications();
 
   if (isHydrating) {
     return (
@@ -40,19 +45,16 @@ export const RootNavigator = () => {
     );
   }
 
-  // Approval Guard Logic (web'deki ApprovalGuard.jsx ile aynı mantık)
-  if (authStatus === 'authenticated' && user) {
-    // Admin muafiyeti: Admin rolü için onay kontrolü yapılmaz
-    if (user.role === 'admin') {
-      return <MainNavigator />;
-    }
-
-    const isApproved = isApprovedFlag(user.is_approved);
-    if (!isApproved) {
-      return <PendingApprovalScreen />;
-    }
-  }
-
-  return authStatus === 'authenticated' ? <MainNavigator /> : <AuthNavigator />;
+  return (
+    <Stack.Navigator
+      initialRouteName={authStatus === 'authenticated' ? 'App' : 'Auth'}
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="Auth" component={AuthNavigator} />
+      <Stack.Screen name="App" component={AppNavigator} />
+    </Stack.Navigator>
+  );
 };
 

@@ -1,78 +1,50 @@
 import React from 'react';
-import { Text } from '@gluestack-ui/themed';
-import type { ComponentProps } from 'react';
+import { Text as RNText, TextStyle, StyleSheet } from 'react-native';
 
-type Variant =
-  | 'heading'
-  | 'title'
-  | 'subtitle'
-  | 'body'
-  | 'bodySecondary'
-  | 'caption';
-
-type GSUITextProps = ComponentProps<typeof Text>;
-
-type VariantProps = {
-  fontSize: GSUITextProps['fontSize'];
-  fontWeight?: GSUITextProps['fontWeight'];
-  color: GSUITextProps['color'];
-  lineHeight?: GSUITextProps['lineHeight'];
-};
-
-interface TypographyProps extends Omit<GSUITextProps, 'children'> {
-  variant?: Variant;
+interface TypographyProps {
   children: React.ReactNode;
+  variant?: 'h1' | 'h2' | 'h3' | 'body' | 'caption';
+  style?: TextStyle;
+  color?: string;
 }
 
-const VARIANT_MAP: Record<Variant, VariantProps> = {
-  heading: {
-    fontSize: '$2xl',
-    fontWeight: '$bold',
-    color: '$textDark900',
-    lineHeight: '$2xl',
-  },
-  title: {
-    fontSize: '$lg',
-    fontWeight: '$semibold',
-    color: '$textDark900',
-    lineHeight: '$lg',
-  },
-  subtitle: {
-    fontSize: '$md',
-    fontWeight: '$medium',
-    color: '$textLight700',
-  },
-  body: {
-    fontSize: '$md',
-    color: '$textDark800',
-  },
-  bodySecondary: {
-    fontSize: '$md',
-    color: '$textLight700',
-  },
-  caption: {
-    fontSize: '$sm',
-    color: '$textLight500',
-  },
-};
-
-export const Typography = ({
+export const Typography: React.FC<TypographyProps> = ({
+  children,
   variant = 'body',
   style,
-  children,
-  ...rest
-}: TypographyProps) => {
-  const variantProps = VARIANT_MAP[variant];
+  color,
+}) => {
   return (
-    <Text
-      {...rest}
-      fontSize={variantProps.fontSize}
-      fontWeight={variantProps.fontWeight}
-      color={variantProps.color}
-      lineHeight={variantProps.lineHeight}
-      style={style}
-    >
+    <RNText style={[styles[variant], color && { color }, style]}>
       {children}
-    </Text>
+    </RNText>
   );
 };
+
+const styles = StyleSheet.create({
+  h1: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#000000',
+  },
+  h2: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  h3: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000000',
+  },
+  body: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#000000',
+  },
+  caption: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#8E8E93',
+  },
+});

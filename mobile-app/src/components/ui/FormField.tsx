@@ -1,51 +1,53 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Typography } from '@/components/ui/Typography';
-import { colors, spacing, typography as typeScale } from '@/constants/theme';
+import { View, Text, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import { Input, InputProps } from './Input';
 
-interface FormFieldProps {
-  label: string;
+interface FormFieldProps extends InputProps {
+  label?: string;
   error?: string;
-  helperText?: string;
-  children: React.ReactNode;
+  required?: boolean;
+  containerStyle?: ViewStyle;
+  labelStyle?: TextStyle;
 }
 
-export const FormField = ({ label, error, helperText, children }: FormFieldProps) => (
-  <View style={styles.field}>
-    <Typography variant="subtitle" style={styles.label}>
-      {label}
-    </Typography>
-    {children}
-    {helperText && !error && (
-      <Typography variant="caption" style={styles.helper}>
-        {helperText}
-      </Typography>
-    )}
-    {error && (
-      <Typography variant="caption" style={styles.error}>
-        {error}
-      </Typography>
-    )}
-  </View>
-);
+export const FormField: React.FC<FormFieldProps> = ({
+  label,
+  error,
+  required,
+  containerStyle,
+  labelStyle,
+  ...inputProps
+}) => {
+  return (
+    <View style={[styles.container, containerStyle]}>
+      {label && (
+        <Text style={[styles.label, labelStyle]}>
+          {label}
+          {required && <Text style={styles.required}> *</Text>}
+        </Text>
+      )}
+      <Input {...inputProps} />
+      {error && <Text style={styles.error}>{error}</Text>}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  field: {
-    width: '100%',
-    marginBottom: spacing.lg,
+  container: {
+    marginBottom: 16,
   },
   label: {
-    fontWeight: typeScale.fontWeight.medium,
-    marginBottom: spacing.xs,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#000000',
+    marginBottom: 8,
   },
-  helper: {
-    marginTop: spacing.xs,
-    color: colors.text.secondary,
+  required: {
+    color: '#FF3B30',
   },
   error: {
-    marginTop: spacing.xs,
-    color: colors.error[600],
+    fontSize: 12,
+    color: '#FF3B30',
+    marginTop: 4,
   },
 });
-
-
