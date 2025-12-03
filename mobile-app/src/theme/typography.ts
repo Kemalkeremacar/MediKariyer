@@ -30,42 +30,42 @@ export const typography = {
 
 export const textVariants = {
   h1: {
-    fontSize: typography.fontSize['4xl'],
+    fontSize: typography.fontSize['2xl'], // 24pt - Bold for main headings
     fontWeight: typography.fontWeight.bold,
     lineHeight: typography.lineHeight.tight,
   },
   h2: {
-    fontSize: typography.fontSize['3xl'],
+    fontSize: typography.fontSize.xl, // 20pt - Bold for section headings
     fontWeight: typography.fontWeight.bold,
     lineHeight: typography.lineHeight.tight,
   },
   h3: {
-    fontSize: typography.fontSize['2xl'],
+    fontSize: typography.fontSize.lg, // 18pt - Semibold for subheadings
     fontWeight: typography.fontWeight.semibold,
     lineHeight: typography.lineHeight.tight,
   },
   h4: {
-    fontSize: typography.fontSize.xl,
+    fontSize: typography.fontSize.base, // 16pt - Semibold for minor headings
     fontWeight: typography.fontWeight.semibold,
     lineHeight: typography.lineHeight.normal,
   },
   body: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.normal,
+    fontSize: typography.fontSize.base, // 16pt - Medium for normal text
+    fontWeight: typography.fontWeight.medium,
     lineHeight: typography.lineHeight.normal,
   },
   bodyLarge: {
-    fontSize: typography.fontSize.lg,
-    fontWeight: typography.fontWeight.normal,
+    fontSize: typography.fontSize.lg, // 18pt - Medium for emphasized body
+    fontWeight: typography.fontWeight.medium,
     lineHeight: typography.lineHeight.normal,
   },
   bodySmall: {
-    fontSize: typography.fontSize.sm,
+    fontSize: typography.fontSize.sm, // 14pt - Regular for descriptions
     fontWeight: typography.fontWeight.normal,
     lineHeight: typography.lineHeight.normal,
   },
   caption: {
-    fontSize: typography.fontSize.xs,
+    fontSize: typography.fontSize.xs, // 12pt - Regular for captions
     fontWeight: typography.fontWeight.normal,
     lineHeight: typography.lineHeight.normal,
   },

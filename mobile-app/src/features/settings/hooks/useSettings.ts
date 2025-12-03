@@ -33,9 +33,12 @@ export const useSettings = () => {
       // TODO: Implement API call to update settings
       // await settingsService.updateSettings(payload);
       
-      setSettings((prev) => ({
-        ...prev,
-        ...payload,
+      setSettings((prev): SettingsData => ({
+        notifications: payload.notifications 
+          ? { ...prev.notifications, ...payload.notifications }
+          : prev.notifications,
+        language: payload.language ?? prev.language,
+        theme: payload.theme ?? prev.theme,
       }));
 
       Alert.alert('Başarılı', 'Ayarlarınız güncellendi.');

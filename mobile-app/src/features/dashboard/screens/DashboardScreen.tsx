@@ -1,30 +1,24 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   Briefcase,
   FileText,
   TrendingUp,
   ChevronRight,
-  CheckCircle,
   Clock,
-  MapPin,
-  Star,
 } from 'lucide-react-native';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
 import type { AppTabParamList } from '@/navigation/types';
 import { useDashboard } from '../hooks/useDashboard';
-import { QuickStatCard, WelcomeHeader } from '../components';
 
 export const DashboardScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<AppTabParamList>>();
+  const navigation = useNavigation<BottomTabNavigationProp<AppTabParamList>>();
   const user = useAuthStore((state) => state.user);
 
   const { data, isLoading, error, refetch, isRefetching } = useDashboard();
@@ -44,208 +38,122 @@ export const DashboardScreen = () => {
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
       >
-        {/* Welcome Header */}
-        <WelcomeHeader
-          firstName={user?.first_name || ''}
-          lastName={user?.last_name || ''}
-          unreadCount={data.stats?.unread_notifications_count || 0}
-          onNotificationPress={() => {
-            // TODO: Notifications ekranı TabNavigator'a eklendiğinde aktif edilecek
-            // navigation.navigate('Notifications')
-          }}
-        />
-
-        {/* Profile Completion Alert */}
-        {needsCompletion && (
-          <Card variant="elevated" padding="lg" style={styles.completionCard}>
-            <View style={styles.completionHeader}>
-              <TrendingUp size={20} color={colors.warning[600]} />
-              <Typography variant="h3" style={styles.completionTitle}>
-                Profilini Tamamla
-              </Typography>
-            </View>
-            <Typography variant="body" style={styles.completionText}>
-              Profilin %{completionPercent} tamamlandı. Daha fazla iş fırsatı için
-              profilini tamamla!
-            </Typography>
-            <View style={styles.progressBar}>
-              <View
-                style={[styles.progressFill, { width: `${completionPercent}%` }]}
-              />
-            </View>
-            <TouchableOpacity
-              style={styles.completionButton}
-              onPress={() => navigation.navigate('Profile')}
-            >
-              <Typography variant="body" style={styles.completionButtonText}>
-                Profili Tamamla
-              </Typography>
-              <ChevronRight size={16} color={colors.primary[600]} />
-            </TouchableOpacity>
-          </Card>
-        )}
-
-        {/* Quick Stats */}
-        <View style={styles.quickStats}>
-          <QuickStatCard
-            icon={Briefcase}
-            iconColor={colors.primary[600]}
-            iconBgColor={colors.primary[50]}
-            value={data.recommended_jobs?.length || 0}
-            label="Önerilen İlan"
-          />
-          <QuickStatCard
-            icon={FileText}
-            iconColor={colors.success[600]}
-            iconBgColor={colors.success[50]}
-            value={data.recent_applications?.length || 0}
-            label="Aktif Başvuru"
-          />
-          <QuickStatCard
-            icon={Star}
-            iconColor={colors.warning[600]}
-            iconBgColor={colors.warning[50]}
-            value={`${completionPercent}%`}
-            label="Profil"
-          />
+        {/* Simple Greeting */}
+        <View style={styles.greetingSection}>
+          <Typography variant="h1" style={styles.greeting}>
+            Hoş geldin, Dr. {user?.first_name?.trim() || 'Doktor'}
+          </Typography>
         </View>
 
-        {/* Recent Applications */}
-        {data.recent_applications && data.recent_applications.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Typography variant="h3">Son Başvurular</Typography>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Applications')}
-              >
-                <Typography variant="body" style={styles.seeAll}>
-                  Tümünü Gör
-                </Typography>
-              </TouchableOpacity>
-            </View>
+        {/* Main Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('JobsTab')}
+          >
+            <Card variant="elevated" padding="2xl" style={styles.actionCard}>
+              <View style={styles.actionIconContainer}>
+                <Briefcase size={32} color={colors.primary[600] as any} />
+              </View>
+              <Typography variant="h3" style={styles.actionLabel}>
+                İlanlar
+              </Typography>
+              <Typography variant="caption" style={styles.actionSubtext}>
+                {data.recommended_jobs?.length || 0} yeni ilan
+              </Typography>
+            </Card>
+          </TouchableOpacity>
 
-            {data.recent_applications.slice(0, 3).map((app) => (
-              <TouchableOpacity
-                key={app.id}
-                onPress={() => navigation.navigate('Applications')}
-              >
-                <Card
-                  variant="outlined"
-                  padding="lg"
-                  style={styles.applicationCard}
-                >
-                  <View style={styles.applicationHeader}>
-                    <View style={styles.applicationInfo}>
-                      <Typography variant="h3" style={styles.jobTitle}>
-                        {app.job_title}
-                      </Typography>
-                      <Typography variant="caption" style={styles.hospitalName}>
-                        {app.hospital_name}
-                      </Typography>
-                    </View>
-                    <Badge
-                      variant={
-                        app.status_label === 'Onaylandı' ? 'success' : 'warning'
-                      }
-                      size="sm"
-                    >
-                      {app.status_label}
-                    </Badge>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigation.navigate('Applications')}
+          >
+            <Card variant="elevated" padding="2xl" style={styles.actionCard}>
+              <View style={styles.actionIconContainer}>
+                <FileText size={32} color={colors.success[600] as any} />
+              </View>
+              <Typography variant="h3" style={styles.actionLabel}>
+                Başvurularım
+              </Typography>
+              <Typography variant="caption" style={styles.actionSubtext}>
+                {data.recent_applications?.length || 0} aktif başvuru
+              </Typography>
+            </Card>
+          </TouchableOpacity>
+        </View>
+
+        {/* Notifications / Quick Actions Section */}
+        <View style={styles.notificationsSection}>
+          <Typography variant="h3" style={styles.sectionTitle}>
+            Bildirimler & Hızlı Aksiyonlar
+          </Typography>
+
+          {/* Profile Completion */}
+          {needsCompletion && (
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+              <Card variant="outlined" padding="lg" style={styles.notificationCard}>
+                <View style={styles.notificationContent}>
+                  <View style={styles.notificationIcon}>
+                    <TrendingUp size={20} color={colors.warning[600] as any} />
                   </View>
-                  <View style={styles.applicationFooter}>
-                    <View style={styles.applicationMeta}>
-                      <Clock size={14} color={colors.text.secondary} />
-                      <Typography variant="caption">
-                        {new Date(app.created_at).toLocaleDateString('tr-TR')}
-                      </Typography>
-                    </View>
-                    <ChevronRight size={16} color={colors.text.secondary} />
-                  </View>
-                </Card>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Recommended Jobs */}
-        {data.recommended_jobs && data.recommended_jobs.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Typography variant="h3">Önerilen İlanlar</Typography>
-              <TouchableOpacity onPress={() => navigation.navigate('JobsTab')}>
-                <Typography variant="body" style={styles.seeAll}>
-                  Tümünü Gör
-                </Typography>
-              </TouchableOpacity>
-            </View>
-
-            {data.recommended_jobs.slice(0, 3).map((job) => (
-              <TouchableOpacity
-                key={job.id}
-                onPress={() =>
-                  navigation.navigate('JobsTab', {
-                    screen: 'JobDetail',
-                    params: { id: job.id },
-                  })
-                }
-              >
-                <Card
-                  variant="outlined"
-                  padding="lg"
-                  style={styles.jobCard}
-                >
-                <View style={styles.jobHeader}>
-                  <View style={styles.jobInfo}>
-                    <Typography variant="h3" style={styles.jobTitle}>
-                      {job.title}
+                  <View style={styles.notificationText}>
+                    <Typography variant="body" style={styles.notificationTitle}>
+                      Profilini Tamamla
                     </Typography>
-                    <Typography variant="caption" style={styles.hospitalName}>
-                      {job.hospital_name}
+                    <Typography variant="caption" style={styles.notificationSubtext}>
+                      %{completionPercent} tamamlandı
                     </Typography>
                   </View>
-                  {job.is_applied && (
-                    <View style={styles.appliedBadge}>
-                      <CheckCircle size={16} color={colors.success[600]} />
-                    </View>
-                  )}
-                </View>
-                <View style={styles.jobFooter}>
-                  <View style={styles.jobMeta}>
-                    <MapPin size={14} color={colors.text.secondary} />
-                    <Typography variant="caption">{job.city_name}</Typography>
-                  </View>
-                  {job.specialty_name && (
-                    <Badge variant="secondary" size="sm">
-                      {job.specialty_name}
-                    </Badge>
-                  )}
-                </View>
-                <View style={styles.jobAction}>
-                  <ChevronRight size={16} color={colors.primary[600]} />
+                  <ChevronRight size={20} color={colors.text.secondary as any} />
                 </View>
               </Card>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Empty State */}
-        {data.recent_applications.length === 0 &&
-          data.recommended_jobs.length === 0 && (
-            <View style={styles.emptyState}>
-              <Typography variant="h3" style={styles.emptyTitle}>
-                Henüz içerik yok
-              </Typography>
-              <Typography variant="body" style={styles.emptyText}>
-                İş ilanlarına göz atmaya başlayın!
-              </Typography>
-              <Button
-                label="İlanları Gör"
-                variant="primary"
-                onPress={() => navigation.navigate('JobsTab')}
-              />
-            </View>
+            </TouchableOpacity>
           )}
+
+          {/* Recent Applications Summary */}
+          {data.recent_applications && data.recent_applications.length > 0 && (
+            <TouchableOpacity onPress={() => navigation.navigate('Applications')}>
+              <Card variant="outlined" padding="lg" style={styles.notificationCard}>
+                <View style={styles.notificationContent}>
+                  <View style={styles.notificationIcon}>
+                    <Clock size={20} color={colors.primary[600] as any} />
+                  </View>
+                  <View style={styles.notificationText}>
+                    <Typography variant="body" style={styles.notificationTitle}>
+                      Başvurun değerlendiriliyor
+                    </Typography>
+                    <Typography variant="caption" style={styles.notificationSubtext}>
+                      {data.recent_applications[0].hospital_name}
+                    </Typography>
+                  </View>
+                  <ChevronRight size={20} color={colors.text.secondary as any} />
+                </View>
+              </Card>
+            </TouchableOpacity>
+          )}
+
+          {/* Recommended Jobs Summary */}
+          {data.recommended_jobs && data.recommended_jobs.length > 0 && (
+            <TouchableOpacity onPress={() => navigation.navigate('JobsTab')}>
+              <Card variant="outlined" padding="lg" style={styles.notificationCard}>
+                <View style={styles.notificationContent}>
+                  <View style={styles.notificationIcon}>
+                    <Briefcase size={20} color={colors.success[600] as any} />
+                  </View>
+                  <View style={styles.notificationText}>
+                    <Typography variant="body" style={styles.notificationTitle}>
+                      Yeni ilanlar mevcut
+                    </Typography>
+                    <Typography variant="caption" style={styles.notificationSubtext}>
+                      {data.recommended_jobs.length} ilan seni bekliyor
+                    </Typography>
+                  </View>
+                  <ChevronRight size={20} color={colors.text.secondary as any} />
+                </View>
+              </Card>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
     );
   };
@@ -267,143 +175,79 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: spacing.lg,
+    padding: spacing.lg, // 16px horizontal padding (8px grid)
     paddingBottom: spacing['4xl'],
   },
+  
+  // Greeting Section
+  greetingSection: {
+    marginBottom: spacing['2xl'], // 24px spacing (8px grid)
+  },
+  greeting: {
+    color: colors.text.primary,
+  },
 
-  completionCard: {
-    marginBottom: spacing.lg,
-    backgroundColor: colors.warning[50],
-  },
-  completionHeader: {
+  // Main Action Buttons
+  actionButtons: {
     flexDirection: 'row',
+    gap: spacing.lg, // 16px gap between buttons
+    marginBottom: spacing['2xl'], // 24px spacing
+  },
+  actionButton: {
+    flex: 1,
+  },
+  actionCard: {
     alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    minHeight: 120, // Sufficient height for prominent buttons
   },
-  completionTitle: {
-    color: colors.warning[700],
-  },
-  completionText: {
-    color: colors.text.secondary,
-    marginBottom: spacing.md,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: colors.warning[100],
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: spacing.md,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.warning[500],
-  },
-  completionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  actionIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: spacing.lg, // 16px rounded
+    backgroundColor: colors.background.secondary,
     justifyContent: 'center',
-    gap: spacing.xs,
-  },
-  completionButtonText: {
-    color: colors.primary[600],
-    fontWeight: '600',
-  },
-  quickStats: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: spacing.md, // 12px spacing
   },
-  seeAll: {
-    color: colors.primary[600],
-    fontWeight: '500',
+  actionLabel: {
+    marginBottom: spacing.xs, // 4px spacing
+    textAlign: 'center',
   },
-  applicationCard: {
-    marginBottom: spacing.md,
-  },
-  applicationHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    marginBottom: spacing.sm,
-  },
-  applicationInfo: {
-    flex: 1,
-  },
-  jobTitle: {
-    marginBottom: spacing.xs,
-  },
-  hospitalName: {
+  actionSubtext: {
     color: colors.text.secondary,
+    textAlign: 'center',
   },
-  applicationFooter: {
+
+  // Notifications Section
+  notificationsSection: {
+    marginBottom: spacing['2xl'], // 24px spacing
+  },
+  sectionTitle: {
+    marginBottom: spacing.lg, // 16px spacing
+  },
+  notificationCard: {
+    marginBottom: spacing.lg, // 16px spacing between cards
+  },
+  notificationContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.md, // 12px gap
   },
-  applicationMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  jobCard: {
-    marginBottom: spacing.md,
-    position: 'relative',
-  },
-  jobHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    marginBottom: spacing.sm,
-    paddingRight: spacing.lg,
-  },
-  jobInfo: {
-    flex: 1,
-  },
-  appliedBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.success[50],
+  notificationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: spacing.sm, // 8px rounded
+    backgroundColor: colors.background.secondary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  jobFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  notificationText: {
+    flex: 1,
   },
-  jobMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
+  notificationTitle: {
+    marginBottom: spacing.xs / 2, // 2px spacing
   },
-  jobAction: {
-    position: 'absolute',
-    right: spacing.lg,
-    top: '50%',
-    transform: [{ translateY: -8 }],
-  },
-  emptyState: {
-    padding: spacing.xl,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  emptyText: {
+  notificationSubtext: {
     color: colors.text.secondary,
-    marginBottom: spacing.lg,
-    textAlign: 'center',
   },
 });

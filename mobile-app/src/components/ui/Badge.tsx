@@ -2,17 +2,21 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
+export type BadgeStatus = 'pending' | 'accepted' | 'rejected' | 'reviewed';
+
 export interface BadgeProps {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'neutral';
-  size?: 'sm' | 'md' | 'lg';
+  status?: BadgeStatus;
+  size?: 'sm' | 'md';
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
   children,
-  variant = 'primary',
+  variant,
+  status,
   size = 'md',
   style,
   textStyle,
@@ -20,9 +24,17 @@ export const Badge: React.FC<BadgeProps> = ({
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  // Map status to variant if status is provided
+  const effectiveVariant = status 
+    ? (status === 'pending' ? 'warning' 
+      : status === 'accepted' ? 'success' 
+      : status === 'rejected' ? 'error' 
+      : 'primary') // reviewed -> primary (blue)
+    : (variant || 'primary');
+
   return (
-    <View style={[styles.base, styles[variant], styles[`size_${size}`], style]}>
-      <Text style={[styles.text, styles[`text_${variant}`], styles[`textSize_${size}`], textStyle]}>
+    <View style={[styles.base, styles[effectiveVariant], styles[`size_${size}`], style]}>
+      <Text style={[styles.text, styles[`text_${effectiveVariant}`], styles[`textSize_${size}`], textStyle]}>
         {children}
       </Text>
     </View>
@@ -31,7 +43,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
 const createStyles = (theme: any) => StyleSheet.create({
   base: {
-    borderRadius: theme.borderRadius.full,
+    borderRadius: theme.borderRadius.md, // 12px for pill shape (8px grid)
     alignSelf: 'flex-start',
   },
   primary: {
@@ -53,19 +65,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.neutral[100],
   },
   size_sm: {
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs / 2,
+    paddingHorizontal: theme.spacing.sm, // 8px
+    paddingVertical: theme.spacing.xs, // 4px
   },
   size_md: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-  },
-  size_lg: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm, // 8px
+    paddingVertical: theme.spacing.xs, // 4px
   },
   text: {
-    fontWeight: theme.typography.fontWeight.medium,
+    fontWeight: theme.typography.fontWeight.normal, // Regular weight for badges
   },
   text_primary: {
     color: theme.colors.primary[700],
@@ -86,12 +94,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.neutral[700],
   },
   textSize_sm: {
-    fontSize: theme.typography.fontSize.xs,
+    fontSize: theme.typography.fontSize.xs, // 12pt
   },
   textSize_md: {
-    fontSize: theme.typography.fontSize.sm,
-  },
-  textSize_lg: {
-    fontSize: theme.typography.fontSize.base,
+    fontSize: theme.typography.fontSize.sm, // 14pt - Regular for status badges
   },
 });

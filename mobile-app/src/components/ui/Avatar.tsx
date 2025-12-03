@@ -6,6 +6,7 @@ export interface AvatarProps {
   source?: ImageSourcePropType;
   name?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  color?: string;
   style?: ViewStyle;
 }
 
@@ -13,6 +14,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   source,
   name,
   size = 'md',
+  color,
   style,
 }) => {
   const getInitials = (name: string) => {

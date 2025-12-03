@@ -11,7 +11,7 @@ import { colors, spacing, borderRadius } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { JobCard } from '@/components/ui/JobCard';
+import { JobCard } from '../components/JobCard';
 import { Screen } from '@/components/layout/Screen';
 import { Filter } from 'lucide-react-native';
 import type { JobListItem } from '@/types/job';
@@ -77,12 +77,16 @@ export const JobsScreen = () => {
       <JobCard
         key={item.id}
         title={item.title || ''}
-        company={item.hospital_name || undefined}
-        location={item.city_name || undefined}
+        hospital_name={item.hospital_name || undefined}
+        city_name={item.city_name || undefined}
+        specialty_name={item.specialty || undefined}
+        salary={item.salary_range || undefined}
+        is_applied={item.is_applied || false}
         onPress={() => {
           // @ts-ignore - Navigation type issue
           navigation.navigate('JobDetail', { id: item.id });
         }}
+        onApply={() => handleApply(item.id)}
       />
     ),
     [navigation]
@@ -253,7 +257,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   listContent: {
-    padding: spacing.lg,
+    padding: spacing.lg, // 16px horizontal padding (8px grid)
+    paddingBottom: spacing['4xl'], // Extra bottom padding for tab bar
   },
   footer: {
     flexDirection: 'row',

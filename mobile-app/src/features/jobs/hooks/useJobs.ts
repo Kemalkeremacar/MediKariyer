@@ -11,8 +11,8 @@ export const useJobs = (params: JobListParams = {}) => {
         limit: params.limit || 10,
       }),
     getNextPageParam: (lastPage) => 
-      lastPage.pagination?.hasMore 
-        ? lastPage.pagination.page + 1 
+      lastPage.pagination?.has_next 
+        ? lastPage.pagination.current_page + 1 
         : undefined,
     initialPageParam: 1,
   });

@@ -1,0 +1,1584 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Component Visual Regression Tests Badge Component - Dark Mode should match snapshot for status badges in dark mode 1`] = `
+<View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#fef3c7",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#b45309",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Beklemede
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#dcfce7",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#15803d",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Onaylandı
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#fee2e2",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#b91c1c",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Reddedildi
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#dbeafe",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#1d4ed8",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      İncelendi
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Badge Component - Light Mode should match snapshot for accepted status 1`] = `
+<View
+  style={
+    [
+      {
+        "alignSelf": "flex-start",
+        "borderRadius": 12,
+      },
+      {
+        "backgroundColor": "#dcfce7",
+      },
+      {
+        "paddingHorizontal": 8,
+        "paddingVertical": 4,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "400",
+        },
+        {
+          "color": "#15803d",
+        },
+        {
+          "fontSize": 12,
+        },
+        undefined,
+      ]
+    }
+  >
+    Onaylandı
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Badge Component - Light Mode should match snapshot for medium size badge 1`] = `
+<View
+  style={
+    [
+      {
+        "alignSelf": "flex-start",
+        "borderRadius": 12,
+      },
+      {
+        "backgroundColor": "#fef3c7",
+      },
+      {
+        "paddingHorizontal": 8,
+        "paddingVertical": 4,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "400",
+        },
+        {
+          "color": "#b45309",
+        },
+        {
+          "fontSize": 14,
+        },
+        undefined,
+      ]
+    }
+  >
+    Medium Badge
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Badge Component - Light Mode should match snapshot for pending status 1`] = `
+<View
+  style={
+    [
+      {
+        "alignSelf": "flex-start",
+        "borderRadius": 12,
+      },
+      {
+        "backgroundColor": "#fef3c7",
+      },
+      {
+        "paddingHorizontal": 8,
+        "paddingVertical": 4,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "400",
+        },
+        {
+          "color": "#b45309",
+        },
+        {
+          "fontSize": 12,
+        },
+        undefined,
+      ]
+    }
+  >
+    Beklemede
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Badge Component - Light Mode should match snapshot for rejected status 1`] = `
+<View
+  style={
+    [
+      {
+        "alignSelf": "flex-start",
+        "borderRadius": 12,
+      },
+      {
+        "backgroundColor": "#fee2e2",
+      },
+      {
+        "paddingHorizontal": 8,
+        "paddingVertical": 4,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "400",
+        },
+        {
+          "color": "#b91c1c",
+        },
+        {
+          "fontSize": 12,
+        },
+        undefined,
+      ]
+    }
+  >
+    Reddedildi
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Badge Component - Light Mode should match snapshot for reviewed status 1`] = `
+<View
+  style={
+    [
+      {
+        "alignSelf": "flex-start",
+        "borderRadius": 12,
+      },
+      {
+        "backgroundColor": "#dbeafe",
+      },
+      {
+        "paddingHorizontal": 8,
+        "paddingVertical": 4,
+      },
+      undefined,
+    ]
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "400",
+        },
+        {
+          "color": "#1d4ed8",
+        },
+        {
+          "fontSize": 12,
+        },
+        undefined,
+      ]
+    }
+  >
+    İncelendi
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Badge Component - Light Mode should match snapshot for variant-based badges 1`] = `
+<View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#dbeafe",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#1d4ed8",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Primary
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#ccfbf1",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#0f766e",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Secondary
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#dcfce7",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#15803d",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Success
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#fef3c7",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#b45309",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Warning
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignSelf": "flex-start",
+          "borderRadius": 12,
+        },
+        {
+          "backgroundColor": "#fee2e2",
+        },
+        {
+          "paddingHorizontal": 8,
+          "paddingVertical": 4,
+        },
+        undefined,
+      ]
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "400",
+          },
+          {
+            "color": "#b91c1c",
+          },
+          {
+            "fontSize": 12,
+          },
+          undefined,
+        ]
+      }
+    >
+      Error
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for disabled state 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": true,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={false}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#2563eb",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 44,
+      "opacity": 0.5,
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#ffffff",
+        },
+        {
+          "fontSize": 16,
+        },
+        {
+          "color": "#d1d5db",
+        },
+        undefined,
+      ]
+    }
+  >
+    Disabled
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for full width button 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#2563eb",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 44,
+      "opacity": 1,
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+      "width": "100%",
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#ffffff",
+        },
+        {
+          "fontSize": 16,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Full Width
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for ghost variant 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "transparent",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 44,
+      "opacity": 1,
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#2563eb",
+        },
+        {
+          "fontSize": 16,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Ghost Button
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for large size 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#2563eb",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 52,
+      "opacity": 1,
+      "paddingHorizontal": 32,
+      "paddingVertical": 24,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#ffffff",
+        },
+        {
+          "fontSize": 18,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Large Button
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for loading state 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": true,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={false}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#2563eb",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 44,
+      "opacity": 0.5,
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+>
+  <ActivityIndicator
+    color="#ffffff"
+  />
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for outline variant 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "transparent",
+      "borderColor": "#2563eb",
+      "borderRadius": 16,
+      "borderWidth": 1,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 44,
+      "opacity": 1,
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#2563eb",
+        },
+        {
+          "fontSize": 16,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Outline Button
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for primary variant 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#2563eb",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 44,
+      "opacity": 1,
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#ffffff",
+        },
+        {
+          "fontSize": 16,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Primary Button
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for secondary variant 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#0d9488",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 44,
+      "opacity": 1,
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#ffffff",
+        },
+        {
+          "fontSize": 16,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Secondary Button
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Button Component - Light Mode should match snapshot for small size 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#2563eb",
+      "borderRadius": 16,
+      "flexDirection": "row",
+      "justifyContent": "center",
+      "minHeight": 36,
+      "opacity": 1,
+      "paddingHorizontal": 16,
+      "paddingVertical": 8,
+    }
+  }
+>
+  <Text
+    style={
+      [
+        {
+          "fontWeight": "600",
+        },
+        {
+          "color": "#ffffff",
+        },
+        {
+          "fontSize": 14,
+        },
+        false,
+        undefined,
+      ]
+    }
+  >
+    Small Button
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Card Component - Dark Mode should match snapshot for elevated variant in dark mode 1`] = `
+<View
+  activeOpacity={1}
+  style={
+    [
+      {
+        "backgroundColor": "#ffffff",
+        "borderRadius": 16,
+      },
+      {
+        "elevation": 4,
+        "shadowColor": "#3b82f6",
+        "shadowOffset": {
+          "height": 4,
+          "width": 0,
+        },
+        "shadowOpacity": 0.08,
+        "shadowRadius": 8,
+      },
+      {
+        "padding": 24,
+      },
+      undefined,
+      undefined,
+    ]
+  }
+>
+  <Text>
+    Elevated Card Content
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Card Component - Dark Mode should match snapshot for filled variant in dark mode 1`] = `
+<View
+  activeOpacity={1}
+  style={
+    [
+      {
+        "backgroundColor": "#ffffff",
+        "borderRadius": 16,
+      },
+      {
+        "backgroundColor": "#f8fafc",
+      },
+      {
+        "padding": 24,
+      },
+      undefined,
+      undefined,
+    ]
+  }
+>
+  <Text>
+    Filled Card Content
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Card Component - Light Mode should match snapshot for elevated variant 1`] = `
+<View
+  activeOpacity={1}
+  style={
+    [
+      {
+        "backgroundColor": "#ffffff",
+        "borderRadius": 16,
+      },
+      {
+        "elevation": 4,
+        "shadowColor": "#3b82f6",
+        "shadowOffset": {
+          "height": 4,
+          "width": 0,
+        },
+        "shadowOpacity": 0.08,
+        "shadowRadius": 8,
+      },
+      {
+        "padding": 24,
+      },
+      undefined,
+      undefined,
+    ]
+  }
+>
+  <Text>
+    Elevated Card Content
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Card Component - Light Mode should match snapshot for filled variant 1`] = `
+<View
+  activeOpacity={1}
+  style={
+    [
+      {
+        "backgroundColor": "#ffffff",
+        "borderRadius": 16,
+      },
+      {
+        "backgroundColor": "#f8fafc",
+      },
+      {
+        "padding": 24,
+      },
+      undefined,
+      undefined,
+    ]
+  }
+>
+  <Text>
+    Filled Card Content
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Card Component - Light Mode should match snapshot for outlined variant 1`] = `
+<View
+  activeOpacity={1}
+  style={
+    [
+      {
+        "backgroundColor": "#ffffff",
+        "borderRadius": 16,
+      },
+      {
+        "borderColor": "#e5e7eb",
+        "borderWidth": 1,
+      },
+      {
+        "padding": 24,
+      },
+      undefined,
+      undefined,
+    ]
+  }
+>
+  <Text>
+    Outlined Card Content
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Card Component - Light Mode should match snapshot for pressable card 1`] = `
+<View
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": undefined,
+      "expanded": undefined,
+      "selected": undefined,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onClick={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "backgroundColor": "#ffffff",
+      "borderRadius": 16,
+      "elevation": 4,
+      "opacity": 1,
+      "padding": 24,
+      "shadowColor": "#3b82f6",
+      "shadowOffset": {
+        "height": 4,
+        "width": 0,
+      },
+      "shadowOpacity": 0.08,
+      "shadowRadius": 8,
+    }
+  }
+>
+  <Text>
+    Pressable Card
+  </Text>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Card Component - Light Mode should match snapshot with different padding sizes 1`] = `
+<View>
+  <View
+    activeOpacity={1}
+    style={
+      [
+        {
+          "backgroundColor": "#ffffff",
+          "borderRadius": 16,
+        },
+        {
+          "elevation": 4,
+          "shadowColor": "#3b82f6",
+          "shadowOffset": {
+            "height": 4,
+            "width": 0,
+          },
+          "shadowOpacity": 0.08,
+          "shadowRadius": 8,
+        },
+        {
+          "padding": 8,
+        },
+        undefined,
+        undefined,
+      ]
+    }
+  >
+    <Text>
+      Small Padding
+    </Text>
+  </View>
+  <View
+    activeOpacity={1}
+    style={
+      [
+        {
+          "backgroundColor": "#ffffff",
+          "borderRadius": 16,
+        },
+        {
+          "elevation": 4,
+          "shadowColor": "#3b82f6",
+          "shadowOffset": {
+            "height": 4,
+            "width": 0,
+          },
+          "shadowOpacity": 0.08,
+          "shadowRadius": 8,
+        },
+        {
+          "padding": 24,
+        },
+        undefined,
+        undefined,
+      ]
+    }
+  >
+    <Text>
+      Large Padding
+    </Text>
+  </View>
+  <View
+    activeOpacity={1}
+    style={
+      [
+        {
+          "backgroundColor": "#ffffff",
+          "borderRadius": 16,
+        },
+        {
+          "elevation": 4,
+          "shadowColor": "#3b82f6",
+          "shadowOffset": {
+            "height": 4,
+            "width": 0,
+          },
+          "shadowOpacity": 0.08,
+          "shadowRadius": 8,
+        },
+        {
+          "padding": 48,
+        },
+        undefined,
+        undefined,
+      ]
+    }
+  >
+    <Text>
+      Extra Large Padding
+    </Text>
+  </View>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Component Combinations should match snapshot for card with badge 1`] = `
+<View
+  activeOpacity={1}
+  style={
+    [
+      {
+        "backgroundColor": "#ffffff",
+        "borderRadius": 16,
+      },
+      {
+        "elevation": 4,
+        "shadowColor": "#3b82f6",
+        "shadowOffset": {
+          "height": 4,
+          "width": 0,
+        },
+        "shadowOpacity": 0.08,
+        "shadowRadius": 8,
+      },
+      {
+        "padding": 24,
+      },
+      undefined,
+      undefined,
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "flexDirection": "row",
+        "justifyContent": "space-between",
+      }
+    }
+  >
+    <Text>
+      Application Status
+    </Text>
+    <View
+      style={
+        [
+          {
+            "alignSelf": "flex-start",
+            "borderRadius": 12,
+          },
+          {
+            "backgroundColor": "#dcfce7",
+          },
+          {
+            "paddingHorizontal": 8,
+            "paddingVertical": 4,
+          },
+          undefined,
+        ]
+      }
+    >
+      <Text
+        style={
+          [
+            {
+              "fontWeight": "400",
+            },
+            {
+              "color": "#15803d",
+            },
+            {
+              "fontSize": 12,
+            },
+            undefined,
+          ]
+        }
+      >
+        Approved
+      </Text>
+    </View>
+  </View>
+</View>
+`;
+
+exports[`Component Visual Regression Tests Component Combinations should match snapshot for card with button 1`] = `
+<View
+  activeOpacity={1}
+  style={
+    [
+      {
+        "backgroundColor": "#ffffff",
+        "borderRadius": 16,
+      },
+      {
+        "elevation": 4,
+        "shadowColor": "#3b82f6",
+        "shadowOffset": {
+          "height": 4,
+          "width": 0,
+        },
+        "shadowOpacity": 0.08,
+        "shadowRadius": 8,
+      },
+      {
+        "padding": 24,
+      },
+      undefined,
+      undefined,
+    ]
+  }
+>
+  <Text>
+    Card with Action
+  </Text>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": false,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "#2563eb",
+        "borderRadius": 16,
+        "flexDirection": "row",
+        "justifyContent": "center",
+        "minHeight": 44,
+        "opacity": 1,
+        "paddingHorizontal": 24,
+        "paddingVertical": 16,
+      }
+    }
+  >
+    <Text
+      style={
+        [
+          {
+            "fontWeight": "600",
+          },
+          {
+            "color": "#ffffff",
+          },
+          {
+            "fontSize": 16,
+          },
+          false,
+          undefined,
+        ]
+      }
+    >
+      Action
+    </Text>
+  </View>
+</View>
+`;

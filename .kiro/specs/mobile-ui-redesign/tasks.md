@@ -1,0 +1,238 @@
+# Implementation Plan
+## Phase 1: Design System Foundation
+- [x] 1. Update theme configuration to enforce 8px grid system
+  - Review and update `src/theme/spacing.ts` to ensure all values are multiples of 8
+  - Update `src/theme/borderRadius.ts` to use 16-24px range for components
+  - Refine `src/theme/typography.ts` to match hierarchy (Bold 22-24pt, Semibold 18pt, Medium 16pt, Regular 14pt)
+  - Ensure `src/theme/colors.ts` uses white background and soft-blue primary colors
+  - Adjust shadow definitions to maintain subtlety (opacity < 0.3)
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+- [x] 1.1 Write property test for spacing grid consistency
+  - **Property 1: Spacing grid consistency**
+  - **Validates: Requirements 1.1**
+- [x] 1.2 Write property test for border radius compliance
+  - **Property 2: Border radius range compliance**
+  - **Validates: Requirements 1.2**
+- [x] 1.3 Write property test for typography hierarchy
+  - **Property 3: Typography hierarchy correctness**
+  - **Validates: Requirements 1.3**
+- [x] 1.4 Write property test for color palette compliance
+  - **Property 4: Color palette compliance**
+  - **Validates: Requirements 1.4**
+- [x]* 1.5 Write property test for shadow subtlety
+  - **Property 5: Shadow subtlety**
+  - **Validates: Requirements 1.5**
+- [x] 2. Refine global Button component
+  - Update `src/components/ui/Button.tsx` to use refined border radius (12px)
+  - Ensure all variants (primary, secondary, outline, ghost) follow design system
+  - Verify minimum touch target of 44x44px for md size
+  - Apply 8px grid spacing for padding
+  - Update button typography to use semibold weight
+  - _Requirements: 1.2, 2.5, 10.5_
+- [x] 2.1 Write property test for Button variant support
+  - **Property 7: Button variant support**
+  - **Validates: Requirements 2.5**
+- [x] 2.2 Write property test for touch target accessibility
+  - **Property 24: Touch target accessibility**
+  - **Validates: Requirements 10.5**
+- [x] 3. Refine global Card component
+  - Update `src/components/ui/Card.tsx` to use 16px border radius
+  - Ensure default padding follows 8px grid (16px default)
+  - Apply subtle shadows for elevated variant
+  - Verify all variants (elevated, outlined, filled) work correctly
+  - _Requirements: 1.2, 1.5, 2.4_
+- [x] 3.1 Write property test for Card component consistency
+  - **Property 6: Card component consistency**
+  - **Validates: Requirements 2.4**
+- [x] 4. Create global Badge component
+  - Create `src/components/ui/Badge.tsx` with status variants
+  - Implement color mapping: pending (yellow), accepted (green), rejected (red), reviewed (blue)
+  - Use 8px border radius for pill shape
+  - Apply 4px/8px padding following grid system
+  - Use Regular 14pt typography
+  - _Requirements: 6.3, 6.4_
+- [x] 4.1 Write property test for status color mapping
+  - **Property 16: Application status color mapping**
+  - **Validates: Requirements 6.4**
+- [x] 5. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+## Phase 2: Core Screens Redesign
+- [x] 6. Redesign Dashboard screen
+  - Update `src/features/dashboard/screens/DashboardScreen.tsx` with simplified layout
+  - Implement personalized greeting with doctor's name (Bold 24pt)
+  - Create two prominent action buttons for "İlanlar" and "Başvurularım"
+  - Add notifications section below action buttons
+  - Apply 16px horizontal padding and 8px grid spacing throughout
+  - Use ample whitespace (24px between sections)
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 10.1, 10.4_
+- [x] 6.1 Write property test for Dashboard greeting personalization
+  - **Property 8: Dashboard greeting personalization**
+  - **Validates: Requirements 3.1**
+- [x] 6.2 Write property test for Dashboard spacing compliance
+  - **Property 9: Dashboard spacing compliance**
+  - **Validates: Requirements 3.5**
+- [x] 7. Create JobCard component
+  - Create `src/features/jobs/components/JobCard.tsx`
+  - Display hospital name (Semibold 18pt), department (Medium 16pt), city (Regular 14pt)
+  - Add optional salary and application count fields
+  - Include Apply button (primary, md size) right-aligned
+  - Use Card component with 16px padding
+  - Apply 8px spacing between elements
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
+- [x] 7.1 Write property test for job card completeness
+  - **Property 10: Job card completeness**
+  - **Validates: Requirements 4.2**
+- [x]* 7.2 Write property test for job card optional fields
+  - **Property 11: Job card optional fields**
+  - **Validates: Requirements 4.3**
+- [x] 8. Update Job Listing screen
+  - Update `src/features/jobs/screens/JobsScreen.tsx` to use new JobCard
+  - Implement FlatList with 16px spacing between cards
+  - Apply 16px horizontal screen padding
+  - Add pull-to-refresh functionality
+  - Implement empty state with illustration
+  - _Requirements: 4.1, 4.5, 10.3, 10.4_
+- [x] 8.1 Write property test for job listing spacing consistency
+  - **Property 12: Job listing spacing consistency**
+  - **Validates: Requirements 4.5**
+- [x] 9. Redesign Job Detail screen
+  - Update `src/features/jobs/screens/JobDetailScreen.tsx` with new layout
+  - Add hospital logo (64x64) and name at top
+  - Display job details as icon-labeled rows with 8px gap and 12px vertical padding
+  - Implement scrollable description section (Regular 16pt, relaxed line height)
+  - Add fixed "BAŞVUR" button at bottom with 16px padding from edges
+  - Use typography hierarchy (larger/bolder for headings)
+  - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+- [x] 9.1 Write property test for job detail completeness
+  - **Property 13: Job detail completeness**
+  - **Validates: Requirements 5.1**
+- [x] 9.2 Write property test for job detail typography hierarchy
+  - **Property 14: Job detail typography hierarchy**
+  - **Validates: Requirements 5.5**
+- [x] 10. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+## Phase 3: Secondary Screens Redesign
+- [x] 11. Create ApplicationCard component
+  - Create `src/features/applications/components/ApplicationCard.tsx`
+  - Display hospital name (Semibold 18pt), position (Medium 16pt)
+  - Add status Badge component in top-right corner
+  - Display application date (Regular 14pt, secondary text color)
+  - Use Card component with 16px padding
+  - Apply 8px spacing between elements
+  - _Requirements: 6.1, 6.2, 6.3_
+- [x] 11.1 Write property test for application card completeness
+  - **Property 15: Application card completeness**
+  - **Validates: Requirements 6.2**
+- [x] 12. Update Applications screen
+  - Update `src/features/applications/screens/ApplicationsScreen.tsx` to use ApplicationCard
+  - Implement sorting logic (most recent first)
+  - Use FlatList with 16px spacing between cards
+  - Apply 16px horizontal screen padding
+  - Add empty state for no applications
+  - _Requirements: 6.1, 6.5, 10.3, 10.4_
+- [x] 12.1 Write property test for application sorting
+- [ ] 12.1 Write property test for application sorting
+
+  - **Property 17: Application sorting**
+  - **Validates: Requirements 6.5**
+- [x] 13. Create NotificationCard component
+
+  - Create `src/features/notifications/components/NotificationCard.tsx`
+  - Display notification message (Medium 16pt)
+  - Display timestamp (Regular 14pt, secondary text color)
+  - Implement conditional background: light blue for unread, white for read
+  - Use Card component with 16px padding
+  - Apply 8px spacing between message and timestamp
+  - Add onPress handler for marking as read
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
+- [x] 13.1 Write property test for notification unread styling
+
+  - **Property 18: Notification unread styling**
+  - **Validates: Requirements 7.2**
+- [x] 13.2 Write property test for notification interaction state change
+  - **Property 19: Notification interaction state change**
+  - **Validates: Requirements 7.5**
+- [x] 14. Update Notifications screen
+  - Update `src/features/notifications/screens/NotificationsScreen.tsx` to use NotificationCard
+  - Implement mark-as-read functionality on tap
+  - Use FlatList with 16px spacing between cards
+  - Apply 16px horizontal screen padding
+  - Add empty state for no notifications
+  - _Requirements: 7.1, 7.2, 7.5, 10.3, 10.4_
+- [x] 15. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+## Phase 4: Profile and Navigation
+- [x] 16. Redesign Profile screen with tabbed navigation
+  - Update `src/features/profile/screens/ProfileScreen.tsx` with tab navigation
+  - Implement tabs: Personal Information, Education, Experience, Certificates, Languages
+  - Create tab bar with 48px height and horizontal scroll support
+  - Add active tab indicator (3px height, primary color underline)
+  - Apply 24px spacing between tabs
+  - Implement tab content area with 16px padding
+  - Use Card components within each tab for information display
+  - Add horizontal swipe gesture support for tab switching
+  - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+- [x] 16.1 Write property test for profile tab content exclusivity
+  - **Property 20: Profile tab content exclusivity**
+  - **Validates: Requirements 8.3**
+- [x] 16.2 Write property test for active tab highlighting
+  - **Property 21: Active tab highlighting**
+  - **Validates: Requirements 8.2**
+- [x] 17. Update Bottom Tab Navigation
+  - Update `src/navigation/TabNavigator.tsx` with 4 tabs: Home, İlanlar, Başvurular, Profil
+  - Implement active tab highlighting with primary accent color
+  - Ensure icons clearly represent each section
+  - Apply 8px grid spacing for tab sizing and spacing
+  - Verify navigation remains visible on all main screens
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
+- [x] 17.1 Write property test for bottom navigation spacing compliance
+  - **Property 22: Bottom navigation spacing compliance**
+  - **Validates: Requirements 9.5**
+- [x] 18. Ensure consistent screen padding across all screens
+  - Audit all screen components for horizontal padding
+  - Update screens to use consistent 16px horizontal padding
+  - Verify all screens follow 8px grid for margins and padding
+  - Ensure spacing between components follows grid system
+  - _Requirements: 10.1, 10.2, 10.3, 10.4_
+- [x] 18.1 Write property test for screen padding consistency
+  - **Property 23: Screen padding consistency**
+  - **Validates: Requirements 10.4**
+- [x] 19. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+## Phase 5: Polish and Testing
+- [x] 20. Visual refinements and polish
+  - Review all screens for visual consistency
+  - Verify all components use theme values (no hardcoded colors/spacing)
+  - Test dark mode appearance for all screens
+  - Ensure smooth transitions and animations
+  - Optimize component rendering performance
+  - _Requirements: All_
+- [x] 21. Write integration tests for key user flows
+- Test navigation between Dashboard → Jobs → Job Detail → Apply
+  - Test Applications screen with different status filters
+  - Test Notifications screen with read/unread interactions
+  - Test Profile screen tab switching
+  - Test theme switching across all screens
+- [x] 22. Write visual regression tests
+  - Create snapshot tests for all major screens
+  - Test component variants (Button, Card, Badge)
+  - Compare light and dark mode screenshots
+  - Verify responsive layout on different screen sizes
+- [x] 23. Write accessibility tests
+
+
+- [ ] 23. Write accessibility tests
+  - Verify touch target sizes meet 44x44px minimum
+  - Check color contrast ratios (4.5:1 for normal text, 3:1 for large text)
+  - Test screen reader labels for interactive elements
+  - Verify keyboard navigation support
+  - Test focus indicators
+- [x] 24. Update documentation
+  - Document design system usage guidelines
+  - Create component usage examples
+  - Update README with new design patterns
+  - Document spacing and typography standards
+  - Create style guide for future development
+  - _Requirements: All_
+- [x] 25. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

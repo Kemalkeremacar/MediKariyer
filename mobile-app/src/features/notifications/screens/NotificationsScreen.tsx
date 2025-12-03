@@ -31,11 +31,18 @@ export const NotificationsScreen = () => {
 
 
   const renderItem = ({ item }: { item: NotificationItem }) => {
+    const handlePress = () => {
+      if (!item.is_read) {
+        markAsReadMutation.mutate(item.id);
+      }
+    };
+
     return (
       <NotificationCard
-        notification={item}
-        onMarkAsRead={(id) => markAsReadMutation.mutate(id)}
-        isMarkingAsRead={markAsReadMutation.isPending}
+        message={item.body || item.title || 'Bildirim'}
+        timestamp={item.created_at ? new Date(item.created_at).toLocaleDateString('tr-TR') : 'Tarih yok'}
+        isRead={item.is_read || false}
+        onPress={handlePress}
       />
     );
   };

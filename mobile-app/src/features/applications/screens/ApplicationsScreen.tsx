@@ -182,7 +182,16 @@ export const ApplicationsScreen = () => {
         keyExtractor={(item, index) => `app-${item.id}-${index}`}
         renderItem={({ item }) => (
           <ApplicationCard
-            application={item}
+            hospitalName={item.hospital_name || 'Kurum bilgisi yok'}
+            position={item.job_title || 'Pozisyon bilgisi yok'}
+            status={
+              item.status?.toLowerCase() === 'başvuruldu' ? 'pending' :
+              item.status?.toLowerCase() === 'onaylandı' ? 'accepted' :
+              item.status?.toLowerCase() === 'reddedildi' ? 'rejected' :
+              'reviewed'
+            }
+            statusLabel={item.status || 'Durum yok'}
+            date={new Date(item.created_at).toLocaleDateString('tr-TR')}
             onPress={() => setSelectedApplicationId(item.id)}
           />
         )}

@@ -24,14 +24,14 @@ export const TabNavigator = () => (
         backgroundColor: colors.background.primary,
         borderTopWidth: 1,
         borderTopColor: colors.neutral[200],
-        height: 70,
-        paddingBottom: 12,
-        paddingTop: 12,
-        elevation: 8,
+        height: 72, // Adjusted to 8px grid (72 = 9 * 8)
+        paddingBottom: 16, // 16px (8px grid)
+        paddingTop: 8, // 8px (8px grid)
+        elevation: 8, // 8px elevation
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowOpacity: 0.08, // Reduced for subtle shadow
+        shadowRadius: 8, // 8px shadow radius
         position: 'absolute',
         bottom: 0,
         left: 0,

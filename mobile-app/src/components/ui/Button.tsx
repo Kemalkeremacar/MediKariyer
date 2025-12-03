@@ -81,7 +81,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.lg, // 16px for modern, clinical appearance
   },
   fullWidth: {
     width: '100%',

@@ -27,7 +27,7 @@ export const QuickStatCard = ({
   style,
 }: QuickStatCardProps) => {
   return (
-    <Card variant="elevated" padding="md" style={[styles.card, style]}>
+    <Card variant="elevated" padding="md" style={StyleSheet.flatten([styles.card, style])}>
       <View style={styles.content}>
         <View style={[styles.iconContainer, { backgroundColor: iconBgColor }]}>
           <Icon size={20} color={iconColor} />

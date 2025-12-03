@@ -1,0 +1,27 @@
+const React = require('react');
+
+module.exports = {
+  __esModule: true,
+  default: ({ children, ...props }) => React.createElement('Svg', props, children),
+  Svg: ({ children, ...props }) => React.createElement('Svg', props, children),
+  Circle: (props) => React.createElement('Circle', props),
+  Ellipse: (props) => React.createElement('Ellipse', props),
+  G: ({ children, ...props }) => React.createElement('G', props, children),
+  Text: ({ children, ...props }) => React.createElement('Text', props, children),
+  TSpan: ({ children, ...props }) => React.createElement('TSpan', props, children),
+  Path: (props) => React.createElement('Path', props),
+  Polygon: (props) => React.createElement('Polygon', props),
+  Polyline: (props) => React.createElement('Polyline', props),
+  Line: (props) => React.createElement('Line', props),
+  Rect: (props) => React.createElement('Rect', props),
+  Use: (props) => React.createElement('Use', props),
+  Image: (props) => React.createElement('Image', props),
+  Symbol: ({ children, ...props }) => React.createElement('Symbol', props, children),
+  Defs: ({ children, ...props }) => React.createElement('Defs', props, children),
+  LinearGradient: ({ children, ...props }) => React.createElement('LinearGradient', props, children),
+  RadialGradient: ({ children, ...props }) => React.createElement('RadialGradient', props, children),
+  Stop: (props) => React.createElement('Stop', props),
+  ClipPath: ({ children, ...props }) => React.createElement('ClipPath', props, children),
+  Pattern: ({ children, ...props }) => React.createElement('Pattern', props, children),
+  Mask: ({ children, ...props }) => React.createElement('Mask', props, children),
+};

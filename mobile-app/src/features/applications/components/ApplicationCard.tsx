@@ -1,50 +1,68 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Badge } from '@/components/ui/Badge';
-import { colors, spacing } from '@/theme';
-import type { ApplicationListItem } from '@/types/application';
+import { Badge, BadgeStatus } from '@/components/ui/Badge';
+import { spacing, colors } from '@/theme';
 
-interface ApplicationCardProps {
-  application: ApplicationListItem;
-  onPress: () => void;
+export interface ApplicationCardProps {
+  hospitalName: string;
+  position: string;
+  status: BadgeStatus;
+  statusLabel: string;
+  date: string;
+  onPress?: () => void;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({
-  application,
+export const ApplicationCard = ({
+  hospitalName,
+  position,
+  status,
+  statusLabel,
+  date,
   onPress,
-}) => {
-  return (
-    <Card style={styles.card} onPress={onPress}>
-      <Typography variant="h4">{application.job_title ?? 'Başvuru'}</Typography>
-      <Typography variant="bodySmall" color="secondary">
-        {application.hospital_name ?? 'Kurum bilgisi yok'}
-      </Typography>
-      <View style={styles.footer}>
-        <Badge 
-          label={application.status ?? 'Durum yok'}
-          variant="primary"
-          size="sm"
-        />
-        <Typography variant="caption" color="secondary">
-          {new Date(application.created_at).toLocaleDateString('tr-TR')}
+}: ApplicationCardProps) => (
+  <Card variant="elevated" padding="lg" onPress={onPress} style={styles.card}>
+    <View style={styles.header}>
+      <View style={styles.info}>
+        <Typography variant="h3" style={styles.hospitalName}>
+          {hospitalName}
+        </Typography>
+        <Typography variant="body" style={styles.position}>
+          {position}
         </Typography>
       </View>
-    </Card>
-  );
-};
+      <Badge status={status} size="sm">
+        {statusLabel}
+      </Badge>
+    </View>
+    <Typography variant="caption" style={styles.date}>
+      {date}
+    </Typography>
+  </Card>
+);
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border.light,
+    marginBottom: spacing.lg, // 16px spacing between cards (8px grid)
   },
-  footer: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.sm,
+    alignItems: 'flex-start',
+    marginBottom: spacing.sm, // 8px spacing
+    gap: spacing.md, // 12px gap
+  },
+  info: {
+    flex: 1,
+  },
+  hospitalName: {
+    marginBottom: spacing.xs / 2, // 2px spacing
+  },
+  position: {
+    // Medium 16pt for position
+  },
+  date: {
+    color: colors.text.secondary,
   },
 });

@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
   },
   notificationCount: {
-    color: '#FFFFFF',
+    color: colors.text.inverse,
     fontSize: 11,
     fontWeight: '600',
   },
