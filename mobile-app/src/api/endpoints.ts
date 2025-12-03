@@ -34,5 +34,11 @@ export const endpoints = {
     unreadCount: '/notifications/unread-count',
   },
   deviceToken: '/device-token',
+  lookup: {
+    specialties: '/lookup/specialties',
+    subspecialties: (specialtyId?: number) =>
+      specialtyId ? `/lookup/subspecialties/${specialtyId}` : '/lookup/subspecialties',
+    cities: '/lookup/cities',
+  },
 } as const;
 

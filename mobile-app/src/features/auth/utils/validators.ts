@@ -35,7 +35,7 @@ export const registrationValidationSchema = z
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: passwordSchema,
-    title: z.enum(['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.']),
+    title: z.enum(['Dr', 'Uz.Dr', 'Dr.Öğr.Üyesi', 'Doç.Dr', 'Prof.Dr']),
     region: z.enum([
       'ist_avrupa',
       'ist_anadolu',

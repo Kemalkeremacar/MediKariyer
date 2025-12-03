@@ -4,13 +4,13 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Picker } from '@react-native-picker/picker';
-import { colors, spacing, borderRadius } from '@/constants/theme';
+import { colors, spacing, borderRadius } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 
-const TITLE_OPTIONS = ['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'] as const;
+const TITLE_OPTIONS = ['Dr', 'Uz.Dr', 'Dr.Öğr.Üyesi', 'Doç.Dr', 'Prof.Dr'] as const;
 const REGION_VALUES = ['ist_avrupa', 'ist_anadolu', 'ankara', 'izmir', 'diger', 'yurtdisi'] as const;
 const REGION_OPTIONS = [
   { value: 'ist_avrupa', label: 'İstanbul (Avrupa)' },
@@ -92,7 +92,7 @@ export const RegisterForm = ({
       email: '',
       password: '',
       confirmPassword: '',
-      title: 'Dr.',
+      title: 'Dr',
       region: 'diger',
       specialty_id: '',
       subspecialty_id: '',

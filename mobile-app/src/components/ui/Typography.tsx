@@ -3,7 +3,7 @@ import { Text as RNText, TextStyle, StyleSheet } from 'react-native';
 
 interface TypographyProps {
   children: React.ReactNode;
-  variant?: 'h1' | 'h2' | 'h3' | 'body' | 'caption';
+  variant?: 'h1' | 'h2' | 'h3' | 'heading' | 'body' | 'bodySecondary' | 'caption';
   style?: TextStyle;
   color?: string;
 }
@@ -37,10 +37,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#000000',
   },
+  heading: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#000000',
+  },
   body: {
     fontSize: 16,
     fontWeight: '400',
     color: '#000000',
+  },
+  bodySecondary: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#8E8E93',
   },
   caption: {
     fontSize: 12,

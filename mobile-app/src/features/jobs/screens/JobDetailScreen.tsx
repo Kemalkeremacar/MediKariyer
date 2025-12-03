@@ -1,18 +1,11 @@
 import React, { useState } from 'react';
 import {
+  View,
   ScrollView,
   ActivityIndicator,
   Alert,
   StyleSheet,
 } from 'react-native';
-import {
-  Box,
-  Text,
-  VStack,
-  HStack,
-  Icon,
-  Divider,
-} from '@gluestack-ui/themed';
 import { Button } from '@/components/ui/Button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,7 +20,7 @@ import {
 } from 'lucide-react-native';
 import { jobService } from '@/api/services/job.service';
 import type { JobsStackParamList } from '@/navigation/types';
-import { colors, spacing, borderRadius } from '@/constants/theme';
+import { colors, spacing, borderRadius } from '@/theme';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
@@ -80,9 +73,9 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   if (isLoading) {
     return (
       <ScreenContainer scrollable={false}>
-        <Box flex={1} justifyContent="center" alignItems="center">
+        <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary[600]} />
-        </Box>
+        </View>
       </ScreenContainer>
     );
   }
@@ -90,8 +83,8 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   if (isError || !job) {
     return (
       <ScreenContainer scrollable={false}>
-        <Box flex={1} justifyContent="center" alignItems="center" px="$4">
-          <Typography variant="title" style={{ marginBottom: spacing.md }}>
+        <View style={[styles.centerContainer, { padding: spacing.lg }]}>
+          <Typography variant="h3" style={{ marginBottom: spacing.md }}>
             İlan detayları yüklenemedi
           </Typography>
           <Button 
@@ -99,7 +92,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             variant="secondary" 
             onPress={() => navigation.goBack()} 
           />
-        </Box>
+        </View>
       </ScreenContainer>
     );
   }
@@ -126,30 +119,14 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   return (
     <ScreenContainer scrollable={false} contentContainerStyle={styles.container}>
       {/* Geri Butonu */}
-        <Box
-          position="absolute"
-          top={insets.top + spacing.md}
-          left={spacing.lg}
-          zIndex={10}
-        >
-          <Button
-            label=""
-            variant="ghost"
-            onPress={() => navigation.goBack()}
-            leftIcon={<Icon as={ChevronLeft} color="$textDark900" size="md" />}
-            style={{
-              backgroundColor: 'white',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
-              elevation: 4,
-              borderRadius: 9999,
-              width: 40,
-              height: 40,
-            }}
-          />
-        </Box>
+      <View style={[styles.backButton, { top: insets.top + spacing.md }]}>
+        <Button
+          label=""
+          variant="ghost"
+          onPress={() => navigation.goBack()}
+          style={styles.backButtonInner}
+        />
+      </View>
 
       {/* Scrollable İçerik */}
       <ScrollView
@@ -158,75 +135,61 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
       >
         {/* Header Card */}
         <Card padding="2xl" style={styles.headerCard}>
-          <VStack space="md">
-            <HStack space="md" alignItems="center">
-              <Box
-                w={64}
-                h={64}
-                bg="$backgroundLight50"
-                borderRadius="$xl"
-                borderWidth={1}
-                borderColor="$borderLight"
-                justifyContent="center"
-                alignItems="center"
-              >
-                <Icon as={Building2} size="xl" color="$textLight700" />
-              </Box>
-              <VStack flex={1} space="xs">
+          <View style={{ gap: spacing.md }}>
+            <View style={styles.row}>
+              <View style={styles.iconContainer}>
+                <Building2 size={32} color={colors.text.secondary} />
+              </View>
+              <View style={{ flex: 1, gap: spacing.xs }}>
                 <Typography variant="heading">{job.title ?? 'İş İlanı'}</Typography>
                 <Typography variant="bodySecondary">
                   {job.hospital_name ?? 'Kurum bilgisi yok'}
                 </Typography>
-              </VStack>
-            </HStack>
+              </View>
+            </View>
 
-            <Divider bg="$borderLight" />
+            <View style={styles.divider} />
 
-            <VStack space="sm">
-              <HStack space="md" flexWrap="wrap">
-                <HStack space="xs" alignItems="center">
-                  <Icon as={MapPin} size="xs" color="$textLight700" />
+            <View style={{ gap: spacing.sm }}>
+              <View style={styles.metaRow}>
+                <View style={styles.metaItem}>
+                  <MapPin size={14} color={colors.text.secondary} />
                   <Typography variant="caption" style={styles.metaText}>
                     {job.city_name ?? 'Lokasyon yok'}
                   </Typography>
-                </HStack>
-                <HStack space="xs" alignItems="center">
-                  <Icon as={Briefcase} size="xs" color="$textLight700" />
+                </View>
+                <View style={styles.metaItem}>
+                  <Briefcase size={14} color={colors.text.secondary} />
                   <Typography variant="caption" style={styles.metaText}>
                     {job.work_type ?? '-'}
                   </Typography>
-                </HStack>
-                <HStack space="xs" alignItems="center">
-                  <Icon as={Clock} size="xs" color="$textLight700" />
+                </View>
+                <View style={styles.metaItem}>
+                  <Clock size={14} color={colors.text.secondary} />
                   <Typography variant="caption" style={styles.metaText}>
                     {formatDate(job.created_at)}
                   </Typography>
-                </HStack>
-              </HStack>
+                </View>
+              </View>
 
               {job.salary_range && (
-                <Box
-                  bg="$primary50"
-                  p="$3"
-                  borderRadius="$lg"
-                  mt="$2"
-                >
-                  <Typography variant="caption" color="$primary700" mb="$1">
+                <View style={styles.salaryBox}>
+                  <Typography variant="caption" style={styles.salaryLabel}>
                     Tahmini Maaş Aralığı
                   </Typography>
-                  <Typography variant="title" color="$primary600">
+                  <Typography variant="h3" style={styles.salaryValue}>
                     {job.salary_range}
                   </Typography>
-                </Box>
+                </View>
               )}
-            </VStack>
-          </VStack>
+            </View>
+          </View>
         </Card>
 
         {/* İş Tanımı */}
         {job.description && (
           <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="title" style={styles.sectionTitle}>
+            <Typography variant="h3" style={styles.sectionTitle}>
               İş Tanımı
             </Typography>
             <Typography variant="body" style={styles.descriptionText}>
@@ -238,26 +201,26 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         {/* Gereksinimler */}
         {job.requirements && job.requirements.length > 0 && (
           <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="title" style={styles.sectionTitle}>
+            <Typography variant="h3" style={styles.sectionTitle}>
               Aranan Nitelikler
             </Typography>
-            <VStack space="sm" mt="$2">
+            <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
               {job.requirements.map((req: string, index: number) => (
-                <HStack key={index} space="sm" alignItems="flex-start">
-                  <Text style={styles.bullet}>•</Text>
-                  <Typography variant="bodySecondary" flex={1}>
+                <View key={index} style={styles.requirementRow}>
+                  <Typography variant="body" style={styles.bullet}>•</Typography>
+                  <Typography variant="bodySecondary" style={{ flex: 1 }}>
                     {req}
                   </Typography>
-                </HStack>
+                </View>
               ))}
-            </VStack>
+            </View>
           </Card>
         )}
 
         {/* Ön Yazı (Başvuru için) */}
         {!job.is_applied && (
           <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="title" style={styles.sectionTitle}>
+            <Typography variant="h3" style={styles.sectionTitle}>
               Ön Yazı (Opsiyonel)
             </Typography>
             <Input
@@ -274,46 +237,29 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         {/* Başvuruldu Badge */}
         {job.is_applied && (
           <Card padding="2xl" style={styles.contentCard}>
-            <HStack space="sm" alignItems="center" justifyContent="center">
-              <Icon as={CheckCircle} size="md" color="$success600" />
-              <Typography variant="title" color="$success600">
+            <View style={styles.appliedBadge}>
+              <CheckCircle size={20} color={colors.success[600]} />
+              <Typography variant="h3" style={styles.appliedText}>
                 Bu ilana başvurdunuz
               </Typography>
-            </HStack>
+            </View>
           </Card>
         )}
       </ScrollView>
 
       {/* Sticky Bottom Action Bar */}
       {!job.is_applied && (
-        <Box
-          position="absolute"
-          bottom={0}
-          left={0}
-          right={0}
-          bg="$white"
-          p="$4"
-          pb={insets.bottom + spacing.lg}
-          borderTopWidth={1}
-          borderColor="$borderLight"
-          sx={{
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-            elevation: 10,
-          }}
-        >
+        <View style={[styles.stickyFooter, { paddingBottom: insets.bottom + spacing.lg }]}>
           <Button
             label={applyMutation.isPending ? 'İşleniyor...' : 'Hemen Başvur'}
             size="lg"
             variant="primary"
             onPress={() => applyMutation.mutate()}
             loading={applyMutation.isPending}
-            isDisabled={job.is_applied || applyMutation.isPending}
+            disabled={job.is_applied || applyMutation.isPending}
             fullWidth
           />
-        </Box>
+        </View>
       )}
     </ScreenContainer>
   );
@@ -324,11 +270,77 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 100,
   },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  backButton: {
+    position: 'absolute',
+    left: spacing.lg,
+    zIndex: 10,
+  },
+  backButtonInner: {
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    borderRadius: 9999,
+    width: 40,
+    height: 40,
+  },
   scrollContent: {
     paddingBottom: spacing['4xl'],
   },
   headerCard: {
     marginBottom: spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    backgroundColor: colors.background.secondary,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.border.light,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  metaText: {
+    color: colors.text.secondary,
+  },
+  salaryBox: {
+    backgroundColor: colors.primary[50],
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.sm,
+  },
+  salaryLabel: {
+    color: colors.primary[700],
+    marginBottom: spacing.xs,
+  },
+  salaryValue: {
+    color: colors.primary[600],
   },
   contentCard: {
     marginBottom: spacing.md,
@@ -339,16 +351,41 @@ const styles = StyleSheet.create({
   descriptionText: {
     lineHeight: 24,
   },
-  metaText: {
-    color: colors.text.secondary,
+  requirementRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'flex-start',
   },
   bullet: {
-    fontSize: 16,
     color: colors.text.secondary,
     marginTop: 2,
   },
   coverLetterInput: {
     marginTop: spacing.sm,
     minHeight: 100,
+  },
+  appliedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  appliedText: {
+    color: colors.success[600],
+  },
+  stickyFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    padding: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
   },
 });

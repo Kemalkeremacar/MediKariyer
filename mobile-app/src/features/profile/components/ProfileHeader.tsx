@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Avatar, Typography, Card } from '@/ui';
+import { Avatar } from '@/components/ui/Avatar';
+import { Typography } from '@/components/ui/Typography';
+import { Card } from '@/components/ui/Card';
 import { colors, spacing, borderRadius, typography } from '@/theme';
 import type { CompleteProfile } from '@/types/profile';
 

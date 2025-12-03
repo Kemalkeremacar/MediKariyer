@@ -1,2 +1,2 @@
-export { DashboardCard } from './DashboardCard';
-export { StatCard } from './StatCard';
+export * from './QuickStatCard';
+export * from './WelcomeHeader';

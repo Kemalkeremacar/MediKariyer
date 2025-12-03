@@ -2,12 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 import { Input, InputProps } from './Input';
 
-interface FormFieldProps extends InputProps {
+interface FormFieldProps {
   label?: string;
   error?: string;
   required?: boolean;
   containerStyle?: ViewStyle;
   labelStyle?: TextStyle;
+  children: React.ReactNode;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
@@ -16,7 +17,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   required,
   containerStyle,
   labelStyle,
-  ...inputProps
+  children,
 }) => {
   return (
     <View style={[styles.container, containerStyle]}>
@@ -26,7 +27,7 @@ export const FormField: React.FC<FormFieldProps> = ({
           {required && <Text style={styles.required}> *</Text>}
         </Text>
       )}
-      <Input {...inputProps} />
+      {children}
       {error && <Text style={styles.error}>{error}</Text>}
     </View>
   );

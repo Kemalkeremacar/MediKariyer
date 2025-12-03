@@ -4,7 +4,6 @@
  */
 
 import { useCallback } from 'react';
-import { useToast } from '@/hooks/useToast';
 import { useUIStore } from '@/store/uiStore';
 import { errorLogger } from '@/utils/errorLogger';
 import {
@@ -33,8 +32,7 @@ interface UseErrorHandlerReturn {
  * Hook for handling errors consistently across the app
  */
 export const useErrorHandler = (): UseErrorHandlerReturn => {
-  const { showError } = useToast();
-  const { setLoading } = useUIStore();
+  const setLoading = useUIStore((state) => state.setLoading);
 
   /**
    * Handle any error with options
@@ -61,12 +59,12 @@ export const useErrorHandler = (): UseErrorHandlerReturn => {
 
       // Show toast notification
       if (showToast) {
-        showError(message);
+        // Toast will be handled by the component using this hook
       }
 
       return message;
     },
-    [showError, setLoading]
+    [setLoading]
   );
 
   /**

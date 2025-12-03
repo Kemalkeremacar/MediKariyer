@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Card, Typography, Badge, Button } from '@/ui';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { spacing } from '@/theme';
 
 export interface JobCardProps {
@@ -24,24 +27,24 @@ export const JobCard = ({
 }: JobCardProps) => (
   <Card variant="elevated" padding="lg" onPress={onPress} style={styles.jobCard}>
     <View style={styles.jobHeader}>
-      <Typography variant="h4" numberOfLines={2} style={styles.jobTitle}>
+      <Typography variant="h3" style={styles.jobTitle}>
         {title}
       </Typography>
-      {is_applied && <Badge label="Başvuruldu" variant="success" size="sm" />}
+      {is_applied && <Badge variant="success" size="sm">Başvuruldu</Badge>}
     </View>
     {hospital_name && (
-      <Typography variant="body" color="secondary" style={styles.jobRow}>
+      <Typography variant="body" style={styles.jobRow}>
         🏥 {hospital_name}
       </Typography>
     )}
     <View style={styles.jobDetails}>
       {city_name && (
-        <Typography variant="bodySmall" color="secondary">
+        <Typography variant="caption">
           📍 {city_name}
         </Typography>
       )}
       {specialty_name && (
-        <Typography variant="bodySmall" color="secondary">
+        <Typography variant="caption">
           ⚕️ {specialty_name}
         </Typography>
       )}

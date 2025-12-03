@@ -8,14 +8,20 @@ type UseRegisterOptions = Omit<
 >;
 
 /**
- * Hook for doctor registration functionality
- * Handles registration submission
+ * Hook for doctor registration
  */
 export const useRegister = (options?: UseRegisterOptions) => {
   return useMutation({
     mutationFn: async (data: DoctorRegistrationPayload) => {
-      const response = await authService.registerDoctor(data);
-      return response;
+      console.log('🔵 useRegister: mutationFn called');
+      try {
+        const response = await authService.registerDoctor(data);
+        console.log('✅ useRegister: registration successful');
+        return response;
+      } catch (error) {
+        console.log('❌ useRegister: registration error:', error);
+        throw error;
+      }
     },
     ...options,
   });

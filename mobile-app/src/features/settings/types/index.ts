@@ -2,24 +2,22 @@
  * Settings Feature Types
  */
 
-export type NotificationPreference = {
+export interface NotificationSettings {
   email: boolean;
   sms: boolean;
   push: boolean;
-};
+}
 
-export type SettingsData = {
-  notifications: NotificationPreference;
+export interface SettingsData {
+  notifications: NotificationSettings;
   language: string;
   theme: 'light' | 'dark' | 'system';
-};
+}
 
-export type SettingsUpdatePayload = Partial<SettingsData>;
+export interface SettingsUpdatePayload {
+  notifications?: Partial<NotificationSettings>;
+  language?: string;
+  theme?: 'light' | 'dark' | 'system';
+}
 
 export type AccountAction = 'freeze' | 'delete';
-
-export type SettingsSection = 
-  | 'personal' 
-  | 'notifications' 
-  | 'privacy' 
-  | 'account';

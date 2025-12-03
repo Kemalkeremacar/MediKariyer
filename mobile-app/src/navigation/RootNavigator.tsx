@@ -47,13 +47,15 @@ export const RootNavigator = () => {
 
   return (
     <Stack.Navigator
-      initialRouteName={authStatus === 'authenticated' ? 'App' : 'Auth'}
       screenOptions={{
         headerShown: false,
       }}
     >
-      <Stack.Screen name="Auth" component={AuthNavigator} />
-      <Stack.Screen name="App" component={AppNavigator} />
+      {authStatus === 'authenticated' ? (
+        <Stack.Screen name="App" component={AppNavigator} />
+      ) : (
+        <Stack.Screen name="Auth" component={AuthNavigator} />
+      )}
     </Stack.Navigator>
   );
 };

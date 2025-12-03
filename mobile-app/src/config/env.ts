@@ -5,10 +5,12 @@
 
 import Constants from 'expo-constants';
 
+// Expo'da environment variable'lar EXPO_PUBLIC_ prefix'i ile otomatik olarak yüklenir
 const getEnvVar = (key: string, defaultValue?: string): string => {
-  const value = Constants.expoConfig?.extra?.[key] || process.env[key];
+  // @ts-ignore - Expo runtime'da process.env.EXPO_PUBLIC_* değişkenleri mevcuttur
+  const value = process.env[key] || Constants.expoConfig?.extra?.[key];
   if (!value && !defaultValue) {
-    throw new Error(`Environment variable ${key} is not defined`);
+    console.warn(`Environment variable ${key} is not defined, using default value`);
   }
   return value || defaultValue || '';
 };

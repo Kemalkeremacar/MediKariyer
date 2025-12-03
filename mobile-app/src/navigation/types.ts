@@ -45,6 +45,8 @@ export type AppTabParamList = {
   JobsTab: NavigatorScreenParams<JobsStackParamList>;
   Applications: undefined;
   Profile: undefined;
+  Notifications: undefined;
+  Settings: undefined;
 };
 
 /**

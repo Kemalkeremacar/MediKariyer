@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
+import { colors, shadows, spacing, borderRadius, typography } from '@/theme';
 import type {
   DoctorEducation,
   DoctorExperience,

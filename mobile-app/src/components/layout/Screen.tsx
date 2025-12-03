@@ -4,9 +4,9 @@ import {
   ScrollView,
   StyleSheet,
   ViewStyle,
-  SafeAreaView,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Loader } from '@/components/feedback/Loader';
 import { Text } from '@/components/ui/Text';

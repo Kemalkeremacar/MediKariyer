@@ -52,7 +52,7 @@ const buildTokenPayload = (user) => ({
 });
 
 const registerDoctor = async (registrationData, req) => {
-  const { email, password, first_name, last_name, title, specialty_id, subspecialty_id, region, profile_photo } = registrationData;
+  const { email, password, first_name, last_name, title, specialty_id, subspecialty_id, profile_photo } = registrationData;
 
   // AuthService ile doktor kaydı yap (web ile aynı mantık)
   const result = await authService.registerDoctor({
@@ -63,7 +63,6 @@ const registerDoctor = async (registrationData, req) => {
     title,
     specialty_id,
     subspecialty_id,
-    region,
     profile_photo
   });
 
@@ -83,7 +82,6 @@ const registerDoctor = async (registrationData, req) => {
       title: result.profile.title,
       specialty_id: result.profile.specialty_id,
       subspecialty_id: result.profile.subspecialty_id,
-      region: result.profile.region,
       profile_photo: result.profile.profile_photo
     }
   };
@@ -113,7 +111,8 @@ const login = async ({ email, password }, req) => {
       first_name: profile?.first_name || null,
       last_name: profile?.last_name || null
     },
-    profile: profile ? profileTransformer.toMobileProfile(profile) : null
+    // Login response'da profile photo'yu dahil etme (çok büyük)
+    profile: profile ? profileTransformer.toMobileProfile(profile, false) : null
   };
 };
 
@@ -163,7 +162,8 @@ const getMe = async (userId) => {
       first_name: profile.first_name,
       last_name: profile.last_name
     },
-    profile: profileTransformer.toMobileProfile(profile)
+    // getMe'de de photo'yu dahil etme (çok büyük), gerekirse ayrı endpoint
+    profile: profileTransformer.toMobileProfile(profile, false)
   };
 };
 

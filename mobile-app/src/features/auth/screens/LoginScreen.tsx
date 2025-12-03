@@ -6,7 +6,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '@/store/authStore';
-import { colors, spacing } from '@/constants/theme';
+import { tokenManager } from '@/utils/tokenManager';
+import { colors } from '@/theme/colors';
+import { spacing } from '@/theme/spacing';
 import type { AuthStackParamList } from '@/navigation/types';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Card } from '@/components/ui/Card';
@@ -37,9 +39,24 @@ export const LoginScreen = () => {
     resolver: zodResolver(loginSchema),
   });
 
+  const setAuthState = useAuthStore((state) => state.setAuthState);
+
   const loginMutation = useLogin({
-    onSuccess: () => {
+    onSuccess: async (data) => {
       setServerError(null);
+      
+      // Direkt olarak token'ları kaydet ve auth state'i güncelle
+      try {
+        await tokenManager.saveTokens(data.accessToken, data.refreshToken);
+        
+        setAuthState({
+          user: data.user,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        });
+      } catch (err) {
+        // Token kaydetme hatası
+      }
     },
     onError: (error) => {
       let message = 'Giriş sırasında bir hata oluştu';

@@ -6,18 +6,23 @@ interface ScreenContainerProps {
   children: React.ReactNode;
   scrollable?: boolean;
   style?: ViewStyle;
+  contentContainerStyle?: ViewStyle;
 }
 
 export const ScreenContainer: React.FC<ScreenContainerProps> = ({
   children,
   scrollable = false,
   style,
+  contentContainerStyle,
 }) => {
   const Container = scrollable ? ScrollView : View;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <Container style={[styles.container, style]}>
+      <Container 
+        style={[styles.container, style]}
+        contentContainerStyle={scrollable ? contentContainerStyle : undefined}
+      >
         {children}
       </Container>
     </SafeAreaView>

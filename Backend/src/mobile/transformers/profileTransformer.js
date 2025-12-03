@@ -22,27 +22,38 @@
 // TRANSFORMER FONKSİYONLARI
 // ============================================================================
 
-const toMobileProfile = (profile = {}) => ({
-  id: profile.id,
-  user_id: profile.user_id,
-  first_name: profile.first_name || null,
-  last_name: profile.last_name || null,
-  title: profile.title || null,
-  specialty_id: profile.specialty_id || null,
-  specialty_name: profile.specialty_name || null,
-  subspecialty_id: profile.subspecialty_id || null,
-  subspecialty_name: profile.subspecialty_name || null,
-  dob: profile.dob || null,
-  phone: profile.phone || null,
-  profile_photo: profile.profile_photo || null,
-  birth_place_id: profile.birth_place_id || null,
-  birth_place_name: profile.birth_place_name || null,
-  residence_city_id: profile.residence_city_id || null,
-  residence_city_name: profile.residence_city_name || null,
-  completion_percent: profile.completion_percent ?? null,
-  created_at: profile.created_at || null,
-  updated_at: profile.updated_at || null
-});
+const toMobileProfile = (profile = {}, includePhoto = false) => {
+  const baseProfile = {
+    id: profile.id,
+    user_id: profile.user_id,
+    first_name: profile.first_name || null,
+    last_name: profile.last_name || null,
+    title: profile.title || null,
+    specialty_id: profile.specialty_id || null,
+    specialty_name: profile.specialty_name || null,
+    subspecialty_id: profile.subspecialty_id || null,
+    subspecialty_name: profile.subspecialty_name || null,
+    dob: profile.dob || null,
+    phone: profile.phone || null,
+    birth_place_id: profile.birth_place_id || null,
+    birth_place_name: profile.birth_place_name || null,
+    residence_city_id: profile.residence_city_id || null,
+    residence_city_name: profile.residence_city_name || null,
+    completion_percent: profile.completion_percent ?? null,
+    created_at: profile.created_at || null,
+    updated_at: profile.updated_at || null
+  };
+
+  // Profile photo sadece istendiğinde ekle (çok büyük olabileceği için)
+  if (includePhoto) {
+    baseProfile.profile_photo = profile.profile_photo || null;
+  } else {
+    // Photo varsa sadece var olduğunu belirt
+    baseProfile.has_photo = !!profile.profile_photo;
+  }
+
+  return baseProfile;
+};
 
 // ============================================================================
 // MODULE EXPORTS

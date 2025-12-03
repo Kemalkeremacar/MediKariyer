@@ -29,6 +29,9 @@ const processQueue = (error: unknown, token: string | null) => {
 const attachInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     async (config) => {
+      console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
+      console.log('📤 Request data:', JSON.stringify(config.data, null, 2));
+      
       const token = await tokenManager.getAccessToken();
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -40,6 +43,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
     },
     (error) => {
       // Request error (network error, timeout, etc.)
+      console.error('❌ Request error:', error);
       errorLogger.logError(error, {
         type: 'request',
         phase: 'interceptor',
@@ -49,8 +53,16 @@ const attachInterceptors = (instance: AxiosInstance) => {
   );
 
   instance.interceptors.response.use(
-    (response) => response,
+    (response) => {
+      console.log('📥 API Response:', response.config.method?.toUpperCase(), response.config.url);
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response data:', JSON.stringify(response.data, null, 2));
+      return response;
+    },
     async (error) => {
+      console.error('❌ API Error:', error.config?.url, error.response?.status);
+      console.error('❌ Error response:', JSON.stringify(error.response?.data, null, 2));
+      
       // Network error handling
       if (!error.response) {
         // Determine specific network error message
@@ -86,7 +98,8 @@ const attachInterceptors = (instance: AxiosInstance) => {
       
       // 403 (Forbidden) hatası - yetki hatası, refresh token yapmaya gerek yok
       if (status === 403) {
-        const errorMessage = error.response?.data?.message || 'Bu işlem için yetkiniz yok';
+        const backendMessage = error.response?.data?.message || error.response?.data?.error;
+        const errorMessage = backendMessage || 'Bu işlem için yetkiniz yok';
         const formattedError = new Error(errorMessage);
         formattedError.name = 'ApiError';
         
@@ -98,8 +111,9 @@ const attachInterceptors = (instance: AxiosInstance) => {
       
       // 401 (Unauthorized) hatası değilse veya zaten retry yapıldıysa
       if (status !== 401 || originalRequest._retry) {
-        // Format error message for better UX
-        const errorMessage = getUserFriendlyErrorMessage(error);
+        // Backend'den gelen mesajı al, yoksa genel mesaj kullan
+        const backendMessage = error.response?.data?.message || error.response?.data?.error;
+        const errorMessage = backendMessage || getUserFriendlyErrorMessage(error);
         const formattedError = new Error(errorMessage);
         formattedError.name = 'ApiError';
         
@@ -132,13 +146,19 @@ const attachInterceptors = (instance: AxiosInstance) => {
         await tokenManager.clearTokens();
         isRefreshing = false;
         
+        // Backend'den gelen mesajı al
+        const backendMessage = error.response?.data?.message || error.response?.data?.error;
+        const errorMessage = backendMessage || 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.';
+        const formattedError = new Error(errorMessage);
+        formattedError.name = 'ApiError';
+        
         // Log authentication error
-        errorLogger.logError(new Error('No refresh token available'), {
+        errorLogger.logError(formattedError, {
           type: 'auth',
           action: 'token_refresh',
         });
         
-        return Promise.reject(error);
+        return Promise.reject(formattedError);
       }
 
       try {
@@ -169,16 +189,19 @@ const attachInterceptors = (instance: AxiosInstance) => {
         useAuthStore.getState().markUnauthenticated();
         await tokenManager.clearTokens();
         
-        // Log token refresh failure
-        errorLogger.logError(
-          refreshError instanceof Error ? refreshError : new Error('Token refresh failed'),
-          {
-            type: 'auth',
-            action: 'token_refresh_failed',
-          }
-        );
+        // Backend'den gelen mesajı al veya genel mesaj kullan
+        const backendMessage = (refreshError as any)?.response?.data?.message || (refreshError as any)?.response?.data?.error;
+        const errorMessage = backendMessage || 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.';
+        const formattedError = new Error(errorMessage);
+        formattedError.name = 'ApiError';
         
-        return Promise.reject(refreshError);
+        // Log token refresh failure
+        errorLogger.logError(formattedError, {
+          type: 'auth',
+          action: 'token_refresh_failed',
+        });
+        
+        return Promise.reject(formattedError);
       } finally {
         isRefreshing = false;
       }

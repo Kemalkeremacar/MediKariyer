@@ -1,6 +1,9 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Card, Typography, Button, Badge } from '@/ui';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { colors, spacing, typography } from '@/theme';
 import type { NotificationItem } from '../types';
 

@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Typography } from '@/ui';
+import { Typography } from '@/components/ui/Typography';
 import { colors, spacing, borderRadius } from '@/theme';
 
 export interface DashboardCardProps {
@@ -27,9 +27,9 @@ export const DashboardCard = ({ title, subtitle, status }: DashboardCardProps) =
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Typography variant="h4" numberOfLines={1}>{title}</Typography>
+        <Typography variant="h3">{title}</Typography>
         {subtitle && (
-          <Typography variant="bodySmall" color="secondary">{subtitle}</Typography>
+          <Typography variant="caption">{subtitle}</Typography>
         )}
       </View>
       <View style={[styles.statusDot, { backgroundColor: getStatusColor(status) }]} />

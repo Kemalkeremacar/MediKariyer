@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, RefreshControl, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, FlatList, RefreshControl, View, ActivityIndicator } from 'react-native';
 import { colors, spacing, borderRadius } from '@/theme';
-import { Card, Typography, Button, EmptyState, ErrorState, LoadingState } from '@/ui';
-import { Screen } from '@/layouts';
+import { Card } from '@/components/ui/Card';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { Screen } from '@/components/layout/Screen';
 import { NotificationCard } from '../components/NotificationCard';
 import { useNotifications } from '../hooks/useNotifications';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
-import type { NotificationItem } from '../types';
+import type { NotificationItem } from '@/types/notification';
 
 export const NotificationsScreen = () => {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -26,11 +28,7 @@ export const NotificationsScreen = () => {
 
   const markAsReadMutation = useMarkAsRead();
 
-  useEffect(() => {
-    if (isError) {
-      console.warn('Bildirimler yüklenirken hata oluştu:', error);
-    }
-  }, [isError, error]);
+
 
   const renderItem = ({ item }: { item: NotificationItem }) => {
     return (
@@ -46,20 +44,17 @@ export const NotificationsScreen = () => {
     refetch();
   };
 
-  const renderErrorState = () => (
-    <ErrorState
-      title="Bildirimler yüklenemedi"
-      message="Lütfen internet bağlantınızı kontrol edip tekrar deneyin."
-      onRetry={() => refetch()}
-    />
-  );
-
   return (
-    <Screen scrollable={false}>
+    <Screen 
+      scrollable={false}
+      loading={isLoading}
+      error={isError ? (error as Error) : null}
+      onRetry={refetch}
+    >
       <View style={styles.header}>
         <View>
           <Typography variant="h2">Bildirimler</Typography>
-          <Typography variant="bodySmall" color="secondary">
+          <Typography variant="caption">
             {showUnreadOnly ? 'Okunmamış' : 'Tüm'} bildirimleri görüntülüyorsun
           </Typography>
         </View>
@@ -95,20 +90,21 @@ export const NotificationsScreen = () => {
         onEndReachedThreshold={0.5}
         ListFooterComponent={
           isFetchingNextPage ? (
-            <LoadingState message="Daha fazla yükleniyor..." size="small" />
+            <View style={styles.loadingFooter}>
+              <ActivityIndicator size="small" color={colors.primary[600]} />
+              <Typography variant="caption">Daha fazla yükleniyor...</Typography>
+            </View>
           ) : null
         }
         ListEmptyComponent={
-          isLoading ? (
-            <LoadingState message="Bildirimler yükleniyor..." />
-          ) : isError ? (
-            renderErrorState()
-          ) : (
-            <EmptyState
-              title="Henüz bildirim bulunmamaktadır."
-              description="Yeni gelişmeler olduğunda burada görünecek."
-            />
-          )
+          !isLoading && !isError ? (
+            <View style={styles.emptyState}>
+              <Typography variant="h3" style={styles.emptyTitle}>Henüz bildirim bulunmamaktadır.</Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                Yeni gelişmeler olduğunda burada görünecek.
+              </Typography>
+            </View>
+          ) : null
         }
       />
     </Screen>
@@ -132,6 +128,25 @@ const styles = StyleSheet.create({
   listContent: {
     padding: spacing.lg,
     paddingBottom: spacing['3xl'],
+  },
+  loadingFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+  },
+  emptyState: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  emptyText: {
+    color: colors.text.secondary,
+    textAlign: 'center',
   },
 });
 

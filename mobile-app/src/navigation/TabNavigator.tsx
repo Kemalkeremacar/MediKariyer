@@ -1,8 +1,9 @@
+import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { DashboardScreen } from '@/features/dashboard';
-import { ApplicationsScreen } from '@/features/applications';
-import { ProfileScreen } from '@/features/profile';
 import { JobsStackNavigator } from './JobsStackNavigator';
+import { DashboardScreen } from '@/features/dashboard/screens/DashboardScreen';
+import { ProfileScreen } from '@/features/profile/screens/ProfileScreen';
+import { ApplicationsScreen } from '@/features/applications/screens/ApplicationsScreen';
 import { Home, Briefcase, FileText, User } from 'lucide-react-native';
 import { colors } from '@/theme/colors';
 import type { AppTabParamList } from './types';
@@ -76,3 +77,5 @@ export const TabNavigator = () => (
     />
   </Tab.Navigator>
 );
+
+

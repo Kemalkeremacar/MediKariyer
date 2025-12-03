@@ -13,7 +13,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { profileService } from '@/api/services/profile.service';
-import { colors, shadows, spacing, borderRadius, typography } from '@/constants/theme';
+import { colors, shadows, spacing, borderRadius, typography } from '@/theme';
 // Icons will be replaced with @expo/vector-icons or simple text
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

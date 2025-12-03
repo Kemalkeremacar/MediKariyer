@@ -1,5 +1,6 @@
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { JobsScreen, JobDetailScreen } from '@/features/jobs';
+import { JobsScreen, JobDetailScreen } from '@/features/jobs/screens';
 import type { JobsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<JobsStackParamList>();

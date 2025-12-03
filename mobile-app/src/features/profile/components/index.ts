@@ -1,2 +1,5 @@
-export { ProfileFormModal } from './ProfileFormModal';
-export { ProfileHeader } from './ProfileHeader';
+export * from './ProfileFormModal';
+export * from './ProfileHeader';
+export * from './ProfileInfoCard';
+export * from './ProfileInfoRow';
+export * from './ProfileMenuItem';

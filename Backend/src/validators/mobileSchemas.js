@@ -107,12 +107,8 @@ const mobileRegisterDoctorSchema = Joi.object({
     'number.integer': 'Yan dal ID tam sayı olmalıdır',
     'number.positive': 'Yan dal ID pozitif bir sayı olmalıdır'
   }),
-  region: Joi.string().valid('ist_avrupa', 'ist_anadolu', 'ankara', 'izmir', 'diger', 'yurtdisi').required().messages({
-    'any.only': 'Bölge ist_avrupa, ist_anadolu, ankara, izmir, diger veya yurtdisi olmalıdır',
-    'any.required': 'Bölge zorunludur'
-  }),
-  profile_photo: Joi.string().max(500).required().messages({
-    'string.max': 'Profil fotoğrafı URL en fazla 500 karakter olabilir',
+  profile_photo: Joi.string().max(5000000).required().messages({
+    'string.max': 'Profil fotoğrafı çok büyük (max 5MB base64)',
     'any.required': 'Profil fotoğrafı zorunludur'
   })
 });
@@ -225,7 +221,7 @@ const mobileJobsQuerySchema = paginationQuerySchema.keys({
   work_type: Joi.string().valid('tam_zamanli', 'yari_zamanli', 'nobet').optional().messages({
     'any.only': 'Work type tam_zamanli, yari_zamanli veya nobet olmalıdır'
   }),
-  search: Joi.string().max(100).trim().optional().messages({
+  search: Joi.string().max(100).trim().allow('').optional().messages({
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
   })
 });

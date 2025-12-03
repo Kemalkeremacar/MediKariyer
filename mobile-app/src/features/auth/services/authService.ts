@@ -6,7 +6,7 @@ import type {
   LoginPayload,
   DoctorRegistrationPayload,
   DoctorRegistrationResponse,
-} from '../types';
+} from '@/types/auth';
 
 /**
  * Normalizes auth response from various API response formats

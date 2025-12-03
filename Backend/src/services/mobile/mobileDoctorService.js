@@ -141,13 +141,17 @@ const getDashboard = async (userId) => {
     .limit(5);
 
   return {
-    unread_notifications_count: parseCount(unreadQuery),
+    stats: {
+      unread_notifications_count: parseCount(unreadQuery),
+      active_applications_count: applications.length,
+      recommended_jobs_count: recommendedJobs.length,
+      profile_completion_percent: profile.completion_percent
+    },
     recent_applications: applications.map(applicationTransformer.toListItem),
     recommended_jobs: recommendedJobs.map((job) => jobTransformer.toListItem({
       ...job,
       is_applied: Boolean(job.application_id)
-    })),
-    profile_completion_percent: profile.completion_percent
+    }))
   };
 };
 

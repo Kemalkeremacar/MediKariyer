@@ -105,12 +105,11 @@ export const usePushNotifications = () => {
 
     notificationReceivedListener.current = Notifications.addNotificationReceivedListener(
       (notification: any) => {
-        console.log('📩 Notification received:', notification.request.content.title);
+        // Notification received
       },
     );
     notificationResponseListener.current = Notifications.addNotificationResponseReceivedListener(
       (response: any) => {
-        console.log('👉 Notification response:', response.notification.request.content.data);
         handleNotificationNavigation(response.notification.request.content.data as Record<string, unknown>);
       },
     );

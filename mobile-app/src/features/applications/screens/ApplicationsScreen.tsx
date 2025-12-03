@@ -7,18 +7,20 @@ import {
   ScrollView,
   View,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import type { InfiniteData } from '@tanstack/react-query';
 import { lookupService } from '@/api/services/lookup.service';
 import { colors, spacing } from '@/theme';
-import { Typography, Button, Card, Badge, EmptyState, ErrorState } from '@/ui';
-import { Screen } from '@/layouts';
-import type { ApplicationListItem } from '@/types/application';
-import type { ApplicationsListResponse } from '@/api/services/application.service';
-import { ApplicationFilterSheet, ApplicationCard } from '@/features/applications/components';
-import { useApplications, useApplicationDetail, useWithdrawApplication } from '@/features/applications/hooks';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Screen } from '@/components/layout/Screen';
+import { ApplicationFilterSheet } from '../components/ApplicationFilterSheet';
+import { ApplicationCard } from '../components/ApplicationCard';
+import { useApplications } from '../hooks/useApplications';
+import { useApplicationDetail } from '../hooks/useApplicationDetail';
+import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 const DetailsModal = ({
@@ -62,10 +64,10 @@ const DetailsModal = ({
         )}
         {isError && (
           <View style={styles.modalLoader}>
-            <Typography variant="h4" style={{ color: colors.error[700], marginBottom: spacing.sm }}>
+            <Typography variant="h3" style={{ color: colors.error[700], marginBottom: spacing.sm }}>
               Başvuru yüklenemedi
             </Typography>
-            <Typography variant="bodySmall" color="secondary" style={{ marginBottom: spacing.md, textAlign: 'center' }}>
+            <Typography variant="caption" style={{ marginBottom: spacing.md, textAlign: 'center', color: colors.text.secondary }}>
               Lütfen internet bağlantınızı kontrol edip tekrar deneyin.
             </Typography>
             <Button label="Tekrar dene" onPress={() => refetch()} variant="primary" />
@@ -76,20 +78,21 @@ const DetailsModal = ({
             <Typography variant="h2">
               {data.job_title ?? 'Başvuru'}
             </Typography>
-            <Typography variant="bodySmall" color="secondary" style={styles.modalSubtitle}>
+            <Typography variant="caption" style={styles.modalSubtitle}>
               {data.hospital_name ?? 'Kurum bilgisi yok'}
             </Typography>
             <View style={styles.modalRow}>
               <Badge 
-                label={data.status ?? 'Durum yok'}
                 variant="primary"
                 size="sm"
-              />
+              >
+                {data.status ?? 'Durum yok'}
+              </Badge>
               <Typography variant="caption">
                 {new Date(data.created_at).toLocaleDateString('tr-TR')}
               </Typography>
             </View>
-            <Typography variant="h4" style={styles.sectionTitle}>
+            <Typography variant="h3" style={styles.sectionTitle}>
               Ön Yazı
             </Typography>
             <Typography variant="body">
@@ -97,7 +100,7 @@ const DetailsModal = ({
             </Typography>
             {data.notes && (
               <>
-                <Typography variant="h4" style={styles.sectionTitle}>
+                <Typography variant="h3" style={styles.sectionTitle}>
                   Hastane Notu
                 </Typography>
                 <Typography variant="body">{data.notes}</Typography>
@@ -159,81 +162,82 @@ export const ApplicationsScreen = () => {
     query.refetch();
   }, [query]);
 
-  return (
-    <Screen scrollable={false} padding={false}>
-      <View style={styles.container}>
-        <Card style={styles.filterCard}>
-          <Typography variant="bodySmall" color="secondary">Başvuru Durumu</Typography>
-          <Typography variant="h4">
-            {selectedStatus || 'Tüm durumlar'}
-          </Typography>
-          <Button
-            label="Filtreleri Aç"
-            variant="ghost"
-            fullWidth
-            onPress={openFilters}
+  const renderContent = () => (
+    <View style={styles.container}>
+      <Card style={styles.filterCard}>
+        <Typography variant="caption" style={{ color: colors.text.secondary }}>Başvuru Durumu</Typography>
+        <Typography variant="h3">
+          {selectedStatus || 'Tüm durumlar'}
+        </Typography>
+        <Button
+          label="Filtreleri Aç"
+          variant="ghost"
+          fullWidth
+          onPress={openFilters}
+        />
+      </Card>
+
+      <FlatList
+        data={applications}
+        keyExtractor={(item, index) => `app-${item.id}-${index}`}
+        renderItem={({ item }) => (
+          <ApplicationCard
+            application={item}
+            onPress={() => setSelectedApplicationId(item.id)}
           />
-        </Card>
+        )}
+        refreshControl={
+          <RefreshControl
+            refreshing={query.isRefetching}
+            onRefresh={() => query.refetch()}
+            tintColor={colors.primary[600]}
+          />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          query.isFetchingNextPage ? (
+            <ActivityIndicator style={styles.listLoader} color={colors.primary[600]} />
+          ) : null
+        }
+        ListEmptyComponent={
+          !query.isLoading && !query.isError ? (
+            <View style={styles.emptyState}>
+              <Typography variant="h3" style={styles.emptyTitle}>Henüz başvuru yapılmadı</Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                Yeni ilanlara başvurarak bu alanı doldurabilirsin.
+              </Typography>
+            </View>
+          ) : null
+        }
+        contentContainerStyle={styles.listContent}
+      />
 
-        <FlatList
-          data={applications}
-          keyExtractor={(item, index) => `app-${item.id}-${index}`}
-          renderItem={({ item }) => (
-            <ApplicationCard
-              application={item}
-              onPress={() => setSelectedApplicationId(item.id)}
-            />
-          )}
-          refreshControl={
-            <RefreshControl
-              refreshing={query.isRefetching}
-              onRefresh={() => query.refetch()}
-              tintColor={colors.primary[600]}
-            />
-          }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
-          ListFooterComponent={
-            query.isFetchingNextPage ? (
-              <ActivityIndicator style={styles.listLoader} color={colors.primary[600]} />
-            ) : null
-          }
-          ListEmptyComponent={
-            query.isLoading ? (
-              <View style={styles.loader}>
-                <ActivityIndicator size="large" color={colors.primary[600]} />
-              </View>
-            ) : query.isError ? (
-              <ErrorState
-                title="Başvurular yüklenemedi"
-                message="Lütfen internet bağlantınızı kontrol edip tekrar deneyin."
-                onRetry={() => query.refetch()}
-              />
-            ) : (
-              <EmptyState
-                title="Henüz başvuru yapılmadı"
-                description="Yeni ilanlara başvurarak bu alanı doldurabilirsin."
-              />
-            )
-          }
-          contentContainerStyle={styles.listContent}
-        />
+      <DetailsModal
+        applicationId={selectedApplicationId}
+        visible={selectedApplicationId !== null}
+        onClose={() => setSelectedApplicationId(null)}
+      />
 
-        <DetailsModal
-          applicationId={selectedApplicationId}
-          visible={selectedApplicationId !== null}
-          onClose={() => setSelectedApplicationId(null)}
-        />
+      <ApplicationFilterSheet
+        ref={filterSheetRef}
+        statuses={statuses}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+      />
+    </View>
+  );
 
-        <ApplicationFilterSheet
-          ref={filterSheetRef}
-          statuses={statuses}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
-          onApply={handleApplyFilters}
-          onReset={handleResetFilters}
-        />
-      </View>
+  return (
+    <Screen 
+      scrollable={false} 
+      loading={query.isLoading}
+      error={query.isError ? (new Error('Başvurular yüklenemedi')) : null}
+      onRetry={() => query.refetch()}
+    >
+      {renderContent()}
     </Screen>
   );
 };
@@ -291,5 +295,17 @@ const styles = StyleSheet.create({
   },
   withdrawButton: {
     marginTop: spacing.lg,
+  },
+  emptyState: {
+    padding: spacing.xl,
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  emptyText: {
+    color: colors.text.secondary,
+    textAlign: 'center',
   },
 });

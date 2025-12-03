@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
-import { colors, spacing, borderRadius } from '@/constants/theme';
+import { colors, spacing, borderRadius } from '@/theme';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';

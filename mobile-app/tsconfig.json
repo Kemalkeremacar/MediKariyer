@@ -16,9 +16,7 @@
       "@/config/*": ["src/config/*"],
       "@/navigation/*": ["src/navigation/*"],
       "@/contexts/*": ["src/contexts/*"],
-      "@/ui": ["src/ui.tsx"],
-      "@/layouts": ["src/layouts.tsx"],
-      "@/animations": ["src/animations.tsx"]
+      "@/providers/*": ["src/providers/*"]
     }
   },
   "include": [

@@ -22,18 +22,23 @@ export const useLogin = (options?: UseLoginOptions) => {
       return response;
     },
     onSuccess: async (data, variables, context) => {
-      // Save tokens to secure storage
-      await tokenManager.saveTokens(data.accessToken, data.refreshToken);
+      try {
+        await tokenManager.saveTokens(data.accessToken, data.refreshToken);
 
-      // Update auth store
-      setAuthState({
-        user: data.user,
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-      });
+        setAuthState({
+          user: data.user,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+        });
 
-      // Call user's onSuccess if provided
-      options?.onSuccess?.(data, variables, context);
+        // Call user's onSuccess if provided
+        options?.onSuccess?.(data, variables, context);
+      } catch (error) {
+        throw error;
+      }
+    },
+    onError: (error, variables, context) => {
+      options?.onError?.(error, variables, context);
     },
     ...options,
   });

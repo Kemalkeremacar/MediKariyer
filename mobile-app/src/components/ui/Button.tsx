@@ -14,8 +14,10 @@ export interface ButtonProps {
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
+  fullWidth?: boolean;
   onPress: () => void;
-  children: React.ReactNode;
+  label?: string;
+  children?: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
 }
@@ -25,7 +27,9 @@ export const Button: React.FC<ButtonProps> = ({
   size = 'md',
   loading = false,
   disabled = false,
+  fullWidth = false,
   onPress,
+  label,
   children,
   style,
   textStyle,
@@ -34,6 +38,8 @@ export const Button: React.FC<ButtonProps> = ({
   const isDisabled = disabled || loading;
 
   const styles = useMemo(() => createStyles(theme), [theme]);
+  
+  const content = label || children;
 
   return (
     <TouchableOpacity
@@ -41,6 +47,7 @@ export const Button: React.FC<ButtonProps> = ({
         styles.base,
         styles[variant],
         styles[`size_${size}`],
+        fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
       ]}
@@ -62,7 +69,7 @@ export const Button: React.FC<ButtonProps> = ({
             textStyle,
           ]}
         >
-          {children}
+          {content}
         </Text>
       )}
     </TouchableOpacity>
@@ -75,6 +82,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: theme.borderRadius.md,
+  },
+  fullWidth: {
+    width: '100%',
   },
   primary: {
     backgroundColor: theme.colors.primary[600],

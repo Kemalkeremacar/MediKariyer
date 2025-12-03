@@ -2,7 +2,8 @@ import { forwardRef, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
 import { Picker } from '@react-native-picker/picker';
-import { Typography, Button } from '@/ui';
+import { Typography } from '@/components/ui/Typography';
+import { Button } from '@/components/ui/Button';
 import { colors, spacing, borderRadius } from '@/theme';
 import type { ApplicationStatus } from '@/types/lookup';
 

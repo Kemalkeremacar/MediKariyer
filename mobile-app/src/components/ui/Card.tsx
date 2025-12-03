@@ -8,7 +8,8 @@ type Theme = typeof lightTheme;
 export interface CardProps {
   children: React.ReactNode;
   variant?: 'elevated' | 'outlined' | 'filled';
-  padding?: keyof Theme['spacing'];
+  padding?: keyof Theme['spacing'] | '2xl';
+  shadow?: 'sm' | 'md' | 'lg';
   onPress?: () => void;
   style?: ViewStyle;
 }
@@ -17,6 +18,7 @@ export const Card: React.FC<CardProps> = ({
   children,
   variant = 'elevated',
   padding = 'lg',
+  shadow,
   onPress,
   style,
 }) => {
@@ -24,13 +26,20 @@ export const Card: React.FC<CardProps> = ({
   const Container = onPress ? TouchableOpacity : View;
   
   const styles = useMemo(() => createStyles(theme), [theme]);
+  
+  // Handle padding value
+  const paddingValue = padding === '2xl' ? theme.spacing.xl * 1.5 : theme.spacing[padding as keyof Theme['spacing']];
+  
+  // Handle shadow
+  const shadowStyle = shadow ? theme.shadows[shadow] : undefined;
 
   return (
     <Container
       style={[
         styles.base,
         styles[variant],
-        { padding: theme.spacing[padding] },
+        { padding: paddingValue },
+        shadowStyle,
         style,
       ]}
       onPress={onPress}
