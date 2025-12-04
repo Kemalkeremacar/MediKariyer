@@ -61,6 +61,10 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
     baseQuery.andWhere('j.specialty_id', filters.specialty_id);
   }
 
+  if (filters.employment_type) {
+    baseQuery.andWhere('j.employment_type', filters.employment_type);
+  }
+
   if (filters.keyword) {
     baseQuery.andWhere('j.title', 'like', `%${filters.keyword}%`);
   }
@@ -124,11 +128,18 @@ const getJobDetail = async (userId, jobId) => {
         .andOn('a.doctor_profile_id', '=', db.raw('?', [profile.id]))
         .andOnNull('a.deleted_at');
     })
+    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .select(
       'j.*',
       'c.name as city_name',
       's.name as specialty_name',
+      'ss.name as subspecialty_name',
       'hp.institution_name as hospital_name',
+      'hp.address as hospital_address',
+      'hp.phone as hospital_phone',
+      'hp.email as hospital_email',
+      'hp.website as hospital_website',
+      'hp.about as hospital_about',
       'a.id as application_id'
     )
     .where('j.id', jobId)

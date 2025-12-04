@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { JobCard } from '../components/JobCard';
 import { Screen } from '@/components/layout/Screen';
-import { Filter } from 'lucide-react-native';
+import { Filter, Search, Briefcase, TrendingUp, MapPin, X } from 'lucide-react-native';
 import type { JobListItem } from '@/types/job';
 import { JobFilterSheet } from '../components/JobFilterSheet';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -96,50 +96,91 @@ export const JobsScreen = () => {
     // TODO: Başvuru işlemi
   };
 
+  const hasActiveFilters = selectedSpecialtyId || selectedCityId || selectedWorkType;
+
   const renderContent = () => {
     if (!data) return null;
     
     return (
       <>
-        {/* Header */}
+        {/* Modern Header */}
         <View style={styles.header}>
-          <Typography variant="h3">İş İlanları</Typography>
-          <View style={styles.headerActions}>
-            <Badge variant="primary" size="sm">{jobs.length} ilan</Badge>
+          <View style={styles.headerContent}>
+            <View style={styles.headerIcon}>
+              <Briefcase size={28} color={colors.primary[600]} />
+            </View>
+            <View style={styles.headerText}>
+              <Typography variant="h2" style={styles.headerTitle}>
+                İş İlanları
+              </Typography>
+              <Typography variant="caption" style={styles.headerSubtitle}>
+                {jobs.length} fırsat seni bekliyor
+              </Typography>
+            </View>
           </View>
+          {hasActiveFilters && (
+            <TouchableOpacity 
+              style={styles.clearFiltersButton}
+              onPress={handleResetFilters}
+            >
+              <X size={16} color={colors.error[600]} />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Search & Filter */}
         <View style={styles.searchContainer}>
           <View style={styles.searchWrapper}>
-            <Input
-              placeholder="İlan ara..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              style={styles.searchInput}
-            />
+            <View style={styles.searchInputContainer}>
+              <Search size={20} color={colors.neutral[400]} style={styles.searchIcon} />
+              <Input
+                placeholder="Hastane, şehir veya branş ara..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                style={styles.searchInput}
+              />
+            </View>
           </View>
           <TouchableOpacity
-            style={styles.filterButton}
+            style={hasActiveFilters ? StyleSheet.flatten([styles.filterButton, styles.filterButtonActive]) : styles.filterButton}
             onPress={() => filterSheetRef.current?.present()}
           >
-            <Filter size={20} color={colors.primary[600]} />
+            <Filter size={20} color={hasActiveFilters ? colors.background.primary : colors.primary[600]} />
+            {hasActiveFilters && (
+              <View style={styles.filterBadge}>
+                <Typography variant="caption" style={styles.filterBadgeText}>
+                  {[selectedSpecialtyId, selectedCityId, selectedWorkType].filter(Boolean).length}
+                </Typography>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
-        {/* Active Filters */}
-        {(selectedSpecialtyId || selectedCityId || selectedWorkType) && (
-          <View style={styles.activeFilters}>
-            <Typography variant="caption" style={styles.activeFiltersText}>
-              {[
-                selectedSpecialtyId && 'Branş',
-                selectedCityId && 'Şehir',
-                selectedWorkType && 'Çalışma Şekli',
-              ]
-                .filter(Boolean)
-                .join(', ')}{' '}
-              filtrelendi
-            </Typography>
+        {/* Active Filters Chips */}
+        {hasActiveFilters && (
+          <View style={styles.activeFiltersContainer}>
+            {selectedSpecialtyId && (
+              <View style={styles.filterChip}>
+                <Typography variant="caption" style={styles.filterChipText}>
+                  Branş Filtresi
+                </Typography>
+              </View>
+            )}
+            {selectedCityId && (
+              <View style={styles.filterChip}>
+                <MapPin size={12} color={colors.primary[700]} />
+                <Typography variant="caption" style={styles.filterChipText}>
+                  Şehir
+                </Typography>
+              </View>
+            )}
+            {selectedWorkType && (
+              <View style={styles.filterChip}>
+                <Typography variant="caption" style={styles.filterChipText}>
+                  {selectedWorkType}
+                </Typography>
+              </View>
+            )}
           </View>
         )}
 
@@ -155,10 +196,27 @@ export const JobsScreen = () => {
           onRefresh={refetch}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Typography variant="h3" style={styles.emptyTitle}>İlan bulunamadı</Typography>
-              <Typography variant="body" style={styles.emptyText}>
-                Arama kriterlerinizi değiştirerek tekrar deneyin
+              <View style={styles.emptyIcon}>
+                <Briefcase size={64} color={colors.neutral[300]} />
+              </View>
+              <Typography variant="h3" style={styles.emptyTitle}>
+                İlan Bulunamadı
               </Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                {searchQuery || hasActiveFilters 
+                  ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
+                  : 'Henüz ilan bulunmuyor'}
+              </Typography>
+              {hasActiveFilters && (
+                <TouchableOpacity 
+                  style={styles.emptyButton}
+                  onPress={handleResetFilters}
+                >
+                  <Typography variant="body" style={styles.emptyButtonText}>
+                    Filtreleri Temizle
+                  </Typography>
+                </TouchableOpacity>
+              )}
             </View>
           }
           ListFooterComponent={
@@ -217,48 +275,126 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
+    borderBottomColor: colors.neutral[100],
   },
-  headerActions: {
+  headerContent: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  headerIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerText: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text.primary,
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    color: colors.text.secondary,
+    fontSize: 13,
+  },
+  clearFiltersButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.error[50],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
-    gap: spacing.sm,
+    gap: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
     backgroundColor: colors.background.primary,
   },
   searchWrapper: {
     flex: 1,
   },
+  searchInputContainer: {
+    position: 'relative',
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: 12,
+    top: 14,
+    zIndex: 1,
+  },
   searchInput: {
     marginBottom: 0,
+    paddingLeft: 44,
   },
   filterButton: {
     width: 48,
     height: 48,
-    borderRadius: borderRadius.lg,
+    borderRadius: 24,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
-  activeFilters: {
+  filterButtonActive: {
+    backgroundColor: colors.primary[600],
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: colors.error[600],
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  filterBadgeText: {
+    color: colors.background.primary,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  activeFiltersContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
     backgroundColor: colors.background.primary,
   },
-  activeFiltersText: {
-    color: colors.primary[600],
-    fontWeight: '500',
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.primary[50],
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.primary[200],
+  },
+  filterChipText: {
+    color: colors.primary[700],
+    fontSize: 12,
+    fontWeight: '600',
   },
   listContent: {
-    padding: spacing.lg, // 16px horizontal padding (8px grid)
-    paddingBottom: spacing['4xl'], // Extra bottom padding for tab bar
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing['4xl'],
   },
   footer: {
     flexDirection: 'row',
@@ -268,15 +404,31 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
   },
   emptyState: {
-    padding: spacing.xl,
+    padding: spacing['3xl'],
     alignItems: 'center',
+  },
+  emptyIcon: {
+    marginBottom: spacing.lg,
   },
   emptyTitle: {
     marginBottom: spacing.sm,
     textAlign: 'center',
+    color: colors.text.primary,
   },
   emptyText: {
     color: colors.text.secondary,
     textAlign: 'center',
+    fontSize: 14,
+    marginBottom: spacing.lg,
+  },
+  emptyButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.primary[600],
+    borderRadius: 24,
+  },
+  emptyButtonText: {
+    color: colors.background.primary,
+    fontWeight: '600',
   },
 });

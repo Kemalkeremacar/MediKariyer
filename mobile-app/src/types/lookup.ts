@@ -20,6 +20,7 @@ export interface City {
 export interface ApplicationStatus {
   id: number;
   name: string;
+  value?: string; // Backend API için İngilizce değer
 }
 
 export interface EducationType {

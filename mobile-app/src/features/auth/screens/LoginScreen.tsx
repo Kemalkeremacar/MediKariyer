@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Stethoscope, Mail, Lock, ArrowRight } from 'lucide-react-native';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import { colors } from '@/theme/colors';
@@ -55,11 +56,12 @@ export const LoginScreen = () => {
           refreshToken: data.refreshToken,
         });
       } catch (err) {
-        // Token kaydetme hatası
+        setServerError('⚠️ Token kaydetme hatası. Lütfen tekrar deneyin.');
       }
     },
     onError: (error) => {
-      let message = 'Giriş sırasında bir hata oluştu';
+      let message = '❌ Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
+      
       if (error instanceof Error) {
         message = error.message;
       } else if (
@@ -70,7 +72,18 @@ export const LoginScreen = () => {
       ) {
         message = (error as { message: string }).message;
       }
+      
+      // Kullanıcı dostu hata mesajları
+      if (message.toLowerCase().includes('unauthorized') || message.toLowerCase().includes('invalid')) {
+        message = '❌ E-posta veya şifre hatalı';
+      } else if (message.toLowerCase().includes('network')) {
+        message = '🌐 İnternet bağlantınızı kontrol edin';
+      } else if (message.toLowerCase().includes('timeout')) {
+        message = '⏱️ İstek zaman aşımına uğradı. Tekrar deneyin.';
+      }
+      
       setServerError(message);
+      Alert.alert('Giriş Başarısız', message);
     },
   });
 
@@ -88,27 +101,42 @@ export const LoginScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.cardWrapper}>
-          <Card padding="2xl" shadow="md">
-            <Typography variant="heading">MediKariyer Doktor</Typography>
-            <Typography variant="bodySecondary" style={styles.subtitle}>
-              Mobile deneyime hoş geldin. Lütfen giriş yap.
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.logoContainer}>
+              <Stethoscope size={48} color={colors.primary[600]} strokeWidth={2.5} />
+            </View>
+            <Typography variant="heading" style={styles.title}>
+              Tekrar Hoş Geldin!
             </Typography>
+            <Typography variant="body" style={styles.headerSubtitle}>
+              Hesabına giriş yap ve kariyer fırsatlarını keşfet
+            </Typography>
+          </View>
+
+          <Card padding="2xl" shadow="lg" style={styles.formCard}>
 
             <FormField
-              label="E-posta"
+              label="E-posta Adresi"
               error={errors.email?.message as string}
             >
               <Controller
                 control={control}
                 name="email"
                 render={({ field: { onChange, value } }) => (
-                  <Input
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                    placeholder="ornek@medikariyer.com"
-                    value={value}
-                    onChangeText={onChange}
-                  />
+                  <View style={styles.inputWrapper}>
+                    <View style={styles.inputIcon}>
+                      <Mail size={20} color={colors.neutral[400]} />
+                    </View>
+                    <Input
+                      autoCapitalize="none"
+                      keyboardType="email-address"
+                      placeholder="ornek@medikariyer.com"
+                      value={value}
+                      onChangeText={onChange}
+                      style={styles.inputWithIcon}
+                    />
+                  </View>
                 )}
               />
             </FormField>
@@ -121,12 +149,18 @@ export const LoginScreen = () => {
                 control={control}
                 name="password"
                 render={({ field: { onChange, value } }) => (
-                  <Input
-                    placeholder="Şifreniz"
-                    secureTextEntry
-                    value={value}
-                    onChangeText={onChange}
-                  />
+                  <View style={styles.inputWrapper}>
+                    <View style={styles.inputIcon}>
+                      <Lock size={20} color={colors.neutral[400]} />
+                    </View>
+                    <Input
+                      placeholder="••••••••"
+                      secureTextEntry
+                      value={value}
+                      onChangeText={onChange}
+                      style={styles.inputWithIcon}
+                    />
+                  </View>
                 )}
               />
             </FormField>
@@ -140,18 +174,47 @@ export const LoginScreen = () => {
             </View>
 
             <Button
-              label="Giriş Yap"
+              label={loginMutation.isPending ? "Giriş Yapılıyor..." : "Giriş Yap"}
               onPress={handleSubmit(onSubmit)}
               loading={loginMutation.isPending}
               fullWidth
+              size="lg"
               style={styles.buttonSpacing}
             />
-            <Button
-              label="Hesabın yok mu? Kayıt ol"
-              variant="ghost"
-              fullWidth
-              onPress={() => navigation.navigate('Register')}
-            />
+
+            {/* Forgot Password */}
+            <TouchableOpacity 
+              style={styles.forgotPassword}
+              onPress={() => Alert.alert('Şifre Sıfırlama', 'Bu özellik yakında eklenecek.')}
+            >
+              <Typography variant="body" style={styles.forgotPasswordText}>
+                Şifreni mi unuttun?
+              </Typography>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Typography variant="caption" style={styles.dividerText}>
+                veya
+              </Typography>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Register Prompt */}
+            <View style={styles.registerPrompt}>
+              <Typography variant="body" style={styles.registerPromptText}>
+                Hesabın yok mu?
+              </Typography>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <View style={styles.registerLink}>
+                  <Typography variant="body" style={styles.registerLinkText}>
+                    Kayıt Ol
+                  </Typography>
+                  <ArrowRight size={16} color={colors.primary[600]} />
+                </View>
+              </TouchableOpacity>
+            </View>
           </Card>
         </View>
       </KeyboardAvoidingView>
@@ -163,7 +226,8 @@ const styles = StyleSheet.create({
   screenContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: spacing['2xl'],
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing['2xl'],
   },
   flex: {
     flex: 1,
@@ -171,6 +235,40 @@ const styles = StyleSheet.create({
   cardWrapper: {
     flex: 1,
     justifyContent: 'center',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing['3xl'],
+  },
+  logoContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+    shadowColor: colors.primary[600],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+    textAlign: 'center',
+  },
+  headerSubtitle: {
+    color: colors.text.secondary,
+    textAlign: 'center',
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  formCard: {
+    marginBottom: spacing['2xl'],
   },
   subtitle: {
     marginTop: spacing.xs,
@@ -183,8 +281,73 @@ const styles = StyleSheet.create({
   },
   serverError: {
     color: colors.error[600],
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500',
   },
   buttonSpacing: {
-    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+    marginBottom: spacing.md,
+  },
+  forgotPassword: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  forgotPasswordText: {
+    color: colors.primary[600],
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.neutral[200],
+  },
+  dividerText: {
+    marginHorizontal: spacing.md,
+    color: colors.text.secondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  registerPrompt: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.primary[50],
+    borderRadius: 12,
+    marginTop: spacing.sm,
+  },
+  registerPromptText: {
+    color: colors.text.secondary,
+    fontSize: 14,
+  },
+  registerLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  registerLinkText: {
+    color: colors.primary[600],
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  inputWrapper: {
+    position: 'relative',
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 12,
+    top: 12,
+    zIndex: 1,
+  },
+  inputWithIcon: {
+    paddingLeft: 44,
   },
 });

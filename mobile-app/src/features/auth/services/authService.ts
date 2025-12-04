@@ -90,4 +90,19 @@ export const authService = {
     const response = await apiClient.get<ApiResponse<any>>(endpoints.auth.me);
     return response.data.data.user;
   },
+
+  /**
+   * Change password for authenticated user
+   */
+  async changePassword(payload: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<void> {
+    const response = await apiClient.post<ApiResponse<null>>(
+      endpoints.auth.changePassword,
+      payload,
+    );
+    return response.data.data;
+  },
 };

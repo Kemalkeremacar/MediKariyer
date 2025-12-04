@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { JobsScreen, JobDetailScreen } from '@/features/jobs/screens';
+import { JobsScreen } from '@/features/jobs/screens/JobsScreen';
+import { JobDetailScreen } from '@/features/jobs/screens/JobDetailScreen';
 import type { JobsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<JobsStackParamList>();
@@ -11,6 +12,7 @@ const Stack = createNativeStackNavigator<JobsStackParamList>();
  */
 export const JobsStackNavigator = () => (
   <Stack.Navigator
+    initialRouteName="JobsList"
     screenOptions={{
       headerShown: false,
     }}

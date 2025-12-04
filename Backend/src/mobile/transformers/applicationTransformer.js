@@ -37,8 +37,19 @@ const toDetail = (application = {}) => ({
   ...toListItem(application),
   cover_letter: application.cover_letter || null,
   notes: application.notes || null,
-  timeline: application.timeline || [],
-  attachments: application.attachments || []
+  // Job details
+  description: application.description || null,
+  employment_type: application.employment_type || null,
+  min_experience_years: application.min_experience_years ?? null,
+  city_name: application.city_name || null,
+  specialty_name: application.specialty_name || null,
+  subspecialty_name: application.subspecialty_name || null,
+  // Hospital details
+  hospital_address: application.hospital_address || null,
+  hospital_phone: application.hospital_phone || null,
+  hospital_email: application.hospital_email || null,
+  hospital_website: application.hospital_website || null,
+  hospital_about: application.hospital_about || null,
 });
 
 // ============================================================================

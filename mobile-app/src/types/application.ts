@@ -11,6 +11,21 @@ export interface ApplicationListItem {
 export interface ApplicationDetail extends ApplicationListItem {
   cover_letter: string | null;
   notes: string | null;
+  // Job details
+  description: string | null;
+  requirements: string | null;
+  benefits: string | null;
+  employment_type: string | null;
+  min_experience_years: number | null;
+  city_name: string | null;
+  specialty_name: string | null;
+  subspecialty_name: string | null;
+  // Hospital details
+  hospital_address: string | null;
+  hospital_phone: string | null;
+  hospital_email: string | null;
+  hospital_website: string | null;
+  hospital_about: string | null;
 }
 
 export interface ApplicationsPagination {

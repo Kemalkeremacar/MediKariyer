@@ -30,15 +30,9 @@ export const useLogin = (options?: UseLoginOptions) => {
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
         });
-
-        // Call user's onSuccess if provided
-        options?.onSuccess?.(data, variables, context);
       } catch (error) {
         throw error;
       }
-    },
-    onError: (error, variables, context) => {
-      options?.onError?.(error, variables, context);
     },
     ...options,
   });

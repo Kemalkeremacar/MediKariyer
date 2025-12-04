@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Button } from '@/components/ui/Button';
+import { BackButton } from '@/components/ui/BackButton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -16,7 +17,12 @@ import {
   Briefcase,
   CheckCircle,
   Building2,
-  ChevronLeft,
+  DollarSign,
+  Users,
+  Calendar,
+  Phone,
+  Mail,
+  Globe,
 } from 'lucide-react-native';
 import { jobService } from '@/api/services/job.service';
 import type { JobsStackParamList } from '@/navigation/types';
@@ -118,73 +124,202 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
 
   return (
     <ScreenContainer scrollable={false} contentContainerStyle={styles.container}>
-      {/* Geri Butonu */}
-      <View style={[styles.backButton, { top: insets.top + spacing.md }]}>
-        <Button
-          label=""
-          variant="ghost"
-          onPress={() => navigation.goBack()}
-          style={styles.backButtonInner}
-        />
-      </View>
-
       {/* Scrollable İçerik */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Back Button */}
+        <View style={styles.backButtonContainer}>
+          <BackButton />
+        </View>
         {/* Header Card */}
-        <Card padding="2xl" style={styles.headerCard}>
-          <View style={{ gap: spacing.md }}>
+        <Card variant="elevated" padding="2xl" style={styles.headerCard}>
+          <View style={{ gap: spacing.lg }}>
+            {/* Hospital Logo & Title */}
             <View style={styles.row}>
               <View style={styles.iconContainer}>
-                <Building2 size={32} color={colors.text.secondary} />
+                <Building2 size={32} color={colors.primary[600]} />
               </View>
               <View style={{ flex: 1, gap: spacing.xs }}>
-                <Typography variant="heading">{job.title ?? 'İş İlanı'}</Typography>
-                <Typography variant="bodySecondary">
+                <Typography variant="h2" style={styles.jobTitle}>
+                  {job.title ?? 'İş İlanı'}
+                </Typography>
+                <Typography variant="body" style={styles.hospitalName}>
                   {job.hospital_name ?? 'Kurum bilgisi yok'}
                 </Typography>
               </View>
             </View>
 
-            <View style={styles.divider} />
-
-            <View style={{ gap: spacing.sm }}>
-              <View style={styles.metaRow}>
-                <View style={styles.metaItem}>
-                  <MapPin size={14} color={colors.text.secondary} />
-                  <Typography variant="caption" style={styles.metaText}>
-                    {job.city_name ?? 'Lokasyon yok'}
-                  </Typography>
+            {/* Info Grid */}
+            <View style={styles.infoGrid}>
+              <View style={styles.infoCard}>
+                <View style={styles.infoIconContainer}>
+                  <MapPin size={18} color={colors.primary[600]} />
                 </View>
-                <View style={styles.metaItem}>
-                  <Briefcase size={14} color={colors.text.secondary} />
-                  <Typography variant="caption" style={styles.metaText}>
-                    {job.work_type ?? '-'}
-                  </Typography>
-                </View>
-                <View style={styles.metaItem}>
-                  <Clock size={14} color={colors.text.secondary} />
-                  <Typography variant="caption" style={styles.metaText}>
-                    {formatDate(job.created_at)}
-                  </Typography>
-                </View>
+                <Typography variant="caption" style={styles.infoLabel}>
+                  Lokasyon
+                </Typography>
+                <Typography variant="body" style={styles.infoValue}>
+                  {job.city_name ?? '-'}
+                </Typography>
               </View>
 
-              {job.salary_range && (
-                <View style={styles.salaryBox}>
-                  <Typography variant="caption" style={styles.salaryLabel}>
-                    Tahmini Maaş Aralığı
+              <View style={styles.infoCard}>
+                <View style={styles.infoIconContainer}>
+                  <Briefcase size={18} color={colors.primary[600]} />
+                </View>
+                <Typography variant="caption" style={styles.infoLabel}>
+                  Çalışma Tipi
+                </Typography>
+                <Typography variant="body" style={styles.infoValue}>
+                  {job.work_type ?? '-'}
+                </Typography>
+              </View>
+
+              <View style={styles.infoCard}>
+                <View style={styles.infoIconContainer}>
+                  <Calendar size={18} color={colors.primary[600]} />
+                </View>
+                <Typography variant="caption" style={styles.infoLabel}>
+                  Yayınlanma
+                </Typography>
+                <Typography variant="body" style={styles.infoValue}>
+                  {formatDate(job.created_at)}
+                </Typography>
+              </View>
+
+              {job.min_experience_years !== null && job.min_experience_years !== undefined && (
+                <View style={styles.infoCard}>
+                  <View style={styles.infoIconContainer}>
+                    <Users size={18} color={colors.primary[600]} />
+                  </View>
+                  <Typography variant="caption" style={styles.infoLabel}>
+                    Min. Deneyim
                   </Typography>
-                  <Typography variant="h3" style={styles.salaryValue}>
+                  <Typography variant="body" style={styles.infoValue}>
+                    {job.min_experience_years} yıl
+                  </Typography>
+                </View>
+              )}
+
+              {job.salary_range && (
+                <View style={styles.infoCard}>
+                  <View style={styles.infoIconContainer}>
+                    <DollarSign size={18} color={colors.success[600]} />
+                  </View>
+                  <Typography variant="caption" style={styles.infoLabel}>
+                    Maaş Aralığı
+                  </Typography>
+                  <Typography variant="body" style={styles.salaryInfoValue}>
                     {job.salary_range}
                   </Typography>
                 </View>
               )}
             </View>
+
+            {/* Specialty Info */}
+            {(job.specialty || job.subspecialty_name) && (
+              <View style={styles.specialtyContainer}>
+                {job.specialty && (
+                  <View style={styles.specialtyBadge}>
+                    <Typography variant="caption" style={styles.specialtyText}>
+                      {job.specialty}
+                    </Typography>
+                  </View>
+                )}
+                {job.subspecialty_name && (
+                  <View style={[styles.specialtyBadge, styles.subspecialtyBadge]}>
+                    <Typography variant="caption" style={styles.subspecialtyText}>
+                      {job.subspecialty_name}
+                    </Typography>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Applied Badge */}
+            {job.is_applied && (
+              <View style={styles.appliedBadgeInline}>
+                <CheckCircle size={18} color={colors.success[600]} />
+                <Typography variant="body" style={styles.appliedTextInline}>
+                  Başvuruldu
+                </Typography>
+              </View>
+            )}
           </View>
         </Card>
+
+        {/* Hastane Bilgileri */}
+        {(job.hospital_address || job.hospital_phone || job.hospital_email || job.hospital_website || job.hospital_about) && (
+          <Card padding="2xl" style={styles.contentCard}>
+            <Typography variant="h3" style={styles.sectionTitle}>
+              Hastane Bilgileri
+            </Typography>
+            <View style={{ gap: spacing.md }}>
+              {job.hospital_about && (
+                <View>
+                  <Typography variant="body" style={styles.hospitalAbout}>
+                    {job.hospital_about}
+                  </Typography>
+                  <View style={styles.divider} />
+                </View>
+              )}
+              {job.hospital_address && (
+                <View style={styles.hospitalInfoRow}>
+                  <MapPin size={16} color={colors.text.secondary} />
+                  <View style={{ flex: 1 }}>
+                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                      Adres
+                    </Typography>
+                    <Typography variant="body" style={styles.hospitalInfoValue}>
+                      {job.hospital_address}
+                    </Typography>
+                  </View>
+                </View>
+              )}
+              {job.hospital_phone && (
+                <View style={styles.hospitalInfoRow}>
+                  <Phone size={16} color={colors.text.secondary} />
+                  <View style={{ flex: 1 }}>
+                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                      Telefon
+                    </Typography>
+                    <Typography variant="body" style={styles.hospitalInfoValue}>
+                      {job.hospital_phone}
+                    </Typography>
+                  </View>
+                </View>
+              )}
+              {job.hospital_email && (
+                <View style={styles.hospitalInfoRow}>
+                  <Mail size={16} color={colors.text.secondary} />
+                  <View style={{ flex: 1 }}>
+                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                      E-posta
+                    </Typography>
+                    <Typography variant="body" style={styles.hospitalInfoValue}>
+                      {job.hospital_email}
+                    </Typography>
+                  </View>
+                </View>
+              )}
+              {job.hospital_website && (
+                <View style={styles.hospitalInfoRow}>
+                  <Globe size={16} color={colors.text.secondary} />
+                  <View style={{ flex: 1 }}>
+                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                      Website
+                    </Typography>
+                    <Typography variant="body" style={styles.linkText}>
+                      {job.hospital_website}
+                    </Typography>
+                  </View>
+                </View>
+              )}
+            </View>
+          </Card>
+        )}
 
         {/* İş Tanımı */}
         {job.description && (
@@ -199,21 +334,26 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         )}
 
         {/* Gereksinimler */}
-        {job.requirements && job.requirements.length > 0 && (
+        {job.requirements && (
           <Card padding="2xl" style={styles.contentCard}>
             <Typography variant="h3" style={styles.sectionTitle}>
               Aranan Nitelikler
             </Typography>
-            <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
-              {job.requirements.map((req: string, index: number) => (
-                <View key={index} style={styles.requirementRow}>
-                  <Typography variant="body" style={styles.bullet}>•</Typography>
-                  <Typography variant="bodySecondary" style={{ flex: 1 }}>
-                    {req}
-                  </Typography>
-                </View>
-              ))}
-            </View>
+            <Typography variant="body" style={styles.descriptionText}>
+              {job.requirements}
+            </Typography>
+          </Card>
+        )}
+
+        {/* Avantajlar */}
+        {job.benefits && (
+          <Card padding="2xl" style={styles.contentCard}>
+            <Typography variant="h3" style={styles.sectionTitle}>
+              Avantajlar
+            </Typography>
+            <Typography variant="body" style={styles.descriptionText}>
+              {job.benefits}
+            </Typography>
           </Card>
         )}
 
@@ -275,23 +415,120 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButton: {
-    position: 'absolute',
-    left: spacing.lg,
-    zIndex: 10,
+  backButtonContainer: {
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm, // BackButton için padding
   },
-  backButtonInner: {
-    backgroundColor: 'white',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-    borderRadius: 9999,
-    width: 40,
-    height: 40,
+  jobTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  hospitalName: {
+    color: colors.text.secondary,
+    fontSize: 15,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  infoCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: colors.background.secondary,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    gap: spacing.xs,
+  },
+  infoIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xs,
+  },
+  infoLabel: {
+    color: colors.text.secondary,
+    fontSize: 11,
+  },
+  infoValue: {
+    color: colors.text.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  appliedBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.success[50],
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignSelf: 'flex-start',
+  },
+  appliedTextInline: {
+    color: colors.success[700],
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  salaryInfoValue: {
+    color: colors.success[600],
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  specialtyContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+  },
+  specialtyBadge: {
+    backgroundColor: colors.primary[100],
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.lg,
+  },
+  specialtyText: {
+    color: colors.primary[700],
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  subspecialtyBadge: {
+    backgroundColor: colors.primary[50],
+  },
+  subspecialtyText: {
+    color: colors.primary[600],
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  hospitalAbout: {
+    color: colors.text.secondary,
+    lineHeight: 22,
+    marginBottom: spacing.md,
+  },
+  hospitalInfoRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  hospitalInfoLabel: {
+    color: colors.text.secondary,
+    fontSize: 11,
+    marginBottom: 2,
+  },
+  hospitalInfoValue: {
+    color: colors.text.primary,
+    fontSize: 14,
+  },
+  linkText: {
+    color: colors.primary[600],
+    fontSize: 14,
   },
   scrollContent: {
+    paddingHorizontal: spacing.md, // Daha dar padding, kartlar daha geniş
+    paddingTop: spacing.lg,
     paddingBottom: spacing['4xl'],
   },
   headerCard: {

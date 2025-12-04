@@ -37,6 +37,24 @@ export type JobsStackParamList = {
 };
 
 /**
+ * Profile Stack - Profile management
+ * Nested within the Profile tab
+ */
+export type ProfileStackParamList = {
+  ProfileMain: undefined;
+  ProfileEdit: undefined;
+};
+
+/**
+ * Settings Stack - Account settings
+ * Nested within the Settings tab
+ */
+export type SettingsStackParamList = {
+  SettingsMain: undefined;
+  ChangePassword: undefined;
+};
+
+/**
  * App Tab - Main authenticated navigation
  * Bottom tab navigator for primary app features
  */
@@ -44,9 +62,9 @@ export type AppTabParamList = {
   Dashboard: undefined;
   JobsTab: NavigatorScreenParams<JobsStackParamList>;
   Applications: undefined;
-  Profile: undefined;
   Notifications: undefined;
-  Settings: undefined;
+  ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
+  SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
 };
 
 /**
@@ -56,7 +74,9 @@ export type AppTabParamList = {
 export type RootNavigationParamList = RootStackParamList &
   AuthStackParamList &
   AppTabParamList &
-  JobsStackParamList;
+  JobsStackParamList &
+  ProfileStackParamList &
+  SettingsStackParamList;
 
 /**
  * Navigation prop types for type-safe navigation
@@ -65,3 +85,5 @@ export type RootStackNavigationProp = NativeStackNavigationProp<RootStackParamLi
 export type AuthStackNavigationProp = NativeStackNavigationProp<AuthStackParamList>;
 export type AppTabNavigationProp = BottomTabNavigationProp<AppTabParamList>;
 export type JobsStackNavigationProp = NativeStackNavigationProp<JobsStackParamList>;
+export type ProfileStackNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+export type SettingsStackNavigationProp = NativeStackNavigationProp<SettingsStackParamList>;

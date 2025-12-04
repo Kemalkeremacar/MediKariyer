@@ -22,8 +22,8 @@
 // TRANSFORMER FONKSİYONLARI
 // ============================================================================
 
-const toMobileProfile = (profile = {}, includePhoto = false) => {
-  const baseProfile = {
+const toMobileProfile = (profile = {}) => {
+  return {
     id: profile.id,
     user_id: profile.user_id,
     first_name: profile.first_name || null,
@@ -35,6 +35,7 @@ const toMobileProfile = (profile = {}, includePhoto = false) => {
     subspecialty_name: profile.subspecialty_name || null,
     dob: profile.dob || null,
     phone: profile.phone || null,
+    profile_photo: profile.profile_photo || null,
     birth_place_id: profile.birth_place_id || null,
     birth_place_name: profile.birth_place_name || null,
     residence_city_id: profile.residence_city_id || null,
@@ -43,16 +44,6 @@ const toMobileProfile = (profile = {}, includePhoto = false) => {
     created_at: profile.created_at || null,
     updated_at: profile.updated_at || null
   };
-
-  // Profile photo sadece istendiğinde ekle (çok büyük olabileceği için)
-  if (includePhoto) {
-    baseProfile.profile_photo = profile.profile_photo || null;
-  } else {
-    // Photo varsa sadece var olduğunu belirt
-    baseProfile.has_photo = !!profile.profile_photo;
-  }
-
-  return baseProfile;
 };
 
 // ============================================================================

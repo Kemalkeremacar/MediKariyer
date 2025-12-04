@@ -1,1 +1,0 @@
-export { ApplicationsScreen } from './ApplicationsScreen';

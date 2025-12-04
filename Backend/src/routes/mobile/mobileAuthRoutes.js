@@ -36,7 +36,8 @@ const {
   mobileLoginSchema,
   mobileRefreshTokenSchema,
   mobileLogoutSchema,
-  mobileRegisterDoctorSchema
+  mobileRegisterDoctorSchema,
+  mobileChangePasswordSchema
 } = require('../../validators/mobileSchemas');
 
 const router = express.Router();
@@ -52,6 +53,7 @@ router.post('/logout', validateBody(mobileLogoutSchema), mobileAuthController.lo
 const { authMiddleware } = require('../../middleware/authMiddleware');
 const { requireDoctor } = require('../../middleware/roleGuard');
 router.get('/me', authMiddleware, requireDoctor, mobileAuthController.getMe);
+router.post('/change-password', authMiddleware, requireDoctor, validateBody(mobileChangePasswordSchema), mobileAuthController.changePassword);
 
 router.use(mobileErrorBoundary);
 

@@ -1,160 +1,128 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import {
-  Briefcase,
-  FileText,
-  TrendingUp,
-  ChevronRight,
-  Clock,
-} from 'lucide-react-native';
-import { Typography } from '@/components/ui/Typography';
-import { Card } from '@/components/ui/Card';
+import { Edit3, Bell } from 'lucide-react-native';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
 import type { AppTabParamList } from '@/navigation/types';
-import { useDashboard } from '../hooks/useDashboard';
+import { useDashboardData } from '../hooks/useDashboardData';
+import { ProfileHero } from '../components/ProfileHero';
+import { SpecialtyChips } from '../components/SpecialtyChips';
+import { StatsSection } from '../components/StatsSection';
+import { RecommendedJobCard } from '../components/RecommendedJobCard';
 
 export const DashboardScreen = () => {
   const navigation = useNavigation<BottomTabNavigationProp<AppTabParamList>>();
   const user = useAuthStore((state) => state.user);
 
-  const { data, isLoading, error, refetch, isRefetching } = useDashboard();
-
-  const completionPercent = data?.stats?.profile_completion_percent || 0;
-  const needsCompletion = completionPercent < 100;
+  const {
+    profile,
+    stats,
+    recommendedJobs,
+    completionPercentage,
+    isLoading,
+    error,
+  } = useDashboardData();
 
   const renderContent = () => {
-    if (!data) return null;
+    if (!profile) return null;
 
     return (
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-      >
-        {/* Simple Greeting */}
-        <View style={styles.greetingSection}>
-          <Typography variant="h1" style={styles.greeting}>
-            Hoş geldin, Dr. {user?.first_name?.trim() || 'Doktor'}
-          </Typography>
-        </View>
-
-        {/* Main Action Buttons */}
-        <View style={styles.actionButtons}>
+      <>
+        {/* Header */}
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('JobsTab')}
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('ProfileTab', { screen: 'ProfileMain' })}
+            accessibilityLabel="Profilim"
           >
-            <Card variant="elevated" padding="2xl" style={styles.actionCard}>
-              <View style={styles.actionIconContainer}>
-                <Briefcase size={32} color={colors.primary[600] as any} />
-              </View>
-              <Typography variant="h3" style={styles.actionLabel}>
-                İlanlar
-              </Typography>
-              <Typography variant="caption" style={styles.actionSubtext}>
-                {data.recommended_jobs?.length || 0} yeni ilan
-              </Typography>
-            </Card>
+            <Edit3 size={24} color={colors.primary[600]} />
           </TouchableOpacity>
-
+          
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('Applications')}
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('Notifications')}
+            accessibilityLabel="Bildirimler"
           >
-            <Card variant="elevated" padding="2xl" style={styles.actionCard}>
-              <View style={styles.actionIconContainer}>
-                <FileText size={32} color={colors.success[600] as any} />
-              </View>
-              <Typography variant="h3" style={styles.actionLabel}>
-                Başvurularım
-              </Typography>
-              <Typography variant="caption" style={styles.actionSubtext}>
-                {data.recent_applications?.length || 0} aktif başvuru
-              </Typography>
-            </Card>
+            <Bell size={24} color={colors.primary[600]} />
           </TouchableOpacity>
         </View>
 
-        {/* Notifications / Quick Actions Section */}
-        <View style={styles.notificationsSection}>
-          <Typography variant="h3" style={styles.sectionTitle}>
-            Bildirimler & Hızlı Aksiyonlar
-          </Typography>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Profile Hero */}
+          <ProfileHero
+          profilePhoto={profile.profile_photo || undefined}
+          title={profile.title || 'Dr.'}
+          fullName={`${profile.first_name} ${profile.last_name}`}
+          specialty={profile.specialty_name || 'Genel Pratisyen'}
+          city={profile.residence_city_name || 'İstanbul'}
+          completionPercentage={completionPercentage}
+        />
 
-          {/* Profile Completion */}
-          {needsCompletion && (
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-              <Card variant="outlined" padding="lg" style={styles.notificationCard}>
-                <View style={styles.notificationContent}>
-                  <View style={styles.notificationIcon}>
-                    <TrendingUp size={20} color={colors.warning[600] as any} />
-                  </View>
-                  <View style={styles.notificationText}>
-                    <Typography variant="body" style={styles.notificationTitle}>
-                      Profilini Tamamla
-                    </Typography>
-                    <Typography variant="caption" style={styles.notificationSubtext}>
-                      %{completionPercent} tamamlandı
-                    </Typography>
-                  </View>
-                  <ChevronRight size={20} color={colors.text.secondary as any} />
-                </View>
-              </Card>
-            </TouchableOpacity>
-          )}
+        {/* Specialty Chips */}
+        {profile.specialty_name && (
+          <View style={styles.section}>
+            <SpecialtyChips
+              specialties={[profile.specialty_name, profile.subspecialty_name].filter(Boolean) as string[]}
+              maxVisible={3}
+              onViewAll={() => navigation.navigate('ProfileTab', { screen: 'ProfileMain' })}
+            />
+          </View>
+        )}
 
-          {/* Recent Applications Summary */}
-          {data.recent_applications && data.recent_applications.length > 0 && (
-            <TouchableOpacity onPress={() => navigation.navigate('Applications')}>
-              <Card variant="outlined" padding="lg" style={styles.notificationCard}>
-                <View style={styles.notificationContent}>
-                  <View style={styles.notificationIcon}>
-                    <Clock size={20} color={colors.primary[600] as any} />
-                  </View>
-                  <View style={styles.notificationText}>
-                    <Typography variant="body" style={styles.notificationTitle}>
-                      Başvurun değerlendiriliyor
-                    </Typography>
-                    <Typography variant="caption" style={styles.notificationSubtext}>
-                      {data.recent_applications[0].hospital_name}
-                    </Typography>
-                  </View>
-                  <ChevronRight size={20} color={colors.text.secondary as any} />
-                </View>
-              </Card>
-            </TouchableOpacity>
-          )}
+        {/* Stats Section */}
+        {stats && (
+          <View style={styles.section}>
+            <StatsSection
+              activeJobsCount={stats.activeJobsCount || 0}
+              pendingApplicationsCount={stats.pendingApplicationsCount || 0}
+              pendingChangesCount={stats.pendingChangesCount || 0}
+              profileCompletionPercent={completionPercentage}
+            />
+          </View>
+        )}
 
-          {/* Recommended Jobs Summary */}
-          {data.recommended_jobs && data.recommended_jobs.length > 0 && (
-            <TouchableOpacity onPress={() => navigation.navigate('JobsTab')}>
-              <Card variant="outlined" padding="lg" style={styles.notificationCard}>
-                <View style={styles.notificationContent}>
-                  <View style={styles.notificationIcon}>
-                    <Briefcase size={20} color={colors.success[600] as any} />
-                  </View>
-                  <View style={styles.notificationText}>
-                    <Typography variant="body" style={styles.notificationTitle}>
-                      Yeni ilanlar mevcut
-                    </Typography>
-                    <Typography variant="caption" style={styles.notificationSubtext}>
-                      {data.recommended_jobs.length} ilan seni bekliyor
-                    </Typography>
-                  </View>
-                  <ChevronRight size={20} color={colors.text.secondary as any} />
-                </View>
-              </Card>
-            </TouchableOpacity>
-          )}
-        </View>
-      </ScrollView>
+        {/* Recommended Jobs */}
+        {recommendedJobs && recommendedJobs.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Önerilen İlanlar</Text>
+              {recommendedJobs.length > 3 && (
+                <TouchableOpacity onPress={() => navigation.navigate('JobsTab', { screen: 'JobsList' })}>
+                  <Text style={styles.viewAllLink}>Tümünü gör</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            {recommendedJobs.slice(0, 5).map((job: any) => (
+              <RecommendedJobCard
+                key={job.id}
+                hospitalName={job.hospital_name}
+                positionTitle={job.position_title}
+                city={job.city}
+                workType={job.work_type}
+                onDetailPress={() => navigation.navigate('JobsTab', { 
+                  screen: 'JobDetail', 
+                  params: { id: job.id } 
+                })}
+                onQuickApplyPress={() => {
+                  // Quick apply logic
+                  navigation.navigate('JobsTab', { 
+                    screen: 'JobDetail', 
+                    params: { id: job.id } 
+                  });
+                }}
+              />
+            ))}
+          </View>
+        )}
+        </ScrollView>
+      </>
     );
   };
 
@@ -162,7 +130,6 @@ export const DashboardScreen = () => {
     <Screen
       loading={isLoading}
       error={error as Error | null}
-      onRetry={refetch}
       scrollable={false}
     >
       {renderContent()}
@@ -171,83 +138,49 @@ export const DashboardScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.background.primary,
+  },
+  headerButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
   },
   content: {
-    padding: spacing.lg, // 16px horizontal padding (8px grid)
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing['4xl'],
+    gap: spacing['3xl'],
   },
-  
-  // Greeting Section
-  greetingSection: {
-    marginBottom: spacing['2xl'], // 24px spacing (8px grid)
+  section: {
+    marginBottom: spacing['3xl'],
   },
-  greeting: {
-    color: colors.text.primary,
-  },
-
-  // Main Action Buttons
-  actionButtons: {
+  sectionHeader: {
     flexDirection: 'row',
-    gap: spacing.lg, // 16px gap between buttons
-    marginBottom: spacing['2xl'], // 24px spacing
-  },
-  actionButton: {
-    flex: 1,
-  },
-  actionCard: {
     alignItems: 'center',
-    minHeight: 120, // Sufficient height for prominent buttons
-  },
-  actionIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: spacing.lg, // 16px rounded
-    backgroundColor: colors.background.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.md, // 12px spacing
-  },
-  actionLabel: {
-    marginBottom: spacing.xs, // 4px spacing
-    textAlign: 'center',
-  },
-  actionSubtext: {
-    color: colors.text.secondary,
-    textAlign: 'center',
-  },
-
-  // Notifications Section
-  notificationsSection: {
-    marginBottom: spacing['2xl'], // 24px spacing
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
   sectionTitle: {
-    marginBottom: spacing.lg, // 16px spacing
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text.primary,
   },
-  notificationCard: {
-    marginBottom: spacing.lg, // 16px spacing between cards
-  },
-  notificationContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md, // 12px gap
-  },
-  notificationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: spacing.sm, // 8px rounded
-    backgroundColor: colors.background.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notificationText: {
-    flex: 1,
-  },
-  notificationTitle: {
-    marginBottom: spacing.xs / 2, // 2px spacing
-  },
-  notificationSubtext: {
-    color: colors.text.secondary,
+  viewAllLink: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary[600],
   },
 });

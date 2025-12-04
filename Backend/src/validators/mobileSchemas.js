@@ -142,6 +142,21 @@ const mobileLogoutSchema = Joi.object({
   })
 });
 
+/**
+ * Mobile Change Password Schema
+ * @description Mobile şifre değiştirme endpoint için validasyon
+ */
+const mobileChangePasswordSchema = Joi.object({
+  currentPassword: Joi.string().required().messages({
+    'any.required': 'Mevcut şifre zorunludur'
+  }),
+  newPassword: passwordSchema,
+  confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+    'any.only': 'Şifreler eşleşmiyor',
+    'any.required': 'Şifre tekrarı zorunludur'
+  })
+});
+
 // ==================== MOBILE APPLICATION SCHEMAS ====================
 
 /**
@@ -218,8 +233,8 @@ const mobileJobsQuerySchema = paginationQuerySchema.keys({
     'number.integer': 'City ID tam sayı olmalıdır',
     'number.positive': 'City ID pozitif bir sayı olmalıdır'
   }),
-  work_type: Joi.string().valid('tam_zamanli', 'yari_zamanli', 'nobet').optional().messages({
-    'any.only': 'Work type tam_zamanli, yari_zamanli veya nobet olmalıdır'
+  employment_type: Joi.string().max(100).optional().messages({
+    'string.max': 'Employment type en fazla 100 karakter olabilir'
   }),
   search: Joi.string().max(100).trim().allow('').optional().messages({
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
@@ -236,8 +251,8 @@ const mobileApplicationsQuerySchema = paginationQuerySchema.keys({
     'number.integer': 'Status ID tam sayı olmalıdır',
     'number.positive': 'Status ID pozitif bir sayı olmalıdır'
   }),
-  status: Joi.string().valid('pending', 'reviewing', 'approved', 'rejected', 'withdrawn').optional().messages({
-    'any.only': 'Status pending, reviewing, approved, rejected veya withdrawn olmalıdır'
+  status: Joi.string().valid('pending', 'reviewing', 'approved', 'rejected', 'withdrawn', 'Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Red Edildi', 'Geri Çekildi').optional().messages({
+    'any.only': 'Status geçerli bir başvuru durumu olmalıdır'
   })
 });
 
@@ -290,6 +305,7 @@ module.exports = {
   mobileLoginSchema,
   mobileRefreshTokenSchema,
   mobileLogoutSchema,
+  mobileChangePasswordSchema,
   
   // Applications
   mobileCreateApplicationSchema,

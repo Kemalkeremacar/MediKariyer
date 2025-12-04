@@ -61,11 +61,18 @@ const getMe = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Kullanıcı bilgileri getirildi', result);
 });
 
+const changePassword = catchAsync(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  await mobileAuthService.changePassword(req.user.id, { currentPassword, newPassword });
+  return sendSuccess(res, 'Şifre başarıyla değiştirildi');
+});
+
 module.exports = {
   registerDoctor,
   login,
   refreshToken,
   logout,
-  getMe
+  getMe,
+  changePassword
 };
 

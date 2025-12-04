@@ -42,6 +42,7 @@ export interface DoctorRegistrationPayload {
   specialty_id?: number;
   subspecialty_id?: number;
   residence_city_id?: number;
+  profile_photo?: string;
 }
 
 export interface DoctorRegistrationResponse {

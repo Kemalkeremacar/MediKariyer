@@ -3,8 +3,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Edit } from 'lucide-react-native';
+import { View, StyleSheet } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Typography } from '@/components/ui/Typography';
@@ -18,7 +17,6 @@ interface ProfileInfoCardProps {
   subspecialty?: string | null;
   email?: string;
   completionPercent: number;
-  onEditPress: () => void;
 }
 
 export const ProfileInfoCard = ({
@@ -29,7 +27,6 @@ export const ProfileInfoCard = ({
   subspecialty,
   email,
   completionPercent,
-  onEditPress,
 }: ProfileInfoCardProps) => {
   const needsCompletion = completionPercent < 100;
   const fullName = `${firstName} ${lastName}`;
@@ -72,13 +69,6 @@ export const ProfileInfoCard = ({
           </Typography>
         </View>
       )}
-
-      <TouchableOpacity style={styles.editButton} onPress={onEditPress}>
-        <Edit size={16} color={colors.primary[600]} />
-        <Typography variant="body" style={styles.editButtonText}>
-          Profili Düzenle
-        </Typography>
-      </TouchableOpacity>
     </Card>
   );
 };
@@ -144,20 +134,5 @@ const styles = StyleSheet.create({
   },
   completionHint: {
     color: colors.text.secondary,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    padding: spacing.md,
-    backgroundColor: colors.primary[50],
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.primary[200],
-  },
-  editButtonText: {
-    color: colors.primary[600],
-    fontWeight: '600',
   },
 });

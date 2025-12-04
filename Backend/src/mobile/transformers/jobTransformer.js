@@ -61,11 +61,13 @@ const toListItem = (job = {}) => ({
 const toDetail = (job = {}) => ({
   ...toListItem(job),
   description: job.short_description || job.description || null,
-  requirements: Array.isArray(job.requirements)
-    ? job.requirements.slice(0, 5)
-    : (job.requirements ? job.requirements.split('\n').filter(Boolean).slice(0, 5) : []),
-  benefits: job.benefits || null,
-  application_deadline: job.application_deadline || null
+  min_experience_years: job.min_experience_years ?? null,
+  subspecialty_name: job.subspecialty_name || null,
+  hospital_address: job.hospital_address || null,
+  hospital_phone: job.hospital_phone || null,
+  hospital_email: job.hospital_email || null,
+  hospital_website: job.hospital_website || null,
+  hospital_about: job.hospital_about || null,
 });
 
 // ============================================================================

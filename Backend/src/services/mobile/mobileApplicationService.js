@@ -45,6 +45,21 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
   const currentPage = Math.max(Number(page) || 1, 1);
   const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
 
+  // İngilizce status değerlerini Türkçe'ye çevir (veritabanındaki değerlerle eşleşmeli)
+  // Hem İngilizce hem Türkçe değerleri kabul et
+  const statusMapping = {
+    'pending': 'Başvuruldu',
+    'reviewing': 'İnceleniyor',
+    'approved': 'Kabul Edildi',
+    'rejected': 'Red Edildi',
+    'withdrawn': 'Geri Çekildi',
+    'başvuruldu': 'Başvuruldu',
+    'inceleniyor': 'İnceleniyor',
+    'kabul edildi': 'Kabul Edildi',
+    'red edildi': 'Red Edildi',
+    'geri çekildi': 'Geri Çekildi'
+  };
+
   const baseQuery = db('applications as a')
     .leftJoin('jobs as j', 'j.id', 'a.job_id')
     .leftJoin('hospital_profiles as hp', 'hp.id', 'j.hospital_id')
@@ -53,7 +68,9 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
     .whereNull('a.deleted_at');
 
   if (status) {
-    baseQuery.andWhere('st.name', status);
+    // Hem İngilizce hem Türkçe değerleri kabul et
+    const turkishStatus = statusMapping[status.toLowerCase()] || status;
+    baseQuery.andWhere('st.name', turkishStatus);
   }
 
   const countQuery = baseQuery.clone().clearSelect().clearOrder().count({ count: '*' }).first();
@@ -105,32 +122,65 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
 const getApplicationDetail = async (userId, applicationId) => {
   const profile = await getDoctorProfile(userId);
 
-  const application = await db('applications as a')
-    .leftJoin('jobs as j', 'j.id', 'a.job_id')
-    .leftJoin('hospital_profiles as hp', 'hp.id', 'j.hospital_id')
-    .leftJoin('application_statuses as st', 'st.id', 'a.status_id')
-    .select(
-      'a.id',
-      'a.job_id',
-      'a.doctor_profile_id',
-      'a.status_id',
-      'a.applied_at as created_at', // SQL'de applied_at var, created_at yok
-      'a.updated_at',
-      'a.cover_letter',
-      'a.notes',
-      'a.deleted_at',
-      'j.title as job_title',
-      'hp.institution_name as hospital_name',
-      'st.name as status_label'
-    )
-    .where('a.id', applicationId)
-    .where('a.doctor_profile_id', profile.id)
-    .whereNull('a.deleted_at')
-    .first();
+  // Web backend'deki gibi ayrı ayrı sorgular - Knex SQL Server bug'ını bypass et
+  // Önce applications tablosundan temel veriyi al
+  const applications = await db('applications')
+    .select('*')
+    .where('id', applicationId)
+    .where('doctor_profile_id', profile.id)
+    .whereNull('deleted_at');
 
-  if (!application) {
+  if (!applications || applications.length === 0) {
     throw new AppError('Başvuru bulunamadı', 404);
   }
+
+  const application = applications[0];
+
+  // Job bilgilerini al - .first() yerine array döndür
+  if (application.job_id) {
+    const jobs = await db('jobs as j')
+      .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+      .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
+      .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+      .select(
+        'j.title as job_title',
+        'j.description',
+        'j.employment_type',
+        'j.min_experience_years',
+        'hp.institution_name as hospital_name',
+        'hp.address as hospital_address',
+        'hp.phone as hospital_phone',
+        'hp.email as hospital_email',
+        'hp.website as hospital_website',
+        'hp.about as hospital_about',
+        'c.name as city_name',
+        's.name as specialty_name',
+        'ss.name as subspecialty_name'
+      )
+      .where('j.id', application.job_id);
+
+    const job = jobs[0];
+    if (job) {
+      Object.assign(application, job);
+    }
+  }
+
+  // Status bilgisini al - .first() yerine array döndür
+  if (application.status_id) {
+    const statuses = await db('application_statuses')
+      .select('name as status_label')
+      .where('id', application.status_id);
+
+    const status = statuses[0];
+    if (status) {
+      application.status_label = status.status_label;
+      application.status = status.status_label;
+    }
+  }
+
+  // created_at için applied_at kullan
+  application.created_at = application.applied_at;
 
   return applicationTransformer.toDetail(application);
 };

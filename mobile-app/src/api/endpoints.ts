@@ -13,6 +13,7 @@ export const endpoints = {
     refreshToken: '/auth/refresh',
     logout: '/auth/logout',
     me: '/auth/me',
+    changePassword: '/auth/change-password',
   },
   doctor: {
     dashboard: '/doctor/dashboard',

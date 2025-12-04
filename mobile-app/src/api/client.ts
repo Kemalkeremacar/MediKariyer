@@ -30,7 +30,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     async (config) => {
       console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
-      console.log('📤 Request data:', JSON.stringify(config.data, null, 2));
+      // Don't log request data to avoid logging base64 images
       
       const token = await tokenManager.getAccessToken();
       if (token && config.headers) {
@@ -56,7 +56,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
     (response) => {
       console.log('📥 API Response:', response.config.method?.toUpperCase(), response.config.url);
       console.log('📥 Response status:', response.status);
-      console.log('📥 Response data:', JSON.stringify(response.data, null, 2));
+      // Don't log response data to avoid logging base64 images
       return response;
     },
     async (error) => {

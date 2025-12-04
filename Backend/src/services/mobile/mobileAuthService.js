@@ -167,6 +167,31 @@ const getMe = async (userId) => {
   };
 };
 
+const changePassword = async (userId, { currentPassword, newPassword }) => {
+  const db = require('../../config/dbConfig').db;
+  const bcrypt = require('bcryptjs');
+  const logger = require('../../utils/logger');
+
+  // Kullanıcıyı veritabanından getir
+  const user = await db('users').where('id', userId).first();
+  if (!user) throw new AppError('Kullanıcı bulunamadı', 404);
+
+  // Mevcut şifreyi doğrula
+  const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+  if (!isValid) throw new AppError('Mevcut şifre yanlış', 400);
+
+  // Yeni şifreyi hash'le ve güncelle
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await db('users').where('id', user.id).update({
+    password_hash: hashedPassword,
+    updated_at: db.fn.now()
+  });
+
+  logger.info(`Password changed for user: ${user.email} (mobile)`);
+  
+  return { success: true };
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -176,6 +201,7 @@ module.exports = {
   login,
   refresh,
   logout,
-  getMe
+  getMe,
+  changePassword
 };
 

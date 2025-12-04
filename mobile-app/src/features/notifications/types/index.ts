@@ -20,6 +20,14 @@ export interface NotificationResponse {
     total: number;
     unread_count: number;
   };
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
 }
 
 export type NotificationsResponse = NotificationResponse;

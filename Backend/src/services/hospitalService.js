@@ -1586,10 +1586,7 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
         'rc.name as residence_city_name',
         'dp.phone',
         'dp.title',
-        'dp.work_type',
         'dp.profile_photo',
-        'dp.photo_status',
-        'dp.region',
         's.name as specialty_name',
         'ss.name as subspecialty_name',
         'u.email',
@@ -1610,10 +1607,7 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
 
     let doctors = doctorRows.map((doctor) => ({
       ...doctor,
-      specialties: doctor.specialty_name || null,
-      work_type: doctor.work_type ?? null,
-      photo_status: doctor.photo_status ?? null,
-      region: doctor.region ?? null
+      specialties: doctor.specialty_name || null
     }));
 
     if (doctors.length > 0) {

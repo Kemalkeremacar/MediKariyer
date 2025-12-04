@@ -12,9 +12,16 @@ export interface JobListItem {
 
 export interface JobDetail extends JobListItem {
   description: string | null;
-  requirements: string[];
+  requirements: string | null;
   benefits: string | null;
   application_deadline: string | null;
+  min_experience_years: number | null;
+  subspecialty_name: string | null;
+  hospital_address: string | null;
+  hospital_phone: string | null;
+  hospital_email: string | null;
+  hospital_website: string | null;
+  hospital_about: string | null;
 }
 
 export interface JobsPagination {
