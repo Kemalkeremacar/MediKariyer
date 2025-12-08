@@ -157,7 +157,7 @@ const MainLayout = () => {
 
   if (isAuthPage) {
     return (
-      <div className="flex flex-col w-full bg-gradient-to-br from-blue-900 via-indigo-900 to-blue-800">
+      <div className="flex flex-col w-full min-h-screen bg-white">
         {/* Üst Navigasyon (reset-password hariç) */}
         {showAuthHeader && <Header />}
 

@@ -46,7 +46,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
@@ -62,8 +62,46 @@ import logoImage from '../../assets/logo.jpg';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Scroll event listener - Public sayfada scroll durumunu takip et
+  useEffect(() => {
+    const isPublicPage = location.pathname === '/';
+    
+    // Public sayfa değilse active section'ı sıfırla
+    if (!isPublicPage) {
+      setActiveSection('');
+      return;
+    }
+
+    const handleScroll = () => {
+      const offset = window.scrollY;
+      setScrolled(offset > 100);
+
+      // Active section detection - sadece ana sayfada
+      const sections = ['home', 'about', 'contact'];
+      const scrollPosition = window.scrollY + 150; // Header yüksekliği + offset
+
+      for (const sectionId of sections) {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(sectionId);
+            break;
+          }
+        }
+      }
+    };
+
+    handleScroll(); // İlk yüklemede çalıştır
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [location.pathname]);
 
   // ============================================================================
   // NAVIGATION CONFIGURATION - Rol bazlı navigasyon yapılandırması
@@ -75,9 +113,9 @@ const Header = () => {
    */
   const navLinksByRole = {
     guest: [
-      { to: ROUTE_CONFIG.PUBLIC.HOME, text: 'Ana Sayfa' },
-      { to: ROUTE_CONFIG.PUBLIC.ABOUT, text: 'Hakkımızda' },
-      { to: ROUTE_CONFIG.PUBLIC.CONTACT, text: 'İletişim' },
+      { to: '/#home', text: 'Ana Sayfa', isHash: true },
+      { to: '/#about', text: 'Hakkımızda', isHash: true },
+      { to: '/#contact', text: 'İletişim', isHash: true },
     ],
     admin: [], // Admin için navigation menü yok, sadece dropdown
     doctor: [
@@ -112,8 +150,10 @@ const Header = () => {
 
   /**
    * Mevcut kullanıcı rolüne göre navigasyon linklerini al
+   * Login/Register sayfalarında da guest navigation göster
    */
-  const navLinks = navLinksByRole[user?.role || 'guest'];
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const navLinks = (isAuthPage || !user) ? navLinksByRole.guest : navLinksByRole[user.role || 'guest'];
 
   // ============================================================================
   // EVENT HANDLERS - Event handler fonksiyonları
@@ -122,8 +162,15 @@ const Header = () => {
   /**
    * Logo tıklama handler
    * Kullanıcının rolüne göre uygun dashboard'a yönlendirir
+   * Login/Register sayfalarından ana sayfaya dönüş sağlar
    */
   const handleLogoClick = () => {
+    // Login/Register sayfalarındaysa ana sayfaya dön
+    if (isAuthPage) {
+      navigate(ROUTE_CONFIG.PUBLIC.HOME);
+      return;
+    }
+    
     if (user?.role === 'admin') {
       navigate(ROUTE_CONFIG.ADMIN.DASHBOARD);
     } else if (user?.role === 'doctor') {
@@ -146,7 +193,65 @@ const Header = () => {
     navigate('/', { replace: true });
   };
 
-  const NavLinkItem = ({ to, text, exact = false, ...props }) => {
+  const NavLinkItem = ({ to, text, exact = false, isHash = false, ...props }) => {
+    const location = useLocation();
+    
+    // Hash navigation için özel handler
+    const handleHashClick = (e) => {
+      if (isHash) {
+        e.preventDefault();
+        const hash = to.split('#')[1];
+        
+        // Eğer farklı bir sayfadaysak, önce ana sayfaya git
+        if (location.pathname !== '/') {
+          navigate(`/#${hash}`);
+          // Ana sayfaya gittikten sonra scroll yapılacak (LandingPage useEffect'i ile)
+          return;
+        }
+        
+        // Aynı sayfadaysak direkt scroll yap
+        const element = document.getElementById(hash);
+        if (element) {
+          // scrollIntoView kullan - CSS scroll-margin otomatik uygulanır
+          element.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start'
+          });
+        }
+        // URL'i güncelle
+        window.history.pushState(null, '', to);
+      }
+    };
+
+    // Hash navigation için active state kontrolü
+    // Sadece ana sayfada (/) active state göster
+    const hash = to.split('#')[1];
+    const isActive = isHash && location.pathname === '/'
+      ? activeSection === hash
+      : false;
+
+    if (isHash) {
+      return (
+        <a
+          href={to}
+          onClick={handleHashClick}
+          className={`group relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+            isActive 
+              ? 'bg-blue-500/10 text-blue-600' 
+              : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+          }`}
+          {...props}
+        >
+          <span className="transition-colors">
+            {text}
+          </span>
+          {isActive && (
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full"></div>
+          )}
+        </a>
+      );
+    }
+
     return (
       <NavLink
         to={to}
@@ -187,8 +292,15 @@ const Header = () => {
     return 'text-gray-900';
   };
 
+  const isPublicPage = location.pathname === '/';
+  const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+
   return (
-    <header className={`${getHeaderColors()} backdrop-blur-md shadow-lg sticky top-0 z-40 border-b border-gray-200`}>
+    <header className={`${getHeaderColors()} backdrop-blur-md shadow-lg ${
+      isPublicPage ? 'fixed' : isAuthRoute ? 'relative' : 'sticky'
+    } ${isPublicPage || isAuthRoute ? '' : 'top-0'} ${isPublicPage ? 'left-0 right-0' : ''} z-50 border-b border-gray-200 transition-all duration-300 ${
+      isPublicPage && !scrolled ? 'bg-white/80' : 'bg-white/95'
+    }`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo - 4 Parametre Planına Göre */}
@@ -217,7 +329,9 @@ const Header = () => {
             {navLinks.map((link, index) => (
               <NavLinkItem 
                 key={`${link.to}-${index}`} 
-                {...link} 
+                to={link.to}
+                text={link.text}
+                isHash={link.isHash}
                 exact={link.to === ROUTE_CONFIG.DOCTOR.DASHBOARD || link.to === ROUTE_CONFIG.HOSPITAL.DASHBOARD}
               />
             ))}
@@ -526,16 +640,51 @@ const Header = () => {
 
                   {/* Navigation Links */}
                   <div className="px-2 py-2">
-                    {navLinks.map((link, index) => (
-                      <Link
-                        key={`mobile-dropdown-nav-${link.to}-${index}`}
-                        to={link.to}
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
-                      >
-                        <span className="text-sm font-medium">{link.text}</span>
-                      </Link>
-                    ))}
+                    {navLinks.map((link, index) => {
+                      if (link.isHash) {
+                        return (
+                          <a
+                            key={`mobile-dropdown-nav-${link.to}-${index}`}
+                            href={link.to}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              const hash = link.to.split('#')[1];
+                              
+                              // Eğer farklı bir sayfadaysak, önce ana sayfaya git
+                              if (location.pathname !== '/') {
+                                navigate(`/#${hash}`);
+                                setIsUserMenuOpen(false);
+                                return;
+                              }
+                              
+                              // Aynı sayfadaysak direkt scroll yap
+                              const element = document.getElementById(hash);
+                              if (element) {
+                                element.scrollIntoView({ 
+                                  behavior: 'smooth', 
+                                  block: 'start'
+                                });
+                              }
+                              window.history.pushState(null, '', link.to);
+                              setIsUserMenuOpen(false);
+                            }}
+                            className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                          >
+                            <span className="text-sm font-medium">{link.text}</span>
+                          </a>
+                        );
+                      }
+                      return (
+                        <Link
+                          key={`mobile-dropdown-nav-${link.to}-${index}`}
+                          to={link.to}
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                        >
+                          <span className="text-sm font-medium">{link.text}</span>
+                        </Link>
+                      );
+                    })}
                   </div>
 
 

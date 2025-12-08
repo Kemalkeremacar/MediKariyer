@@ -42,8 +42,8 @@
 export const ROUTE_CONFIG = {
   PUBLIC: {
     HOME: '/',
-    ABOUT: '/about',
-    CONTACT: '/contact',
+    ABOUT: '/#about',
+    CONTACT: '/#contact',
     LOGIN: '/login',
     REGISTER: '/register',
     PENDING_APPROVAL: '/pending-approval',

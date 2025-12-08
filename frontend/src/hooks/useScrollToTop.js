@@ -52,13 +52,18 @@ const useScrollToTop = () => {
   const location = useLocation();
 
   useEffect(() => {
+    // Hash navigation varsa scroll yapma (tek sayfa scroll için)
+    if (location.hash) {
+      return;
+    }
+    
     // Sayfa değiştiğinde en üste scroll
     window.scrollTo({
       top: 0,
       left: 0,
       behavior: 'smooth'
     });
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 };
 
 export default useScrollToTop;

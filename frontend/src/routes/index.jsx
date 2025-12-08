@@ -117,9 +117,7 @@ import ApprovalGuard from '@/middleware/ApprovalGuard';
  * Bu sayfalar herhangi bir kimlik doğrulama veya yetkilendirme gerektirmez
  * Tüm kullanıcılar (authenticate olanlar ve misafirler) erişebilir
  */
-import HomePage from '../features/public/pages/HomePage';
-import AboutPage from '../features/public/pages/AboutPage';
-import ContactPage from '../features/public/pages/ContactPage';
+import LandingPage from '../features/public/pages/LandingPage';
 import NotFound from '@/features/public/pages/NotFound';
 
 
@@ -265,14 +263,8 @@ const AppRoutes = () => {
             Guard kullanılmaz
           */}
           
-          {/* Ana sayfa - Index route (/ path'inde gösterilir) */}
-          <Route index element={<HomePage />} />
-          
-          {/* Hakkımızda sayfası - /about */}
-          <Route path="about" element={<AboutPage />} />
-          
-          {/* İletişim sayfası - /contact */}
-          <Route path="contact" element={<ContactPage />} />
+          {/* Ana sayfa - Index route (/ path'inde gösterilir) - Tek sayfa scroll yapısı */}
+          <Route index element={<LandingPage />} />
 
           {/* 
             ====================================================================
