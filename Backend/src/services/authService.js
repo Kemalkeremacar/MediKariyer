@@ -315,41 +315,17 @@ const validateCredentials = async (email, password) => {
     passwordHashLength: user.password_hash ? user.password_hash.length : 0
   });
   
-  // DEBUG: Console.log ile kontrol
-  console.log('🔍 DEBUG - User Status (RAW):', {
-    email: email,
-    userId: user.id,
-    role: user.role,
-    is_active_raw: user.is_active,
-    is_active_type: typeof user.is_active,
-    is_active_strict_false: user.is_active === false,
-    is_active_loose_false: user.is_active == false,
-    is_active_zero: user.is_active === 0,
-    is_approved_raw: user.is_approved,
-    is_approved_type: typeof user.is_approved
-  });
-  
   // SQL Server bit tipi 0/1 olarak geliyorsa boolean'a çevir
   const isActive = user.is_active === 1 || user.is_active === true;
   const isApproved = user.is_approved === 1 || user.is_approved === true;
   
-  console.log('🔍 DEBUG - User Status (CONVERTED):', {
-    isActive,
-    isApproved
-  });
-  
   // Admin için is_active kontrolü yapılmaz, diğer kullanıcılar için yapılır
   if (user.role !== 'admin' && !isActive) {
-    console.log('❌ DEBUG - User is INACTIVE, throwing error');
     throw new AppError('Hesabınız pasifleştirilmiştir. Lütfen sistem yöneticisi ile iletişime geçin.', 403);
   }
   
-  console.log('✅ DEBUG - User is ACTIVE, continuing login');
-  
   // Admin için is_approved kontrolü yapılmaz, diğer kullanıcılar için yapılır
   if (user.role !== 'admin' && !isApproved) {
-    // Bu mesaj kullanıcıya gösterilmeli, server loglarına yazılmamalı
-    console.log('❌ DEBUG - User is NOT APPROVED, throwing error');
     throw new AppError('Hesabınız admin onayını bekliyor. Onaylandıktan sonra giriş yapabilirsiniz.', 403);
   }
 

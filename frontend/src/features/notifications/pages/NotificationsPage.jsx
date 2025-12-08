@@ -16,6 +16,7 @@ import { toastMessages } from '@/config/toast';
 import { Bell, CheckCircle, Filter, Search, Trash2 } from 'lucide-react';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { formatRelativeTime } from '@/utils/dateUtils';
 
 /**
  * Notification Card Component
@@ -46,11 +47,7 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete }) => {
     return icons[mappedType] || '📢';
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleString('tr-TR');
-  };
+  // formatDate artık dateUtils'den geliyor (formatRelativeTime olarak)
 
   // Backend'den gelen field'ları kullan (normalize edilmiş)
   const isRead = notification.isRead !== undefined 
@@ -72,7 +69,7 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete }) => {
         <div className="flex justify-between items-center">
           <h4 className="font-medium">{notification.title}</h4>
           <span className="text-xs text-gray-500">
-            {formatDate(createdAt)}
+            {formatRelativeTime(createdAt)}
           </span>
         </div>
         <p className="text-sm text-gray-600">{message}</p>

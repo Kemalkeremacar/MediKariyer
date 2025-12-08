@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiPlay, FiCheckCircle, FiUsers, FiShield, FiTrendingUp, FiHeart } from 'react-icons/fi';
 import { ROUTE_CONFIG } from '@config/routes.js';
-import heroBg from '@/assets/hero-bg.jpg';
+import heroGif from '@/assets/giphy.gif';
 
 const HomeSection = () => {
   const navigate = useNavigate();
@@ -41,16 +41,24 @@ const HomeSection = () => {
     <>
       {/* Full-Screen Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image */}
+        {/* Background GIF */}
         <div className="absolute inset-0 z-0">
           <img
-            src={heroBg}
+            src={heroGif}
             alt="MediKariyer Hero"
             className="w-full h-full object-cover"
+            style={{
+              imageRendering: 'crisp-edges',
+              WebkitBackfaceVisibility: 'hidden',
+              backfaceVisibility: 'hidden',
+              transform: 'translateZ(0) scale(1.001)',
+              willChange: 'transform',
+              filter: 'contrast(1.15) saturate(1.25) brightness(1.1)'
+            }}
           />
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/85 via-blue-800/75 to-cyan-900/70"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+          {/* Gradient Overlay - Daha hafif */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 via-blue-800/60 to-cyan-900/55"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
           
           {/* Animated Pattern Overlay */}
           <div className="absolute inset-0 opacity-10" style={{
@@ -210,7 +218,7 @@ const HomeSection = () => {
             
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-blue-900 mb-6 leading-tight">
               Kariyerinizi Bugün{' '}
-              <span className="block bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mt-2">
+              <span className="block bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mt-2 pb-2" style={{ lineHeight: '1.3' }}>
                 Başlatın
               </span>
             </h2>

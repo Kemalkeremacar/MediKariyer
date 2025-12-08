@@ -1,52 +1,4 @@
-const normalizeDateValue = (value) => {
-  if (!value) return null;
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value;
-  }
-  if (typeof value === 'number') {
-    const fromNumber = new Date(value);
-    return Number.isNaN(fromNumber.getTime()) ? null : fromNumber;
-  }
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (!trimmed) return null;
-
-    const candidates = [];
-
-    if (trimmed.includes(' ') && !trimmed.includes('T')) {
-      candidates.push(trimmed.replace(' ', 'T'));
-    }
-    candidates.push(trimmed);
-
-    if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(trimmed)) {
-      const withZ = `${trimmed.includes('T') ? trimmed : trimmed.replace(' ', 'T')}Z`;
-      candidates.push(withZ);
-    }
-
-    for (const candidate of candidates) {
-      const date = new Date(candidate);
-      if (!Number.isNaN(date.getTime())) {
-        return date;
-      }
-    }
-  }
-  return null;
-};
-
-const formatDateTime = (value) => {
-  const date = normalizeDateValue(value);
-  if (!date) return '-';
-  try {
-    return new Intl.DateTimeFormat('tr-TR', {
-      dateStyle: 'short',
-      timeStyle: 'short',
-      timeZone: 'Europe/Istanbul',
-      hour12: false
-    }).format(date);
-  } catch (error) {
-    return date.toLocaleString('tr-TR');
-  }
-};
+// normalizeDateValue ve formatDateTime artık dateUtils'den geliyor
 /**
  * Hospital Job Detail Page
  * 
@@ -71,9 +23,9 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Briefcase, Edit3, Users, MapPin, Calendar, 
   Target, AlertCircle, ArrowLeft, Building, CheckCircle, Clock, Settings,
-  Hourglass, RefreshCw, XCircle, FileText, History, PauseCircle
+  Hourglass, RefreshCw, XCircle, FileText, History, PauseCircle, Download
 } from 'lucide-react';
-import { useHospitalJobById, useUpdateHospitalJobStatus, useResubmitHospitalJob } from '../api/useHospital';
+import { useHospitalJobById, useUpdateHospitalJobStatus, useResubmitHospitalJob, downloadJobPDF } from '../api/useHospital';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 // ConfirmationModal global; local import gerekmez
@@ -81,6 +33,9 @@ import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { resolveRevisionNote as resolveRevisionNoteUtil } from '@/utils/jobUtils';
+import { formatDate, formatMonthYear, normalizeDateValue } from '@/utils/dateUtils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const JobDetailPage = () => {
   const { jobId } = useParams();
@@ -402,6 +357,21 @@ const allRevisionEntries = useMemo(() => {
     }
   };
 
+  // Export iş ilanı fonksiyonu - Backend'den PDF indir
+  const handleExportJob = async () => {
+    if (!job || !jobId) {
+      showToast.warning('İş ilanı verisi bulunamadı');
+      return;
+    }
+    
+    try {
+      await downloadJobPDF(jobId);
+    } catch (error) {
+      // Error handling already done in downloadJobPDF
+      console.error('PDF indirme hatası:', error);
+    }
+  };
+
   // Status badge component - Türkçe status'lar için güncellendi
   const StatusBadge = ({ status }) => {
     const normalized = status?.toString().trim().toLowerCase();
@@ -454,7 +424,7 @@ const allRevisionEntries = useMemo(() => {
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
               <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-4">İş İlanı Yüklenemedi</h2>
-              <p className="text-gray-300 mb-6">{jobError.message || 'Bir hata oluştu'}</p>
+              <p className="text-gray-100 mb-6">{jobError.message || 'Bir hata oluştu'}</p>
               <button
                 type="button"
                 onClick={handleBackToJobs}
@@ -478,7 +448,7 @@ const allRevisionEntries = useMemo(() => {
             <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
               <AlertCircle className="w-16 h-16 text-orange-400 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-4">İş İlanı Bulunamadı</h2>
-              <p className="text-gray-300 mb-6">Aradığınız iş ilanı bulunamadı veya silinmiş olabilir.</p>
+              <p className="text-gray-100 mb-6">Aradığınız iş ilanı bulunamadı veya silinmiş olabilir.</p>
               <button
                 type="button"
                 onClick={handleBackToJobs}
@@ -504,16 +474,25 @@ const allRevisionEntries = useMemo(() => {
               <button
                 type="button"
                 onClick={handleBackToJobs}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 text-white p-3 rounded-xl hover:bg-white/20 transition-all duration-300"
+                className="bg-white border border-blue-200 text-blue-600 p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-sm"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-white">İş İlanı Detayı</h1>
-                <p className="text-gray-300 mt-1">İş ilanı bilgilerini görüntüleyin</p>
+                <h1 className="text-3xl font-bold text-gray-900">İş İlanı Detayı</h1>
+                <p className="text-gray-700 mt-1">İş ilanı bilgilerini görüntüleyin</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {/* PDF İndirme Butonu */}
+              <button
+                onClick={handleExportJob}
+                className="bg-blue-500 text-white px-4 py-3 rounded-xl hover:bg-blue-600 transition-all duration-300 inline-flex items-center gap-2 font-semibold shadow-md hover:shadow-lg"
+                title="İş ilanını indir"
+              >
+                <Download className="w-4 h-4" />
+                İndir
+              </button>
               {/* Needs Revision durumunda Resubmit butonu */}
               {job?.status_id === 2 && (
                 <button
@@ -529,7 +508,7 @@ const allRevisionEntries = useMemo(() => {
               {job?.status_id === 2 && (
                 <Link
                   to={`/hospital/jobs/${jobId}/edit`}
-                  className="bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-4 py-3 rounded-xl hover:bg-yellow-500/30 transition-all duration-300 inline-flex items-center gap-2"
+                  className="bg-yellow-500/20 text-gray-900 border border-yellow-500/30 px-4 py-3 rounded-xl hover:bg-yellow-500/30 transition-all duration-300 inline-flex items-center gap-2 font-semibold"
                 >
                   <Edit3 className="w-4 h-4" />
                   Düzenle
@@ -539,21 +518,21 @@ const allRevisionEntries = useMemo(() => {
           </div>
 
           {/* Job Content */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-8 space-y-8">
+          <div className="bg-white rounded-3xl border border-blue-100 shadow-lg p-8 space-y-8">
             {/* Title and Status */}
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h2 className="text-3xl font-bold text-white mb-4">{job.title}</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">{job.title}</h2>
                 <div className="flex items-center gap-4 mb-4 flex-wrap">
                   <StatusBadge status={job.status} statusId={job.status_id} />
-                  <span className="text-gray-300 flex items-center gap-2">
+                  <span className="text-gray-700 font-medium flex items-center gap-2">
                     <Users className="w-4 h-4" />
                     {job.application_count || 0} Başvuru
                   </span>
                   {job.approved_at && (
-                    <span className="text-gray-300 flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-400" />
-                      Onaylandı: {new Date(job.approved_at).toLocaleDateString('tr-TR')}
+                    <span className="text-gray-700 font-medium flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      Onaylandı: {formatDate(job.approved_at)}
                     </span>
                   )}
                 </div>
@@ -562,17 +541,17 @@ const allRevisionEntries = useMemo(() => {
 
             {/* Revision Note - Needs Revision durumunda göster */}
             {isNeedsRevision && latestRevisionNote && (
-              <div className="bg-orange-500/10 border border-orange-500/30 rounded-2xl p-6">
+              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-orange-300 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-orange-200 mb-2 flex items-center gap-2">
-                      <FileText className="w-5 h-5" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-orange-600" />
                       Revizyon Notu
                     </h3>
-                    <p className="text-orange-100 whitespace-pre-wrap leading-relaxed">{latestRevisionNote}</p>
+                    <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{latestRevisionNote}</p>
                     {hospitalRevisionCount > 0 && (
-                      <p className="text-sm text-orange-300 mt-2">
+                      <p className="text-sm text-gray-700 mt-2 font-medium">
                         Revizyon Sayısı: {hospitalRevisionCount}
                       </p>
                     )}
@@ -584,101 +563,97 @@ const allRevisionEntries = useMemo(() => {
             {/* Job Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Uzmanlık */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-blue-500/20 p-2 rounded-lg">
-                    <Target className="w-5 h-5 text-blue-300" />
+                  <div className="bg-blue-100 p-2 rounded-lg">
+                    <Target className="w-5 h-5 text-blue-600" />
                   </div>
-                  <span className="text-gray-400 text-sm">Uzmanlık Alanı</span>
+                  <span className="text-gray-700 text-sm font-semibold">Uzmanlık Alanı</span>
                 </div>
-                <p className="text-white font-medium text-lg">{job.specialty}</p>
+                <p className="text-gray-900 font-semibold text-lg">{job.specialty}</p>
                 {job.subspecialty_name && (
-                  <p className="text-blue-300 text-sm mt-1">Yan Dal: {job.subspecialty_name}</p>
+                  <p className="text-blue-700 text-sm mt-1 font-medium">Yan Dal: {job.subspecialty_name}</p>
                 )}
               </div>
 
               {/* Şehir */}
               {job.city && (
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-green-500/20 p-2 rounded-lg">
-                      <MapPin className="w-5 h-5 text-green-300" />
+                    <div className="bg-green-100 p-2 rounded-lg">
+                      <MapPin className="w-5 h-5 text-green-600" />
                     </div>
-                    <span className="text-gray-400 text-sm">Şehir</span>
+                    <span className="text-gray-700 text-sm font-semibold">Şehir</span>
                   </div>
-                  <p className="text-white font-medium text-lg">{job.city}</p>
+                  <p className="text-gray-900 font-semibold text-lg">{job.city}</p>
                 </div>
               )}
 
               {/* İstihdam Türü */}
               {job.employment_type && (
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <div className="bg-purple-50 rounded-2xl p-4 border border-purple-100">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-purple-500/20 p-2 rounded-lg">
-                      <Briefcase className="w-5 h-5 text-purple-300" />
+                    <div className="bg-purple-100 p-2 rounded-lg">
+                      <Briefcase className="w-5 h-5 text-purple-600" />
                     </div>
-                    <span className="text-gray-400 text-sm">İstihdam Türü</span>
+                    <span className="text-gray-700 text-sm font-semibold">İstihdam Türü</span>
                   </div>
-                  <p className="text-white font-medium text-lg">{job.employment_type}</p>
+                  <p className="text-gray-900 font-semibold text-lg">{job.employment_type}</p>
                 </div>
               )}
 
               {/* Minimum Deneyim */}
               {job.min_experience_years !== null && job.min_experience_years !== undefined && (
-                <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100">
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="bg-orange-500/20 p-2 rounded-lg">
-                      <Clock className="w-5 h-5 text-orange-300" />
+                    <div className="bg-orange-100 p-2 rounded-lg">
+                      <Clock className="w-5 h-5 text-orange-600" />
                     </div>
-                    <span className="text-gray-400 text-sm">Minimum Deneyim</span>
+                    <span className="text-gray-700 text-sm font-semibold">Minimum Deneyim</span>
                   </div>
-                  <p className="text-white font-medium text-lg">{job.min_experience_years} Yıl</p>
+                  <p className="text-gray-900 font-semibold text-lg">{job.min_experience_years} Yıl</p>
                 </div>
               )}
 
               {/* Oluşturulma Tarihi */}
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
+              <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-indigo-500/20 p-2 rounded-lg">
-                    <Calendar className="w-5 h-5 text-indigo-300" />
+                  <div className="bg-indigo-100 p-2 rounded-lg">
+                    <Calendar className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <span className="text-gray-400 text-sm">Oluşturulma Tarihi</span>
+                  <span className="text-gray-700 text-sm font-semibold">Oluşturulma Tarihi</span>
                 </div>
-                <p className="text-white font-medium text-lg">
-                  {new Date(job.created_at).toLocaleDateString('tr-TR', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
+                <p className="text-gray-900 font-semibold text-lg">
+                  {formatMonthYear(job.created_at)}
                 </p>
               </div>
             </div>
 
             {/* İş Tanımı */}
-            <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-blue-400" />
+            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-blue-600" />
                 İş Tanımı
               </h3>
-              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{job.description}</p>
+              <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{job.description}</p>
             </div>
 
             {/* İlan Durumu Yönetimi */}
             {job?.status_id !== 2 && (
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/20 p-6">
+              <div className="bg-white rounded-2xl border border-blue-100 shadow-md p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
                     <Settings className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-white">İlan Durumu Yönetimi</h3>
+                  <h3 className="text-xl font-bold text-gray-900">İlan Durumu Yönetimi</h3>
                 </div>
                 
                 <div className="space-y-4">
                   {/* Mevcut Durum */}
-                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                  <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-100">
                     <div className="flex items-center gap-3">
                       <StatusBadge status={job?.status} statusId={job?.status_id} />
-                      <span className="text-gray-300">Mevcut Durum</span>
+                      <span className="text-gray-900 font-semibold">Mevcut Durum</span>
                     </div>
                   </div>
 
@@ -688,7 +663,7 @@ const allRevisionEntries = useMemo(() => {
                       <button
                         onClick={() => openStatusModal(4)}
                         disabled={updateStatusMutation.isPending}
-                        className="bg-orange-500/20 text-orange-300 border border-orange-500/30 px-6 py-3 rounded-xl hover:bg-orange-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-orange-100 text-orange-700 border border-orange-200 px-6 py-3 rounded-xl hover:bg-orange-200 transition-all duration-300 inline-flex items-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                       >
                         <Clock className="w-5 h-5" />
                         Pasif Yap
@@ -697,25 +672,25 @@ const allRevisionEntries = useMemo(() => {
                       <button
                         onClick={() => openStatusModal(3)}
                         disabled={updateStatusMutation.isPending}
-                        className="bg-green-500/20 text-green-300 border border-green-500/30 px-6 py-3 rounded-xl hover:bg-green-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-green-100 text-green-700 border border-green-200 px-6 py-3 rounded-xl hover:bg-green-200 transition-all duration-300 inline-flex items-center gap-2 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                       >
                         <CheckCircle className="w-5 h-5" />
                         Aktif Yap
                       </button>
                     ) : (
-                      <div className="text-gray-400 text-sm">
+                      <div className="text-gray-700 text-sm font-medium">
                         Durum bilgisi yükleniyor...
                       </div>
                     )}
                   </div>
 
                   {/* Bilgilendirme */}
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-blue-300 mt-0.5 flex-shrink-0" />
-                      <div className="text-sm text-blue-200">
-                        <p className="font-medium mb-1">Durum Değişikliği Hakkında:</p>
-                        <ul className="space-y-1 text-blue-300">
+                      <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm text-gray-700">
+                        <p className="font-semibold mb-1 text-gray-900">Durum Değişikliği Hakkında:</p>
+                        <ul className="space-y-1">
                           <li>• <strong>Onaylandı:</strong> Doktorlar bu ilanı görebilir ve başvuru yapabilir</li>
                           <li>• <strong>Pasif:</strong> Doktorlar bu ilanı göremez ve başvuru yapamaz</li>
                           <li>• <strong>Not:</strong> Durum değişikliği sadece Onaylandı ve Pasif durumları arasında yapılabilir</li>
@@ -728,10 +703,10 @@ const allRevisionEntries = useMemo(() => {
             )}
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-6 border-t border-white/10">
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
               <Link
                 to={`/hospital/applications?jobIds=${jobId}`}
-                className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-6 py-3 rounded-xl hover:bg-blue-500/30 transition-all duration-300 inline-flex items-center gap-2 font-medium"
+                className="bg-blue-600 text-white border border-blue-700 px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-300 inline-flex items-center gap-2 font-semibold shadow-sm"
               >
                 <Users className="w-5 h-5" />
                 Başvuruları Görüntüle ({job.application_count || 0})
@@ -739,7 +714,7 @@ const allRevisionEntries = useMemo(() => {
               <button
                 type="button"
                 onClick={handleBackToJobs}
-                className="text-gray-300 hover:text-white transition-colors"
+                className="text-gray-700 hover:text-gray-900 transition-colors font-semibold"
               >
                 İş İlanlarına Dön
               </button>

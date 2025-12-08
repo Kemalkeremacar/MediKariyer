@@ -24,6 +24,7 @@ import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { useLookup } from '../../../hooks/useLookup';
+import { formatDate, formatDateTime } from '@/utils/dateUtils';
 
 const DoctorApplicationsPage = () => {
   const navigate = useNavigate();
@@ -264,10 +265,10 @@ const DoctorApplicationsPage = () => {
                   Yaptığınız başvuruları takip edin ve yönetin.
                 </p>
               </div>
-              <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-4 w-32 h-24 flex items-center justify-center">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-blue-200/50 shadow-md p-3 min-w-[100px] flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-sm font-medium text-gray-500 mb-1">Toplam Başvuru</div>
-                  <div className="text-2xl font-bold text-blue-900">{pagination.total || 0}</div>
+                  <div className="text-xs font-medium text-gray-500 mb-0.5">Toplam Başvuru</div>
+                  <div className="text-xl font-bold text-indigo-600">{pagination.total || 0}</div>
                 </div>
               </div>
             </div>
@@ -482,7 +483,7 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs md:text-sm text-gray-500 mb-4">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-blue-400" />
-                <span>Başvuru: {new Date(application.created_at || application.applied_at).toLocaleDateString('tr-TR')}</span>
+                <span>Başvuru: {formatDate(application.created_at || application.applied_at)}</span>
               </div>
             </div>
             
@@ -525,12 +526,12 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs md:text-sm text-gray-500 mb-4">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-400" />
-              <span>Başvuru: {new Date(application.created_at || application.applied_at).toLocaleDateString('tr-TR')}</span>
+              <span>Başvuru: {formatDate(application.created_at || application.applied_at)}</span>
             </div>
             {application.updated_at !== application.created_at && (
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-blue-400" />
-                <span>Güncelleme: {new Date(application.updated_at).toLocaleDateString('tr-TR')}</span>
+                <span>Güncelleme: {formatDate(application.updated_at)}</span>
               </div>
             )}
           </div>

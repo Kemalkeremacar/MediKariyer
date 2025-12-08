@@ -57,6 +57,7 @@ import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { useNavigate } from 'react-router-dom';
+import { formatDate as formatDateUtil, formatMonthYear } from '@/utils/dateUtils';
 
 const DoctorProfile = () => {
   const [activeTab, setActiveTab] = useState('personal');
@@ -419,7 +420,7 @@ const DoctorProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto w-full">
           {/* Hero Section */}
           <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-3xl p-8 mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             {/* Background Pattern */}
@@ -503,33 +504,33 @@ const DoctorProfile = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white rounded-2xl border border-blue-100 shadow-lg">
+          <div className="bg-white rounded-2xl border border-blue-100 shadow-lg w-full">
             <div className="border-b border-gray-100">
-              <nav className="flex flex-wrap gap-2 p-6">
+              <nav className="flex flex-wrap gap-2 p-6 min-h-[72px]">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-medium text-sm transition-all duration-300 ${
+                      className={`flex items-center gap-3 px-6 py-3 rounded-2xl font-medium text-sm transition-colors duration-200 flex-shrink-0 ${
                         activeTab === tab.id
                           ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
                           : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-400 hover:text-blue-600'
                       }`}
                     >
-                      <Icon className="w-5 h-5" />
-                      {tab.label}
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="whitespace-nowrap">{tab.label}</span>
                     </button>
                   );
                 })}
               </nav>
             </div>
 
-            <div className="p-8">
+            <div className="p-8 min-h-[600px] w-full">
             {/* Kişisel Bilgiler Tab */}
-            {activeTab === 'personal' && (
-              <div className="space-y-8">
+            <div className={`w-full ${activeTab === 'personal' ? 'block animate-fadeIn' : 'hidden'}`}>
+              <div className="space-y-8 w-full">
                 {/* Profil Fotoğrafı Butonu - Yeni sayfaya yönlendirme */}
                 <ProfilePhotoButton 
                   photoRequestStatus={photoRequestStatus}
@@ -544,10 +545,10 @@ const DoctorProfile = () => {
                 cities={cities}
               />
               </div>
-            )}
+            </div>
 
             {/* Eğitim Tab */}
-            {activeTab === 'education' && (
+            <div className={`w-full ${activeTab === 'education' ? 'block animate-fadeIn' : 'hidden'}`}>
               <EducationTab
                 educations={educations}
                 isLoading={educationsLoading}
@@ -556,10 +557,10 @@ const DoctorProfile = () => {
                 onDelete={(id) => handleDeleteItem(id, 'education')}
                 educationTypes={educationTypes}
               />
-            )}
+            </div>
 
             {/* Deneyim Tab */}
-            {activeTab === 'experience' && (
+            <div className={`w-full ${activeTab === 'experience' ? 'block animate-fadeIn' : 'hidden'}`}>
               <ExperienceTab
                 experiences={experiences}
                 isLoading={experiencesLoading}
@@ -567,10 +568,10 @@ const DoctorProfile = () => {
                 onEdit={(item) => handleEditItem(item, 'experience')}
                 onDelete={(id) => handleDeleteItem(id, 'experience')}
               />
-            )}
+            </div>
 
             {/* Sertifika Tab */}
-            {activeTab === 'certificates' && (
+            <div className={`w-full ${activeTab === 'certificates' ? 'block animate-fadeIn' : 'hidden'}`}>
               <CertificateTab
                 certificates={certificates}
                 isLoading={certificatesLoading}
@@ -578,10 +579,10 @@ const DoctorProfile = () => {
                 onEdit={(item) => handleEditItem(item, 'certificate')}
                 onDelete={(id) => handleDeleteItem(id, 'certificate')}
               />
-            )}
+            </div>
 
             {/* Dil Tab */}
-            {activeTab === 'languages' && (
+            <div className={`w-full ${activeTab === 'languages' ? 'block animate-fadeIn' : 'hidden'}`}>
               <LanguageTab
                 languages={doctorLanguages}
                 isLoading={languagesLoading}
@@ -589,7 +590,7 @@ const DoctorProfile = () => {
                 onEdit={(item) => handleEditItem(item, 'language')}
                 onDelete={(id) => handleDeleteItem(id, 'language')}
               />
-            )}
+            </div>
           </div>
           </div>
 
@@ -1303,7 +1304,8 @@ const ExperienceTab = ({ experiences, isLoading, onAdd, onEdit, onDelete }) => {
   const [expanded, setExpanded] = React.useState({});
   const toggle = (id) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const formatDate = (d) => (d ? new Date(d).toLocaleDateString('tr-TR') : 'Belirtilmemiş');
+  // formatDate artık dateUtils'den geliyor (formatDateUtil olarak import edildi)
+  const formatDate = (d) => (d ? formatMonthYear(d) : 'Belirtilmemiş');
 
   return (
     <div className="space-y-6">

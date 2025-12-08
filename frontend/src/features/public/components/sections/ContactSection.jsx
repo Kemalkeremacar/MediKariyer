@@ -7,6 +7,7 @@ import { FiMail, FiPhone, FiMapPin, FiClock, FiSend } from 'react-icons/fi';
 import { showToast } from '@/utils/toastUtils';
 import { useSendMessage } from '../../../contact/useContactMessages';
 import { contactMessageSchema } from '@config/validation.js';
+import { APP_CONFIG } from '@config/app.js';
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -89,8 +90,7 @@ const ContactSection = () => {
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold text-blue-900 mb-2">Adres</h4>
                       <p className="text-gray-600 leading-relaxed">
-                        Atatürk Mah. Turgut Özal Bulv. Gardenya 1 Plaza<br />
-                        İş Merkezi, D:42/B Kat:5 Ataşehir-İstanbul
+                        {APP_CONFIG.CONTACT_INFO.ADDRESS}
                       </p>
                     </div>
                   </div>
@@ -103,7 +103,9 @@ const ContactSection = () => {
                     </div>
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold text-blue-900 mb-2">E-posta</h4>
-                      <p className="text-gray-600">info@medikariyer.com</p>
+                      <a href={`mailto:${APP_CONFIG.CONTACT_INFO.EMAIL}`} className="text-gray-600 hover:text-blue-600 transition-colors">
+                        {APP_CONFIG.CONTACT_INFO.EMAIL}
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -115,7 +117,9 @@ const ContactSection = () => {
                     </div>
                     <div className="flex-1">
                       <h4 className="text-lg font-semibold text-blue-900 mb-2">Telefon</h4>
-                      <p className="text-gray-600">+90 212 227 80 20</p>
+                      <a href={`tel:${APP_CONFIG.CONTACT_INFO.PHONE.replace(/\s/g, '')}`} className="text-gray-600 hover:text-blue-600 transition-colors">
+                        {APP_CONFIG.CONTACT_INFO.PHONE_DISPLAY}
+                      </a>
                     </div>
                   </div>
                 </div>

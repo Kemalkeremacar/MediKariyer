@@ -50,8 +50,32 @@ export const APP_CONFIG = {
    */
   APP_NAME: 'MediKariyer.Net',
   APP_VERSION: '1.0.0',
-  APP_DESCRIPTION: 'Medical Career Platform - Doktor ve Hastane Buluşma Platformu',
-  APP_TAGLINE: 'Sağlık sektöründe kariyerinizi şekillendirin',
+  APP_DESCRIPTION: 'Türkiye\'nin en güvenilir sağlık kariyer platformu',
+  APP_TAGLINE: 'Doktorlar ve sağlık kurumlarını bir araya getiriyoruz',
+  
+  // ==================== İLETİŞİM BİLGİLERİ ====================
+  /**
+   * Şirket iletişim bilgileri
+   */
+  CONTACT_INFO: {
+    ADDRESS: 'Atatürk Mah. Turgut Özal Bulv. Gardenya 1 Plaza İş Merkezi, D:42/B Kat:5 Ataşehir-İstanbul',
+    PHONE: '+90 212 227 80 20',
+    PHONE_DISPLAY: '+90 212 227 80 20',
+    EMAIL: 'info@medikariyer.net',
+    WEBSITE: 'https://medikariyer.com'
+  },
+  
+  // ==================== SOSYAL MEDYA LİNKLERİ ====================
+  /**
+   * Sosyal medya hesap linkleri
+   */
+  SOCIAL_LINKS: {
+    FACEBOOK: 'https://facebook.com/medikariyer',
+    TWITTER: 'https://twitter.com/medikariyer',
+    INSTAGRAM: 'https://instagram.com/medikariyer',
+    LINKEDIN: 'https://linkedin.com/company/medikariyer',
+    YOUTUBE: 'https://youtube.com/@medikariyer'
+  },
   
   // ==================== API KONFIGÜRASYONU ====================
   /**

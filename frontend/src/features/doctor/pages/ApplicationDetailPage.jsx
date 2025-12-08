@@ -16,6 +16,7 @@ import { useMyApplications } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { formatDateTime, formatDate } from '@/utils/dateUtils';
 
 const DoctorApplicationDetailPage = () => {
   const { applicationId } = useParams();
@@ -199,11 +200,7 @@ const DoctorApplicationDetailPage = () => {
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
                   <div className="text-gray-600 text-sm mb-1">Başvuru Tarihi</div>
                   <div className="text-gray-900 font-medium">
-                    {new Date(application?.created_at || application?.applied_at).toLocaleDateString('tr-TR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric'
-                    })}
+                    {formatDateTime(application?.created_at || application?.applied_at)}
                   </div>
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">

@@ -21,5 +21,9 @@ export default defineConfig({
   build: {
     // Vite/Rollup'un kendi chunk bölme stratejisini kullan
     // chunkSizeWarningLimit: 600,
+    minify: 'esbuild', // Vite'ın varsayılan minifier'ı
+  },
+  esbuild: {
+    drop: ['console', 'debugger'], // Production build'de console ve debugger'ları kaldır
   },
 })

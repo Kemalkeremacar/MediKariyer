@@ -32,6 +32,7 @@ import { useJobStatuses, useSpecialties, useSubspecialties } from '@/hooks/useLo
 import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { formatDate } from '@/utils/dateUtils';
 
 const hospitalPageWrapper = 'hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8';
 
@@ -500,7 +501,7 @@ const HospitalJobs = () => {
                       <div className="flex items-center gap-2 text-gray-500">
                         <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0" />
                         <span className="text-sm">
-                          İlan Tarihi: {new Date(job.created_at).toLocaleDateString('tr-TR')}
+                          İlan Tarihi: {formatDate(job.created_at)}
                         </span>
                       </div>
                     </div>

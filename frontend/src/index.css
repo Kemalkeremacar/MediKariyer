@@ -779,6 +779,9 @@ body {
   /* Scroll pozisyonu */
   scroll-padding-top: 0;
   scroll-behavior: smooth;
+  /* Inter font için özel ayarlar */
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  font-variation-settings: normal;
 }
 
 /* Root container için beyaz flash önleme ve scroll düzeltmesi */
@@ -2261,3 +2264,153 @@ select:-webkit-autofill:focus {
 }
 
 
+
+/* ================================================================ */
+/* TAB GEÇİŞ ANİMASYONLARI - Titreme önleme */
+/* ================================================================ */
+
+/* Fade-in animasyonu - Sekme geçişlerinde smooth görünüm */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+  animation-fill-mode: both;
+}
+
+/* Hidden state için animasyon sıfırlama */
+.hidden {
+  animation: none !important;
+}
+
+/* ================================================================ */
+/* LAYOUT SHIFT ÖNLEME - Scrollbar ve genişlik sabitleme */
+/* ================================================================ */
+
+/* Scrollbar'ı her zaman göster - Layout shift önleme */
+html {
+  overflow-y: scroll !important;
+  scrollbar-gutter: stable;
+}
+
+body {
+  overflow-y: visible;
+}
+
+/* Container genişliğini sabitle */
+.max-w-7xl {
+  width: 100%;
+  max-width: 80rem;
+  box-sizing: border-box;
+}
+
+/* Tab container için layout shift önleme */
+.bg-white.rounded-2xl.border.border-blue-100.shadow-lg {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tab içerikleri için sabit genişlik */
+.p-8.min-h-\[600px\] {
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+/* Tüm tab içeriklerini aynı genişlikte tut */
+.p-8.min-h-\[600px\] > div {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ================================================================ */
+/* VIDEO KALITE İYİLEŞTİRMELERİ */
+/* ================================================================ */
+
+/* Video elementleri için kalite optimizasyonu */
+video {
+  /* Daha keskin görüntü için */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  
+  /* Hardware acceleration */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0) scale(1.001);
+  transform: translateZ(0) scale(1.001);
+  
+  /* Smooth rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Performance optimization */
+  will-change: transform;
+  
+  /* Keskinlik ve netlik artırma */
+  filter: contrast(1.1) saturate(1.2) brightness(1.05) sharpen(1);
+  -webkit-filter: contrast(1.1) saturate(1.2) brightness(1.05);
+}
+
+/* Video container için optimizasyon */
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+
+/* Video için anti-aliasing */
+@supports (image-rendering: -webkit-optimize-contrast) {
+  video {
+    image-rendering: -webkit-optimize-contrast;
+  }
+}
+
+@supports (image-rendering: crisp-edges) {
+  video {
+    image-rendering: crisp-edges;
+  }
+}
+
+/* ================================================================ */
+/* GIF KALITE İYİLEŞTİRMELERİ */
+/* ================================================================ */
+
+/* GIF ve animasyonlu görseller için optimizasyon */
+img[src$=".gif"] {
+  /* Daha keskin görüntü */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  
+  /* Hardware acceleration */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: translateZ(0) scale(1.001);
+  transform: translateZ(0) scale(1.001);
+  
+  /* Smooth rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Performance */
+  will-change: transform;
+  
+  /* Keskinlik ve netlik */
+  filter: contrast(1.15) saturate(1.25) brightness(1.1);
+  -webkit-filter: contrast(1.15) saturate(1.25) brightness(1.1);
+}
+
+/* Hero section GIF için özel optimizasyon */
+.hero-gif {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}

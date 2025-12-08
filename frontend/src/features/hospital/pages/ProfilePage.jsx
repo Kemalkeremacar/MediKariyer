@@ -128,10 +128,10 @@ const HospitalProfile = () => {
     return (
       <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-4">Profil Yüklenemedi</h2>
-            <p className="text-gray-300">{profileError.message || 'Bir hata oluştu'}</p>
+          <div className="text-center bg-white rounded-3xl p-8 border border-blue-100 shadow-lg">
+            <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Profil Yüklenemedi</h2>
+            <p className="text-gray-700">{profileError.message || 'Bir hata oluştu'}</p>
           </div>
         </div>
       </div>
@@ -211,8 +211,8 @@ const HospitalProfile = () => {
               <h3 className="text-sm font-medium text-gray-300 mb-3">Profil Durumu</h3>
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400">Tamamlanan Alanlar</span>
-                  <span className="text-white">{completion?.completedFields || 0}/{completion?.totalFields || 0}</span>
+                  <span className="text-gray-600">Tamamlanan Alanlar</span>
+                  <span className="text-gray-900 font-semibold">{completion?.completedFields || 0}/{completion?.totalFields || 0}</span>
                 </div>
                 <div className="w-full bg-white/20 rounded-full h-2">
                   <div 

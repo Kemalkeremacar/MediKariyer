@@ -122,12 +122,12 @@ const JobCreatePage = () => {
       <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100">
         <TransitionWrapper>
           <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Briefcase className="w-8 h-8 text-blue-400 animate-pulse" />
+            <div className="text-center bg-white rounded-3xl p-8 border border-blue-100 shadow-lg">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Briefcase className="w-8 h-8 text-white animate-pulse" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-4">Yükleniyor...</h2>
-              <p className="text-gray-300">Form verileri hazırlanıyor</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Yükleniyor...</h2>
+              <p className="text-gray-700">Form verileri hazırlanıyor</p>
             </div>
           </div>
         </TransitionWrapper>
@@ -140,46 +140,50 @@ const JobCreatePage = () => {
       <TransitionWrapper>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <button
-              onClick={handleCancel}
-              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors mb-4"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Geri Dön
-            </button>
-            <h1 className="text-3xl font-bold text-white mb-2">Yeni İş İlanı Oluştur</h1>
-            <p className="text-gray-300">Nitelikli doktorlara ulaşmak için iş ilanınızı oluşturun</p>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="bg-white border border-blue-200 text-blue-600 p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-sm"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Yeni İş İlanı Oluştur</h1>
+                <p className="text-gray-700 mt-1">Nitelikli doktorlara ulaşmak için iş ilanınızı oluşturun</p>
+              </div>
+            </div>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-8">
+            <div className="bg-white rounded-3xl border border-blue-100 shadow-lg p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
                   <Briefcase className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">Temel Bilgiler</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Temel Bilgiler</h2>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Job Title */}
                 <div className="lg:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     İş İlanı Başlığı *
                   </label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
-                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
-                      errors.title ? 'border-red-500' : 'border-white/20'
+                    className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
+                      errors.title ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Örn: Kardiyoloji Uzmanı Aranıyor"
                   />
                   {errors.title && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-4 h-4" />
                       {errors.title}
                     </p>
@@ -188,25 +192,25 @@ const JobCreatePage = () => {
 
                 {/* Specialty */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Uzmanlık Alanı *
                   </label>
                   <select
                     value={formData.specialty_id}
                     onChange={(e) => handleInputChange('specialty_id', e.target.value)}
-                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
-                      errors.specialty_id ? 'border-red-500' : 'border-white/20'
+                    className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
+                      errors.specialty_id ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
-                    <option value="" className="bg-slate-800">Uzmanlık Alanı Seçin</option>
+                    <option value="">Uzmanlık Alanı Seçin</option>
                     {specialties.map((specialty) => (
-                      <option key={specialty.value} value={specialty.value} className="bg-slate-800">
+                      <option key={specialty.value} value={specialty.value}>
                         {specialty.label}
                       </option>
                     ))}
                   </select>
                   {errors.specialty_id && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-4 h-4" />
                       {errors.specialty_id}
                     </p>
@@ -215,18 +219,18 @@ const JobCreatePage = () => {
 
                 {/* Subspecialty */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Yan Dal Uzmanlığı
                   </label>
                   <select
                     value={formData.subspecialty_id}
                     onChange={(e) => handleInputChange('subspecialty_id', e.target.value)}
-                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
-                      errors.subspecialty_id ? 'border-red-500' : 'border-white/20'
+                    className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
+                      errors.subspecialty_id ? 'border-red-500' : 'border-gray-300'
                     }`}
                     disabled={!formData.specialty_id || !subspecialties.some(sub => sub.specialty_id === parseInt(formData.specialty_id))}
                   >
-                    <option value="" className="bg-slate-800">
+                    <option value="">
                       {!formData.specialty_id 
                         ? 'Önce Uzmanlık Alanı Seçin'
                         : !subspecialties.some(sub => sub.specialty_id === parseInt(formData.specialty_id))
@@ -237,13 +241,13 @@ const JobCreatePage = () => {
                     {subspecialties
                       .filter(subspecialty => subspecialty.specialty_id === parseInt(formData.specialty_id))
                       .map((subspecialty) => (
-                        <option key={subspecialty.value} value={subspecialty.value} className="bg-slate-800">
+                        <option key={subspecialty.value} value={subspecialty.value}>
                           {subspecialty.label}
                         </option>
                       ))}
                   </select>
                   {errors.subspecialty_id && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-4 h-4" />
                       {errors.subspecialty_id}
                     </p>
@@ -252,25 +256,25 @@ const JobCreatePage = () => {
 
                 {/* City */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Şehir *
                   </label>
                   <select
                     value={formData.city_id}
                     onChange={(e) => handleInputChange('city_id', e.target.value)}
-                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
-                      errors.city_id ? 'border-red-500' : 'border-white/20'
+                    className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
+                      errors.city_id ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
-                    <option value="" className="bg-slate-800">Şehir Seçin</option>
+                    <option value="">Şehir Seçin</option>
                     {cities.map((city) => (
-                      <option key={city.value} value={city.value} className="bg-slate-800">
+                      <option key={city.value} value={city.value}>
                         {city.label}
                       </option>
                     ))}
                   </select>
                   {errors.city_id && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-4 h-4" />
                       {errors.city_id}
                     </p>
@@ -279,14 +283,14 @@ const JobCreatePage = () => {
 
                 {/* Employment Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     İstihdam Türü *
                   </label>
                   <select
                     value={formData.employment_type}
                     onChange={(e) => handleInputChange('employment_type', e.target.value)}
-                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 ${
-                      errors.employment_type ? 'border-red-500' : 'border-white/20'
+                    className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
+                      errors.employment_type ? 'border-red-500' : 'border-gray-300'
                     }`}
                   >
                     <option value="" className="bg-slate-800">İstihdam Türü Seçin</option>
@@ -295,7 +299,7 @@ const JobCreatePage = () => {
                     <option value="Nöbet Usulü" className="bg-slate-800">Nöbet Usulü</option>
                   </select>
                   {errors.employment_type && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-4 h-4" />
                       {errors.employment_type}
                     </p>
@@ -304,7 +308,7 @@ const JobCreatePage = () => {
 
                 {/* Min Experience Years */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Minimum Deneyim (Yıl) - Opsiyonel
                   </label>
                   <input
@@ -313,19 +317,19 @@ const JobCreatePage = () => {
                     max="50"
                     value={formData.min_experience_years}
                     onChange={(e) => handleInputChange('min_experience_years', e.target.value)}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
                     placeholder="Örn: 2 (Boş bırakılabilir)"
                   />
                 </div>
               </div>
 
               {/* Bilgilendirme Notu */}
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mt-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-4">
                 <div className="flex items-start gap-3">
-                  <div className="text-blue-400 mt-0.5">ℹ️</div>
+                  <div className="text-blue-600 mt-0.5">ℹ️</div>
                   <div>
-                    <p className="text-sm text-blue-300 font-medium mb-1">İlan Durumu</p>
-                    <p className="text-xs text-blue-200/80">
+                    <p className="text-sm text-gray-900 font-semibold mb-1">İlan Durumu</p>
+                    <p className="text-xs text-gray-700">
                       Yeni oluşturulan ilanlar otomatik olarak <span className="font-semibold">"Aktif"</span> durumda yayınlanır ve doktorlar tarafından görüntülenebilir. 
                       İlan durumunu değiştirmek için ilan oluşturduktan sonra düzenleme sayfasını kullanabilirsiniz.
                     </p>
@@ -336,36 +340,36 @@ const JobCreatePage = () => {
 
 
             {/* Job Description */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl border border-white/20 p-8">
+            <div className="bg-white rounded-3xl border border-blue-100 shadow-lg p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">İş Tanımı</h2>
+                <h2 className="text-2xl font-bold text-gray-900">İş Tanımı</h2>
               </div>
 
               <div className="space-y-6">
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
                     İş Tanımı *
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={8}
-                    className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all duration-300 resize-none ${
-                      errors.description ? 'border-red-500' : 'border-white/20'
+                    className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 resize-none ${
+                      errors.description ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="İş pozisyonu hakkında detaylı açıklama..."
                   />
                   {errors.description && (
-                    <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                    <p className="text-red-600 text-sm mt-1 flex items-center gap-1 font-medium">
                       <AlertCircle className="w-4 h-4" />
                       {errors.description}
                     </p>
                   )}
-                  <p className="text-gray-400 text-sm mt-2">
+                  <p className="text-gray-600 text-sm mt-2">
                     En az 10 karakter olmalıdır
                   </p>
                 </div>
@@ -377,14 +381,14 @@ const JobCreatePage = () => {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-8 py-3 text-gray-300 hover:text-white transition-colors"
+                className="px-8 py-3 text-gray-700 hover:text-gray-900 transition-colors font-semibold"
               >
                 İptal
               </button>
               <button
                 type="submit"
                 disabled={createJobMutation.isPending}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-medium transition-all duration-300 inline-flex items-center gap-2 shadow-lg disabled:opacity-50"
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2 shadow-lg disabled:opacity-50"
               >
                 {createJobMutation.isPending ? (
                   <>

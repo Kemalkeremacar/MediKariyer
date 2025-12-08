@@ -19,6 +19,7 @@ import {
   FiCheckCircle,
 } from 'react-icons/fi';
 import { ROUTE_CONFIG } from '@config/routes.js';
+import backgroundVideo from '@/assets/Medical_Career_Dashboard_Animation.mp4';
 
 const introParagraphs = [
   'MEDİKARİYER, sadece hekimler için tasarlanmış özel bir kariyer ve iş bulma platformudur. Sağlık sektöründeki profesyonellerin güvenli, hızlı ve verimli bir şekilde doğru kurumlarla buluşmasını hedefler. Halka açık ilan sitelerinden farklı olarak, MEDİKARİYER kapalı devre bir sistemde çalışır — yalnızca doğrulanmış sağlık kurumları ve lisanslı hekimler platforma erişebilir. Bu sayede, hem kurumların hem de hekimlerin kişisel verileri titizlikle korunur, güvenli bir dijital kariyer ortamı sağlanır.',
@@ -201,41 +202,64 @@ const AboutSection = () => {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative overflow-hidden bg-white py-20">
-        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(circle at 30% 30%, rgba(59,130,246,0.18) 0, transparent 55%)' }} />
+      {/* CTA - Video Section */}
+      <section className="relative overflow-hidden min-h-screen flex items-start justify-center pt-32">
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto object-cover"
+          style={{
+            imageRendering: 'crisp-edges',
+            WebkitBackfaceVisibility: 'hidden',
+            backfaceVisibility: 'hidden',
+            transform: 'translate(-50%, -50%) scale(1.1)',
+            willChange: 'transform',
+            filter: 'contrast(1.15) saturate(1.1) brightness(0.85)',
+            objectFit: 'cover'
+          }}
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+        </video>
+        
+        {/* Overlay - Daha koyu karartma */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-blue-900/35 to-black/40"></div>
+        
+        {/* İkinci katman - Merkezi vurgulama */}
+        <div className="absolute inset-0 bg-radial-gradient" style={{
+          background: 'radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.3) 100%)'
+        }}></div>
+        
         <div className="relative z-10 container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="mx-auto max-w-3xl text-center"
-          >
-            <h2 className="text-4xl sm:text-5xl font-bold text-blue-900">Bizimle İletişime Geçin</h2>
-            <p className="mt-5 text-lg text-slate-600">
-              Sağlık sektöründe kariyerinizi şekillendirmek için doğru yerdesiniz.
-            </p>
-          </motion.div>
-
-          <div className="mt-12 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 items-center justify-center">
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleContactClick}
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 px-10 py-4 text-lg font-semibold text-white shadow-[0_18px_35px_-14px_rgba(37,99,235,0.45)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_24px_60px_-18px_rgba(37,99,235,0.55)]"
+              className="group inline-flex items-center justify-center gap-4 rounded-3xl bg-white text-blue-600 px-16 py-6 text-2xl font-extrabold shadow-[0_20px_60px_-15px_rgba(255,255,255,0.5)] transition-all duration-300 hover:shadow-[0_30px_80px_-15px_rgba(255,255,255,0.8)] hover:-translate-y-2"
+              style={{ 
+                letterSpacing: '0.02em',
+                textShadow: '0 1px 2px rgba(0,0,0,0.1)'
+              }}
             >
-              <FiArrowRight className="h-5 w-5 text-white transition-transform duration-300 group-hover:translate-x-1" />
+              <FiArrowRight className="h-7 w-7 transition-transform duration-300 group-hover:translate-x-2" />
               İletişime Geç
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.95 }}
               onClick={handleRegisterClick}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-white px-10 py-4 text-lg font-semibold text-blue-600 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-300 hover:shadow-md"
+              className="inline-flex items-center justify-center gap-4 rounded-3xl bg-white/15 backdrop-blur-md border-3 border-white/40 text-white px-16 py-6 text-2xl font-extrabold shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all duration-300 hover:bg-white/25 hover:border-white/60 hover:-translate-y-2"
+              style={{ 
+                letterSpacing: '0.02em',
+                textShadow: '0 2px 8px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.5)'
+              }}
             >
-              <FiCheckCircle className="h-5 w-5" />
+              <FiCheckCircle className="h-7 w-7" />
               Ücretsiz Kayıt Ol
             </motion.button>
           </div>

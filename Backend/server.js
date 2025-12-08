@@ -14,7 +14,12 @@ const path = require('path');
 // ============================
 if (process.env.NODE_ENV === 'production') {
   require('dotenv').config({ path: path.join(__dirname, '.env.production') });
-  console.log("📦 [PROD] .env.production yüklendi");
+  
+  // Production ortamında console.log'ları devre dışı bırak
+  // console.error ve console.warn hariç (kritik hatalar için)
+  console.log = function() {};
+  console.debug = function() {};
+  console.info = function() {};
 } else {
   require('dotenv').config({ path: path.join(__dirname, '.env') });
   console.log("📦 [DEV] .env yüklendi");

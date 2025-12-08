@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useDoctorDashboard, useDoctorProfile } from '../api/useDoctor';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { formatDate } from '@/utils/dateUtils';
 
 const DoctorDashboard = () => {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDoctorDashboard();
@@ -159,7 +160,7 @@ const DoctorDashboard = () => {
                                  application.status || 'Bilinmiyor'}
                               </span>
                               <span className="text-xs text-gray-500">
-                                {new Date(application.applied_at || application.created_at).toLocaleDateString('tr-TR')}
+                                {formatDate(application.applied_at || application.created_at)}
                               </span>
                             </div>
                           </div>
@@ -208,7 +209,7 @@ const DoctorDashboard = () => {
                               </div>
                               <div className="flex items-center gap-1 text-xs text-gray-600">
                                 <Calendar className="h-4 w-4" />
-                                {new Date(job.created_at).toLocaleDateString('tr-TR')}
+                                {formatDate(job.created_at)}
                               </div>
                             </div>
                           </div>

@@ -16,6 +16,7 @@ import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
+import { formatDate } from '@/utils/dateUtils';
 
 const DoctorJobDetailPage = () => {
   const { jobId } = useParams();
@@ -344,17 +345,13 @@ const DoctorJobDetailPage = () => {
                 <div className="flex items-center gap-4 text-gray-600 text-sm">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    <span>İlan Tarihi: {new Date(job?.created_at).toLocaleDateString('tr-TR')}</span>
+                    <span>İlan Tarihi: {formatDate(job?.created_at)}</span>
                   </div>
                   {job?.deadline && (
                     <div>
-                      Son Başvuru: {new Date(job.deadline).toLocaleDateString('tr-TR')}
+                      Son Başvuru: {formatDate(job.deadline)}
                     </div>
                   )}
-                </div>
-                <div className={`flex items-center text-sm ${((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif') ? 'text-red-400' : 'text-green-400'}`}>
-                  <div className={`w-2 h-2 rounded-full mr-2 ${((job?.status_name||job?.status||'').toString().toLowerCase()==='pasif') ? 'bg-red-400' : 'bg-green-400'}`}></div>
-                  {job?.status_name || job?.status}
                 </div>
               </div>
             </div>

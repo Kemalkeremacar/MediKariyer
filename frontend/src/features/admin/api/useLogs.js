@@ -168,10 +168,8 @@ export const useApplicationLogs = (filters = {}, enabled = true) => {
         const { data } = await http.get(`/logs/application?${params.toString()}`);
         return data.data;
       } catch (error) {
-        console.warn('Log API hatası:', error.message);
         // Development modda mock data döndür, production'da hata fırlat
         if (import.meta.env.DEV) {
-          console.info('Development mode: Mock data kullanılıyor');
           return mockApplicationLogs;
         }
         throw error;
@@ -217,10 +215,8 @@ export const useAuditLogs = (filters = {}, enabled = true) => {
         const { data } = await http.get(`/logs/audit?${params.toString()}`);
         return data.data;
       } catch (error) {
-        console.warn('Log API hatası:', error.message);
         // Development modda mock data döndür, production'da hata fırlat
         if (import.meta.env.DEV) {
-          console.info('Development mode: Mock data kullanılıyor');
           return mockAuditLogs;
         }
         throw error;
@@ -266,10 +262,8 @@ export const useSecurityLogs = (filters = {}, enabled = true) => {
         const { data } = await http.get(`/logs/security?${params.toString()}`);
         return data.data;
       } catch (error) {
-        console.warn('Log API hatası:', error.message);
         // Development modda mock data döndür, production'da hata fırlat
         if (import.meta.env.DEV) {
-          console.info('Development mode: Mock data kullanılıyor');
           return mockSecurityLogs;
         }
         throw error;
@@ -301,10 +295,8 @@ export const useLogStatistics = (options = {}, enabled = false) => {
         const { data } = await http.get(`/logs/statistics?${params.toString()}`);
         return data.data;
       } catch (error) {
-        console.warn('Log API hatası:', error.message);
         // Development modda mock data döndür, production'da hata fırlat
         if (import.meta.env.DEV) {
-          console.info('Development mode: Mock data kullanılıyor');
           return mockStatistics;
         }
         throw error;

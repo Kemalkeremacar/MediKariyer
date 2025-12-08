@@ -33,16 +33,19 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, FileText, Calendar, Clock, Settings, Target, 
   Eye, User, Phone, Mail, Briefcase, MapPin, AlertCircle,
-  ChevronUp, XCircle
+  ChevronUp, XCircle, Download
 } from 'lucide-react';
 import { useFloating, autoUpdate, offset, shift, FloatingPortal } from '@floating-ui/react';
-import { useHospitalApplicationDetail, useUpdateApplicationStatus, useHospitalDoctorProfileDetail } from '../api/useHospital';
+import { useHospitalApplicationDetail, useUpdateApplicationStatus, useHospitalDoctorProfileDetail, downloadApplicationPDF } from '../api/useHospital';
 import { useApplicationStatuses } from '@/hooks/useLookup';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { StatusBadge } from './ApplicationsPage';
 import { GraduationCap, Award, Languages } from 'lucide-react';
+import { formatDateTime, formatDate, formatDateShort, formatMonthYear } from '@/utils/dateUtils';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const HospitalApplicationDetailPage = () => {
   const { applicationId } = useParams();
@@ -152,6 +155,21 @@ const HospitalApplicationDetailPage = () => {
     } catch (error) {
       console.error('Not güncelleme hatası:', error);
       showToast.error(error, { defaultMessage: toastMessages.application.updateNoteError });
+    }
+  };
+
+  // Export başvuru fonksiyonu - Backend'den PDF indir
+  const handleExportApplication = async () => {
+    if (!application || !applicationId) {
+      showToast.warning('Başvuru verisi bulunamadı');
+      return;
+    }
+    
+    try {
+      await downloadApplicationPDF(applicationId);
+    } catch (error) {
+      // Error handling already done in downloadApplicationPDF
+      console.error('PDF indirme hatası:', error);
     }
   };
 
@@ -266,18 +284,31 @@ const HospitalApplicationDetailPage = () => {
     <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8 flex flex-col overflow-x-hidden">
       <div className="max-w-7xl mx-auto space-y-8 flex-1 w-full min-w-0">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleGoBack}
-            className="p-2 hover:bg-white/10 rounded-xl transition-all"
-          >
-            <ArrowLeft className="w-6 h-6 text-white" />
-          </button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleGoBack}
+              className="bg-white border border-blue-200 text-blue-600 p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-sm"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Başvuru Detayları</h1>
+              <p className="text-gray-700 mt-1">
+                {application.first_name} {application.last_name} - {application.job_title}
+              </p>
+            </div>
+          </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Başvuru Detayları</h1>
-            <p className="text-gray-300 mt-1">
-              {application.first_name} {application.last_name} - {application.job_title}
-            </p>
+            {/* PDF İndirme Butonu */}
+            <button
+              onClick={handleExportApplication}
+              className="bg-blue-500 text-white px-4 py-3 rounded-xl hover:bg-blue-600 transition-all duration-300 inline-flex items-center gap-2 font-semibold shadow-md hover:shadow-lg"
+              title="Başvuruyu indir"
+            >
+              <Download className="w-4 h-4" />
+              İndir
+            </button>
           </div>
         </div>
 
@@ -408,7 +439,7 @@ const HospitalApplicationDetailPage = () => {
                   <div className="text-right flex-shrink-0 whitespace-nowrap">
                     <span className="text-xs text-gray-600 block font-medium">Son Güncelleme</span>
                     <span className="text-sm text-gray-700 font-semibold">
-                      {new Date(application.updated_at).toLocaleDateString('tr-TR')}
+                      {formatDate(application.updated_at)}
                     </span>
                   </div>
                 </div>
@@ -430,7 +461,7 @@ const HospitalApplicationDetailPage = () => {
                     <span className="text-xs text-gray-600 font-medium">Başvuru Tarihi</span>
                   </div>
                   <span className="text-sm text-gray-900 font-semibold">
-                    {new Date(application.applied_at).toLocaleDateString('tr-TR')}
+                    {formatDateTime(application.applied_at)}
                   </span>
                 </div>
               </div>
@@ -731,7 +762,7 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
               {profile.dob && (
                 <div>
                   <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Doğum Tarihi</span>
-                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{new Date(profile.dob).toLocaleDateString('tr-TR')}</p>
+                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{formatDate(profile.dob)}</p>
                 </div>
               )}
               {profile.birth_place_name && (
@@ -829,8 +860,8 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
                         )}
                         <div className="flex items-center gap-2 mt-2">
                           <span className={`px-2 py-0.5 ${isInline ? 'bg-purple-100 text-purple-800' : 'bg-purple-500/20 text-purple-300'} rounded text-xs font-medium`}>
-                            {new Date(exp.start_date).toLocaleDateString('tr-TR')} - 
-                            {exp.is_current ? ' Devam Ediyor' : (exp.end_date ? new Date(exp.end_date).toLocaleDateString('tr-TR') : 'Belirtilmemiş')}
+                            {formatMonthYear(exp.start_date)} - 
+                            {exp.is_current ? ' Devam Ediyor' : (exp.end_date ? formatMonthYear(exp.end_date) : 'Belirtilmemiş')}
                           </span>
                         </div>
                         {exp.description && (

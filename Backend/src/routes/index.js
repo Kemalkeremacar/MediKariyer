@@ -9,6 +9,7 @@ const notificationRoutes = require('./notificationRoutes');
 const contactRoutes = require('./contactRoutes');
 const lookupRoutes = require('./lookupRoutes');
 const logRoutes = require('./logRoutes');
+const pdfRoutes = require('./pdfRoutes');
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ router.get('/', (req, res) => {
       contact: '/api/contact',
       users: '/api/users',
       logs: '/api/logs',
+      pdf: '/api/pdf',
     },
     documentation: '/api/docs',
     timestamp: new Date().toISOString()
@@ -54,6 +56,7 @@ router.use('/notifications', notificationRoutes);
 router.use('/contact', contactRoutes);
 router.use('/lookup', lookupRoutes);
 router.use('/logs', logRoutes);
+router.use('/pdf', pdfRoutes);
 router.use('/mobile/auth', require('./mobile/mobileAuthRoutes'));
 router.use('/mobile/doctor', require('./mobile/mobileDoctorRoutes'));
 router.use('/mobile/jobs', require('./mobile/mobileJobRoutes'));

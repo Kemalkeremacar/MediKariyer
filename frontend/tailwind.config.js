@@ -62,8 +62,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'Poppins', 'system-ui', 'sans-serif'],
-        display: ['Poppins', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Roboto', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Roboto', 'Poppins', 'Inter', 'system-ui', 'sans-serif'],
+        body: ['Roboto', 'Inter', 'system-ui', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1rem' }],

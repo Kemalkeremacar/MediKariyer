@@ -35,11 +35,11 @@ const Footer = () => {
   };
 
   const socialLinks = [
-    { icon: Facebook, href: '#', label: 'Facebook' },
-    { icon: Twitter, href: '#', label: 'Twitter' },
-    { icon: Instagram, href: '#', label: 'Instagram' },
-    { icon: Linkedin, href: '#', label: 'LinkedIn' },
-    { icon: Youtube, href: '#', label: 'YouTube' },
+    { icon: Facebook, href: APP_CONFIG.SOCIAL_LINKS.FACEBOOK, label: 'Facebook' },
+    { icon: Twitter, href: APP_CONFIG.SOCIAL_LINKS.TWITTER, label: 'Twitter' },
+    { icon: Instagram, href: APP_CONFIG.SOCIAL_LINKS.INSTAGRAM, label: 'Instagram' },
+    { icon: Linkedin, href: APP_CONFIG.SOCIAL_LINKS.LINKEDIN, label: 'LinkedIn' },
+    { icon: Youtube, href: APP_CONFIG.SOCIAL_LINKS.YOUTUBE, label: 'YouTube' },
   ];
 
   return (
@@ -62,7 +62,7 @@ const Footer = () => {
               </span>
             </div>
             <p className="text-gray-400 mb-6 leading-relaxed max-w-md">
-              Türkiye'nin en güvenilir sağlık kariyer platformu. Doktorlar ve sağlık kurumlarını bir araya getiriyoruz.
+              {APP_CONFIG.APP_DESCRIPTION}. {APP_CONFIG.APP_TAGLINE}.
             </p>
             
             {/* Contact Info */}
@@ -70,20 +70,19 @@ const Footer = () => {
               <div className="flex items-start gap-3 text-sm">
                 <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-400">
-                  Atatürk Mah. Turgut Özal Bulv. Gardenya 1 Plaza<br />
-                  İş Merkezi, D:42/B Kat:5 Ataşehir-İstanbul
+                  {APP_CONFIG.CONTACT_INFO.ADDRESS}
                 </span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                <a href="tel:+902122278020" className="text-gray-400 hover:text-white transition-colors">
-                  +90 212 227 80 20
+                <a href={`tel:${APP_CONFIG.CONTACT_INFO.PHONE.replace(/\s/g, '')}`} className="text-gray-400 hover:text-white transition-colors">
+                  {APP_CONFIG.CONTACT_INFO.PHONE_DISPLAY}
                 </a>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                <a href="mailto:info@medikariyer.com" className="text-gray-400 hover:text-white transition-colors">
-                  info@medikariyer.com
+                <a href={`mailto:${APP_CONFIG.CONTACT_INFO.EMAIL}`} className="text-gray-400 hover:text-white transition-colors">
+                  {APP_CONFIG.CONTACT_INFO.EMAIL}
                 </a>
               </div>
             </div>
@@ -162,9 +161,9 @@ const Footer = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-blue-600 flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    className="group w-9 h-9 rounded-lg bg-gray-800 hover:bg-blue-600 flex items-center justify-center transition-all duration-300 hover:scale-110"
                   >
-                    <Icon className="w-4 h-4 text-gray-400 group-hover:text-white" />
+                    <Icon className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
                   </a>
                 );
               })}

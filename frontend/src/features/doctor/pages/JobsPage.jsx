@@ -23,6 +23,7 @@ import { useDoctorJobs } from '../api/useDoctor.js';
 import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { useLookup } from '@/hooks/useLookup';
+import { formatDate } from '@/utils/dateUtils';
 
 const DoctorJobsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -494,10 +495,10 @@ const DoctorJobsPage = () => {
                   Size uygun iş ilanlarını keşfedin ve başvurun.
                   </p>
                 </div>
-                <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-4 w-32 h-24 flex items-center justify-center">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-blue-200/50 shadow-md p-3 min-w-[100px] flex items-center justify-center">
                   <div className="text-center">
-                    <div className="text-sm font-medium text-gray-500 mb-1">Toplam İlan</div>
-                    <div className="text-2xl font-bold text-blue-900">{pagination.total || 0}</div>
+                    <div className="text-xs font-medium text-gray-500 mb-0.5">Toplam İlan</div>
+                    <div className="text-xl font-bold text-blue-600">{pagination.total || 0}</div>
                   </div>
                 </div>
               </div>
@@ -915,7 +916,7 @@ const JobCard = memo(({ job, onClick }) => {
             {job.employment_type}
           </div>
         <div className="text-xs text-gray-500 mt-1">
-          {new Date(job.created_at).toLocaleDateString('tr-TR')}
+          {formatDate(job.created_at)}
         </div>
       </div>
     </div>

@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useHospitalDashboard, useHospitalProfile } from '../api/useHospital';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { formatDate } from '@/utils/dateUtils';
 
 const HospitalDashboard = () => {
   // API hook'ları - dashboard ve profil verisi
@@ -210,7 +211,7 @@ const HospitalDashboard = () => {
                                  application.status || 'Bilinmiyor'}
                               </span>
                               <span className="text-xs text-gray-500">
-                                {application.applied_at ? new Date(application.applied_at).toLocaleDateString('tr-TR') : 'Tarih yok'}
+                                {application.applied_at ? formatDate(application.applied_at) : 'Tarih yok'}
                               </span>
                             </div>
                           </div>
@@ -256,7 +257,7 @@ const HospitalDashboard = () => {
                                 {job.city ? job.city : 'Şehir belirtilmemiş'}
                               </span>
                               <span className="text-xs text-gray-500">
-                                {new Date(job.created_at).toLocaleDateString('tr-TR')}
+                                {formatDate(job.created_at)}
                               </span>
                             </div>
                           </div>

@@ -38,6 +38,7 @@ import { useHospitalApplications, useUpdateApplicationStatus, useHospitalJobs } 
 import { useApplicationStatuses } from '@/hooks/useLookup';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
+import { formatDate, formatDateShort } from '@/utils/dateUtils';
 
 const HospitalApplications = () => {
   const navigate = useNavigate();
@@ -552,7 +553,7 @@ const HospitalApplications = () => {
               e.stopPropagation();
               return false;
             }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-4 relative z-20"
+            className="bg-white rounded-2xl border border-blue-100 shadow-lg p-4 relative z-20"
           >
             {/* Üst satır: Tüm Durumlar ve İlanlarım */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -561,11 +562,11 @@ const HospitalApplications = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-400"
                 >
-                  <option value="" className="bg-slate-800">Tüm Durumlar</option>
+                  <option value="">Tüm Durumlar</option>
                   {statusOptions.map((status) => (
-                    <option key={status.value} value={status.value} className="bg-slate-800">
+                    <option key={status.value} value={status.value}>
                       {status.label}
                     </option>
                   ))}
@@ -581,15 +582,15 @@ const HospitalApplications = () => {
                   }}
                   type="button"
                   onClick={() => setIsJobFilterOpen(!isJobFilterOpen)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white hover:bg-white/10 transition-all flex items-center justify-between backdrop-blur-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 hover:border-blue-400 transition-all flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <span className="text-sm font-medium">
                     {selectedJobIds.length > 0 ? `${selectedJobIds.length} İlan Seçili` : 'İlanlarım'}
                   </span>
                   {isJobFilterOpen ? (
-                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
                   )}
                 </button>
 
@@ -602,15 +603,15 @@ const HospitalApplications = () => {
                       ref={refs.setFloating}
                       style={floatingStyles}
                       {...getFloatingProps()}
-                      className="z-[9999] bg-slate-800 border border-white/20 rounded-xl shadow-2xl max-h-[240px] overflow-y-auto backdrop-blur-md"
+                      className="z-[9999] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[240px] overflow-y-auto"
                     >
                       {jobsLoading ? (
-                        <div className="p-4 text-center text-gray-400">
+                        <div className="p-4 text-center text-gray-600">
                           <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
                           <span className="text-sm">İlanlar yükleniyor...</span>
                         </div>
                       ) : jobs.length === 0 ? (
-                        <div className="p-4 text-center text-gray-400">
+                        <div className="p-4 text-center text-gray-600">
                           <Briefcase className="w-5 h-5 mx-auto mb-2 opacity-50" />
                           <span className="text-sm">Henüz ilan bulunmamaktadır</span>
                         </div>
@@ -619,17 +620,17 @@ const HospitalApplications = () => {
                           {jobs.map((job) => (
                             <label
                               key={job.id}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/10 cursor-pointer transition-colors"
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
                             >
                               <input
                                 type="checkbox"
                                 checked={selectedJobIds.includes(job.id)}
                                 onChange={() => handleJobToggle(job.id)}
-                                className="w-4 h-4 text-blue-500 bg-white/10 border-white/20 rounded focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-transparent cursor-pointer flex-shrink-0"
+                                className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer flex-shrink-0"
                               />
                               <div className="flex-1 min-w-0">
-                                <div className="text-sm text-white font-medium truncate">{job.title}</div>
-                                <div className="text-xs text-gray-400 mt-0.5">
+                                <div className="text-sm text-gray-900 font-medium truncate">{job.title}</div>
+                                <div className="text-xs text-gray-600 mt-0.5">
                                   {job.application_count || 0} başvuru
                                 </div>
                               </div>
@@ -687,7 +688,7 @@ const HospitalApplications = () => {
                       }
                     }}
                     placeholder="Doktor adı veya iş ilanı başlığı ara..."
-                    className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 backdrop-blur-sm transition-all hover:bg-white/10"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-blue-400"
                   />
                   {/* Minimum karakter uyarısı - sadece yazarken göster */}
                   {searchQuery && searchQuery.length > 0 && searchQuery.length < 2 && (
@@ -795,14 +796,14 @@ const HospitalApplications = () => {
             </div>
           ) : (
             <div className="min-h-[500px] flex items-center justify-center">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 p-12 text-center max-w-md">
+              <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-12 text-center max-w-md">
                 <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
                   <FileText className="w-12 h-12 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-4">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
                   Henüz Başvuru Yok
                 </h3>
-                <p className="text-gray-300 mb-8">
+                <p className="text-gray-700 mb-8">
                   İş ilanlarınıza henüz başvuru yapılmamış.
                 </p>
               </div>
@@ -912,7 +913,7 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
               {application.job_created_at && (
                 <div className="text-gray-700 text-xs mb-2 flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  <span>İlan Tarihi: {new Date(application.job_created_at).toLocaleDateString('tr-TR')}</span>
+                  <span>İlan Tarihi: {formatDate(application.job_created_at)}</span>
                 </div>
               )}
               
@@ -1059,7 +1060,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handlePrev}
         disabled={currentPage === 1}
-        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+        className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         Önceki
       </button>
@@ -1086,10 +1087,10 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
           <button
             key={page}
             onClick={() => handlePage(page)}
-            className={`px-4 py-2 text-sm font-medium rounded-xl backdrop-blur-sm transition-all ${
+            className={`px-4 py-2 text-sm font-medium rounded-xl transition-all ${
               isCurrentPage
-                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                : 'text-gray-300 bg-white/10 border border-white/20 hover:bg-white/20'
+                ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
+                : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'
             }`}
           >
             {page}
@@ -1100,7 +1101,7 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
       <button
         onClick={handleNext}
         disabled={currentPage === totalPages}
-        className="px-4 py-2 text-sm font-medium text-gray-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm transition-all"
+        className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
         Sonraki
       </button>

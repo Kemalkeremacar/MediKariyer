@@ -12,6 +12,7 @@ import { ROUTE_CONFIG } from '@config/routes.js';
 import useAuthStore from '@/store/authStore';
 import apiRequest from '@/services/http/client';
 import { showToast } from '@/utils/toastUtils';
+import { formatRelativeTime } from '@/utils/dateUtils';
 
 const NavbarNotificationBell = () => {
   const { user } = useAuthStore();
@@ -198,21 +199,7 @@ const NavbarNotificationBell = () => {
                     return icons[type] || '📢';
                   };
 
-                  const formatDate = (dateString) => {
-                    if (!dateString) return '';
-                    const date = new Date(dateString);
-                    const now = new Date();
-                    const diff = now - date;
-                    const minutes = Math.floor(diff / 60000);
-                    const hours = Math.floor(diff / 3600000);
-                    const days = Math.floor(diff / 86400000);
-
-                    if (minutes < 1) return 'Az önce';
-                    if (minutes < 60) return `${minutes} dk önce`;
-                    if (hours < 24) return `${hours} saat önce`;
-                    if (days < 7) return `${days} gün önce`;
-                    return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
-                  };
+                  // formatDate artık dateUtils'den geliyor (formatRelativeTime olarak)
 
                   const handleClick = async () => {
                     setIsOpen(false);
@@ -299,7 +286,7 @@ const NavbarNotificationBell = () => {
                             {notification.message || notification.body}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {formatDate(notification.createdAt || notification.created_at)}
+                            {formatRelativeTime(notification.createdAt || notification.created_at)}
                           </p>
                         </div>
                       </div>

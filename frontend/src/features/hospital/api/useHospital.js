@@ -640,46 +640,87 @@ export const useHospitalDoctorProfileDetail = (doctorId) => {
 };
 
 // ============================================================================
-// DEFAULT EXPORT - Hospital hooks object
+// PDF DOWNLOAD FUNCTIONS
 // ============================================================================
 
-const useHospital = {
-  // Dashboard
-  useHospitalDashboard,
-  
-  // Profile
-  useHospitalProfile,
-  useUpdateHospitalProfile,
-  useHospitalProfileCompletion,
-  
-  // Jobs
-  useHospitalJobs,
-  useHospitalJobById,
-  useCreateHospitalJob,
-  useUpdateHospitalJob,
-  useUpdateHospitalJobStatus,
-  useResubmitHospitalJob,
-  
-  // Applications
-  useHospitalApplications,
-  useHospitalJobApplications,
-  useUpdateApplicationStatus,
-  
-  // Departments
-  useHospitalDepartments,
-  useCreateHospitalDepartment,
-  useUpdateHospitalDepartment,
-  useDeleteHospitalDepartment,
-  
-  // Contacts
-  useHospitalContacts,
-  useCreateHospitalContact,
-  useUpdateHospitalContact,
-  useDeleteHospitalContact,
-  useDeactivateHospitalAccount,
-  
-  // Doctor Profiles
-  useHospitalDoctorProfileDetail,
+/**
+ * İş ilanı PDF'ini indirir
+ * Backend: GET /api/pdf/job/:jobId
+ */
+export const downloadJobPDF = async (jobId) => {
+  try {
+    const endpoint = `/pdf/job/${jobId}`;
+    const response = await apiRequest.get(endpoint, {
+      responseType: 'blob'
+    });
+    
+    // response.data zaten bir blob, tekrar sarmalamaya gerek yok
+    const blob = response.data;
+    
+    // Blob'un geçerli olduğunu kontrol et
+    if (!blob || blob.size === 0) {
+      throw new Error('PDF verisi alınamadı');
+    }
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ilan-${jobId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+    
+    showToast.success('PDF başarıyla indirildi');
+  } catch (error) {
+    console.error('PDF indirme hatası:', error);
+    showToast.error(error, { defaultMessage: 'PDF indirilemedi' });
+    throw error;
+  }
+};
+
+/**
+ * Başvuru PDF'ini indirir (Job + Doctor Profile)
+ * Backend: GET /api/pdf/application/:applicationId
+ */
+export const downloadApplicationPDF = async (applicationId) => {
+  try {
+    const endpoint = `/pdf/application/${applicationId}`;
+    const response = await apiRequest.get(endpoint, {
+      responseType: 'blob'
+    });
+    
+    // response.data zaten bir blob, tekrar sarmalamaya gerek yok
+    const blob = response.data;
+    
+    // Blob'un geçerli olduğunu kontrol et
+    if (!blob || blob.size === 0) {
+      throw new Error('PDF verisi alınamadı');
+    }
+    
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `basvuru-${applicationId}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+    
+    showToast.success('PDF başarıyla indirildi');
+  } catch (error) {
+    console.error('PDF indirme hatası:', error);
+    showToast.error(error, { defaultMessage: 'PDF indirilemedi' });
+    throw error;
+  }
 };
 
 // ============================================================================
@@ -724,6 +765,53 @@ export const calculateProfileCompletion = (profile) => {
 };
 
 // Manuel validation fonksiyonu kaldırıldı - Zod schema'ları kullanılıyor
+
+// ============================================================================
+// DEFAULT EXPORT - Hospital hooks object
+// ============================================================================
+
+const useHospital = {
+  // Dashboard
+  useHospitalDashboard,
+  
+  // Profile
+  useHospitalProfile,
+  useUpdateHospitalProfile,
+  useHospitalProfileCompletion,
+  
+  // Jobs
+  useHospitalJobs,
+  useHospitalJobById,
+  useCreateHospitalJob,
+  useUpdateHospitalJob,
+  useUpdateHospitalJobStatus,
+  useResubmitHospitalJob,
+  
+  // Applications
+  useHospitalApplications,
+  useHospitalJobApplications,
+  useUpdateApplicationStatus,
+  
+  // Departments
+  useHospitalDepartments,
+  useCreateHospitalDepartment,
+  useUpdateHospitalDepartment,
+  useDeleteHospitalDepartment,
+  
+  // Contacts
+  useHospitalContacts,
+  useCreateHospitalContact,
+  useUpdateHospitalContact,
+  useDeleteHospitalContact,
+  useDeactivateHospitalAccount,
+  
+  // Doctor Profiles
+  useHospitalDoctorProfileDetail,
+  
+  // PDF Downloads
+  downloadJobPDF,
+  downloadApplicationPDF,
+};
 
 export default useHospital;
 

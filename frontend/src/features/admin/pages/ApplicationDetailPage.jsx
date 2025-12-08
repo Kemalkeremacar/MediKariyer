@@ -18,6 +18,7 @@ import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
+import { formatDateTime, formatDate as formatDateUtil, formatDateShort } from '@/utils/dateUtils';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -132,20 +133,7 @@ const AdminApplicationDetailPage = () => {
       return;
     }
 
-    const formatDate = (date) => {
-      if (!date) return 'Belirtilmemiş';
-      try {
-        return new Date(date).toLocaleDateString('tr-TR', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      } catch {
-        return date;
-      }
-    };
+    // formatDate artık utility'den geliyor, burada local tanımlama kaldırıldı
 
     const doctorProfile = doctorData?.user?.profile || doctorData?.profile || {};
     const doctorName = `${application.first_name || ''} ${application.last_name || ''}`.trim() || 'Belirtilmemiş';
@@ -167,15 +155,7 @@ const AdminApplicationDetailPage = () => {
       return div.innerHTML;
     };
 
-    // Format date helper
-    const formatDateShort = (date) => {
-      if (!date) return '';
-      try {
-        return new Date(date).toLocaleDateString('tr-TR', { year: 'numeric', month: 'short' });
-      } catch {
-        return date;
-      }
-    };
+    // formatDateShort artık utility'den geliyor, burada local tanımlama kaldırıldı
 
     // Geçici HTML elementi oluştur
     const printWindow = document.createElement('div');
@@ -706,13 +686,7 @@ const AdminApplicationDetailPage = () => {
                     </div>
                     <span className="text-sm text-gray-900 font-medium">
                       {application.applied_at 
-                        ? new Date(application.applied_at).toLocaleDateString('tr-TR', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })
+                        ? formatDateTime(application.applied_at)
                         : 'Bilinmiyor'}
                     </span>
                   </div>
