@@ -663,9 +663,14 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
   }
 
   const profile = doctorData?.profile;
-  const educations = doctorData?.educations || [];
-  const experiences = doctorData?.experiences || [];
-  const certificates = doctorData?.certificates || [];
+  // Tarihe göre sırala - en yeni üstte, en eski altta
+  const educations = (doctorData?.educations || []).sort((a, b) => b.graduation_year - a.graduation_year);
+  const experiences = (doctorData?.experiences || []).sort((a, b) => {
+    const dateA = new Date(a.start_date);
+    const dateB = new Date(b.start_date);
+    return dateB - dateA; // En yeni üstte
+  });
+  const certificates = (doctorData?.certificates || []).sort((a, b) => b.certificate_year - a.certificate_year);
   const languages = doctorData?.languages || [];
 
   // Profile not found state
@@ -765,18 +770,14 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
                   <p className={isInline ? 'text-gray-900' : 'text-white'}>{formatDate(profile.dob)}</p>
                 </div>
               )}
-              {profile.birth_place_name && (
-                <div>
-                  <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Doğum Yeri</span>
-                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.birth_place_name}</p>
-                </div>
-              )}
-              {profile.residence_city_name && (
-                <div>
-                  <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>İkamet Şehri</span>
-                  <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.residence_city_name}</p>
-                </div>
-              )}
+              <div>
+                <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Doğum Yeri</span>
+                <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.birth_place_name || 'Belirtilmemiş'}</p>
+              </div>
+              <div>
+                <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>İkamet Yeri</span>
+                <p className={isInline ? 'text-gray-900' : 'text-white'}>{profile.residence_city_name || 'Belirtilmemiş'}</p>
+              </div>
               {profile.specialty_name && (
                 <div>
                   <span className={`text-sm ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>Uzmanlık Alanı</span>
@@ -807,18 +808,15 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
                         <GraduationCap className={`w-5 h-5 ${isInline ? 'text-green-600' : 'text-green-400'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
+                        {edu.education_type_name && (
+                          <p className={`text-xs mb-1 font-semibold ${isInline ? 'text-gray-900' : 'text-white'}`}>{edu.education_type_name}</p>
+                        )}
                         <h4 className={`font-semibold text-sm mb-1 ${isInline ? 'text-gray-900' : 'text-white'}`}>{edu.institution_name}</h4>
-                        <p className={`text-xs mb-1 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{edu.field}</p>
-                        {edu.degree_type && <p className={`text-xs mb-2 ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>{edu.degree_type}</p>}
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className={`text-xs ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{edu.field}</p>
                           <span className={`px-2 py-0.5 ${isInline ? 'bg-green-100 text-green-800' : 'bg-green-500/20 text-green-300'} rounded text-xs font-medium`}>
                             {edu.graduation_year}
                           </span>
-                          {edu.education_type_name && (
-                            <span className={`px-2 py-0.5 ${isInline ? 'bg-blue-100 text-blue-800' : 'bg-blue-500/20 text-blue-300'} rounded text-xs font-medium`}>
-                              {edu.education_type_name}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -843,29 +841,19 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
                         <Briefcase className={`w-5 h-5 ${isInline ? 'text-purple-600' : 'text-purple-400'}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className={`font-semibold text-sm ${isInline ? 'text-gray-900' : 'text-white'}`}>{exp.role_title}</h4>
-                          {exp.is_current && (
-                            <span className={`px-2 py-0.5 ${isInline ? 'bg-green-100 text-green-800' : 'bg-green-500/20 text-green-300'} rounded text-xs font-medium ml-2 flex-shrink-0`}>
-                              Devam Ediyor
-                            </span>
-                          )}
-                        </div>
-                        <p className={`text-xs mb-1 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{exp.organization}</p>
-                        {exp.specialty_name && (
-                          <p className={`text-xs mb-2 ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>
-                            Uzmanlık: {exp.specialty_name}
-                            {exp.subspecialty_name && ` - ${exp.subspecialty_name}`}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className={`text-xs font-semibold ${isInline ? 'text-gray-900' : 'text-white'}`}>{exp.organization}</p>
                           <span className={`px-2 py-0.5 ${isInline ? 'bg-purple-100 text-purple-800' : 'bg-purple-500/20 text-purple-300'} rounded text-xs font-medium`}>
-                            {formatMonthYear(exp.start_date)} - 
-                            {exp.is_current ? ' Devam Ediyor' : (exp.end_date ? formatMonthYear(exp.end_date) : 'Belirtilmemiş')}
+                            {new Date(exp.start_date).getFullYear()}{exp.end_date && !exp.is_current ? ` - ${new Date(exp.end_date).getFullYear()}` : ''}
                           </span>
                         </div>
+                        {exp.specialty_name && (
+                          <p className={`text-xs mb-1 ${isInline ? 'text-gray-600' : 'text-gray-400'}`}>
+                            {exp.specialty_name}{exp.subspecialty_name && ` - ${exp.subspecialty_name}`}
+                          </p>
+                        )}
                         {exp.description && (
-                          <p className={`text-xs mt-2 pt-2 ${isInline ? 'text-gray-700 border-t border-gray-200' : 'text-gray-300 border-t border-white/10'}`}>{exp.description}</p>
+                          <p className={`text-xs mt-2 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{exp.description}</p>
                         )}
                       </div>
                     </div>
@@ -891,8 +879,8 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className={`font-semibold text-sm mb-1 ${isInline ? 'text-gray-900' : 'text-white'}`}>{cert.certificate_name || 'Sertifika'}</h4>
-                        <p className={`text-xs mb-1 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{cert.institution}</p>
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className={`text-xs ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>{cert.institution}</p>
                           <span className={`px-2 py-0.5 ${isInline ? 'bg-yellow-100 text-yellow-800' : 'bg-yellow-500/20 text-yellow-300'} rounded text-xs font-medium`}>
                             {cert.certificate_year}
                           </span>
@@ -921,12 +909,9 @@ const DoctorProfilePopover = ({ doctorId, doctorData, isLoading, anchorElement, 
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className={`font-semibold text-sm mb-1 ${isInline ? 'text-gray-900' : 'text-white'}`}>{lang.language_name}</h4>
-                        <p className={`text-xs mb-2 ${isInline ? 'text-gray-700' : 'text-gray-300'}`}>Seviye: {lang.level_name}</p>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-0.5 ${isInline ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'} rounded text-xs font-medium`}>
-                            {lang.level_name}
-                          </span>
-                        </div>
+                        <span className={`px-2 py-0.5 ${isInline ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'} rounded text-xs font-medium inline-block`}>
+                          {lang.level_name}
+                        </span>
                       </div>
                     </div>
                   </div>

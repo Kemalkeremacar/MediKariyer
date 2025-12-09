@@ -998,7 +998,7 @@ const updateApplicationStatus = async (applicationId, statusId, reason = null) =
         1: 'pending',      // Beklemede
         2: 'pending',      // İnceleniyor
         3: 'accepted',     // Kabul Edildi
-        4: 'rejected',     // Red Edildi
+        4: 'rejected',     // Reddedildi
         5: 'withdrawn'     // Geri Çekildi
       };
       

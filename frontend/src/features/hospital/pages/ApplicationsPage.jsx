@@ -831,7 +831,7 @@ export const StatusBadge = ({ status_id, statusName }) => {
     1: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-300', label: 'Beklemede', icon: Clock },
     2: { bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', label: 'İnceleniyor', icon: Eye },
     3: { bg: 'bg-green-100', text: 'text-green-800', border: 'border-green-300', label: 'Kabul Edildi', icon: CheckCircle },
-    4: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300', label: 'Red Edildi', icon: X },
+    4: { bg: 'bg-red-100', text: 'text-red-800', border: 'border-red-300', label: 'Reddedildi', icon: X },
     5: { bg: 'bg-gray-100', text: 'text-gray-800', border: 'border-gray-300', label: 'Geri Çekildi', icon: ArrowLeft }
   };
 
@@ -884,7 +884,7 @@ const ApplicationCardComponent = ({ application, statusOptions, onStatusChange, 
               ) : (
                 <>
                   <h3 className="text-lg font-bold text-gray-900 mb-1">
-                    {application.first_name} {application.last_name}
+                    {application.title && `${application.title} `}{application.first_name} {application.last_name}
                   </h3>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-gray-700 text-sm">

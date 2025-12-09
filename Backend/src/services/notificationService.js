@@ -605,7 +605,7 @@ const sendDoctorNotification = async (doctorUserId, status, applicationData) => 
       notificationType = 'success';
       break;
     case 'rejected':
-    case 4: // Status ID 4 = Red Edildi
+    case 4: // Status ID 4 = Reddedildi
       notificationTitle = 'Başvurunuz Reddedildi';
       notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz reddedildi.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
       notificationType = 'error';

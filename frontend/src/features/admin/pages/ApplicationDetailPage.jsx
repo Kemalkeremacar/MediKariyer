@@ -19,8 +19,6 @@ import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 import { formatDateTime, formatDate as formatDateUtil, formatDateShort } from '@/utils/dateUtils';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 const AdminApplicationDetailPage = () => {
   const { id } = useParams();
@@ -126,352 +124,44 @@ const AdminApplicationDetailPage = () => {
     }
   };
 
-  // Export başvuru fonksiyonu (PDF - HTML tabanlı, Türkçe karakter desteği ile)
+  // Export başvuru fonksiyonu (Backend PDF servisi kullanarak)
   const handleExportApplication = async () => {
     if (!application || !application.id) {
       showToast.warning('Başvuru verisi bulunamadı');
       return;
     }
 
-    // formatDate artık utility'den geliyor, burada local tanımlama kaldırıldı
-
-    const doctorProfile = doctorData?.user?.profile || doctorData?.profile || {};
-    const doctorName = `${application.first_name || ''} ${application.last_name || ''}`.trim() || 'Belirtilmemiş';
-    const doctorTitle = doctorProfile.title || '';
-    const fullDoctorName = doctorTitle ? `${doctorTitle} ${doctorName}` : doctorName;
-    const hospitalName = application.institution_name || application.hospital_name || 'Belirtilmemiş';
-    const jobTitle = application.job_title || 'Belirtilmemiş';
-    const doctorPhoto = doctorProfile.profile_photo || application.profile_photo || null;
-    const doctorEducations = doctorProfile.educations || [];
-    const doctorExperiences = doctorProfile.experiences || [];
-    const doctorCertificates = doctorProfile.certificates || [];
-    const doctorLanguages = doctorProfile.languages || [];
-
-    // HTML escape fonksiyonu
-    const escapeHtml = (text) => {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    };
-
-    // formatDateShort artık utility'den geliyor, burada local tanımlama kaldırıldı
-
-    // Geçici HTML elementi oluştur
-    const printWindow = document.createElement('div');
-    printWindow.style.position = 'absolute';
-    printWindow.style.left = '-9999px';
-    printWindow.style.width = '210mm'; // A4 genişliği
-    printWindow.style.padding = '20mm';
-    printWindow.style.fontFamily = 'Arial, sans-serif';
-    printWindow.style.backgroundColor = '#ffffff';
-    printWindow.style.color = '#000000';
-    
-    // Fotoğraf için base64 veya URL kontrolü
-    const photoHtml = doctorPhoto 
-      ? `<img src="${doctorPhoto}" alt="Profil Fotoğrafı" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #3b82f6;" />`
-      : '<div style="width: 120px; height: 120px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px; border: 3px solid #3b82f6;">Fotoğraf Yok</div>';
-
-    printWindow.innerHTML = `
-      <div style="max-width: 800px; margin: 0 auto; background: white; padding: 30px; font-family: 'Segoe UI', Arial, sans-serif;">
-        <!-- DOKTOR PROFİLİ - En Üstte -->
-        <div style="margin-bottom: 30px; page-break-inside: avoid; border-bottom: 3px solid #10b981; padding-bottom: 20px;">
-          <h1 style="color: #1e40af; font-size: 20px; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid #10b981; padding-bottom: 8px;">
-            👤 DOKTOR PROFİLİ
-          </h1>
-          
-          <!-- Doktor Header - Fotoğraf ve Temel Bilgiler (Popover Formatına Benzer) -->
-          <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px; border-left: 4px solid #10b981; page-break-inside: avoid;">
-            <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-              <div>
-                ${photoHtml}
-              </div>
-              <div style="flex: 1;">
-                <h2 style="color: #111827; font-size: 20px; font-weight: bold; margin: 0 0 8px 0;">${escapeHtml(fullDoctorName)}</h2>
-                ${doctorProfile.specialty_name || application.specialty_name ? `
-                  <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px 0;">${escapeHtml(doctorProfile.specialty_name || application.specialty_name)}</p>
-                ` : ''}
-                ${doctorProfile.subspecialty_name || application.subspecialty_name ? `
-                  <p style="color: #9ca3af; font-size: 12px; margin: 0;">Yan Dal: ${escapeHtml(doctorProfile.subspecialty_name || application.subspecialty_name)}</p>
-                ` : ''}
-              </div>
-            </div>
-            
-            <!-- Kişisel ve İletişim Bilgileri - Grid Format -->
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; font-size: 11px;">
-              <div>
-                <span style="color: #6b7280; display: block; margin-bottom: 4px;">Ad Soyad</span>
-                <p style="color: #111827; font-weight: 600; margin: 0;">${escapeHtml(fullDoctorName)}</p>
-              </div>
-              <div>
-                <span style="color: #6b7280; display: block; margin-bottom: 4px;">Telefon</span>
-                <p style="color: #111827; margin: 0;">${escapeHtml(doctorProfile.phone || application.phone || 'Belirtilmemiş')}</p>
-              </div>
-              <div>
-                <span style="color: #6b7280; display: block; margin-bottom: 4px;">E-posta</span>
-                <p style="color: #111827; margin: 0;">${escapeHtml(doctorProfile.email || application.email || 'Belirtilmemiş')}</p>
-              </div>
-              ${doctorProfile.birth_date || doctorProfile.dob ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Doğum Tarihi</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(formatDate(doctorProfile.birth_date || doctorProfile.dob))}</p>
-                </div>
-              ` : ''}
-              ${doctorProfile.birth_place_name ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Doğum Yeri</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(doctorProfile.birth_place_name)}</p>
-                </div>
-              ` : ''}
-              ${doctorProfile.residence_city_name || application.residence_city_name ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">İkamet Şehri</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(doctorProfile.residence_city_name || application.residence_city_name)}</p>
-                </div>
-              ` : ''}
-              ${doctorProfile.specialty_name || application.specialty_name ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Uzmanlık Alanı</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(doctorProfile.specialty_name || application.specialty_name)}</p>
-                </div>
-              ` : ''}
-              ${doctorProfile.subspecialty_name || application.subspecialty_name ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Yan Dal</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(doctorProfile.subspecialty_name || application.subspecialty_name)}</p>
-                </div>
-              ` : ''}
-            </div>
-          </div>
-
-          <!-- Eğitim -->
-          ${doctorEducations.length > 0 ? `
-          <div style="margin-bottom: 20px; page-break-inside: avoid;">
-            <h3 style="color: #1e40af; font-size: 14px; font-weight: bold; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #3b82f6; text-transform: uppercase;">
-              🎓 Eğitim
-            </h3>
-            ${doctorEducations.map(edu => `
-              <div style="margin-bottom: 12px; padding: 10px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #3b82f6; font-size: 11px;">
-                <div style="font-weight: 600; color: #111827; margin-bottom: 4px;">${escapeHtml(edu.institution_name || 'Belirtilmemiş')}</div>
-                <div style="color: #6b7280; font-size: 10px;">
-                  ${edu.education_type_name ? escapeHtml(edu.education_type_name) : ''} 
-                  ${edu.graduation_year ? ` • ${escapeHtml(String(edu.graduation_year))}` : ''}
-                  ${edu.specialty_name ? ` • ${escapeHtml(edu.specialty_name)}` : ''}
-                </div>
-                ${edu.description ? `<div style="margin-top: 4px; color: #374151; font-size: 10px;">${escapeHtml(edu.description)}</div>` : ''}
-              </div>
-            `).join('')}
-          </div>
-          ` : ''}
-
-          <!-- Deneyim -->
-          ${doctorExperiences.length > 0 ? `
-          <div style="margin-bottom: 20px; page-break-inside: avoid;">
-            <h3 style="color: #1e40af; font-size: 14px; font-weight: bold; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #10b981; text-transform: uppercase;">
-              💼 Deneyim
-            </h3>
-            ${doctorExperiences.map(exp => `
-              <div style="margin-bottom: 12px; padding: 10px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #10b981; font-size: 11px;">
-                <div style="font-weight: 600; color: #111827; margin-bottom: 4px;">${escapeHtml(exp.institution_name || 'Belirtilmemiş')}</div>
-                <div style="color: #6b7280; font-size: 10px;">
-                  ${exp.start_date ? formatDateShort(exp.start_date) : ''} 
-                  ${exp.is_current ? '- Devam Ediyor' : (exp.end_date ? ` - ${formatDateShort(exp.end_date)}` : '')}
-                  ${exp.position ? ` • ${escapeHtml(exp.position)}` : ''}
-                </div>
-                ${exp.description ? `<div style="margin-top: 4px; color: #374151; font-size: 10px;">${escapeHtml(exp.description)}</div>` : ''}
-              </div>
-            `).join('')}
-          </div>
-          ` : ''}
-
-          <!-- Sertifikalar -->
-          ${doctorCertificates.length > 0 ? `
-          <div style="margin-bottom: 20px; page-break-inside: avoid;">
-            <h3 style="color: #1e40af; font-size: 14px; font-weight: bold; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #f59e0b; text-transform: uppercase;">
-              🏆 Sertifikalar
-            </h3>
-            ${doctorCertificates.map(cert => `
-              <div style="margin-bottom: 12px; padding: 10px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #f59e0b; font-size: 11px;">
-                <div style="font-weight: 600; color: #111827; margin-bottom: 4px;">${escapeHtml(cert.certificate_name || 'Belirtilmemiş')}</div>
-                <div style="color: #6b7280; font-size: 10px;">
-                  ${cert.certificate_year ? escapeHtml(String(cert.certificate_year)) : ''}
-                  ${cert.issuing_organization ? ` • ${escapeHtml(cert.issuing_organization)}` : ''}
-                </div>
-                ${cert.description ? `<div style="margin-top: 4px; color: #374151; font-size: 10px;">${escapeHtml(cert.description)}</div>` : ''}
-              </div>
-            `).join('')}
-          </div>
-          ` : ''}
-
-          <!-- Diller -->
-          ${doctorLanguages.length > 0 ? `
-          <div style="margin-bottom: 20px; page-break-inside: avoid;">
-            <h3 style="color: #1e40af; font-size: 14px; font-weight: bold; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #8b5cf6; text-transform: uppercase;">
-              🌐 Diller
-            </h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 11px;">
-              ${doctorLanguages.map(lang => `
-                <div style="padding: 8px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #8b5cf6;">
-                  <div style="font-weight: 600; color: #111827;">${escapeHtml(lang.language_name || 'Belirtilmemiş')}</div>
-                  <div style="color: #6b7280; font-size: 10px;">${escapeHtml(lang.level_name || '')}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-          ` : ''}
-        </div>
-
-        <!-- İLAN BİLGİLERİ - Ortada -->
-        <div style="margin-bottom: 30px; page-break-inside: avoid; border-bottom: 3px solid #f59e0b; padding-bottom: 20px;">
-          <h1 style="color: #1e40af; font-size: 20px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid #f59e0b; padding-bottom: 8px;">
-            📋 İLAN BİLGİLERİ
-          </h1>
-          <div style="background: #f8fafc; border-radius: 8px; padding: 20px; border-left: 4px solid #f59e0b;">
-            <div style="margin-bottom: 15px;">
-              <h2 style="color: #111827; font-size: 18px; font-weight: bold; margin: 0 0 10px 0;">${escapeHtml(jobTitle)}</h2>
-              <p style="color: #6b7280; font-size: 14px; margin: 0;">${escapeHtml(hospitalName)}</p>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 11px; margin-bottom: 15px;">
-              ${application.job_specialty_name || application.specialty_name ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Uzmanlık Alanı</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(application.job_specialty_name || application.specialty_name)}</p>
-                </div>
-              ` : ''}
-              ${application.job_subspecialty_name || application.subspecialty_name ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Yan Dal</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(application.job_subspecialty_name || application.subspecialty_name)}</p>
-                </div>
-              ` : ''}
-              ${application.job_city_name || application.job_city ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Şehir</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(application.job_city_name || application.job_city)}</p>
-                </div>
-              ` : ''}
-              ${application.employment_type ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Çalışma Şekli</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(application.employment_type)}</p>
-                </div>
-              ` : ''}
-              ${application.min_experience_years ? `
-                <div>
-                  <span style="color: #6b7280; display: block; margin-bottom: 4px;">Deneyim</span>
-                  <p style="color: #111827; margin: 0;">${escapeHtml(String(application.min_experience_years))}+ yıl</p>
-                </div>
-              ` : ''}
-            </div>
-            
-            ${application.job_description ? `
-              <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                <h3 style="color: #111827; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;">İlan Açıklaması</h3>
-                <div style="color: #374151; font-size: 11px; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; background: white; padding: 12px; border-radius: 6px;">
-                  ${escapeHtml(application.job_description).replace(/\n/g, '<br>')}
-                </div>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-
-        <!-- BAŞVURU BİLGİLERİ - En Altta -->
-        <div style="border-bottom: 3px solid #3b82f6; padding-bottom: 20px;">
-          <h1 style="color: #1e40af; font-size: 20px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; page-break-after: avoid;">
-            📝 BAŞVURU BİLGİLERİ
-          </h1>
-          <div style="background: #f8fafc; border-radius: 8px; padding: 20px; border-left: 4px solid #3b82f6;">
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; font-size: 11px; margin-bottom: 15px; page-break-inside: avoid;">
-              <div>
-                <span style="color: #6b7280; display: block; margin-bottom: 4px;">Başvuru ID</span>
-                <p style="color: #111827; font-weight: 600; margin: 0;">${escapeHtml(String(application.id || 'Belirtilmemiş'))}</p>
-              </div>
-              <div>
-                <span style="color: #6b7280; display: block; margin-bottom: 4px;">Başvuru Durumu</span>
-                <p style="color: #111827; margin: 0;">${escapeHtml(application.status || application.status_name || 'Belirtilmemiş')}</p>
-              </div>
-              <div>
-                <span style="color: #6b7280; display: block; margin-bottom: 4px;">Başvuru Tarihi</span>
-                <p style="color: #111827; margin: 0;">${escapeHtml(formatDate(application.applied_at || application.created_at))}</p>
-              </div>
-              <div>
-                <span style="color: #6b7280; display: block; margin-bottom: 4px;">Son Güncelleme</span>
-                <p style="color: #111827; margin: 0;">${escapeHtml(formatDate(application.updated_at))}</p>
-              </div>
-            </div>
-            
-            ${application.cover_letter ? `
-              <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; page-break-inside: avoid;">
-                <h3 style="color: #111827; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;">Doktor Ön Yazısı</h3>
-                <div style="color: #374151; font-size: 11px; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; background: white; padding: 12px; border-radius: 6px;">
-                  ${escapeHtml(application.cover_letter).replace(/\n/g, '<br>')}
-                </div>
-              </div>
-            ` : ''}
-            
-            ${application.notes ? `
-              <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb; page-break-inside: avoid;">
-                <h3 style="color: #111827; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;">Hastane Notu</h3>
-                <div style="color: #374151; font-size: 11px; line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; background: white; padding: 12px; border-radius: 6px;">
-                  ${escapeHtml(application.notes).replace(/\n/g, '<br>')}
-                </div>
-              </div>
-            ` : ''}
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div style="margin-top: 30px; padding-top: 15px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 10px; page-break-inside: avoid;">
-          <p style="margin: 0;">Rapor Oluşturulma Tarihi: ${new Date().toLocaleString('tr-TR')}</p>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(printWindow);
-    
     try {
-      // HTML'i canvas'a çevir
-      const canvas = await html2canvas(printWindow, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/pdf/application/${application.id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
-      
-      // Canvas'ı PDF'e çevir
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgWidth = 210; // A4 genişliği (mm)
-      const pageHeight = 297; // A4 yüksekliği (mm)
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      if (!response.ok) {
+        throw new Error('PDF oluşturulamadı');
       }
 
-      // Dosya adı: {isim} {soyisim} - {ilan başlığı}
-      const cleanDoctorName = doctorName.replace(/[<>:"/\\|?*]/g, '');
-      const cleanJobTitle = jobTitle.replace(/[<>:"/\\|?*]/g, '');
-      const fileName = `${cleanDoctorName.toUpperCase()} - ${cleanJobTitle.toUpperCase()}.pdf`;
-      pdf.save(fileName);
-      
-      document.body.removeChild(printWindow);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `basvuru-${application.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
       showToast.success('Başvuru başarıyla indirildi');
     } catch (error) {
-      console.error('PDF oluşturma hatası:', error);
-      document.body.removeChild(printWindow);
-      showToast.error('PDF oluşturulurken bir hata oluştu');
+      console.error('PDF indirme hatası:', error);
+      showToast.error('PDF indirilirken bir hata oluştu');
     }
   };
+
+
 
   const getStatusConfig = (status) => {
     const statusConfig = {
@@ -902,18 +592,14 @@ const AdminApplicationDetailPage = () => {
                             <p className="text-sm font-medium text-gray-600 mb-1">E-posta</p>
                             <p className="text-sm text-gray-900">{application.email || doctorProfile.email || 'Belirtilmemiş'}</p>
                           </div>
-                          {(doctorProfile.residence_city_name || application.residence_city_name) && (
-                            <div>
-                              <p className="text-sm font-medium text-gray-600 mb-1">İkamet Şehri</p>
-                              <p className="text-sm text-gray-900">{doctorProfile.residence_city_name || application.residence_city_name}</p>
-                            </div>
-                          )}
-                          {(doctorProfile.birth_place_name || application.birth_place_name) && (
-                            <div>
-                              <p className="text-sm font-medium text-gray-600 mb-1">Doğum Yeri</p>
-                              <p className="text-sm text-gray-900">{doctorProfile.birth_place_name || application.birth_place_name}</p>
-                            </div>
-                          )}
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">Doğum Yeri</p>
+                            <p className="text-sm text-gray-900">{doctorProfile.birth_place_name || application.birth_place_name || 'Belirtilmemiş'}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600 mb-1">İkamet Yeri</p>
+                            <p className="text-sm text-gray-900">{doctorProfile.residence_city_name || application.residence_city_name || 'Belirtilmemiş'}</p>
+                          </div>
                         </div>
                       </div>
                       

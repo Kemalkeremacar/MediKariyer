@@ -251,7 +251,7 @@ const mobileApplicationsQuerySchema = paginationQuerySchema.keys({
     'number.integer': 'Status ID tam sayı olmalıdır',
     'number.positive': 'Status ID pozitif bir sayı olmalıdır'
   }),
-  status: Joi.string().valid('pending', 'reviewing', 'approved', 'rejected', 'withdrawn', 'Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Red Edildi', 'Geri Çekildi').optional().messages({
+  status: Joi.string().valid('pending', 'reviewing', 'approved', 'rejected', 'withdrawn', 'Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Reddedildi', 'Geri Çekildi').optional().messages({
     'any.only': 'Status geçerli bir başvuru durumu olmalıdır'
   })
 });

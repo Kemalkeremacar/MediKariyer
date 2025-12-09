@@ -45,7 +45,7 @@
  * @since 2024
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
@@ -67,6 +67,8 @@ const Header = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const desktopMenuRef = useRef(null);
+  const mobileMenuRef = useRef(null);
 
   // Scroll event listener - Public sayfada scroll durumunu takip et
   useEffect(() => {
@@ -102,6 +104,36 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [location.pathname]);
+
+  // Dropdown dışına tıklanınca kapat
+  useEffect(() => {
+    if (!isUserMenuOpen) return;
+
+    const handleClickOutside = (event) => {
+      // Desktop ve mobil menü ref'lerini kontrol et
+      const isOutsideDesktop = desktopMenuRef.current && !desktopMenuRef.current.contains(event.target);
+      const isOutsideMobile = mobileMenuRef.current && !mobileMenuRef.current.contains(event.target);
+      
+      // Her ikisi de dışarıdaysa kapat
+      if (isOutsideDesktop && isOutsideMobile) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isUserMenuOpen]);
 
   // ============================================================================
   // NAVIGATION CONFIGURATION - Rol bazlı navigasyon yapılandırması
@@ -235,7 +267,7 @@ const Header = () => {
         <a
           href={to}
           onClick={handleHashClick}
-          className={`group relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+          className={`group relative px-4 py-2 rounded-lg font-bold transition-all duration-300 ${
             isActive 
               ? 'bg-blue-500/10 text-blue-600' 
               : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
@@ -257,7 +289,7 @@ const Header = () => {
         to={to}
         end={exact}
         className={({ isActive }) =>
-          `group relative px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+          `group relative px-4 py-2 rounded-lg font-bold transition-all duration-300 ${
             isActive 
               ? 'bg-blue-500/10 text-blue-600' 
               : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
@@ -343,51 +375,52 @@ const Header = () => {
               <>
                 {user.role === 'admin' ? (
                   // Admin için özel header
-                  <>
-                    <div className="relative">
-                      <button
-                        onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
-                      >
-                        <User size={18} />
-                        <span className="text-sm font-medium">
-                          {user.first_name && user.last_name 
-                            ? `${user.title || 'Dr.'} ${user.first_name} ${user.last_name}` 
-                            : user.email
-                          }
-                        </span>
-                        <ChevronDown size={16} className={`transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
-                      </button>
+                  <div className="relative" ref={desktopMenuRef}>
+                    <button
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
+                    >
+                      <User size={18} />
+                      <span className="text-sm font-bold">
+                        {user.first_name && user.last_name 
+                          ? `${user.title || 'Dr.'} ${user.first_name} ${user.last_name}` 
+                          : user.email
+                        }
+                      </span>
+                      <ChevronDown size={16} className={`transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
 
-                      {/* Dropdown Menu */}
-                      {isUserMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                          {adminMenuItems.map((item, index) => {
-                            const IconComponent = item.icon;
-                            return (
-                              <Link
-                                key={`${item.to}-${index}`}
-                                to={item.to}
-                                onClick={() => setIsUserMenuOpen(false)}
-                                className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
-                              >
-                                <IconComponent size={18} className="text-gray-500" />
-                                <span className="text-sm font-medium">{item.text}</span>
-                              </Link>
-                            );
-                          })}
-                          <hr className="my-2 border-gray-200" />
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 w-full text-left"
-                          >
-                            <LogOut size={18} />
-                            <span className="text-sm font-medium">Çıkış Yap</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                    {/* Dropdown Menu */}
+                    {isUserMenuOpen && (
+                      <div 
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {adminMenuItems.map((item, index) => {
+                          const IconComponent = item.icon;
+                          return (
+                            <Link
+                              key={`${item.to}-${index}`}
+                              to={item.to}
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                            >
+                              <IconComponent size={18} className="text-gray-500" />
+                              <span className="text-sm font-bold">{item.text}</span>
+                            </Link>
+                          );
+                        })}
+                        <hr className="my-2 border-gray-200" />
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 w-full text-left"
+                        >
+                          <LogOut size={18} />
+                          <span className="text-sm font-bold">Çıkış Yap</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : user.role === 'hospital' ? (
                   // Hastane için dropdown menü
                   <>
@@ -395,13 +428,13 @@ const Header = () => {
                     <NavbarNotificationBell />
 
                     {/* Hastane Dropdown */}
-                    <div className="relative">
+                    <div className="relative" ref={desktopMenuRef}>
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                         className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
                       >
                         <Building2 size={18} />
-                        <span className="text-sm font-medium">
+                        <span className="text-sm font-bold">
                           {user.institution_name || user.email}
                         </span>
                         <ChevronDown size={16} className={`transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
@@ -409,14 +442,17 @@ const Header = () => {
 
                       {/* Dropdown Menu */}
                       {isUserMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                        <div 
+                          className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Link
                             to={ROUTE_CONFIG.HOSPITAL.DASHBOARD}
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <BarChart3 size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Ana Sayfa</span>
+                            <span className="text-sm font-bold">Ana Sayfa</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.HOSPITAL.PROFILE}
@@ -424,7 +460,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <Building2 size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Profilim</span>
+                            <span className="text-sm font-bold">Profilim</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.HOSPITAL.JOBS}
@@ -432,7 +468,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <Briefcase size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">İlan Yönetimi</span>
+                            <span className="text-sm font-bold">İlan Yönetimi</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.HOSPITAL.APPLICATIONS}
@@ -440,7 +476,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <ClipboardList size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Başvurular</span>
+                            <span className="text-sm font-bold">Başvurular</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.HOSPITAL.NOTIFICATIONS}
@@ -448,7 +484,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <Bell size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Bildirimler</span>
+                            <span className="text-sm font-bold">Bildirimler</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.HOSPITAL.SETTINGS}
@@ -456,7 +492,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <Settings size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Ayarlar</span>
+                            <span className="text-sm font-bold">Ayarlar</span>
                           </Link>
                           <hr className="my-2 border-gray-200" />
                           <button
@@ -468,7 +504,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 w-full text-left"
                           >
                             <LogOut size={18} />
-                            <span className="text-sm font-medium">Çıkış Yap</span>
+                            <span className="text-sm font-bold">Çıkış Yap</span>
                           </button>
                         </div>
                       )}
@@ -481,13 +517,13 @@ const Header = () => {
                     <NavbarNotificationBell />
 
                     {/* Doktor Dropdown */}
-                    <div className="relative">
+                    <div className="relative" ref={desktopMenuRef}>
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                         className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
                       >
                         <User size={18} />
-                        <span className="text-sm font-medium">
+                        <span className="text-sm font-bold">
                           {user.first_name && user.last_name 
                             ? `${user.title || 'Dr.'} ${user.first_name} ${user.last_name}` 
                             : user.email
@@ -498,14 +534,17 @@ const Header = () => {
 
                       {/* Dropdown Menu */}
                       {isUserMenuOpen && (
-                        <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                        <div 
+                          className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Link
                             to={ROUTE_CONFIG.DOCTOR.DASHBOARD}
                             onClick={() => setIsUserMenuOpen(false)}
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <BarChart3 size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Ana Sayfa</span>
+                            <span className="text-sm font-bold">Ana Sayfa</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.DOCTOR.PROFILE}
@@ -513,7 +552,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <User size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Profilim</span>
+                            <span className="text-sm font-bold">Profilim</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.DOCTOR.JOBS}
@@ -521,7 +560,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <Briefcase size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">İş İlanları</span>
+                            <span className="text-sm font-bold">İş İlanları</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.DOCTOR.APPLICATIONS}
@@ -529,7 +568,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <FileText size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Başvurularım</span>
+                            <span className="text-sm font-bold">Başvurularım</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.DOCTOR.NOTIFICATIONS}
@@ -537,7 +576,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <Bell size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Bildirimler</span>
+                            <span className="text-sm font-bold">Bildirimler</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.DOCTOR.SETTINGS}
@@ -545,7 +584,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
                           >
                             <Settings size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">Ayarlar</span>
+                            <span className="text-sm font-bold">Ayarlar</span>
                           </Link>
                           <hr className="my-2 border-gray-200" />
                           <button
@@ -557,7 +596,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 w-full text-left"
                           >
                             <LogOut size={18} />
-                            <span className="text-sm font-medium">Çıkış Yap</span>
+                            <span className="text-sm font-bold">Çıkış Yap</span>
                           </button>
                         </div>
                       )}
@@ -569,7 +608,7 @@ const Header = () => {
               <>
                 <Link
                   to={ROUTE_CONFIG.PUBLIC.LOGIN}
-                  className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg font-medium transition-all duration-300"
+                  className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg font-bold transition-all duration-300"
                 >
                   Giriş Yap
                 </Link>
@@ -594,7 +633,7 @@ const Header = () => {
               )}
               
               {/* Mobile Menu Button */}
-              <div className="relative">
+              <div className="relative" ref={mobileMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none p-2"
@@ -620,11 +659,15 @@ const Header = () => {
 
                 {/* Mobile All-in-One Dropdown - 4 Parametre Planına Göre */}
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50 max-h-96 overflow-y-auto mobile-dropdown" style={{ zIndex: 9999 }}>
+                  <div 
+                    className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50 max-h-96 overflow-y-auto mobile-dropdown" 
+                    style={{ zIndex: 9999 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                   {/* User Info Section */}
                   {user && (
                     <div className="px-4 py-3 border-b border-gray-200">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-bold text-gray-900 truncate">
                         {user.first_name && user.last_name 
                           ? `${user.first_name} ${user.last_name}` 
                           : user.email
@@ -670,7 +713,7 @@ const Header = () => {
                             }}
                             className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                           >
-                            <span className="text-sm font-medium">{link.text}</span>
+                            <span className="text-sm font-bold">{link.text}</span>
                           </a>
                         );
                       }
@@ -681,7 +724,7 @@ const Header = () => {
                           onClick={() => setIsUserMenuOpen(false)}
                           className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                         >
-                          <span className="text-sm font-medium">{link.text}</span>
+                          <span className="text-sm font-bold">{link.text}</span>
                         </Link>
                       );
                     })}
@@ -704,7 +747,7 @@ const Header = () => {
                             className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                           >
                             <IconComponent size={18} className="text-gray-500" />
-                            <span className="text-sm font-medium">{item.text}</span>
+                            <span className="text-sm font-bold">{item.text}</span>
                           </Link>
                         );
                       })}
@@ -720,7 +763,7 @@ const Header = () => {
                         className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
                         <User size={18} className="text-gray-500" />
-                        <span className="text-sm font-medium">Giriş Yap</span>
+                        <span className="text-sm font-bold">Giriş Yap</span>
                       </Link>
                       <Link
                         to={ROUTE_CONFIG.PUBLIC.REGISTER}
@@ -728,7 +771,7 @@ const Header = () => {
                         className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
                         <User size={18} className="text-gray-500" />
-                        <span className="text-sm font-medium">Kayıt Ol</span>
+                        <span className="text-sm font-bold">Kayıt Ol</span>
                       </Link>
                     </div>
                   )}
@@ -742,7 +785,7 @@ const Header = () => {
                         className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
                         <Bell size={18} className="text-gray-500" />
-                        <span className="text-sm font-medium">Bildirimler</span>
+                        <span className="text-sm font-bold">Bildirimler</span>
                       </Link>
                       <Link
                         to={ROUTE_CONFIG.DOCTOR.SETTINGS}
@@ -750,7 +793,7 @@ const Header = () => {
                         className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
                         <Settings size={18} className="text-gray-500" />
-                        <span className="text-sm font-medium">Ayarlar</span>
+                        <span className="text-sm font-bold">Ayarlar</span>
                       </Link>
                     </div>
                   )}
@@ -764,7 +807,7 @@ const Header = () => {
                         className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
                         <Bell size={18} className="text-gray-500" />
-                        <span className="text-sm font-medium">Bildirimler</span>
+                        <span className="text-sm font-bold">Bildirimler</span>
                       </Link>
                       <Link
                         to={ROUTE_CONFIG.HOSPITAL.SETTINGS}
@@ -772,7 +815,7 @@ const Header = () => {
                         className="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200"
                       >
                         <Settings size={18} className="text-gray-500" />
-                        <span className="text-sm font-medium">Ayarlar</span>
+                        <span className="text-sm font-bold">Ayarlar</span>
                       </Link>
                     </div>
                   )}
@@ -789,7 +832,7 @@ const Header = () => {
                         className="mt-3 flex items-center space-x-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 w-full text-left"
                       >
                         <LogOut size={18} />
-                        <span className="text-sm font-medium">Çıkış Yap</span>
+                        <span className="text-sm font-bold">Çıkış Yap</span>
                       </button>
                     </div>
                   )}

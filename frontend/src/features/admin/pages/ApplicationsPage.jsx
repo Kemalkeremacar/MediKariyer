@@ -275,7 +275,7 @@ const ApplicationsPage = () => {
         icon: CheckCircle,
         text: 'Kabul Edildi'
       },
-      4: { // Red Edildi
+      4: { // Reddedildi
         color: 'bg-red-100 text-red-800 border-red-300', 
         icon: XCircle,
         text: 'Reddedildi'

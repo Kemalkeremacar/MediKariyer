@@ -1459,7 +1459,7 @@ export const hospitalApiRequest = {
    * - 1: Başvuruldu
    * - 2: İnceleniyor
    * - 3: Kabul Edildi
-   * - 4: Red Edildi
+   * - 4: Reddedildi
    * - 5: Geri Çekildi
    * 
    * @param {number} applicationId - Başvuru ID'si

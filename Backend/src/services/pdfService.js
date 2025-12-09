@@ -165,58 +165,60 @@ class PDFService {
       line-height: 1.6;
     }
     
+    .page-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #1e40af;
+      padding: 15px 0;
+      margin-bottom: 10px;
+    }
+    
     .header {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
       padding: 30px;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      border-radius: 8px 8px 0 0;
-    }
-    
-    .header-left {
-      flex: 1;
-    }
-    
-    .logo {
-      font-size: 28px;
-      font-weight: bold;
-      margin-bottom: 10px;
+      border-radius: 8px;
     }
     
     .hospital-info {
       display: flex;
       align-items: center;
-      gap: 15px;
-      margin-top: 10px;
+      gap: 20px;
     }
     
-    .hospital-logo {
-      width: 60px;
-      height: 60px;
+    .hospital-logo-container {
+      width: 80px;
+      height: 80px;
       background: white;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .hospital-logo-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      object-fit: contain;
+      padding: 8px;
+    }
+    
+    .hospital-logo-text {
+      font-size: 32px;
       font-weight: bold;
       color: #2563eb;
     }
     
-    .header-right {
-      text-align: right;
-    }
-    
-    .job-id {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 5px;
-    }
-    
-    .created-date {
-      font-size: 12px;
-      opacity: 0.8;
+    .hospital-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: white;
     }
     
     .content {
@@ -224,11 +226,11 @@ class PDFService {
     }
     
     .section {
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
     
     .section-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
       color: #1e40af;
       margin-bottom: 15px;
@@ -247,37 +249,20 @@ class PDFService {
     }
     
     .info-table td {
-      padding: 12px 15px;
+      padding: 10px 15px;
+      font-size: 14px;
     }
     
     .info-table td:first-child {
       font-weight: 600;
       color: #1a1a1a;
-      width: 200px;
+      width: 180px;
       background: #f8f9fa;
     }
     
     .info-table td:last-child {
       color: #1a1a1a;
       font-weight: 500;
-    }
-    
-    .status-badge {
-      display: inline-block;
-      padding: 5px 15px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    
-    .status-active {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
     }
     
     .detail-box {
@@ -291,130 +276,129 @@ class PDFService {
     .detail-box h4 {
       color: #1e40af;
       margin-bottom: 10px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
     }
     
-    .detail-box p, .detail-box ul {
+    .detail-box p {
       color: #1a1a1a;
       font-size: 14px;
       line-height: 1.8;
+      white-space: pre-wrap;
     }
     
-    .detail-box ul {
-      margin-left: 20px;
-      margin-top: 10px;
+    .page-break {
+      page-break-before: always;
     }
     
-    .detail-box li {
-      margin-bottom: 5px;
-    }
-    
-    .contact-section {
+    .hospital-info-section {
       background: #dbeafe;
       padding: 20px;
       border-radius: 8px;
       margin-top: 20px;
     }
     
-    .contact-item {
+    .hospital-info-item {
       display: flex;
-      align-items: center;
       margin-bottom: 10px;
       font-size: 14px;
     }
     
-    .contact-label {
+    .hospital-info-label {
       font-weight: 600;
       width: 120px;
       color: #1a1a1a;
     }
     
-    .contact-item span:last-child {
+    .hospital-info-item span:last-child {
       color: #1a1a1a;
+      flex: 1;
     }
     
     .footer {
       background: #f8f9fa;
-      padding: 20px;
+      padding: 15px 20px;
       text-align: center;
-      border-radius: 0 0 8px 8px;
+      border-radius: 8px;
       margin-top: 30px;
       border-top: 2px solid #e0e0e0;
     }
     
     .footer p {
-      font-size: 12px;
+      font-size: 11px;
       color: #666;
-      font-style: italic;
+      margin: 3px 0;
     }
   </style>
 </head>
 <body>
+  <div class="page-title">MediKariyer.net İş İlanı</div>
+  
   <div class="header">
-    <div class="header-left">
-      <div class="logo">🏥 MediKariyer</div>
-      <div class="hospital-info">
-        ${hospitalLogo && hospitalLogo.startsWith('data:image') ? `<img src="${hospitalLogo}" alt="Hospital Logo" style="width: 60px; height: 60px; border-radius: 8px; background: white; object-fit: contain; padding: 5px;">` : `<div class="hospital-logo">${hospitalName.charAt(0)}</div>`}
-        <div>
-          <div style="font-size: 18px; font-weight: 600;">${hospitalName}</div>
-        </div>
+    <div class="hospital-info">
+      <div class="hospital-logo-container">
+        ${hospitalLogo && hospitalLogo.startsWith('data:image') 
+          ? `<img src="${hospitalLogo}" alt="Hospital Logo" class="hospital-logo-img">` 
+          : `<div class="hospital-logo-text">${hospitalName.charAt(0)}</div>`}
       </div>
-    </div>
-    <div class="header-right">
-      <div class="job-id">İlan ID: ${jobId}</div>
-      <div class="created-date">Oluşturulma: ${new Date(createdAt).toLocaleDateString('tr-TR')}</div>
+      <div class="hospital-name">${hospitalName}</div>
     </div>
   </div>
 
   <div class="content">
     <div class="section">
-      <h2 class="section-title">📋 Pozisyon Özeti</h2>
+      <h2 class="section-title">İlan Detayları</h2>
       <table class="info-table">
         <tr>
           <td>İlan Başlığı</td>
           <td><strong>${jobTitle}</strong></td>
         </tr>
         <tr>
+          <td>İlan Tarihi</td>
+          <td>${new Date(createdAt).toLocaleDateString('tr-TR')}</td>
+        </tr>
+        <tr>
           <td>Uzmanlık</td>
-          <td><strong>${specialty}</strong>${subSpecialty ? ` / ${subSpecialty}` : ''}</td>
+          <td><strong>${specialty}</strong></td>
+        </tr>
+        <tr>
+          <td>Yan Dal Uzmanlığı</td>
+          <td>${subSpecialty || '-'}</td>
         </tr>
         <tr>
           <td>Çalışma Türü</td>
           <td>${workType}</td>
         </tr>
         <tr>
-          <td>Bölge</td>
+          <td>Şehir</td>
           <td>${region}</td>
         </tr>
+        ${minExperience !== null && minExperience !== undefined ? `
         <tr>
-          <td>İlan Durumu</td>
-          <td><span class="status-badge ${status === 'Onaylandı' || status === 'Aktif' || status === 'active' ? 'status-active' : 'status-pending'}">${status}</span></td>
+          <td>Minimum Deneyim</td>
+          <td><strong>${minExperience} yıl</strong></td>
         </tr>
+        ` : ''}
       </table>
     </div>
 
+    ${description ? `
     <div class="section">
-      <h2 class="section-title">🔍 Detay Bilgileri</h2>
-      
-      ${minExperience !== null && minExperience !== undefined ? `
+      <h2 class="section-title">İlan Açıklaması</h2>
       <div class="detail-box">
-        <h4>Minimum Deneyim</h4>
-        <p><strong>${minExperience} yıl</strong></p>
+        <p>${description}</p>
       </div>
-      ` : ''}
+    </div>
+    ` : ''}
+    
+    ${requirements || workingHours || benefits ? `
+    <div class="section">
+      <h2 class="section-title">Detay Bilgileri</h2>
       
       ${requirements ? `
       <div class="detail-box">
         <h4>Aranan Nitelikler</h4>
         <p>${requirements}</p>
-      </div>
-      ` : ''}
-      
-      ${description ? `
-      <div class="detail-box">
-        <h4>İlan Açıklaması</h4>
-        <p>${description}</p>
       </div>
       ` : ''}
       
@@ -432,37 +416,46 @@ class PDFService {
       </div>
       ` : ''}
     </div>
+    ` : ''}
+  </div>
 
+  <div class="page-break"></div>
+
+  <div class="content">
     <div class="section">
-      <h2 class="section-title">📞 İletişim Bilgileri</h2>
-      <div class="contact-section">
+      <h2 class="section-title">HASTANE BİLGİLERİ</h2>
+      <div class="hospital-info-section">
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Hastane Adı:</span>
+          <span>${hospitalName}</span>
+        </div>
         ${hospitalCity ? `
-        <div class="contact-item">
-          <span class="contact-label">Şehir:</span>
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Şehir:</span>
           <span>${hospitalCity}</span>
         </div>
         ` : ''}
         ${hospitalAddress ? `
-        <div class="contact-item">
-          <span class="contact-label">Adres:</span>
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Adres:</span>
           <span>${hospitalAddress}</span>
         </div>
         ` : ''}
         ${hospitalPhone ? `
-        <div class="contact-item">
-          <span class="contact-label">Telefon:</span>
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Telefon:</span>
           <span>${hospitalPhone}</span>
         </div>
         ` : ''}
         ${hospitalEmail ? `
-        <div class="contact-item">
-          <span class="contact-label">E-posta:</span>
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">E-posta:</span>
           <span>${hospitalEmail}</span>
         </div>
         ` : ''}
         ${hospitalWebsite ? `
-        <div class="contact-item">
-          <span class="contact-label">Website:</span>
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Web Site:</span>
           <span>${hospitalWebsite}</span>
         </div>
         ` : ''}
@@ -471,8 +464,15 @@ class PDFService {
   </div>
 
   <div class="footer">
-    <p>Bu belge MediKariyer sistemi tarafından otomatik olarak üretilmiştir.</p>
-    <p>Oluşturulma Zamanı: ${new Date().toLocaleString('tr-TR')}</p>
+    <p>Bu belge MediKariyer.net sistemi tarafından otomatik olarak üretilmiştir.</p>
+    <p>Oluşturulma Zamanı: ${new Date().toLocaleString('tr-TR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    })}</p>
   </div>
 </body>
 </html>
@@ -486,7 +486,15 @@ class PDFService {
     const {
       applicationId,
       jobTitle,
+      jobDescription,
+      employmentType,
       hospitalName,
+      hospitalLogo,
+      hospitalCity,
+      hospitalAddress,
+      hospitalPhone,
+      hospitalEmail,
+      hospitalWebsite,
       doctor,
       applicationDate,
       status,
@@ -513,33 +521,60 @@ class PDFService {
       line-height: 1.6;
     }
     
+    .page-title {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #1e40af;
+      padding: 15px 0;
+      margin-bottom: 10px;
+    }
+    
     .header {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
       padding: 30px;
-      border-radius: 8px 8px 0 0;
-    }
-    
-    .logo {
-      font-size: 28px;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    
-    .application-info {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      margin-top: 15px;
+      border-radius: 8px;
     }
     
-    .application-id {
-      font-size: 16px;
+    .hospital-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
     }
     
-    .job-title {
-      font-size: 14px;
-      opacity: 0.9;
+    .hospital-logo-container {
+      width: 80px;
+      height: 80px;
+      background: white;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .hospital-logo-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      object-fit: contain;
+      padding: 8px;
+    }
+    
+    .hospital-logo-text {
+      font-size: 32px;
+      font-weight: bold;
+      color: #2563eb;
+    }
+    
+    .hospital-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: white;
     }
     
     .content {
@@ -547,304 +582,296 @@ class PDFService {
     }
     
     .section {
-      margin-bottom: 30px;
+      margin-bottom: 25px;
     }
     
     .section-title {
-      font-size: 20px;
-      font-weight: bold;
-      color: #1e40af;
-      margin-bottom: 15px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #2563eb;
-    }
-    
-    .doctor-profile {
-      display: flex;
-      gap: 25px;
-      background: #f8f9fa;
-      padding: 25px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .doctor-photo {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 48px;
-      font-weight: bold;
-      flex-shrink: 0;
-    }
-    
-    .doctor-info {
-      flex: 1;
-    }
-    
-    .doctor-name {
-      font-size: 24px;
-      font-weight: bold;
-      color: #1a1a1a;
-      margin-bottom: 10px;
-    }
-    
-    .doctor-specialty {
-      font-size: 16px;
-      color: #2563eb;
-      font-weight: 600;
-      margin-bottom: 15px;
-    }
-    
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    
-    .info-item {
-      font-size: 14px;
-    }
-    
-    .info-label {
-      font-weight: 600;
-      color: #1a1a1a;
-    }
-    
-    .info-item {
-      color: #1a1a1a;
-    }
-    
-    .cv-section {
-      background: white;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .cv-section h3 {
-      color: #1e40af;
       font-size: 18px;
+      font-weight: bold;
+      color: #1e40af;
       margin-bottom: 15px;
       padding-bottom: 8px;
       border-bottom: 2px solid #2563eb;
+    }
+    
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    
+    .info-table tr {
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .info-table td {
+      padding: 10px 15px;
+      font-size: 14px;
+    }
+    
+    .info-table td:first-child {
+      font-weight: 600;
+      color: #1a1a1a;
+      width: 180px;
+      background: #f8f9fa;
+    }
+    
+    .info-table td:last-child {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+    
+    .detail-box {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border-left: 4px solid #2563eb;
+    }
+    
+    .detail-box h4 {
+      color: #1e40af;
+      margin-bottom: 10px;
+      font-size: 15px;
       font-weight: bold;
     }
     
-    .cv-item {
-      margin-bottom: 15px;
-      padding-left: 15px;
-      border-left: 3px solid #2563eb;
-    }
-    
-    .cv-item-title {
-      font-weight: 600;
+    .detail-box p {
       color: #1a1a1a;
-      margin-bottom: 5px;
-      font-size: 15px;
-    }
-    
-    .cv-item-detail {
       font-size: 14px;
-      color: #1a1a1a;
-      line-height: 1.6;
+      line-height: 1.8;
+      white-space: pre-wrap;
     }
     
-    .application-status {
+    .page-break {
+      page-break-before: always;
+    }
+    
+    .hospital-info-section {
       background: #dbeafe;
       padding: 20px;
       border-radius: 8px;
       margin-top: 20px;
     }
     
-    .status-badge {
-      display: inline-block;
-      padding: 8px 20px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
+    .hospital-info-item {
+      display: flex;
       margin-bottom: 10px;
-    }
-    
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .status-reviewed {
-      background: #cce5ff;
-      color: #004085;
-    }
-    
-    .status-accepted {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .status-rejected {
-      background: #f8d7da;
-      color: #721c24;
-    }
-    
-    .note-box {
-      background: #fff9e6;
-      border-left: 4px solid #ffc107;
-      padding: 15px;
-      margin-top: 15px;
-      border-radius: 4px;
-    }
-    
-    .note-box h4 {
-      color: #856404;
-      margin-bottom: 8px;
       font-size: 14px;
     }
     
-    .note-box p {
+    .hospital-info-label {
+      font-weight: 600;
+      width: 120px;
       color: #1a1a1a;
-      font-size: 14px;
-      line-height: 1.6;
+    }
+    
+    .hospital-info-item span:last-child {
+      color: #1a1a1a;
+      flex: 1;
     }
     
     .footer {
       background: #f8f9fa;
-      padding: 20px;
+      padding: 15px 20px;
       text-align: center;
-      border-radius: 0 0 8px 8px;
+      border-radius: 8px;
       margin-top: 30px;
       border-top: 2px solid #e0e0e0;
     }
     
     .footer p {
-      font-size: 12px;
+      font-size: 11px;
       color: #666;
-    }
-    
-    .security-code {
-      font-family: monospace;
-      font-size: 10px;
-      color: #999;
-      margin-top: 10px;
+      margin: 3px 0;
     }
   </style>
 </head>
 <body>
+  <div class="page-title">MediKariyer.net Başvuru Belgesi</div>
+  
   <div class="header">
-    <div class="logo">🏥 MediKariyer</div>
-    <div class="application-info">
-      <div>
-        <div class="application-id">Başvuru ID: ${applicationId}</div>
-        <div class="job-title">İlan: ${jobTitle} - ${hospitalName}</div>
+    <div class="hospital-info">
+      <div class="hospital-logo-container">
+        ${hospitalLogo && hospitalLogo.startsWith('data:image') 
+          ? `<img src="${hospitalLogo}" alt="Hospital Logo" class="hospital-logo-img">` 
+          : `<div class="hospital-logo-text">${hospitalName.charAt(0)}</div>`}
       </div>
+      <div class="hospital-name">${hospitalName}</div>
     </div>
   </div>
 
   <div class="content">
     <div class="section">
-      <h2 class="section-title">👨‍⚕️ Doktor Bilgileri</h2>
-      <div class="doctor-profile">
-        <div class="doctor-photo">
-          ${doctor.profilePhoto && doctor.profilePhoto.startsWith('data:image') ? `<img src="${doctor.profilePhoto}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">` : doctor.fullName.charAt(0)}
-        </div>
-        <div class="doctor-info">
-          <div class="doctor-name">${doctor.fullName}</div>
-          <div class="doctor-specialty">${doctor.specialty}${doctor.subSpecialty ? ` / ${doctor.subSpecialty}` : ''}</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-label">Telefon:</span> ${doctor.phone}
-            </div>
-            <div class="info-item">
-              <span class="info-label">E-posta:</span> ${doctor.email}
-            </div>
-            <div class="info-item">
-              <span class="info-label">Doğum Tarihi:</span> ${doctor.birthDate ? new Date(doctor.birthDate).toLocaleDateString('tr-TR') : '-'}
-            </div>
-            <div class="info-item">
-              <span class="info-label">Şehir:</span> ${doctor.city || '-'}
-            </div>
-          </div>
-        </div>
-      </div>
+      <h2 class="section-title">Doktor Bilgileri</h2>
+      <table class="info-table">
+        <tr>
+          <td>Ad Soyad</td>
+          <td><strong>${doctor.fullName}</strong></td>
+        </tr>
+        <tr>
+          <td>Uzmanlık</td>
+          <td><strong>${doctor.specialty}</strong></td>
+        </tr>
+        <tr>
+          <td>Yan Dal Uzmanlığı</td>
+          <td>${doctor.subSpecialty || '-'}</td>
+        </tr>
+        <tr>
+          <td>E-posta</td>
+          <td>${doctor.email}</td>
+        </tr>
+        <tr>
+          <td>Telefon</td>
+          <td>${doctor.phone}</td>
+        </tr>
+        <tr>
+          <td>Şehir</td>
+          <td>${doctor.city || '-'}</td>
+        </tr>
+        ${doctor.birthDate ? `
+        <tr>
+          <td>Doğum Tarihi</td>
+          <td>${new Date(doctor.birthDate).toLocaleDateString('tr-TR')}</td>
+        </tr>
+        ` : ''}
+      </table>
     </div>
 
+    ${doctor.education && doctor.education.length > 0 ? `
     <div class="section">
-      <h2 class="section-title">📄 Doktor CV</h2>
-      
-      ${doctor.education && doctor.education.length > 0 ? `
-      <div class="cv-section">
-        <h3>🎓 Eğitim</h3>
-        ${doctor.education.map(edu => `
-          <div class="cv-item">
-            <div class="cv-item-title">${edu.education_institution || 'Belirtilmemiş'}</div>
-            <div class="cv-item-detail">${edu.education_type_name || ''} ${edu.field ? `- ${edu.field}` : ''}</div>
-            ${edu.graduation_year ? `<div class="cv-item-detail">Mezuniyet: ${edu.graduation_year}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-      ` : ''}
-      
-      ${doctor.experience && doctor.experience.length > 0 ? `
-      <div class="cv-section">
-        <h3>💼 Deneyim</h3>
-        ${doctor.experience.map(exp => `
-          <div class="cv-item">
-            <div class="cv-item-title">${exp.role_title || 'Belirtilmemiş'} - ${exp.organization || 'Belirtilmemiş'}</div>
-            <div class="cv-item-detail">${exp.start_date ? new Date(exp.start_date).toLocaleDateString('tr-TR') : ''} - ${exp.end_date ? new Date(exp.end_date).toLocaleDateString('tr-TR') : 'Devam Ediyor'}</div>
-            ${exp.specialty_name ? `<div class="cv-item-detail" style="margin-top: 3px;">Uzmanlık: ${exp.specialty_name}${exp.subspecialty_name ? ` / ${exp.subspecialty_name}` : ''}</div>` : ''}
-            ${exp.description ? `<div class="cv-item-detail" style="margin-top: 5px;">${exp.description}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-      ` : ''}
-      
-      ${doctor.certificates && doctor.certificates.length > 0 ? `
-      <div class="cv-section">
-        <h3>📜 Sertifikalar</h3>
-        ${doctor.certificates.map(cert => `
-          <div class="cv-item">
-            <div class="cv-item-title">${cert.certificate_name || 'Belirtilmemiş'}</div>
-            ${cert.institution || cert.certificate_year ? `<div class="cv-item-detail">${cert.institution || ''} ${cert.certificate_year ? `| ${cert.certificate_year}` : ''}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>
-      ` : ''}
-      
-      ${doctor.languages && doctor.languages.length > 0 ? `
-      <div class="cv-section">
-        <h3>🌍 Diller</h3>
-        ${doctor.languages.map(lang => `
-          <div class="cv-item">
-            <div class="cv-item-title">${lang.language_name || 'Belirtilmemiş'}</div>
-            <div class="cv-item-detail">Seviye: ${lang.level_name || 'Belirtilmemiş'}</div>
-          </div>
-        `).join('')}
-      </div>
-      ` : ''}
+      <h2 class="section-title">Eğitim Bilgileri</h2>
+      ${doctor.education.map(edu => `
+        <div class="detail-box">
+          <h4>${edu.education_institution || 'Belirtilmemiş'}</h4>
+          <p>${edu.education_type_name || ''} ${edu.field ? `- ${edu.field}` : ''}
+${edu.graduation_year ? `Mezuniyet: ${edu.graduation_year}` : ''}</p>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+
+    ${doctor.experience && doctor.experience.length > 0 ? `
+    <div class="section">
+      <h2 class="section-title">Deneyim Bilgileri</h2>
+      ${doctor.experience.map(exp => `
+        <div class="detail-box">
+          <h4>${exp.role_title || 'Belirtilmemiş'} - ${exp.organization || 'Belirtilmemiş'}</h4>
+          <p>${exp.start_date ? new Date(exp.start_date).toLocaleDateString('tr-TR') : ''} - ${exp.end_date ? new Date(exp.end_date).toLocaleDateString('tr-TR') : 'Devam Ediyor'}
+${exp.specialty_name ? `Uzmanlık: ${exp.specialty_name}${exp.subspecialty_name ? ` / ${exp.subspecialty_name}` : ''}` : ''}
+${exp.description ? `\n${exp.description}` : ''}</p>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+
+    ${doctor.certificates && doctor.certificates.length > 0 ? `
+    <div class="section">
+      <h2 class="section-title">Sertifikalar</h2>
+      ${doctor.certificates.map(cert => `
+        <div class="detail-box">
+          <h4>${cert.certificate_name || 'Belirtilmemiş'}</h4>
+          <p>${cert.institution || ''} ${cert.certificate_year ? `| ${cert.certificate_year}` : ''}</p>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+
+    ${doctor.languages && doctor.languages.length > 0 ? `
+    <div class="section">
+      <h2 class="section-title">Dil Bilgileri</h2>
+      ${doctor.languages.map(lang => `
+        <div class="detail-box">
+          <h4>${lang.language_name || 'Belirtilmemiş'}</h4>
+          <p>Seviye: ${lang.level_name || 'Belirtilmemiş'}</p>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
+  </div>
+
+  <div class="page-break"></div>
+
+  <div class="content">
+    <div class="section">
+      <h2 class="section-title">Başvuru Bilgileri</h2>
+      <table class="info-table">
+        <tr>
+          <td>Başvuru ID</td>
+          <td><strong>${applicationId}</strong></td>
+        </tr>
+        <tr>
+          <td>İlan Başlığı</td>
+          <td><strong>${jobTitle}</strong></td>
+        </tr>
+        <tr>
+          <td>Çalışma Türü</td>
+          <td>${employmentType || '-'}</td>
+        </tr>
+        <tr>
+          <td>Başvuru Tarihi</td>
+          <td>${new Date(applicationDate).toLocaleDateString('tr-TR')}</td>
+        </tr>
+        <tr>
+          <td>Durum</td>
+          <td><strong>${status}</strong></td>
+        </tr>
+      </table>
     </div>
 
+    ${doctorNote ? `
     <div class="section">
-      <h2 class="section-title">📋 Başvuru Bilgileri</h2>
-      <div class="application-status">
-        <div style="color: #1a1a1a;">
-          <strong>Başvuru Tarihi:</strong> ${new Date(applicationDate).toLocaleString('tr-TR')}
+      <h2 class="section-title">Doktor Notu</h2>
+      <div class="detail-box">
+        <p>${doctorNote}</p>
+      </div>
+    </div>
+    ` : ''}
+
+    ${jobDescription ? `
+    <div class="section">
+      <h2 class="section-title">İlan Açıklaması</h2>
+      <div class="detail-box">
+        <p>${jobDescription}</p>
+      </div>
+    </div>
+    ` : ''}
+
+    <div class="section">
+      <h2 class="section-title">HASTANE BİLGİLERİ</h2>
+      <div class="hospital-info-section">
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Hastane Adı:</span>
+          <span>${hospitalName}</span>
         </div>
-        <div style="margin-top: 10px; color: #1a1a1a;">
-          <strong>Durum:</strong> 
-          <span class="status-badge status-${status.toLowerCase()}">
-            ${status}
-          </span>
+        ${hospitalCity ? `
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Şehir:</span>
+          <span>${hospitalCity}</span>
         </div>
-        
-        ${doctorNote ? `
-        <div class="note-box">
-          <h4>📝 Doktor Notu</h4>
-          <p>${doctorNote}</p>
+        ` : ''}
+        ${hospitalAddress ? `
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Adres:</span>
+          <span>${hospitalAddress}</span>
+        </div>
+        ` : ''}
+        ${hospitalPhone ? `
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Telefon:</span>
+          <span>${hospitalPhone}</span>
+        </div>
+        ` : ''}
+        ${hospitalEmail ? `
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">E-posta:</span>
+          <span>${hospitalEmail}</span>
+        </div>
+        ` : ''}
+        ${hospitalWebsite ? `
+        <div class="hospital-info-item">
+          <span class="hospital-info-label">Web Site:</span>
+          <span>${hospitalWebsite}</span>
         </div>
         ` : ''}
       </div>
@@ -852,9 +879,15 @@ class PDFService {
   </div>
 
   <div class="footer">
-    <p>Bu belge MediKariyer sistemi tarafından dijital olarak üretilmiştir.</p>
-    <p>Oluşturulma Zamanı: ${new Date().toLocaleString('tr-TR')}</p>
-    <div class="security-code">Güvenlik Kodu: ${applicationId}-${Date.now().toString(36).toUpperCase()}</div>
+    <p>Bu belge MediKariyer.net sistemi tarafından otomatik olarak üretilmiştir.</p>
+    <p>Oluşturulma Zamanı: ${new Date().toLocaleString('tr-TR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      second: '2-digit' 
+    })}</p>
   </div>
 </body>
 </html>

@@ -411,10 +411,10 @@ const withdrawApplicationSchema = Joi.object({
  */
 const applicationFilterSchema = Joi.object({
   status: Joi.string()
-    .valid('Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Red Edildi', 'Geri Çekildi')
+    .valid('Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Reddedildi', 'Geri Çekildi')
     .optional()
     .messages({
-      'any.only': 'Durum geçerli değerlerden biri olmalıdır: Başvuruldu, İnceleniyor, Kabul Edildi, Red Edildi, Geri Çekildi'
+      'any.only': 'Durum geçerli değerlerden biri olmalıdır: Başvuruldu, İnceleniyor, Kabul Edildi, Reddedildi, Geri Çekildi'
     }),
   
   city: Joi.string()

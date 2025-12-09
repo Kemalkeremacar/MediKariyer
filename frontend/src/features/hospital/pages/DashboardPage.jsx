@@ -206,7 +206,7 @@ const HospitalDashboard = () => {
                                 {application.status_id === 1 ? 'Başvuruldu' :
                                  application.status_id === 2 ? 'İnceleniyor' :
                                  application.status_id === 3 ? 'Kabul Edildi' :
-                                 application.status_id === 4 ? 'Red Edildi' :
+                                 application.status_id === 4 ? 'Reddedildi' :
                                  application.status_id === 5 ? 'Geri Çekildi' :
                                  application.status || 'Bilinmiyor'}
                               </span>

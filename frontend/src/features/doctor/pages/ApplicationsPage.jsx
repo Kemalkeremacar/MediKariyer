@@ -197,7 +197,7 @@ const DoctorApplicationsPage = () => {
       case 1: return 'Başvuruldu';
       case 2: return 'İnceleniyor';
       case 3: return 'Kabul Edildi';
-      case 4: return 'Red Edildi';
+      case 4: return 'Reddedildi';
       case 5: return 'Geri Çekildi';
       default: return 'Bilinmiyor';
     }
@@ -219,7 +219,7 @@ const DoctorApplicationsPage = () => {
     { value: 'Başvuruldu', label: 'Başvuruldu', id: 1 },
     { value: 'İnceleniyor', label: 'İnceleniyor', id: 2 },
     { value: 'Kabul Edildi', label: 'Kabul Edildi', id: 3 },
-    { value: 'Red Edildi', label: 'Red Edildi', id: 4 },
+    { value: 'Reddedildi', label: 'Reddedildi', id: 4 },
     { value: 'Geri Çekildi', label: 'Geri Çekildi', id: 5 },
   ], []);
 

@@ -357,7 +357,7 @@ export const useLookup = () => {
    * Başvuru Durumları Query
    * 
    * Backend'den başvuru durumlarını getirir
-   * Başvuruldu (1), İnceleniyor (2), Kabul Edildi (3), Red Edildi (4), Geri Çekildi (5)
+   * Başvuruldu (1), İnceleniyor (2), Kabul Edildi (3), Reddedildi (4), Geri Çekildi (5)
    * 
    * Query Key: ['lookup', 'application-statuses']
    * Endpoint: ENDPOINTS.LOOKUP.APPLICATION_STATUSES

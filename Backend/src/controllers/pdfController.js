@@ -112,6 +112,7 @@ class PDFController {
         .join('jobs as j', 'a.job_id', 'j.id')
         .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
         .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
+        .leftJoin('cities as hc', 'hp.city_id', 'hc.id')
         .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
         .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
         .where('a.id', applicationId)
@@ -133,6 +134,12 @@ class PDFController {
           'j.description as job_description',
           'j.employment_type',
           'hp.institution_name as hospital_name',
+          'hp.logo as hospital_logo',
+          'hp.address as hospital_address',
+          'hp.phone as hospital_phone',
+          'hp.email as hospital_email',
+          'hp.website as hospital_website',
+          'hc.name as hospital_city',
           'ast.name as status_name'
         )
         .first();
@@ -191,7 +198,15 @@ class PDFController {
       const pdfData = {
         applicationId: application.id,
         jobTitle: application.job_title,
+        jobDescription: application.job_description,
+        employmentType: application.employment_type,
         hospitalName: application.hospital_name,
+        hospitalLogo: application.hospital_logo,
+        hospitalCity: application.hospital_city,
+        hospitalAddress: application.hospital_address,
+        hospitalPhone: application.hospital_phone,
+        hospitalEmail: application.hospital_email,
+        hospitalWebsite: application.hospital_website,
         applicationDate: application.applied_at,
         status: application.status_name,
         doctorNote: application.cover_letter,

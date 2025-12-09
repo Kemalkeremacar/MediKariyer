@@ -55,7 +55,7 @@ const DoctorApplicationDetailPage = () => {
       case 1: return 'Başvuruldu';
       case 2: return 'İnceleniyor';
       case 3: return 'Kabul Edildi';
-      case 4: return 'Red Edildi';
+      case 4: return 'Reddedildi';
       case 5: return 'Geri Çekildi';
       default: return 'Bilinmiyor';
     }

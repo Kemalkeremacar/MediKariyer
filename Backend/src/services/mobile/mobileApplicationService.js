@@ -51,12 +51,12 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
     'pending': 'Başvuruldu',
     'reviewing': 'İnceleniyor',
     'approved': 'Kabul Edildi',
-    'rejected': 'Red Edildi',
+    'rejected': 'Reddedildi',
     'withdrawn': 'Geri Çekildi',
     'başvuruldu': 'Başvuruldu',
     'inceleniyor': 'İnceleniyor',
     'kabul edildi': 'Kabul Edildi',
-    'red edildi': 'Red Edildi',
+    'red edildi': 'Reddedildi',
     'geri çekildi': 'Geri Çekildi'
   };
 

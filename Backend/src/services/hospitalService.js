@@ -1050,6 +1050,7 @@ const getAllApplications = async (userId, params = {}) => {
         // Aktif edildiğinde (is_active = 1) bilgiler tekrar görünür olacak
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.first_name END as first_name'),
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.last_name END as last_name'),
+        db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.title END as title'),
         db.raw('CASE WHEN u.is_active = 0 OR u.is_active IS NULL THEN NULL ELSE dp.phone END as phone'),
         // OPTİMİZASYON: profile_photo ve specialty_id kaldırıldı - liste sayfasında gerekli değil
         // 'dp.profile_photo' - base64 1-2 MB olabilir
@@ -1292,7 +1293,7 @@ const updateApplicationStatus = async (userId, applicationId, statusId, notes = 
           1: 'pending',      // Beklemede
           2: 'pending',      // İnceleniyor
           3: 'accepted',     // Kabul Edildi
-          4: 'rejected',     // Red Edildi
+          4: 'rejected',     // Reddedildi
           5: 'withdrawn'     // Geri Çekildi
         };
         
@@ -1670,6 +1671,8 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
       .join('users as u', 'dp.user_id', 'u.id')
       .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
       .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
+      .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
+      .leftJoin('cities as rc', 'dp.residence_city_id', 'rc.id')
       .select(
         'dp.*',
         'u.email',
@@ -1677,7 +1680,9 @@ const getDoctorProfileDetail = async (hospitalUserId, doctorProfileId) => {
         'u.is_active',
         'u.created_at as user_created_at',
         's.name as specialty_name',
-        'ss.name as subspecialty_name'
+        'ss.name as subspecialty_name',
+        'bp.name as birth_place_name',
+        'rc.name as residence_city_name'
       )
       .where('dp.id', doctorProfileId)
       .where('u.is_approved', true)
