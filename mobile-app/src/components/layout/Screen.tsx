@@ -5,11 +5,11 @@ import {
   StyleSheet,
   ViewStyle,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Loader } from '@/components/feedback/Loader';
-import { Text } from '@/components/ui/Text';
+import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 
 export interface ScreenProps {
@@ -49,7 +49,7 @@ export const Screen: React.FC<ScreenProps> = ({
     if (loading) {
       return (
         <View style={styles.centerContainer}>
-          <Loader size="large" />
+          <ActivityIndicator size="large" color={theme.colors.primary[600]} />
         </View>
       );
     }
@@ -57,12 +57,12 @@ export const Screen: React.FC<ScreenProps> = ({
     if (error) {
       return (
         <View style={styles.centerContainer}>
-          <Text variant="h4" align="center" style={styles.errorTitle}>
+          <Typography variant="h3" style={styles.errorTitle}>
             Bir Hata Oluştu
-          </Text>
-          <Text align="center" color={theme.colors.text.secondary} style={styles.errorMessage}>
+          </Typography>
+          <Typography variant="body" style={styles.errorMessage}>
             {error.message || 'Beklenmeyen bir hata oluştu'}
-          </Text>
+          </Typography>
           {onRetry && (
             <Button onPress={onRetry} style={styles.retryButton}>
               Tekrar Dene
@@ -119,9 +119,13 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   errorTitle: {
     marginBottom: theme.spacing.md,
+    textAlign: 'center',
+    color: theme.colors.text.primary,
   },
   errorMessage: {
     marginBottom: theme.spacing.xl,
+    textAlign: 'center',
+    color: theme.colors.text.secondary,
   },
   retryButton: {
     minWidth: 120,

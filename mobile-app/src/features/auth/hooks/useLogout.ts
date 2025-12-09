@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
-import { authService } from '../services/authService';
+import { authService } from '@/api/services/authService';
 
 /**
  * Hook for logout functionality

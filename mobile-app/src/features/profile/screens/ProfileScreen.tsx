@@ -11,11 +11,16 @@ import {
   User,
   CheckCircle,
   Edit3,
+  Bell,
   Briefcase,
   GraduationCap,
   Award,
   Languages,
 } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
 import { Screen } from '@/components/layout/Screen';
@@ -23,8 +28,15 @@ import { colors, spacing } from '@/theme';
 import { useAuthStore } from '@/store/authStore';
 import { useProfile } from '../hooks/useProfile';
 import { getFullImageUrl } from '@/utils/imageUrl';
+import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 
-export const ProfileScreen = ({ navigation }: any) => {
+type ProfileScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<ProfileStackParamList, 'ProfileMain'>,
+  BottomTabNavigationProp<AppTabParamList>
+>;
+
+export const ProfileScreen = () => {
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const user = useAuthStore((state) => state.user);
   const { data: profile, isLoading, error, refetch, isRefetching } = useProfile();
 
@@ -36,17 +48,22 @@ export const ProfileScreen = ({ navigation }: any) => {
 
     return (
       <>
-        {/* Header with Edit Button */}
+        {/* Header with Edit and Notification Buttons */}
         <View style={styles.header}>
-          <Typography variant="h2" style={styles.headerTitle}>
-            Profilim
-          </Typography>
           <TouchableOpacity
             style={styles.headerButton}
             onPress={() => navigation.navigate('ProfileEdit')}
             accessibilityLabel="Profil düzenle"
           >
             <Edit3 size={20} color={colors.primary[600]} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => navigation.navigate('Notifications')}
+            accessibilityLabel="Bildirimler"
+          >
+            <Bell size={24} color={colors.primary[600]} />
           </TouchableOpacity>
         </View>
 
@@ -221,13 +238,6 @@ const styles = StyleSheet.create({
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
     backgroundColor: colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text.primary,
   },
   headerButton: {
     width: 44,

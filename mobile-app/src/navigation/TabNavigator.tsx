@@ -4,7 +4,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { JobsStackNavigator } from './JobsStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
-import { DashboardScreen } from '@/features/dashboard/screens/DashboardScreen';
 import { ApplicationsScreen } from '@/features/applications/screens/ApplicationsScreen';
 import { NotificationsScreen } from '@/features/notifications/screens/NotificationsScreen';
 import { Home, Briefcase, FileText, Settings } from 'lucide-react-native';
@@ -45,11 +44,9 @@ const Tab = createBottomTabNavigator<AppTabParamList>();
  * Bottom tab navigator for primary authenticated features
  * 
  * Tabs:
- * - Dashboard: Anasayfa (Home page with overview)
+ * - ProfileTab: Anasayfa (Profile as home page)
  * - JobsTab: İlanlar (Job listings)
- * - Applications: Başvurularım (My applications)
- * - Notifications: Bildirimler (Notifications)
- * - ProfileTab: Profilim (Profile editing)
+ * - Applications: Başvurular (My applications)
  * - SettingsTab: Hesabım (Account settings)
  */
 export const TabNavigator = () => {
@@ -62,32 +59,51 @@ export const TabNavigator = () => {
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
           backgroundColor: colors.background.primary,
           borderTopWidth: 1,
           borderTopColor: colors.neutral[100],
-          height: 65,
-          paddingBottom: 5,
-          paddingTop: 5,
+          height: 80,
+          paddingBottom: 15,
+          paddingTop: 10,
+          paddingHorizontal: 0,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 5,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 12,
           fontWeight: '600',
-          marginTop: 2,
+          marginTop: 4,
+          marginBottom: 0,
         },
         tabBarIconStyle: {
-          marginTop: 5,
+          marginTop: 0,
         },
       }}
     >
     <Tab.Screen
-      name="Dashboard"
-      component={DashboardScreen}
+      name="ProfileTab"
+      component={ProfileStackNavigator}
       options={{
         tabBarLabel: 'Anasayfa',
         tabBarIcon: ({ focused }) => (
           <AnimatedIcon Icon={Home} focused={focused} />
         ),
       }}
+      listeners={({ navigation }) => ({
+        tabPress: () => {
+          navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
+        },
+      })}
     />
     <Tab.Screen
       name="JobsTab"
@@ -127,13 +143,6 @@ export const TabNavigator = () => {
     <Tab.Screen
       name="Notifications"
       component={NotificationsScreen}
-      options={{
-        tabBarButton: () => null,
-      }}
-    />
-    <Tab.Screen
-      name="ProfileTab"
-      component={ProfileStackNavigator}
       options={{
         tabBarButton: () => null,
       }}

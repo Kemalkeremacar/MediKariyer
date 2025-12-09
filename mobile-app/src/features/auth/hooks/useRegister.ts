@@ -1,6 +1,6 @@
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
-import { authService } from '../services/authService';
-import type { DoctorRegistrationPayload, DoctorRegistrationResponse } from '../types';
+import { authService } from '@/api/services/authService';
+import type { DoctorRegistrationPayload, DoctorRegistrationResponse } from '@/types/auth';
 
 type UseRegisterOptions = Omit<
   UseMutationOptions<DoctorRegistrationResponse, Error, DoctorRegistrationPayload>,

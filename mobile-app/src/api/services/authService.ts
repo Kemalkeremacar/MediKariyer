@@ -99,10 +99,9 @@ export const authService = {
     newPassword: string;
     confirmPassword: string;
   }): Promise<void> {
-    const response = await apiClient.post<ApiResponse<null>>(
+    await apiClient.post<ApiResponse<null>>(
       endpoints.auth.changePassword,
       payload,
     );
-    return response.data.data;
   },
 };

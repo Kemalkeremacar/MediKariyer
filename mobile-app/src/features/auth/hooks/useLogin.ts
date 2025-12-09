@@ -1,8 +1,8 @@
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 import { tokenManager } from '@/utils/tokenManager';
 import { useAuthStore } from '@/store/authStore';
-import { authService } from '../services/authService';
-import type { LoginPayload, AuthResponsePayload } from '../types';
+import { authService } from '@/api/services/authService';
+import type { LoginPayload, AuthResponsePayload } from '@/types/auth';
 
 type UseLoginOptions = Omit<
   UseMutationOptions<AuthResponsePayload, Error, LoginPayload>,

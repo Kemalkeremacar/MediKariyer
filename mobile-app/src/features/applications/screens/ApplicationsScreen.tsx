@@ -18,13 +18,12 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BackButton } from '@/components/ui/BackButton';
 import { Screen } from '@/components/layout/Screen';
-import { ApplicationFilterSheet } from '../components/ApplicationFilterSheet';
-import { ApplicationCard } from '../components/ApplicationCard';
+import { ApplicationFilterSheet } from '@/components/applications/ApplicationFilterSheet';
+import { ApplicationCard } from '@/components/applications/ApplicationCard';
 import { useApplications } from '../hooks/useApplications';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { FileText, Filter, CheckCircle, Clock, XCircle, Eye, AlertCircle, Building2, MapPin, Phone, Mail } from 'lucide-react-native';
+import { FileText, Filter, CheckCircle, Clock, XCircle, Eye, AlertCircle, Building2, MapPin, Phone, Mail, X } from 'lucide-react-native';
 
 const DetailsModal = ({
   applicationId,
@@ -321,7 +320,7 @@ const DetailsModal = ({
 export const ApplicationsScreen = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
-  const filterSheetRef = useRef<BottomSheetModal>(null);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
 
   const { data: statuses = [] } = useQuery({
     queryKey: ['lookup', 'application-statuses'],
@@ -356,17 +355,17 @@ export const ApplicationsScreen = () => {
   };
 
   const openFilters = useCallback(() => {
-    filterSheetRef.current?.present();
+    setShowFilterSheet(true);
   }, []);
 
   const handleApplyFilters = useCallback(() => {
-    filterSheetRef.current?.dismiss();
+    setShowFilterSheet(false);
     query.refetch();
   }, [query]);
 
   const handleResetFilters = useCallback(() => {
     setSelectedStatus('');
-    filterSheetRef.current?.dismiss();
+    setShowFilterSheet(false);
     query.refetch();
   }, [query]);
 
@@ -464,16 +463,7 @@ export const ApplicationsScreen = () => {
         keyExtractor={(item, index) => `app-${item.id}-${index}`}
         renderItem={({ item }) => (
           <ApplicationCard
-            hospitalName={item.hospital_name || 'Kurum bilgisi yok'}
-            position={item.job_title || 'Pozisyon bilgisi yok'}
-            status={
-              item.status?.toLowerCase() === 'başvuruldu' ? 'pending' :
-              item.status?.toLowerCase() === 'kabul edildi' ? 'accepted' :
-              item.status?.toLowerCase() === 'red edildi' ? 'rejected' :
-              'reviewed'
-            }
-            statusLabel={item.status || 'Durum yok'}
-            date={new Date(item.created_at).toLocaleDateString('tr-TR')}
+            application={item}
             onPress={() => setSelectedApplicationId(item.id)}
           />
         )}
@@ -528,10 +518,6 @@ export const ApplicationsScreen = () => {
       />
 
       <ApplicationFilterSheet
-        ref={filterSheetRef}
-        statuses={statuses}
-        selectedStatus={selectedStatus}
-        onStatusChange={setSelectedStatus}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
       />
@@ -668,12 +654,6 @@ const styles = StyleSheet.create({
   },
   filterButtonTextActive: {
     color: colors.background.primary,
-  },
-  backButtonContainer: {
-    marginBottom: spacing.md,
-  },
-  modalHeaderInline: {
-    marginBottom: spacing.lg,
   },
   modalHeaderTitle: {
     fontSize: 24,

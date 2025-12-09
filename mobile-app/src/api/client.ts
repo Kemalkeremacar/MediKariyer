@@ -225,6 +225,6 @@ const rootApiClient = attachInterceptors(
   }),
 );
 
-export { rootApiClient };
+export { rootApiClient, apiClient };
 export default apiClient;
 

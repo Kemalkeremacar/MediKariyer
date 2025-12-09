@@ -1,15 +1,49 @@
 import React, { useState } from 'react';
 import { StyleSheet, FlatList, RefreshControl, View, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing } from '@/theme';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/layout/Screen';
-import { NotificationCard } from '../components/NotificationCard';
 import { useNotifications } from '../hooks/useNotifications';
 import { useMarkAsRead } from '../hooks/useMarkAsRead';
 import { Bell, BellOff, Inbox } from 'lucide-react-native';
-import type { NotificationItem } from '../types';
+import type { NotificationItem } from '@/types/notification';
+
+// Inline NotificationCard component
+const NotificationCard = ({ 
+  title, 
+  message, 
+  isRead, 
+  createdAt, 
+  onPress 
+}: { 
+  title: string; 
+  message: string; 
+  isRead: boolean; 
+  createdAt: string | null; 
+  onPress: () => void;
+}) => (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.notificationCard}>
+    <Card padding="md" style={!isRead ? styles.unreadCard : undefined}>
+      <View style={styles.notificationHeader}>
+        <Typography variant="h4" style={styles.notificationTitle}>{title}</Typography>
+        {!isRead && <View style={styles.unreadDot} />}
+      </View>
+      <Typography variant="body" style={styles.notificationMessage}>{message}</Typography>
+      {createdAt && (
+        <Typography variant="caption" style={styles.notificationDate}>
+          {new Date(createdAt).toLocaleDateString('tr-TR', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </Typography>
+      )}
+    </Card>
+  </TouchableOpacity>
+);
 
 export const NotificationsScreen = () => {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -62,10 +96,9 @@ export const NotificationsScreen = () => {
     return (
       <NotificationCard
         title={item.title}
-        message={item.message || 'Bildirim'}
-        timestamp={item.created_at ? formatTimestamp(item.created_at) : 'Tarih yok'}
+        message={item.body || 'Bildirim'}
+        createdAt={item.created_at}
         isRead={item.is_read || false}
-        type={item.type || 'info'}
         onPress={handlePress}
       />
     );
@@ -357,6 +390,41 @@ const styles = StyleSheet.create({
   emptyButtonText: {
     color: colors.background.primary,
     fontWeight: '600',
+  },
+  notificationCard: {
+    marginBottom: spacing.md,
+  },
+  unreadCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary[600],
+  },
+  notificationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+  },
+  notificationTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary[600],
+    marginLeft: spacing.sm,
+  },
+  notificationMessage: {
+    color: colors.text.secondary,
+    fontSize: 14,
+    marginBottom: spacing.xs,
+  },
+  notificationDate: {
+    color: colors.text.tertiary,
+    fontSize: 12,
   },
 });
 

@@ -11,12 +11,11 @@ import { colors, spacing, borderRadius } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { JobCard } from '../components/JobCard';
+import { JobCard } from '@/components/jobs/JobCard';
 import { Screen } from '@/components/layout/Screen';
 import { Filter, Search, Briefcase, TrendingUp, MapPin, X } from 'lucide-react-native';
 import type { JobListItem } from '@/types/job';
-import { JobFilterSheet } from '../components/JobFilterSheet';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { JobFilterSheet } from '@/components/jobs/JobFilterSheet';
 
 export const JobsScreen = () => {
   const navigation = useNavigation();
@@ -24,7 +23,7 @@ export const JobsScreen = () => {
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | undefined>();
   const [selectedCityId, setSelectedCityId] = useState<number | undefined>();
   const [selectedWorkType, setSelectedWorkType] = useState<string | undefined>();
-  const filterSheetRef = React.useRef<any>(null);
+  const [showFilterSheet, setShowFilterSheet] = React.useState(false);
 
   const {
     data,
@@ -75,18 +74,11 @@ export const JobsScreen = () => {
   const renderJob = useCallback(
     ({ item }: { item: JobListItem }) => (
       <JobCard
-        key={item.id}
-        title={item.title || ''}
-        hospital_name={item.hospital_name || undefined}
-        city_name={item.city_name || undefined}
-        specialty_name={item.specialty || undefined}
-        salary={item.salary_range || undefined}
-        is_applied={item.is_applied || false}
+        job={item}
         onPress={() => {
           // @ts-ignore - Navigation type issue
           navigation.navigate('JobDetail', { id: item.id });
         }}
-        onApply={() => handleApply(item.id)}
       />
     ),
     [navigation]
@@ -143,7 +135,7 @@ export const JobsScreen = () => {
           </View>
           <TouchableOpacity
             style={hasActiveFilters ? StyleSheet.flatten([styles.filterButton, styles.filterButtonActive]) : styles.filterButton}
-            onPress={() => filterSheetRef.current?.present()}
+            onPress={() => setShowFilterSheet(true)}
           >
             <Filter size={20} color={hasActiveFilters ? colors.background.primary : colors.primary[600]} />
             {hasActiveFilters && (
@@ -233,7 +225,7 @@ export const JobsScreen = () => {
   };
 
   const handleApplyFilters = useCallback(() => {
-    filterSheetRef.current?.dismiss();
+    setShowFilterSheet(false);
     refetch();
   }, [refetch]);
 
@@ -241,7 +233,7 @@ export const JobsScreen = () => {
     setSelectedSpecialtyId(undefined);
     setSelectedCityId(undefined);
     setSelectedWorkType(undefined);
-    filterSheetRef.current?.dismiss();
+    setShowFilterSheet(false);
     refetch();
   }, [refetch]);
 
@@ -255,13 +247,6 @@ export const JobsScreen = () => {
       {renderContent()}
       
       <JobFilterSheet
-        ref={filterSheetRef}
-        selectedSpecialtyId={selectedSpecialtyId}
-        selectedCityId={selectedCityId}
-        selectedWorkType={selectedWorkType}
-        onSpecialtyChange={setSelectedSpecialtyId}
-        onCityChange={setSelectedCityId}
-        onWorkTypeChange={setSelectedWorkType}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
       />

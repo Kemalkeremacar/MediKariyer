@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import type { InfiniteData } from '@tanstack/react-query';
-import { notificationService } from '../services/notificationService';
-import type { NotificationsResponse } from '../types';
+import { notificationService } from '@/api/services/notification.service';
+import type { NotificationsResponse } from '@/types/notification';
 
 export interface UseNotificationsParams {
   showUnreadOnly?: boolean;

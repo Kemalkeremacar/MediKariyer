@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { Alert } from 'react-native';
-import { authService } from '@/features/auth/services/authService';
+import { authService } from '@/api/services/authService';
 
 interface ChangePasswordPayload {
   currentPassword: string;

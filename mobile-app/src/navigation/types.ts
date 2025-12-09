@@ -59,12 +59,11 @@ export type SettingsStackParamList = {
  * Bottom tab navigator for primary app features
  */
 export type AppTabParamList = {
-  Dashboard: undefined;
+  ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
   JobsTab: NavigatorScreenParams<JobsStackParamList>;
   Applications: undefined;
-  Notifications: undefined;
-  ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
+  Notifications: undefined;
 };
 
 /**
