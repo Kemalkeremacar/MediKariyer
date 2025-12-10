@@ -63,6 +63,7 @@ const notificationIdParamsSchema = Joi.object({
 });
 
 router.get('/', validateQuery(mobileNotificationsQuerySchema), mobileNotificationController.listNotifications);
+router.get('/unread-count', mobileNotificationController.getUnreadCount);
 router.post('/:notificationId/read', validateParams(notificationIdParamsSchema), mobileNotificationController.markAsRead);
 
 router.use(mobileErrorBoundary);

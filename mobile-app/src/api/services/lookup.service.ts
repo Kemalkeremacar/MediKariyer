@@ -1,4 +1,21 @@
+/**
+ * @file lookup.service.ts
+ * @description Lookup service - Dropdown ve select için lookup data'ları getirir
+ * 
+ * Not: Lookup endpoint'leri web API'den gelir (/api/lookup/*)
+ * Mobile API'de ayrı lookup endpoint'leri yok çünkü:
+ * - Lookup data zaten minimal (ID + name)
+ * - Transformer'a gerek yok
+ * - Cache web tarafında yapılıyor
+ * - Tüm client'lar aynı lookup data'yı kullanır
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import { rootApiClient } from '@/api/client';
+import { rootEndpoints } from '@/api/endpoints';
 import { ApiResponse } from '@/types/api';
 import {
   Specialty,
@@ -10,62 +27,83 @@ import {
   LanguageLevel,
 } from '@/types/lookup';
 
-const unwrap = <T>(response: ApiResponse<T> | T): T => {
-  if ((response as ApiResponse<T>).success !== undefined) {
-    return (response as ApiResponse<T>).data;
-  }
-  return response as T;
-};
-
 export const lookupService = {
-  async getSpecialties() {
+  /**
+   * Branş listesini getirir
+   * @returns {Promise<Specialty[]>} Branş listesi
+   */
+  async getSpecialties(): Promise<Specialty[]> {
     const response = await rootApiClient.get<ApiResponse<Specialty[]>>(
-      '/lookup/specialties',
+      rootEndpoints.lookup.specialties,
     );
-    return unwrap(response.data);
+    return response.data.data;
   },
 
-  async getSubspecialties() {
+  /**
+   * Yan dal listesini getirir (branşa göre filtrelenebilir)
+   * @param {number} [specialtyId] - Branş ID'si (opsiyonel)
+   * @returns {Promise<Subspecialty[]>} Yan dal listesi
+   */
+  async getSubspecialties(specialtyId?: number): Promise<Subspecialty[]> {
     const response = await rootApiClient.get<ApiResponse<Subspecialty[]>>(
-      '/lookup/subspecialties',
+      rootEndpoints.lookup.subspecialties(specialtyId),
     );
-    return unwrap(response.data);
+    return response.data.data;
   },
 
-  async getCities() {
+  /**
+   * Şehir listesini getirir
+   * @returns {Promise<City[]>} Şehir listesi
+   */
+  async getCities(): Promise<City[]> {
     const response = await rootApiClient.get<ApiResponse<City[]>>(
-      '/lookup/cities',
+      rootEndpoints.lookup.cities,
     );
-    return unwrap(response.data);
+    return response.data.data;
   },
 
-  async getApplicationStatuses() {
-    const response =
-      await rootApiClient.get<ApiResponse<ApplicationStatus[]>>(
-        '/lookup/application-statuses',
-      );
-    return unwrap(response.data);
+  /**
+   * Başvuru durumları listesini getirir
+   * @returns {Promise<ApplicationStatus[]>} Başvuru durumları listesi
+   */
+  async getApplicationStatuses(): Promise<ApplicationStatus[]> {
+    const response = await rootApiClient.get<ApiResponse<ApplicationStatus[]>>(
+      rootEndpoints.lookup.applicationStatuses,
+    );
+    return response.data.data;
   },
 
-  async getEducationTypes() {
+  /**
+   * Eğitim türleri listesini getirir
+   * @returns {Promise<EducationType[]>} Eğitim türleri listesi
+   */
+  async getEducationTypes(): Promise<EducationType[]> {
     const response = await rootApiClient.get<ApiResponse<EducationType[]>>(
-      '/lookup/doctor-education-types',
+      rootEndpoints.lookup.educationTypes,
     );
-    return unwrap(response.data);
+    return response.data.data;
   },
 
-  async getLanguages() {
+  /**
+   * Dil listesini getirir
+   * @returns {Promise<Language[]>} Dil listesi
+   */
+  async getLanguages(): Promise<Language[]> {
     const response = await rootApiClient.get<ApiResponse<Language[]>>(
-      '/lookup/languages',
+      rootEndpoints.lookup.languages,
     );
-    return unwrap(response.data);
+    return response.data.data;
   },
 
-  async getLanguageLevels() {
+  /**
+   * Dil seviyeleri listesini getirir
+   * @returns {Promise<LanguageLevel[]>} Dil seviyeleri listesi
+   */
+  async getLanguageLevels(): Promise<LanguageLevel[]> {
     const response = await rootApiClient.get<ApiResponse<LanguageLevel[]>>(
-      '/lookup/language-levels',
+      rootEndpoints.lookup.languageLevels,
     );
-    return unwrap(response.data);
+    return response.data.data;
   },
 };
 

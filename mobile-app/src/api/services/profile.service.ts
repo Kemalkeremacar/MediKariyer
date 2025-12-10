@@ -1,6 +1,32 @@
+/**
+ * @file profile.service.ts
+ * @description Profile service - Doktor profil işlemleri için API servisi
+ * 
+ * Ana İşlevler:
+ * - Get profile (profil bilgisi)
+ * - Get complete profile (tam profil - eğitim, deneyim, sertifika, dil dahil)
+ * - Get profile completion (profil tamamlanma oranı)
+ * - Update personal info (kişisel bilgi güncelleme)
+ * - Education CRUD (eğitim bilgileri)
+ * - Experience CRUD (deneyim bilgileri)
+ * - Certificate CRUD (sertifika bilgileri)
+ * - Language CRUD (dil bilgileri)
+ * - Photo management (fotoğraf yönetimi)
+ * 
+ * Endpoint'ler:
+ * - Mobile API: /api/mobile/doctor/* (TÜM işlemler artık mobile API'de!)
+ * - Web API: /api/doctor/* (sadece photo management için)
+ * 
+ * Not: Backend mobile service'leri güncellendi, artık tüm CRUD işlemleri mobile API'de!
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
 import apiClient from '@/api/client';
 import { rootApiClient } from '@/api/client';
-import { endpoints } from '@/api/endpoints';
+import { endpoints, rootEndpoints } from '@/api/endpoints';
 import { ApiResponse } from '@/types/api';
 import type {
   CompleteProfile,
@@ -23,14 +49,11 @@ import type {
   PhotoRequest,
 } from '@/types/profile';
 
-// Web backend için ayrı axios instance (detaylı profil işlemleri için)
-// Not: Eğitim, deneyim, sertifika gibi detaylı işlemler henüz mobile API'de yok
-// Bu yüzden web API kullanıyoruz. İleride mobile API'ye taşınabilir.
-const WEB_BASE_URL = process.env.EXPO_PUBLIC_PRIMARY_API_BASE_URL || 'https://mk.monassist.com';
-const webApiClient = rootApiClient; // rootApiClient zaten PRIMARY_API_BASE_URL kullanıyor
-
 export const profileService = {
-  // Profil GET işlemleri - Mobile API kullanıyor
+  /**
+   * Profil bilgisini getirir (temel bilgiler)
+   * @returns {Promise<DoctorProfile>} Doktor profil bilgileri
+   */
   async getProfile(): Promise<DoctorProfile> {
     const response = await apiClient.get<ApiResponse<DoctorProfile>>(
       endpoints.doctor.profile,
@@ -38,13 +61,15 @@ export const profileService = {
     return response.data.data;
   },
 
+  /**
+   * Tam profil bilgisini getirir (eğitim, deneyim, sertifika, dil dahil)
+   * @returns {Promise<CompleteProfile>} Tam profil bilgileri
+   */
   async getCompleteProfile(): Promise<CompleteProfile> {
-    // Mobile için sadece mobile API kullan
     const response = await apiClient.get<ApiResponse<DoctorProfile>>(
       endpoints.doctor.profile,
     );
     
-    // Mobile API response'unu CompleteProfile formatına dönüştür
     const basicProfile = response.data.data;
     return {
       ...basicProfile,
@@ -55,8 +80,11 @@ export const profileService = {
     } as CompleteProfile;
   },
 
+  /**
+   * Profil tamamlanma oranını getirir
+   * @returns {Promise<ProfileCompletion>} Profil tamamlanma bilgileri
+   */
   async getProfileCompletion(): Promise<ProfileCompletion> {
-    // Mobile için basit completion hesaplama
     const profile = await this.getProfile();
     
     const fields = [
@@ -80,179 +108,275 @@ export const profileService = {
     };
   },
 
-  // Profil güncelleme
+  /**
+   * Kişisel bilgileri günceller
+   * @param {UpdatePersonalInfoPayload} payload - Güncellenecek bilgiler
+   * @returns {Promise<DoctorProfile>} Güncellenmiş profil
+   */
   async updatePersonalInfo(
     payload: UpdatePersonalInfoPayload,
   ): Promise<DoctorProfile> {
-    const response = await webApiClient.patch<ApiResponse<DoctorProfile>>(
-      '/api/doctor/profile/personal',
+    const response = await apiClient.patch<ApiResponse<DoctorProfile>>(
+      endpoints.doctor.updatePersonalInfo,
       payload,
     );
     return response.data.data;
   },
 
-  // Eğitim CRUD
+  /**
+   * Eğitim listesini getirir
+   * @returns {Promise<DoctorEducation[]>} Eğitim listesi
+   */
   async getEducations(): Promise<DoctorEducation[]> {
-    const response = await webApiClient.get<ApiResponse<DoctorEducation[]>>(
-      '/api/doctor/educations',
+    const response = await apiClient.get<ApiResponse<DoctorEducation[]>>(
+      endpoints.doctor.educations,
     );
     return response.data.data;
   },
 
+  /**
+   * Yeni eğitim kaydı oluşturur
+   * @param {CreateEducationPayload} payload - Eğitim bilgileri
+   * @returns {Promise<DoctorEducation>} Oluşturulan eğitim kaydı
+   */
   async createEducation(
     payload: CreateEducationPayload,
   ): Promise<DoctorEducation> {
-    const response = await webApiClient.post<ApiResponse<DoctorEducation>>(
-      '/api/doctor/educations',
+    const response = await apiClient.post<ApiResponse<DoctorEducation>>(
+      endpoints.doctor.educations,
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Eğitim kaydını günceller
+   * @param {number} id - Eğitim ID'si
+   * @param {UpdateEducationPayload} payload - Güncellenecek bilgiler
+   * @returns {Promise<DoctorEducation>} Güncellenmiş eğitim kaydı
+   */
   async updateEducation(
     id: number,
     payload: UpdateEducationPayload,
   ): Promise<DoctorEducation> {
-    const response = await webApiClient.patch<ApiResponse<DoctorEducation>>(
-      `/api/doctor/educations/${id}`,
+    const response = await apiClient.put<ApiResponse<DoctorEducation>>(
+      endpoints.doctor.education(id),
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Eğitim kaydını siler
+   * @param {number} id - Eğitim ID'si
+   * @returns {Promise<void>}
+   */
   async deleteEducation(id: number): Promise<void> {
-    await webApiClient.delete<ApiResponse<null>>(`/api/doctor/educations/${id}`);
+    await apiClient.delete<ApiResponse<null>>(endpoints.doctor.education(id));
   },
 
-  // Deneyim CRUD
+  /**
+   * Deneyim listesini getirir
+   * @returns {Promise<DoctorExperience[]>} Deneyim listesi
+   */
   async getExperiences(): Promise<DoctorExperience[]> {
-    const response = await webApiClient.get<ApiResponse<DoctorExperience[]>>(
-      '/api/doctor/experiences',
+    const response = await apiClient.get<ApiResponse<DoctorExperience[]>>(
+      endpoints.doctor.experiences,
     );
     return response.data.data;
   },
 
+  /**
+   * Yeni deneyim kaydı oluşturur
+   * @param {CreateExperiencePayload} payload - Deneyim bilgileri
+   * @returns {Promise<DoctorExperience>} Oluşturulan deneyim kaydı
+   */
   async createExperience(
     payload: CreateExperiencePayload,
   ): Promise<DoctorExperience> {
-    const response = await webApiClient.post<ApiResponse<DoctorExperience>>(
-      '/api/doctor/experiences',
+    const response = await apiClient.post<ApiResponse<DoctorExperience>>(
+      endpoints.doctor.experiences,
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Deneyim kaydını günceller
+   * @param {number} id - Deneyim ID'si
+   * @param {UpdateExperiencePayload} payload - Güncellenecek bilgiler
+   * @returns {Promise<DoctorExperience>} Güncellenmiş deneyim kaydı
+   */
   async updateExperience(
     id: number,
     payload: UpdateExperiencePayload,
   ): Promise<DoctorExperience> {
-    const response = await webApiClient.patch<ApiResponse<DoctorExperience>>(
-      `/api/doctor/experiences/${id}`,
+    const response = await apiClient.put<ApiResponse<DoctorExperience>>(
+      endpoints.doctor.experience(id),
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Deneyim kaydını siler
+   * @param {number} id - Deneyim ID'si
+   * @returns {Promise<void>}
+   */
   async deleteExperience(id: number): Promise<void> {
-    await webApiClient.delete<ApiResponse<null>>(
-      `/api/doctor/experiences/${id}`,
+    await apiClient.delete<ApiResponse<null>>(
+      endpoints.doctor.experience(id),
     );
   },
 
-  // Sertifika CRUD
+  /**
+   * Sertifika listesini getirir
+   * @returns {Promise<DoctorCertificate[]>} Sertifika listesi
+   */
   async getCertificates(): Promise<DoctorCertificate[]> {
-    const response = await webApiClient.get<ApiResponse<DoctorCertificate[]>>(
-      '/api/doctor/certificates',
+    const response = await apiClient.get<ApiResponse<DoctorCertificate[]>>(
+      endpoints.doctor.certificates,
     );
     return response.data.data;
   },
 
+  /**
+   * Yeni sertifika kaydı oluşturur
+   * @param {CreateCertificatePayload} payload - Sertifika bilgileri
+   * @returns {Promise<DoctorCertificate>} Oluşturulan sertifika kaydı
+   */
   async createCertificate(
     payload: CreateCertificatePayload,
   ): Promise<DoctorCertificate> {
-    const response = await webApiClient.post<ApiResponse<DoctorCertificate>>(
-      '/api/doctor/certificates',
+    const response = await apiClient.post<ApiResponse<DoctorCertificate>>(
+      endpoints.doctor.certificates,
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Sertifika kaydını günceller
+   * @param {number} id - Sertifika ID'si
+   * @param {UpdateCertificatePayload} payload - Güncellenecek bilgiler
+   * @returns {Promise<DoctorCertificate>} Güncellenmiş sertifika kaydı
+   */
   async updateCertificate(
     id: number,
     payload: UpdateCertificatePayload,
   ): Promise<DoctorCertificate> {
-    const response = await webApiClient.patch<ApiResponse<DoctorCertificate>>(
-      `/api/doctor/certificates/${id}`,
+    const response = await apiClient.put<ApiResponse<DoctorCertificate>>(
+      endpoints.doctor.certificate(id),
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Sertifika kaydını siler
+   * @param {number} id - Sertifika ID'si
+   * @returns {Promise<void>}
+   */
   async deleteCertificate(id: number): Promise<void> {
-    await webApiClient.delete<ApiResponse<null>>(
-      `/api/doctor/certificates/${id}`,
+    await apiClient.delete<ApiResponse<null>>(
+      endpoints.doctor.certificate(id),
     );
   },
 
-  // Dil CRUD
+  /**
+   * Dil listesini getirir
+   * @returns {Promise<DoctorLanguage[]>} Dil listesi
+   */
   async getLanguages(): Promise<DoctorLanguage[]> {
-    const response = await webApiClient.get<ApiResponse<DoctorLanguage[]>>(
-      '/api/doctor/languages',
+    const response = await apiClient.get<ApiResponse<DoctorLanguage[]>>(
+      endpoints.doctor.languages,
     );
     return response.data.data;
   },
 
+  /**
+   * Yeni dil kaydı oluşturur
+   * @param {CreateLanguagePayload} payload - Dil bilgileri
+   * @returns {Promise<DoctorLanguage>} Oluşturulan dil kaydı
+   */
   async createLanguage(
     payload: CreateLanguagePayload,
   ): Promise<DoctorLanguage> {
-    const response = await webApiClient.post<ApiResponse<DoctorLanguage>>(
-      '/api/doctor/languages',
+    const response = await apiClient.post<ApiResponse<DoctorLanguage>>(
+      endpoints.doctor.languages,
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Dil kaydını günceller
+   * @param {number} id - Dil ID'si
+   * @param {UpdateLanguagePayload} payload - Güncellenecek bilgiler
+   * @returns {Promise<DoctorLanguage>} Güncellenmiş dil kaydı
+   */
   async updateLanguage(
     id: number,
     payload: UpdateLanguagePayload,
   ): Promise<DoctorLanguage> {
-    const response = await webApiClient.patch<ApiResponse<DoctorLanguage>>(
-      `/api/doctor/languages/${id}`,
+    const response = await apiClient.put<ApiResponse<DoctorLanguage>>(
+      endpoints.doctor.language(id),
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Dil kaydını siler
+   * @param {number} id - Dil ID'si
+   * @returns {Promise<void>}
+   */
   async deleteLanguage(id: number): Promise<void> {
-    await webApiClient.delete<ApiResponse<null>>(`/api/doctor/languages/${id}`);
+    await apiClient.delete<ApiResponse<null>>(endpoints.doctor.language(id));
   },
 
-  // Fotoğraf yönetimi
+  /**
+   * Profil fotoğrafı yükler (Web API - admin onayı gerekir)
+   * @param {UploadPhotoPayload} payload - Fotoğraf bilgileri
+   * @returns {Promise<PhotoRequest>} Fotoğraf yükleme isteği
+   */
   async uploadPhoto(payload: UploadPhotoPayload): Promise<PhotoRequest> {
-    const response = await webApiClient.post<ApiResponse<PhotoRequest>>(
-      '/api/doctor/profile/photo',
+    const response = await rootApiClient.post<ApiResponse<PhotoRequest>>(
+      rootEndpoints.doctor.profile.photo,
       payload,
     );
     return response.data.data;
   },
 
+  /**
+   * Fotoğraf yükleme isteği durumunu getirir
+   * @returns {Promise<PhotoRequest | null>} Fotoğraf yükleme isteği durumu
+   */
   async getPhotoRequestStatus(): Promise<PhotoRequest | null> {
-    const response = await webApiClient.get<ApiResponse<PhotoRequest | null>>(
-      '/api/doctor/profile/photo/status',
+    const response = await rootApiClient.get<ApiResponse<PhotoRequest | null>>(
+      rootEndpoints.doctor.profile.photoStatus,
     );
     return response.data.data;
   },
 
+  /**
+   * Fotoğraf yükleme geçmişini getirir
+   * @returns {Promise<PhotoRequest[]>} Fotoğraf yükleme geçmişi
+   */
   async getPhotoRequestHistory(): Promise<PhotoRequest[]> {
-    const response = await webApiClient.get<ApiResponse<PhotoRequest[]>>(
-      '/api/doctor/profile/photo/history',
+    const response = await rootApiClient.get<ApiResponse<PhotoRequest[]>>(
+      rootEndpoints.doctor.profile.photoHistory,
     );
     return response.data.data;
   },
 
+  /**
+   * Fotoğraf yükleme isteğini iptal eder
+   * @returns {Promise<void>}
+   */
   async cancelPhotoRequest(): Promise<void> {
-    await webApiClient.delete<ApiResponse<null>>(
-      '/api/doctor/profile/photo/request',
+    await rootApiClient.delete<ApiResponse<null>>(
+      rootEndpoints.doctor.profile.photoRequest,
     );
   },
 };

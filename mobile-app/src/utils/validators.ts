@@ -1,8 +1,9 @@
 /**
  * Validation Utilities
- * Provides input validation functions
+ * Provides input validation functions and Zod schemas
  */
 
+import { z } from 'zod';
 import {
   MIN_PASSWORD_LENGTH,
   MAX_PASSWORD_LENGTH,
@@ -309,3 +310,72 @@ export const sanitizeString = (value: string): string => {
     .replace(/[<>'"]/g, '')
     .trim();
 };
+
+// ============================================================================
+// ZOD VALIDATION SCHEMAS
+// ============================================================================
+
+/**
+ * Email validation schema (Zod)
+ */
+export const emailSchema = z.string().email('Geçerli bir e-posta girin');
+
+/**
+ * Password validation schema (Zod)
+ */
+export const passwordSchema = z
+  .string()
+  .min(MIN_PASSWORD_LENGTH, `Şifre en az ${MIN_PASSWORD_LENGTH} karakter olmalı`)
+  .max(MAX_PASSWORD_LENGTH, `Şifre en fazla ${MAX_PASSWORD_LENGTH} karakter olabilir`);
+
+/**
+ * Name validation schema (Zod)
+ */
+export const nameSchema = z
+  .string()
+  .min(MIN_NAME_LENGTH, `En az ${MIN_NAME_LENGTH} karakter olmalı`)
+  .max(MAX_NAME_LENGTH, `En fazla ${MAX_NAME_LENGTH} karakter olabilir`);
+
+/**
+ * Login form validation schema (Zod)
+ */
+export const loginValidationSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+});
+
+/**
+ * Registration form validation schema (Zod)
+ */
+export const registrationValidationSchema = z
+  .object({
+    first_name: nameSchema,
+    last_name: nameSchema,
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: passwordSchema,
+    title: z.enum(['Dr', 'Uz.Dr', 'Dr.Öğr.Üyesi', 'Doç.Dr', 'Prof.Dr'], {
+      message: 'Lütfen ünvan seçin',
+    }),
+    specialty_id: z.string().min(1, 'Lütfen branş seçin'),
+    subspecialty_id: z.string().optional(),
+    profile_photo: z.string().min(1, 'Profil fotoğrafı yüklemelisiniz'),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Şifreler eşleşmiyor',
+    path: ['confirmPassword'],
+  });
+
+/**
+ * Change password validation schema (Zod)
+ */
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Mevcut şifre gereklidir'),
+    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Şifreler eşleşmiyor',
+    path: ['confirmPassword'],
+  });

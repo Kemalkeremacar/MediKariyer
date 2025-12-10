@@ -1,20 +1,29 @@
+/**
+ * @file authStore.ts
+ * @description Authentication state management
+ * 
+ * IMPORTANT: Tokens are NOT stored here anymore!
+ * - Tokens are stored in SecureStore only (tokenManager)
+ * - This store only manages user data and auth status
+ * - Single source of truth for tokens: SecureStore
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthStatus, AuthUser } from '@/types/auth';
-import { STORAGE_KEYS } from '@/config/constants';
 
 interface AuthState {
   user: AuthUser | null;
-  accessToken: string | null;
-  refreshToken: string | null;
   authStatus: AuthStatus;
   isHydrating: boolean;
-  setAuthState: (payload: {
-    user?: AuthUser | null;
-    accessToken?: string | null;
-    refreshToken?: string | null;
-  }) => void;
+  setUser: (user: AuthUser | null) => void;
+  setAuthStatus: (status: AuthStatus) => void;
+  markAuthenticated: (user: AuthUser) => void;
   markUnauthenticated: () => void;
   setHydrating: (value: boolean) => void;
 }
@@ -23,36 +32,31 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      accessToken: null,
-      refreshToken: null,
       authStatus: 'idle',
       isHydrating: true,
-      setAuthState: ({ user, accessToken, refreshToken }) =>
-        set((state) => {
-          const nextUser = user ?? state.user;
-          const nextAccessToken =
-            accessToken !== undefined ? accessToken : state.accessToken;
-          const nextRefreshToken =
-            refreshToken !== undefined ? refreshToken : state.refreshToken;
 
-          const isAuthenticated = Boolean(
-            nextUser || nextAccessToken || nextRefreshToken,
-          );
-
-          return {
-            user: nextUser ?? null,
-            accessToken: nextAccessToken ?? null,
-            refreshToken: nextRefreshToken ?? null,
-            authStatus: isAuthenticated ? 'authenticated' : 'unauthenticated',
-          };
+      setUser: (user) =>
+        set({
+          user,
         }),
+
+      setAuthStatus: (status) =>
+        set({
+          authStatus: status,
+        }),
+
+      markAuthenticated: (user) =>
+        set({
+          user,
+          authStatus: 'authenticated',
+        }),
+
       markUnauthenticated: () =>
         set({
           user: null,
-          accessToken: null,
-          refreshToken: null,
           authStatus: 'unauthenticated',
         }),
+
       setHydrating: (value) => set({ isHydrating: value }),
     }),
     {
@@ -60,8 +64,6 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
         authStatus: state.authStatus,
       }),
       onRehydrateStorage: () => (state) => {

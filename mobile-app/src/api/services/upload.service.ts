@@ -1,9 +1,24 @@
 /**
- * Upload Service
- * Dosya yükleme işlemleri için API servisi
+ * @file upload.service.ts
+ * @description Upload service - Dosya yükleme işlemleri için API servisi
+ * 
+ * Ana İşlevler:
+ * - Upload profile photo (profil fotoğrafı yükleme - Base64 format)
+ * 
+ * Endpoint'ler: /api/mobile/upload/*
+ * 
+ * Not: Base64 format kullanılıyor (multipart/form-data değil)
+ * Maksimum dosya boyutu: 5MB
+ * Desteklenen formatlar: JPEG, PNG
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import apiClient from '../client';
+import { endpoints } from '../endpoints';
+import { ApiResponse } from '@/types/api';
 
 export interface UploadResponse {
   url: string;
@@ -11,22 +26,23 @@ export interface UploadResponse {
   size: number;
 }
 
-/**
- * Profil fotoğrafı yükle (Base64 format)
- */
-export const uploadProfilePhoto = async (uri: string, base64: string): Promise<UploadResponse> => {
-  const base64String = `data:image/jpeg;base64,${base64}`;
-  
-  const response = await apiClient.post<{ data: UploadResponse }>(
-    '/upload/profile-photo',
-    {
-      photo: base64String,
-    }
-  );
-
-  return response.data.data;
-};
-
 export const uploadService = {
-  uploadProfilePhoto,
+  /**
+   * Profil fotoğrafı yükle (Base64 format)
+   * @param {string} uri - Fotoğraf URI'si (local file path)
+   * @param {string} base64 - Base64 encoded fotoğraf
+   * @returns {Promise<UploadResponse>} Upload sonucu (URL, filename, size)
+   */
+  async uploadProfilePhoto(uri: string, base64: string): Promise<UploadResponse> {
+    const base64String = `data:image/jpeg;base64,${base64}`;
+    
+    const response = await apiClient.post<ApiResponse<UploadResponse>>(
+      endpoints.upload.profilePhoto,
+      {
+        photo: base64String,
+      }
+    );
+
+    return response.data.data;
+  },
 };

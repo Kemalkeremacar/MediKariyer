@@ -32,6 +32,27 @@ const attachInterceptors = (instance: AxiosInstance) => {
       console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
       // Don't log request data to avoid logging base64 images
       
+      // Check if token needs refresh before making request
+      const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
+      if (shouldRefresh && !config.url?.includes('/auth/refresh-token')) {
+        console.log('🔄 Token needs refresh, triggering proactive refresh...');
+        try {
+          const refreshToken = await tokenManager.getRefreshToken();
+          if (refreshToken) {
+            const response = await axios.post(
+              `${env.API_BASE_URL}${endpoints.auth.refreshToken}`,
+              { refreshToken },
+            );
+            const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
+            await tokenManager.saveTokens(accessToken, newRefreshToken);
+            useAuthStore.getState().markAuthenticated(user);
+            console.log('✅ Proactive token refresh successful');
+          }
+        } catch (error) {
+          console.warn('⚠️ Proactive token refresh failed, will retry on 401');
+        }
+      }
+      
       const token = await tokenManager.getAccessToken();
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -173,9 +194,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
           response.data.data;
 
         await tokenManager.saveTokens(accessToken, newRefreshToken);
-        useAuthStore
-          .getState()
-          .setAuthState({ user, accessToken, refreshToken: newRefreshToken });
+        useAuthStore.getState().markAuthenticated(user);
 
         processQueue(null, accessToken);
 

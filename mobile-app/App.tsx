@@ -8,19 +8,37 @@ import { AppProviders } from '@/providers/AppProviders';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { AuthInitializer } from '@/providers/AuthInitializer';
 import { navigationRef } from '@/navigation/navigationRef';
+import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { StyleSheet } from 'react-native';
+
+/**
+ * AppContent - Inner app component with push notifications
+ */
+const AppContent = () => {
+  // Initialize push notifications
+  usePushNotifications();
+
+  return (
+    <>
+      <AuthInitializer />
+      <RootNavigator />
+    </>
+  );
+};
 
 export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <AppProviders>
-          <NavigationContainer ref={navigationRef}>
-            <BottomSheetModalProvider>
-              <AuthInitializer />
-              <RootNavigator />
-            </BottomSheetModalProvider>
-          </NavigationContainer>
+          <ErrorBoundary>
+            <NavigationContainer ref={navigationRef}>
+              <BottomSheetModalProvider>
+                <AppContent />
+              </BottomSheetModalProvider>
+            </NavigationContainer>
+          </ErrorBoundary>
         </AppProviders>
       </SafeAreaProvider>
     </GestureHandlerRootView>

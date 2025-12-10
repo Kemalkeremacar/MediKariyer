@@ -14,35 +14,32 @@
 
 const express = require('express');
 const router = express.Router();
-const { catchAsync } = require('../../utils/errorHandler');
-const { sendSuccess } = require('../../utils/response');
+const { authMiddleware } = require('../../middleware/authMiddleware');
+const { requireDoctor } = require('../../middleware/roleGuard');
+const { mobileErrorHandler, mobileErrorBoundary } = require('../../middleware/mobileErrorHandler');
+const { validateBody } = require('../../middleware/validationMiddleware');
+const Joi = require('joi');
+const mobileUploadController = require('../../controllers/mobile/mobileUploadController');
 
-// Test route
-router.get('/test', (req, res) => {
-  res.json({ success: true, message: 'Upload route is loaded!' });
+// Base64 photo upload schema
+const uploadPhotoSchema = Joi.object({
+  photo: Joi.string().required().messages({
+    'any.required': 'Fotoğraf verisi zorunludur',
+    'string.base': 'Fotoğraf verisi string olmalıdır'
+  })
 });
+
+router.use(mobileErrorHandler);
+router.use(authMiddleware);
+router.use(requireDoctor);
 
 /**
  * @route   POST /api/mobile/upload/profile-photo
  * @desc    Profil fotoğrafı yükleme (Base64 format)
- * @access  Public
+ * @access  Private (Doctor)
  */
-router.post('/profile-photo', catchAsync(async (req, res) => {
-  const { photo } = req.body;
-  
-  if (!photo) {
-    return res.status(400).json({
-      success: false,
-      message: 'Fotoğraf verisi bulunamadı'
-    });
-  }
+router.post('/profile-photo', validateBody(uploadPhotoSchema), mobileUploadController.uploadProfilePhoto);
 
-  // Base64 string'i olduğu gibi döndür
-  // Frontend'de zaten base64 olarak gönderilecek
-  return sendSuccess(res, 'Fotoğraf başarıyla yüklendi', {
-    url: photo, // Base64 string'i URL olarak döndür
-    size: photo.length
-  });
-}));
+router.use(mobileErrorBoundary);
 
 module.exports = router;

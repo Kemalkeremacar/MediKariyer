@@ -50,8 +50,8 @@ export const textVariants = {
     lineHeight: typography.lineHeight.normal,
   },
   body: {
-    fontSize: typography.fontSize.base, // 16pt - Medium for normal text
-    fontWeight: typography.fontWeight.medium,
+    fontSize: typography.fontSize.base, // 16pt - Regular for normal text
+    fontWeight: typography.fontWeight.normal,
     lineHeight: typography.lineHeight.normal,
   },
   bodyLarge: {

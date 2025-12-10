@@ -3,14 +3,20 @@ import {
   View,
   ScrollView,
   ActivityIndicator,
-  Alert,
   StyleSheet,
 } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
+import { Tabs } from '@/components/ui/Tabs';
+import { FAB } from '@/components/ui/FAB';
+import { Divider } from '@/components/ui/Divider';
+import { Chip } from '@/components/ui/Chip';
+import { Avatar } from '@/components/ui/Avatar';
+import { Badge } from '@/components/ui/Badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useToast } from '@/providers/ToastProvider';
 import {
   MapPin,
   Clock,
@@ -23,11 +29,12 @@ import {
   Phone,
   Mail,
   Globe,
+  Send,
 } from 'lucide-react-native';
 import { jobService } from '@/api/services/job.service';
 import type { JobsStackParamList } from '@/navigation/types';
 import { colors, spacing, borderRadius } from '@/theme';
-import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
@@ -38,7 +45,9 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   const { id } = route.params;
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const [coverLetter, setCoverLetter] = useState('');
+  const [activeTab, setActiveTab] = useState('details');
 
   const {
     data: job,
@@ -64,7 +73,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       // Job detail'i yeniden çek
       refetch();
-      Alert.alert('Başarılı', 'Başvurunuz başarıyla iletildi.');
+      showToast('Başvurunuz başarıyla iletildi', 'success');
     },
     onError: (error: any) => {
       // Backend'den gelen error mesajını göster
@@ -72,7 +81,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         error?.response?.data?.message || 
         error?.message || 
         'Başvuru yapılırken bir sorun oluştu.';
-      Alert.alert('Hata', errorMessage);
+      showToast(errorMessage, 'error');
     },
   });
 
@@ -138,15 +147,21 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
           <View style={{ gap: spacing.lg }}>
             {/* Hospital Logo & Title */}
             <View style={styles.row}>
-              <View style={styles.iconContainer}>
-                <Building2 size={32} color={colors.primary[600]} />
-              </View>
+              <Avatar
+                size="lg"
+                initials={job.hospital_name?.substring(0, 2).toUpperCase()}
+              />
               <View style={{ flex: 1, gap: spacing.xs }}>
-                <Typography variant="h2" style={styles.jobTitle}>
-                  {job.title ?? 'İş İlanı'}
-                </Typography>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+                  <Typography variant="h2" style={styles.jobTitle}>
+                    {job.title ?? 'İş İlanı'}
+                  </Typography>
+                </View>
                 <Typography variant="body" style={styles.hospitalName}>
                   {job.hospital_name ?? 'Kurum bilgisi yok'}
+                </Typography>
+                <Typography variant="caption" style={styles.postedDate}>
+                  {formatDate(job.created_at)}
                 </Typography>
               </View>
             </View>
@@ -427,6 +442,10 @@ const styles = StyleSheet.create({
   hospitalName: {
     color: colors.text.secondary,
     fontSize: 15,
+  },
+  postedDate: {
+    color: colors.text.tertiary,
+    fontSize: 12,
   },
   infoGrid: {
     flexDirection: 'row',

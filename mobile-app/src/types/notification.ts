@@ -8,18 +8,9 @@ export interface NotificationItem {
   data: Record<string, unknown> | null;
 }
 
-export interface NotificationsPagination {
-  current_page: number;
-  per_page: number;
-  total: number;
-  total_pages: number;
-  has_next: boolean;
-  has_prev: boolean;
-}
-
 export interface NotificationsResponse {
   data: NotificationItem[];
-  pagination: NotificationsPagination;
+  pagination: import('./api').PaginationMeta;
 }
 
 export interface RegisterDeviceTokenPayload {

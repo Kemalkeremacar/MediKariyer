@@ -11,9 +11,37 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
+import { Progress } from '@/components/ui/Progress';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
 import { useChangePassword } from '@/features/settings/hooks/useChangePassword';
+
+// Password strength calculator
+const calculatePasswordStrength = (password: string): number => {
+  let strength = 0;
+  if (password.length >= 6) strength += 25;
+  if (password.length >= 8) strength += 25;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+  if (/\d/.test(password)) strength += 15;
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 10;
+  return Math.min(strength, 100);
+};
+
+const getPasswordStrengthText = (password: string): string => {
+  const strength = calculatePasswordStrength(password);
+  if (strength < 40) return 'Zayıf';
+  if (strength < 70) return 'Orta';
+  if (strength < 90) return 'Güçlü';
+  return 'Çok Güçlü';
+};
+
+const getPasswordStrengthColor = (password: string): string => {
+  const strength = calculatePasswordStrength(password);
+  if (strength < 40) return colors.error[500];
+  if (strength < 70) return colors.warning[500];
+  if (strength < 90) return colors.primary[500];
+  return colors.success[500];
+};
 
 export const ChangePasswordScreen = ({ navigation }: any) => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -165,6 +193,21 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 )}
               </TouchableOpacity>
             </View>
+            {newPassword.length > 0 && (
+              <View style={styles.passwordStrength}>
+                <View style={styles.strengthHeader}>
+                  <Typography variant="caption" style={styles.strengthLabel}>
+                    Şifre Gücü:
+                  </Typography>
+                  <Typography variant="caption" style={{ ...styles.strengthValue, color: getPasswordStrengthColor(newPassword) }}>
+                    {getPasswordStrengthText(newPassword)}
+                  </Typography>
+                </View>
+                <Progress
+                  value={calculatePasswordStrength(newPassword)}
+                />
+              </View>
+            )}
           </View>
 
           {/* Confirm Password */}
@@ -303,5 +346,22 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: spacing.md,
+  },
+  passwordStrength: {
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  strengthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  strengthLabel: {
+    color: colors.text.secondary,
+    fontSize: 12,
+  },
+  strengthValue: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

@@ -52,8 +52,8 @@ export const Card: React.FC<CardProps> = ({
 
 const createStyles = (theme: Theme) => StyleSheet.create({
   base: {
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.background.primary,
+    borderRadius: theme.borderRadius['2xl'],
+    backgroundColor: theme.colors.background.secondary,
   },
   elevated: {
     ...theme.shadows.md,

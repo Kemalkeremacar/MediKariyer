@@ -28,17 +28,8 @@ export interface ApplicationDetail extends ApplicationListItem {
   hospital_about: string | null;
 }
 
-export interface ApplicationsPagination {
-  current_page?: number;
-  per_page?: number;
-  total?: number;
-  total_pages?: number;
-  has_next?: boolean;
-  has_prev?: boolean;
-}
-
 export interface ApplicationsResponse {
   data: ApplicationListItem[];
-  pagination?: ApplicationsPagination;
+  pagination?: import('./api').PaginationMeta;
 }
 

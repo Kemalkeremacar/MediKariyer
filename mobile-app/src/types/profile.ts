@@ -24,31 +24,30 @@ export interface DoctorProfile {
 
 export interface DoctorEducation {
   id: number;
-  doctor_profile_id: number;
-  education_type_id: number;
+  education_type_id: number | null;
+  education_type_name?: string | null;
   education_type?: string | null;
-  education_institution: string;
-  field: string;
-  graduation_year: number;
+  education_institution: string | null;
+  field: string | null;
+  graduation_year: number | null;
   created_at?: string | null;
   updated_at?: string | null;
-  deleted_at?: string | null;
 }
 
 export interface DoctorExperience {
   id: number;
-  doctor_profile_id: number;
-  organization: string;
-  role_title: string;
-  start_date: string;
+  organization: string | null;
+  role_title: string | null;
+  specialty_id: number | null;
+  specialty_name?: string | null;
+  subspecialty_id: number | null;
+  subspecialty_name?: string | null;
+  start_date: string | null;
   end_date: string | null;
   is_current: boolean;
   description: string | null;
-  specialty_id: number;
-  subspecialty_id: number | null;
   created_at?: string | null;
   updated_at?: string | null;
-  deleted_at?: string | null;
 }
 
 export interface DoctorCertificate {
@@ -64,14 +63,12 @@ export interface DoctorCertificate {
 
 export interface DoctorLanguage {
   id: number;
-  doctor_profile_id: number;
-  language_id: number;
-  language_name?: string | null;
-  level_id: number;
-  level_name?: string | null;
+  language_id: number | null;
+  language?: string | null;
+  level_id: number | null;
+  level?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
-  deleted_at?: string | null;
 }
 
 export interface CompleteProfile extends DoctorProfile {

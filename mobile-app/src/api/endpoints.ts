@@ -16,8 +16,21 @@ export const endpoints = {
     changePassword: '/auth/change-password',
   },
   doctor: {
-    dashboard: '/doctor/dashboard',
     profile: '/doctor/profile',
+    profileCompletion: '/doctor/profile/completion',
+    updatePersonalInfo: '/doctor/profile/personal',
+    // Education CRUD
+    educations: '/doctor/education',
+    education: (id: number) => `/doctor/education/${id}`,
+    // Experience CRUD
+    experiences: '/doctor/experience',
+    experience: (id: number) => `/doctor/experience/${id}`,
+    // Certificate CRUD
+    certificates: '/doctor/certificate',
+    certificate: (id: number) => `/doctor/certificate/${id}`,
+    // Language CRUD
+    languages: '/doctor/language',
+    language: (id: number) => `/doctor/language/${id}`,
   },
   jobs: {
     list: '/jobs',
@@ -35,11 +48,44 @@ export const endpoints = {
     unreadCount: '/notifications/unread-count',
   },
   deviceToken: '/device-token',
+  upload: {
+    profilePhoto: '/upload/profile-photo',
+  },
+} as const;
+
+/**
+ * Root API Endpoints - Ana API için endpoint tanımları
+ * 
+ * Not: Bu endpoint'ler rootApiClient ile kullanılır (PRIMARY_API_BASE_URL)
+ * Base URL: `/api` (mobile değil)
+ */
+export const rootEndpoints = {
   lookup: {
     specialties: '/lookup/specialties',
     subspecialties: (specialtyId?: number) =>
       specialtyId ? `/lookup/subspecialties/${specialtyId}` : '/lookup/subspecialties',
     cities: '/lookup/cities',
+    applicationStatuses: '/lookup/application-statuses',
+    educationTypes: '/lookup/doctor-education-types',
+    languages: '/lookup/languages',
+    languageLevels: '/lookup/language-levels',
+  },
+  doctor: {
+    profile: {
+      personal: '/doctor/profile/personal',
+      photo: '/doctor/profile/photo',
+      photoStatus: '/doctor/profile/photo/status',
+      photoHistory: '/doctor/profile/photo/history',
+      photoRequest: '/doctor/profile/photo/request',
+    },
+    educations: '/doctor/educations',
+    education: (id: number) => `/doctor/educations/${id}`,
+    experiences: '/doctor/experiences',
+    experience: (id: number) => `/doctor/experiences/${id}`,
+    certificates: '/doctor/certificates',
+    certificate: (id: number) => `/doctor/certificates/${id}`,
+    languages: '/doctor/languages',
+    language: (id: number) => `/doctor/languages/${id}`,
   },
 } as const;
 

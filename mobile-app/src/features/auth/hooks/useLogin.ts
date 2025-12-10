@@ -14,7 +14,7 @@ type UseLoginOptions = Omit<
  * Handles authentication, token storage, and auth state updates
  */
 export const useLogin = (options?: UseLoginOptions) => {
-  const setAuthState = useAuthStore((state) => state.setAuthState);
+  const setAuthState = useAuthStore((state) => state.markAuthenticated);
 
   return useMutation({
     mutationFn: async (credentials: LoginPayload) => {
@@ -23,13 +23,11 @@ export const useLogin = (options?: UseLoginOptions) => {
     },
     onSuccess: async (data, variables, context) => {
       try {
+        // Save tokens to SecureStore (single source of truth)
         await tokenManager.saveTokens(data.accessToken, data.refreshToken);
 
-        setAuthState({
-          user: data.user,
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        });
+        // Update auth state (user only, no tokens)
+        setAuthState(data.user);
       } catch (error) {
         throw error;
       }

@@ -94,12 +94,12 @@ const buildPaginationSQL = (queryBuilder, page = 1, pageSize = 10, orderByPatter
     // - ORDER BY [column] DESC, [id] DESC  
     // - ORDER BY column DESC, id DESC
     const patterns = [
-      // En spesifik: [table].[column] formatı (örn: [notifications].[created_at])
-      /(order\s+by\s+\[?\w+\]?\.\[?\w+\]?\s+(?:asc|desc)(?:\s*,\s*\[?\w+\]?\.\[?\w+\]?\s+(?:asc|desc))?)\s*$/i,
+      // En spesifik: [table].[column] formatı (örn: [a].[created_at] desc, [a].[id] desc)
+      /(order\s+by\s+\[[^\]]+\]\.\[[^\]]+\]\s+(?:asc|desc)(?:\s*,\s*\[[^\]]+\]\.\[[^\]]+\]\s+(?:asc|desc))*)/i,
       // Orta: [column] formatı (select * kullanıldığında veya explicit select'te)
-      /(order\s+by\s+\[?\w+\]?\s+(?:asc|desc)(?:\s*,\s*\[?\w+\]?\s+(?:asc|desc))?)\s*$/i,
+      /(order\s+by\s+\[[^\]]+\]\s+(?:asc|desc)(?:\s*,\s*\[[^\]]+\]\s+(?:asc|desc))*)/i,
       // En basit: column formatı (bracket olmadan)
-      /(order\s+by\s+\w+\s+(?:asc|desc)(?:\s*,\s*\w+\s+(?:asc|desc))?)\s*$/i,
+      /(order\s+by\s+\w+\s+(?:asc|desc)(?:\s*,\s*\w+\s+(?:asc|desc))*)/i,
     ];
     
     // SQL'i logla (debug için)
@@ -120,17 +120,21 @@ const buildPaginationSQL = (queryBuilder, page = 1, pageSize = 10, orderByPatter
 
   if (finalOrderByPattern) {
     // ORDER BY sonrasına OFFSET/FETCH ekle
-    // SQL Server'da db.raw() için ? placeholder kullan
+    // SQL Server için @pN formatında parametre kullan
+    const nextParamIndex = querySQL.bindings.length;
+    const offsetParam = `@p${nextParamIndex}`;
+    const limitParam = `@p${nextParamIndex + 1}`;
+    
     if (finalOrderByPattern instanceof RegExp) {
       sql = sql.replace(
         finalOrderByPattern,
-        `$1 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`
+        `$1 OFFSET ${offsetParam} ROWS FETCH NEXT ${limitParam} ROWS ONLY`
       );
     } else {
       // String pattern ise direkt replace
       sql = sql.replace(
         finalOrderByPattern,
-        `${finalOrderByPattern} OFFSET ? ROWS FETCH NEXT ? ROWS ONLY`
+        `${finalOrderByPattern} OFFSET ${offsetParam} ROWS FETCH NEXT ${limitParam} ROWS ONLY`
       );
     }
     

@@ -2,6 +2,8 @@
  * Auth Types
  */
 
+import type { DoctorProfile } from './profile';
+
 export type AuthStatus = 'idle' | 'authenticated' | 'unauthenticated';
 
 export interface AuthUser {
@@ -23,7 +25,7 @@ export interface AuthResponsePayload {
   user: AuthUser;
   accessToken: string;
   refreshToken: string;
-  profile?: any;
+  profile?: DoctorProfile | null;
 }
 
 export interface LoginPayload {

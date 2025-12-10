@@ -58,6 +58,18 @@ export const useUpdatePersonalInfo = () => {
 };
 
 /**
+ * Hook for fetching education list
+ */
+export const useEducations = () => {
+  return useQuery({
+    queryKey: ['educations'],
+    queryFn: () => profileService.getEducations(),
+    retry: 2,
+    retryDelay: 1000,
+  });
+};
+
+/**
  * Hook for managing education entries
  */
 export const useEducation = () => {
@@ -67,6 +79,7 @@ export const useEducation = () => {
     mutationFn: (data: CreateEducationPayload) => profileService.createEducation(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['educations'] });
       Alert.alert('Başarılı', 'Eğitim bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -79,6 +92,7 @@ export const useEducation = () => {
       profileService.updateEducation(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['educations'] });
       Alert.alert('Başarılı', 'Eğitim bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -90,6 +104,7 @@ export const useEducation = () => {
     mutationFn: (id: number) => profileService.deleteEducation(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['educations'] });
       Alert.alert('Başarılı', 'Eğitim bilgisi silindi');
     },
     onError: (error: any) => {
@@ -105,6 +120,18 @@ export const useEducation = () => {
 };
 
 /**
+ * Hook for fetching experience list
+ */
+export const useExperiences = () => {
+  return useQuery({
+    queryKey: ['experiences'],
+    queryFn: () => profileService.getExperiences(),
+    retry: 2,
+    retryDelay: 1000,
+  });
+};
+
+/**
  * Hook for managing experience entries
  */
 export const useExperience = () => {
@@ -114,6 +141,7 @@ export const useExperience = () => {
     mutationFn: (data: CreateExperiencePayload) => profileService.createExperience(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['experiences'] });
       Alert.alert('Başarılı', 'Deneyim bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -126,6 +154,7 @@ export const useExperience = () => {
       profileService.updateExperience(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['experiences'] });
       Alert.alert('Başarılı', 'Deneyim bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -137,6 +166,7 @@ export const useExperience = () => {
     mutationFn: (id: number) => profileService.deleteExperience(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['experiences'] });
       Alert.alert('Başarılı', 'Deneyim bilgisi silindi');
     },
     onError: (error: any) => {
@@ -152,6 +182,18 @@ export const useExperience = () => {
 };
 
 /**
+ * Hook for fetching certificate list
+ */
+export const useCertificates = () => {
+  return useQuery({
+    queryKey: ['certificates'],
+    queryFn: () => profileService.getCertificates(),
+    retry: 2,
+    retryDelay: 1000,
+  });
+};
+
+/**
  * Hook for managing certificate entries
  */
 export const useCertificate = () => {
@@ -161,6 +203,7 @@ export const useCertificate = () => {
     mutationFn: (data: CreateCertificatePayload) => profileService.createCertificate(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['certificates'] });
       Alert.alert('Başarılı', 'Sertifika bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -173,6 +216,7 @@ export const useCertificate = () => {
       profileService.updateCertificate(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['certificates'] });
       Alert.alert('Başarılı', 'Sertifika bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -184,6 +228,7 @@ export const useCertificate = () => {
     mutationFn: (id: number) => profileService.deleteCertificate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['certificates'] });
       Alert.alert('Başarılı', 'Sertifika bilgisi silindi');
     },
     onError: (error: any) => {
@@ -199,6 +244,18 @@ export const useCertificate = () => {
 };
 
 /**
+ * Hook for fetching language list
+ */
+export const useLanguages = () => {
+  return useQuery({
+    queryKey: ['languages'],
+    queryFn: () => profileService.getLanguages(),
+    retry: 2,
+    retryDelay: 1000,
+  });
+};
+
+/**
  * Hook for managing language entries
  */
 export const useLanguage = () => {
@@ -208,6 +265,7 @@ export const useLanguage = () => {
     mutationFn: (data: CreateLanguagePayload) => profileService.createLanguage(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['languages'] });
       Alert.alert('Başarılı', 'Dil bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -220,6 +278,7 @@ export const useLanguage = () => {
       profileService.updateLanguage(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['languages'] });
       Alert.alert('Başarılı', 'Dil bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -231,6 +290,7 @@ export const useLanguage = () => {
     mutationFn: (id: number) => profileService.deleteLanguage(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['languages'] });
       Alert.alert('Başarılı', 'Dil bilgisi silindi');
     },
     onError: (error: any) => {

@@ -12,12 +12,13 @@ import {
   Mail,
   Phone,
   MapPin,
-  Save,
+  Calendar,
 } from 'lucide-react-native';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
 import { useProfile } from '../hooks/useProfile';
@@ -33,6 +34,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
     lastName: profile?.last_name || '',
     phone: profile?.phone || '',
     email: user?.email || '',
+    birthDate: undefined as Date | undefined,
   });
 
   const handleSave = () => {
@@ -181,6 +183,21 @@ export const ProfileEditScreen = ({ navigation }: any) => {
               </View>
             </View>
           </Card>
+        </View>
+
+        {/* Birth Date Section */}
+        <View style={styles.section}>
+          <Typography variant="h4" style={styles.sectionTitle}>
+            Doğum Tarihi
+          </Typography>
+
+          <DatePicker
+            label="Doğum Tarihi"
+            placeholder="Doğum tarihinizi seçin"
+            value={formData.birthDate}
+            onChange={(date) => setFormData({ ...formData, birthDate: date })}
+            maximumDate={new Date()}
+          />
         </View>
 
         {/* Info Note */}

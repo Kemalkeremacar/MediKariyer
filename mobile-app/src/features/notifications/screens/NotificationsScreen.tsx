@@ -1,121 +1,129 @@
 import React, { useState } from 'react';
-import { StyleSheet, FlatList, RefreshControl, View, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { colors, spacing } from '@/theme';
-import { Card } from '@/components/ui/Card';
-import { Typography } from '@/components/ui/Typography';
+import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
+import { Bell, CheckSquare, Square, Trash2 } from 'lucide-react-native';
 import { Screen } from '@/components/layout/Screen';
-import { useNotifications } from '../hooks/useNotifications';
-import { useMarkAsRead } from '../hooks/useMarkAsRead';
-import { Bell, BellOff, Inbox } from 'lucide-react-native';
-import type { NotificationItem } from '@/types/notification';
-
-// Inline NotificationCard component
-const NotificationCard = ({ 
-  title, 
-  message, 
-  isRead, 
-  createdAt, 
-  onPress 
-}: { 
-  title: string; 
-  message: string; 
-  isRead: boolean; 
-  createdAt: string | null; 
-  onPress: () => void;
-}) => (
-  <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={styles.notificationCard}>
-    <Card padding="md" style={!isRead ? styles.unreadCard : undefined}>
-      <View style={styles.notificationHeader}>
-        <Typography variant="h4" style={styles.notificationTitle}>{title}</Typography>
-        {!isRead && <View style={styles.unreadDot} />}
-      </View>
-      <Typography variant="body" style={styles.notificationMessage}>{message}</Typography>
-      {createdAt && (
-        <Typography variant="caption" style={styles.notificationDate}>
-          {new Date(createdAt).toLocaleDateString('tr-TR', { 
-            day: 'numeric', 
-            month: 'long', 
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </Typography>
-      )}
-    </Card>
-  </TouchableOpacity>
-);
+import { Typography } from '@/components/ui/Typography';
+import { IconButton } from '@/components/ui/IconButton';
+import { Button } from '@/components/ui/Button';
+import { Tabs } from '@/components/ui/Tabs';
+import { Checkbox } from '@/components/ui/Checkbox';
+import { NotificationCard } from '@/components/composite/NotificationCard';
+import { colors, spacing } from '@/theme';
+import { notificationService } from '@/api/services/notification.service';
+import { useNotifications } from '@/features/notifications/hooks/useNotifications';
+import { useMarkAsRead } from '@/features/notifications/hooks/useMarkAsRead';
 
 export const NotificationsScreen = () => {
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  const {
-    notifications,
-    unreadCount,
-    isLoading,
-    isError,
-    error,
-    isRefetching,
-    isFetchingNextPage,
+  const { 
+    notifications: notificationList, 
+    isLoading, 
+    isError, 
+    refetch, 
+    isFetching,
     hasNextPage,
-    refetch,
     fetchNextPage,
-  } = useNotifications({ showUnreadOnly });
+    isFetchingNextPage
+  } = useNotifications({ limit: 20 });
 
-  const markAsReadMutation = useMarkAsRead();
+  const { mutateAsync: markAsRead } = useMarkAsRead();
 
+  const filteredNotifications = React.useMemo(() => {
+    if (activeTab === 'unread') {
+      return notificationList.filter((n: any) => !n.is_read);
+    }
+    
+    return notificationList;
+  }, [notificationList, activeTab]);
 
+  const unreadCount = notificationList.filter((n: any) => !n.is_read).length;
 
-  const renderItem = ({ item }: { item: NotificationItem }) => {
-    const handlePress = () => {
-      if (!item.is_read) {
-        markAsReadMutation.mutate(item.id);
+  const handleNotificationPress = async (notification: any) => {
+    // Mark as read
+    if (!notification.is_read) {
+      try {
+        await markAsRead(notification.id);
+      } catch (error) {
+        console.error('Failed to mark notification as read:', error);
       }
-    };
-
-    const formatTimestamp = (dateString: string) => {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffInMs = now.getTime() - date.getTime();
-      const diffInHours = diffInMs / (1000 * 60 * 60);
-      
-      if (diffInHours < 1) {
-        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-        return `${diffInMinutes} dakika önce`;
-      } else if (diffInHours < 24) {
-        return `${Math.floor(diffInHours)} saat önce`;
-      } else {
-        return date.toLocaleDateString('tr-TR', { 
-          day: 'numeric', 
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
-    };
-
-    return (
-      <NotificationCard
-        title={item.title}
-        message={item.body || 'Bildirim'}
-        createdAt={item.created_at}
-        isRead={item.is_read || false}
-        onPress={handlePress}
-      />
-    );
+    }
+    
+    // Navigate based on notification type
+    // TODO: Add navigation logic
   };
 
-  const onRefresh = () => {
+  const handleMarkAllRead = async () => {
+    // Mark all unread notifications as read
+    const unreadNotifications = notificationList.filter((n: any) => !n.is_read);
+    try {
+      await Promise.all(
+        unreadNotifications.map((n: any) => markAsRead(n.id))
+      );
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
+
+  const toggleSelectionMode = () => {
+    setSelectionMode(!selectionMode);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredNotifications.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredNotifications.map((n: any) => n.id)));
+    }
+  };
+
+  const toggleSelectNotification = (id: number) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleMarkSelectedAsRead = async () => {
+    const selectedNotifications = Array.from(selectedIds);
+    try {
+      await Promise.all(
+        selectedNotifications.map((id) => markAsRead(id))
+      );
+      setSelectedIds(new Set());
+      setSelectionMode(false);
+    } catch (error) {
+      console.error('Failed to mark selected as read:', error);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    // TODO: Implement delete API
+    setSelectedIds(new Set());
+    setSelectionMode(false);
     refetch();
   };
 
   return (
-    <Screen 
+    <Screen
       scrollable={false}
       loading={isLoading}
-      error={isError ? (error as Error) : null}
+      error={isError ? new Error('Bildirimler yüklenemedi') : null}
       onRetry={refetch}
     >
-      {/* Modern Header */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerIcon}>
@@ -123,109 +131,123 @@ export const NotificationsScreen = () => {
           </View>
           <View style={styles.headerText}>
             <Typography variant="h2" style={styles.headerTitle}>
-              Bildirimler
+              {selectionMode ? `${selectedIds.size} seçildi` : 'Bildirimler'}
             </Typography>
             <Typography variant="caption" style={styles.headerSubtitle}>
-              {unreadCount > 0 ? `${unreadCount} okunmamış bildirim` : 'Tüm bildirimler okundu'}
+              {selectionMode 
+                ? 'Toplu işlem modu' 
+                : unreadCount > 0 ? `${unreadCount} okunmamış` : 'Tüm bildirimler okundu'}
             </Typography>
           </View>
         </View>
+        <IconButton
+          icon={selectionMode ? <CheckSquare size={20} color={colors.primary[600]} /> : <Square size={20} color={colors.primary[600]} />}
+          onPress={toggleSelectionMode}
+          size="md"
+          variant="ghost"
+        />
       </View>
 
-      {/* Stats & Filter */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, styles.totalIcon]}>
-            <Inbox size={18} color={colors.primary[700]} />
-          </View>
-          <Typography variant="caption" style={styles.statLabel}>
-            Toplam
-          </Typography>
-          <Typography variant="h3" style={styles.statValue}>
-            {notifications.length}
-          </Typography>
-        </View>
-
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, styles.unreadIcon]}>
-            <BellOff size={18} color={colors.warning[700]} />
-          </View>
-          <Typography variant="caption" style={styles.statLabel}>
-            Okunmamış
-          </Typography>
-          <Typography variant="h3" style={styles.statValue}>
-            {unreadCount}
-          </Typography>
-        </View>
-      </View>
-
-      {/* Filter Toggle */}
-      <TouchableOpacity 
-        style={[styles.filterButton, showUnreadOnly && styles.filterButtonActive]}
-        onPress={() => setShowUnreadOnly((prev) => !prev)}
-      >
-        <BellOff size={20} color={showUnreadOnly ? colors.background.primary : colors.primary[600]} />
-        <Typography 
-          variant="body" 
-          style={showUnreadOnly ? styles.filterButtonTextActive : styles.filterButtonText}
-        >
-          {showUnreadOnly ? 'Sadece Okunmamışlar' : 'Tüm Bildirimler'}
-        </Typography>
-        {showUnreadOnly && unreadCount > 0 && (
-          <View style={styles.filterBadge}>
-            <Typography variant="caption" style={styles.filterBadgeText}>
-              {unreadCount}
+      {/* Selection Actions */}
+      {selectionMode && (
+        <View style={styles.selectionActions}>
+          <TouchableOpacity 
+            style={styles.selectAllButton}
+            onPress={toggleSelectAll}
+          >
+            <Typography variant="body" style={styles.selectAllText}>
+              {selectedIds.size === filteredNotifications.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
             </Typography>
+          </TouchableOpacity>
+          <View style={styles.actionButtons}>
+            <Button
+              label="Okundu İşaretle"
+              onPress={handleMarkSelectedAsRead}
+              variant="outline"
+              size="sm"
+              disabled={selectedIds.size === 0}
+            />
+            <IconButton
+              icon={<Trash2 size={18} color={selectedIds.size > 0 ? colors.error[600] : colors.neutral[400]} />}
+              onPress={handleDeleteSelected}
+              size="sm"
+              variant="ghost"
+              disabled={selectedIds.size === 0}
+            />
+          </View>
+        </View>
+      )}
+
+      {/* Tabs */}
+      {!selectionMode && (
+        <Tabs
+          tabs={[
+            { key: 'all', label: 'Tümü', badge: notificationList.length },
+            { key: 'unread', label: 'Okunmamış', badge: unreadCount },
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          variant="default"
+        />
+      )}
+
+      {/* Notifications List */}
+      <FlatList
+        data={filteredNotifications}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.notificationRow}>
+            {selectionMode && (
+              <View style={styles.checkboxContainer}>
+                <Checkbox
+                  checked={selectedIds.has(item.id)}
+                  onPress={() => toggleSelectNotification(item.id)}
+                  size="sm"
+                />
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <NotificationCard
+                id={item.id}
+                type={(item.type as 'application' | 'job' | 'system' | 'message') || 'system'}
+                title={item.title}
+                message={item.body}
+                timestamp={item.created_at || new Date().toISOString()}
+                read={item.is_read}
+                onPress={() => selectionMode ? toggleSelectNotification(item.id) : handleNotificationPress(item)}
+              />
+            </View>
           </View>
         )}
-      </TouchableOpacity>
-
-      <FlatList
-        data={notifications}
-        keyExtractor={(item, index) => `notif-${item.id}-${index}`}
-        renderItem={renderItem}
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
-        }
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
+        onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching && !isFetchingNextPage}
+            onRefresh={refetch}
+            tintColor={colors.primary[600]}
+          />
+        }
         ListFooterComponent={
           isFetchingNextPage ? (
-            <View style={styles.loadingFooter}>
-              <ActivityIndicator size="small" color={colors.primary[600]} />
-              <Typography variant="caption">Daha fazla yükleniyor...</Typography>
+            <View style={styles.loadingMore}>
+              <Typography variant="caption" style={styles.loadingText}>
+                Yükleniyor...
+              </Typography>
             </View>
           ) : null
         }
         ListEmptyComponent={
-          !isLoading && !isError ? (
+          !isLoading ? (
             <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}>
-                <Bell size={64} color={colors.neutral[300]} />
-              </View>
+              <Bell size={64} color={colors.neutral[300]} />
               <Typography variant="h3" style={styles.emptyTitle}>
-                {showUnreadOnly ? 'Okunmamış Bildirim Yok' : 'Henüz Bildirim Yok'}
+                Bildirim Yok
               </Typography>
               <Typography variant="body" style={styles.emptyText}>
-                {showUnreadOnly 
-                  ? 'Tüm bildirimleriniz okunmuş durumda'
-                  : 'Yeni gelişmeler olduğunda burada görünecek'}
+                Henüz hiç bildiriminiz bulunmuyor
               </Typography>
-              {showUnreadOnly && (
-                <TouchableOpacity 
-                  style={styles.emptyButton}
-                  onPress={() => setShowUnreadOnly(false)}
-                >
-                  <Typography variant="body" style={styles.emptyButtonText}>
-                    Tüm Bildirimleri Göster
-                  </Typography>
-                </TouchableOpacity>
-              )}
             </View>
           ) : null
         }
@@ -272,105 +294,17 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: 13,
   },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.background.primary,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-    borderRadius: 16,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
-  },
-  statIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  totalIcon: {
-    backgroundColor: colors.primary[100],
-  },
-  unreadIcon: {
-    backgroundColor: colors.warning[100],
-  },
-  statLabel: {
-    color: colors.text.secondary,
-    fontSize: 11,
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text.primary,
-  },
-  filterButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    backgroundColor: colors.primary[50],
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.primary[200],
-  },
-  filterButtonActive: {
-    backgroundColor: colors.primary[600],
-    borderColor: colors.primary[600],
-  },
-  filterButtonText: {
-    flex: 1,
-    color: colors.primary[700],
-    fontWeight: '600',
-  },
-  filterButtonTextActive: {
-    color: colors.background.primary,
-  },
-  filterBadge: {
-    backgroundColor: colors.error[600],
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  filterBadgeText: {
-    color: colors.background.primary,
-    fontSize: 11,
-    fontWeight: '700',
-  },
   listContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing['3xl'],
-  },
-  loadingFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing['4xl'],
   },
   emptyState: {
     padding: spacing['3xl'],
     alignItems: 'center',
   },
-  emptyIcon: {
-    marginBottom: spacing.lg,
-  },
   emptyTitle: {
+    marginTop: spacing.lg,
     marginBottom: spacing.sm,
     textAlign: 'center',
     color: colors.text.primary,
@@ -379,53 +313,43 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
     fontSize: 14,
-    marginBottom: spacing.lg,
   },
-  emptyButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.primary[600],
-    borderRadius: 24,
-  },
-  emptyButtonText: {
-    color: colors.background.primary,
-    fontWeight: '600',
-  },
-  notificationCard: {
-    marginBottom: spacing.md,
-  },
-  unreadCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary[600],
-  },
-  notificationHeader: {
+  selectionActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.primary[50],
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary[100],
   },
-  notificationTitle: {
-    flex: 1,
-    fontSize: 16,
+  selectAllButton: {
+    paddingVertical: spacing.sm,
+  },
+  selectAllText: {
+    color: colors.primary[600],
     fontWeight: '600',
-    color: colors.text.primary,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.primary[600],
-    marginLeft: spacing.sm,
-  },
-  notificationMessage: {
-    color: colors.text.secondary,
     fontSize: 14,
-    marginBottom: spacing.xs,
   },
-  notificationDate: {
-    color: colors.text.tertiary,
-    fontSize: 12,
+  actionButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  notificationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  checkboxContainer: {
+    paddingLeft: spacing.lg,
+  },
+  loadingMore: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: colors.text.secondary,
   },
 });
-
-export default NotificationsScreen;

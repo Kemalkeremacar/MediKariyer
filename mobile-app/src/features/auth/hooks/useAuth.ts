@@ -12,8 +12,6 @@ import type { AuthUser } from '../types';
  */
 export const useAuth = () => {
   const user = useAuthStore((state) => state.user);
-  const accessToken = useAuthStore((state) => state.accessToken);
-  const refreshToken = useAuthStore((state) => state.refreshToken);
   const authStatus = useAuthStore((state) => state.authStatus);
   const isHydrating = useAuthStore((state) => state.isHydrating);
 
@@ -23,8 +21,6 @@ export const useAuth = () => {
 
   return {
     user,
-    accessToken,
-    refreshToken,
     authStatus,
     isAuthenticated,
     isUnauthenticated,

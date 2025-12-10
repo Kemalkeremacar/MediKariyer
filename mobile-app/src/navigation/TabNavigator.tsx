@@ -1,11 +1,10 @@
 import React from 'react';
-import { Animated } from 'react-native';
+import { Animated, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { JobsStackNavigator } from './JobsStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { ApplicationsScreen } from '@/features/applications/screens/ApplicationsScreen';
-import { NotificationsScreen } from '@/features/notifications/screens/NotificationsScreen';
 import { Home, Briefcase, FileText, Settings } from 'lucide-react-native';
 import { colors } from '@/theme';
 import type { AppTabParamList } from './types';
@@ -47,7 +46,7 @@ const Tab = createBottomTabNavigator<AppTabParamList>();
  * - ProfileTab: Anasayfa (Profile as home page)
  * - JobsTab: İlanlar (Job listings)
  * - Applications: Başvurular (My applications)
- * - SettingsTab: Hesabım (Account settings)
+ * - SettingsTab: Ayarlar (Settings)
  */
 export const TabNavigator = () => {
   return (
@@ -55,38 +54,40 @@ export const TabNavigator = () => {
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: colors.primary[600],
-        tabBarInactiveTintColor: colors.neutral[500],
+        tabBarInactiveTintColor: colors.neutral[400],
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          bottom: Platform.OS === 'ios' ? 20 : 16,
+          left: 16,
+          right: 16,
           backgroundColor: colors.background.primary,
-          borderTopWidth: 1,
-          borderTopColor: colors.neutral[100],
-          height: 80,
-          paddingBottom: 15,
+          borderTopWidth: 0,
+          borderRadius: 24,
+          height: 70,
+          paddingBottom: Platform.OS === 'ios' ? 12 : 10,
           paddingTop: 10,
-          paddingHorizontal: 0,
-          elevation: 8,
+          paddingHorizontal: 8,
+          elevation: 12,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
         },
         tabBarItemStyle: {
-          paddingVertical: 5,
+          paddingVertical: 4,
+          marginHorizontal: 4,
+          borderRadius: 16,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
+          marginTop: 2,
           marginBottom: 0,
         },
         tabBarIconStyle: {
-          marginTop: 0,
+          marginTop: 2,
         },
       }}
     >
@@ -134,18 +135,16 @@ export const TabNavigator = () => {
       name="SettingsTab"
       component={SettingsStackNavigator}
       options={{
-        tabBarLabel: 'Hesabım',
+        tabBarLabel: 'Ayarlar',
         tabBarIcon: ({ focused }) => (
           <AnimatedIcon Icon={Settings} focused={focused} />
         ),
       }}
-    />
-    <Tab.Screen
-      name="Notifications"
-      component={NotificationsScreen}
-      options={{
-        tabBarButton: () => null,
-      }}
+      listeners={({ navigation }) => ({
+        tabPress: () => {
+          navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
+        },
+      })}
     />
     </Tab.Navigator>
   );

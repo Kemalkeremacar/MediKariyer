@@ -3,7 +3,7 @@ import {
   StyleSheet,
   FlatList,
   RefreshControl,
-  Modal,
+  Modal as RNModal,
   ScrollView,
   View,
   ActivityIndicator,
@@ -17,9 +17,14 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BackButton } from '@/components/ui/BackButton';
+import { Divider } from '@/components/ui/Divider';
+import { Modal } from '@/components/ui/Modal';
+import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Screen } from '@/components/layout/Screen';
-import { ApplicationFilterSheet } from '@/components/applications/ApplicationFilterSheet';
-import { ApplicationCard } from '@/components/applications/ApplicationCard';
+import { ApplicationFilterSheet } from '@/components/composite/ApplicationFilterSheet';
+import { ApplicationCard } from '@/components/composite/ApplicationCard';
+import { StatCard } from '@/components/composite/StatCard';
+import { TimelineItem } from '@/components/composite/TimelineItem';
 import { useApplications } from '../hooks/useApplications';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
@@ -36,11 +41,13 @@ const DetailsModal = ({
 }) => {
   const { data, isLoading, isError, refetch } = useApplicationDetail(applicationId, visible);
   const withdrawMutation = useWithdrawApplication();
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
 
   const handleWithdraw = () => {
     if (applicationId) {
       withdrawMutation.mutate(applicationId, {
         onSuccess: () => {
+          setShowWithdrawConfirm(false);
           refetch();
         },
       });
@@ -51,7 +58,7 @@ const DetailsModal = ({
     data?.status?.toLowerCase() === 'başvuruldu' && !withdrawMutation.isPending;
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <RNModal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={styles.modalContainer}>
         {isLoading && (
           <View style={styles.modalLoader}>
@@ -211,6 +218,60 @@ const DetailsModal = ({
               </View>
             )}
 
+            {/* Application Timeline */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionIconContainer}>
+                  <Clock size={18} color={colors.primary[600]} />
+                </View>
+                <Typography variant="h4" style={styles.sectionTitle}>
+                  Başvuru Süreci
+                </Typography>
+              </View>
+              <Card variant="outlined" padding="lg">
+                <TimelineItem
+                  title="Başvuru Gönderildi"
+                  date={new Date(data.created_at).toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                  description="Başvurunuz başarıyla iletildi"
+                  status="completed"
+                  icon={<CheckCircle size={16} color={colors.background.primary} />}
+                />
+                <TimelineItem
+                  title={data.status || 'İnceleniyor'}
+                  date={new Date(data.updated_at || data.created_at).toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                  description={
+                    data.status?.toLowerCase() === 'kabul edildi'
+                      ? 'Tebrikler! Başvurunuz kabul edildi'
+                      : data.status?.toLowerCase() === 'red edildi'
+                      ? 'Başvurunuz değerlendirildi'
+                      : 'Başvurunuz inceleniyor'
+                  }
+                  status={
+                    data.status?.toLowerCase() === 'kabul edildi' ||
+                    data.status?.toLowerCase() === 'red edildi'
+                      ? 'completed'
+                      : 'current'
+                  }
+                  icon={
+                    data.status?.toLowerCase() === 'kabul edildi' ? (
+                      <CheckCircle size={16} color={colors.background.primary} />
+                    ) : data.status?.toLowerCase() === 'red edildi' ? (
+                      <XCircle size={16} color={colors.background.primary} />
+                    ) : (
+                      <Clock size={16} color={colors.background.primary} />
+                    )
+                  }
+                  isLast
+                />
+              </Card>
+            </View>
+
             {/* Cover Letter */}
             {data.cover_letter && (
               <View style={styles.section}>
@@ -303,8 +364,7 @@ const DetailsModal = ({
               <Button
                 label="Başvuruyu Geri Çek"
                 variant="outline"
-                onPress={handleWithdraw}
-                loading={withdrawMutation.isPending}
+                onPress={() => setShowWithdrawConfirm(true)}
                 fullWidth
                 size="lg"
                 style={styles.withdrawButton}
@@ -312,8 +372,40 @@ const DetailsModal = ({
             )}
           </ScrollView>
         )}
+
+        {/* Withdraw Confirmation Modal */}
+        <Modal
+          visible={showWithdrawConfirm}
+          onClose={() => setShowWithdrawConfirm(false)}
+          title="Başvuruyu Geri Çek"
+          size="sm"
+        >
+          <View style={styles.confirmModalContent}>
+            <View style={styles.confirmIcon}>
+              <AlertCircle size={48} color={colors.warning[600]} />
+            </View>
+            <Typography variant="body" style={styles.confirmText}>
+              Bu başvuruyu geri çekmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </Typography>
+            <View style={styles.confirmActions}>
+              <Button
+                label="İptal"
+                variant="outline"
+                onPress={() => setShowWithdrawConfirm(false)}
+                style={styles.confirmButton}
+              />
+              <Button
+                label="Geri Çek"
+                variant="primary"
+                onPress={handleWithdraw}
+                loading={withdrawMutation.isPending}
+                style={styles.confirmButton}
+              />
+            </View>
+          </View>
+        </Modal>
       </View>
-    </Modal>
+    </RNModal>
   );
 };
 
@@ -398,43 +490,26 @@ export const ApplicationsScreen = () => {
         )}
       </View>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Using StatCard Component */}
       <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, styles.pendingIcon]}>
-            <Clock size={18} color={colors.warning[700]} />
-          </View>
-          <Typography variant="caption" style={styles.statLabel}>
-            Beklemede
-          </Typography>
-          <Typography variant="h3" style={styles.statValue}>
-            {applications.filter(a => a.status?.toLowerCase() === 'başvuruldu').length}
-          </Typography>
-        </View>
-
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, styles.acceptedIcon]}>
-            <CheckCircle size={18} color={colors.success[700]} />
-          </View>
-          <Typography variant="caption" style={styles.statLabel}>
-            Kabul Edilen
-          </Typography>
-          <Typography variant="h3" style={styles.statValue}>
-            {applications.filter(a => a.status?.toLowerCase() === 'kabul edildi').length}
-          </Typography>
-        </View>
-
-        <View style={styles.statCard}>
-          <View style={[styles.statIconContainer, styles.reviewedIcon]}>
-            <Eye size={18} color={colors.primary[700]} />
-          </View>
-          <Typography variant="caption" style={styles.statLabel}>
-            İncelenen
-          </Typography>
-          <Typography variant="h3" style={styles.statValue}>
-            {applications.filter(a => a.status?.toLowerCase() === 'inceleniyor').length}
-          </Typography>
-        </View>
+        <StatCard
+          icon={<Clock size={18} color={colors.warning[700]} />}
+          label="Beklemede"
+          value={applications.filter(a => a.status?.toLowerCase() === 'başvuruldu').length}
+          color="warning"
+        />
+        <StatCard
+          icon={<CheckCircle size={18} color={colors.success[700]} />}
+          label="Kabul Edilen"
+          value={applications.filter(a => a.status?.toLowerCase() === 'kabul edildi').length}
+          color="success"
+        />
+        <StatCard
+          icon={<Eye size={18} color={colors.primary[700]} />}
+          label="İncelenen"
+          value={applications.filter(a => a.status?.toLowerCase() === 'inceleniyor').length}
+          color="primary"
+        />
       </View>
 
       {/* Filter Button */}
@@ -458,30 +533,37 @@ export const ApplicationsScreen = () => {
         )}
       </TouchableOpacity>
 
-      <FlatList
-        data={applications}
-        keyExtractor={(item, index) => `app-${item.id}-${index}`}
-        renderItem={({ item }) => (
-          <ApplicationCard
-            application={item}
-            onPress={() => setSelectedApplicationId(item.id)}
-          />
-        )}
-        refreshControl={
-          <RefreshControl
-            refreshing={query.isRefetching}
-            onRefresh={() => query.refetch()}
-            tintColor={colors.primary[600]}
-          />
-        }
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          query.isFetchingNextPage ? (
-            <ActivityIndicator style={styles.listLoader} color={colors.primary[600]} />
-          ) : null
-        }
-        ListEmptyComponent={
+      {query.isLoading ? (
+        <View style={styles.skeletonContainer}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={applications}
+          keyExtractor={(item, index) => `app-${item.id}-${index}`}
+          renderItem={({ item }) => (
+            <ApplicationCard
+              application={item}
+              onPress={() => setSelectedApplicationId(item.id)}
+            />
+          )}
+          refreshControl={
+            <RefreshControl
+              refreshing={query.isRefetching}
+              onRefresh={() => query.refetch()}
+              tintColor={colors.primary[600]}
+            />
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            query.isFetchingNextPage ? (
+              <ActivityIndicator style={styles.listLoader} color={colors.primary[600]} />
+            ) : null
+          }
+          ListEmptyComponent={
           !query.isLoading && !query.isError ? (
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon}>
@@ -507,9 +589,10 @@ export const ApplicationsScreen = () => {
               )}
             </View>
           ) : null
-        }
-        contentContainerStyle={styles.listContent}
-      />
+          }
+          contentContainerStyle={styles.listContent}
+        />
+      )}
 
       <DetailsModal
         applicationId={selectedApplicationId}
@@ -591,43 +674,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     backgroundColor: colors.background.primary,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-    borderRadius: 16,
-    padding: spacing.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
-  },
-  statIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  pendingIcon: {
-    backgroundColor: colors.warning[100],
-  },
-  acceptedIcon: {
-    backgroundColor: colors.success[100],
-  },
-  reviewedIcon: {
-    backgroundColor: colors.primary[100],
-  },
-  statLabel: {
-    color: colors.text.secondary,
-    fontSize: 11,
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text.primary,
   },
   filterButton: {
     flexDirection: 'row',
@@ -882,5 +928,31 @@ const styles = StyleSheet.create({
   emptyButtonText: {
     color: colors.background.primary,
     fontWeight: '600',
+  },
+  skeletonContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.md,
+  },
+  confirmModalContent: {
+    alignItems: 'center',
+    gap: spacing.lg,
+  },
+  confirmIcon: {
+    marginBottom: spacing.sm,
+  },
+  confirmText: {
+    textAlign: 'center',
+    color: colors.text.secondary,
+    lineHeight: 22,
+  },
+  confirmActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    width: '100%',
+    marginTop: spacing.md,
+  },
+  confirmButton: {
+    flex: 1,
   },
 });

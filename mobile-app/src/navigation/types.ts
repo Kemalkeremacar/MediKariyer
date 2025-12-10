@@ -43,6 +43,11 @@ export type JobsStackParamList = {
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   ProfileEdit: undefined;
+  Education: undefined;
+  Experience: undefined;
+  Certificates: undefined;
+  Languages: undefined;
+  Notifications: undefined;
 };
 
 /**
@@ -52,6 +57,7 @@ export type ProfileStackParamList = {
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   ChangePassword: undefined;
+  BiometricSettings: undefined;
 };
 
 /**
@@ -63,7 +69,6 @@ export type AppTabParamList = {
   JobsTab: NavigatorScreenParams<JobsStackParamList>;
   Applications: undefined;
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
-  Notifications: undefined;
 };
 
 /**

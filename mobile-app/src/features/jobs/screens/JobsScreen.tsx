@@ -9,16 +9,21 @@ import { useNavigation } from '@react-navigation/native';
 import { jobService } from '@/api/services/job.service';
 import { colors, spacing, borderRadius } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { JobCard } from '@/components/jobs/JobCard';
+import { SearchBar } from '@/components/ui/SearchBar';
+import { IconButton } from '@/components/ui/IconButton';
+import { SkeletonCard } from '@/components/ui/Skeleton';
+import { Chip } from '@/components/ui/Chip';
+import { JobCard } from '@/components/composite/JobCard';
 import { Screen } from '@/components/layout/Screen';
-import { Filter, Search, Briefcase, TrendingUp, MapPin, X } from 'lucide-react-native';
+import { Filter, Briefcase, MapPin, X } from 'lucide-react-native';
 import type { JobListItem } from '@/types/job';
-import { JobFilterSheet } from '@/components/jobs/JobFilterSheet';
+import { JobFilterSheet } from '@/components/composite/JobFilterSheet';
+
+import { useToast } from '@/providers/ToastProvider';
 
 export const JobsScreen = () => {
   const navigation = useNavigation();
+  const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | undefined>();
   const [selectedCityId, setSelectedCityId] = useState<number | undefined>();
@@ -120,58 +125,62 @@ export const JobsScreen = () => {
           )}
         </View>
 
-        {/* Search & Filter */}
+        {/* Modern Search & Filter */}
         <View style={styles.searchContainer}>
-          <View style={styles.searchWrapper}>
-            <View style={styles.searchInputContainer}>
-              <Search size={20} color={colors.neutral[400]} style={styles.searchIcon} />
-              <Input
-                placeholder="Hastane, şehir veya branş ara..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                style={styles.searchInput}
-              />
-            </View>
-          </View>
-          <TouchableOpacity
-            style={hasActiveFilters ? StyleSheet.flatten([styles.filterButton, styles.filterButtonActive]) : styles.filterButton}
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Hastane, şehir veya branş ara..."
+            onClear={() => setSearchQuery('')}
+            style={styles.searchBar}
+          />
+          <IconButton
+            icon={<Filter size={20} color={hasActiveFilters ? colors.background.primary : colors.primary[600]} />}
             onPress={() => setShowFilterSheet(true)}
-          >
-            <Filter size={20} color={hasActiveFilters ? colors.background.primary : colors.primary[600]} />
-            {hasActiveFilters && (
-              <View style={styles.filterBadge}>
-                <Typography variant="caption" style={styles.filterBadgeText}>
-                  {[selectedSpecialtyId, selectedCityId, selectedWorkType].filter(Boolean).length}
-                </Typography>
-              </View>
-            )}
-          </TouchableOpacity>
+            size="md"
+            variant={hasActiveFilters ? 'filled' : 'ghost'}
+            color="primary"
+            style={styles.filterButton}
+          />
+          {hasActiveFilters && (
+            <View style={styles.filterBadge}>
+              <Typography variant="caption" style={styles.filterBadgeText}>
+                {[selectedSpecialtyId, selectedCityId, selectedWorkType].filter(Boolean).length}
+              </Typography>
+            </View>
+          )}
         </View>
 
-        {/* Active Filters Chips */}
+        {/* Active Filters with Modern Chips */}
         {hasActiveFilters && (
           <View style={styles.activeFiltersContainer}>
             {selectedSpecialtyId && (
-              <View style={styles.filterChip}>
-                <Typography variant="caption" style={styles.filterChipText}>
-                  Branş Filtresi
-                </Typography>
-              </View>
+              <Chip
+                label="Branş Filtresi"
+                variant="soft"
+                color="primary"
+                size="sm"
+                onDelete={() => setSelectedSpecialtyId(undefined)}
+              />
             )}
             {selectedCityId && (
-              <View style={styles.filterChip}>
-                <MapPin size={12} color={colors.primary[700]} />
-                <Typography variant="caption" style={styles.filterChipText}>
-                  Şehir
-                </Typography>
-              </View>
+              <Chip
+                label="Şehir"
+                icon={<MapPin size={12} color={colors.primary[700]} />}
+                variant="soft"
+                color="primary"
+                size="sm"
+                onDelete={() => setSelectedCityId(undefined)}
+              />
             )}
             {selectedWorkType && (
-              <View style={styles.filterChip}>
-                <Typography variant="caption" style={styles.filterChipText}>
-                  {selectedWorkType}
-                </Typography>
-              </View>
+              <Chip
+                label={selectedWorkType}
+                variant="soft"
+                color="primary"
+                size="sm"
+                onDelete={() => setSelectedWorkType(undefined)}
+              />
             )}
           </View>
         )}
@@ -240,11 +249,36 @@ export const JobsScreen = () => {
   return (
     <Screen 
       scrollable={false} 
-      loading={isLoading}
+      loading={false}
       error={isError ? (new Error('İlanlar yüklenemedi')) : null}
       onRetry={refetch}
     >
-      {renderContent()}
+      {isLoading ? (
+        <View style={styles.skeletonContainer}>
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <View style={styles.headerIcon}>
+                <Briefcase size={28} color={colors.primary[600]} />
+              </View>
+              <View style={styles.headerText}>
+                <Typography variant="h2" style={styles.headerTitle}>
+                  İş İlanları
+                </Typography>
+                <Typography variant="caption" style={styles.headerSubtitle}>
+                  Yükleniyor...
+                </Typography>
+              </View>
+            </View>
+          </View>
+          <View style={styles.skeletonList}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </View>
+        </View>
+      ) : (
+        renderContent()
+      )}
       
       <JobFilterSheet
         onApply={handleApplyFilters}
@@ -302,38 +336,18 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     backgroundColor: colors.background.primary,
+    position: 'relative',
   },
-  searchWrapper: {
+  searchBar: {
     flex: 1,
   },
-  searchInputContainer: {
-    position: 'relative',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: 12,
-    top: 14,
-    zIndex: 1,
-  },
-  searchInput: {
-    marginBottom: 0,
-    paddingLeft: 44,
-  },
   filterButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary[50],
-    alignItems: 'center',
-    justifyContent: 'center',
     position: 'relative',
-  },
-  filterButtonActive: {
-    backgroundColor: colors.primary[600],
   },
   filterBadge: {
     position: 'absolute',
@@ -360,21 +374,14 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     backgroundColor: colors.background.primary,
   },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    backgroundColor: colors.primary[50],
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.primary[200],
+  skeletonContainer: {
+    flex: 1,
+    backgroundColor: colors.background.primary,
   },
-  filterChipText: {
-    color: colors.primary[700],
-    fontSize: 12,
-    fontWeight: '600',
+  skeletonList: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    gap: spacing.md,
   },
   listContent: {
     paddingHorizontal: spacing.lg,

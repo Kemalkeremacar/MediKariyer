@@ -1,6 +1,23 @@
+/**
+ * @file notification.service.ts
+ * @description Notification service - Bildirim işlemleri için API servisi
+ * 
+ * Ana İşlevler:
+ * - List notifications (bildirim listesi)
+ * - Mark as read (okundu işaretle)
+ * - Get unread count (okunmamış sayısı)
+ * - Register device token (push notification için)
+ * 
+ * Endpoint'ler: /api/mobile/notifications/*
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
-import { ApiResponse } from '@/types/api';
+import { ApiResponse, PaginationMeta } from '@/types/api';
 import type {
   NotificationItem,
   NotificationsResponse,
@@ -14,31 +31,85 @@ export interface NotificationListParams {
   type?: string;
 }
 
-const unwrap = <T>(response: ApiResponse<T> | T): T =>
-  (response as ApiResponse<T>).data ?? (response as T);
-
 export const notificationService = {
-  async registerDeviceToken(payload: RegisterDeviceTokenPayload) {
+  /**
+   * Device token kaydı - Push notification için
+   */
+  async registerDeviceToken(payload: RegisterDeviceTokenPayload): Promise<{ device_token_id: number }> {
     const response = await apiClient.post<ApiResponse<{ device_token_id: number }>>(
       endpoints.deviceToken,
       payload,
     );
-    return unwrap(response.data);
+    return response.data.data;
   },
 
-  async listNotifications(params: NotificationListParams = {}) {
-    const response =
-      await apiClient.get<ApiResponse<NotificationsResponse>>(endpoints.notifications.list, {
-        params,
-      });
-    return unwrap(response.data);
+  /**
+   * Bildirim listesini getirir (pagination ile)
+   * @param {NotificationListParams} params - Filtreleme ve pagination parametreleri
+   * @returns {Promise<NotificationsResponse>} Bildirim listesi ve pagination bilgisi
+   */
+  async listNotifications(params: NotificationListParams = {}): Promise<NotificationsResponse> {
+    const response = await apiClient.get<
+      ApiResponse<NotificationItem[]> & { pagination?: PaginationMeta }
+    >(endpoints.notifications.list, {
+      params,
+    });
+    
+    const responseData = response.data;
+    
+    // Backend'den gelen response iki farklı formatta olabilir:
+    // 1. sendSuccess kullanıyorsa: { data: { data: [...], pagination: {...} } }
+    // 2. sendPaginated kullanıyorsa: { data: [...], pagination: {...} }
+    
+    let notificationData: NotificationItem[];
+    let pagination: PaginationMeta | undefined;
+    
+    // Nested data yapısını kontrol et
+    const isNestedData = responseData.data && 
+                         typeof responseData.data === 'object' && 
+                         !Array.isArray(responseData.data) &&
+                         'data' in responseData.data;
+    
+    if (isNestedData) {
+      // Nested yapı (sendSuccess ile)
+      notificationData = (responseData.data as any).data || [];
+      pagination = (responseData.data as any).pagination;
+    } else {
+      // Düz yapı (sendPaginated ile)
+      notificationData = responseData.data || [];
+      pagination = responseData.pagination;
+    }
+    
+    if (!pagination) {
+      throw new Error('Pagination bilgisi alınamadı');
+    }
+    
+    return {
+      data: notificationData,
+      pagination,
+    };
   },
 
-  async markAsRead(notificationId: number) {
+  /**
+   * Bildirimi okundu olarak işaretler
+   * @param {number} notificationId - Bildirim ID'si
+   * @returns {Promise<{ success: boolean }>} İşlem sonucu
+   */
+  async markAsRead(notificationId: number): Promise<{ success: boolean }> {
     const response = await apiClient.post<ApiResponse<{ success: boolean }>>(
       endpoints.notifications.markAsRead(notificationId),
     );
-    return unwrap(response.data);
+    return response.data.data;
+  },
+
+  /**
+   * Okunmamış bildirim sayısını getirir
+   */
+  async getUnreadCount(): Promise<{ count: number }> {
+    const response = await apiClient.get<ApiResponse<{ count: number }>>(
+      endpoints.notifications.unreadCount,
+    );
+    return response.data.data;
   },
 };
 

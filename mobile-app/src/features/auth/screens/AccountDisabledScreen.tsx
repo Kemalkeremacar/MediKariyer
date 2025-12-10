@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Linking } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 import { colors, spacing, borderRadius } from '@/theme';
-import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';

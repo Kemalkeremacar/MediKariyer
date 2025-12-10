@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SettingsScreen } from '@/features/settings/screens/SettingsScreen';
 import { ChangePasswordScreen } from '@/features/settings/screens/ChangePasswordScreen';
+import { BiometricSettingsScreen } from '@/features/settings/screens/BiometricSettingsScreen';
 import type { SettingsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
@@ -26,6 +27,10 @@ export const SettingsStackNavigator = () => (
       options={{
         presentation: 'modal',
       }}
+    />
+    <Stack.Screen 
+      name="BiometricSettings" 
+      component={BiometricSettingsScreen}
     />
   </Stack.Navigator>
 );

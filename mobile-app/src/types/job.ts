@@ -24,17 +24,8 @@ export interface JobDetail extends JobListItem {
   hospital_about: string | null;
 }
 
-export interface JobsPagination {
-  current_page: number;
-  per_page: number;
-  total: number;
-  total_pages: number;
-  has_next: boolean;
-  has_prev: boolean;
-}
-
 export interface JobsResponse {
   data: JobListItem[];
-  pagination?: JobsPagination;
+  pagination?: import('./api').PaginationMeta;
 }
 

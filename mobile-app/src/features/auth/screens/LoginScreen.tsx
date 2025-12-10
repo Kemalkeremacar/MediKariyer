@@ -1,23 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Stethoscope, Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { Stethoscope, Mail, Lock, ArrowRight, Fingerprint } from 'lucide-react-native';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import type { AuthStackParamList } from '@/navigation/types';
-import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { useLogin } from '../hooks/useLogin';
+import { useBiometricLogin } from '../hooks/useBiometricLogin';
+import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta girin'),
@@ -30,6 +32,7 @@ export const LoginScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showBiometric, setShowBiometric] = useState(false);
 
   const {
     control,
@@ -40,21 +43,32 @@ export const LoginScreen = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  const setAuthState = useAuthStore((state) => state.setAuthState);
+  const markAuthenticated = useAuthStore((state) => state.markAuthenticated);
+  const { isAvailable, isEnabled, biometricTypes } = useBiometricAuth();
+  const { loginWithBiometric, saveBiometricCredentials, isBiometricLoginAvailable } = useBiometricLogin();
+
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
+
+  const checkBiometricAvailability = async () => {
+    const available = await isBiometricLoginAvailable();
+    setShowBiometric(available);
+  };
 
   const loginMutation = useLogin({
     onSuccess: async (data) => {
       setServerError(null);
       
-      // Direkt olarak token'ları kaydet ve auth state'i güncelle
+      // Token'ları kaydet ve auth state'i güncelle
       try {
         await tokenManager.saveTokens(data.accessToken, data.refreshToken);
+        markAuthenticated(data.user);
         
-        setAuthState({
-          user: data.user,
-          accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
-        });
+        // Biometric enabled ise email'i kaydet
+        if (isEnabled && data.user.email) {
+          await saveBiometricCredentials(data.user.email);
+        }
       } catch (err) {
         setServerError('⚠️ Token kaydetme hatası. Lütfen tekrar deneyin.');
       }
@@ -89,6 +103,15 @@ export const LoginScreen = () => {
 
   const onSubmit = (values: LoginFormValues) => {
     loginMutation.mutate(values);
+  };
+
+  const handleBiometricLogin = async () => {
+    try {
+      await loginWithBiometric.mutateAsync();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Biyometrik giriş başarısız';
+      Alert.alert('Hata', message);
+    }
   };
 
   return (
@@ -181,6 +204,33 @@ export const LoginScreen = () => {
               size="lg"
               style={styles.buttonSpacing}
             />
+
+            {/* Biometric Login Button */}
+            {showBiometric && (
+              <>
+                <View style={styles.divider}>
+                  <View style={styles.dividerLine} />
+                  <Typography variant="caption" style={styles.dividerText}>
+                    veya
+                  </Typography>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                <TouchableOpacity
+                  style={styles.biometricButton}
+                  onPress={handleBiometricLogin}
+                  disabled={loginWithBiometric.isPending}
+                >
+                  <Fingerprint size={24} color={colors.primary[600]} />
+                  <Typography variant="body" style={styles.biometricButtonText}>
+                    {loginWithBiometric.isPending 
+                      ? 'Doğrulanıyor...' 
+                      : `${biometricTypes[0] || 'Biyometrik'} ile Giriş Yap`
+                    }
+                  </Typography>
+                </TouchableOpacity>
+              </>
+            )}
 
             {/* Forgot Password */}
             <TouchableOpacity 
@@ -349,5 +399,23 @@ const styles = StyleSheet.create({
   },
   inputWithIcon: {
     paddingLeft: 44,
+  },
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.primary[50],
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary[200],
+    marginBottom: spacing.md,
+  },
+  biometricButtonText: {
+    color: colors.primary[600],
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

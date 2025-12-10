@@ -36,7 +36,7 @@ const { AppError } = require('../../utils/errorHandler');
 const logger = require('../../utils/logger');
 const jobTransformer = require('../../mobile/transformers/jobTransformer');
 const { getDoctorProfile } = require('./mobileDoctorService');
-const { buildPaginationSQL, normalizeRawResult, normalizeCountResult } = require('../../utils/queryHelper');
+const { normalizeCountResult, buildPaginationSQL, normalizeRawResult } = require('../../utils/queryHelper');
 
 const buildJobsBaseQuery = () => {
   return db('jobs as j')
@@ -69,42 +69,57 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
     baseQuery.andWhere('j.title', 'like', `%${filters.keyword}%`);
   }
 
-  const countQuery = baseQuery.clone().clearSelect().clearOrder().count({ count: '*' }).first();
-
   const dataQuery = baseQuery
     .clone()
-    .leftJoin('applications as a', function linkApplications() {
-      this.on('a.job_id', '=', 'j.id')
-        .andOn('a.doctor_profile_id', '=', db.raw('?', [profile.id]))
-        .andOnNull('a.deleted_at');
-    })
     .select(
       'j.id',
       'j.title',
-      'j.created_at',
-      'j.employment_type', // SQL'de work_type yok, employment_type var
+      'j.city_id',
+      'j.specialty_id',
+      'j.hospital_id',
+      'j.employment_type',
       'c.name as city_name',
       's.name as specialty_name',
-      'hp.institution_name as hospital_name',
-      'a.id as application_id'
+      'hp.institution_name as hospital_name'
     )
-    .orderBy('j.created_at', 'desc')
     .orderBy('j.id', 'desc');
 
-  // SQL Server için pagination SQL'i oluştur
-  const { sql, bindings } = buildPaginationSQL(dataQuery, currentPage, perPage);
-
-  const [countResult, rowsResult] = await Promise.all([
-    countQuery,
-    db.raw(sql, bindings)
+  const [countResults, allRows] = await Promise.all([
+    baseQuery.clone().clearSelect().clearOrder().count({ count: '*' }),
+    dataQuery
   ]);
   
-  // Sonuçları normalize et
-  const rows = normalizeRawResult(rowsResult);
-  const total = normalizeCountResult(countResult);
+  const total = normalizeCountResult(countResults[0]);
+  
+  // JavaScript'te pagination
+  const startIndex = (currentPage - 1) * perPage;
+  const endIndex = startIndex + perPage;
+  const rows = allRows.slice(startIndex, endIndex);
+
+  // Başvuru kontrolü için job id'leri topla
+  const jobIds = rows.map(r => r.id);
+  const applications = jobIds.length > 0 
+    ? await db('applications')
+        .select('job_id', 'id')
+        .whereIn('job_id', jobIds)
+        .where('doctor_profile_id', profile.id)
+        .whereNull('deleted_at')
+    : [];
+
+  // Application map oluştur
+  const applicationMap = {};
+  applications.forEach(app => {
+    applicationMap[app.job_id] = app.id;
+  });
+
+  // Rows'a application_id ekle
+  const rowsWithApplications = rows.map(row => ({
+    ...row,
+    application_id: applicationMap[row.id] || null
+  }));
 
   return {
-    data: rows.map((row) => jobTransformer.toListItem({
+    data: rowsWithApplications.map((row) => jobTransformer.toListItem({
       ...row,
       is_applied: Boolean(row.application_id)
     })),
@@ -122,15 +137,24 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
 const getJobDetail = async (userId, jobId) => {
   const profile = await getDoctorProfile(userId);
 
-  const job = await buildJobsBaseQuery()
-    .leftJoin('applications as a', function linkApplications() {
-      this.on('a.job_id', '=', 'j.id')
-        .andOn('a.doctor_profile_id', '=', db.raw('?', [profile.id]))
-        .andOnNull('a.deleted_at');
-    })
+  // İlk önce job bilgisini al
+  let jobQuery;
+  try {
+    jobQuery = await db('jobs as j')
+    .leftJoin('cities as c', 'j.city_id', 'c.id')
+    .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
+    .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .select(
-      'j.*',
+      'j.id',
+      'j.title',
+      'j.description',
+      'j.city_id',
+      'j.specialty_id',
+      'j.subspecialty_id',
+      'j.hospital_id',
+      'j.employment_type',
+      'j.min_experience_years',
       'c.name as city_name',
       's.name as specialty_name',
       'ss.name as subspecialty_name',
@@ -139,15 +163,45 @@ const getJobDetail = async (userId, jobId) => {
       'hp.phone as hospital_phone',
       'hp.email as hospital_email',
       'hp.website as hospital_website',
-      'hp.about as hospital_about',
-      'a.id as application_id'
+      'hp.about as hospital_about'
     )
     .where('j.id', jobId)
-    .first();
+    .whereNull('j.deleted_at');
+  } catch (error) {
+    logger.error('❌ Job detail query error:', error.message);
+    logger.error('Error details:', {
+      code: error.code,
+      number: error.number,
+      message: error.message
+    });
+    console.error('FULL JOB ERROR:', error);
+    throw error;
+  }
 
-  if (!job) {
+  if (!jobQuery || jobQuery.length === 0) {
     throw new AppError('İlan bulunamadı', 404);
   }
+
+  const jobData = jobQuery[0];
+
+  // Başvuru kontrolü ayrı query ile yap
+  const applicationCheck = await db('applications')
+    .select('id')
+    .where('job_id', jobId)
+    .where('doctor_profile_id', profile.id)
+    .whereNull('deleted_at')
+    .first();
+
+  const jobs = [{
+    ...jobData,
+    application_id: applicationCheck?.id || null
+  }];
+
+  if (!jobs || jobs.length === 0) {
+    throw new AppError('İlan bulunamadı', 404);
+  }
+
+  const job = jobs[0];
 
   return jobTransformer.toDetail({
     ...job,

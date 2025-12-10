@@ -33,7 +33,7 @@ const db = require('../../config/dbConfig').db;
 const { AppError } = require('../../utils/errorHandler');
 const logger = require('../../utils/logger');
 const notificationTransformer = require('../../mobile/transformers/notificationTransformer');
-const { buildPaginationSQL, normalizeRawResult, normalizeCountResult } = require('../../utils/queryHelper');
+const { normalizeCountResult } = require('../../utils/queryHelper');
 
 const listNotifications = async (userId, { page = 1, limit = 20 } = {}) => {
   const currentPage = Math.max(Number(page) || 1, 1);
@@ -44,36 +44,49 @@ const listNotifications = async (userId, { page = 1, limit = 20 } = {}) => {
     .count({ count: '*' })
     .first();
 
-  // Explicit column selection kullan (select('*') ORDER BY pattern matching'de sorun çıkarabilir)
-  // is_read computed field: read_at IS NOT NULL kontrolü yapılacak
+  // Explicit column selection - is_read computed field olarak hesaplanacak
   const notificationsQuery = db('notifications')
     .where('user_id', userId)
     .select(
       'id',
+      'user_id',
       'title',
       'body',
       'type',
-      'read_at', // is_read computed field olarak hesaplanacak (read_at IS NOT NULL)
+      'read_at',
       'created_at',
-      'data_json as data' // Database'de data_json field'ı var, data olarak alias veriyoruz
+      'data_json'
     )
     .orderBy('created_at', 'desc')
-    .orderBy('id', 'desc');
+    .orderBy('id', 'desc')
+    .limit(perPage)
+    .offset((currentPage - 1) * perPage);
 
-  // SQL Server için pagination SQL'i oluştur
-  const { sql, bindings } = buildPaginationSQL(notificationsQuery, currentPage, perPage);
-
-  const [countResult, notificationsResult] = await Promise.all([
+  const [countResult, notifications] = await Promise.all([
     countQuery,
-    db.raw(sql, bindings)
+    notificationsQuery
   ]);
   
-  // Sonuçları normalize et
-  const notifications = normalizeRawResult(notificationsResult);
   const total = normalizeCountResult(countResult);
 
+  // data_json field'ını parse et ve data olarak ekle
+  const processedNotifications = notifications.map(notification => {
+    let parsedData = null;
+    if (notification.data_json) {
+      try {
+        parsedData = JSON.parse(notification.data_json);
+      } catch (error) {
+        logger.warn('Notification data_json parse error:', error);
+      }
+    }
+    return {
+      ...notification,
+      data: parsedData
+    };
+  });
+
   return {
-    data: notifications.map(notificationTransformer.toListItem),
+    data: processedNotifications.map(notificationTransformer.toListItem),
     pagination: {
       current_page: currentPage,
       per_page: perPage,
@@ -170,9 +183,20 @@ const registerDeviceToken = async (userId, expoPushToken, deviceId, platform, ap
 // MODULE EXPORTS
 // ============================================================================
 
+const getUnreadCount = async (userId) => {
+  const result = await db('notifications')
+    .where('user_id', userId)
+    .whereNull('read_at')
+    .count({ count: '*' })
+    .first();
+
+  return parseInt(result.count) || 0;
+};
+
 module.exports = {
   listNotifications,
   markAsRead,
-  registerDeviceToken
+  registerDeviceToken,
+  getUnreadCount
 };
 

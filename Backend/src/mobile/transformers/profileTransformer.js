@@ -46,11 +46,82 @@ const toMobileProfile = (profile = {}) => {
   };
 };
 
+/**
+ * Education transformer - Mobile için minimal education data
+ */
+const toMobileEducation = (education = {}) => {
+  return {
+    id: education.id,
+    education_type_id: education.education_type_id || null,
+    education_type_name: education.education_type_name || null,
+    education_type: education.education_type || null,
+    education_institution: education.education_institution || null,
+    field: education.field || null,
+    graduation_year: education.graduation_year || null,
+    created_at: education.created_at || null,
+    updated_at: education.updated_at || null
+  };
+};
+
+/**
+ * Experience transformer - Mobile için minimal experience data
+ */
+const toMobileExperience = (experience = {}) => {
+  return {
+    id: experience.id,
+    organization: experience.organization || null,
+    role_title: experience.role_title || null,
+    specialty_id: experience.specialty_id || null,
+    specialty_name: experience.specialty_name || null,
+    subspecialty_id: experience.subspecialty_id || null,
+    subspecialty_name: experience.subspecialty_name || null,
+    start_date: experience.start_date || null,
+    end_date: experience.end_date || null,
+    is_current: experience.is_current ?? false,
+    description: experience.description || null,
+    created_at: experience.created_at || null,
+    updated_at: experience.updated_at || null
+  };
+};
+
+/**
+ * Certificate transformer - Mobile için minimal certificate data
+ */
+const toMobileCertificate = (certificate = {}) => {
+  return {
+    id: certificate.id,
+    certificate_name: certificate.certificate_name || null,
+    institution: certificate.institution || null,
+    certificate_year: certificate.certificate_year || null,
+    created_at: certificate.created_at || null,
+    updated_at: certificate.updated_at || null
+  };
+};
+
+/**
+ * Language transformer - Mobile için minimal language data
+ */
+const toMobileLanguage = (language = {}) => {
+  return {
+    id: language.id,
+    language_id: language.language_id || null,
+    language: language.language || null,
+    level_id: language.level_id || null,
+    level: language.level || null,
+    created_at: language.created_at || null,
+    updated_at: language.updated_at || null
+  };
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
 
 module.exports = {
-  toMobileProfile
+  toMobileProfile,
+  toMobileEducation,
+  toMobileExperience,
+  toMobileCertificate,
+  toMobileLanguage
 };
 

@@ -18,27 +18,28 @@ const { sendSuccess } = require('../../utils/response');
 const logger = require('../../utils/logger');
 
 /**
- * Upload Profile Photo
+ * Upload Profile Photo (Base64)
  * @route POST /api/mobile/upload/profile-photo
  * @access Private (Doctor)
  */
 const uploadProfilePhoto = catchAsync(async (req, res) => {
-  if (!req.file) {
+  const { photo } = req.body;
+  
+  if (!photo) {
     return res.status(400).json({
       success: false,
-      message: 'Dosya yüklenmedi'
+      message: 'Fotoğraf verisi bulunamadı'
     });
   }
 
-  // File URL oluştur
-  const fileUrl = `/uploads/profiles/${req.file.filename}`;
-  
-  logger.info(`Profile photo uploaded | User: ${req.user.userId} | File: ${req.file.filename}`);
+  // Base64 string'i olduğu gibi döndür (MVP için)
+  // Production'da gerçek file upload implementasyonu yapılabilir
+  logger.info(`Profile photo uploaded (base64) | User: ${req.user.id} | Size: ${photo.length}`);
 
   return sendSuccess(res, 'Fotoğraf başarıyla yüklendi', {
-    url: fileUrl,
-    filename: req.file.filename,
-    size: req.file.size
+    url: photo, // Base64 string'i URL olarak döndür
+    filename: `profile_${req.user.id}_${Date.now()}.jpg`,
+    size: photo.length
   });
 });
 

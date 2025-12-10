@@ -96,27 +96,26 @@ const getDashboard = async (userId) => {
     .first();
 
   const applications = await db('applications as a')
-    .distinct('a.id', 'a.job_id', 'a.applied_at', 'a.updated_at')
+    .distinct('a.id', 'a.job_id', 'a.applied_at')
     .leftJoin('jobs as j', 'j.id', 'a.job_id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
     .leftJoin('application_statuses as st', 'st.id', 'a.status_id')
     .select(
       'a.id',
       'a.job_id',
-      'a.applied_at as created_at', // SQL'de applied_at var, created_at yok
-      'a.updated_at',
+      'a.applied_at',
       'j.title as job_title',
       'hp.institution_name as hospital_name',
       'st.name as status_label'
     )
     .where('a.doctor_profile_id', profile.id)
     .whereNull('a.deleted_at')
-    .orderBy('a.applied_at', 'desc') // SQL'de applied_at var, created_at yok
-    .orderBy('a.id', 'desc') // SQL Server için unique sıralama
+    .orderBy('a.applied_at', 'desc')
+    .orderBy('a.id', 'desc')
     .limit(5);
 
   const recommendedJobs = await db('jobs as j')
-    .distinct('j.id', 'j.title', 'j.created_at', 'j.employment_type')
+    .distinct('j.id', 'j.title', 'j.employment_type')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
@@ -128,16 +127,14 @@ const getDashboard = async (userId) => {
     .select(
       'j.id',
       'j.title',
-      'j.created_at',
-      'j.employment_type', // SQL'de work_type yok, employment_type var
+      'j.employment_type',
       'c.name as city_name',
       's.name as specialty_name',
       'hp.institution_name as hospital_name',
       'a.id as application_id'
     )
     .whereNull('j.deleted_at')
-    .orderBy('j.created_at', 'desc')
-    .orderBy('j.id', 'desc') // SQL Server için unique sıralama
+    .orderBy('j.id', 'desc')
     .limit(5);
 
   return {
@@ -164,9 +161,156 @@ const getProfile = async (userId) => {
 // MODULE EXPORTS
 // ============================================================================
 
+// Profile update fonksiyonu (web doctorService'i wrap ediyor)
+const updatePersonalInfo = async (userId, personalInfo) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.updatePersonalInfo(userId, personalInfo);
+  return profileTransformer.toMobileProfile(result);
+};
+
+// Profile completion fonksiyonu
+const getProfileCompletion = async (userId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.getProfileCompletion(userId);
+};
+
+// ============================================================================
+// EDUCATION CRUD (Web Service Wrappers)
+// ============================================================================
+
+const addEducation = async (userId, educationData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.addEducation(userId, educationData);
+  return profileTransformer.toMobileEducation(result);
+};
+
+const getEducations = async (userId) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.getEducations(userId);
+  return result.map(profileTransformer.toMobileEducation);
+};
+
+const updateEducation = async (userId, educationId, educationData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.updateEducation(userId, educationId, educationData);
+  return profileTransformer.toMobileEducation(result);
+};
+
+const deleteEducation = async (userId, educationId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.deleteEducation(userId, educationId);
+};
+
+// ============================================================================
+// EXPERIENCE CRUD (Web Service Wrappers)
+// ============================================================================
+
+const addExperience = async (userId, experienceData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.addExperience(userId, experienceData);
+  return profileTransformer.toMobileExperience(result);
+};
+
+const getExperiences = async (userId) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.getExperiences(userId);
+  return result.map(profileTransformer.toMobileExperience);
+};
+
+const updateExperience = async (userId, experienceId, experienceData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.updateExperience(userId, experienceId, experienceData);
+  return profileTransformer.toMobileExperience(result);
+};
+
+const deleteExperience = async (userId, experienceId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.deleteExperience(userId, experienceId);
+};
+
+// ============================================================================
+// CERTIFICATE CRUD (Web Service Wrappers)
+// ============================================================================
+
+const addCertificate = async (userId, certificateData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.addCertificate(userId, certificateData);
+  return profileTransformer.toMobileCertificate(result);
+};
+
+const getCertificates = async (userId) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.getCertificates(userId);
+  return result.map(profileTransformer.toMobileCertificate);
+};
+
+const updateCertificate = async (userId, certificateId, certificateData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.updateCertificate(userId, certificateId, certificateData);
+  return profileTransformer.toMobileCertificate(result);
+};
+
+const deleteCertificate = async (userId, certificateId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.deleteCertificate(userId, certificateId);
+};
+
+// ============================================================================
+// LANGUAGE CRUD (Web Service Wrappers)
+// ============================================================================
+
+const addLanguage = async (userId, languageData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.addLanguage(userId, languageData);
+  return profileTransformer.toMobileLanguage(result);
+};
+
+const getLanguages = async (userId) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.getLanguages(userId);
+  return result.map(profileTransformer.toMobileLanguage);
+};
+
+const updateLanguage = async (userId, languageId, languageData) => {
+  const doctorService = require('../doctorService');
+  const result = await doctorService.updateLanguage(userId, languageId, languageData);
+  return profileTransformer.toMobileLanguage(result);
+};
+
+const deleteLanguage = async (userId, languageId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.deleteLanguage(userId, languageId);
+};
+
 module.exports = {
   getDashboard,
   getProfile,
-  getDoctorProfile
+  getDoctorProfile,
+  updatePersonalInfo,
+  getProfileCompletion,
+  
+  // Education CRUD
+  addEducation,
+  getEducations,
+  updateEducation,
+  deleteEducation,
+  
+  // Experience CRUD
+  addExperience,
+  getExperiences,
+  updateExperience,
+  deleteExperience,
+  
+  // Certificate CRUD
+  addCertificate,
+  getCertificates,
+  updateCertificate,
+  deleteCertificate,
+  
+  // Language CRUD
+  addLanguage,
+  getLanguages,
+  updateLanguage,
+  deleteLanguage
 };
 

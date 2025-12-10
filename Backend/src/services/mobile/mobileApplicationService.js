@@ -38,73 +38,78 @@ const logger = require('../../utils/logger');
 const applicationTransformer = require('../../mobile/transformers/applicationTransformer');
 const doctorService = require('../doctorService');
 const { getDoctorProfile } = require('./mobileDoctorService');
-const { buildPaginationSQL, normalizeRawResult, normalizeCountResult } = require('../../utils/queryHelper');
+const { normalizeCountResult, buildPaginationSQL, normalizeRawResult } = require('../../utils/queryHelper');
 
 const listApplications = async (userId, { page = 1, limit = 20, status } = {}) => {
   const profile = await getDoctorProfile(userId);
   const currentPage = Math.max(Number(page) || 1, 1);
   const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
 
-  // İngilizce status değerlerini Türkçe'ye çevir (veritabanındaki değerlerle eşleşmeli)
-  // Hem İngilizce hem Türkçe değerleri kabul et
+  // Status mapping - Veritabanında Türkçe değerler var
   const statusMapping = {
     'pending': 'Başvuruldu',
     'reviewing': 'İnceleniyor',
     'approved': 'Kabul Edildi',
     'rejected': 'Reddedildi',
-    'withdrawn': 'Geri Çekildi',
-    'başvuruldu': 'Başvuruldu',
-    'inceleniyor': 'İnceleniyor',
-    'kabul edildi': 'Kabul Edildi',
-    'red edildi': 'Reddedildi',
-    'geri çekildi': 'Geri Çekildi'
+    'withdrawn': 'Geri Çekildi'
   };
 
   const baseQuery = db('applications as a')
     .leftJoin('jobs as j', 'j.id', 'a.job_id')
     .leftJoin('hospital_profiles as hp', 'hp.id', 'j.hospital_id')
     .leftJoin('application_statuses as st', 'st.id', 'a.status_id')
-    .where('a.doctor_profile_id', profile.id)
+    .whereRaw(`[a].[doctor_profile_id] = ${parseInt(profile.id)}`)
     .whereNull('a.deleted_at');
 
   if (status) {
-    // Hem İngilizce hem Türkçe değerleri kabul et
     const turkishStatus = statusMapping[status.toLowerCase()] || status;
     baseQuery.andWhere('st.name', turkishStatus);
   }
 
-  const countQuery = baseQuery.clone().clearSelect().clearOrder().count({ count: '*' }).first();
-
-  // SQL Server için OFFSET ... ROWS FETCH NEXT ... ROWS ONLY syntax'ı kullan
-  // Knex'in SQL Server dialect'i offset+limit birlikte kullanıldığında TOP kullanıyor,
-  // bu yüzden raw SQL ile doğru SQL'i oluşturuyoruz (parametreli sorgu ile güvenli)
+  // Basit çözüm: Tüm veriyi çek, JavaScript'te pagination yap
   const dataQuery = baseQuery
     .clone()
     .select(
       'a.id',
       'a.job_id',
-      'a.applied_at as created_at', // SQL'de applied_at var, created_at yok
-      'a.updated_at',
+      'a.status_id',
+      'a.applied_at',
       'a.cover_letter',
       'a.notes',
       'j.title as job_title',
       'hp.institution_name as hospital_name',
       'st.name as status_label'
     )
-    .orderBy('a.applied_at', 'desc') // SQL'de applied_at var, created_at yok
+    .orderBy('a.applied_at', 'desc')
     .orderBy('a.id', 'desc');
 
-  // SQL Server için pagination SQL'i oluştur
-  const { sql, bindings } = buildPaginationSQL(dataQuery, currentPage, perPage);
+  // Önce count query'sini test et
+  let countResults;
+  try {
+    countResults = await baseQuery.clone().clearSelect().clearOrder().count({ count: '*' });
+    logger.debug('✅ Count query başarılı:', countResults);
+  } catch (error) {
+    logger.error('❌ Count query error:', error.message);
+    throw error;
+  }
 
-  const [countResult, rowsResult] = await Promise.all([
-    countQuery,
-    db.raw(sql, bindings)
-  ]);
+  // Sonra data query'sini çalıştır
+  let allRows;
+  try {
+    allRows = await dataQuery;
+    logger.debug('✅ Data query başarılı, row count:', allRows.length);
+  } catch (error) {
+    logger.error('❌ Data query error:', error.message);
+    logger.error('Profile ID:', profile.id);
+    throw error;
+  }
   
-  // Sonuçları normalize et
-  const rows = normalizeRawResult(rowsResult);
-  const total = normalizeCountResult(countResult);
+  const total = normalizeCountResult(countResults[0]);
+  
+  // JavaScript'te pagination
+  const startIndex = (currentPage - 1) * perPage;
+  const endIndex = startIndex + perPage;
+  const rows = allRows.slice(startIndex, endIndex);
 
   return {
     data: rows.map(applicationTransformer.toListItem),
@@ -122,10 +127,17 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
 const getApplicationDetail = async (userId, applicationId) => {
   const profile = await getDoctorProfile(userId);
 
-  // Web backend'deki gibi ayrı ayrı sorgular - Knex SQL Server bug'ını bypass et
-  // Önce applications tablosundan temel veriyi al
+  // Applications tablosundan temel veriyi al
   const applications = await db('applications')
-    .select('*')
+    .select(
+      'id',
+      'job_id',
+      'doctor_profile_id',
+      'status_id',
+      'cover_letter',
+      'notes',
+      'applied_at'
+    )
     .where('id', applicationId)
     .where('doctor_profile_id', profile.id)
     .whereNull('deleted_at');
@@ -136,7 +148,7 @@ const getApplicationDetail = async (userId, applicationId) => {
 
   const application = applications[0];
 
-  // Job bilgilerini al - .first() yerine array döndür
+  // Job bilgilerini al
   if (application.job_id) {
     const jobs = await db('jobs as j')
       .leftJoin('cities as c', 'j.city_id', 'c.id')
@@ -144,10 +156,14 @@ const getApplicationDetail = async (userId, applicationId) => {
       .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
       .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
       .select(
+        'j.id as hospital_id',
         'j.title as job_title',
         'j.description',
         'j.employment_type',
         'j.min_experience_years',
+        'j.city_id',
+        'j.specialty_id',
+        'j.subspecialty_id',
         'hp.institution_name as hospital_name',
         'hp.address as hospital_address',
         'hp.phone as hospital_phone',
@@ -166,7 +182,7 @@ const getApplicationDetail = async (userId, applicationId) => {
     }
   }
 
-  // Status bilgisini al - .first() yerine array döndür
+  // Status bilgisini al
   if (application.status_id) {
     const statuses = await db('application_statuses')
       .select('name as status_label')
@@ -175,12 +191,8 @@ const getApplicationDetail = async (userId, applicationId) => {
     const status = statuses[0];
     if (status) {
       application.status_label = status.status_label;
-      application.status = status.status_label;
     }
   }
-
-  // created_at için applied_at kullan
-  application.created_at = application.applied_at;
 
   return applicationTransformer.toDetail(application);
 };

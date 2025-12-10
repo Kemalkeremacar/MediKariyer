@@ -1,0 +1,116 @@
+import React from 'react';
+import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import { Calendar } from 'lucide-react-native';
+import { Typography } from './Typography';
+import { colors, spacing } from '@/theme';
+
+export interface DatePickerProps {
+  value?: Date;
+  onChange: (date: Date) => void;
+  label?: string;
+  placeholder?: string;
+  minimumDate?: Date;
+  maximumDate?: Date;
+  disabled?: boolean;
+  error?: string;
+}
+
+export const DatePicker: React.FC<DatePickerProps> = ({
+  value,
+  onChange,
+  label,
+  placeholder = 'Tarih seçin',
+  disabled = false,
+  error,
+}) => {
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const handlePress = () => {
+    if (!disabled) {
+      // TODO: Implement date picker modal
+      // For now, just show a placeholder
+      console.log('Date picker pressed');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      {label && (
+        <Typography variant="body" style={styles.label}>
+          {label}
+        </Typography>
+      )}
+      <TouchableOpacity
+        style={[
+          styles.input,
+          error && styles.inputError,
+          disabled && styles.inputDisabled,
+        ]}
+        onPress={handlePress}
+        disabled={disabled}
+      >
+        <Calendar size={20} color={value ? colors.primary[600] : colors.neutral[400]} />
+        <Typography
+          variant="body"
+          style={value ? styles.text : styles.placeholder}
+        >
+          {value ? formatDate(value) : placeholder}
+        </Typography>
+      </TouchableOpacity>
+      {error && (
+        <Typography variant="caption" style={styles.error}>
+          {error}
+        </Typography>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    gap: spacing.xs,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 2,
+  },
+  input: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.background.primary,
+    borderWidth: 1,
+    borderColor: colors.neutral[200],
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    minHeight: 48,
+  },
+  inputError: {
+    borderColor: colors.error[500],
+  },
+  inputDisabled: {
+    backgroundColor: colors.neutral[50],
+    opacity: 0.6,
+  },
+  text: {
+    flex: 1,
+    fontSize: 15,
+    color: colors.text.primary,
+  },
+  placeholder: {
+    color: colors.neutral[400],
+  },
+  error: {
+    color: colors.error[600],
+    fontSize: 12,
+  },
+});

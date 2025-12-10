@@ -1,3 +1,22 @@
+/**
+ * @file authService.ts
+ * @description Authentication service - Kimlik doğrulama işlemleri için API servisi
+ * 
+ * Ana İşlevler:
+ * - Login (email + password)
+ * - Register (doktor kaydı)
+ * - Refresh token (token yenileme)
+ * - Logout (çıkış)
+ * - Get me (kullanıcı bilgisi)
+ * - Change password (şifre değiştirme)
+ * 
+ * Endpoint'ler: /api/mobile/auth/*
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
 import { ApiResponse } from '@/types/api';

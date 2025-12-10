@@ -20,7 +20,7 @@ import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { Camera, Image as ImageIcon, User, Mail, Lock, Stethoscope, ChevronRight } from 'lucide-react-native';
 import type { AuthStackParamList } from '@/navigation/types';
-import { ScreenContainer } from '@/components/ui/ScreenContainer';
+import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';

@@ -35,8 +35,11 @@ const mobileNotificationService = require('../../services/mobile/mobileNotificat
 
 const listNotifications = catchAsync(async (req, res) => {
   const { page, limit } = req.query;
-  const data = await mobileNotificationService.listNotifications(req.user.id, { page, limit });
-  return sendSuccess(res, 'Bildirimler listelendi', data);
+  const result = await mobileNotificationService.listNotifications(req.user.id, { page, limit });
+  
+  // sendPaginated kullanarak düz response döndür
+  const { sendPaginated } = require('../../utils/response');
+  return sendPaginated(res, 'Bildirimler listelendi', result.data, result.pagination);
 });
 
 const markAsRead = catchAsync(async (req, res) => {
@@ -71,9 +74,15 @@ const registerDeviceToken = catchAsync(async (req, res) => {
 // MODULE EXPORTS
 // ============================================================================
 
+const getUnreadCount = catchAsync(async (req, res) => {
+  const count = await mobileNotificationService.getUnreadCount(req.user.id);
+  return sendSuccess(res, 'Okunmamış bildirim sayısı', { count });
+});
+
 module.exports = {
   listNotifications,
   markAsRead,
-  registerDeviceToken
+  registerDeviceToken,
+  getUnreadCount
 };
 
