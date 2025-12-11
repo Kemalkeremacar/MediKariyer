@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, FlatList, StyleSheet } from 'react-native';
-import { Zap, Plus } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
@@ -57,7 +57,7 @@ export const SkillsScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerIcon}>
-            <Zap size={28} color={colors.warning[600]} />
+            <Ionicons name="flash" size={28} color={colors.warning[600]} />
           </View>
           <View style={styles.headerText}>
             <Typography variant="h2" style={styles.headerTitle}>
@@ -98,7 +98,7 @@ export const SkillsScreen = () => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Zap size={64} color={colors.neutral[300]} />
+            <Ionicons name="flash" size={64} color={colors.neutral[300]} />
             <Typography variant="h3" style={styles.emptyTitle}>
               Yetenek Yok
             </Typography>
@@ -111,7 +111,7 @@ export const SkillsScreen = () => {
 
       {/* FAB */}
       <FAB
-        icon={<Plus size={24} color={colors.background.primary} />}
+        icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddSkill}
         position="bottom-right"
         color="secondary"

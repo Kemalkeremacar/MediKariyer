@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
-import { Calendar } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
 import { colors, spacing } from '@/theme';
 
@@ -55,7 +55,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         onPress={handlePress}
         disabled={disabled}
       >
-        <Calendar size={20} color={value ? colors.primary[600] : colors.neutral[400]} />
+        <Ionicons name="calendar" size={20} color={value ? colors.primary[600] : colors.neutral[400]} />
         <Typography
           variant="body"
           style={value ? styles.text : styles.placeholder}

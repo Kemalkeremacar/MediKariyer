@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Bell, Briefcase, CheckCircle, AlertCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { colors, spacing } from '@/theme';
@@ -18,10 +18,10 @@ export interface NotificationCardProps {
 }
 
 const iconMap = {
-  application: CheckCircle,
-  job: Briefcase,
-  system: AlertCircle,
-  message: Bell,
+  application: 'checkmark-circle' as const,
+  job: 'briefcase' as const,
+  system: 'alert-circle' as const,
+  message: 'notifications' as const,
 };
 
 const colorMap = {
@@ -41,7 +41,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 }) => {
   // Defensive: ensure type is valid
   const safeType = (type && iconMap[type]) ? type : 'system';
-  const Icon = iconMap[safeType];
+  const iconName = iconMap[safeType];
   const color = colorMap[safeType];
   
   // Handle null or invalid timestamp with defensive checks
@@ -69,7 +69,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       >
         <View style={styles.content}>
           <View style={[styles.iconContainer, { backgroundColor: colors[color][50] }]}>
-            <Icon size={20} color={colors[color][600]} />
+            <Ionicons name={iconName} size={20} color={colors[color][600]} />
           </View>
           
           <View style={styles.textContainer}>

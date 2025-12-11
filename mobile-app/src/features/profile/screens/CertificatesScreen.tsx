@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
-import { Award, Plus } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { Screen } from '@/components/layout/Screen';
@@ -34,7 +34,7 @@ export const CertificatesScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerIcon}>
-            <Award size={28} color={colors.warning[600]} />
+            <Ionicons name="ribbon" size={28} color={colors.warning[600]} />
           </View>
           <View style={styles.headerText}>
             <Typography variant="h2" style={styles.headerTitle}>
@@ -65,7 +65,7 @@ export const CertificatesScreen = () => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Award size={64} color={colors.neutral[300]} />
+            <Ionicons name="ribbon" size={64} color={colors.neutral[300]} />
             <Typography variant="h3" style={styles.emptyTitle}>
               Henüz sertifika eklenmemiş
             </Typography>
@@ -78,7 +78,7 @@ export const CertificatesScreen = () => {
 
       {/* FAB */}
       <FAB
-        icon={<Plus size={24} color={colors.background.primary} />}
+        icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddCertificate}
         position="bottom-right"
       />

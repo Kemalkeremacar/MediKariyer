@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { AlertCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
 import { colors } from '@/theme';
 
@@ -21,7 +21,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
 }) => {
   return (
     <View className={fullScreen ? 'flex-1 items-center justify-center bg-white px-6' : 'items-center justify-center py-12 px-6'}>
-      <AlertCircle size={64} color={colors.error[500]} strokeWidth={1.5} />
+      <Ionicons name="alert-circle" size={64} color={colors.error[500]} />
       <Text className="mt-6 text-xl font-semibold text-neutral-900 text-center">
         {title}
       </Text>

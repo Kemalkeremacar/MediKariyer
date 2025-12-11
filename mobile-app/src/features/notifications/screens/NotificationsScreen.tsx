@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
-import { Bell, CheckSquare, Square, Trash2 } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { IconButton } from '@/components/ui/IconButton';
@@ -127,7 +127,7 @@ export const NotificationsScreen = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerIcon}>
-            <Bell size={28} color={colors.primary[600]} />
+            <Ionicons name="notifications" size={28} color={colors.primary[600]} />
           </View>
           <View style={styles.headerText}>
             <Typography variant="h2" style={styles.headerTitle}>
@@ -141,7 +141,7 @@ export const NotificationsScreen = () => {
           </View>
         </View>
         <IconButton
-          icon={selectionMode ? <CheckSquare size={20} color={colors.primary[600]} /> : <Square size={20} color={colors.primary[600]} />}
+          icon={selectionMode ? <Ionicons name="checkbox" size={20} color={colors.primary[600]} /> : <Ionicons name="square-outline" size={20} color={colors.primary[600]} />}
           onPress={toggleSelectionMode}
           size="md"
           variant="ghost"
@@ -168,7 +168,7 @@ export const NotificationsScreen = () => {
               disabled={selectedIds.size === 0}
             />
             <IconButton
-              icon={<Trash2 size={18} color={selectedIds.size > 0 ? colors.error[600] : colors.neutral[400]} />}
+              icon={<Ionicons name="trash" size={18} color={selectedIds.size > 0 ? colors.error[600] : colors.neutral[400]} />}
               onPress={handleDeleteSelected}
               size="sm"
               variant="ghost"
@@ -241,7 +241,7 @@ export const NotificationsScreen = () => {
         ListEmptyComponent={
           !isLoading ? (
             <View style={styles.emptyState}>
-              <Bell size={64} color={colors.neutral[300]} />
+              <Ionicons name="notifications" size={64} color={colors.neutral[300]} />
               <Typography variant="h3" style={styles.emptyTitle}>
                 Bildirim Yok
               </Typography>

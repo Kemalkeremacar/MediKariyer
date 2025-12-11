@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
-import { Check } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
@@ -41,7 +41,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           disabled && styles.checkboxDisabled,
         ]}
       >
-        {checked && <Check size={iconSize} color={colors.background.primary} strokeWidth={3} />}
+        {checked && <Ionicons name="checkmark" size={iconSize} color={colors.background.primary} />}
       </View>
       {label && (
         <Typography

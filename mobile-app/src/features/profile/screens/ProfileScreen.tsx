@@ -8,20 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import {
-  Edit3,
-  Bell,
-  Briefcase,
-  GraduationCap,
-  Award,
-  Languages,
-  FileText,
-  ChevronRight,
-  User,
-  MapPin,
-  TrendingUp,
-  Sparkles,
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 import { useNavigation } from '@react-navigation/native';
@@ -95,7 +82,7 @@ export const ProfileScreen = () => {
           >
             <View style={styles.headerTop}>
               <IconButton
-                icon={<Edit3 size={20} color={colors.primary[600]} />}
+                icon={<Ionicons name="create-outline" size={20} color={colors.primary[600]} />}
                 onPress={() => navigation.navigate('ProfileEdit')}
                 size="md"
                 variant="ghost"
@@ -104,7 +91,7 @@ export const ProfileScreen = () => {
                 Profilim
               </Typography>
               <IconButton
-                icon={<Bell size={20} color={colors.primary[600]} />}
+                icon={<Ionicons name="notifications" size={20} color={colors.primary[600]} />}
                 onPress={() => navigation.navigate('Notifications')}
                 size="md"
                 variant="ghost"
@@ -135,7 +122,7 @@ export const ProfileScreen = () => {
                 style={styles.statGradient}
               >
                 <View style={styles.statIconContainer}>
-                  <Sparkles size={20} color={colors.primary[600]} />
+                  <Ionicons name="sparkles" size={20} color={colors.primary[600]} />
                 </View>
                 <Typography variant="h2" style={styles.statValue}>
                   {completionPercent}%
@@ -154,7 +141,7 @@ export const ProfileScreen = () => {
                 style={styles.statGradient}
               >
                 <View style={styles.statIconContainer}>
-                  <FileText size={20} color={colors.success[600]} />
+                  <Ionicons name="document-text" size={20} color={colors.success[600]} />
                 </View>
                 <Typography variant="h2" style={styles.statValue}>
                   {recentApplications.length}
@@ -176,7 +163,7 @@ export const ProfileScreen = () => {
             >
               <View style={styles.cardHeader}>
                 <View style={styles.cardHeaderIcon}>
-                  <Briefcase size={20} color={colors.primary[600]} />
+                  <Ionicons name="briefcase" size={20} color={colors.primary[600]} />
                 </View>
                 <Typography variant="h4" style={styles.cardTitle}>
                   Profesyonel Bilgiler
@@ -185,7 +172,7 @@ export const ProfileScreen = () => {
               <View style={styles.infoGrid}>
                 <View style={styles.infoItem}>
                   <View style={styles.infoIconSmall}>
-                    <Briefcase size={16} color={colors.primary[600]} />
+                    <Ionicons name="briefcase" size={16} color={colors.primary[600]} />
                   </View>
                   <View style={styles.infoContent}>
                     <Typography variant="caption" style={styles.infoLabel}>
@@ -199,7 +186,7 @@ export const ProfileScreen = () => {
                 <View style={styles.divider} />
                 <View style={styles.infoItem}>
                   <View style={styles.infoIconSmall}>
-                    <GraduationCap size={16} color={colors.primary[600]} />
+                    <Ionicons name="school" size={16} color={colors.primary[600]} />
                   </View>
                   <View style={styles.infoContent}>
                     <Typography variant="caption" style={styles.infoLabel}>
@@ -213,7 +200,7 @@ export const ProfileScreen = () => {
                 <View style={styles.divider} />
                 <View style={styles.infoItem}>
                   <View style={styles.infoIconSmall}>
-                    <MapPin size={16} color={colors.primary[600]} />
+                    <Ionicons name="location" size={16} color={colors.primary[600]} />
                   </View>
                   <View style={styles.infoContent}>
                     <Typography variant="caption" style={styles.infoLabel}>
@@ -227,7 +214,7 @@ export const ProfileScreen = () => {
                 <View style={styles.divider} />
                 <View style={styles.infoItem}>
                   <View style={styles.infoIconSmall}>
-                    <Languages size={16} color={colors.primary[600]} />
+                    <Ionicons name="language" size={16} color={colors.primary[600]} />
                   </View>
                   <View style={styles.infoContent}>
                     <Typography variant="caption" style={styles.infoLabel}>
@@ -256,7 +243,7 @@ export const ProfileScreen = () => {
                 activeOpacity={0.7}
               >
                 <View style={[styles.quickAccessIcon, { backgroundColor: colors.primary[50] }]}>
-                  <Briefcase size={24} color={colors.primary[600]} />
+                  <Ionicons name="briefcase-outline" size={24} color={colors.primary[600]} />
                 </View>
                 <Typography variant="caption" style={styles.quickAccessLabel}>
                   İlanlar
@@ -272,7 +259,7 @@ export const ProfileScreen = () => {
                 activeOpacity={0.7}
               >
                 <View style={[styles.quickAccessIcon, { backgroundColor: colors.success[50] }]}>
-                  <FileText size={24} color={colors.success[600]} />
+                  <Ionicons name="checkmark-done-outline" size={24} color={colors.success[600]} />
                 </View>
                 <Typography variant="caption" style={styles.quickAccessLabel}>
                   Başvurularım
@@ -288,7 +275,7 @@ export const ProfileScreen = () => {
                 activeOpacity={0.7}
               >
                 <View style={[styles.quickAccessIcon, { backgroundColor: colors.warning[50] }]}>
-                  <Bell size={24} color={colors.warning[600]} />
+                  <Ionicons name="notifications-outline" size={24} color={colors.warning[600]} />
                 </View>
                 <Typography variant="caption" style={styles.quickAccessLabel}>
                   Bildirimler
@@ -304,7 +291,7 @@ export const ProfileScreen = () => {
                 activeOpacity={0.7}
               >
                 <View style={[styles.quickAccessIcon, { backgroundColor: colors.secondary[50] }]}>
-                  <User size={24} color={colors.secondary[600]} />
+                  <Ionicons name="settings-outline" size={24} color={colors.secondary[600]} />
                 </View>
                 <Typography variant="caption" style={styles.quickAccessLabel}>
                   Ayarlar
@@ -322,7 +309,7 @@ export const ProfileScreen = () => {
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionHeaderLeft}>
                   <View style={styles.sectionHeaderIcon}>
-                    <FileText size={18} color={colors.success[600]} />
+                    <Ionicons name="document-text" size={18} color={colors.success[600]} />
                   </View>
                   <Typography variant="h4" style={styles.sectionTitle}>
                     Son Başvurular
@@ -345,7 +332,7 @@ export const ProfileScreen = () => {
                 >
                   <View style={styles.applicationPreview}>
                     <View style={styles.applicationIconContainer}>
-                      <Briefcase size={20} color={colors.primary[600]} />
+                      <Ionicons name="briefcase" size={20} color={colors.primary[600]} />
                     </View>
                     <View style={styles.applicationPreviewContent}>
                       <Typography variant="body" style={styles.applicationTitle}>
@@ -358,7 +345,7 @@ export const ProfileScreen = () => {
                         🕐 {formatDistanceToNow(new Date(application.created_at), { addSuffix: true, locale: tr })}
                       </Typography>
                     </View>
-                    <ChevronRight size={20} color={colors.neutral[400]} />
+                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
                   </View>
                 </Card>
               ))}
@@ -374,28 +361,28 @@ export const ProfileScreen = () => {
             </View>
             <View style={styles.sectionsGrid}>
               <SectionCard
-                icon={<GraduationCap size={24} color={colors.primary[600]} />}
+                icon={<Ionicons name="school-outline" size={24} color={colors.primary[600]} />}
                 title="Eğitim"
                 subtitle="Üniversite ve uzmanlık"
                 onPress={() => navigation.navigate('Education')}
               />
 
               <SectionCard
-                icon={<Briefcase size={24} color={colors.success[600]} />}
+                icon={<Ionicons name="briefcase-outline" size={24} color={colors.success[600]} />}
                 title="Deneyim"
                 subtitle="İş deneyimleri"
                 onPress={() => navigation.navigate('Experience')}
               />
 
               <SectionCard
-                icon={<Award size={24} color={colors.warning[600]} />}
+                icon={<Ionicons name="ribbon-outline" size={24} color={colors.warning[600]} />}
                 title="Sertifikalar"
                 subtitle="Kurslar"
                 onPress={() => navigation.navigate('Certificates')}
               />
 
               <SectionCard
-                icon={<Languages size={24} color={colors.secondary[600]} />}
+                icon={<Ionicons name="language-outline" size={24} color={colors.secondary[600]} />}
                 title="Diller"
                 subtitle="Yabancı dil"
                 onPress={() => navigation.navigate('Languages')}

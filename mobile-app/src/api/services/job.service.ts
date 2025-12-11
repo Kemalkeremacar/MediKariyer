@@ -23,10 +23,12 @@ export interface JobListParams {
   page?: number;
   limit?: number;
   keyword?: string;
+  search?: string;
   city_id?: number;
   specialty_id?: number;
   subspecialty_id?: number;
   employment_type?: string;
+  work_type?: string;
 }
 
 export interface ApplyJobPayload {

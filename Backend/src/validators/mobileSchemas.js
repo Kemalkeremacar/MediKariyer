@@ -399,6 +399,9 @@ const mobileJobsQuerySchema = paginationQuerySchema.keys({
   employment_type: Joi.string().max(100).optional().messages({
     'string.max': 'Employment type en fazla 100 karakter olabilir'
   }),
+  keyword: Joi.string().max(100).trim().allow('').optional().messages({
+    'string.max': 'Arama terimi en fazla 100 karakter olabilir'
+  }),
   search: Joi.string().max(100).trim().allow('').optional().messages({
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
   })

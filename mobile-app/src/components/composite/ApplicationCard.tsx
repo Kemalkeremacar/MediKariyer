@@ -7,7 +7,7 @@ import { Chip } from '@/components/ui/Chip';
 import { Avatar } from '@/components/ui/Avatar';
 import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
-import { MapPin, Calendar, FileText, Building2, ChevronRight } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -38,7 +38,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
               {application.job_title || application.position_title}
             </Typography>
             <View style={styles.hospitalRow}>
-              <Building2 size={14} color={colors.text.secondary} />
+              <Ionicons name="business" size={14} color={colors.text.secondary} />
               <Typography variant="body" style={styles.hospital}>
                 {application.hospital_name}
               </Typography>
@@ -48,7 +48,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
             <Badge status={application.status || 'pending'} size="sm">
               {application.status}
             </Badge>
-            <ChevronRight size={20} color={colors.neutral[400]} style={{ marginTop: 4 }} />
+            <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} style={{ marginTop: 4 }} />
           </View>
         </View>
 
@@ -59,7 +59,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
           {application.city && (
             <Chip
               label={application.city}
-              icon={<MapPin size={12} color={colors.primary[700]} />}
+              icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
               variant="soft"
               color="primary"
               size="sm"
@@ -68,7 +68,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
           {timeAgo && (
             <Chip
               label={timeAgo}
-              icon={<Calendar size={12} color={colors.neutral[600]} />}
+              icon={<Ionicons name="calendar-outline" size={12} color={colors.neutral[600]} />}
               variant="soft"
               color="neutral"
               size="sm"

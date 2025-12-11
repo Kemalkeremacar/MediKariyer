@@ -34,7 +34,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
       
       // Check if token needs refresh before making request
       const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
-      if (shouldRefresh && !config.url?.includes('/auth/refresh-token')) {
+      if (shouldRefresh && !config.url?.includes('/auth/refresh')) {
         console.log('🔄 Token needs refresh, triggering proactive refresh...');
         try {
           const refreshToken = await tokenManager.getRefreshToken();

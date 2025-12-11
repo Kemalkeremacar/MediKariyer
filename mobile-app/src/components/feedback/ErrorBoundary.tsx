@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
-import { AlertCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 import { errorLogger } from '@/utils/errorLogger';
 
@@ -77,7 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.iconContainer}>
-              <AlertCircle size={80} color={colors.error[600]} strokeWidth={1.5} />
+              <Ionicons name="alert-circle" size={80} color={colors.error[600]} />
             </View>
             
             <Typography variant="h1" style={styles.title}>

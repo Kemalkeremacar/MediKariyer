@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet, ViewStyle } from 'react-native';
-import { X } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
@@ -64,16 +64,16 @@ export const Chip: React.FC<ChipProps> = ({
       {icon && <View style={styles.icon}>{icon}</View>}
       <Typography
         variant="caption"
-        style={[
-          size === 'sm' ? styles.textSm : styles.textMd,
-          { color: getTextColor() },
-        ]}
+        style={{
+          ...(size === 'sm' ? styles.textSm : styles.textMd),
+          color: getTextColor(),
+        }}
       >
         {label}
       </Typography>
       {onDelete && (
         <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-          <X size={size === 'sm' ? 12 : 14} color={getTextColor()} />
+          <Ionicons name="close" size={size === 'sm' ? 12 : 14} color={getTextColor()} />
         </TouchableOpacity>
       )}
     </Container>

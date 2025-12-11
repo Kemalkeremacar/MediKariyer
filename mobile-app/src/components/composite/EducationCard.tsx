@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { GraduationCap, Calendar } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
@@ -32,7 +32,7 @@ export const EducationCard: React.FC<EducationCardProps> = ({
       <Card variant="outlined" padding="lg" style={styles.card}>
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <GraduationCap size={20} color={colors.primary[600]} />
+            <Ionicons name="school" size={20} color={colors.primary[600]} />
           </View>
           <View style={styles.content}>
             <Typography variant="h4" style={styles.degree}>
@@ -52,7 +52,7 @@ export const EducationCard: React.FC<EducationCardProps> = ({
         <View style={styles.footer}>
           <Chip
             label={`${startDate} - ${current ? 'Devam Ediyor' : endDate}`}
-            icon={<Calendar size={12} color={colors.neutral[600]} />}
+            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
             variant="soft"
             color="neutral"
             size="sm"

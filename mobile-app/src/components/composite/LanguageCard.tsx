@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
-import { Languages, ChevronRight } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -44,7 +44,7 @@ export const LanguageCard: React.FC<LanguageCardProps> = ({
       <Card variant="outlined" padding="md">
         <View style={styles.container}>
           <View style={styles.iconContainer}>
-            <Languages size={20} color={colors.primary[600]} />
+            <Ionicons name="language" size={20} color={colors.primary[600]} />
           </View>
           <View style={styles.content}>
             <Typography variant="h4" style={styles.language}>
@@ -60,7 +60,7 @@ export const LanguageCard: React.FC<LanguageCardProps> = ({
             </View>
           </View>
           {onPress && (
-            <ChevronRight size={20} color={colors.neutral[400]} />
+            <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
           )}
         </View>
       </Card>

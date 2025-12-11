@@ -17,20 +17,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useToast } from '@/providers/ToastProvider';
-import {
-  MapPin,
-  Clock,
-  Briefcase,
-  CheckCircle,
-  Building2,
-  DollarSign,
-  Users,
-  Calendar,
-  Phone,
-  Mail,
-  Globe,
-  Send,
-} from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { jobService } from '@/api/services/job.service';
 import type { JobsStackParamList } from '@/navigation/types';
 import { colors, spacing, borderRadius } from '@/theme';
@@ -170,7 +157,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             <View style={styles.infoGrid}>
               <View style={styles.infoCard}>
                 <View style={styles.infoIconContainer}>
-                  <MapPin size={18} color={colors.primary[600]} />
+                  <Ionicons name="location" size={18} color={colors.primary[600]} />
                 </View>
                 <Typography variant="caption" style={styles.infoLabel}>
                   Lokasyon
@@ -182,7 +169,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
 
               <View style={styles.infoCard}>
                 <View style={styles.infoIconContainer}>
-                  <Briefcase size={18} color={colors.primary[600]} />
+                  <Ionicons name="briefcase" size={18} color={colors.primary[600]} />
                 </View>
                 <Typography variant="caption" style={styles.infoLabel}>
                   Çalışma Tipi
@@ -194,7 +181,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
 
               <View style={styles.infoCard}>
                 <View style={styles.infoIconContainer}>
-                  <Calendar size={18} color={colors.primary[600]} />
+                  <Ionicons name="calendar" size={18} color={colors.primary[600]} />
                 </View>
                 <Typography variant="caption" style={styles.infoLabel}>
                   Yayınlanma
@@ -207,7 +194,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               {job.min_experience_years !== null && job.min_experience_years !== undefined && (
                 <View style={styles.infoCard}>
                   <View style={styles.infoIconContainer}>
-                    <Users size={18} color={colors.primary[600]} />
+                    <Ionicons name="people" size={18} color={colors.primary[600]} />
                   </View>
                   <Typography variant="caption" style={styles.infoLabel}>
                     Min. Deneyim
@@ -221,7 +208,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               {job.salary_range && (
                 <View style={styles.infoCard}>
                   <View style={styles.infoIconContainer}>
-                    <DollarSign size={18} color={colors.success[600]} />
+                    <Ionicons name="cash" size={18} color={colors.success[600]} />
                   </View>
                   <Typography variant="caption" style={styles.infoLabel}>
                     Maaş Aralığı
@@ -256,7 +243,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             {/* Applied Badge */}
             {job.is_applied && (
               <View style={styles.appliedBadgeInline}>
-                <CheckCircle size={18} color={colors.success[600]} />
+                <Ionicons name="checkmark-circle" size={18} color={colors.success[600]} />
                 <Typography variant="body" style={styles.appliedTextInline}>
                   Başvuruldu
                 </Typography>
@@ -282,7 +269,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.hospital_address && (
                 <View style={styles.hospitalInfoRow}>
-                  <MapPin size={16} color={colors.text.secondary} />
+                  <Ionicons name="location" size={16} color={colors.text.secondary} />
                   <View style={{ flex: 1 }}>
                     <Typography variant="caption" style={styles.hospitalInfoLabel}>
                       Adres
@@ -295,7 +282,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.hospital_phone && (
                 <View style={styles.hospitalInfoRow}>
-                  <Phone size={16} color={colors.text.secondary} />
+                  <Ionicons name="call" size={16} color={colors.text.secondary} />
                   <View style={{ flex: 1 }}>
                     <Typography variant="caption" style={styles.hospitalInfoLabel}>
                       Telefon
@@ -308,7 +295,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.hospital_email && (
                 <View style={styles.hospitalInfoRow}>
-                  <Mail size={16} color={colors.text.secondary} />
+                  <Ionicons name="mail" size={16} color={colors.text.secondary} />
                   <View style={{ flex: 1 }}>
                     <Typography variant="caption" style={styles.hospitalInfoLabel}>
                       E-posta
@@ -321,7 +308,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.hospital_website && (
                 <View style={styles.hospitalInfoRow}>
-                  <Globe size={16} color={colors.text.secondary} />
+                  <Ionicons name="globe" size={16} color={colors.text.secondary} />
                   <View style={{ flex: 1 }}>
                     <Typography variant="caption" style={styles.hospitalInfoLabel}>
                       Website
@@ -393,7 +380,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         {job.is_applied && (
           <Card padding="2xl" style={styles.contentCard}>
             <View style={styles.appliedBadge}>
-              <CheckCircle size={20} color={colors.success[600]} />
+              <Ionicons name="checkmark-circle" size={20} color={colors.success[600]} />
               <Typography variant="h3" style={styles.appliedText}>
                 Bu ilana başvurdunuz
               </Typography>

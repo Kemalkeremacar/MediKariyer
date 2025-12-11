@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { ChevronRight, CheckCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Typography } from '@/components/ui/Typography';
@@ -44,7 +44,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           />
           {verified && (
             <View style={styles.verifiedBadge}>
-              <CheckCircle size={20} color={colors.success[600]} fill={colors.background.secondary} />
+              <Ionicons name="checkmark-circle" size={20} color={colors.success[600]} />
             </View>
           )}
         </View>
@@ -83,7 +83,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
         {onPress && (
           <View style={styles.editButton}>
-            <ChevronRight size={20} color={colors.primary[600]} />
+            <Ionicons name="chevron-forward" size={20} color={colors.primary[600]} />
           </View>
         )}
       </TouchableOpacity>

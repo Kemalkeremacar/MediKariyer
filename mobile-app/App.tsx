@@ -3,7 +3,6 @@ import 'react-native-gesture-handler';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { AppProviders } from '@/providers/AppProviders';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { AuthInitializer } from '@/providers/AuthInitializer';
@@ -34,9 +33,7 @@ export default function App() {
         <AppProviders>
           <ErrorBoundary>
             <NavigationContainer ref={navigationRef}>
-              <BottomSheetModalProvider>
-                <AppContent />
-              </BottomSheetModalProvider>
+              <AppContent />
             </NavigationContainer>
           </ErrorBoundary>
         </AppProviders>

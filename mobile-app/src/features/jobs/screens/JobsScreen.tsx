@@ -2,34 +2,38 @@
  * JOBS SCREEN - Modern İş İlanları Ekranı
  */
 
-import React, { useState, useCallback, useMemo, useRef } from 'react';
-import { View, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  View,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { jobService } from '@/api/services/job.service';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { IconButton } from '@/components/ui/IconButton';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Chip } from '@/components/ui/Chip';
 import { JobCard } from '@/components/composite/JobCard';
+import { JobFilterSheet, JobFilters } from '@/components/composite/JobFilterSheet';
 import { Screen } from '@/components/layout/Screen';
-import { Filter, Briefcase, MapPin, X } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { JobListItem } from '@/types/job';
-import { JobFilterSheet } from '@/components/composite/JobFilterSheet';
-
-import { useToast } from '@/providers/ToastProvider';
 
 export const JobsScreen = () => {
   const navigation = useNavigation();
-  const { showToast } = useToast();
+  
+  // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpecialtyId, setSelectedSpecialtyId] = useState<number | undefined>();
-  const [selectedCityId, setSelectedCityId] = useState<number | undefined>();
-  const [selectedWorkType, setSelectedWorkType] = useState<string | undefined>();
-  const [showFilterSheet, setShowFilterSheet] = React.useState(false);
+  const [filters, setFilters] = useState<JobFilters>({});
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
 
+  // Query with filters
   const {
     data,
     isLoading,
@@ -40,33 +44,38 @@ export const JobsScreen = () => {
     refetch,
     isRefetching,
   } = useInfiniteQuery({
-    queryKey: ['jobs', searchQuery, selectedSpecialtyId, selectedCityId, selectedWorkType],
+    queryKey: ['jobs', searchQuery, filters],
     queryFn: ({ pageParam = 1 }) =>
       jobService.listJobs({
         page: pageParam,
         limit: 10,
-        ...(searchQuery ? { search: searchQuery } : {}),
-        ...(selectedSpecialtyId ? { specialty_id: selectedSpecialtyId } : {}),
-        ...(selectedCityId ? { city_id: selectedCityId } : {}),
-        ...(selectedWorkType ? { work_type: selectedWorkType } : {}),
+        ...(searchQuery ? { keyword: searchQuery } : {}),
+        ...(filters.specialtyId ? { specialty_id: filters.specialtyId } : {}),
+        ...(filters.cityId ? { city_id: filters.cityId } : {}),
+        ...(filters.workType ? { employment_type: filters.workType } : {}),
       }),
-    getNextPageParam: (lastPage) => lastPage.pagination?.current_page && lastPage.pagination?.total_pages && lastPage.pagination.current_page < lastPage.pagination.total_pages ? lastPage.pagination.current_page + 1 : undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination?.has_next
+        ? lastPage.pagination.current_page + 1
+        : undefined,
     initialPageParam: 1,
   });
 
-  // Remove duplicate jobs by ID (backend sometimes returns duplicates)
+  // Get total count from pagination
+  const totalCount = useMemo(() => {
+    return data?.pages?.[0]?.pagination?.total ?? 0;
+  }, [data]);
+
+  // Remove duplicate jobs by ID
   const jobs = useMemo(() => {
     if (!data?.pages) return [];
-    
     const allJobs = data.pages.flatMap((page) => page.data);
     const uniqueJobsMap = new Map<number, JobListItem>();
-    
     allJobs.forEach((job) => {
       if (!uniqueJobsMap.has(job.id)) {
         uniqueJobsMap.set(job.id, job);
       }
     });
-    
     return Array.from(uniqueJobsMap.values());
   }, [data]);
 
@@ -89,38 +98,57 @@ export const JobsScreen = () => {
     [navigation]
   );
 
-  const handleApply = (jobId: number) => {
-    // TODO: Başvuru işlemi
-  };
+  // Filter handlers
+  const handleApplyFilters = useCallback((newFilters: JobFilters) => {
+    setFilters(newFilters);
+  }, []);
 
-  const hasActiveFilters = selectedSpecialtyId || selectedCityId || selectedWorkType;
+  const handleResetFilters = useCallback(() => {
+    setFilters({});
+    setSearchQuery('');
+  }, []);
+
+  const handleRemoveFilter = useCallback((key: keyof JobFilters) => {
+    setFilters((prev) => {
+      const newFilters = { ...prev };
+      delete newFilters[key];
+      return newFilters;
+    });
+  }, []);
+
+  // Active filter count
+  const activeFilterCount = useMemo(() => {
+    return [filters.specialtyId, filters.cityId, filters.workType].filter(Boolean).length;
+  }, [filters]);
+
+  const hasActiveFilters = activeFilterCount > 0 || searchQuery.length > 0;
 
   const renderContent = () => {
     if (!data) return null;
-    
+
     return (
       <>
         {/* Modern Header */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View style={styles.headerIcon}>
-              <Briefcase size={28} color={colors.primary[600]} />
+              <Ionicons name="briefcase" size={28} color={colors.primary[600]} />
             </View>
             <View style={styles.headerText}>
               <Typography variant="h2" style={styles.headerTitle}>
                 İş İlanları
               </Typography>
               <Typography variant="caption" style={styles.headerSubtitle}>
-                {jobs.length} fırsat seni bekliyor
+                {totalCount} ilan bulundu
               </Typography>
             </View>
           </View>
           {hasActiveFilters && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.clearFiltersButton}
               onPress={handleResetFilters}
             >
-              <X size={16} color={colors.error[600]} />
+              <Ionicons name="close" size={16} color={colors.error[600]} />
             </TouchableOpacity>
           )}
         </View>
@@ -134,52 +162,63 @@ export const JobsScreen = () => {
             onClear={() => setSearchQuery('')}
             style={styles.searchBar}
           />
-          <IconButton
-            icon={<Filter size={20} color={hasActiveFilters ? colors.background.primary : colors.primary[600]} />}
-            onPress={() => setShowFilterSheet(true)}
-            size="md"
-            variant={hasActiveFilters ? 'filled' : 'ghost'}
-            color="primary"
-            style={styles.filterButton}
-          />
-          {hasActiveFilters && (
-            <View style={styles.filterBadge}>
-              <Typography variant="caption" style={styles.filterBadgeText}>
-                {[selectedSpecialtyId, selectedCityId, selectedWorkType].filter(Boolean).length}
-              </Typography>
-            </View>
-          )}
+          <View style={styles.filterButtonWrapper}>
+            <IconButton
+              icon={
+                <Ionicons
+                  name="filter"
+                  size={20}
+                  color={
+                    activeFilterCount > 0
+                      ? colors.background.primary
+                      : colors.primary[600]
+                  }
+                />
+              }
+              onPress={() => setShowFilterSheet(true)}
+              size="md"
+              variant={activeFilterCount > 0 ? 'filled' : 'ghost'}
+              color="primary"
+            />
+            {activeFilterCount > 0 && (
+              <View style={styles.filterBadge}>
+                <Typography variant="caption" style={styles.filterBadgeText}>
+                  {activeFilterCount}
+                </Typography>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Active Filters with Modern Chips */}
         {hasActiveFilters && (
           <View style={styles.activeFiltersContainer}>
-            {selectedSpecialtyId && (
+            {filters.specialtyId && (
               <Chip
                 label="Branş Filtresi"
                 variant="soft"
                 color="primary"
                 size="sm"
-                onDelete={() => setSelectedSpecialtyId(undefined)}
+                onDelete={() => handleRemoveFilter('specialtyId')}
               />
             )}
-            {selectedCityId && (
+            {filters.cityId && (
               <Chip
                 label="Şehir"
-                icon={<MapPin size={12} color={colors.primary[700]} />}
+                icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
                 variant="soft"
                 color="primary"
                 size="sm"
-                onDelete={() => setSelectedCityId(undefined)}
+                onDelete={() => handleRemoveFilter('cityId')}
               />
             )}
-            {selectedWorkType && (
+            {filters.workType && (
               <Chip
-                label={selectedWorkType}
+                label={filters.workType}
                 variant="soft"
                 color="primary"
                 size="sm"
-                onDelete={() => setSelectedWorkType(undefined)}
+                onDelete={() => handleRemoveFilter('workType')}
               />
             )}
           </View>
@@ -198,18 +237,18 @@ export const JobsScreen = () => {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon}>
-                <Briefcase size={64} color={colors.neutral[300]} />
+                <Ionicons name="briefcase-outline" size={64} color={colors.neutral[300]} />
               </View>
               <Typography variant="h3" style={styles.emptyTitle}>
                 İlan Bulunamadı
               </Typography>
               <Typography variant="body" style={styles.emptyText}>
-                {searchQuery || hasActiveFilters 
+                {hasActiveFilters
                   ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
                   : 'Henüz ilan bulunmuyor'}
               </Typography>
               {hasActiveFilters && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.emptyButton}
                   onPress={handleResetFilters}
                 >
@@ -224,7 +263,15 @@ export const JobsScreen = () => {
             isFetchingNextPage ? (
               <View style={styles.footer}>
                 <ActivityIndicator size="small" color={colors.primary[600]} />
-                <Typography variant="caption">Daha fazla ilan yükleniyor...</Typography>
+                <Typography variant="caption" style={styles.footerText}>
+                  Daha fazla ilan yükleniyor...
+                </Typography>
+              </View>
+            ) : jobs.length > 0 && !hasNextPage ? (
+              <View style={styles.footer}>
+                <Typography variant="caption" style={styles.footerText}>
+                  Tüm ilanlar yüklendi ({jobs.length}/{totalCount})
+                </Typography>
               </View>
             ) : null
           }
@@ -233,24 +280,11 @@ export const JobsScreen = () => {
     );
   };
 
-  const handleApplyFilters = useCallback(() => {
-    setShowFilterSheet(false);
-    refetch();
-  }, [refetch]);
-
-  const handleResetFilters = useCallback(() => {
-    setSelectedSpecialtyId(undefined);
-    setSelectedCityId(undefined);
-    setSelectedWorkType(undefined);
-    setShowFilterSheet(false);
-    refetch();
-  }, [refetch]);
-
   return (
-    <Screen 
-      scrollable={false} 
+    <Screen
+      scrollable={false}
       loading={false}
-      error={isError ? (new Error('İlanlar yüklenemedi')) : null}
+      error={isError ? new Error('İlanlar yüklenemedi') : null}
       onRetry={refetch}
     >
       {isLoading ? (
@@ -258,7 +292,7 @@ export const JobsScreen = () => {
           <View style={styles.header}>
             <View style={styles.headerContent}>
               <View style={styles.headerIcon}>
-                <Briefcase size={28} color={colors.primary[600]} />
+                <Ionicons name="briefcase" size={28} color={colors.primary[600]} />
               </View>
               <View style={styles.headerText}>
                 <Typography variant="h2" style={styles.headerTitle}>
@@ -279,8 +313,11 @@ export const JobsScreen = () => {
       ) : (
         renderContent()
       )}
-      
+
       <JobFilterSheet
+        visible={showFilterSheet}
+        onClose={() => setShowFilterSheet(false)}
+        filters={filters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
       />
@@ -341,29 +378,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     backgroundColor: colors.background.primary,
-    position: 'relative',
   },
   searchBar: {
     flex: 1,
   },
-  filterButton: {
+  filterButtonWrapper: {
     position: 'relative',
   },
   filterBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: -4,
+    right: -4,
     backgroundColor: colors.error[600],
     borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    minWidth: 18,
+    height: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
   },
   filterBadgeText: {
     color: colors.background.primary,
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
   },
   activeFiltersContainer: {
@@ -394,6 +430,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.sm,
     paddingVertical: spacing.lg,
+  },
+  footerText: {
+    color: colors.text.secondary,
   },
   emptyState: {
     padding: spacing['3xl'],

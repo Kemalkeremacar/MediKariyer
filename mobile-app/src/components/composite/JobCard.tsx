@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
-import { MapPin, Briefcase, Clock, Building2, ChevronRight, Zap } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { JobListItem } from '@/types/job';
 
 interface JobCardProps {
@@ -45,13 +45,13 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
               )}
             </View>
             <View style={styles.hospitalRow}>
-              <Building2 size={14} color={colors.text.secondary} />
+              <Ionicons name="business" size={14} color={colors.text.secondary} />
               <Typography variant="body" style={styles.hospital}>
                 {job.hospital_name}
               </Typography>
             </View>
           </View>
-          <ChevronRight size={20} color={colors.neutral[400]} />
+          <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
         </View>
 
         <Divider spacing="sm" />
@@ -61,7 +61,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
           {job.city_name && (
             <Chip
               label={job.city_name}
-              icon={<MapPin size={12} color={colors.primary[700]} />}
+              icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
               variant="soft"
               color="primary"
               size="sm"

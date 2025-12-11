@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { colors, spacing } from '@/theme';
 
@@ -50,7 +50,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       )}
 
       {onPress && (
-        <ChevronRight size={20} color={colors.neutral[400]} />
+        <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
       )}
     </TouchableOpacity>
   );

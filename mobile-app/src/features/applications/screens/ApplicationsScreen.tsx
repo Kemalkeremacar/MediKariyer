@@ -1,4 +1,8 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+/**
+ * APPLICATIONS SCREEN - Modern Başvurularım Ekranı
+ */
+
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -9,26 +13,36 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { lookupService } from '@/api/services/lookup.service';
 import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BackButton } from '@/components/ui/BackButton';
-import { Divider } from '@/components/ui/Divider';
 import { Modal } from '@/components/ui/Modal';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Screen } from '@/components/layout/Screen';
-import { ApplicationFilterSheet } from '@/components/composite/ApplicationFilterSheet';
+import {
+  ApplicationFilterSheet,
+  ApplicationFilters,
+} from '@/components/composite/ApplicationFilterSheet';
 import { ApplicationCard } from '@/components/composite/ApplicationCard';
 import { StatCard } from '@/components/composite/StatCard';
 import { TimelineItem } from '@/components/composite/TimelineItem';
 import { useApplications } from '../hooks/useApplications';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
-import { FileText, Filter, CheckCircle, Clock, XCircle, Eye, AlertCircle, Building2, MapPin, Phone, Mail, X } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+// Status display mapping
+const STATUS_DISPLAY: Record<string, string> = {
+  pending: 'Başvuruldu',
+  reviewing: 'İnceleniyor',
+  approved: 'Kabul Edildi',
+  rejected: 'Red Edildi',
+  withdrawn: 'Geri Çekildi',
+};
+
 
 const DetailsModal = ({
   applicationId,
@@ -39,7 +53,10 @@ const DetailsModal = ({
   visible: boolean;
   onClose: () => void;
 }) => {
-  const { data, isLoading, isError, refetch } = useApplicationDetail(applicationId, visible);
+  const { data, isLoading, isError, refetch } = useApplicationDetail(
+    applicationId,
+    visible
+  );
   const withdrawMutation = useWithdrawApplication();
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
 
@@ -71,7 +88,7 @@ const DetailsModal = ({
         {isError && (
           <View style={styles.modalLoader}>
             <View style={styles.errorIcon}>
-              <XCircle size={48} color={colors.error[600]} />
+              <Ionicons name="close-circle" size={48} color={colors.error[600]} />
             </View>
             <Typography variant="h3" style={styles.errorTitle}>
               Başvuru Yüklenemedi
@@ -79,32 +96,34 @@ const DetailsModal = ({
             <Typography variant="body" style={styles.errorText}>
               Lütfen internet bağlantınızı kontrol edip tekrar deneyin.
             </Typography>
-            <Button 
-              label="Tekrar Dene" 
-              onPress={() => refetch()} 
+            <Button
+              label="Tekrar Dene"
+              onPress={() => refetch()}
               variant="primary"
               size="lg"
             />
           </View>
         )}
         {data && (
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            {/* Back Button */}
+          <ScrollView 
+            contentContainerStyle={styles.modalContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <View style={styles.backButtonContainer}>
               <BackButton onPress={onClose} />
             </View>
 
-            {/* Header */}
             <View style={styles.modalHeaderInline}>
               <Typography variant="h2" style={styles.modalHeaderTitle}>
                 Başvuru Detayı
               </Typography>
             </View>
-            {/* Job Info Card */}
+
             <Card variant="elevated" padding="lg" style={styles.jobInfoCard}>
               <View style={styles.jobInfoHeader}>
                 <View style={styles.jobIconContainer}>
-                  <FileText size={24} color={colors.primary[600]} />
+                  <Ionicons name="document-text" size={24} color={colors.primary[600]} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Typography variant="h2" style={styles.jobTitle}>
@@ -120,20 +139,23 @@ const DetailsModal = ({
                   )}
                 </View>
               </View>
-              
+
               <View style={styles.modalDivider} />
-              
+
               <View style={styles.modalInfoRow}>
                 <View style={styles.modalInfoItem}>
                   <Typography variant="caption" style={styles.modalInfoLabel}>
                     Durum
                   </Typography>
-                  <Badge 
+                  <Badge
                     variant={
-                      data.status?.toLowerCase() === 'kabul edildi' ? 'success' :
-                      data.status?.toLowerCase() === 'red edildi' ? 'error' :
-                      data.status?.toLowerCase() === 'inceleniyor' ? 'warning' :
-                      'primary'
+                      data.status?.toLowerCase() === 'kabul edildi'
+                        ? 'success'
+                        : data.status?.toLowerCase() === 'red edildi'
+                        ? 'error'
+                        : data.status?.toLowerCase() === 'inceleniyor'
+                        ? 'warning'
+                        : 'primary'
                     }
                     size="sm"
                   >
@@ -148,14 +170,15 @@ const DetailsModal = ({
                     {new Date(data.created_at).toLocaleDateString('tr-TR', {
                       day: 'numeric',
                       month: 'long',
-                      year: 'numeric'
+                      year: 'numeric',
                     })}
                   </Typography>
                 </View>
               </View>
 
-              {/* Job Details Grid */}
-              {(data.employment_type || data.min_experience_years !== null || data.specialty_name) && (
+              {(data.employment_type ||
+                data.min_experience_years !== null ||
+                data.specialty_name) && (
                 <>
                   <View style={styles.modalDivider} />
                   <View style={styles.jobDetailsGrid}>
@@ -169,16 +192,17 @@ const DetailsModal = ({
                         </Typography>
                       </View>
                     )}
-                    {data.min_experience_years !== null && data.min_experience_years !== undefined && (
-                      <View style={styles.jobDetailItem}>
-                        <Typography variant="caption" style={styles.modalInfoLabel}>
-                          Min. Deneyim
-                        </Typography>
-                        <Typography variant="body" style={styles.modalInfoValue}>
-                          {data.min_experience_years} yıl
-                        </Typography>
-                      </View>
-                    )}
+                    {data.min_experience_years !== null &&
+                      data.min_experience_years !== undefined && (
+                        <View style={styles.jobDetailItem}>
+                          <Typography variant="caption" style={styles.modalInfoLabel}>
+                            Min. Deneyim
+                          </Typography>
+                          <Typography variant="body" style={styles.modalInfoValue}>
+                            {data.min_experience_years} yıl
+                          </Typography>
+                        </View>
+                      )}
                     {data.specialty_name && (
                       <View style={styles.jobDetailItem}>
                         <Typography variant="caption" style={styles.modalInfoLabel}>
@@ -199,12 +223,11 @@ const DetailsModal = ({
               )}
             </Card>
 
-            {/* Job Description */}
             {data.description && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconContainer}>
-                    <FileText size={18} color={colors.primary[600]} />
+                    <Ionicons name="document-text" size={18} color={colors.primary[600]} />
                   </View>
                   <Typography variant="h4" style={styles.sectionTitle}>
                     İş Tanımı
@@ -218,11 +241,10 @@ const DetailsModal = ({
               </View>
             )}
 
-            {/* Application Timeline */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconContainer}>
-                  <Clock size={18} color={colors.primary[600]} />
+                  <Ionicons name="time" size={18} color={colors.primary[600]} />
                 </View>
                 <Typography variant="h4" style={styles.sectionTitle}>
                   Başvuru Süreci
@@ -237,7 +259,7 @@ const DetailsModal = ({
                   })}
                   description="Başvurunuz başarıyla iletildi"
                   status="completed"
-                  icon={<CheckCircle size={16} color={colors.background.primary} />}
+                  icon={<Ionicons name="checkmark-circle" size={16} color={colors.background.primary} />}
                 />
                 <TimelineItem
                   title={data.status || 'İnceleniyor'}
@@ -260,11 +282,11 @@ const DetailsModal = ({
                   }
                   icon={
                     data.status?.toLowerCase() === 'kabul edildi' ? (
-                      <CheckCircle size={16} color={colors.background.primary} />
+                      <Ionicons name="checkmark-circle" size={16} color={colors.background.primary} />
                     ) : data.status?.toLowerCase() === 'red edildi' ? (
-                      <XCircle size={16} color={colors.background.primary} />
+                      <Ionicons name="close-circle" size={16} color={colors.background.primary} />
                     ) : (
-                      <Clock size={16} color={colors.background.primary} />
+                      <Ionicons name="time" size={16} color={colors.background.primary} />
                     )
                   }
                   isLast
@@ -272,12 +294,11 @@ const DetailsModal = ({
               </Card>
             </View>
 
-            {/* Cover Letter */}
             {data.cover_letter && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconContainer}>
-                    <FileText size={18} color={colors.primary[600]} />
+                    <Ionicons name="document-text" size={18} color={colors.primary[600]} />
                   </View>
                   <Typography variant="h4" style={styles.sectionTitle}>
                     Ön Yazınız
@@ -291,12 +312,11 @@ const DetailsModal = ({
               </View>
             )}
 
-            {/* Hospital Info */}
             {(data.hospital_address || data.hospital_phone || data.hospital_email || data.hospital_about) && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionIconContainer}>
-                    <Building2 size={18} color={colors.primary[600]} />
+                    <Ionicons name="business" size={18} color={colors.primary[600]} />
                   </View>
                   <Typography variant="h4" style={styles.sectionTitle}>
                     Hastane Bilgileri
@@ -312,7 +332,7 @@ const DetailsModal = ({
                     <View style={{ gap: spacing.sm }}>
                       {data.hospital_address && (
                         <View style={styles.hospitalContactRow}>
-                          <MapPin size={14} color={colors.text.secondary} />
+                          <Ionicons name="location" size={14} color={colors.text.secondary} />
                           <Typography variant="caption" style={styles.hospitalContactText}>
                             {data.hospital_address}
                           </Typography>
@@ -320,7 +340,7 @@ const DetailsModal = ({
                       )}
                       {data.hospital_phone && (
                         <View style={styles.hospitalContactRow}>
-                          <Phone size={14} color={colors.text.secondary} />
+                          <Ionicons name="call" size={14} color={colors.text.secondary} />
                           <Typography variant="caption" style={styles.hospitalContactText}>
                             {data.hospital_phone}
                           </Typography>
@@ -328,7 +348,7 @@ const DetailsModal = ({
                       )}
                       {data.hospital_email && (
                         <View style={styles.hospitalContactRow}>
-                          <Mail size={14} color={colors.text.secondary} />
+                          <Ionicons name="mail" size={14} color={colors.text.secondary} />
                           <Typography variant="caption" style={styles.hospitalContactText}>
                             {data.hospital_email}
                           </Typography>
@@ -340,12 +360,11 @@ const DetailsModal = ({
               </View>
             )}
 
-            {/* Hospital Notes */}
             {data.notes && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <View style={[styles.sectionIconContainer, { backgroundColor: colors.warning[50] }]}>
-                    <AlertCircle size={18} color={colors.warning[600]} />
+                    <Ionicons name="alert-circle" size={18} color={colors.warning[600]} />
                   </View>
                   <Typography variant="h4" style={styles.sectionTitle}>
                     Hastane Notu
@@ -359,7 +378,6 @@ const DetailsModal = ({
               </View>
             )}
 
-            {/* Withdraw Button */}
             {canWithdraw && (
               <Button
                 label="Başvuruyu Geri Çek"
@@ -373,7 +391,6 @@ const DetailsModal = ({
           </ScrollView>
         )}
 
-        {/* Withdraw Confirmation Modal */}
         <Modal
           visible={showWithdrawConfirm}
           onClose={() => setShowWithdrawConfirm(false)}
@@ -382,7 +399,7 @@ const DetailsModal = ({
         >
           <View style={styles.confirmModalContent}>
             <View style={styles.confirmIcon}>
-              <AlertCircle size={48} color={colors.warning[600]} />
+              <Ionicons name="alert-circle" size={48} color={colors.warning[600]} />
             </View>
             <Typography variant="body" style={styles.confirmText}>
               Bu başvuruyu geri çekmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
@@ -409,30 +426,17 @@ const DetailsModal = ({
   );
 };
 
+
 export const ApplicationsScreen = () => {
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [filters, setFilters] = useState<ApplicationFilters>({});
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
 
-  const { data: statuses = [] } = useQuery({
-    queryKey: ['lookup', 'application-statuses'],
-    queryFn: lookupService.getApplicationStatuses,
-  });
+  const query = useApplications({ status: filters.status });
 
-  const query = useApplications({ status: selectedStatus });
-
-  // İngilizce API değerini Türkçe'ye çevir (veritabanındaki değerlerle eşleşmeli)
-  const getStatusDisplayName = (apiValue: string): string => {
-    if (!apiValue) return 'Tüm Başvurular';
-    const mapping: Record<string, string> = {
-      'pending': 'Başvuruldu',
-      'reviewing': 'İnceleniyor',
-      'approved': 'Kabul Edildi',
-      'rejected': 'Red Edildi',
-      'withdrawn': 'Geri Çekildi',
-    };
-    return mapping[apiValue] || apiValue;
-  };
+  const totalCount = useMemo(() => {
+    return query.data?.pages?.[0]?.meta?.total ?? 0;
+  }, [query.data]);
 
   const applications = useMemo(() => {
     if (!query.data) return [];
@@ -440,89 +444,89 @@ export const ApplicationsScreen = () => {
     return pages.flatMap((page) => page.data);
   }, [query.data]);
 
-  const loadMore = () => {
+  const stats = useMemo(() => {
+    return {
+      pending: applications.filter((a) => a.status?.toLowerCase() === 'başvuruldu').length,
+      approved: applications.filter((a) => a.status?.toLowerCase() === 'kabul edildi').length,
+      reviewing: applications.filter((a) => a.status?.toLowerCase() === 'inceleniyor').length,
+    };
+  }, [applications]);
+
+  const loadMore = useCallback(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {
       query.fetchNextPage();
     }
-  };
+  }, [query]);
 
-  const openFilters = useCallback(() => {
-    setShowFilterSheet(true);
+  const handleApplyFilters = useCallback((newFilters: ApplicationFilters) => {
+    setFilters(newFilters);
   }, []);
 
-  const handleApplyFilters = useCallback(() => {
-    setShowFilterSheet(false);
-    query.refetch();
-  }, [query]);
-
   const handleResetFilters = useCallback(() => {
-    setSelectedStatus('');
-    setShowFilterSheet(false);
-    query.refetch();
-  }, [query]);
+    setFilters({});
+  }, []);
 
-  const hasActiveFilter = selectedStatus !== '';
+  const hasActiveFilter = Boolean(filters.status);
+
+  const getStatusDisplayName = (status?: string): string => {
+    if (!status) return 'Tüm Başvurular';
+    return STATUS_DISPLAY[status] || status;
+  };
 
   const renderContent = () => (
     <View style={styles.container}>
-      {/* Modern Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerIcon}>
-            <FileText size={28} color={colors.success[600]} />
+            <Ionicons name="checkmark-done-outline" size={28} color={colors.success[600]} />
           </View>
           <View style={styles.headerText}>
             <Typography variant="h2" style={styles.headerTitle}>
               Başvurularım
             </Typography>
             <Typography variant="caption" style={styles.headerSubtitle}>
-              {applications.length} başvuru takip ediliyor
+              {totalCount} başvuru bulundu
             </Typography>
           </View>
         </View>
         {hasActiveFilter && (
-          <TouchableOpacity 
-            style={styles.clearFilterButton}
-            onPress={handleResetFilters}
-          >
-            <X size={16} color={colors.error[600]} />
+          <TouchableOpacity style={styles.clearFilterButton} onPress={handleResetFilters}>
+            <Ionicons name="close" size={16} color={colors.error[600]} />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Stats Cards - Using StatCard Component */}
       <View style={styles.statsContainer}>
         <StatCard
-          icon={<Clock size={18} color={colors.warning[700]} />}
+          icon={<Ionicons name="time" size={18} color={colors.warning[700]} />}
           label="Beklemede"
-          value={applications.filter(a => a.status?.toLowerCase() === 'başvuruldu').length}
+          value={stats.pending}
           color="warning"
         />
         <StatCard
-          icon={<CheckCircle size={18} color={colors.success[700]} />}
-          label="Kabul Edilen"
-          value={applications.filter(a => a.status?.toLowerCase() === 'kabul edildi').length}
+          icon={<Ionicons name="checkmark-circle" size={18} color={colors.success[700]} />}
+          label="Kabul"
+          value={stats.approved}
           color="success"
         />
         <StatCard
-          icon={<Eye size={18} color={colors.primary[700]} />}
-          label="İncelenen"
-          value={applications.filter(a => a.status?.toLowerCase() === 'inceleniyor').length}
+          icon={<Ionicons name="eye" size={18} color={colors.primary[700]} />}
+          label="İnceleme"
+          value={stats.reviewing}
           color="primary"
         />
       </View>
 
-      {/* Filter Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.filterButton, hasActiveFilter && styles.filterButtonActive]}
-        onPress={openFilters}
+        onPress={() => setShowFilterSheet(true)}
       >
-        <Filter size={20} color={hasActiveFilter ? colors.background.primary : colors.primary[600]} />
-        <Typography 
-          variant="body" 
+        <Ionicons name="filter" size={20} color={hasActiveFilter ? colors.background.primary : colors.primary[600]} />
+        <Typography
+          variant="body"
           style={hasActiveFilter ? styles.filterButtonTextActive : styles.filterButtonText}
         >
-          {getStatusDisplayName(selectedStatus)}
+          {getStatusDisplayName(filters.status)}
         </Typography>
         {hasActiveFilter && (
           <View style={styles.filterBadge}>
@@ -560,35 +564,43 @@ export const ApplicationsScreen = () => {
           onEndReachedThreshold={0.5}
           ListFooterComponent={
             query.isFetchingNextPage ? (
-              <ActivityIndicator style={styles.listLoader} color={colors.primary[600]} />
+              <View style={styles.listFooter}>
+                <ActivityIndicator size="small" color={colors.primary[600]} />
+                <Typography variant="caption" style={styles.footerText}>
+                  Daha fazla başvuru yükleniyor...
+                </Typography>
+              </View>
+            ) : applications.length > 0 && !query.hasNextPage ? (
+              <View style={styles.listFooter}>
+                <Typography variant="caption" style={styles.footerText}>
+                  Tüm başvurular yüklendi ({applications.length}/{totalCount})
+                </Typography>
+              </View>
             ) : null
           }
           ListEmptyComponent={
-          !query.isLoading && !query.isError ? (
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}>
-                <FileText size={64} color={colors.neutral[300]} />
+            !query.isLoading && !query.isError ? (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIcon}>
+                  <Ionicons name="document-text" size={64} color={colors.neutral[300]} />
+                </View>
+                <Typography variant="h3" style={styles.emptyTitle}>
+                  {hasActiveFilter ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
+                </Typography>
+                <Typography variant="body" style={styles.emptyText}>
+                  {hasActiveFilter
+                    ? 'Bu durumda başvuru bulunmuyor'
+                    : 'Yeni ilanlara başvurarak kariyer yolculuğuna başla'}
+                </Typography>
+                {hasActiveFilter && (
+                  <TouchableOpacity style={styles.emptyButton} onPress={handleResetFilters}>
+                    <Typography variant="body" style={styles.emptyButtonText}>
+                      Tüm Başvuruları Göster
+                    </Typography>
+                  </TouchableOpacity>
+                )}
               </View>
-              <Typography variant="h3" style={styles.emptyTitle}>
-                {hasActiveFilter ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
-              </Typography>
-              <Typography variant="body" style={styles.emptyText}>
-                {hasActiveFilter 
-                  ? 'Bu durumda başvuru bulunmuyor'
-                  : 'Yeni ilanlara başvurarak kariyer yolculuğuna başla'}
-              </Typography>
-              {hasActiveFilter && (
-                <TouchableOpacity 
-                  style={styles.emptyButton}
-                  onPress={handleResetFilters}
-                >
-                  <Typography variant="body" style={styles.emptyButtonText}>
-                    Tüm Başvuruları Göster
-                  </Typography>
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : null
+            ) : null
           }
           contentContainerStyle={styles.listContent}
         />
@@ -601,6 +613,9 @@ export const ApplicationsScreen = () => {
       />
 
       <ApplicationFilterSheet
+        visible={showFilterSheet}
+        onClose={() => setShowFilterSheet(false)}
+        filters={filters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
       />
@@ -608,16 +623,17 @@ export const ApplicationsScreen = () => {
   );
 
   return (
-    <Screen 
-      scrollable={false} 
+    <Screen
+      scrollable={false}
       loading={query.isLoading}
-      error={query.isError ? (new Error('Başvurular yüklenemedi')) : null}
+      error={query.isError ? new Error('Başvurular yüklenemedi') : null}
       onRetry={() => query.refetch()}
     >
       {renderContent()}
     </Screen>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -687,7 +703,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.primary[200],
-    position: 'relative',
   },
   filterButtonActive: {
     backgroundColor: colors.primary[600],
@@ -699,16 +714,99 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterButtonTextActive: {
+    flex: 1,
     color: colors.background.primary,
+    fontWeight: '600',
+  },
+  filterBadge: {
+    backgroundColor: colors.error[600],
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  filterBadgeText: {
+    color: colors.background.primary,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  skeletonContainer: {
+    paddingHorizontal: spacing.lg,
+    gap: spacing.md,
+  },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing['4xl'],
+  },
+  listFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+  },
+  footerText: {
+    color: colors.text.secondary,
+  },
+  emptyState: {
+    padding: spacing['3xl'],
+    alignItems: 'center',
+  },
+  emptyIcon: {
+    marginBottom: spacing.lg,
+  },
+  emptyTitle: {
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+    color: colors.text.primary,
+  },
+  emptyText: {
+    color: colors.text.secondary,
+    textAlign: 'center',
+    fontSize: 14,
+    marginBottom: spacing.lg,
+  },
+  emptyButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.primary[600],
+    borderRadius: 24,
+  },
+  emptyButtonText: {
+    color: colors.background.primary,
+    fontWeight: '600',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: colors.background.secondary,
+  },
+  modalLoader: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  modalLoaderText: {
+    color: colors.text.secondary,
+    marginTop: spacing.sm,
+  },
+  modalContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing['4xl'],
+  },
+  backButtonContainer: {
+    marginBottom: spacing.md,
+  },
+  modalHeaderInline: {
+    marginBottom: spacing.lg,
   },
   modalHeaderTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: colors.text.primary,
-  },
-  modalLoaderText: {
-    color: colors.text.secondary,
-    marginTop: spacing.sm,
   },
   errorIcon: {
     marginBottom: spacing.md,
@@ -749,6 +847,11 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     fontSize: 14,
   },
+  cityText: {
+    color: colors.text.secondary,
+    fontSize: 12,
+    marginTop: spacing.xs,
+  },
   modalDivider: {
     height: 1,
     backgroundColor: colors.neutral[100],
@@ -771,6 +874,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  jobDetailsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+  },
+  jobDetailItem: {
+    flex: 1,
+    minWidth: '45%',
+  },
+  subspecialtyText: {
+    color: colors.primary[600],
+    fontSize: 11,
+    marginTop: 2,
+  },
   section: {
     marginTop: spacing.xl,
   },
@@ -788,36 +905,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  sectionTitle: {
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
   coverLetterText: {
     color: colors.text.primary,
     lineHeight: 22,
-  },
-  notesCard: {
-    backgroundColor: colors.warning[50],
-    borderColor: colors.warning[200],
-  },
-  notesText: {
-    color: colors.text.primary,
-    lineHeight: 22,
-  },
-  cityText: {
-    color: colors.text.secondary,
-    fontSize: 12,
-    marginTop: spacing.xs,
-  },
-  jobDetailsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  jobDetailItem: {
-    flex: 1,
-    minWidth: '45%',
-  },
-  subspecialtyText: {
-    color: colors.primary[600],
-    fontSize: 11,
-    marginTop: 2,
   },
   hospitalAboutText: {
     color: colors.text.primary,
@@ -834,123 +928,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     flex: 1,
   },
-  filterBadge: {
-    backgroundColor: colors.error[600],
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
+  notesCard: {
+    backgroundColor: colors.warning[50],
+    borderColor: colors.warning[200],
   },
-  filterBadgeText: {
-    color: colors.background.primary,
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  loader: {
-    paddingVertical: spacing['5xl'],
-    alignItems: 'center',
-  },
-  listLoader: {
-    marginVertical: spacing.lg,
-  },
-  listContent: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing['4xl'],
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.background.secondary,
-  },
-  modalClose: {
-    alignSelf: 'flex-end',
-    margin: spacing.lg,
-  },
-  modalLoader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-  },
-  modalContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing['3xl'],
-    gap: spacing.md,
-  },
-  backButtonContainer: {
-    marginBottom: spacing.md,
-  },
-  modalHeaderInline: {
-    marginBottom: spacing.lg,
-  },
-  modalSubtitle: {
-    color: colors.text.secondary,
-  },
-  modalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: spacing.sm,
-  },
-  sectionTitle: {
-    marginTop: spacing.lg,
+  notesText: {
+    color: colors.text.primary,
+    lineHeight: 22,
   },
   withdrawButton: {
-    marginTop: spacing.lg,
-  },
-  emptyState: {
-    padding: spacing['3xl'],
-    alignItems: 'center',
-  },
-  emptyIcon: {
-    marginBottom: spacing.lg,
-  },
-  emptyTitle: {
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-    color: colors.text.primary,
-  },
-  emptyText: {
-    color: colors.text.secondary,
-    textAlign: 'center',
-    fontSize: 14,
-    marginBottom: spacing.lg,
-  },
-  emptyButton: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.primary[600],
-    borderRadius: 24,
-  },
-  emptyButtonText: {
-    color: colors.background.primary,
-    fontWeight: '600',
-  },
-  skeletonContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    gap: spacing.md,
+    marginTop: spacing.xl,
   },
   confirmModalContent: {
     alignItems: 'center',
-    gap: spacing.lg,
+    padding: spacing.lg,
   },
   confirmIcon: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   confirmText: {
     textAlign: 'center',
     color: colors.text.secondary,
-    lineHeight: 22,
+    marginBottom: spacing.xl,
   },
   confirmActions: {
     flexDirection: 'row',
     gap: spacing.md,
     width: '100%',
-    marginTop: spacing.md,
   },
   confirmButton: {
     flex: 1,

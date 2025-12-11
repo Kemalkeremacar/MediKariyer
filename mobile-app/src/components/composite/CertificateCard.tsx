@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Award, Calendar, ExternalLink } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
@@ -35,7 +35,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
       <Card variant="outlined" padding="lg" style={styles.card}>
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <Award size={20} color={colors.warning[600]} />
+            <Ionicons name="ribbon" size={20} color={colors.warning[600]} />
           </View>
           <View style={styles.content}>
             <Typography variant="h4" style={styles.name}>
@@ -52,7 +52,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
           </View>
           {(credentialUrl || onViewCredential) && (
             <IconButton
-              icon={<ExternalLink size={18} color={colors.primary[600]} />}
+              icon={<Ionicons name="open" size={18} color={colors.primary[600]} />}
               onPress={onViewCredential || (() => {})}
               size="sm"
               variant="ghost"
@@ -63,7 +63,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
         <View style={styles.footer}>
           <Chip
             label={`Verildi: ${issueDate}`}
-            icon={<Calendar size={12} color={colors.neutral[600]} />}
+            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
             variant="soft"
             color="neutral"
             size="sm"

@@ -18,7 +18,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { Camera, Image as ImageIcon, User, Mail, Lock, Stethoscope, ChevronRight } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { AuthStackParamList } from '@/navigation/types';
 import { ScreenContainer } from '@/components/layout/ScreenContainer';
 import { Card } from '@/components/ui/Card';
@@ -271,7 +271,7 @@ export const RegisterScreen = () => {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Stethoscope size={40} color={colors.primary[600]} />
+              <Ionicons name="medical" size={40} color={colors.primary[600]} />
             </View>
             <Typography variant="heading" style={styles.title}>
               MediKariyer'e Hoş Geldin
@@ -460,12 +460,12 @@ export const RegisterScreen = () => {
                         </View>
                       )}
                       <View style={styles.photoEditBadge}>
-                        <Camera size={16} color={colors.background.primary} />
+                        <Ionicons name="camera" size={16} color={colors.background.primary} />
                       </View>
                     </View>
                   ) : (
                     <View style={styles.photoPlaceholder}>
-                      <User size={48} color={colors.neutral[400]} />
+                      <Ionicons name="person" size={48} color={colors.neutral[400]} />
                       <Text style={styles.photoPlaceholderText}>Fotoğraf Ekle</Text>
                       <Text style={styles.photoPlaceholderHint}>Kamera veya galeriden seç</Text>
                     </View>

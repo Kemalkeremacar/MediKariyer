@@ -32,11 +32,16 @@ const { catchAsync } = require('../../utils/errorHandler');
 const mobileJobService = require('../../services/mobile/mobileJobService');
 
 const listJobs = catchAsync(async (req, res) => {
-  const { page, limit, city_id, specialty_id, keyword } = req.query;
+  const { page, limit, city_id, specialty_id, keyword, search, employment_type } = req.query;
   const result = await mobileJobService.listJobs(req.user.id, {
     page,
     limit,
-    filters: { city_id, specialty_id, keyword }
+    filters: { 
+      city_id, 
+      specialty_id, 
+      keyword: keyword || search, // search parametresini de destekle
+      employment_type 
+    }
   });
 
   // sendPaginated kullanarak standart pagination response formatı

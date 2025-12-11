@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
-import { X } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { colors, spacing } from '@/theme';
 
@@ -57,7 +57,7 @@ export const SkillChip: React.FC<SkillChipProps> = ({
           onPress={onRemove}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <X size={14} color={colors.neutral[500]} />
+          <Ionicons name="close" size={14} color={colors.neutral[500]} />
         </TouchableOpacity>
       )}
     </Wrapper>

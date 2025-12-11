@@ -25,7 +25,7 @@ import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { useBiometricLogin } from '@/features/auth/hooks/useBiometricLogin';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { LoadingSpinner } from '@/components/feedback/LoadingSpinner';
-import { Fingerprint, Info, Shield, CheckCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 
 export const BiometricSettingsScreen = () => {
@@ -89,7 +89,7 @@ export const BiometricSettingsScreen = () => {
     return (
       <ScreenContainer>
         <View style={styles.emptyContainer}>
-          <Fingerprint size={64} color={colors.neutral[400]} strokeWidth={1.5} />
+          <Ionicons name="finger-print" size={64} color={colors.neutral[400]} />
           <Typography variant="h2" style={styles.emptyTitle}>
             Biyometrik Kimlik Doğrulama Kullanılamıyor
           </Typography>
@@ -124,7 +124,7 @@ export const BiometricSettingsScreen = () => {
             <Card variant="filled" padding="lg" style={styles.methodsCard}>
               {biometricTypes.map((type, index) => (
                 <View key={index} style={styles.methodRow}>
-                  <Fingerprint size={20} color={colors.primary[600]} />
+                  <Ionicons name="finger-print" size={20} color={colors.primary[600]} />
                   <Typography variant="body" style={styles.methodText}>
                     {type}
                   </Typography>
@@ -174,7 +174,7 @@ export const BiometricSettingsScreen = () => {
           {/* Info Card */}
           <Card variant="filled" padding="lg" style={styles.infoCard}>
             <View style={styles.infoHeader}>
-              <Info size={20} color={colors.primary[600]} />
+              <Ionicons name="information-circle" size={20} color={colors.primary[600]} />
               <Typography variant="h4" style={styles.infoTitle}>
                 Bilgi
               </Typography>

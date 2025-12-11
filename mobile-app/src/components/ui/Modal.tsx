@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 import { IconButton } from './IconButton';
@@ -66,7 +66,7 @@ export const Modal: React.FC<ModalProps> = ({
               )}
               {showCloseButton && (
                 <IconButton
-                  icon={<X size={20} color={colors.neutral[600]} />}
+                  icon={<Ionicons name="close" size={20} color={colors.neutral[600]} />}
                   onPress={onClose}
                   size="sm"
                   variant="ghost"

@@ -5,11 +5,11 @@ import { JobsStackNavigator } from './JobsStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { ApplicationsScreen } from '@/features/applications/screens/ApplicationsScreen';
-import { Home, Briefcase, FileText, Settings } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 import type { AppTabParamList } from './types';
 
-const AnimatedIcon = ({ Icon, focused }: { Icon: any; focused: boolean }) => {
+const AnimatedIcon = ({ iconName, focused }: { iconName: keyof typeof Ionicons.glyphMap; focused: boolean }) => {
   const scale = React.useRef(new Animated.Value(1)).current;
 
   React.useEffect(() => {
@@ -27,10 +27,10 @@ const AnimatedIcon = ({ Icon, focused }: { Icon: any; focused: boolean }) => {
         transform: [{ scale }],
       }}
     >
-      <Icon
+      <Ionicons
+        name={iconName}
         size={24}
         color={focused ? colors.primary[600] : colors.neutral[500]}
-        strokeWidth={focused ? 2.5 : 2}
       />
     </Animated.View>
   );
@@ -97,7 +97,7 @@ export const TabNavigator = () => {
       options={{
         tabBarLabel: 'Anasayfa',
         tabBarIcon: ({ focused }) => (
-          <AnimatedIcon Icon={Home} focused={focused} />
+          <AnimatedIcon iconName={focused ? "person-circle" : "person-circle-outline"} focused={focused} />
         ),
       }}
       listeners={({ navigation }) => ({
@@ -112,7 +112,7 @@ export const TabNavigator = () => {
       options={{
         tabBarLabel: 'İlanlar',
         tabBarIcon: ({ focused }) => (
-          <AnimatedIcon Icon={Briefcase} focused={focused} />
+          <AnimatedIcon iconName={focused ? "briefcase" : "briefcase-outline"} focused={focused} />
         ),
       }}
       listeners={({ navigation }) => ({
@@ -127,7 +127,7 @@ export const TabNavigator = () => {
       options={{
         tabBarLabel: 'Başvurular',
         tabBarIcon: ({ focused }) => (
-          <AnimatedIcon Icon={FileText} focused={focused} />
+          <AnimatedIcon iconName={focused ? "checkmark-done" : "checkmark-done-outline"} focused={focused} />
         ),
       }}
     />
@@ -137,7 +137,7 @@ export const TabNavigator = () => {
       options={{
         tabBarLabel: 'Ayarlar',
         tabBarIcon: ({ focused }) => (
-          <AnimatedIcon Icon={Settings} focused={focused} />
+          <AnimatedIcon iconName={focused ? "settings" : "settings-outline"} focused={focused} />
         ),
       }}
       listeners={({ navigation }) => ({

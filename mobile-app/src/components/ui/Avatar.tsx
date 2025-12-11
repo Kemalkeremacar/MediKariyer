@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Image, StyleSheet, ViewStyle } from 'react-native';
-import { User } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 import { Typography } from './Typography';
 
@@ -58,7 +58,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             {initials}
           </Typography>
         ) : (
-          <User size={iconSize} color={colors.primary[600]} />
+          <Ionicons name="person" size={iconSize} color={colors.primary[600]} />
         )}
       </View>
       {verified && (

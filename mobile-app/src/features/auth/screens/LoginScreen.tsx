@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Stethoscope, Mail, Lock, ArrowRight, Fingerprint } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import { colors } from '@/theme/colors';
@@ -127,7 +127,7 @@ export const LoginScreen = () => {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Stethoscope size={48} color={colors.primary[600]} strokeWidth={2.5} />
+              <Ionicons name="medical" size={48} color={colors.primary[600]} />
             </View>
             <Typography variant="heading" style={styles.title}>
               Tekrar Hoş Geldin!
@@ -149,7 +149,7 @@ export const LoginScreen = () => {
                 render={({ field: { onChange, value } }) => (
                   <View style={styles.inputWrapper}>
                     <View style={styles.inputIcon}>
-                      <Mail size={20} color={colors.neutral[400]} />
+                      <Ionicons name="mail" size={20} color={colors.neutral[400]} />
                     </View>
                     <Input
                       autoCapitalize="none"
@@ -174,7 +174,7 @@ export const LoginScreen = () => {
                 render={({ field: { onChange, value } }) => (
                   <View style={styles.inputWrapper}>
                     <View style={styles.inputIcon}>
-                      <Lock size={20} color={colors.neutral[400]} />
+                      <Ionicons name="lock-closed" size={20} color={colors.neutral[400]} />
                     </View>
                     <Input
                       placeholder="••••••••"
@@ -221,7 +221,7 @@ export const LoginScreen = () => {
                   onPress={handleBiometricLogin}
                   disabled={loginWithBiometric.isPending}
                 >
-                  <Fingerprint size={24} color={colors.primary[600]} />
+                  <Ionicons name="finger-print" size={24} color={colors.primary[600]} />
                   <Typography variant="body" style={styles.biometricButtonText}>
                     {loginWithBiometric.isPending 
                       ? 'Doğrulanıyor...' 
@@ -261,7 +261,7 @@ export const LoginScreen = () => {
                   <Typography variant="body" style={styles.registerLinkText}>
                     Kayıt Ol
                   </Typography>
-                  <ArrowRight size={16} color={colors.primary[600]} />
+                  <Ionicons name="arrow-forward" size={16} color={colors.primary[600]} />
                 </View>
               </TouchableOpacity>
             </View>

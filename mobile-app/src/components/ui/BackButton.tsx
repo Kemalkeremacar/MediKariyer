@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronLeft } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 
 interface BackButtonProps {
@@ -37,7 +37,7 @@ export const BackButton: React.FC<BackButtonProps> = ({
       onPress={handlePress}
       activeOpacity={0.7}
     >
-      <ChevronLeft size={size} color={color} />
+      <Ionicons name="chevron-back" size={size} color={color} />
     </TouchableOpacity>
   );
 };

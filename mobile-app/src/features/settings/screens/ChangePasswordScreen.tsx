@@ -5,7 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -105,7 +105,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerIcon}>
-            <Lock size={32} color={colors.primary[600]} />
+            <Ionicons name="lock-closed" size={32} color={colors.primary[600]} />
           </View>
           <Typography variant="h2" style={styles.headerTitle}>
             Şifre Değiştir
@@ -118,7 +118,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         {/* Info Card */}
         <Card variant="outlined" padding="lg" style={styles.infoCard}>
           <View style={styles.infoHeader}>
-            <CheckCircle size={20} color={colors.primary[600]} />
+            <Ionicons name="checkmark-circle" size={20} color={colors.primary[600]} />
             <Typography variant="h4" style={styles.infoTitle}>
               Güçlü Şifre Kriterleri
             </Typography>
@@ -160,9 +160,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onPress={() => setShowCurrentPassword(!showCurrentPassword)}
               >
                 {showCurrentPassword ? (
-                  <EyeOff size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye-off" size={20} color={colors.text.secondary} />
                 ) : (
-                  <Eye size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye" size={20} color={colors.text.secondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -187,9 +187,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onPress={() => setShowNewPassword(!showNewPassword)}
               >
                 {showNewPassword ? (
-                  <EyeOff size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye-off" size={20} color={colors.text.secondary} />
                 ) : (
-                  <Eye size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye" size={20} color={colors.text.secondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -229,9 +229,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
-                  <EyeOff size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye-off" size={20} color={colors.text.secondary} />
                 ) : (
-                  <Eye size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye" size={20} color={colors.text.secondary} />
                 )}
               </TouchableOpacity>
             </View>

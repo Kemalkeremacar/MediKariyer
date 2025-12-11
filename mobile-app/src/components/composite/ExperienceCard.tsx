@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Briefcase, Calendar, MapPin } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
@@ -35,7 +35,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
       <Card variant="outlined" padding="lg" style={styles.card}>
         <View style={styles.header}>
           <View style={styles.iconContainer}>
-            <Briefcase size={20} color={colors.secondary[600]} />
+            <Ionicons name="briefcase" size={20} color={colors.secondary[600]} />
           </View>
           <View style={styles.content}>
             <Typography variant="h4" style={styles.title}>
@@ -59,7 +59,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
         <View style={styles.footer}>
           <Chip
             label={`${startDate} - ${current ? 'Devam Ediyor' : endDate}`}
-            icon={<Calendar size={12} color={colors.neutral[600]} />}
+            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
             variant="soft"
             color="neutral"
             size="sm"
@@ -67,7 +67,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           {location && (
             <Chip
               label={location}
-              icon={<MapPin size={12} color={colors.neutral[600]} />}
+              icon={<Ionicons name="location" size={12} color={colors.neutral[600]} />}
               variant="soft"
               color="neutral"
               size="sm"

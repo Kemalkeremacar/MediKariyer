@@ -63,7 +63,7 @@ export const useAuthInitialization = () => {
           }
           
           try {
-            const response = await apiClient.post('/auth/refresh-token', {
+            const response = await apiClient.post('/auth/refresh', {
               refreshToken,
             });
             const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;

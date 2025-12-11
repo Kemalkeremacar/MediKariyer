@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { CheckCircle, XCircle, AlertCircle, Info } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
@@ -14,10 +14,10 @@ export interface ToastProps {
 }
 
 const iconMap = {
-  success: CheckCircle,
-  error: XCircle,
-  warning: AlertCircle,
-  info: Info,
+  success: 'checkmark-circle' as const,
+  error: 'close-circle' as const,
+  warning: 'alert-circle' as const,
+  info: 'information-circle' as const,
 };
 
 const colorMap = {
@@ -42,7 +42,7 @@ export const Toast: React.FC<ToastProps> = ({
 }) => {
   const opacity = new Animated.Value(0);
   const translateY = new Animated.Value(-20);
-  const Icon = iconMap[type];
+  const iconName = iconMap[type];
 
   useEffect(() => {
     Animated.parallel([
@@ -89,7 +89,7 @@ export const Toast: React.FC<ToastProps> = ({
         },
       ]}
     >
-      <Icon size={20} color={colorMap[type]} />
+      <Ionicons name={iconName} size={20} color={colorMap[type]} />
       <Typography variant="body" style={{ ...styles.message, color: colorMap[type] }}>
         {message}
       </Typography>
