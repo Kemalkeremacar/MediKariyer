@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { jobService } from '@/api/services/job.service';
@@ -128,30 +129,42 @@ export const JobsScreen = () => {
 
     return (
       <>
-        {/* Modern Header */}
-        <View style={styles.header}>
+        {/* Premium Gradient Header */}
+        <LinearGradient
+          colors={['#FFFFFF', '#F0FDF4', '#DCFCE7']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientHeader}
+        >
+          {/* Decorative Elements */}
+          <View style={styles.headerDecoration}>
+            <View style={styles.decorCircle1} />
+            <View style={styles.decorCircle2} />
+          </View>
+          
           <View style={styles.headerContent}>
-            <View style={styles.headerIcon}>
-              <Ionicons name="briefcase" size={28} color={colors.primary[600]} />
+            <View style={styles.headerIconWrapper}>
+              <LinearGradient
+                colors={['#10B981', '#059669']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.headerIconGradient}
+              >
+                <Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />
+              </LinearGradient>
             </View>
-            <View style={styles.headerText}>
-              <Typography variant="h2" style={styles.headerTitle}>
-                İş İlanları
+            <Typography variant="h1" style={styles.headerTitle}>
+              İş İlanları
+            </Typography>
+            <View style={styles.headerSubtitleContainer}>
+              <View style={styles.headerDot} />
+              <Typography variant="body" style={styles.headerSubtitle}>
+                {totalCount} aktif ilan
               </Typography>
-              <Typography variant="caption" style={styles.headerSubtitle}>
-                {totalCount} ilan bulundu
-              </Typography>
+              <View style={styles.headerDot} />
             </View>
           </View>
-          {hasActiveFilters && (
-            <TouchableOpacity
-              style={styles.clearFiltersButton}
-              onPress={handleResetFilters}
-            >
-              <Ionicons name="close" size={16} color={colors.error[600]} />
-            </TouchableOpacity>
-          )}
-        </View>
+        </LinearGradient>
 
         {/* Modern Search & Filter */}
         <View style={styles.searchContainer}>
@@ -326,6 +339,89 @@ export const JobsScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  // Premium Gradient Header - STANDARD SIZE
+  gradientHeader: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerDecoration: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  decorCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#10B981',
+    opacity: 0.15,
+    top: -40,
+    right: -20,
+  },
+  decorCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#34D399',
+    opacity: 0.1,
+    bottom: -20,
+    left: -10,
+  },
+  headerContent: {
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 1,
+  },
+  headerIconWrapper: {
+    marginBottom: spacing.sm,
+  },
+  headerIconGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#065F46',
+    marginBottom: spacing.xs,
+    letterSpacing: 0.5,
+  },
+  headerSubtitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  headerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#10B981',
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#059669',
+    lineHeight: 18,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -335,12 +431,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral[100],
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    flex: 1,
   },
   headerIcon: {
     width: 56,
@@ -352,24 +442,6 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    color: colors.text.secondary,
-    fontSize: 13,
-  },
-  clearFiltersButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.error[50],
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   searchContainer: {
     flexDirection: 'row',

@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -475,26 +476,42 @@ export const ApplicationsScreen = () => {
 
   const renderContent = () => (
     <View style={styles.container}>
-      <View style={styles.header}>
+      {/* Premium Gradient Header */}
+      <LinearGradient
+        colors={['#FFFBEB', '#FEF3C7', '#FDE68A']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientHeader}
+      >
+        {/* Decorative Elements */}
+        <View style={styles.headerDecoration}>
+          <View style={styles.decorCircle1} />
+          <View style={styles.decorCircle2} />
+        </View>
+        
         <View style={styles.headerContent}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="checkmark-done-outline" size={28} color={colors.success[600]} />
+          <View style={styles.headerIconWrapper}>
+            <LinearGradient
+              colors={['#F59E0B', '#D97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.headerIconGradient}
+            >
+              <Ionicons name="document-text-sharp" size={28} color="#FFFFFF" />
+            </LinearGradient>
           </View>
-          <View style={styles.headerText}>
-            <Typography variant="h2" style={styles.headerTitle}>
-              Başvurularım
+          <Typography variant="h1" style={styles.headerTitle}>
+            Başvurularım
+          </Typography>
+          <View style={styles.headerSubtitleContainer}>
+            <View style={styles.headerDot} />
+            <Typography variant="body" style={styles.headerSubtitle}>
+              {totalCount} başvuru
             </Typography>
-            <Typography variant="caption" style={styles.headerSubtitle}>
-              {totalCount} başvuru bulundu
-            </Typography>
+            <View style={styles.headerDot} />
           </View>
         </View>
-        {hasActiveFilter && (
-          <TouchableOpacity style={styles.clearFilterButton} onPress={handleResetFilters}>
-            <Ionicons name="close" size={16} color={colors.error[600]} />
-          </TouchableOpacity>
-        )}
-      </View>
+      </LinearGradient>
 
       <View style={styles.statsContainer}>
         <StatCard
@@ -639,6 +656,89 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  // Premium Gradient Header - STANDARD SIZE
+  gradientHeader: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerDecoration: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  decorCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#FCD34D',
+    opacity: 0.25,
+    top: -40,
+    right: -20,
+  },
+  decorCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FDE68A',
+    opacity: 0.2,
+    bottom: -20,
+    left: -10,
+  },
+  headerContent: {
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 1,
+  },
+  headerIconWrapper: {
+    marginBottom: spacing.sm,
+  },
+  headerIconGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#B45309',
+    marginBottom: spacing.xs,
+    letterSpacing: 0.5,
+  },
+  headerSubtitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  headerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#FBBF24',
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#F59E0B',
+    lineHeight: 18,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -648,12 +748,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral[100],
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    flex: 1,
   },
   headerIcon: {
     width: 56,
@@ -665,16 +759,6 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    color: colors.text.secondary,
-    fontSize: 13,
   },
   clearFilterButton: {
     width: 32,

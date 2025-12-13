@@ -1,6 +1,6 @@
 /**
  * @file SettingsScreen.tsx
- * @description Modern ve profesyonel ayarlar ekranı
+ * @description Kurumsal tarzda ayarlar ekranı - Sadece uygulama ayarları
  */
 
 import React, { useState } from 'react';
@@ -8,22 +8,19 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  TouchableOpacity,
   Alert,
-  RefreshControl,
   Switch,
-  Image,
+  Animated,
+  Pressable,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
-import { useAuthStore } from '@/store/authStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
-import { useProfile } from '@/features/profile/hooks/useProfile';
-import { getFullImageUrl } from '@/utils/imageUrl';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -35,6 +32,8 @@ interface SettingItemProps {
   badge?: string;
   badgeColor?: 'primary' | 'success' | 'warning' | 'error';
   rightElement?: React.ReactNode;
+  iconBgColor?: string;
+  iconColor?: string;
 }
 
 const SettingItem: React.FC<SettingItemProps> = ({
@@ -47,42 +46,69 @@ const SettingItem: React.FC<SettingItemProps> = ({
   badge,
   badgeColor = 'primary',
   rightElement,
-}) => (
-  <TouchableOpacity
-    style={styles.settingItem}
-    onPress={onPress}
-    disabled={!onPress}
-    activeOpacity={onPress ? 0.7 : 1}
-  >
-    <View style={styles.settingIconContainer}>{icon}</View>
-    <View style={styles.settingContent}>
-      <View style={styles.settingTitleRow}>
-        <Typography variant="body" style={styles.settingTitle}>
-          {title}
-        </Typography>
-        {badge && (
-          <Badge variant={badgeColor} size="sm">
-            {badge}
-          </Badge>
+  iconBgColor,
+}) => {
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    if (onPress) {
+      Animated.spring(scaleAnim, {
+        toValue: 0.98,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  const handlePressOut = () => {
+    if (onPress) {
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={!onPress}
+    >
+      <Animated.View style={[styles.settingItem, { transform: [{ scale: scaleAnim }] }]}>
+        <View style={[styles.settingIconContainer, iconBgColor && { backgroundColor: iconBgColor }]}>{icon}</View>
+        <View style={styles.settingContent}>
+          <View style={styles.settingTitleRow}>
+            <Typography variant="body" style={styles.settingTitle}>
+              {title}
+            </Typography>
+            {badge && (
+              <Badge variant={badgeColor} size="sm">
+                {badge}
+              </Badge>
+            )}
+          </View>
+          {subtitle && (
+            <Typography variant="caption" style={styles.settingSubtitle}>
+              {subtitle}
+            </Typography>
+          )}
+          {value && (
+            <Typography variant="caption" style={styles.settingValue}>
+              {value}
+            </Typography>
+          )}
+        </View>
+        {rightElement || (
+          showChevron &&
+          onPress && <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
         )}
-      </View>
-      {subtitle && (
-        <Typography variant="caption" style={styles.settingSubtitle}>
-          {subtitle}
-        </Typography>
-      )}
-      {value && (
-        <Typography variant="caption" style={styles.settingValue}>
-          {value}
-        </Typography>
-      )}
-    </View>
-    {rightElement || (
-      showChevron &&
-      onPress && <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
-    )}
-  </TouchableOpacity>
-);
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 interface SectionHeaderProps {
   title: string;
@@ -99,14 +125,14 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, icon }) => (
 );
 
 export const SettingsScreen = ({ navigation }: any) => {
-  const user = useAuthStore((state) => state.user);
   const logoutMutation = useLogout();
-  const { data: profile, isLoading, error, refetch, isRefetching } = useProfile();
 
-  // Local state for switches (demo purposes)
+  // Bildirim ayarları
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [applicationUpdates, setApplicationUpdates] = useState(true);
+  const [jobAlerts, setJobAlerts] = useState(true);
+  const [systemMessages, setSystemMessages] = useState(true);
 
   const handleLogout = () => {
     Alert.alert('Çıkış Yap', 'Çıkış yapmak istediğinize emin misiniz?', [
@@ -159,134 +185,67 @@ export const SettingsScreen = ({ navigation }: any) => {
   };
 
   const renderContent = () => {
-    if (!profile) return null;
-
     return (
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={colors.primary[600]}
-          />
-        }
       >
-        {/* Profile Header Card */}
-        <Card variant="elevated" padding="lg" style={styles.profileCard}>
-          <TouchableOpacity
-            style={styles.profileHeader}
-            onPress={() => navigation.navigate('Profile')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.profileAvatar}>
-              {profile.profile_photo ? (
-                <Image
-                  source={{
-                    uri: getFullImageUrl(profile.profile_photo) || undefined,
-                  }}
-                  style={styles.avatarImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <Ionicons name="person" size={32} color={colors.primary[600]} />
-              )}
-            </View>
-            <View style={styles.profileInfo}>
-              <Typography variant="h3" style={styles.profileName}>
-                {profile.title} {profile.first_name} {profile.last_name}
-              </Typography>
-              <Typography variant="caption" style={styles.profileEmail}>
-                {user?.email}
-              </Typography>
-              {profile.specialty_name && (
-                <View style={styles.profileBadge}>
-                  <Typography variant="caption" style={styles.profileSpecialty}>
-                    {profile.specialty_name}
-                  </Typography>
-                </View>
-              )}
-            </View>
-            <Ionicons name="chevron-forward" size={24} color={colors.neutral[400]} />
-          </TouchableOpacity>
-
-          {/* Account Status */}
-          <View style={styles.accountStatus}>
-            <View style={styles.statusItem}>
-              {user?.is_approved ? (
-                <Ionicons name="checkmark-circle" size={16} color={colors.success[600]} />
-              ) : (
-                <Ionicons name="time-outline" size={16} color={colors.warning[600]} />
-              )}
-              <Typography variant="caption" style={styles.statusText}>
-                {user?.is_approved ? 'Onaylı Hesap' : 'Onay Bekliyor'}
-              </Typography>
-            </View>
-            {profile.completion_percent !== undefined && (
-              <View style={styles.statusItem}>
-                <Typography variant="caption" style={styles.completionText}>
-                  Profil: %{profile.completion_percent}
-                </Typography>
-              </View>
-            )}
+        {/* Premium Gradient Header */}
+        <LinearGradient
+          colors={['#EEF2FF', '#E0E7FF', '#C7D2FE']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientHeader}
+        >
+          {/* Decorative Elements */}
+          <View style={styles.headerDecoration}>
+            <View style={styles.decorCircle1} />
+            <View style={styles.decorCircle2} />
           </View>
-        </Card>
-
-        {/* Hesap Ayarları */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Hesap Ayarları"
-            icon={<Ionicons name="person-circle-outline" size={18} color={colors.primary[600]} />}
-          />
-          <Card variant="outlined" style={styles.settingsCard}>
-            <SettingItem
-              icon={<Ionicons name="create-outline" size={22} color={colors.primary[600]} />}
-              title="Profili Düzenle"
-              subtitle="Kişisel bilgilerinizi güncelleyin"
-              onPress={() => navigation.navigate('ProfileEdit')}
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="mail-outline" size={22} color={colors.primary[600]} />}
-              title="E-posta"
-              value={user?.email}
-              showChevron={false}
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="call-outline" size={22} color={colors.primary[600]} />}
-              title="Telefon"
-              value={profile.phone || 'Belirtilmemiş'}
-              onPress={() => navigation.navigate('ProfileEdit')}
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="location-outline" size={22} color={colors.primary[600]} />}
-              title="Konum"
-              value={profile.residence_city_name || 'Belirtilmemiş'}
-              onPress={() => navigation.navigate('ProfileEdit')}
-            />
-          </Card>
-        </View>
+          
+          <View style={styles.headerContent}>
+            <View style={styles.headerIconWrapper}>
+              <LinearGradient
+                colors={[colors.primary[500], colors.primary[600]]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.headerIconGradient}
+              >
+                <Ionicons name="settings-sharp" size={28} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Typography variant="h1" style={styles.headerTitle}>
+              Ayarlar
+            </Typography>
+            <View style={styles.headerSubtitleContainer}>
+              <View style={styles.headerDot} />
+              <Typography variant="body" style={styles.headerSubtitle}>
+                Tercihler ve ayarlar
+              </Typography>
+              <View style={styles.headerDot} />
+            </View>
+          </View>
+        </LinearGradient>
 
         {/* Güvenlik */}
         <View style={styles.section}>
           <SectionHeader
             title="Güvenlik"
-            icon={<Ionicons name="shield-checkmark-outline" size={18} color={colors.primary[600]} />}
+            icon={<Ionicons name="shield-checkmark-outline" size={16} color={colors.primary[600]} />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="lock-closed-outline" size={22} color={colors.primary[600]} />}
+              icon={<Ionicons name="lock-closed" size={20} color={colors.primary[600]} />}
+              iconBgColor="#EEF2FF"
               title="Şifre Değiştir"
               subtitle="Hesap şifrenizi güncelleyin"
               onPress={() => navigation.navigate('ChangePassword')}
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="finger-print-outline" size={22} color={colors.primary[600]} />}
+              icon={<Ionicons name="finger-print" size={20} color={colors.primary[600]} />}
+              iconBgColor="#EEF2FF"
               title="Biyometrik Giriş"
               subtitle="Parmak izi veya yüz tanıma"
               onPress={() => navigation.navigate('BiometricSettings')}
@@ -294,17 +253,18 @@ export const SettingsScreen = ({ navigation }: any) => {
           </Card>
         </View>
 
-        {/* Bildirimler */}
+        {/* Bildirim Tercihleri */}
         <View style={styles.section}>
           <SectionHeader
-            title="Bildirimler"
-            icon={<Ionicons name="notifications-outline" size={18} color={colors.primary[600]} />}
+            title="Bildirim Tercihleri"
+            icon={<Ionicons name="notifications-outline" size={16} color="#8B5CF6" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="notifications-outline" size={22} color={colors.primary[600]} />}
-              title="Push Bildirimleri"
-              subtitle="Uygulama bildirimleri"
+              icon={<Ionicons name="notifications" size={20} color="#8B5CF6" />}
+              iconBgColor="#F3E8FF"
+              title="Anlık Bildirimler"
+              subtitle="Tarayıcı ve uygulama bildirimleri"
               showChevron={false}
               rightElement={
                 <Switch
@@ -312,7 +272,7 @@ export const SettingsScreen = ({ navigation }: any) => {
                   onValueChange={setPushNotifications}
                   trackColor={{
                     false: colors.neutral[300],
-                    true: colors.primary[600],
+                    true: '#8B5CF6',
                   }}
                   thumbColor={colors.background.primary}
                 />
@@ -320,9 +280,10 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="mail-outline" size={22} color={colors.primary[600]} />}
+              icon={<Ionicons name="mail" size={20} color="#8B5CF6" />}
+              iconBgColor="#F3E8FF"
               title="E-posta Bildirimleri"
-              subtitle="İş ilanları ve başvuru güncellemeleri"
+              subtitle="Önemli güncellemeler e-posta ile"
               showChevron={false}
               rightElement={
                 <Switch
@@ -330,7 +291,64 @@ export const SettingsScreen = ({ navigation }: any) => {
                   onValueChange={setEmailNotifications}
                   trackColor={{
                     false: colors.neutral[300],
-                    true: colors.primary[600],
+                    true: '#8B5CF6',
+                  }}
+                  thumbColor={colors.background.primary}
+                />
+              }
+            />
+            <View style={styles.divider} />
+            <SettingItem
+              icon={<Ionicons name="document-text" size={20} color="#8B5CF6" />}
+              iconBgColor="#F3E8FF"
+              title="Başvuru Güncellemeleri"
+              subtitle="Başvurularınızla ilgili bildirimler"
+              showChevron={false}
+              rightElement={
+                <Switch
+                  value={applicationUpdates}
+                  onValueChange={setApplicationUpdates}
+                  trackColor={{
+                    false: colors.neutral[300],
+                    true: '#8B5CF6',
+                  }}
+                  thumbColor={colors.background.primary}
+                />
+              }
+            />
+            <View style={styles.divider} />
+            <SettingItem
+              icon={<Ionicons name="briefcase" size={20} color="#8B5CF6" />}
+              iconBgColor="#F3E8FF"
+              title="İş İlanı Uyarıları"
+              subtitle="Yeni iş ilanları hakkında bildirim"
+              showChevron={false}
+              rightElement={
+                <Switch
+                  value={jobAlerts}
+                  onValueChange={setJobAlerts}
+                  trackColor={{
+                    false: colors.neutral[300],
+                    true: '#8B5CF6',
+                  }}
+                  thumbColor={colors.background.primary}
+                />
+              }
+            />
+            <View style={styles.divider} />
+            <SettingItem
+              icon={<Ionicons name="megaphone" size={20} color="#8B5CF6" />}
+              iconBgColor="#F3E8FF"
+              title="Sistem Mesajları"
+              subtitle="Önemli sistem duyuruları"
+              showChevron={false}
+              rightElement={
+                <Switch
+                  value={systemMessages}
+                  onValueChange={setSystemMessages}
+                  trackColor={{
+                    false: colors.neutral[300],
+                    true: '#8B5CF6',
                   }}
                   thumbColor={colors.background.primary}
                 />
@@ -339,37 +357,31 @@ export const SettingsScreen = ({ navigation }: any) => {
           </Card>
         </View>
 
-        {/* Görünüm */}
+        {/* Görünüm ve Dil */}
         <View style={styles.section}>
           <SectionHeader
-            title="Görünüm"
-            icon={<Ionicons name="color-palette-outline" size={18} color={colors.primary[600]} />}
+            title="Görünüm ve Dil"
+            icon={<Ionicons name="color-palette-outline" size={16} color="#EC4899" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="moon-outline" size={22} color={colors.primary[600]} />}
-              title="Karanlık Mod"
-              subtitle="Gece teması"
+              icon={<Ionicons name="contrast" size={20} color="#EC4899" />}
+              iconBgColor="#FCE7F3"
+              title="Tema"
+              subtitle="Açık, koyu veya sistem teması"
+              value="Açık Tema"
               badge="Yakında"
               badgeColor="warning"
-              showChevron={false}
-              rightElement={
-                <Switch
-                  value={darkMode}
-                  onValueChange={setDarkMode}
-                  disabled
-                  trackColor={{
-                    false: colors.neutral[300],
-                    true: colors.primary[600],
-                  }}
-                  thumbColor={colors.background.primary}
-                />
+              onPress={() =>
+                Alert.alert('Bilgi', 'Tema seçimi özelliği yakında eklenecek')
               }
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="language-outline" size={22} color={colors.primary[600]} />}
+              icon={<Ionicons name="language" size={20} color="#EC4899" />}
+              iconBgColor="#FCE7F3"
               title="Dil"
+              subtitle="Uygulama dili"
               value="Türkçe"
               badge="Yakında"
               badgeColor="warning"
@@ -380,42 +392,16 @@ export const SettingsScreen = ({ navigation }: any) => {
           </Card>
         </View>
 
-        {/* Destek ve Bilgi */}
+        {/* Hakkında ve Destek */}
         <View style={styles.section}>
           <SectionHeader
-            title="Destek ve Bilgi"
-            icon={<Ionicons name="help-circle-outline" size={18} color={colors.primary[600]} />}
+            title="Hakkında ve Destek"
+            icon={<Ionicons name="information-circle-outline" size={16} color="#06B6D4" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="star-outline" size={22} color={colors.warning[600]} />}
-              title="Uygulamayı Değerlendir"
-              subtitle="App Store'da puan verin"
-              onPress={() =>
-                Alert.alert('Bilgi', 'Değerlendirme özelliği yakında eklenecek')
-              }
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="chatbubble-outline" size={22} color={colors.primary[600]} />}
-              title="Geri Bildirim Gönder"
-              subtitle="Önerilerinizi paylaşın"
-              onPress={() =>
-                Alert.alert('Bilgi', 'Geri bildirim özelliği yakında eklenecek')
-              }
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="share-social-outline" size={22} color={colors.primary[600]} />}
-              title="Uygulamayı Paylaş"
-              subtitle="Arkadaşlarınızla paylaşın"
-              onPress={() =>
-                Alert.alert('Bilgi', 'Paylaşım özelliği yakında eklenecek')
-              }
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="help-buoy-outline" size={22} color={colors.primary[600]} />}
+              icon={<Ionicons name="help-buoy" size={20} color="#06B6D4" />}
+              iconBgColor="#CFFAFE"
               title="Yardım Merkezi"
               subtitle="SSS ve destek"
               onPress={() =>
@@ -424,7 +410,47 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="document-text-outline" size={22} color={colors.primary[600]} />}
+              icon={<Ionicons name="chatbubble-ellipses" size={20} color="#06B6D4" />}
+              iconBgColor="#CFFAFE"
+              title="Geri Bildirim"
+              subtitle="Önerilerinizi paylaşın"
+              onPress={() =>
+                Alert.alert('Bilgi', 'Geri bildirim özelliği yakında eklenecek')
+              }
+            />
+            <View style={styles.divider} />
+            <SettingItem
+              icon={<Ionicons name="star" size={20} color="#F59E0B" />}
+              iconBgColor="#FEF3C7"
+              title="Uygulamayı Değerlendir"
+              subtitle="App Store'da puan verin"
+              onPress={() =>
+                Alert.alert('Bilgi', 'Değerlendirme özelliği yakında eklenecek')
+              }
+            />
+            <View style={styles.divider} />
+            <SettingItem
+              icon={<Ionicons name="share-social" size={20} color="#06B6D4" />}
+              iconBgColor="#CFFAFE"
+              title="Uygulamayı Paylaş"
+              subtitle="Arkadaşlarınızla paylaşın"
+              onPress={() =>
+                Alert.alert('Bilgi', 'Paylaşım özelliği yakında eklenecek')
+              }
+            />
+          </Card>
+        </View>
+
+        {/* Yasal */}
+        <View style={styles.section}>
+          <SectionHeader
+            title="Yasal"
+            icon={<Ionicons name="document-text-outline" size={16} color="#64748B" />}
+          />
+          <Card variant="outlined" style={styles.settingsCard}>
+            <SettingItem
+              icon={<Ionicons name="shield-checkmark" size={20} color="#64748B" />}
+              iconBgColor="#F1F5F9"
               title="Gizlilik Politikası"
               subtitle="Veri koruma ve gizlilik"
               onPress={() =>
@@ -433,7 +459,8 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="shield-checkmark-outline" size={22} color={colors.primary[600]} />}
+              icon={<Ionicons name="document-text" size={20} color="#64748B" />}
+              iconBgColor="#F1F5F9"
               title="Kullanım Koşulları"
               subtitle="Hizmet şartları"
               onPress={() =>
@@ -442,8 +469,9 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="information-circle-outline" size={22} color={colors.primary[600]} />}
-              title="Hakkında"
+              icon={<Ionicons name="information-circle" size={20} color="#64748B" />}
+              iconBgColor="#F1F5F9"
+              title="Uygulama Bilgisi"
               value="Versiyon 1.0.0"
               onPress={() =>
                 Alert.alert(
@@ -455,15 +483,25 @@ export const SettingsScreen = ({ navigation }: any) => {
           </Card>
         </View>
 
-        {/* Tehlikeli İşlemler */}
+        {/* Hesap İşlemleri */}
         <View style={styles.section}>
           <SectionHeader
-            title="Hesap Yönetimi"
-            icon={<Ionicons name="warning-outline" size={18} color={colors.error[600]} />}
+            title="Hesap İşlemleri"
+            icon={<Ionicons name="warning-outline" size={16} color="#EF4444" />}
           />
-          <Card variant="outlined" style={styles.dangerCard}>
+          <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="trash-outline" size={22} color={colors.error[600]} />}
+              icon={<Ionicons name="log-out" size={20} color="#EF4444" />}
+              iconBgColor="#FEE2E2"
+              title="Çıkış Yap"
+              subtitle="Hesabınızdan çıkış yapın"
+              onPress={handleLogout}
+              showChevron={false}
+            />
+            <View style={styles.divider} />
+            <SettingItem
+              icon={<Ionicons name="trash" size={20} color="#EF4444" />}
+              iconBgColor="#FEE2E2"
               title="Hesabı Sil"
               subtitle="Hesabınızı kalıcı olarak silin"
               onPress={handleDeleteAccount}
@@ -471,19 +509,6 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
           </Card>
         </View>
-
-        {/* Çıkış Yap */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          disabled={logoutMutation.isPending}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="log-out-outline" size={22} color={colors.error[600]} />
-          <Typography variant="body" style={styles.logoutText}>
-            {logoutMutation.isPending ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
-          </Typography>
-        </TouchableOpacity>
 
         {/* Footer */}
         <View style={styles.footer}>
@@ -499,12 +524,7 @@ export const SettingsScreen = ({ navigation }: any) => {
   };
 
   return (
-    <Screen
-      loading={isLoading}
-      error={error as Error | null}
-      onRetry={refetch}
-      scrollable={false}
-    >
+    <Screen scrollable={false}>
       {renderContent()}
     </Screen>
   );
@@ -513,85 +533,93 @@ export const SettingsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: '#FAFBFC',
   },
   content: {
     paddingBottom: spacing['4xl'],
   },
 
-  // Profile Card
-  profileCard: {
-    margin: spacing.lg,
-    marginBottom: 0,
+  // Premium Gradient Header - STANDARD SIZE
+  gradientHeader: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  profileHeader: {
-    flexDirection: 'row',
+  headerDecoration: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  decorCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#6366F1',
+    opacity: 0.2,
+    top: -40,
+    right: -20,
+  },
+  decorCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#818CF8',
+    opacity: 0.15,
+    bottom: -20,
+    left: -10,
+  },
+  headerContent: {
     alignItems: 'center',
-    gap: spacing.md,
+    position: 'relative',
+    zIndex: 1,
   },
-  profileAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primary[50],
+  headerIconWrapper: {
+    marginBottom: spacing.sm,
+  },
+  headerIconGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: colors.primary[200],
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: 2,
-  },
-  profileEmail: {
-    color: colors.text.secondary,
-    fontSize: 13,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#3730A3',
     marginBottom: spacing.xs,
+    letterSpacing: 0.5,
   },
-  profileBadge: {
-    alignSelf: 'flex-start',
-  },
-  profileSpecialty: {
-    color: colors.primary[700],
-    fontSize: 12,
-    fontWeight: '600',
-    backgroundColor: colors.primary[50],
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  accountStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.neutral[100],
-  },
-  statusItem: {
+  headerSubtitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
   },
-  statusText: {
-    color: colors.text.secondary,
-    fontSize: 12,
+  headerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#6366F1',
   },
-  completionText: {
-    color: colors.primary[600],
-    fontSize: 12,
-    fontWeight: '600',
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#4F46E5',
+    lineHeight: 18,
+    textAlign: 'center',
+    fontWeight: '500',
   },
 
   // Section
@@ -604,6 +632,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
   sectionHeaderIcon: {
     width: 28,
@@ -614,27 +643,35 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sectionTitle: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '700',
-    color: colors.text.primary,
+    color: colors.primary[700],
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
 
   // Settings Card
   settingsCard: {
     padding: 0,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    shadowColor: colors.neutral[400],
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.lg,
     gap: spacing.md,
+    backgroundColor: 'transparent',
   },
   settingIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
@@ -656,55 +693,36 @@ const styles = StyleSheet.create({
   settingSubtitle: {
     fontSize: 12,
     color: colors.text.secondary,
-    marginTop: 2,
+    marginTop: 3,
+    lineHeight: 16,
   },
   settingValue: {
     fontSize: 13,
-    color: colors.text.tertiary,
-    marginTop: 2,
+    color: colors.primary[600],
+    marginTop: 3,
+    fontWeight: '500',
   },
   divider: {
     height: 1,
     backgroundColor: colors.neutral[100],
-    marginLeft: spacing.lg + 40 + spacing.md,
+    marginLeft: spacing.lg + 44 + spacing.md,
+    opacity: 0.5,
   },
 
-  // Danger Card
-  dangerCard: {
-    borderColor: colors.error[200],
-    backgroundColor: colors.error[50],
-    padding: 0,
-  },
 
-  // Logout Button
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    padding: spacing.lg,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-    backgroundColor: colors.error[50],
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.error[200],
-  },
-  logoutText: {
-    color: colors.error[600],
-    fontWeight: '600',
-    fontSize: 15,
-  },
 
   // Footer
   footer: {
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing['3xl'],
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
+    marginTop: spacing.xl,
   },
   footerText: {
     color: colors.text.tertiary,
-    fontSize: 11,
+    fontSize: 12,
     textAlign: 'center',
+    fontWeight: '500',
+    opacity: 0.7,
   },
 });
