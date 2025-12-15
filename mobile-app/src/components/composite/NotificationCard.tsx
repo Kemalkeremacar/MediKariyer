@@ -74,7 +74,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
           
           <View style={styles.textContainer}>
             <View style={styles.header}>
-              <Typography variant="h4" style={styles.title}>
+              <Typography variant="h3" style={styles.title}>
                 {title || 'Bildirim'}
               </Typography>
               {!read && <View style={styles.unreadDot} />}

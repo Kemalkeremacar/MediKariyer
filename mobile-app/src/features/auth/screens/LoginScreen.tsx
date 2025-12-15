@@ -1,22 +1,20 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
-import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { useTheme } from '@/contexts/ThemeContext';
 import type { AuthStackParamList } from '@/navigation/types';
-import { ScreenContainer } from '@/components/layout/ScreenContainer';
-import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
+import { GradientButton } from '@/components/ui/GradientButton';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { FormField } from '@/components/ui/FormField';
 import { useLogin } from '../hooks/useLogin';
 import { useBiometricLogin } from '../hooks/useBiometricLogin';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
@@ -33,6 +31,7 @@ export const LoginScreen = () => {
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showBiometric, setShowBiometric] = useState(false);
+  const { theme } = useTheme();
 
   const {
     control,
@@ -115,307 +114,239 @@ export const LoginScreen = () => {
   };
 
   return (
-    <ScreenContainer
-      scrollable={false}
-      contentContainerStyle={styles.screenContent}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.cardWrapper}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="medical" size={48} color={colors.primary[600]} />
-            </View>
-            <Typography variant="heading" style={styles.title}>
-              Tekrar Hoş Geldin!
-            </Typography>
-            <Typography variant="body" style={styles.headerSubtitle}>
-              Hesabına giriş yap ve kariyer fırsatlarını keşfet
-            </Typography>
+        {/* Header with Gradient - Daha Mavi Tonlama */}
+        <LinearGradient
+          colors={['#4A90E2', '#2E5C8A']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../../../assets/logo.jpg')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
           </View>
+          
+          {/* MediKariyer Yazısı */}
+          <Typography variant="h1" style={styles.brandName}>
+            MediKariyer
+          </Typography>
+        </LinearGradient>
 
-          <Card padding="2xl" shadow="lg" style={styles.formCard}>
+        {/* Content */}
+        <View style={styles.content}>
 
-            <FormField
-              label="E-posta Adresi"
-              error={errors.email?.message as string}
-            >
+          <Typography variant="body" style={styles.subtitle}>
+            Hesabına giriş yap ve kariyer fırsatlarını keşfet
+          </Typography>
+
+          {/* Form */}
+          <View style={styles.form}>
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                E-posta
+              </Typography>
               <Controller
                 control={control}
                 name="email"
                 render={({ field: { onChange, value } }) => (
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIcon}>
-                      <Ionicons name="mail" size={20} color={colors.neutral[400]} />
-                    </View>
-                    <Input
-                      autoCapitalize="none"
-                      keyboardType="email-address"
-                      placeholder="ornek@medikariyer.com"
-                      value={value}
-                      onChangeText={onChange}
-                      style={styles.inputWithIcon}
-                    />
-                  </View>
+                  <Input
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    placeholder="ornek@medikariyer.com"
+                    value={value}
+                    onChangeText={onChange}
+                    style={styles.input}
+                  />
                 )}
               />
-            </FormField>
-
-            <FormField
-              label="Şifre"
-              error={errors.password?.message as string}
-            >
-              <Controller
-                control={control}
-                name="password"
-                render={({ field: { onChange, value } }) => (
-                  <View style={styles.inputWrapper}>
-                    <View style={styles.inputIcon}>
-                      <Ionicons name="lock-closed" size={20} color={colors.neutral[400]} />
-                    </View>
-                    <Input
-                      placeholder="••••••••"
-                      secureTextEntry
-                      value={value}
-                      onChangeText={onChange}
-                      style={styles.inputWithIcon}
-                    />
-                  </View>
-                )}
-              />
-            </FormField>
-
-            <View style={styles.errorContainer}>
-              {serverError && (
-                <Typography variant="caption" style={styles.serverError}>
-                  {serverError}
+              {errors.email && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {errors.email.message}
                 </Typography>
               )}
             </View>
 
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Şifre
+              </Typography>
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, value } }) => (
+                  <Input
+                    placeholder="••••••••"
+                    secureTextEntry
+                    value={value}
+                    onChangeText={onChange}
+                    style={styles.input}
+                  />
+                )}
+              />
+              {errors.password && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {errors.password.message}
+                </Typography>
+              )}
+            </View>
+
+            {serverError && (
+              <Typography variant="caption" style={styles.serverError}>
+                {serverError}
+              </Typography>
+            )}
+
             <Button
+              variant="ghost"
+              onPress={() => Alert.alert('Şifre Sıfırlama', 'Bu özellik yakında eklenecek.')}
+              style={styles.forgotButton}
+            >
+              <Typography variant="bodySmall" style={styles.forgotText}>
+                Şifreni mi unuttun?
+              </Typography>
+            </Button>
+
+            <GradientButton
               label={loginMutation.isPending ? "Giriş Yapılıyor..." : "Giriş Yap"}
               onPress={handleSubmit(onSubmit)}
               loading={loginMutation.isPending}
               fullWidth
               size="lg"
-              style={styles.buttonSpacing}
+              colors={['#4A90E2', '#2E5C8A']}
+              style={styles.loginButton}
             />
 
-            {/* Biometric Login Button */}
-            {showBiometric && (
-              <>
-                <View style={styles.divider}>
-                  <View style={styles.dividerLine} />
-                  <Typography variant="caption" style={styles.dividerText}>
-                    veya
-                  </Typography>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                <TouchableOpacity
-                  style={styles.biometricButton}
-                  onPress={handleBiometricLogin}
-                  disabled={loginWithBiometric.isPending}
-                >
-                  <Ionicons name="finger-print" size={24} color={colors.primary[600]} />
-                  <Typography variant="body" style={styles.biometricButtonText}>
-                    {loginWithBiometric.isPending 
-                      ? 'Doğrulanıyor...' 
-                      : `${biometricTypes[0] || 'Biyometrik'} ile Giriş Yap`
-                    }
-                  </Typography>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {/* Forgot Password */}
-            <TouchableOpacity 
-              style={styles.forgotPassword}
-              onPress={() => Alert.alert('Şifre Sıfırlama', 'Bu özellik yakında eklenecek.')}
-            >
-              <Typography variant="body" style={styles.forgotPasswordText}>
-                Şifreni mi unuttun?
-              </Typography>
-            </TouchableOpacity>
-
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Typography variant="caption" style={styles.dividerText}>
-                veya
-              </Typography>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Register Prompt */}
-            <View style={styles.registerPrompt}>
-              <Typography variant="body" style={styles.registerPromptText}>
-                Hesabın yok mu?
+            {/* Register Link */}
+            <View style={styles.registerSection}>
+              <Typography variant="bodySmall" style={styles.registerText}>
+                Hesabın yok mu?{' '}
               </Typography>
               <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <View style={styles.registerLink}>
-                  <Typography variant="body" style={styles.registerLinkText}>
-                    Kayıt Ol
-                  </Typography>
-                  <Ionicons name="arrow-forward" size={16} color={colors.primary[600]} />
-                </View>
+                <Typography variant="bodySmall" style={styles.registerLink}>
+                  Kayıt Ol
+                </Typography>
               </TouchableOpacity>
             </View>
-          </Card>
+          </View>
         </View>
-      </KeyboardAvoidingView>
-    </ScreenContainer>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  screenContent: {
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FE',
+  },
+  scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing['2xl'],
-  },
-  flex: {
-    flex: 1,
-  },
-  cardWrapper: {
-    flex: 1,
-    justifyContent: 'center',
   },
   header: {
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    marginBottom: spacing['3xl'],
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   logoContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: colors.primary[50],
+    width: 80,
+    height: 80,
+    backgroundColor: '#ffffff',
+    borderRadius: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
-    shadowColor: colors.primary[600],
+    marginBottom: 16,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
     elevation: 8,
+    overflow: 'hidden',
   },
-  title: {
+  logo: {
+    width: 70,
+    height: 70,
+  },
+  brandName: {
+    color: '#ffffff',
     fontSize: 32,
     fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
-  headerSubtitle: {
-    color: colors.text.secondary,
-    textAlign: 'center',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  formCard: {
-    marginBottom: spacing['2xl'],
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 40,
   },
   subtitle: {
-    marginTop: spacing.xs,
-    marginBottom: spacing['2xl'],
+    textAlign: 'center',
+    color: '#6B7280',
+    marginBottom: 40,
   },
-  errorContainer: {
-    minHeight: 40,
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
+  form: {
+    flex: 1,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    color: '#6B7280',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#ffffff',
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    borderRadius: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 12,
+  },
+  errorText: {
+    color: '#DC2626',
+    marginTop: 4,
   },
   serverError: {
-    color: colors.error[600],
+    color: '#DC2626',
     textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '500',
+    marginBottom: 16,
   },
-  buttonSpacing: {
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
+  forgotButton: {
+    alignSelf: 'flex-end',
+    marginBottom: 32,
   },
-  forgotPassword: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
+  forgotText: {
+    color: '#4A90E2',
   },
-  forgotPasswordText: {
-    color: colors.primary[600],
-    fontSize: 14,
-    fontWeight: '600',
+  loginButton: {
+    marginBottom: 24,
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.neutral[200],
-  },
-  dividerText: {
-    marginHorizontal: spacing.md,
-    color: colors.text.secondary,
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  registerPrompt: {
+  registerSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.primary[50],
-    borderRadius: 12,
-    marginTop: spacing.sm,
+    paddingBottom: 40,
   },
-  registerPromptText: {
-    color: colors.text.secondary,
-    fontSize: 14,
+  registerText: {
+    color: '#6B7280',
   },
   registerLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  registerLinkText: {
-    color: colors.primary[600],
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  inputWrapper: {
-    position: 'relative',
-  },
-  inputIcon: {
-    position: 'absolute',
-    left: 12,
-    top: 12,
-    zIndex: 1,
-  },
-  inputWithIcon: {
-    paddingLeft: 44,
-  },
-  biometricButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.primary[50],
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.primary[200],
-    marginBottom: spacing.md,
-  },
-  biometricButtonText: {
-    color: colors.primary[600],
-    fontSize: 15,
+    color: '#4A90E2',
     fontWeight: '600',
   },
 });

@@ -7,10 +7,10 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 
-export interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+export interface GradientButtonProps {
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
@@ -20,10 +20,10 @@ export interface ButtonProps {
   children?: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  colors?: readonly [string, string, ...string[]];
 }
 
-export const Button: React.FC<ButtonProps> = ({
-  variant = 'primary',
+export const GradientButton: React.FC<GradientButtonProps> = ({
   size = 'md',
   loading = false,
   disabled = false,
@@ -33,6 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   style,
   textStyle,
+  colors = ['#667eea', '#764ba2'], // Default gradient from design spec
 }) => {
   const { theme } = useTheme();
   const isDisabled = disabled || loading;
@@ -45,7 +46,6 @@ export const Button: React.FC<ButtonProps> = ({
     <TouchableOpacity
       style={[
         styles.base,
-        styles[variant],
         styles[`size_${size}`],
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
@@ -55,50 +55,46 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={isDisabled}
       activeOpacity={0.7}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'outline' || variant === 'ghost' ? theme.colors.primary[600] : theme.colors.text.inverse}
-        />
-      ) : (
-        <Text
-          style={[
-            styles.text,
-            styles[`text_${variant}`],
-            styles[`textSize_${size}`],
-            isDisabled && styles.textDisabled,
-            textStyle,
-          ]}
-        >
-          {content}
-        </Text>
-      )}
+      <LinearGradient
+        colors={isDisabled ? ['#d1d5db', '#d1d5db'] : colors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.gradient,
+          styles[`size_${size}`],
+        ]}
+      >
+        {loading ? (
+          <ActivityIndicator color={theme.colors.text.inverse} />
+        ) : (
+          <Text
+            style={[
+              styles.text,
+              styles[`textSize_${size}`],
+              isDisabled && styles.textDisabled,
+              textStyle,
+            ]}
+          >
+            {content}
+          </Text>
+        )}
+      </LinearGradient>
     </TouchableOpacity>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   base: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     borderRadius: theme.borderRadius.lg, // 16px
   },
   fullWidth: {
     width: '100%',
   },
-  primary: {
-    backgroundColor: theme.colors.primary[500], // #4F46E5
-  },
-  secondary: {
-    backgroundColor: theme.colors.secondary[500], // #764ba2
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: theme.colors.primary[500],
-  },
-  ghost: {
-    backgroundColor: 'transparent',
+  gradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: theme.borderRadius.lg,
   },
   disabled: {
     opacity: 0.5,
@@ -121,18 +117,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   text: {
     fontFamily: theme.typography.fontFamily.default,
     fontWeight: theme.typography.fontWeight.semibold, // 600
-  },
-  text_primary: {
     color: theme.colors.text.inverse,
-  },
-  text_secondary: {
-    color: theme.colors.text.inverse,
-  },
-  text_outline: {
-    color: theme.colors.primary[500],
-  },
-  text_ghost: {
-    color: theme.colors.primary[500],
   },
   textDisabled: {
     color: theme.colors.text.disabled,

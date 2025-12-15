@@ -21,7 +21,6 @@ export const EducationScreen = () => {
 
   const handleAddEducation = () => {
     // TODO: Navigate to add education screen or open modal
-    console.log('Add education');
   };
 
   return (

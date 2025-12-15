@@ -5,28 +5,28 @@
 
 export const lightColors = {
   primary: {
-    50: '#eff6ff',
-    100: '#dbeafe',
-    200: '#bfdbfe',
-    300: '#93c5fd',
-    400: '#60a5fa',
-    500: '#3b82f6',
-    600: '#1D6FFF',
-    700: '#1d4ed8',
-    800: '#1e40af',
-    900: '#1e3a8a',
+    50: '#eef2ff',
+    100: '#e0e7ff',
+    200: '#c7d2fe',
+    300: '#a5b4fc',
+    400: '#818cf8',
+    500: '#4F46E5',
+    600: '#4338ca',
+    700: '#3730a3',
+    800: '#312e81',
+    900: '#1e1b4b',
   },
   secondary: {
-    50: '#f0fdfa',
-    100: '#ccfbf1',
-    200: '#99f6e4',
-    300: '#5eead4',
-    400: '#2dd4bf',
-    500: '#14b8a6',
-    600: '#0d9488',
-    700: '#0f766e',
-    800: '#115e59',
-    900: '#134e4a',
+    50: '#f5f3ff',
+    100: '#ede9fe',
+    200: '#ddd6fe',
+    300: '#c4b5fd',
+    400: '#a78bfa',
+    500: '#764ba2',
+    600: '#7c3aed',
+    700: '#6d28d9',
+    800: '#5b21b6',
+    900: '#4c1d95',
   },
   accent: {
     50: '#faf5ff',
@@ -41,16 +41,16 @@ export const lightColors = {
     900: '#581c87',
   },
   success: {
-    50: '#f0fdf4',
-    100: '#dcfce7',
-    200: '#bbf7d0',
-    300: '#86efac',
-    400: '#4ade80',
-    500: '#22c55e',
-    600: '#16a34a',
-    700: '#15803d',
-    800: '#166534',
-    900: '#14532d',
+    50: '#ecfdf5',
+    100: '#d1fae5',
+    200: '#a7f3d0',
+    300: '#6ee7b7',
+    400: '#34d399',
+    500: '#10B981',
+    600: '#059669',
+    700: '#047857',
+    800: '#065f46',
+    900: '#064e3b',
   },
   warning: {
     50: '#fffbeb',
@@ -71,40 +71,48 @@ export const lightColors = {
     300: '#fca5a5',
     400: '#f87171',
     500: '#ef4444',
-    600: '#dc2626',
+    600: '#DC2626',
     700: '#b91c1c',
     800: '#991b1b',
     900: '#7f1d1d',
   },
   neutral: {
-    50: '#f8fafc',
-    100: '#f1f5f9',
-    200: '#e2e8f0',
-    300: '#cbd5e1',
-    400: '#94a3b8',
-    500: '#64748b',
-    600: '#475569',
-    700: '#334155',
-    800: '#1e293b',
-    900: '#0f172a',
+    50: '#ffffff',
+    100: '#f9fafb',
+    200: '#f3f4f6',
+    300: '#e5e7eb',
+    400: '#d1d5db',
+    500: '#9ca3af',
+    600: '#6b7280',
+    700: '#374151',
+    800: '#1f2937',
+    900: '#111827',
   },
   background: {
-    primary: '#F5F7FF',
+    primary: '#F8F9FE',
     secondary: '#ffffff',
-    tertiary: '#f1f5f9',
+    tertiary: '#f9fafb',
     overlay: 'rgba(0, 0, 0, 0.5)',
+    card: '#ffffff',
+    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  },
+  // Brand gradient colors (used in headers, buttons)
+  gradient: {
+    primary: ['#4A90E2', '#2E5C8A'],
+    secondary: ['#667eea', '#764ba2'],
   },
   text: {
-    primary: '#0E2340',
-    secondary: '#67758A',
+    primary: '#1F2937',
+    secondary: '#6B7280',
     tertiary: '#9ca3af',
     inverse: '#ffffff',
     disabled: '#d1d5db',
+    muted: '#6b7280',
   },
   border: {
-    light: '#E1E7F2',
-    medium: '#d1d5db',
-    dark: '#9ca3af',
+    light: '#f3f4f6',
+    medium: '#e5e7eb',
+    dark: '#d1d5db',
   },
 } as const;
 
@@ -122,16 +130,16 @@ export const darkColors = {
     900: '#eff6ff',
   },
   secondary: {
-    50: '#134e4a',
-    100: '#115e59',
-    200: '#0f766e',
-    300: '#0d9488',
-    400: '#14b8a6',
-    500: '#2dd4bf',
-    600: '#5eead4',
-    700: '#99f6e4',
-    800: '#ccfbf1',
-    900: '#f0fdfa',
+    50: '#0f172a',
+    100: '#1e293b',
+    200: '#334155',
+    300: '#475569',
+    400: '#64748b',
+    500: '#94a3b8',
+    600: '#cbd5e1',
+    700: '#e2e8f0',
+    800: '#f1f5f9',
+    900: '#f8fafc',
   },
   accent: {
     50: '#581c87',
@@ -198,6 +206,13 @@ export const darkColors = {
     secondary: '#1e293b',
     tertiary: '#334155',
     overlay: 'rgba(0, 0, 0, 0.7)',
+    card: '#1e293b',
+    gradient: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
+  },
+  // Brand gradient colors (used in headers, buttons)
+  gradient: {
+    primary: ['#2E5C8A', '#1e3a8a'],
+    secondary: ['#1e40af', '#1e3a8a'],
   },
   text: {
     primary: '#f8fafc',
@@ -205,6 +220,7 @@ export const darkColors = {
     tertiary: '#94a3b8',
     inverse: '#0f172a',
     disabled: '#475569',
+    muted: '#94a3b8',
   },
   border: {
     light: '#334155',
@@ -230,6 +246,8 @@ export interface Colors {
     secondary: string;
     tertiary: string;
     overlay: string;
+    card: string;
+    gradient: string;
   };
   text: {
     primary: string;
@@ -237,6 +255,7 @@ export interface Colors {
     tertiary: string;
     inverse: string;
     disabled: string;
+    muted: string;
   };
   border: {
     light: string;

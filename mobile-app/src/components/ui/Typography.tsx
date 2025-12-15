@@ -1,9 +1,10 @@
 import React from 'react';
 import { Text as RNText, TextStyle, StyleSheet } from 'react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface TypographyProps {
   children: React.ReactNode;
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'heading' | 'title' | 'subtitle' | 'body' | 'bodySecondary' | 'caption';
+  variant?: 'title' | 'subtitle' | 'h1' | 'h2' | 'h3' | 'body' | 'bodyMedium' | 'bodySemibold' | 'bodyLarge' | 'bodySmall' | 'caption';
   style?: TextStyle;
   color?: string;
 }
@@ -14,62 +15,74 @@ export const Typography: React.FC<TypographyProps> = ({
   style,
   color,
 }) => {
+  const { theme } = useTheme();
+  
   return (
-    <RNText style={[styles[variant], color && { color }, style]}>
+    <RNText style={[
+      styles[variant], 
+      { fontFamily: theme.typography.fontFamily.default },
+      color && { color }, 
+      style
+    ]}>
       {children}
     </RNText>
   );
 };
 
 const styles = StyleSheet.create({
-  h1: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#000000',
-  },
-  h2: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  h3: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  h4: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  heading: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#000000',
-  },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 28,        // Başlık (Title)
+    fontWeight: '700',   // Bold
+    color: '#1F2937',    // Text Primary
   },
   subtitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#8E8E93',
+    fontSize: 16,        // Alt Başlık (15-16px)
+    fontWeight: '400',   // Regular
+    color: '#1F2937',    // Text Primary
+  },
+  h1: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  h2: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  h3: {
+    fontSize: 18,        // Büyük Metin (18-20px)
+    fontWeight: '700',   // Bold
+    color: '#1F2937',
   },
   body: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#000000',
+    fontSize: 15,        // Normal Metin (15-16px)
+    fontWeight: '400',   // Regular
+    color: '#1F2937',    // Text Primary
   },
-  bodySecondary: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#8E8E93',
+  bodyMedium: {
+    fontSize: 15,        // Normal Metin
+    fontWeight: '500',   // Medium
+    color: '#1F2937',
+  },
+  bodySemibold: {
+    fontSize: 15,        // Normal Metin
+    fontWeight: '600',   // Semibold
+    color: '#1F2937',
+  },
+  bodyLarge: {
+    fontSize: 18,        // Büyük Metin (18-20px)
+    fontWeight: '700',   // Bold
+    color: '#1F2937',
+  },
+  bodySmall: {
+    fontSize: 14,        // Küçük Metin (12-14px)
+    fontWeight: '400',   // Regular
+    color: '#6B7280',    // Text Secondary
   },
   caption: {
-    fontSize: 12,
-    fontWeight: '400',
-    color: '#8E8E93',
+    fontSize: 12,        // Küçük Metin (12-14px)
+    fontWeight: '400',   // Regular
+    color: '#6B7280',    // Text Secondary
   },
 });

@@ -119,7 +119,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         <Card variant="outlined" padding="lg" style={styles.infoCard}>
           <View style={styles.infoHeader}>
             <Ionicons name="checkmark-circle" size={20} color={colors.primary[600]} />
-            <Typography variant="h4" style={styles.infoTitle}>
+            <Typography variant="h3" style={styles.infoTitle}>
               Güçlü Şifre Kriterleri
             </Typography>
           </View>

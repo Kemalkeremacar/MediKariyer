@@ -118,7 +118,7 @@ interface SectionHeaderProps {
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, icon }) => (
   <View style={styles.sectionHeader}>
     {icon && <View style={styles.sectionHeaderIcon}>{icon}</View>}
-    <Typography variant="h4" style={styles.sectionTitle}>
+    <Typography variant="h3" style={styles.sectionTitle}>
       {title}
     </Typography>
   </View>

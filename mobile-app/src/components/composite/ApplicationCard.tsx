@@ -34,7 +34,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
             initials={application.hospital_name?.substring(0, 2).toUpperCase()}
           />
           <View style={styles.headerContent}>
-            <Typography variant="h4" style={styles.title}>
+            <Typography variant="h3" style={styles.title}>
               {application.job_title || application.position_title}
             </Typography>
             <View style={styles.hospitalRow}>

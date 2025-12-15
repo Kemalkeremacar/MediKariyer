@@ -118,7 +118,7 @@ export const BiometricSettingsScreen = () => {
         <View style={styles.content}>
           {/* Available Biometric Types */}
           <View style={styles.section}>
-            <Typography variant="h4" style={styles.sectionTitle}>
+            <Typography variant="h3" style={styles.sectionTitle}>
               Kullanılabilir Yöntemler
             </Typography>
             <Card variant="filled" padding="lg" style={styles.methodsCard}>
@@ -139,7 +139,7 @@ export const BiometricSettingsScreen = () => {
               <View style={styles.toggleRow}>
                 <View style={styles.toggleContent}>
                   <View style={styles.toggleHeader}>
-                    <Typography variant="h4" style={styles.toggleTitle}>
+                    <Typography variant="h3" style={styles.toggleTitle}>
                       Biyometrik Giriş
                     </Typography>
                     <Badge variant={isEnabled ? 'success' : 'neutral'} size="sm">
@@ -175,7 +175,7 @@ export const BiometricSettingsScreen = () => {
           <Card variant="filled" padding="lg" style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Ionicons name="information-circle" size={20} color={colors.primary[600]} />
-              <Typography variant="h4" style={styles.infoTitle}>
+              <Typography variant="h3" style={styles.infoTitle}>
                 Bilgi
               </Typography>
             </View>

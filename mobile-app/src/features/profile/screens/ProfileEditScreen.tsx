@@ -241,7 +241,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
               <View style={styles.sectionIconContainer}>
                 <Ionicons name="person" size={20} color={colors.primary[600]} />
               </View>
-              <Typography variant="h4" style={styles.sectionTitle}>
+              <Typography variant="h3" style={styles.sectionTitle}>
                 Kişisel Bilgiler
               </Typography>
             </View>
@@ -296,7 +296,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
               <View style={styles.sectionIconContainer}>
                 <Ionicons name="briefcase" size={20} color={colors.primary[600]} />
               </View>
-              <Typography variant="h4" style={styles.sectionTitle}>
+              <Typography variant="h3" style={styles.sectionTitle}>
                 Mesleki Bilgiler
               </Typography>
             </View>
@@ -354,7 +354,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
               <View style={styles.sectionIconContainer}>
                 <Ionicons name="call" size={20} color={colors.primary[600]} />
               </View>
-              <Typography variant="h4" style={styles.sectionTitle}>
+              <Typography variant="h3" style={styles.sectionTitle}>
                 İletişim Bilgileri
               </Typography>
             </View>
@@ -387,7 +387,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
               <View style={styles.sectionIconContainer}>
                 <Ionicons name="location" size={20} color={colors.primary[600]} />
               </View>
-              <Typography variant="h4" style={styles.sectionTitle}>
+              <Typography variant="h3" style={styles.sectionTitle}>
                 Konum ve Doğum Bilgileri
               </Typography>
             </View>

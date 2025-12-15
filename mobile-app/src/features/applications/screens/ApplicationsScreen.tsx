@@ -230,7 +230,7 @@ const DetailsModal = ({
                   <View style={styles.sectionIconContainer}>
                     <Ionicons name="document-text" size={18} color={colors.primary[600]} />
                   </View>
-                  <Typography variant="h4" style={styles.sectionTitle}>
+                  <Typography variant="h3" style={styles.sectionTitle}>
                     İş Tanımı
                   </Typography>
                 </View>
@@ -247,7 +247,7 @@ const DetailsModal = ({
                 <View style={styles.sectionIconContainer}>
                   <Ionicons name="time" size={18} color={colors.primary[600]} />
                 </View>
-                <Typography variant="h4" style={styles.sectionTitle}>
+                <Typography variant="h3" style={styles.sectionTitle}>
                   Başvuru Süreci
                 </Typography>
               </View>
@@ -301,7 +301,7 @@ const DetailsModal = ({
                   <View style={styles.sectionIconContainer}>
                     <Ionicons name="document-text" size={18} color={colors.primary[600]} />
                   </View>
-                  <Typography variant="h4" style={styles.sectionTitle}>
+                  <Typography variant="h3" style={styles.sectionTitle}>
                     Ön Yazınız
                   </Typography>
                 </View>
@@ -319,7 +319,7 @@ const DetailsModal = ({
                   <View style={styles.sectionIconContainer}>
                     <Ionicons name="business" size={18} color={colors.primary[600]} />
                   </View>
-                  <Typography variant="h4" style={styles.sectionTitle}>
+                  <Typography variant="h3" style={styles.sectionTitle}>
                     Hastane Bilgileri
                   </Typography>
                 </View>
@@ -367,7 +367,7 @@ const DetailsModal = ({
                   <View style={[styles.sectionIconContainer, { backgroundColor: colors.warning[50] }]}>
                     <Ionicons name="alert-circle" size={18} color={colors.warning[600]} />
                   </View>
-                  <Typography variant="h4" style={styles.sectionTitle}>
+                  <Typography variant="h3" style={styles.sectionTitle}>
                     Hastane Notu
                   </Typography>
                 </View>
@@ -656,85 +656,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Premium Gradient Header - STANDARD SIZE
+  // Modern Gradient Header
   gradientHeader: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingTop: 60,
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  headerDecoration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  decorCircle1: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#FCD34D',
-    opacity: 0.25,
-    top: -40,
-    right: -20,
-  },
-  decorCircle2: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FDE68A',
-    opacity: 0.2,
-    bottom: -20,
-    left: -10,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   headerContent: {
     alignItems: 'center',
-    position: 'relative',
-    zIndex: 1,
   },
   headerIconWrapper: {
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   headerIconGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
-    color: '#B45309',
+    color: '#ffffff',
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
   },
-  headerSubtitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  headerDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#FBBF24',
-  },
   headerSubtitle: {
-    fontSize: 13,
-    color: '#F59E0B',
-    lineHeight: 18,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
     fontWeight: '500',
   },

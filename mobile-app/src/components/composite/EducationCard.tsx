@@ -35,7 +35,7 @@ export const EducationCard: React.FC<EducationCardProps> = ({
             <Ionicons name="school" size={20} color={colors.primary[600]} />
           </View>
           <View style={styles.content}>
-            <Typography variant="h4" style={styles.degree}>
+            <Typography variant="h3" style={styles.degree}>
               {degree}
             </Typography>
             <Typography variant="body" style={styles.institution}>

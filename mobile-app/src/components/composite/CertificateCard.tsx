@@ -38,7 +38,7 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
             <Ionicons name="ribbon" size={20} color={colors.warning[600]} />
           </View>
           <View style={styles.content}>
-            <Typography variant="h4" style={styles.name}>
+            <Typography variant="h3" style={styles.name}>
               {name}
             </Typography>
             <Typography variant="body" style={styles.issuer}>

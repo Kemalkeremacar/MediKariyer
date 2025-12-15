@@ -47,7 +47,7 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
       {/* Content */}
       <View style={styles.content}>
         <View style={styles.header}>
-          <Typography variant="h4" style={styles.title}>
+          <Typography variant="h3" style={styles.title}>
             {title}
           </Typography>
           <Typography variant="caption" style={styles.date}>

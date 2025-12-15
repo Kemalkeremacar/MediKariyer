@@ -31,7 +31,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       </View>
       
       <View style={styles.content}>
-        <Typography variant="h4" style={styles.title}>
+        <Typography variant="h3" style={styles.title}>
           {title}
         </Typography>
         {subtitle && (

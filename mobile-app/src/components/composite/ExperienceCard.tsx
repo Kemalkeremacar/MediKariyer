@@ -38,7 +38,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
             <Ionicons name="briefcase" size={20} color={colors.secondary[600]} />
           </View>
           <View style={styles.content}>
-            <Typography variant="h4" style={styles.title}>
+            <Typography variant="h3" style={styles.title}>
               {title}
             </Typography>
             <Typography variant="body" style={styles.company}>

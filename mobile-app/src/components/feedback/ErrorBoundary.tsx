@@ -2,9 +2,8 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
-import { Card } from '@/components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing } from '@/theme';
+import { lightColors as colors, spacing } from '@/theme';
 import { errorLogger } from '@/utils/errorLogger';
 
 interface Props {
@@ -90,7 +89,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
             {__DEV__ && this.state.error && (
               <View style={styles.errorCard}>
-                <Typography variant="h4" style={styles.errorTitle}>
+                <Typography variant="h3" style={styles.errorTitle}>
                   Hata Detayı (Sadece Development):
                 </Typography>
                 <Typography variant="caption" style={styles.errorText}>

@@ -35,7 +35,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
           />
           <View style={styles.headerContent}>
             <View style={styles.titleRow}>
-              <Typography variant="h4" style={styles.title}>
+              <Typography variant="h3" style={styles.title}>
                 {job.title}
               </Typography>
               {job.created_at && isNew(job.created_at) && (

@@ -47,7 +47,7 @@ export const LanguageCard: React.FC<LanguageCardProps> = ({
             <Ionicons name="language" size={20} color={colors.primary[600]} />
           </View>
           <View style={styles.content}>
-            <Typography variant="h4" style={styles.language}>
+            <Typography variant="h3" style={styles.language}>
               {language}
             </Typography>
             <View style={styles.levelContainer}>

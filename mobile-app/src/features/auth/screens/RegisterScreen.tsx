@@ -19,19 +19,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { AuthStackParamList } from '@/navigation/types';
-import { ScreenContainer } from '@/components/layout/ScreenContainer';
-import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Button } from '@/components/ui/Button';
+import { GradientButton } from '@/components/ui/GradientButton';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { Select } from '@/components/ui/Select';
 import { useRegister } from '../hooks/useRegister';
 import { lookupService } from '@/api/services/lookup.service';
 import { uploadService } from '@/api/services/upload.service';
-import { colors } from '@/theme/colors';
-import { spacing } from '@/theme/spacing';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'Ad en az 2 karakter olmalı'),
@@ -58,6 +56,7 @@ const TITLES = [
 
 export const RegisterScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const { theme } = useTheme();
   const [serverError, setServerError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<typeof TITLES[number]['value']>('Dr');
   const [selectedSpecialty, setSelectedSpecialty] = useState<number | undefined>();
@@ -75,12 +74,12 @@ export const RegisterScreen = () => {
   // Fetch subspecialties
   const { data: allSubspecialties = [], isLoading: subspecialtiesLoading } = useQuery({
     queryKey: ['subspecialties'],
-    queryFn: lookupService.getSubspecialties,
+    queryFn: () => lookupService.getSubspecialties(),
   });
 
   // Filter subspecialties by selected specialty
   const filteredSubspecialties = selectedSpecialty
-    ? allSubspecialties.filter((sub) => sub.specialty_id === selectedSpecialty)
+    ? (allSubspecialties as any[]).filter((sub: any) => sub.specialty_id === selectedSpecialty)
     : [];
 
   // Reset subspecialty when specialty changes
@@ -262,32 +261,47 @@ export const RegisterScreen = () => {
   };
 
   return (
-    <ScreenContainer scrollable={true}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
+        {/* Header with Gradient */}
+        <LinearGradient
+          colors={['#4A90E2', '#2E5C8A']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../../../assets/logo.jpg')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+          
+          {/* MediKariyer Yazısı */}
+          <Typography variant="h1" style={styles.brandName}>
+            MediKariyer
+          </Typography>
+          
+          <Typography variant="body" style={styles.headerSubtitle}>
+            Doktor hesabı oluştur
+          </Typography>
+        </LinearGradient>
+
+        {/* Content */}
         <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="medical" size={40} color={colors.primary[600]} />
-            </View>
-            <Typography variant="heading" style={styles.title}>
-              MediKariyer'e Hoş Geldin
-            </Typography>
-            <Typography variant="body" style={styles.headerSubtitle}>
-              Doktor hesabı oluştur ve kariyer fırsatlarını keşfet
+          <View style={[styles.sectionHeader, styles.sectionHeaderFirst]}>
+            <Typography variant="h3" style={styles.sectionTitle}>
+              Kişisel Bilgiler
             </Typography>
           </View>
-
-          <Card padding="2xl" shadow="md" style={styles.formCard}>
-
-            <View style={styles.sectionHeader}>
-              <Typography variant="h4" style={styles.sectionTitle}>
-                Kişisel Bilgiler
-              </Typography>
-            </View>
 
             <FormField label="Ad *" error={errors.firstName?.message}>
               <Controller
@@ -344,7 +358,7 @@ export const RegisterScreen = () => {
             </FormField>
 
             <View style={styles.sectionHeader}>
-              <Typography variant="h4" style={styles.sectionTitle}>
+              <Typography variant="h3" style={styles.sectionTitle}>
                 Mesleki Bilgiler
               </Typography>
             </View>
@@ -352,12 +366,12 @@ export const RegisterScreen = () => {
             <FormField label="Uzmanlık Alanı *">
               {specialtiesLoading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.primary[600]} />
+                  <ActivityIndicator size="small" color="#4A90E2" />
                   <Text style={styles.loadingText}>Branşlar yükleniyor...</Text>
                 </View>
               ) : (
                 <Select
-                  options={specialties.map((s) => ({
+                  options={specialties.map((s: any) => ({
                     label: s.name,
                     value: s.id,
                   }))}
@@ -373,12 +387,12 @@ export const RegisterScreen = () => {
               <FormField label="Yan Dal (Opsiyonel)">
                 {subspecialtiesLoading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color={colors.primary[600]} />
+                    <ActivityIndicator size="small" color="#4A90E2" />
                     <Text style={styles.loadingText}>Yükleniyor...</Text>
                   </View>
                 ) : (
                   <Select
-                    options={filteredSubspecialties.map((s) => ({
+                    options={(filteredSubspecialties as any[]).map((s: any) => ({
                       label: s.name,
                       value: s.id,
                     }))}
@@ -392,7 +406,7 @@ export const RegisterScreen = () => {
             )}
 
             <View style={styles.sectionHeader}>
-              <Typography variant="h4" style={styles.sectionTitle}>
+              <Typography variant="h3" style={styles.sectionTitle}>
                 Hesap Bilgileri
               </Typography>
             </View>
@@ -455,17 +469,17 @@ export const RegisterScreen = () => {
                       <Image source={{ uri: photoUri }} style={styles.photoPreview} />
                       {isUploadingPhoto && (
                         <View style={styles.uploadingOverlay}>
-                          <ActivityIndicator size="large" color={colors.background.primary} />
+                          <ActivityIndicator size="large" color="#ffffff" />
                           <Text style={styles.uploadingText}>Yükleniyor...</Text>
                         </View>
                       )}
                       <View style={styles.photoEditBadge}>
-                        <Ionicons name="camera" size={16} color={colors.background.primary} />
+                        <Ionicons name="camera" size={16} color="#ffffff" />
                       </View>
                     </View>
                   ) : (
                     <View style={styles.photoPlaceholder}>
-                      <Ionicons name="person" size={48} color={colors.neutral[400]} />
+                      <Ionicons name="person" size={48} color="#9CA3AF" />
                       <Text style={styles.photoPlaceholderText}>Fotoğraf Ekle</Text>
                       <Text style={styles.photoPlaceholderHint}>Kamera veya galeriden seç</Text>
                     </View>
@@ -482,130 +496,151 @@ export const RegisterScreen = () => {
               )}
             </View>
 
-            <Button
+            <GradientButton
               label={registerMutation.isPending ? "Kayıt Oluşturuluyor..." : "Hesap Oluştur"}
               onPress={handleSubmit(onSubmit)}
               loading={registerMutation.isPending}
               fullWidth
               size="lg"
+              colors={['#4A90E2', '#2E5C8A']}
               style={styles.buttonSpacing}
             />
             
-            <View style={styles.loginPrompt}>
-              <Typography variant="body" style={styles.loginPromptText}>
-                Zaten hesabın var mı?
+          <View style={styles.loginPrompt}>
+            <Typography variant="bodySmall" style={styles.loginPromptText}>
+              Zaten hesabın var mı?{' '}
+            </Typography>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <Typography variant="bodySmall" style={styles.loginLink}>
+                Giriş Yap
               </Typography>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Typography variant="body" style={styles.loginLink}>
-                  Giriş Yap
-                </Typography>
-              </TouchableOpacity>
-            </View>
-          </Card>
+            </TouchableOpacity>
+          </View>
         </View>
-      </KeyboardAvoidingView>
-    </ScreenContainer>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  flex: {
+  container: {
     flex: 1,
+    backgroundColor: '#F8F9FE',
   },
-  content: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing['2xl'],
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
+    paddingTop: 60,
+    paddingBottom: 40,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    marginBottom: spacing['3xl'],
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   logoContainer: {
     width: 80,
     height: 80,
+    backgroundColor: '#ffffff',
     borderRadius: 40,
-    backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+    overflow: 'hidden',
   },
-  title: {
-    fontSize: 28,
+  logo: {
+    width: 70,
+    height: 70,
+  },
+  brandName: {
+    color: '#ffffff',
+    fontSize: 32,
     fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: spacing.xs,
     textAlign: 'center',
+    letterSpacing: 0.5,
+    marginBottom: 8,
   },
   headerSubtitle: {
-    color: colors.text.secondary,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    fontSize: 15,
+    fontSize: 16,
   },
-  formCard: {
-    marginBottom: spacing['2xl'],
-  },
-  subtitle: {
-    marginTop: spacing.xs,
-    marginBottom: spacing['2xl'],
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 40,
   },
   chipContainer: {
     flexDirection: 'row',
-    marginBottom: spacing.sm,
+    marginBottom: 8,
   },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
     borderRadius: 24,
     borderWidth: 2,
-    borderColor: colors.neutral[200],
-    backgroundColor: colors.background.primary,
-    marginRight: 8,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#ffffff',
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   chipSelected: {
-    backgroundColor: colors.primary[600],
-    borderColor: colors.primary[600],
+    backgroundColor: '#4A90E2',
+    borderColor: '#4A90E2',
+    shadowOpacity: 0.15,
+    elevation: 3,
   },
   chipText: {
     fontSize: 14,
-    color: colors.text.primary,
+    color: '#1F2937',
     fontWeight: '500',
   },
   chipTextSelected: {
-    color: colors.background.primary,
+    color: '#ffffff',
     fontWeight: '600',
   },
   errorContainer: {
     minHeight: 40,
     justifyContent: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: 8,
   },
   serverError: {
-    color: colors.error[600],
+    color: '#DC2626',
     textAlign: 'center',
     fontSize: 14,
   },
   buttonSpacing: {
-    marginBottom: spacing.lg,
-    marginTop: spacing.md,
+    marginBottom: 24,
+    marginTop: 24,
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.lg,
+    padding: 16,
     borderWidth: 1,
-    borderColor: colors.neutral[200],
+    borderColor: '#E5E7EB',
     borderRadius: 12,
-    backgroundColor: colors.neutral[50],
+    backgroundColor: '#F9FAFB',
   },
   loadingText: {
-    marginLeft: spacing.sm,
+    marginLeft: 8,
     fontSize: 14,
-    color: colors.text.secondary,
+    color: '#6B7280',
   },
   photoContainer: {
     alignItems: 'center',
-    marginVertical: spacing.lg,
+    marginVertical: 16,
   },
   photoTouchable: {
     alignItems: 'center',
@@ -614,11 +649,11 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   photoPreview: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
     borderWidth: 4,
-    borderColor: colors.primary[600],
+    borderColor: '#4A90E2',
   },
   photoEditBadge: {
     position: 'absolute',
@@ -627,19 +662,19 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.primary[600],
+    backgroundColor: '#4A90E2',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: colors.background.primary,
+    borderColor: '#ffffff',
   },
   photoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.neutral[50],
-    borderWidth: 2,
-    borderColor: colors.neutral[300],
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 3,
+    borderColor: '#4A90E2',
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
@@ -647,12 +682,12 @@ const styles = StyleSheet.create({
   photoPlaceholderText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.text.primary,
-    marginTop: spacing.xs,
+    color: '#1F2937',
+    marginTop: 4,
   },
   photoPlaceholderHint: {
     fontSize: 11,
-    color: colors.text.secondary,
+    color: '#6B7280',
     marginTop: 2,
   },
   uploadingOverlay: {
@@ -662,41 +697,42 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 60,
+    borderRadius: 70,
     justifyContent: 'center',
     alignItems: 'center',
   },
   uploadingText: {
-    color: colors.background.primary,
+    color: '#ffffff',
     fontSize: 12,
-    marginTop: spacing.xs,
+    marginTop: 4,
     fontWeight: '600',
   },
   loginPrompt: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: spacing.xs,
   },
   loginPromptText: {
-    color: colors.text.secondary,
-    fontSize: 14,
+    color: '#6B7280',
   },
   loginLink: {
-    color: colors.primary[600],
-    fontSize: 14,
+    color: '#4A90E2',
     fontWeight: '600',
   },
   sectionHeader: {
-    marginTop: spacing['2xl'],
-    marginBottom: spacing.md,
-    paddingBottom: spacing.sm,
+    marginTop: 24,
+    marginBottom: 20,
+    paddingBottom: 12,
     borderBottomWidth: 2,
-    borderBottomColor: colors.primary[100],
+    borderBottomColor: '#4A90E2',
+  },
+  sectionHeaderFirst: {
+    marginTop: 0,
   },
   sectionTitle: {
-    color: colors.primary[700],
+    color: '#2E5C8A',
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 18,
+    letterSpacing: 0.3,
   },
 });

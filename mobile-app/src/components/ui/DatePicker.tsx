@@ -34,8 +34,6 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   const handlePress = () => {
     if (!disabled) {
       // TODO: Implement date picker modal
-      // For now, just show a placeholder
-      console.log('Date picker pressed');
     }
   };
 
