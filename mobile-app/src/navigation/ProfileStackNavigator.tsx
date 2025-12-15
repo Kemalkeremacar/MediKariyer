@@ -19,6 +19,9 @@ export const ProfileStackNavigator = () => (
   <Stack.Navigator
     screenOptions={{
       headerShown: false,
+      animation: 'slide_from_right', // Smooth animation
+      animationDuration: 200, // Faster animation (default: 350ms)
+      freezeOnBlur: true, // Freeze inactive screens to save resources
     }}
   >
     <Stack.Screen 
@@ -30,6 +33,7 @@ export const ProfileStackNavigator = () => (
       component={ProfileEditScreen}
       options={{
         presentation: 'modal',
+        animation: 'slide_from_bottom',
       }}
     />
     <Stack.Screen 

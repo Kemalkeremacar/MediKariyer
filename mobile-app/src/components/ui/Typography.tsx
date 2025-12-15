@@ -18,12 +18,17 @@ export const Typography: React.FC<TypographyProps> = ({
   const { theme } = useTheme();
   
   return (
-    <RNText style={[
-      styles[variant], 
-      { fontFamily: theme.typography.fontFamily.default },
-      color && { color }, 
-      style
-    ]}>
+    <RNText 
+      allowFontScaling={false}
+      maxFontSizeMultiplier={1}
+      textBreakStrategy="simple"
+      style={[
+        styles[variant], 
+        { fontFamily: theme.typography.fontFamily.default },
+        color && { color }, 
+        style
+      ]}
+    >
       {children}
     </RNText>
   );
@@ -31,58 +36,80 @@ export const Typography: React.FC<TypographyProps> = ({
 
 const styles = StyleSheet.create({
   title: {
-    fontSize: 28,        // Başlık (Title)
-    fontWeight: '700',   // Bold
-    color: '#1F2937',    // Text Primary
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   subtitle: {
-    fontSize: 16,        // Alt Başlık (15-16px)
-    fontWeight: '400',   // Regular
-    color: '#1F2937',    // Text Primary
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   h1: {
     fontSize: 24,
     fontWeight: '700',
     color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   h2: {
     fontSize: 20,
     fontWeight: '700',
     color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   h3: {
-    fontSize: 18,        // Büyük Metin (18-20px)
-    fontWeight: '700',   // Bold
+    fontSize: 18,
+    fontWeight: '700',
     color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   body: {
-    fontSize: 15,        // Normal Metin (15-16px)
-    fontWeight: '400',   // Regular
-    color: '#1F2937',    // Text Primary
+    fontSize: 15,
+    fontWeight: '400',
+    color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   bodyMedium: {
-    fontSize: 15,        // Normal Metin
-    fontWeight: '500',   // Medium
+    fontSize: 15,
+    fontWeight: '500',
     color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   bodySemibold: {
-    fontSize: 15,        // Normal Metin
-    fontWeight: '600',   // Semibold
+    fontSize: 15,
+    fontWeight: '600',
     color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   bodyLarge: {
-    fontSize: 18,        // Büyük Metin (18-20px)
-    fontWeight: '700',   // Bold
+    fontSize: 18,
+    fontWeight: '700',
     color: '#1F2937',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   bodySmall: {
-    fontSize: 14,        // Küçük Metin (12-14px)
-    fontWeight: '400',   // Regular
-    color: '#6B7280',    // Text Secondary
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#6B7280',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   caption: {
-    fontSize: 12,        // Küçük Metin (12-14px)
-    fontWeight: '400',   // Regular
-    color: '#6B7280',    // Text Secondary
+    fontSize: 12,
+    fontWeight: '400',
+    textAlignVertical: 'center',
+    color: '#6B7280',
+    includeFontPadding: false,
   },
 });

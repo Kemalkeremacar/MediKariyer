@@ -7,10 +7,11 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
@@ -20,6 +21,7 @@ export interface ButtonProps {
   children?: React.ReactNode;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  gradientColors?: [string, string];
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -33,6 +35,7 @@ export const Button: React.FC<ButtonProps> = ({
   children,
   style,
   textStyle,
+  gradientColors,
 }) => {
   const { theme } = useTheme();
   const isDisabled = disabled || loading;
@@ -40,6 +43,75 @@ export const Button: React.FC<ButtonProps> = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
   
   const content = label || children;
+
+  const getGradientColors = (): [string, string] => {
+    if (gradientColors) {
+      return gradientColors;
+    }
+    if (variant === 'gradient') {
+      return ['#667eea', '#764ba2']; // Purple gradient (default)
+    }
+    if (variant === 'primary') {
+      return ['#60A5FA', '#3B82F6']; // Modern light blue gradient
+    }
+    if (variant === 'secondary') {
+      return ['#38BDF8', '#0EA5E9']; // Sky blue gradient
+    }
+    return ['transparent', 'transparent'];
+  };
+
+  const renderContent = () => (
+    <>
+      {loading ? (
+        <ActivityIndicator
+          color={variant === 'outline' || variant === 'ghost' ? theme.colors.primary[600] : theme.colors.text.inverse}
+        />
+      ) : (
+        <Text
+          allowFontScaling={false}
+          maxFontSizeMultiplier={1}
+          style={[
+            styles.text,
+            styles[`text_${variant}`] || styles.text_primary,
+            styles[`textSize_${size}`],
+            isDisabled && styles.textDisabled,
+            textStyle,
+          ]}
+        >
+          {content}
+        </Text>
+      )}
+    </>
+  );
+
+  if (variant === 'primary' || variant === 'secondary' || variant === 'gradient') {
+    return (
+      <TouchableOpacity
+        style={[
+          styles.base,
+          styles[`size_${size}`],
+          fullWidth && styles.fullWidth,
+          isDisabled && styles.disabled,
+          style,
+        ]}
+        onPress={onPress}
+        disabled={isDisabled}
+        activeOpacity={0.8}
+      >
+        <LinearGradient
+          colors={getGradientColors()}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[
+            styles.gradient,
+            styles[`size_${size}`],
+          ]}
+        >
+          {renderContent()}
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  }
 
   return (
     <TouchableOpacity
@@ -55,23 +127,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={isDisabled}
       activeOpacity={0.7}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'outline' || variant === 'ghost' ? theme.colors.primary[600] : theme.colors.text.inverse}
-        />
-      ) : (
-        <Text
-          style={[
-            styles.text,
-            styles[`text_${variant}`],
-            styles[`textSize_${size}`],
-            isDisabled && styles.textDisabled,
-            textStyle,
-          ]}
-        >
-          {content}
-        </Text>
-      )}
+      {renderContent()}
     </TouchableOpacity>
   );
 };
@@ -81,21 +137,43 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.borderRadius.lg, // 16px
+    borderRadius: theme.borderRadius?.lg || 16,
+    overflow: 'hidden',
+  },
+  gradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: theme.borderRadius?.lg || 16,
+    width: '100%',
   },
   fullWidth: {
     width: '100%',
   },
   primary: {
     backgroundColor: theme.colors.primary[500], // #4F46E5
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   secondary: {
     backgroundColor: theme.colors.secondary[500], // #764ba2
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   outline: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: theme.colors.primary[500],
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -121,6 +199,8 @@ const createStyles = (theme: any) => StyleSheet.create({
   text: {
     fontFamily: theme.typography.fontFamily.default,
     fontWeight: theme.typography.fontWeight.semibold, // 600
+    includeFontPadding: false, // Android için
+    textAlignVertical: 'center', // Android için
   },
   text_primary: {
     color: theme.colors.text.inverse,
@@ -129,10 +209,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text.inverse,
   },
   text_outline: {
-    color: theme.colors.primary[500],
+    color: '#4F46E5',
   },
   text_ghost: {
     color: theme.colors.primary[500],
+  },
+  text_gradient: {
+    color: theme.colors.text.inverse,
   },
   textDisabled: {
     color: theme.colors.text.disabled,

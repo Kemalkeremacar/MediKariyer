@@ -1,26 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { ExperienceCard } from '@/components/composite/ExperienceCard';
+import { ExperienceFormModal } from '../components/ExperienceFormModal';
 import { colors, spacing } from '@/theme';
-import { profileService } from '@/api/services/profile.service';
+import { useExperiences, useExperience } from '../hooks/useProfile';
+import type { DoctorExperience, CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
 
 export const ExperienceScreen = () => {
   const navigation = useNavigation();
+  const [selectedExperience, setSelectedExperience] = useState<DoctorExperience | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   
-  const { data: experiences = [], isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ['experiences'],
-    queryFn: () => profileService.getExperiences(),
-  });
+  const { data: experiences = [], isLoading, error, refetch, isRefetching } = useExperiences();
+  const experienceMutations = useExperience();
 
   const handleAddExperience = () => {
-    Alert.alert('Yakında', 'Deneyim ekleme özelliği yakında eklenecek');
+    setSelectedExperience(null);
+    setModalVisible(true);
+  };
+
+  const handleEditExperience = (experience: DoctorExperience) => {
+    setSelectedExperience(experience);
+    setModalVisible(true);
+  };
+
+  const handleDeleteExperience = (id: number) => {
+    Alert.alert(
+      'Deneyim Sil',
+      'Bu deneyim kaydını silmek istediğinizden emin misiniz?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: () => experienceMutations.delete.mutate(id),
+        },
+      ]
+    );
+  };
+
+  const handleSubmitExperience = (data: CreateExperiencePayload | UpdateExperiencePayload) => {
+    if (selectedExperience) {
+      experienceMutations.update.mutate(
+        { id: selectedExperience.id, data },
+        {
+          onSuccess: () => {
+            setModalVisible(false);
+            setSelectedExperience(null);
+          },
+        }
+      );
+    } else {
+      experienceMutations.create.mutate(data as CreateExperiencePayload, {
+        onSuccess: () => {
+          setModalVisible(false);
+        },
+      });
+    }
   };
 
   const formatDate = (dateString: string | null) => {
@@ -65,7 +107,8 @@ export const ExperienceScreen = () => {
             startDate={formatDate(item.start_date)}
             endDate={item.is_current ? 'Devam ediyor' : formatDate(item.end_date)}
             current={item.is_current}
-            onPress={() => Alert.alert('Yakında', 'Deneyim düzenleme özelliği yakında eklenecek')}
+            onEdit={() => handleEditExperience(item)}
+            onDelete={() => handleDeleteExperience(item.id)}
           />
         )}
         refreshControl={
@@ -90,6 +133,18 @@ export const ExperienceScreen = () => {
         icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddExperience}
         position="bottom-right"
+      />
+
+      {/* Experience Form Modal */}
+      <ExperienceFormModal
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedExperience(null);
+        }}
+        onSubmit={handleSubmitExperience}
+        experience={selectedExperience}
+        isLoading={experienceMutations.create.isPending || experienceMutations.update.isPending}
       />
     </Screen>
   );

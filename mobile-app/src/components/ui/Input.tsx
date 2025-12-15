@@ -31,8 +31,10 @@ export const Input: React.FC<InputProps> = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text allowFontScaling={false} maxFontSizeMultiplier={1} style={styles.label}>{label}</Text>}
       <TextInput
+        allowFontScaling={false}
+        maxFontSizeMultiplier={1}
         style={[
           styles.input,
           isFocused && styles.inputFocused,
@@ -44,8 +46,8 @@ export const Input: React.FC<InputProps> = ({
         onBlur={() => setIsFocused(false)}
         {...props}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
+      {error && <Text allowFontScaling={false} maxFontSizeMultiplier={1} style={styles.errorText}>{error}</Text>}
+      {helperText && !error && <Text allowFontScaling={false} maxFontSizeMultiplier={1} style={styles.helperText}>{helperText}</Text>}
     </View>
   );
 };
@@ -59,6 +61,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: theme.typography.fontWeight.medium,
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.xs,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   input: {
     height: 50,
@@ -69,6 +73,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: theme.typography.fontSize.base,
     color: theme.colors.text.primary,
     backgroundColor: '#ffffff',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   inputFocused: {
     borderColor: '#4A90E2',
@@ -82,10 +88,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.error[500],
     marginTop: theme.spacing.xs,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   helperText: {
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.secondary,
     marginTop: theme.spacing.xs,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
 });

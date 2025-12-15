@@ -13,11 +13,13 @@ import { useNavigation } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useQueryClient } from '@tanstack/react-query';
 import { Typography } from '@/components/ui/Typography';
 import { DashboardCard } from '@/components/ui/DashboardCard';
 import { useProfile } from '../hooks/useProfile';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { getFullImageUrl } from '@/utils/imageUrl';
+import { profileService } from '@/api/services/profile.service';
 import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 
 type DashboardScreenNavigationProp = CompositeNavigationProp<
@@ -27,8 +29,38 @@ type DashboardScreenNavigationProp = CompositeNavigationProp<
 
 export const DashboardScreen = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
+  const queryClient = useQueryClient();
   const { data: profile, refetch, isRefetching } = useProfile();
   const { unreadCount } = useNotifications({ limit: 1 });
+
+  // Prefetch profile data when user hovers/focuses on cards
+  const prefetchLanguages = () => {
+    queryClient.prefetchQuery({
+      queryKey: ['profile', 'languages'],
+      queryFn: () => profileService.getLanguages(),
+    });
+  };
+
+  const prefetchEducations = () => {
+    queryClient.prefetchQuery({
+      queryKey: ['profile', 'educations'],
+      queryFn: () => profileService.getEducations(),
+    });
+  };
+
+  const prefetchExperiences = () => {
+    queryClient.prefetchQuery({
+      queryKey: ['profile', 'experiences'],
+      queryFn: () => profileService.getExperiences(),
+    });
+  };
+
+  const prefetchCertificates = () => {
+    queryClient.prefetchQuery({
+      queryKey: ['profile', 'certificates'],
+      queryFn: () => profileService.getCertificates(),
+    });
+  };
 
   const completionPercent = profile?.completion_percent || 0;
   const unreadNotificationCount = unreadCount || 0;
@@ -91,10 +123,7 @@ export const DashboardScreen = () => {
 
           {/* Profile Section */}
           <View style={styles.profileSection}>
-            <TouchableOpacity 
-              style={styles.avatarContainer}
-              onPress={() => navigation.navigate('ProfileEdit')}
-            >
+            <View style={styles.avatarContainer}>
               {photoUrl ? (
                 <Image source={{ uri: photoUrl }} style={styles.avatar} />
               ) : (
@@ -102,10 +131,7 @@ export const DashboardScreen = () => {
                   <Ionicons name="person" size={56} color="#4A90E2" />
                 </View>
               )}
-              <View style={styles.editBadge}>
-                <Ionicons name="create" size={16} color="#ffffff" />
-              </View>
-            </TouchableOpacity>
+            </View>
             
             <View style={styles.profileInfo}>
               <Typography variant="h1" style={styles.profileName}>
@@ -186,12 +212,14 @@ export const DashboardScreen = () => {
               title="Eğitim"
               icon={<Ionicons name="school" size={32} color="#4CAF50" />}
               onPress={() => navigation.navigate('Education')}
+              onPressIn={prefetchEducations}
               variant="large"
             />
             <DashboardCard
               title="Deneyim"
               icon={<Ionicons name="briefcase" size={32} color="#2196F3" />}
               onPress={() => navigation.navigate('Experience')}
+              onPressIn={prefetchExperiences}
               variant="large"
             />
           </View>
@@ -201,12 +229,14 @@ export const DashboardScreen = () => {
               title="Sertifikalar"
               icon={<Ionicons name="ribbon" size={32} color="#FF5722" />}
               onPress={() => navigation.navigate('Certificates')}
+              onPressIn={prefetchCertificates}
               variant="large"
             />
             <DashboardCard
               title="Diller"
               icon={<Ionicons name="language" size={32} color="#9C27B0" />}
               onPress={() => navigation.navigate('Languages')}
+              onPressIn={prefetchLanguages}
               variant="large"
             />
           </View>
@@ -226,7 +256,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   header: {
-    paddingTop: 60,
+    paddingTop: 16,
     paddingBottom: 32,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 30,

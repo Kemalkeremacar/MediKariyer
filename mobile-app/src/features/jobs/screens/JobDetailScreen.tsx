@@ -387,11 +387,9 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             </View>
           </Card>
         )}
-      </ScrollView>
 
-      {/* Sticky Bottom Action Bar */}
-      {!job.is_applied && (
-        <View style={[styles.stickyFooter, { paddingBottom: insets.bottom + spacing.lg }]}>
+        {/* Başvur Butonu */}
+        {!job.is_applied && (
           <Button
             label={applyMutation.isPending ? 'İşleniyor...' : 'Hemen Başvur'}
             size="lg"
@@ -400,9 +398,10 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             loading={applyMutation.isPending}
             disabled={job.is_applied || applyMutation.isPending}
             fullWidth
+            style={styles.applyButton}
           />
-        </View>
-      )}
+        )}
+      </ScrollView>
     </ScreenContainer>
   );
 };
@@ -410,7 +409,6 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    paddingBottom: 100,
   },
   centerContainer: {
     flex: 1,
@@ -493,20 +491,20 @@ const styles = StyleSheet.create({
   specialtyBadge: {
     backgroundColor: colors.primary[100],
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
   },
   specialtyText: {
     color: colors.primary[700],
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
   subspecialtyBadge: {
-    backgroundColor: colors.primary[50],
+    backgroundColor: colors.secondary[100],
   },
   subspecialtyText: {
-    color: colors.primary[600],
-    fontSize: 12,
+    color: colors.secondary[700],
+    fontSize: 13,
     fontWeight: '600',
   },
   hospitalAbout: {
@@ -533,9 +531,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   scrollContent: {
-    paddingHorizontal: spacing.md, // Daha dar padding, kartlar daha geniş
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
-    paddingBottom: spacing['4xl'],
+    paddingBottom: 100, // Bottom bar için boşluk
   },
   headerCard: {
     marginBottom: spacing.md,
@@ -616,19 +614,7 @@ const styles = StyleSheet.create({
   appliedText: {
     color: colors.success[600],
   },
-  stickyFooter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.light,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
+  applyButton: {
+    marginTop: spacing.lg,
   },
 });

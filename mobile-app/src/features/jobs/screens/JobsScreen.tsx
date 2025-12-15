@@ -124,129 +124,133 @@ export const JobsScreen = () => {
 
   const hasActiveFilters = activeFilterCount > 0 || searchQuery.length > 0;
 
+  const renderListHeader = () => (
+    <>
+      {/* Premium Gradient Header */}
+      <LinearGradient
+        colors={['#FFFFFF', '#F0FDF4', '#DCFCE7']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientHeader}
+      >
+        {/* Decorative Elements */}
+        <View style={styles.headerDecoration}>
+          <View style={styles.decorCircle1} />
+          <View style={styles.decorCircle2} />
+        </View>
+        
+        <View style={styles.headerContent}>
+          <View style={styles.headerIconWrapper}>
+            <LinearGradient
+              colors={['#10B981', '#059669']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.headerIconGradient}
+            >
+              <Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />
+            </LinearGradient>
+          </View>
+          <Typography variant="h1" style={styles.headerTitle}>
+            İş İlanları
+          </Typography>
+          <View style={styles.headerSubtitleContainer}>
+            <View style={styles.headerDot} />
+            <Typography variant="body" style={styles.headerSubtitle}>
+              {totalCount} aktif ilan
+            </Typography>
+            <View style={styles.headerDot} />
+          </View>
+        </View>
+      </LinearGradient>
+
+      {/* Modern Search & Filter */}
+      <View style={styles.searchContainer}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Hastane, şehir veya branş ara..."
+          onClear={() => setSearchQuery('')}
+          style={styles.searchBar}
+        />
+        <View style={styles.filterButtonWrapper}>
+          <IconButton
+            icon={
+              <Ionicons
+                name="filter"
+                size={20}
+                color={
+                  activeFilterCount > 0
+                    ? colors.background.primary
+                    : colors.primary[600]
+                }
+              />
+            }
+            onPress={() => setShowFilterSheet(true)}
+            size="md"
+            variant={activeFilterCount > 0 ? 'filled' : 'ghost'}
+            color="primary"
+          />
+          {activeFilterCount > 0 && (
+            <View style={styles.filterBadge}>
+              <Typography variant="caption" style={styles.filterBadgeText}>
+                {activeFilterCount}
+              </Typography>
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Active Filters with Modern Chips */}
+      {hasActiveFilters && (
+        <View style={styles.activeFiltersContainer}>
+          {filters.specialtyId && (
+            <Chip
+              label="Branş Filtresi"
+              variant="soft"
+              color="primary"
+              size="sm"
+              onDelete={() => handleRemoveFilter('specialtyId')}
+            />
+          )}
+          {filters.cityId && (
+            <Chip
+              label="Şehir"
+              icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
+              variant="soft"
+              color="primary"
+              size="sm"
+              onDelete={() => handleRemoveFilter('cityId')}
+            />
+          )}
+          {filters.workType && (
+            <Chip
+              label={filters.workType}
+              variant="soft"
+              color="primary"
+              size="sm"
+              onDelete={() => handleRemoveFilter('workType')}
+            />
+          )}
+        </View>
+      )}
+    </>
+  );
+
   const renderContent = () => {
     if (!data) return null;
 
     return (
-      <>
-        {/* Premium Gradient Header */}
-        <LinearGradient
-          colors={['#FFFFFF', '#F0FDF4', '#DCFCE7']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradientHeader}
-        >
-          {/* Decorative Elements */}
-          <View style={styles.headerDecoration}>
-            <View style={styles.decorCircle1} />
-            <View style={styles.decorCircle2} />
-          </View>
-          
-          <View style={styles.headerContent}>
-            <View style={styles.headerIconWrapper}>
-              <LinearGradient
-                colors={['#10B981', '#059669']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.headerIconGradient}
-              >
-                <Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />
-              </LinearGradient>
-            </View>
-            <Typography variant="h1" style={styles.headerTitle}>
-              İş İlanları
-            </Typography>
-            <View style={styles.headerSubtitleContainer}>
-              <View style={styles.headerDot} />
-              <Typography variant="body" style={styles.headerSubtitle}>
-                {totalCount} aktif ilan
-              </Typography>
-              <View style={styles.headerDot} />
-            </View>
-          </View>
-        </LinearGradient>
-
-        {/* Modern Search & Filter */}
-        <View style={styles.searchContainer}>
-          <SearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Hastane, şehir veya branş ara..."
-            onClear={() => setSearchQuery('')}
-            style={styles.searchBar}
-          />
-          <View style={styles.filterButtonWrapper}>
-            <IconButton
-              icon={
-                <Ionicons
-                  name="filter"
-                  size={20}
-                  color={
-                    activeFilterCount > 0
-                      ? colors.background.primary
-                      : colors.primary[600]
-                  }
-                />
-              }
-              onPress={() => setShowFilterSheet(true)}
-              size="md"
-              variant={activeFilterCount > 0 ? 'filled' : 'ghost'}
-              color="primary"
-            />
-            {activeFilterCount > 0 && (
-              <View style={styles.filterBadge}>
-                <Typography variant="caption" style={styles.filterBadgeText}>
-                  {activeFilterCount}
-                </Typography>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Active Filters with Modern Chips */}
-        {hasActiveFilters && (
-          <View style={styles.activeFiltersContainer}>
-            {filters.specialtyId && (
-              <Chip
-                label="Branş Filtresi"
-                variant="soft"
-                color="primary"
-                size="sm"
-                onDelete={() => handleRemoveFilter('specialtyId')}
-              />
-            )}
-            {filters.cityId && (
-              <Chip
-                label="Şehir"
-                icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
-                variant="soft"
-                color="primary"
-                size="sm"
-                onDelete={() => handleRemoveFilter('cityId')}
-              />
-            )}
-            {filters.workType && (
-              <Chip
-                label={filters.workType}
-                variant="soft"
-                color="primary"
-                size="sm"
-                onDelete={() => handleRemoveFilter('workType')}
-              />
-            )}
-          </View>
-        )}
-
-        {/* Jobs List */}
-        <FlatList
+      <FlatList
           data={jobs}
           renderItem={renderJob}
           keyExtractor={(item) => item.id.toString()}
+          ListHeaderComponent={renderListHeader}
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
           refreshing={isRefetching}
           onRefresh={refetch}
+          showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon}>
@@ -288,8 +292,7 @@ export const JobsScreen = () => {
               </View>
             ) : null
           }
-        />
-      </>
+      />
     );
   };
 
@@ -343,7 +346,8 @@ const styles = StyleSheet.create({
   gradientHeader: {
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 0,
+    marginBottom: spacing.md,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     position: 'relative',
@@ -380,6 +384,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
     zIndex: 1,
+    paddingHorizontal: spacing.lg,
   },
   headerIconWrapper: {
     marginBottom: spacing.sm,
@@ -492,8 +497,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   listContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+    paddingTop: 0,
     paddingBottom: spacing['4xl'],
   },
   footer: {

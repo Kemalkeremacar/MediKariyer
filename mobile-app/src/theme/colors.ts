@@ -5,16 +5,16 @@
 
 export const lightColors = {
   primary: {
-    50: '#eef2ff',
-    100: '#e0e7ff',
-    200: '#c7d2fe',
-    300: '#a5b4fc',
-    400: '#818cf8',
-    500: '#4F46E5',
-    600: '#4338ca',
-    700: '#3730a3',
-    800: '#312e81',
-    900: '#1e1b4b',
+    50: '#eff6ff',
+    100: '#dbeafe',
+    200: '#bfdbfe',
+    300: '#93c5fd',
+    400: '#60a5fa',
+    500: '#3B82F6', // Modern blue
+    600: '#2563eb',
+    700: '#1d4ed8',
+    800: '#1e40af',
+    900: '#1e3a8a',
   },
   secondary: {
     50: '#f5f3ff',
@@ -98,8 +98,8 @@ export const lightColors = {
   },
   // Brand gradient colors (used in headers, buttons)
   gradient: {
-    primary: ['#4A90E2', '#2E5C8A'],
-    secondary: ['#667eea', '#764ba2'],
+    primary: ['#60A5FA', '#3B82F6'], // Light blue gradient
+    secondary: ['#38BDF8', '#0EA5E9'], // Sky blue gradient
   },
   text: {
     primary: '#1F2937',

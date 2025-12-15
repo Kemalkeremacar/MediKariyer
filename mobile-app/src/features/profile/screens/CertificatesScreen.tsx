@@ -1,26 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { CertificateCard } from '@/components/composite/CertificateCard';
+import { CertificateFormModal } from '../components/CertificateFormModal';
 import { colors, spacing } from '@/theme';
-import { profileService } from '@/api/services/profile.service';
+import { useCertificates, useCertificate } from '../hooks/useProfile';
+import type { DoctorCertificate, CreateCertificatePayload, UpdateCertificatePayload } from '@/types/profile';
 
 export const CertificatesScreen = () => {
   const navigation = useNavigation();
+  const [selectedCertificate, setSelectedCertificate] = useState<DoctorCertificate | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
   
-  const { data: certificates = [], isLoading, error, refetch, isRefetching } = useQuery({
-    queryKey: ['certificates'],
-    queryFn: () => profileService.getCertificates(),
-  });
+  const { data: certificates = [], isLoading, error, refetch, isRefetching } = useCertificates();
+  const certificateMutations = useCertificate();
 
   const handleAddCertificate = () => {
-    Alert.alert('Yakında', 'Sertifika ekleme özelliği yakında eklenecek');
+    setSelectedCertificate(null);
+    setModalVisible(true);
+  };
+
+  const handleEditCertificate = (certificate: DoctorCertificate) => {
+    setSelectedCertificate(certificate);
+    setModalVisible(true);
+  };
+
+  const handleDeleteCertificate = (id: number) => {
+    Alert.alert(
+      'Sertifika Sil',
+      'Bu sertifika kaydını silmek istediğinizden emin misiniz?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Sil',
+          style: 'destructive',
+          onPress: () => certificateMutations.delete.mutate(id),
+        },
+      ]
+    );
+  };
+
+  const handleSubmitCertificate = (data: CreateCertificatePayload | UpdateCertificatePayload) => {
+    if (selectedCertificate) {
+      certificateMutations.update.mutate(
+        { id: selectedCertificate.id, data },
+        {
+          onSuccess: () => {
+            setModalVisible(false);
+            setSelectedCertificate(null);
+          },
+        }
+      );
+    } else {
+      certificateMutations.create.mutate(data as CreateCertificatePayload, {
+        onSuccess: () => {
+          setModalVisible(false);
+        },
+      });
+    }
   };
 
   return (
@@ -56,7 +98,8 @@ export const CertificatesScreen = () => {
             name={item.certificate_name || 'Sertifika'}
             issuer={item.institution || 'Kurum'}
             issueDate={item.certificate_year?.toString() || ''}
-            onPress={() => Alert.alert('Yakında', 'Sertifika düzenleme özelliği yakında eklenecek')}
+            onEdit={() => handleEditCertificate(item)}
+            onDelete={() => handleDeleteCertificate(item.id)}
           />
         )}
         refreshControl={
@@ -81,6 +124,18 @@ export const CertificatesScreen = () => {
         icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddCertificate}
         position="bottom-right"
+      />
+
+      {/* Certificate Form Modal */}
+      <CertificateFormModal
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedCertificate(null);
+        }}
+        onSubmit={handleSubmitCertificate}
+        certificate={selectedCertificate}
+        isLoading={certificateMutations.create.isPending || certificateMutations.update.isPending}
       />
     </Screen>
   );

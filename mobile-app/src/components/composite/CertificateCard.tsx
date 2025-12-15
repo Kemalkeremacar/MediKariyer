@@ -15,7 +15,9 @@ export interface CertificateCardProps {
   credentialId?: string;
   credentialUrl?: string;
   onPress?: () => void;
+  onEdit?: () => void;
   onViewCredential?: () => void;
+  onDelete?: () => void;
 }
 
 export const CertificateCard: React.FC<CertificateCardProps> = ({
@@ -26,7 +28,9 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
   credentialId,
   credentialUrl,
   onPress,
+  onEdit,
   onViewCredential,
+  onDelete,
 }) => {
   const Container = onPress ? TouchableOpacity : View;
 
@@ -50,14 +54,26 @@ export const CertificateCard: React.FC<CertificateCardProps> = ({
               </Typography>
             )}
           </View>
-          {(credentialUrl || onViewCredential) && (
-            <IconButton
-              icon={<Ionicons name="open" size={18} color={colors.primary[600]} />}
-              onPress={onViewCredential || (() => {})}
-              size="sm"
-              variant="ghost"
-            />
-          )}
+          <View style={styles.actions}>
+            {onEdit && (
+              <TouchableOpacity onPress={onEdit} style={styles.editButton}>
+                <Ionicons name="pencil-outline" size={18} color={colors.primary[600]} />
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
+              </TouchableOpacity>
+            )}
+            {(credentialUrl || onViewCredential) && !onDelete && (
+              <IconButton
+                icon={<Ionicons name="open" size={18} color={colors.primary[600]} />}
+                onPress={onViewCredential || (() => {})}
+                size="sm"
+                variant="ghost"
+              />
+            )}
+          </View>
         </View>
 
         <View style={styles.footer}>
@@ -121,5 +137,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     flexWrap: 'wrap',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary[100],
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.error[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.error[100],
   },
 });

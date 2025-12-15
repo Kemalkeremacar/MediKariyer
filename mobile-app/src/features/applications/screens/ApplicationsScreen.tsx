@@ -23,6 +23,8 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Modal } from '@/components/ui/Modal';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Screen } from '@/components/layout/Screen';
+import { IconButton } from '@/components/ui/IconButton';
+import { SearchBar } from '@/components/ui/SearchBar';
 import {
   ApplicationFilterSheet,
   ApplicationFilters,
@@ -432,6 +434,7 @@ export const ApplicationsScreen = () => {
   const [filters, setFilters] = useState<ApplicationFilters>({});
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
   const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const query = useApplications({ status: filters.status });
 
@@ -442,8 +445,19 @@ export const ApplicationsScreen = () => {
   const applications = useMemo(() => {
     if (!query.data) return [];
     const pages = query.data.pages ?? [];
-    return pages.flatMap((page) => page.data);
-  }, [query.data]);
+    let allApplications = pages.flatMap((page) => page.data);
+    
+    // Search filter
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase();
+      allApplications = allApplications.filter((app) => 
+        app.hospital_name?.toLowerCase().includes(lowerQuery) ||
+        app.job_title?.toLowerCase().includes(lowerQuery)
+      );
+    }
+    
+    return allApplications;
+  }, [query.data, searchQuery]);
 
   const stats = useMemo(() => {
     return {
@@ -474,8 +488,8 @@ export const ApplicationsScreen = () => {
     return STATUS_DISPLAY[status] || status;
   };
 
-  const renderContent = () => (
-    <View style={styles.container}>
+  const renderListHeader = () => (
+    <>
       {/* Premium Gradient Header */}
       <LinearGradient
         colors={['#FFFBEB', '#FEF3C7', '#FDE68A']}
@@ -513,47 +527,58 @@ export const ApplicationsScreen = () => {
         </View>
       </LinearGradient>
 
-      <View style={styles.statsContainer}>
-        <StatCard
-          icon={<Ionicons name="time" size={18} color={colors.warning[700]} />}
-          label="Beklemede"
-          value={stats.pending}
-          color="warning"
+      {/* Modern Search & Filter */}
+      <View style={styles.searchContainer}>
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Hastane veya pozisyon ara..."
+          onClear={() => setSearchQuery('')}
+          style={styles.searchBar}
         />
-        <StatCard
-          icon={<Ionicons name="checkmark-circle" size={18} color={colors.success[700]} />}
-          label="Kabul"
-          value={stats.approved}
-          color="success"
-        />
-        <StatCard
-          icon={<Ionicons name="eye" size={18} color={colors.primary[700]} />}
-          label="İnceleme"
-          value={stats.reviewing}
-          color="primary"
-        />
+        <View style={styles.filterButtonWrapper}>
+          <TouchableOpacity
+            onPress={() => setShowFilterSheet(true)}
+            style={[
+              styles.filterButton,
+              hasActiveFilter && styles.filterButtonActive,
+            ]}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="filter"
+              size={20}
+              color={hasActiveFilter ? colors.background.primary : colors.primary[600]}
+            />
+          </TouchableOpacity>
+          {hasActiveFilter && (
+            <View style={styles.filterBadge}>
+              <Typography variant="caption" style={styles.filterBadgeText}>
+                1
+              </Typography>
+            </View>
+          )}
+        </View>
       </View>
 
-      <TouchableOpacity
-        style={[styles.filterButton, hasActiveFilter && styles.filterButtonActive]}
-        onPress={() => setShowFilterSheet(true)}
-      >
-        <Ionicons name="filter" size={20} color={hasActiveFilter ? colors.background.primary : colors.primary[600]} />
-        <Typography
-          variant="body"
-          style={hasActiveFilter ? styles.filterButtonTextActive : styles.filterButtonText}
-        >
-          {getStatusDisplayName(filters.status)}
-        </Typography>
-        {hasActiveFilter && (
-          <View style={styles.filterBadge}>
-            <Typography variant="caption" style={styles.filterBadgeText}>
-              1
+      {/* Active Filter Chip */}
+      {hasActiveFilter && (
+        <View style={styles.activeFiltersContainer}>
+          <View style={styles.activeFilterChip}>
+            <Typography variant="body" style={styles.activeFilterText}>
+              {getStatusDisplayName(filters.status)}
             </Typography>
+            <TouchableOpacity onPress={() => setFilters({})}>
+              <Ionicons name="close-circle" size={18} color={colors.primary[600]} />
+            </TouchableOpacity>
           </View>
-        )}
-      </TouchableOpacity>
+        </View>
+      )}
+    </>
+  );
 
+  const renderContent = () => (
+    <View style={styles.container}>
       {query.isLoading ? (
         <View style={styles.skeletonContainer}>
           {[1, 2, 3, 4, 5].map((i) => (
@@ -562,6 +587,7 @@ export const ApplicationsScreen = () => {
         </View>
       ) : (
         <FlatList
+          ListHeaderComponent={renderListHeader}
           data={applications}
           keyExtractor={(item, index) => `app-${item.id}-${index}`}
           renderItem={({ item }) => (
@@ -579,6 +605,7 @@ export const ApplicationsScreen = () => {
           }
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
+          showsVerticalScrollIndicator={false}
           ListFooterComponent={
             query.isFetchingNextPage ? (
               <View style={styles.listFooter}>
@@ -656,70 +683,87 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Modern Gradient Header
+  // Premium Gradient Header - STANDARD SIZE
   gradientHeader: {
-    paddingTop: 60,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
+    paddingHorizontal: 0,
+    marginBottom: spacing.md,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  headerDecoration: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  decorCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#F59E0B',
+    opacity: 0.2,
+    top: -40,
+    right: -20,
+  },
+  decorCircle2: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FBBF24',
+    opacity: 0.15,
+    bottom: -20,
+    left: -10,
   },
   headerContent: {
     alignItems: 'center',
+    position: 'relative',
+    zIndex: 1,
+    paddingHorizontal: spacing.lg,
   },
   headerIconWrapper: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   headerIconGradient: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#ffffff',
-    marginBottom: spacing.xs,
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
-  },
-  headerIcon: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.success[50],
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#F59E0B',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  headerText: {
-    flex: 1,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#92400E',
+    marginBottom: spacing.xs,
+    letterSpacing: 0.5,
   },
-  clearFilterButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.error[50],
+  headerSubtitleContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  headerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#F59E0B',
+  },
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#D97706',
+    lineHeight: 18,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -728,34 +772,59 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     backgroundColor: colors.background.primary,
   },
-  filterButton: {
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    backgroundColor: colors.primary[50],
+    paddingVertical: spacing.lg,
+    backgroundColor: colors.background.primary,
+  },
+  searchBar: {
+    flex: 1,
+  },
+  filterButtonWrapper: {
+    position: 'relative',
+  },
+  filterButton: {
+    width: 44,
+    height: 44,
     borderRadius: 12,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.primary[200],
+    borderColor: colors.primary[100],
   },
   filterButtonActive: {
     backgroundColor: colors.primary[600],
     borderColor: colors.primary[600],
   },
-  filterButtonText: {
-    flex: 1,
+  activeFiltersContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  activeFilterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.primary[50],
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary[100],
+    alignSelf: 'flex-start',
+  },
+  activeFilterText: {
     color: colors.primary[700],
     fontWeight: '600',
-  },
-  filterButtonTextActive: {
-    flex: 1,
-    color: colors.background.primary,
-    fontWeight: '600',
+    fontSize: 14,
   },
   filterBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
     backgroundColor: colors.error[600],
     borderRadius: 10,
     minWidth: 20,
@@ -763,6 +832,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
+    borderWidth: 2,
+    borderColor: colors.background.primary,
   },
   filterBadgeText: {
     color: colors.background.primary,
@@ -774,7 +845,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   listContent: {
-    paddingHorizontal: spacing.lg,
     paddingBottom: spacing['4xl'],
   },
   listFooter: {

@@ -14,6 +14,8 @@ export interface EducationCardProps {
   endDate?: string;
   current?: boolean;
   onPress?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export const EducationCard: React.FC<EducationCardProps> = ({
@@ -24,6 +26,8 @@ export const EducationCard: React.FC<EducationCardProps> = ({
   endDate,
   current = false,
   onPress,
+  onEdit,
+  onDelete,
 }) => {
   const Container = onPress ? TouchableOpacity : View;
 
@@ -47,17 +51,31 @@ export const EducationCard: React.FC<EducationCardProps> = ({
               </Typography>
             )}
           </View>
+          <View style={styles.actions}>
+            {onEdit && (
+              <TouchableOpacity onPress={onEdit} style={styles.editButton}>
+                <Ionicons name="pencil-outline" size={18} color={colors.primary[600]} />
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        <View style={styles.footer}>
-          <Chip
-            label={`${startDate} - ${current ? 'Devam Ediyor' : endDate}`}
-            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
-            variant="soft"
-            color="neutral"
-            size="sm"
-          />
-        </View>
+        {endDate && (
+          <View style={styles.footer}>
+            <Chip
+              label={endDate}
+              icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
+              variant="soft"
+              color="neutral"
+              size="sm"
+            />
+          </View>
+        )}
       </Card>
     </Container>
   );
@@ -99,5 +117,30 @@ const styles = StyleSheet.create({
   },
   footer: {
     marginTop: spacing.xs,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary[100],
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.error[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.error[100],
   },
 });

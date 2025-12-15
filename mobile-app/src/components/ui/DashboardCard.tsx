@@ -7,6 +7,7 @@ export interface DashboardCardProps {
   title: string;
   icon?: React.ReactNode;
   onPress?: () => void;
+  onPressIn?: () => void; // Prefetch için
   style?: ViewStyle;
   variant?: 'default' | 'large';
 }
@@ -15,6 +16,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   title,
   icon,
   onPress,
+  onPressIn,
   style,
   variant = 'default',
 }) => {
@@ -31,6 +33,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
         style,
       ]}
       onPress={onPress}
+      onPressIn={onPressIn}
       activeOpacity={onPress ? 0.7 : 1}
     >
       <View style={styles.content}>

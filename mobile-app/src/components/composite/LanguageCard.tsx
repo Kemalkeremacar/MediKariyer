@@ -10,32 +10,34 @@ export interface LanguageCardProps {
   language: string;
   level: string;
   onPress?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 const levelColors = {
-  A1: 'neutral' as const,
-  A2: 'neutral' as const,
-  B1: 'primary' as const,
-  B2: 'primary' as const,
-  C1: 'success' as const,
-  C2: 'success' as const,
-  Native: 'success' as const,
+  'Başlangıç': 'neutral' as const,
+  'Temel': 'neutral' as const,
+  'Orta': 'primary' as const,
+  'Orta Üstü': 'primary' as const,
+  'İleri': 'success' as const,
+  'Ana Dil': 'success' as const,
 };
 
 const levelLabels = {
-  A1: 'Başlangıç',
-  A2: 'Temel',
-  B1: 'Orta',
-  B2: 'Orta-İleri',
-  C1: 'İleri',
-  C2: 'Çok İleri',
-  Native: 'Ana Dil',
+  'Başlangıç': 'A1',
+  'Temel': 'A2',
+  'Orta': 'B1',
+  'Orta Üstü': 'B2',
+  'İleri': 'C1',
+  'Ana Dil': 'C2',
 };
 
 export const LanguageCard: React.FC<LanguageCardProps> = ({
   language,
   level,
   onPress,
+  onEdit,
+  onDelete,
 }) => {
   const Wrapper = onPress ? TouchableOpacity : View;
 
@@ -59,9 +61,21 @@ export const LanguageCard: React.FC<LanguageCardProps> = ({
               </Typography>
             </View>
           </View>
-          {onPress && (
-            <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
-          )}
+          <View style={styles.actions}>
+            {onEdit && (
+              <TouchableOpacity onPress={onEdit} style={styles.editButton}>
+                <Ionicons name="pencil-outline" size={18} color={colors.primary[600]} />
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
+              </TouchableOpacity>
+            )}
+            {onPress && !onDelete && !onEdit && (
+              <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+            )}
+          </View>
         </View>
       </Card>
     </Wrapper>
@@ -99,5 +113,30 @@ const styles = StyleSheet.create({
   levelText: {
     fontSize: 12,
     color: colors.text.secondary,
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    alignItems: 'center',
+  },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary[100],
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.error[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.error[100],
   },
 });

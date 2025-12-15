@@ -118,7 +118,13 @@ export interface CreateEducationPayload {
   education_type?: string | null;
 }
 
-export interface UpdateEducationPayload extends CreateEducationPayload {}
+export interface UpdateEducationPayload {
+  education_type_id?: number;
+  education_institution?: string;
+  field?: string;
+  graduation_year?: number;
+  education_type?: string | null;
+}
 
 export interface CreateExperiencePayload {
   organization: string;
@@ -131,7 +137,16 @@ export interface CreateExperiencePayload {
   subspecialty_id?: number | null;
 }
 
-export interface UpdateExperiencePayload extends CreateExperiencePayload {}
+export interface UpdateExperiencePayload {
+  organization?: string;
+  role_title?: string;
+  start_date?: string;
+  end_date?: string | null;
+  is_current?: boolean;
+  description?: string | null;
+  specialty_id?: number;
+  subspecialty_id?: number | null;
+}
 
 export interface CreateCertificatePayload {
   certificate_name: string;
@@ -139,14 +154,21 @@ export interface CreateCertificatePayload {
   certificate_year: number;
 }
 
-export interface UpdateCertificatePayload extends CreateCertificatePayload {}
+export interface UpdateCertificatePayload {
+  certificate_name?: string;
+  institution?: string;
+  certificate_year?: number | null;
+}
 
 export interface CreateLanguagePayload {
   language_id: number;
   level_id: number;
 }
 
-export interface UpdateLanguagePayload extends CreateLanguagePayload {}
+export interface UpdateLanguagePayload {
+  language_id?: number;
+  level_id?: number;
+}
 
 export interface UploadPhotoPayload {
   file_url: string;

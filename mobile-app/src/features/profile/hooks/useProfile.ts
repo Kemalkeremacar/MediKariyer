@@ -62,7 +62,7 @@ export const useUpdatePersonalInfo = () => {
  */
 export const useEducations = () => {
   return useQuery({
-    queryKey: ['educations'],
+    queryKey: ['profile', 'educations'],
     queryFn: () => profileService.getEducations(),
     retry: 2,
     retryDelay: 1000,
@@ -79,7 +79,7 @@ export const useEducation = () => {
     mutationFn: (data: CreateEducationPayload) => profileService.createEducation(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['educations'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
       Alert.alert('Başarılı', 'Eğitim bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -92,7 +92,7 @@ export const useEducation = () => {
       profileService.updateEducation(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['educations'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
       Alert.alert('Başarılı', 'Eğitim bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -104,7 +104,7 @@ export const useEducation = () => {
     mutationFn: (id: number) => profileService.deleteEducation(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['educations'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
       Alert.alert('Başarılı', 'Eğitim bilgisi silindi');
     },
     onError: (error: any) => {
@@ -124,7 +124,7 @@ export const useEducation = () => {
  */
 export const useExperiences = () => {
   return useQuery({
-    queryKey: ['experiences'],
+    queryKey: ['profile', 'experiences'],
     queryFn: () => profileService.getExperiences(),
     retry: 2,
     retryDelay: 1000,
@@ -141,7 +141,7 @@ export const useExperience = () => {
     mutationFn: (data: CreateExperiencePayload) => profileService.createExperience(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['experiences'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
       Alert.alert('Başarılı', 'Deneyim bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -154,7 +154,7 @@ export const useExperience = () => {
       profileService.updateExperience(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['experiences'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
       Alert.alert('Başarılı', 'Deneyim bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -166,7 +166,7 @@ export const useExperience = () => {
     mutationFn: (id: number) => profileService.deleteExperience(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['experiences'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
       Alert.alert('Başarılı', 'Deneyim bilgisi silindi');
     },
     onError: (error: any) => {
@@ -186,7 +186,7 @@ export const useExperience = () => {
  */
 export const useCertificates = () => {
   return useQuery({
-    queryKey: ['certificates'],
+    queryKey: ['profile', 'certificates'],
     queryFn: () => profileService.getCertificates(),
     retry: 2,
     retryDelay: 1000,
@@ -203,7 +203,7 @@ export const useCertificate = () => {
     mutationFn: (data: CreateCertificatePayload) => profileService.createCertificate(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['certificates'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
       Alert.alert('Başarılı', 'Sertifika bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -216,7 +216,7 @@ export const useCertificate = () => {
       profileService.updateCertificate(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['certificates'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
       Alert.alert('Başarılı', 'Sertifika bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -228,7 +228,7 @@ export const useCertificate = () => {
     mutationFn: (id: number) => profileService.deleteCertificate(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['certificates'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
       Alert.alert('Başarılı', 'Sertifika bilgisi silindi');
     },
     onError: (error: any) => {
@@ -248,10 +248,12 @@ export const useCertificate = () => {
  */
 export const useLanguages = () => {
   return useQuery({
-    queryKey: ['languages'],
+    queryKey: ['profile', 'languages'], // Unique key - lookup ile çakışmasın
     queryFn: () => profileService.getLanguages(),
     retry: 2,
     retryDelay: 1000,
+    staleTime: 0, // Her zaman fresh data çek
+    refetchOnMount: 'always', // Mount olduğunda her zaman refetch yap
   });
 };
 
@@ -265,7 +267,7 @@ export const useLanguage = () => {
     mutationFn: (data: CreateLanguagePayload) => profileService.createLanguage(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
       Alert.alert('Başarılı', 'Dil bilgisi eklendi');
     },
     onError: (error: any) => {
@@ -278,7 +280,7 @@ export const useLanguage = () => {
       profileService.updateLanguage(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
       Alert.alert('Başarılı', 'Dil bilgisi güncellendi');
     },
     onError: (error: any) => {
@@ -290,7 +292,7 @@ export const useLanguage = () => {
     mutationFn: (id: number) => profileService.deleteLanguage(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['languages'] });
+      queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
       Alert.alert('Başarılı', 'Dil bilgisi silindi');
     },
     onError: (error: any) => {

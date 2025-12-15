@@ -3,7 +3,7 @@
  * @description Modern başvuru filtreleme bottom sheet bileşeni
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,11 +13,9 @@ import {
   Dimensions,
   Pressable,
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
-import { lookupService } from '@/api/services/lookup.service';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -41,35 +39,28 @@ const STATUS_OPTIONS = [
     label: 'Başvuruldu',
     icon: 'time' as const,
     color: colors.warning[600],
-    bgColor: colors.warning[50],
+    bgColor: colors.warning[100],
   },
   {
     value: 'reviewing',
     label: 'İnceleniyor',
     icon: 'eye' as const,
     color: colors.primary[600],
-    bgColor: colors.primary[50],
+    bgColor: colors.primary[100],
   },
   {
     value: 'approved',
     label: 'Kabul Edildi',
     icon: 'checkmark-circle' as const,
     color: colors.success[600],
-    bgColor: colors.success[50],
+    bgColor: colors.success[100],
   },
   {
     value: 'rejected',
     label: 'Red Edildi',
     icon: 'close-circle' as const,
     color: colors.error[600],
-    bgColor: colors.error[50],
-  },
-  {
-    value: 'withdrawn',
-    label: 'Geri Çekildi',
-    icon: 'refresh' as const,
-    color: colors.neutral[600],
-    bgColor: colors.neutral[100],
+    bgColor: colors.error[100],
   },
 ];
 
@@ -155,10 +146,10 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
               <View
                 style={[
                   styles.statusIcon,
-                  { backgroundColor: colors.neutral[100] },
+                  { backgroundColor: colors.warning[100] },
                 ]}
               >
-                <Ionicons name="document-text" size={24} color={colors.neutral[600]} />
+                <Ionicons name="document-text" size={20} color={colors.warning[600]} />
               </View>
               <View style={styles.statusInfo}>
                 <Typography
@@ -201,7 +192,7 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
                       { backgroundColor: option.bgColor },
                     ]}
                   >
-                    <Ionicons name={iconName} size={24} color={option.color} />
+                    <Ionicons name={iconName} size={20} color={option.color} />
                   </View>
                   <View style={styles.statusInfo}>
                     <Typography
@@ -230,13 +221,16 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
               label="Temizle"
               variant="outline"
               onPress={handleReset}
-              style={styles.footerButton}
+              size="lg"
+              style={styles.clearButton}
             />
+            
             <Button
               label="Uygula"
               variant="primary"
               onPress={handleApply}
-              style={styles.footerButton}
+              size="lg"
+              style={styles.applyButton}
             />
           </View>
         </View>
@@ -255,19 +249,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   sheet: {
-    backgroundColor: colors.background.primary,
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: SCREEN_HEIGHT * 0.7,
+    paddingBottom: spacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -277,7 +271,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.text.primary,
+    color: '#1F2937',
   },
   badge: {
     backgroundColor: colors.primary[600],
@@ -294,27 +288,30 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   content: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 24,
     paddingVertical: spacing.md,
   },
   statusCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    marginBottom: spacing.sm,
-    backgroundColor: colors.background.primary,
+    height: 72,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: colors.neutral[200],
+    borderColor: '#E5E7EB',
   },
   statusCardSelected: {
-    borderColor: colors.primary[600],
-    backgroundColor: colors.primary[50],
+    borderWidth: 2,
+    borderColor: '#60A5FA',
+    backgroundColor: '#EFF6FF',
   },
   statusIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -323,13 +320,15 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   statusLabel: {
+    fontSize: 16,
     fontWeight: '600',
     color: colors.text.primary,
   },
   statusLabelSelected: {
-    color: colors.primary[700],
+    color: '#3B82F6',
   },
   statusDescription: {
+    fontSize: 13,
     color: colors.text.secondary,
     marginTop: 2,
   },
@@ -338,13 +337,14 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.neutral[100],
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingTop: spacing.lg,
   },
-  footerButton: {
+  clearButton: {
+    flex: 1,
+  },
+  applyButton: {
     flex: 1,
   },
 });

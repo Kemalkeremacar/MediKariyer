@@ -1095,7 +1095,7 @@ const getLanguages = async (userId) => {
     )
     .where('dl.doctor_profile_id', profile.id)
     .whereNull('dl.deleted_at') // Soft delete: Sadece silinmemiş kayıtları getir
-    .orderBy('ll.name', 'desc');
+    .orderBy('dl.created_at', 'desc');
 };
 
 

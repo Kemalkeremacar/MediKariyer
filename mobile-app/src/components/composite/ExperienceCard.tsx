@@ -16,6 +16,8 @@ export interface ExperienceCardProps {
   current?: boolean;
   description?: string;
   onPress?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({
@@ -27,6 +29,8 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
   current = false,
   description,
   onPress,
+  onEdit,
+  onDelete,
 }) => {
   const Container = onPress ? TouchableOpacity : View;
 
@@ -44,6 +48,18 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
             <Typography variant="body" style={styles.company}>
               {company}
             </Typography>
+          </View>
+          <View style={styles.actions}>
+            {onEdit && (
+              <TouchableOpacity onPress={onEdit} style={styles.editButton}>
+                <Ionicons name="pencil-outline" size={18} color={colors.primary[600]} />
+              </TouchableOpacity>
+            )}
+            {onDelete && (
+              <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -119,5 +135,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     flexWrap: 'wrap',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary[100],
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.error[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.error[100],
   },
 });
