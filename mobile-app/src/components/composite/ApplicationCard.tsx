@@ -19,20 +19,8 @@ interface ApplicationCardProps {
 export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onPress }) => {
   const dateToUse = application.applied_at || application.created_at;
   
-  // Parse date and handle timezone
-  const parseDate = (dateString: string) => {
-    // Backend'den gelen tarih UTC ise, direkt parse et
-    const date = new Date(dateString);
-    // Eğer tarih string'i 'Z' ile bitmiyorsa (UTC değilse), local olarak kabul et
-    if (!dateString.endsWith('Z') && !dateString.includes('+')) {
-      // Local timezone'a göre ayarla
-      return new Date(dateString + 'Z');
-    }
-    return date;
-  };
-  
   const timeAgo = dateToUse
-    ? formatDistanceToNow(parseDate(dateToUse), { 
+    ? formatDistanceToNow(new Date(dateToUse), { 
         addSuffix: true,
         locale: tr 
       })

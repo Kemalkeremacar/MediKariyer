@@ -49,44 +49,39 @@ const createStyles = (theme: any) => StyleSheet.create({
   base: {
     borderRadius: theme.borderRadius.full, // Tam yuvarlak
     alignSelf: 'flex-start',
-    shadowColor: '#000',
+    // Modern: Soft pastel shadow
+    shadowColor: '#6366F1',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
   primary: {
     backgroundColor: theme.colors.primary[100],
-    borderWidth: 1,
-    borderColor: theme.colors.primary[200],
+    // Modern: Border kaldırıldı
   },
   secondary: {
     backgroundColor: theme.colors.secondary[100],
-    borderWidth: 1,
-    borderColor: theme.colors.secondary[200],
+    // Modern: Border kaldırıldı
   },
   success: {
     backgroundColor: theme.colors.success[100],
-    borderWidth: 1,
-    borderColor: theme.colors.success[200],
+    // Modern: Border kaldırıldı
   },
   warning: {
     backgroundColor: theme.colors.warning[100],
-    borderWidth: 1,
-    borderColor: theme.colors.warning[200],
+    // Modern: Border kaldırıldı
   },
   error: {
     backgroundColor: theme.colors.error[100],
-    borderWidth: 1,
-    borderColor: theme.colors.error[200],
+    // Modern: Border kaldırıldı
   },
   neutral: {
     backgroundColor: theme.colors.neutral[100],
-    borderWidth: 1,
-    borderColor: theme.colors.neutral[200],
+    // Modern: Border kaldırıldı
   },
   size_sm: {
     paddingHorizontal: theme.spacing.md, // 12px

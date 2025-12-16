@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
-import { GradientButton } from './GradientButton';
+
 import { Button } from './Button';
 
 export type AlertType = 'success' | 'error' | 'info' | 'confirm' | 'confirmDestructive';
@@ -135,19 +135,21 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                     </Typography>
                   </TouchableOpacity>
                 ) : (
-                  <GradientButton
+                  <Button
+                    variant="gradient"
                     label={confirmText}
                     onPress={handleConfirm}
-                    colors={['#4A90E2', '#2E5C8A']}
+                    gradientColors={['#4A90E2', '#2E5C8A']}
                     style={styles.button}
                   />
                 )}
               </>
             ) : (
-              <GradientButton
+              <Button
+                variant="gradient"
                 label={confirmText}
                 onPress={onClose}
-                colors={['#4A90E2', '#2E5C8A']}
+                gradientColors={['#4A90E2', '#2E5C8A']}
                 fullWidth
               />
             )}

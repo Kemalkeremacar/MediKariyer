@@ -56,9 +56,9 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
 const createStyles = (theme: any) => StyleSheet.create({
   base: {
     backgroundColor: theme.colors.background.card,
-    borderRadius: theme.borderRadius.lg, // 16px
-    borderWidth: 0.5,
-    borderColor: theme.colors.border.light,
+    borderRadius: theme.borderRadius.xl, // Modern: Daha yuvarlak köşeler
+    // Modern: Border kaldırıldı, soft shadow eklendi
+    ...theme.shadows.sm,
   },
   default: {
     padding: theme.spacing.lg, // 16px

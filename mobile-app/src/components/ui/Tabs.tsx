@@ -93,8 +93,7 @@ export const Tabs: React.FC<TabsProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[200],
+    // Modern: Border kaldırıldı
   },
   tab: {
     flex: 1,
@@ -129,7 +128,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
-    borderRadius: 20,
+    borderRadius: 24, // Modern: Daha yuvarlak
     backgroundColor: colors.neutral[100],
   },
   pillActive: {

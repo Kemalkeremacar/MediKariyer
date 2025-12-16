@@ -137,14 +137,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.borderRadius?.lg || 16,
+    borderRadius: theme.borderRadius?.xl || 22, // Modern: Daha yuvarlak
     overflow: 'hidden',
   },
   gradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.borderRadius?.lg || 16,
+    borderRadius: theme.borderRadius?.xl || 22, // Modern: Daha yuvarlak
     width: '100%',
   },
   fullWidth: {
@@ -152,25 +152,27 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   primary: {
     backgroundColor: theme.colors.primary[500], // #4F46E5
-    shadowColor: '#000',
+    // Modern: Soft pastel shadow
+    shadowColor: '#3B82F6',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 3,
   },
   secondary: {
     backgroundColor: theme.colors.secondary[500], // #764ba2
-    shadowColor: '#000',
+    // Modern: Soft pastel shadow
+    shadowColor: '#764ba2',
     shadowOffset: {
       width: 0,
       height: 4,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 3,
   },
   outline: {
     backgroundColor: 'transparent',

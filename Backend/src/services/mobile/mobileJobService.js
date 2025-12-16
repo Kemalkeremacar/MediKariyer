@@ -43,7 +43,8 @@ const buildJobsBaseQuery = () => {
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
-    .whereNull('j.deleted_at');
+    .whereNull('j.deleted_at')
+    .where('j.status_id', 3); // Sadece onaylanmış ilanları göster (status_id = 3 = Onaylandı)
 };
 
 const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => {
@@ -166,7 +167,8 @@ const getJobDetail = async (userId, jobId) => {
       'hp.about as hospital_about'
     )
     .where('j.id', jobId)
-    .whereNull('j.deleted_at');
+    .whereNull('j.deleted_at')
+    .where('j.status_id', 3); // Sadece onaylanmış ilanları göster
   } catch (error) {
     logger.error('❌ Job detail query error:', error.message);
     logger.error('Error details:', {

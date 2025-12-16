@@ -18,6 +18,8 @@
 
 'use strict';
 
+const { toUTC } = require('./dateHelper');
+
 // ============================================================================
 // TRANSFORMER FONKSİYONLARI
 // ============================================================================
@@ -41,8 +43,8 @@ const toMobileProfile = (profile = {}) => {
     residence_city_id: profile.residence_city_id || null,
     residence_city_name: profile.residence_city_name || null,
     completion_percent: profile.completion_percent ?? null,
-    created_at: profile.created_at || null,
-    updated_at: profile.updated_at || null
+    created_at: toUTC(profile.created_at),
+    updated_at: toUTC(profile.updated_at)
   };
 };
 
@@ -58,8 +60,8 @@ const toMobileEducation = (education = {}) => {
     education_institution: education.education_institution || null,
     field: education.field || null,
     graduation_year: education.graduation_year || null,
-    created_at: education.created_at || null,
-    updated_at: education.updated_at || null
+    created_at: toUTC(education.created_at),
+    updated_at: toUTC(education.updated_at)
   };
 };
 
@@ -79,8 +81,8 @@ const toMobileExperience = (experience = {}) => {
     end_date: experience.end_date || null,
     is_current: experience.is_current ?? false,
     description: experience.description || null,
-    created_at: experience.created_at || null,
-    updated_at: experience.updated_at || null
+    created_at: toUTC(experience.created_at),
+    updated_at: toUTC(experience.updated_at)
   };
 };
 
@@ -93,8 +95,8 @@ const toMobileCertificate = (certificate = {}) => {
     certificate_name: certificate.certificate_name || null,
     institution: certificate.institution || null,
     certificate_year: certificate.certificate_year || null,
-    created_at: certificate.created_at || null,
-    updated_at: certificate.updated_at || null
+    created_at: toUTC(certificate.created_at),
+    updated_at: toUTC(certificate.updated_at)
   };
 };
 
@@ -108,8 +110,8 @@ const toMobileLanguage = (language = {}) => {
     language: language.language || null,
     level_id: language.level_id || null,
     level: language.level || null,
-    created_at: language.created_at || null,
-    updated_at: language.updated_at || null
+    created_at: toUTC(language.created_at),
+    updated_at: toUTC(language.updated_at)
   };
 };
 

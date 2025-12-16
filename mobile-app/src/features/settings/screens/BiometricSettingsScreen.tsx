@@ -14,7 +14,8 @@
 
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
-import { ScreenContainer } from '@/components/layout/ScreenContainer';
+import { showAlert } from '@/utils/alert';
+import { Screen } from '@/components/layout/Screen';
 import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { Switch } from '@/components/ui/Switch';
@@ -87,7 +88,7 @@ export const BiometricSettingsScreen = () => {
 
   if (!isAvailable) {
     return (
-      <ScreenContainer>
+      <Screen scrollable={false}>
         <View style={styles.emptyContainer}>
           <Ionicons name="finger-print" size={64} color={colors.neutral[400]} />
           <Typography variant="h2" style={styles.emptyTitle}>
@@ -97,12 +98,12 @@ export const BiometricSettingsScreen = () => {
             Cihazınız biyometrik kimlik doğrulamayı desteklemiyor veya ayarlanmamış.
           </Typography>
         </View>
-      </ScreenContainer>
+      </Screen>
     );
   }
 
   return (
-    <ScreenContainer>
+    <Screen scrollable={false}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -188,7 +189,7 @@ export const BiometricSettingsScreen = () => {
           </Card>
         </View>
       </View>
-    </ScreenContainer>
+    </Screen>
   );
 };
 

@@ -58,15 +58,14 @@ const createStyles = (theme: Theme) => StyleSheet.create({
   elevated: {
     ...theme.shadows.md,
     backgroundColor: theme.colors.background.card,
-    borderWidth: 0.5,
-    borderColor: theme.colors.border.light,
+    // Modern: Border kaldırıldı, sadece gölge kullanılıyor
   },
   outlined: {
-    borderWidth: 1,
-    borderColor: theme.colors.border.medium,
+    // Modern: İnce border yerine hafif gölge ve arka plan
+    ...theme.shadows.sm,
     backgroundColor: theme.colors.background.card,
   },
   filled: {
-    backgroundColor: theme.colors.background.card,
+    backgroundColor: theme.colors.neutral[50],
   },
 });

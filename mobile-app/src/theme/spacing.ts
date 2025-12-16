@@ -17,14 +17,14 @@ export const spacing = {
 } as const;
 
 export const borderRadius = {
-  xs: 4,
-  sm: 8,
-  md: 12,   // Kartlar için (12-16px)
-  lg: 16,   // Kartlar için (12-16px)
-  xl: 20,
-  '2xl': 24,
+  xs: 6,
+  sm: 10,
+  md: 14,   // Küçük bileşenler için
+  lg: 18,   // Kartlar için (modern)
+  xl: 22,
+  '2xl': 28, // Büyük kartlar için
   '3xl': 40, // Profil resimleri için (40px)
-  header: 30, // Header bottom radius
+  header: 32, // Header bottom radius
   full: 9999,
 } as const;
 

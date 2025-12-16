@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { jobService } from '@/api/services/job.service';
 import type { JobsStackParamList } from '@/navigation/types';
 import { colors, spacing, borderRadius } from '@/theme';
-import { ScreenContainer } from '@/components/layout/ScreenContainer';
+import { Screen } from '@/components/layout/Screen';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
@@ -74,17 +74,17 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
 
   if (isLoading) {
     return (
-      <ScreenContainer scrollable={false}>
+      <Screen scrollable={false}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary[600]} />
         </View>
-      </ScreenContainer>
+      </Screen>
     );
   }
 
   if (isError || !job) {
     return (
-      <ScreenContainer scrollable={false}>
+      <Screen scrollable={false}>
         <View style={[styles.centerContainer, { padding: spacing.lg }]}>
           <Typography variant="h3" style={{ marginBottom: spacing.md }}>
             İlan detayları yüklenemedi
@@ -95,7 +95,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             onPress={() => navigation.goBack()} 
           />
         </View>
-      </ScreenContainer>
+      </Screen>
     );
   }
 
@@ -119,7 +119,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   };
 
   return (
-    <ScreenContainer scrollable={false} contentContainerStyle={styles.container}>
+    <Screen scrollable={false} contentContainerStyle={styles.container}>
       {/* Scrollable İçerik */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -402,7 +402,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
           />
         )}
       </ScrollView>
-    </ScreenContainer>
+    </Screen>
   );
 };
 

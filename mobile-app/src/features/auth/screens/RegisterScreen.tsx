@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { AuthStackParamList } from '@/navigation/types';
 import { Typography } from '@/components/ui/Typography';
-import { GradientButton } from '@/components/ui/GradientButton';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { Select } from '@/components/ui/Select';
@@ -487,13 +487,14 @@ export const RegisterScreen = () => {
               )}
             </View>
 
-            <GradientButton
+            <Button
+              variant="gradient"
               label={registerMutation.isPending ? "Kayıt Oluşturuluyor..." : "Hesap Oluştur"}
               onPress={handleSubmit(onSubmit)}
               loading={registerMutation.isPending}
               fullWidth
               size="lg"
-              colors={['#4A90E2', '#2E5C8A']}
+              gradientColors={['#4A90E2', '#2E5C8A']}
               style={styles.buttonSpacing}
             />
             

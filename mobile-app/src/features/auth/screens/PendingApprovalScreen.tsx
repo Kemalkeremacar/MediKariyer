@@ -10,7 +10,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
-import { GradientButton } from '@/components/ui/GradientButton';
+import { Button } from '@/components/ui/Button';
 import type { AuthStackParamList } from '@/navigation/types';
 
 export const PendingApprovalScreen = () => {
@@ -71,10 +71,11 @@ export const PendingApprovalScreen = () => {
           </Typography>
         </View>
 
-        <GradientButton
+        <Button
+          variant="gradient"
           label="Giriş Ekranına Dön"
           onPress={() => navigation.navigate('Login')}
-          colors={['#4A90E2', '#2E5C8A']}
+          gradientColors={['#4A90E2', '#2E5C8A']}
           fullWidth
           size="lg"
         />

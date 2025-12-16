@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Linking } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 import { colors, spacing, borderRadius } from '@/theme';
-import { ScreenContainer } from '@/components/layout/ScreenContainer';
+import { Screen } from '@/components/layout/Screen';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -22,7 +22,7 @@ export const AccountDisabledScreen = () => {
   };
 
   return (
-    <ScreenContainer
+    <Screen
       scrollable={false}
       contentContainerStyle={styles.screenContent}
     >
@@ -61,7 +61,7 @@ export const AccountDisabledScreen = () => {
           loading={logoutMutation.isPending}
         />
       </Card>
-    </ScreenContainer>
+    </Screen>
   );
 };
 

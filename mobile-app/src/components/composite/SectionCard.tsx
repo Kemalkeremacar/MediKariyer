@@ -61,10 +61,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.lg,
-    backgroundColor: colors.background.primary,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
+    backgroundColor: colors.background.card,
+    borderRadius: 18,
+    // Modern: Border kaldırıldı, soft shadow eklendi
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 2,
     gap: spacing.md,
   },
   iconContainer: {

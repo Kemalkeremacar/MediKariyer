@@ -23,6 +23,8 @@
 // TRANSFORMER FONKSİYONLARI
 // ============================================================================
 
+const { toUTC } = require('./dateHelper');
+
 const toListItem = (application = {}) => ({
   id: application.id,
   job_id: application.job_id,
@@ -30,9 +32,9 @@ const toListItem = (application = {}) => ({
   hospital_name: application.hospital_name || null,
   status: application.status_label || application.status || null,
   status_id: application.status_id || null,
-  applied_at: application.applied_at || application.created_at || null,
-  created_at: application.created_at || application.applied_at || null,
-  updated_at: application.updated_at || null
+  applied_at: toUTC(application.applied_at || application.created_at),
+  created_at: toUTC(application.created_at || application.applied_at),
+  updated_at: toUTC(application.updated_at)
 });
 
 const toDetail = (application = {}) => ({

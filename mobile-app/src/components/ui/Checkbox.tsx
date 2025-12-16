@@ -62,15 +62,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   checkbox: {
-    borderWidth: 2,
-    borderColor: colors.neutral[300],
+    borderWidth: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.background.primary,
+    backgroundColor: colors.neutral[200],
   },
   checkboxChecked: {
     backgroundColor: colors.primary[600],
-    borderColor: colors.primary[600],
   },
   checkboxDisabled: {
     opacity: 0.5,

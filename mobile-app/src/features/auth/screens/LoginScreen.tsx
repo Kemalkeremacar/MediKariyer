@@ -13,7 +13,7 @@ import { tokenManager } from '@/utils/tokenManager';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { AuthStackParamList } from '@/navigation/types';
 import { Typography } from '@/components/ui/Typography';
-import { GradientButton } from '@/components/ui/GradientButton';
+
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useLogin } from '../hooks/useLogin';
@@ -219,13 +219,14 @@ export const LoginScreen = () => {
               </Typography>
             </Button>
 
-            <GradientButton
+            <Button
+              variant="gradient"
               label={loginMutation.isPending ? "Giriş Yapılıyor..." : "Giriş Yap"}
               onPress={handleSubmit(onSubmit)}
               loading={loginMutation.isPending}
               fullWidth
               size="lg"
-              colors={['#4A90E2', '#2E5C8A']}
+              gradientColors={['#4A90E2', '#2E5C8A']}
               style={styles.loginButton}
             />
 

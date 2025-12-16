@@ -66,12 +66,16 @@ export const StatCard: React.FC<StatCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    backgroundColor: colors.background.primary,
-    borderRadius: 16,
+    backgroundColor: colors.background.card,
+    borderRadius: 20,
     padding: spacing.md,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
+    // Modern: Border kaldırıldı, soft shadow eklendi
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 2,
     gap: spacing.xs,
   },
   iconContainer: {

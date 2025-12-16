@@ -20,6 +20,8 @@
 
 'use strict';
 
+const { toUTC } = require('./dateHelper');
+
 // ============================================================================
 // YARDIMCI FONKSİYONLAR
 // ============================================================================
@@ -55,8 +57,8 @@ const toListItem = (job = {}) => ({
   specialty: job.specialty_name || job.specialty || null,
   salary_range: job.salary_range || formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency),
   work_type: job.work_type || job.employment_type || null,
-  created_at: job.created_at,
-  updated_at: job.updated_at || null,
+  created_at: toUTC(job.created_at),
+  updated_at: toUTC(job.updated_at),
   is_applied: Boolean(job.is_applied),
   hospital_id: job.hospital_id || null,
   hospital_name: job.hospital_name || job.institution_name || null

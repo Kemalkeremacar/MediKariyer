@@ -56,12 +56,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.background.secondary,
-    borderRadius: 12,
-    paddingHorizontal: spacing.md,
-    height: 48,
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
+    backgroundColor: colors.neutral[100],
+    borderRadius: 16,
+    paddingHorizontal: spacing.lg,
+    height: 52,
+    // Modern: Border kaldırıldı
   },
   searchIcon: {
     marginRight: spacing.sm,

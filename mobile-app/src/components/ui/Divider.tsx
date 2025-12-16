@@ -60,11 +60,11 @@ export const Divider: React.FC<DividerProps> = ({
 const styles = StyleSheet.create({
   horizontal: {
     height: 1,
-    backgroundColor: colors.neutral[200],
+    backgroundColor: colors.neutral[100], // Modern: Daha açık renk
   },
   vertical: {
     width: 1,
-    backgroundColor: colors.neutral[200],
+    backgroundColor: colors.neutral[100], // Modern: Daha açık renk
     alignSelf: 'stretch',
   },
   labelContainer: {
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.neutral[200],
+    backgroundColor: colors.neutral[100], // Modern: Daha açık renk
   },
   label: {
     color: colors.text.secondary,

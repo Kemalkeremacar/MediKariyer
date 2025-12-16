@@ -150,8 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.primary[100],
+    // Modern: Border kaldırıldı
   },
   deleteButton: {
     width: 36,
@@ -160,7 +159,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error[50],
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.error[100],
+    // Modern: Border kaldırıldı
   },
 });

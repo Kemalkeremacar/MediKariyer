@@ -18,6 +18,8 @@
 
 'use strict';
 
+const { toUTC } = require('./dateHelper');
+
 // ============================================================================
 // TRANSFORMER FONKSİYONLARI
 // ============================================================================
@@ -30,8 +32,8 @@ const toListItem = (notification = {}) => ({
   type: notification.type || 'info',
   // is_read: read_at IS NOT NULL kontrolü (database'de is_read field'ı yok, read_at var)
   is_read: Boolean(notification.read_at),
-  read_at: notification.read_at || null,
-  created_at: notification.created_at,
+  read_at: toUTC(notification.read_at),
+  created_at: toUTC(notification.created_at),
   data: notification.data || null
 });
 

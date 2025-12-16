@@ -101,14 +101,15 @@ const styles = StyleSheet.create({
   },
   container: {
     width: '90%',
-    backgroundColor: colors.background.primary,
-    borderRadius: 20,
+    backgroundColor: colors.background.card,
+    borderRadius: 28,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 24,
-    elevation: 8,
+    // Modern: Soft pastel shadow
+    shadowColor: '#6366F1',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 32,
+    elevation: 6,
   },
   header: {
     flexDirection: 'row',
@@ -116,8 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
+    // Modern: Border kaldırıldı, boşluk ile ayrım sağlanıyor
   },
   title: {
     flex: 1,

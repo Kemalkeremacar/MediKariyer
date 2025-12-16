@@ -21,9 +21,8 @@ export { Skeleton } from './Skeleton';
 export { Switch } from './Switch';
 export { Tabs } from './Tabs';
 export { Toast } from './Toast';
-export { Touchable } from './Touchable';
+
 export { Typography } from './Typography';
 
 // New MediKariyer Design Components
-export { GradientButton } from './GradientButton';
 export { DashboardCard } from './DashboardCard';
