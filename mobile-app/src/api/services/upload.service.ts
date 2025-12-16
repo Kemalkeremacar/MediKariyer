@@ -45,4 +45,23 @@ export const uploadService = {
 
     return response.data.data;
   },
+
+  /**
+   * Kayıt sırasında profil fotoğrafı yükle (Base64 format) - Auth gerektirmez
+   * @param {string} uri - Fotoğraf URI'si (local file path)
+   * @param {string} base64 - Base64 encoded fotoğraf
+   * @returns {Promise<UploadResponse>} Upload sonucu (URL, filename, size)
+   */
+  async uploadRegisterPhoto(uri: string, base64: string): Promise<UploadResponse> {
+    const base64String = `data:image/jpeg;base64,${base64}`;
+    
+    const response = await apiClient.post<ApiResponse<UploadResponse>>(
+      endpoints.upload.registerPhoto,
+      {
+        photo: base64String,
+      }
+    );
+
+    return response.data.data;
+  },
 };

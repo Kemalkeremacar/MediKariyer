@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import { showAlert } from '@/utils/alert';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
@@ -61,17 +62,26 @@ const DetailsModal = ({
     visible
   );
   const withdrawMutation = useWithdrawApplication();
-  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
 
   const handleWithdraw = () => {
     if (applicationId) {
       withdrawMutation.mutate(applicationId, {
         onSuccess: () => {
-          setShowWithdrawConfirm(false);
-          refetch();
+          onClose(); // Close the detail modal after successful withdrawal
+          refetch(); // Refresh the applications list
         },
       });
     }
+  };
+
+  const handleWithdrawPress = () => {
+    showAlert.confirmDestructive(
+      'Başvuruyu Geri Çek',
+      'Bu başvuruyu geri çekmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      handleWithdraw,
+      undefined,
+      'Geri Çek'
+    );
   };
 
   const canWithdraw =
@@ -385,7 +395,7 @@ const DetailsModal = ({
               <Button
                 label="Başvuruyu Geri Çek"
                 variant="outline"
-                onPress={() => setShowWithdrawConfirm(true)}
+                onPress={handleWithdrawPress}
                 fullWidth
                 size="lg"
                 style={styles.withdrawButton}
@@ -394,36 +404,7 @@ const DetailsModal = ({
           </ScrollView>
         )}
 
-        <Modal
-          visible={showWithdrawConfirm}
-          onClose={() => setShowWithdrawConfirm(false)}
-          title="Başvuruyu Geri Çek"
-          size="sm"
-        >
-          <View style={styles.confirmModalContent}>
-            <View style={styles.confirmIcon}>
-              <Ionicons name="alert-circle" size={48} color={colors.warning[600]} />
-            </View>
-            <Typography variant="body" style={styles.confirmText}>
-              Bu başvuruyu geri çekmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
-            </Typography>
-            <View style={styles.confirmActions}>
-              <Button
-                label="İptal"
-                variant="outline"
-                onPress={() => setShowWithdrawConfirm(false)}
-                style={styles.confirmButton}
-              />
-              <Button
-                label="Geri Çek"
-                variant="primary"
-                onPress={handleWithdraw}
-                loading={withdrawMutation.isPending}
-                style={styles.confirmButton}
-              />
-            </View>
-          </View>
-        </Modal>
+
       </View>
     </RNModal>
   );

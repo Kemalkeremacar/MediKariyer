@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-query';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from './ToastProvider';
+import { AlertProvider } from './AlertProvider';
 import { CACHE_STALE_TIME, CACHE_TIME, MAX_RETRY_ATTEMPTS } from '@/config/constants';
 
 /**
@@ -31,9 +32,11 @@ export const AppProviders = ({ children }: PropsWithChildren) => {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <ToastProvider>
-          {children}
-        </ToastProvider>
+        <AlertProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
+        </AlertProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

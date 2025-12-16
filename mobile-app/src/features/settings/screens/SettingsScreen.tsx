@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import {
   View,
   ScrollView,
@@ -135,52 +136,33 @@ export const SettingsScreen = ({ navigation }: any) => {
   const [systemMessages, setSystemMessages] = useState(true);
 
   const handleLogout = () => {
-    Alert.alert('Çıkış Yap', 'Çıkış yapmak istediğinize emin misiniz?', [
-      {
-        text: 'İptal',
-        style: 'cancel',
-      },
-      {
-        text: 'Çıkış Yap',
-        style: 'destructive',
-        onPress: () => logoutMutation.mutate(),
-      },
-    ]);
+    showAlert.confirmDestructive(
+      'Çıkış Yap',
+      'Çıkış yapmak istediğinize emin misiniz?',
+      () => logoutMutation.mutate(),
+      undefined,
+      'Çıkış Yap'
+    );
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
+    showAlert.confirmDestructive(
       'Hesabı Sil',
       'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      [
-        {
-          text: 'İptal',
-          style: 'cancel',
-        },
-        {
-          text: 'Devam Et',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Son Onay',
-              'Tüm verileriniz kalıcı olarak silinecektir. Bu işlem geri alınamaz!',
-              [
-                {
-                  text: 'Vazgeç',
-                  style: 'cancel',
-                },
-                {
-                  text: 'Hesabı Sil',
-                  style: 'destructive',
-                  onPress: () => {
-                    Alert.alert('Bilgi', 'Hesap silme özelliği yakında aktif olacak');
-                  },
-                },
-              ]
-            );
+      () => {
+        // İkinci onay
+        showAlert.confirmDestructive(
+          'Son Onay',
+          'Tüm verileriniz kalıcı olarak silinecektir. Bu işlem geri alınamaz!',
+          () => {
+            showAlert.info('Hesap silme özelliği yakında aktif olacak');
           },
-        },
-      ]
+          undefined,
+          'Hesabı Sil'
+        );
+      },
+      undefined,
+      'Devam Et'
     );
   };
 
@@ -373,7 +355,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               badge="Yakında"
               badgeColor="warning"
               onPress={() =>
-                Alert.alert('Bilgi', 'Tema seçimi özelliği yakında eklenecek')
+                showAlert.info('Tema seçimi özelliği yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -386,7 +368,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               badge="Yakında"
               badgeColor="warning"
               onPress={() =>
-                Alert.alert('Bilgi', 'Dil seçimi özelliği yakında eklenecek')
+                showAlert.info('Dil seçimi özelliği yakında eklenecek')
               }
             />
           </Card>
@@ -405,7 +387,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Yardım Merkezi"
               subtitle="SSS ve destek"
               onPress={() =>
-                Alert.alert('Bilgi', 'Yardım merkezi yakında eklenecek')
+                showAlert.info('Yardım merkezi yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -415,7 +397,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Geri Bildirim"
               subtitle="Önerilerinizi paylaşın"
               onPress={() =>
-                Alert.alert('Bilgi', 'Geri bildirim özelliği yakında eklenecek')
+                showAlert.info('Geri bildirim özelliği yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -425,7 +407,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Uygulamayı Değerlendir"
               subtitle="App Store'da puan verin"
               onPress={() =>
-                Alert.alert('Bilgi', 'Değerlendirme özelliği yakında eklenecek')
+                showAlert.info('Değerlendirme özelliği yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -435,7 +417,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Uygulamayı Paylaş"
               subtitle="Arkadaşlarınızla paylaşın"
               onPress={() =>
-                Alert.alert('Bilgi', 'Paylaşım özelliği yakında eklenecek')
+                showAlert.info('Paylaşım özelliği yakında eklenecek')
               }
             />
           </Card>
@@ -454,7 +436,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Gizlilik Politikası"
               subtitle="Veri koruma ve gizlilik"
               onPress={() =>
-                Alert.alert('Bilgi', 'Gizlilik politikası yakında eklenecek')
+                showAlert.info('Gizlilik politikası yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -464,7 +446,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Kullanım Koşulları"
               subtitle="Hizmet şartları"
               onPress={() =>
-                Alert.alert('Bilgi', 'Kullanım koşulları yakında eklenecek')
+                showAlert.info('Kullanım koşulları yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -474,10 +456,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Uygulama Bilgisi"
               value="Versiyon 1.0.0"
               onPress={() =>
-                Alert.alert(
-                  'MediKariyer Doktor',
-                  'Versiyon: 1.0.0\nGeliştirici: MediKariyer Ekibi\n\n© 2024 MediKariyer. Tüm hakları saklıdır.'
-                )
+                showAlert.info('Versiyon: 1.0.0\nGeliştirici: MediKariyer Ekibi\n\n© 2024 MediKariyer. Tüm hakları saklıdır.')
               }
             />
           </Card>

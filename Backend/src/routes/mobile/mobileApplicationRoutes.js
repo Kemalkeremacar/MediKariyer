@@ -7,7 +7,7 @@
  * - GET /api/mobile/applications - Başvuru listesi (pagination, status filter)
  * - GET /api/mobile/applications/:applicationId - Başvuru detayı
  * - POST /api/mobile/applications - Başvuru oluştur
- * - POST /api/mobile/applications/:applicationId/withdraw - Başvuruyu geri çek
+ * - PATCH /api/mobile/applications/:applicationId/withdraw - Başvuruyu geri çek (web backend ile uyumlu)
  * 
  * Middleware'ler:
  * - mobileErrorHandler: JSON-only error handling
@@ -56,7 +56,8 @@ router.use(requireDoctor);
 router.get('/', validateQuery(mobileApplicationsQuerySchema), mobileApplicationController.listApplications);
 router.get('/:applicationId', validateParams(mobileApplicationDetailParamsSchema), mobileApplicationController.getApplicationDetail);
 router.post('/', validateBody(mobileCreateApplicationSchema), mobileApplicationController.createApplication);
-router.post('/:applicationId/withdraw', validateParams(mobileApplicationDetailParamsSchema), mobileApplicationController.withdrawApplication);
+// PATCH kullanılıyor (web backend ile uyumlu)
+router.patch('/:applicationId/withdraw', validateParams(mobileApplicationDetailParamsSchema), mobileApplicationController.withdrawApplication);
 
 router.use(mobileErrorBoundary);
 

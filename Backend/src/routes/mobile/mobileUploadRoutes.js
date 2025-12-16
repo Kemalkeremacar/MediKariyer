@@ -30,6 +30,15 @@ const uploadPhotoSchema = Joi.object({
 });
 
 router.use(mobileErrorHandler);
+
+/**
+ * @route   POST /api/mobile/upload/register-photo
+ * @desc    Kayıt sırasında profil fotoğrafı yükleme (Base64 format)
+ * @access  Public
+ */
+router.post('/register-photo', validateBody(uploadPhotoSchema), mobileUploadController.uploadRegisterPhoto);
+
+// Protected routes
 router.use(authMiddleware);
 router.use(requireDoctor);
 

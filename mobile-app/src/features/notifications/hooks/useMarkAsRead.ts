@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert } from 'react-native';
+import { showAlert } from '@/utils/alert';
 import { notificationService } from '@/api/services/notification.service';
 
 export const useMarkAsRead = () => {
@@ -11,10 +11,7 @@ export const useMarkAsRead = () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
     onError: () => {
-      Alert.alert(
-        'İşlem başarısız',
-        'Bildirim okundu olarak işaretlenemedi. Lütfen tekrar deneyin.'
-      );
+      showAlert.error('Bildirim okundu olarak işaretlenemedi. Lütfen tekrar deneyin.');
     },
   });
 };

@@ -16,7 +16,7 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useQueryClient } from '@tanstack/react-query';
 import { Typography } from '@/components/ui/Typography';
 import { DashboardCard } from '@/components/ui/DashboardCard';
-import { useProfile } from '../hooks/useProfile';
+import { useProfile, useProfileCompletion } from '../hooks/useProfile';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { profileService } from '@/api/services/profile.service';
@@ -31,6 +31,7 @@ export const DashboardScreen = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
   const queryClient = useQueryClient();
   const { data: profile, refetch, isRefetching } = useProfile();
+  const { data: completionData, refetch: refetchCompletion } = useProfileCompletion();
   const { unreadCount } = useNotifications({ limit: 1 });
 
   // Prefetch profile data when user hovers/focuses on cards
@@ -62,7 +63,7 @@ export const DashboardScreen = () => {
     });
   };
 
-  const completionPercent = profile?.completion_percent || 0;
+  const completionPercent = completionData?.completion_percent || 0;
   const unreadNotificationCount = unreadCount || 0;
 
   // Profil tamamlanma mesajı
@@ -91,7 +92,13 @@ export const DashboardScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <RefreshControl 
+            refreshing={isRefetching} 
+            onRefresh={() => {
+              refetch();
+              refetchCompletion();
+            }} 
+          />
         }
       >
         {/* Modern Header with Gradient */}

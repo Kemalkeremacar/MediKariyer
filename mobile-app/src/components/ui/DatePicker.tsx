@@ -1,5 +1,6 @@
-import React from 'react';
-import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
 import { colors, spacing } from '@/theme';
@@ -20,9 +21,13 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   onChange,
   label,
   placeholder = 'Tarih seçin',
+  minimumDate,
+  maximumDate,
   disabled = false,
   error,
 }) => {
+  const [show, setShow] = useState(false);
+
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('tr-TR', {
       day: 'numeric',
@@ -33,7 +38,20 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 
   const handlePress = () => {
     if (!disabled) {
-      // TODO: Implement date picker modal
+      setShow(true);
+    }
+  };
+
+  const handleChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShow(false);
+    }
+    
+    if (selectedDate) {
+      onChange(selectedDate);
+      if (Platform.OS === 'ios') {
+        setShow(false);
+      }
     }
   };
 
@@ -65,6 +83,17 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         <Typography variant="caption" style={styles.error}>
           {error}
         </Typography>
+      )}
+      
+      {show && (
+        <DateTimePicker
+          value={value || new Date()}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleChange}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
+        />
       )}
     </View>
   );

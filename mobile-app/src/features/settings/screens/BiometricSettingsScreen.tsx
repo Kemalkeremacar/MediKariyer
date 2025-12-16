@@ -57,9 +57,9 @@ export const BiometricSettingsScreen = () => {
           await saveBiometricCredentials(user.email);
         }
         await enableBiometric();
-        Alert.alert('Başarılı', 'Biyometrik giriş etkinleştirildi.');
+        showAlert.success('Biyometrik giriş etkinleştirildi.');
       } else {
-        Alert.alert('Hata', result.error || 'Kimlik doğrulama başarısız.');
+        showAlert.error(result.error || 'Kimlik doğrulama başarısız.');
       }
       
       setIsSaving(false);
@@ -67,7 +67,7 @@ export const BiometricSettingsScreen = () => {
       // Disable biometric
       await clearBiometricCredentials();
       await disableBiometric();
-      Alert.alert('Başarılı', 'Biyometrik giriş devre dışı bırakıldı.');
+      showAlert.success('Biyometrik giriş devre dışı bırakıldı.');
     }
   };
 
@@ -75,9 +75,9 @@ export const BiometricSettingsScreen = () => {
     const result = await authenticate('Test için doğrulayın');
     
     if (result.success) {
-      Alert.alert('Başarılı', 'Kimlik doğrulama başarılı!');
+      showAlert.success('Kimlik doğrulama başarılı!');
     } else {
-      Alert.alert('Hata', result.error || result.warning || 'Kimlik doğrulama başarısız.');
+      showAlert.error(result.error || result.warning || 'Kimlik doğrulama başarısız.');
     }
   };
 

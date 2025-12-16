@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, Alert, ScrollView, Image } from 'react-native';
+import { showAlert } from '@/utils/alert';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
@@ -96,7 +97,7 @@ export const LoginScreen = () => {
       }
       
       setServerError(message);
-      Alert.alert('Giriş Başarısız', message);
+      showAlert.error(message);
     },
   });
 
@@ -109,7 +110,7 @@ export const LoginScreen = () => {
       await loginWithBiometric.mutateAsync();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Biyometrik giriş başarısız';
-      Alert.alert('Hata', message);
+      showAlert.error(message);
     }
   };
 
@@ -210,7 +211,7 @@ export const LoginScreen = () => {
 
             <Button
               variant="ghost"
-              onPress={() => Alert.alert('Şifre Sıfırlama', 'Bu özellik yakında eklenecek.')}
+              onPress={() => showAlert.info('Bu özellik yakında eklenecek.')}
               style={styles.forgotButton}
             >
               <Typography variant="bodySmall" style={styles.forgotText}>

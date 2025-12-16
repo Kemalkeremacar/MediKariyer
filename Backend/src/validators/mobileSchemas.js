@@ -189,14 +189,21 @@ const mobileUpdatePersonalInfoSchema = Joi.object({
     'string.pattern.base': 'Geçerli bir telefon numarası giriniz',
     'string.max': 'Telefon numarası en fazla 20 karakter olabilir'
   }),
-  dob: Joi.date().max('now').allow(null).optional().messages({
+  dob: Joi.alternatives().try(
+    Joi.date().max('now'),
+    Joi.string().isoDate()
+  ).allow(null).optional().messages({
     'date.max': 'Doğum tarihi bugünden sonra olamaz'
   }),
-  birth_place: Joi.string().max(100).allow(null, '').optional().messages({
-    'string.max': 'Doğum yeri en fazla 100 karakter olabilir'
+  birth_place_id: Joi.number().integer().positive().allow(null).optional().messages({
+    'number.base': 'Doğum yeri ID sayı olmalıdır',
+    'number.integer': 'Doğum yeri ID tam sayı olmalıdır',
+    'number.positive': 'Doğum yeri ID pozitif bir sayı olmalıdır'
   }),
-  residence_city: Joi.string().max(100).allow(null, '').optional().messages({
-    'string.max': 'İkamet şehri en fazla 100 karakter olabilir'
+  residence_city_id: Joi.number().integer().positive().allow(null).optional().messages({
+    'number.base': 'İkamet şehri ID sayı olmalıdır',
+    'number.integer': 'İkamet şehri ID tam sayı olmalıdır',
+    'number.positive': 'İkamet şehri ID pozitif bir sayı olmalıdır'
   })
 });
 

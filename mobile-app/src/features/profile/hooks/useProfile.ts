@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Alert } from 'react-native';
+import { showAlert } from '@/utils/alert';
 import { profileService } from '@/api/services/profile.service';
 import type {
   UpdatePersonalInfoPayload,
@@ -49,10 +49,10 @@ export const useUpdatePersonalInfo = () => {
       profileService.updatePersonalInfo(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      Alert.alert('Başarılı', 'Kişisel bilgiler güncellendi');
+      showAlert.success('Kişisel bilgiler güncellendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Bilgiler güncellenirken bir hata oluştu');
+      showAlert.error(error.message || 'Bilgiler güncellenirken bir hata oluştu');
     },
   });
 };
@@ -80,10 +80,10 @@ export const useEducation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
-      Alert.alert('Başarılı', 'Eğitim bilgisi eklendi');
+      showAlert.success('Eğitim bilgisi eklendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Eğitim bilgisi eklenirken bir hata oluştu');
+      showAlert.error(error.message || 'Eğitim bilgisi eklenirken bir hata oluştu');
     },
   });
 
@@ -93,10 +93,10 @@ export const useEducation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
-      Alert.alert('Başarılı', 'Eğitim bilgisi güncellendi');
+      showAlert.success('Eğitim bilgisi güncellendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Eğitim bilgisi güncellenirken bir hata oluştu');
+      showAlert.error(error.message || 'Eğitim bilgisi güncellenirken bir hata oluştu');
     },
   });
 
@@ -105,10 +105,10 @@ export const useEducation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
-      Alert.alert('Başarılı', 'Eğitim bilgisi silindi');
+      showAlert.success('Eğitim bilgisi silindi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Eğitim bilgisi silinirken bir hata oluştu');
+      showAlert.error(error.message || 'Eğitim bilgisi silinirken bir hata oluştu');
     },
   });
 
@@ -142,10 +142,10 @@ export const useExperience = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
-      Alert.alert('Başarılı', 'Deneyim bilgisi eklendi');
+      showAlert.success('Deneyim bilgisi eklendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Deneyim bilgisi eklenirken bir hata oluştu');
+      showAlert.error(error.message || 'Deneyim bilgisi eklenirken bir hata oluştu');
     },
   });
 
@@ -155,10 +155,10 @@ export const useExperience = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
-      Alert.alert('Başarılı', 'Deneyim bilgisi güncellendi');
+      showAlert.success('Deneyim bilgisi güncellendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Deneyim bilgisi güncellenirken bir hata oluştu');
+      showAlert.error(error.message || 'Deneyim bilgisi güncellenirken bir hata oluştu');
     },
   });
 
@@ -167,10 +167,10 @@ export const useExperience = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
-      Alert.alert('Başarılı', 'Deneyim bilgisi silindi');
+      showAlert.success('Deneyim bilgisi silindi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Deneyim bilgisi silinirken bir hata oluştu');
+      showAlert.error(error.message || 'Deneyim bilgisi silinirken bir hata oluştu');
     },
   });
 
@@ -204,10 +204,10 @@ export const useCertificate = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
-      Alert.alert('Başarılı', 'Sertifika bilgisi eklendi');
+      showAlert.success('Sertifika bilgisi eklendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Sertifika bilgisi eklenirken bir hata oluştu');
+      showAlert.error(error.message || 'Sertifika bilgisi eklenirken bir hata oluştu');
     },
   });
 
@@ -217,10 +217,10 @@ export const useCertificate = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
-      Alert.alert('Başarılı', 'Sertifika bilgisi güncellendi');
+      showAlert.success('Sertifika bilgisi güncellendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Sertifika bilgisi güncellenirken bir hata oluştu');
+      showAlert.error(error.message || 'Sertifika bilgisi güncellenirken bir hata oluştu');
     },
   });
 
@@ -229,10 +229,10 @@ export const useCertificate = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
-      Alert.alert('Başarılı', 'Sertifika bilgisi silindi');
+      showAlert.success('Sertifika bilgisi silindi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Sertifika bilgisi silinirken bir hata oluştu');
+      showAlert.error(error.message || 'Sertifika bilgisi silinirken bir hata oluştu');
     },
   });
 
@@ -268,10 +268,10 @@ export const useLanguage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
-      Alert.alert('Başarılı', 'Dil bilgisi eklendi');
+      showAlert.success('Dil bilgisi eklendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Dil bilgisi eklenirken bir hata oluştu');
+      showAlert.error(error.message || 'Dil bilgisi eklenirken bir hata oluştu');
     },
   });
 
@@ -281,10 +281,10 @@ export const useLanguage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
-      Alert.alert('Başarılı', 'Dil bilgisi güncellendi');
+      showAlert.success('Dil bilgisi güncellendi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Dil bilgisi güncellenirken bir hata oluştu');
+      showAlert.error(error.message || 'Dil bilgisi güncellenirken bir hata oluştu');
     },
   });
 
@@ -293,10 +293,10 @@ export const useLanguage = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
-      Alert.alert('Başarılı', 'Dil bilgisi silindi');
+      showAlert.success('Dil bilgisi silindi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Dil bilgisi silinirken bir hata oluştu');
+      showAlert.error(error.message || 'Dil bilgisi silinirken bir hata oluştu');
     },
   });
 
@@ -319,10 +319,10 @@ export const useProfilePhoto = () => {
       queryClient.invalidateQueries({ queryKey: ['photoRequestStatus'] });
       queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      Alert.alert('Başarılı', 'Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
+      showAlert.success('Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Fotoğraf yüklenirken bir hata oluştu');
+      showAlert.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
     },
   });
 
@@ -331,10 +331,10 @@ export const useProfilePhoto = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photoRequestStatus'] });
       queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
-      Alert.alert('Başarılı', 'Fotoğraf değişiklik talebi iptal edildi');
+      showAlert.success('Fotoğraf değişiklik talebi iptal edildi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Talep iptal edilirken bir hata oluştu');
+      showAlert.error(error.message || 'Talep iptal edilirken bir hata oluştu');
     },
   });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { showAlert } from '@/utils/alert';
 import {
   View,
   Text,
@@ -52,11 +53,11 @@ export const PhotoManagementScreen = () => {
       queryClient.invalidateQueries({ queryKey: ['photoRequestStatus'] });
       queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      Alert.alert('Başarılı', 'Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
+      showAlert.success('Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
       setPhotoPreview(null);
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Fotoğraf yüklenirken bir hata oluştu');
+      showAlert.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
     },
   });
 
@@ -65,10 +66,10 @@ export const PhotoManagementScreen = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['photoRequestStatus'] });
       queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
-      Alert.alert('Başarılı', 'Fotoğraf değişiklik talebi iptal edildi');
+      showAlert.success('Fotoğraf değişiklik talebi iptal edildi');
     },
     onError: (error: any) => {
-      Alert.alert('Hata', error.message || 'Talep iptal edilirken bir hata oluştu');
+      showAlert.error(error.message || 'Talep iptal edilirken bir hata oluştu');
     },
   });
 
@@ -85,7 +86,7 @@ export const PhotoManagementScreen = () => {
     // Request permissions
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('İzin Gerekli', 'Fotoğraf seçmek için galeri erişim izni gereklidir');
+      showAlert.error('Fotoğraf seçmek için galeri erişim izni gereklidir');
       return;
     }
 
@@ -103,13 +104,13 @@ export const PhotoManagementScreen = () => {
       
       // Validate file size
       if (asset.fileSize && asset.fileSize > MAX_FILE_SIZE) {
-        Alert.alert('Hata', 'Dosya boyutu 5MB\'dan küçük olmalıdır');
+        showAlert.error('Dosya boyutu 5MB\'dan küçük olmalıdır');
         return;
       }
 
       // Validate file type
       if (asset.mimeType && !ALLOWED_TYPES.includes(asset.mimeType)) {
-        Alert.alert('Hata', 'Sadece JPEG, PNG veya WebP formatları desteklenir');
+        showAlert.error('Sadece JPEG, PNG veya WebP formatları desteklenir');
         return;
       }
 
@@ -136,30 +137,25 @@ export const PhotoManagementScreen = () => {
         };
         
         reader.onerror = () => {
-          Alert.alert('Hata', 'Fotoğraf okunurken bir hata oluştu');
+          showAlert.error('Fotoğraf okunurken bir hata oluştu');
           setIsUploading(false);
         };
         
         reader.readAsDataURL(blob);
       } catch (error) {
-        Alert.alert('Hata', 'Fotoğraf işlenirken bir hata oluştu');
+        showAlert.error('Fotoğraf işlenirken bir hata oluştu');
         setIsUploading(false);
       }
     }
   };
 
   const handleCancelRequest = () => {
-    Alert.alert(
+    showAlert.confirmDestructive(
       'Talebi İptal Et',
       'Fotoğraf değişiklik talebini iptal etmek istediğinizden emin misiniz?',
-      [
-        { text: 'Hayır', style: 'cancel' },
-        {
-          text: 'Evet',
-          style: 'destructive',
-          onPress: () => cancelPhotoRequestMutation.mutate(),
-        },
-      ],
+      () => cancelPhotoRequestMutation.mutate(),
+      undefined,
+      'Evet'
     );
   };
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { showAlert } from '@/utils/alert';
 import {
   View,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
   TouchableOpacity,
   Text,
@@ -89,7 +89,7 @@ export const RegisterScreen = () => {
 
   // Show photo picker options
   const showPhotoOptions = () => {
-    Alert.alert(
+    showAlert.custom(
       'Profil Fotoğrafı',
       'Fotoğraf nasıl eklemek istersiniz?',
       [
@@ -114,7 +114,7 @@ export const RegisterScreen = () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('İzin Gerekli', 'Fotoğraf çekmek için kamera izni gerekiyor.');
+        showAlert.error('Fotoğraf çekmek için kamera izni gerekiyor.');
         return;
       }
 
@@ -129,7 +129,7 @@ export const RegisterScreen = () => {
         processImage(result.assets[0]);
       }
     } catch (error) {
-      Alert.alert('Hata', 'Kamera açılırken bir hata oluştu.');
+      showAlert.error('Kamera açılırken bir hata oluştu.');
     }
   };
 
@@ -138,7 +138,7 @@ export const RegisterScreen = () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('İzin Gerekli', 'Galeri erişim izni gerekiyor.');
+        showAlert.error('Galeri erişim izni gerekiyor.');
         return;
       }
 
@@ -154,7 +154,7 @@ export const RegisterScreen = () => {
         processImage(result.assets[0]);
       }
     } catch (error) {
-      Alert.alert('Hata', 'Fotoğraf seçilirken bir hata oluştu.');
+      showAlert.error('Fotoğraf seçilirken bir hata oluştu.');
     }
   };
 
@@ -163,7 +163,7 @@ export const RegisterScreen = () => {
     setPhotoUri(asset.uri);
     
     if (!asset.base64) {
-      Alert.alert('Hata', 'Fotoğraf verisi alınamadı');
+      showAlert.error('Fotoğraf verisi alınamadı');
       return;
     }
     
@@ -176,17 +176,17 @@ export const RegisterScreen = () => {
       const sizeInKB = sizeInBytes / 1024;
       
       if (sizeInKB > 500) {
-        Alert.alert('Uyarı', 'Fotoğraf çok büyük (max 500KB). Lütfen daha küçük bir fotoğraf seçin.');
+        showAlert.error('Fotoğraf çok büyük (max 500KB). Lütfen daha küçük bir fotoğraf seçin.');
         setPhotoUri('');
         return;
       }
       
-      // Upload photo to server (base64)
-      const uploadResult = await uploadService.uploadProfilePhoto(asset.uri, asset.base64);
+      // Upload photo to server (base64) - Register endpoint (no auth required)
+      const uploadResult = await uploadService.uploadRegisterPhoto(asset.uri, asset.base64);
       setProfilePhotoUrl(uploadResult.url);
-      Alert.alert('Başarılı', 'Fotoğraf yüklendi');
+      showAlert.success('Fotoğraf yüklendi');
     } catch (error: any) {
-      Alert.alert('Hata', error.message || 'Fotoğraf yüklenirken bir hata oluştu');
+      showAlert.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
       setPhotoUri('');
     } finally {
       setIsUploadingPhoto(false);
@@ -211,22 +211,13 @@ export const RegisterScreen = () => {
   const registerMutation = useRegister({
     onSuccess: () => {
       setServerError(null);
-      Alert.alert(
-        '🎉 Kayıt Başarılı!',
-        'Hesabınız başarıyla oluşturuldu.\n\nAdmin onayından sonra e-posta adresinize bildirim gelecek ve giriş yapabileceksiniz.',
-        [
-          {
-            text: 'Giriş Ekranına Dön',
-            onPress: () => navigation.navigate('Login'),
-            style: 'default',
-          },
-        ]
-      );
+      // Navigate to pending approval screen
+      navigation.navigate('PendingApproval');
     },
     onError: (err) => {
       const errorMessage = err.message || 'Kayıt işlemi başarısız oldu. Lütfen tekrar deneyin.';
       setServerError(errorMessage);
-      Alert.alert('❌ Kayıt Başarısız', errorMessage);
+      showAlert.error(errorMessage);
     },
   });
 
@@ -236,13 +227,13 @@ export const RegisterScreen = () => {
     // Validation
     if (!selectedSpecialty) {
       setServerError('⚠️ Lütfen uzmanlık alanı seçin');
-      Alert.alert('Eksik Bilgi', 'Lütfen uzmanlık alanınızı seçin.');
+      showAlert.error('Lütfen uzmanlık alanınızı seçin.');
       return;
     }
 
     if (!profilePhotoUrl) {
       setServerError('⚠️ Lütfen profil fotoğrafı ekleyin');
-      Alert.alert('Eksik Bilgi', 'Lütfen profil fotoğrafınızı ekleyin.');
+      showAlert.error('Lütfen profil fotoğrafınızı ekleyin.');
       return;
     }
     

@@ -177,6 +177,10 @@ export const ProfileEditScreen = ({ navigation }: any) => {
   // Check if form has changes
   const hasChanges = useMemo(() => {
     if (!profile) return false;
+    
+    const profileDob = profile.dob ? new Date(profile.dob).toISOString().split('T')[0] : null;
+    const formDob = formData.dob ? formData.dob.toISOString().split('T')[0] : null;
+    
     return (
       formData.first_name !== (profile.first_name || '') ||
       formData.last_name !== (profile.last_name || '') ||
@@ -185,7 +189,8 @@ export const ProfileEditScreen = ({ navigation }: any) => {
       formData.subspecialty_id !== profile.subspecialty_id ||
       formData.phone !== (profile.phone || '') ||
       formData.birth_place_id !== profile.birth_place_id ||
-      formData.residence_city_id !== profile.residence_city_id
+      formData.residence_city_id !== profile.residence_city_id ||
+      formDob !== profileDob
     );
   }, [formData, profile]);
 

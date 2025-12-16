@@ -81,30 +81,21 @@ export const profileService = {
   },
 
   /**
-   * Profil tamamlanma oranını getirir
+   * Profil tamamlanma oranını getirir (Backend'den)
    * @returns {Promise<ProfileCompletion>} Profil tamamlanma bilgileri
    */
   async getProfileCompletion(): Promise<ProfileCompletion> {
-    const profile = await this.getProfile();
+    const response = await apiClient.get<ApiResponse<any>>(
+      endpoints.doctor.profileCompletion
+    );
     
-    const fields = [
-      profile.first_name,
-      profile.last_name,
-      profile.title,
-      profile.specialty_id,
-      profile.phone,
-      profile.profile_photo,
-    ];
-    
-    const filled = fields.filter(f => f !== null && f !== undefined).length;
-    const total = fields.length;
-    const percentage = Math.round((filled / total) * 100);
+    const data = response.data.data;
     
     return {
-      completion_percent: percentage,
-      filled_fields: filled,
-      total_fields: total,
-      missing_fields: [],
+      completion_percent: data.completion_percentage || 0,
+      filled_fields: data.details?.personal?.completed || 0,
+      total_fields: data.details?.personal?.total || 0,
+      missing_fields: data.missing_fields || [],
     };
   },
 

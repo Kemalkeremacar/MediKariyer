@@ -43,6 +43,32 @@ const uploadProfilePhoto = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Upload Register Photo (Base64) - Public endpoint for registration
+ * @route POST /api/mobile/upload/register-photo
+ * @access Public
+ */
+const uploadRegisterPhoto = catchAsync(async (req, res) => {
+  const { photo } = req.body;
+  
+  if (!photo) {
+    return res.status(400).json({
+      success: false,
+      message: 'Fotoğraf verisi bulunamadı'
+    });
+  }
+
+  // Base64 string'i olduğu gibi döndür (MVP için)
+  logger.info(`Register photo uploaded (base64) | Size: ${photo.length}`);
+
+  return sendSuccess(res, 'Fotoğraf başarıyla yüklendi', {
+    url: photo, // Base64 string'i URL olarak döndür
+    filename: `register_${Date.now()}.jpg`,
+    size: photo.length
+  });
+});
+
 module.exports = {
-  uploadProfilePhoto
+  uploadProfilePhoto,
+  uploadRegisterPhoto
 };

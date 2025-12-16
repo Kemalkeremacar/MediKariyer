@@ -13,7 +13,7 @@
  * - GET /api/mobile/applications - Başvuru listesi
  * - GET /api/mobile/applications/:applicationId - Başvuru detayı
  * - POST /api/mobile/applications - Başvuru oluştur
- * - POST /api/mobile/applications/:applicationId/withdraw - Başvuruyu geri çek
+ * - PATCH /api/mobile/applications/:applicationId/withdraw - Başvuruyu geri çek (web backend ile uyumlu)
  * 
  * Özellikler:
  * - Minimal response payload (mobile optimized)

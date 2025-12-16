@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
+import { showAlert } from '@/utils/alert';
 import { useAuthStore } from '@/store/authStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { SettingsData, SettingsUpdatePayload, AccountAction } from '../types';
@@ -41,9 +42,9 @@ export const useSettings = () => {
         theme: payload.theme ?? prev.theme,
       }));
 
-      Alert.alert('Başarılı', 'Ayarlarınız güncellendi.');
+      showAlert.success('Ayarlarınız güncellendi.');
     } catch (error) {
-      Alert.alert('Hata', 'Ayarlar güncellenirken bir hata oluştu.');
+      showAlert.error('Ayarlar güncellenirken bir hata oluştu.');
       throw error;
     } finally {
       setIsLoading(false);
@@ -54,19 +55,12 @@ export const useSettings = () => {
    * Handle logout with confirmation
    */
   const handleLogout = useCallback(() => {
-    Alert.alert(
+    showAlert.confirmDestructive(
       'Çıkış Yap',
       'Hesabından çıkmak istediğine emin misin?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Çıkış Yap',
-          style: 'destructive',
-          onPress: () => {
-            logoutMutation.mutate();
-          },
-        },
-      ],
+      () => logoutMutation.mutate(),
+      undefined,
+      'Çıkış Yap'
     );
   }, [logoutMutation]);
 
@@ -76,34 +70,26 @@ export const useSettings = () => {
   const handleAccountAction = useCallback((action: AccountAction) => {
     const isDelete = action === 'delete';
     
-    Alert.alert(
+    showAlert.confirmDestructive(
       isDelete ? 'Hesabı Sil' : 'Hesabı Dondur',
       isDelete 
         ? 'Bu işlem geri alınamaz. Tüm verilerin kalıcı olarak silinecek.'
         : 'Hesabını dondurduğunda profil görünmez olacak.',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: isDelete ? 'Sil' : 'Dondur',
-          style: isDelete ? 'destructive' : 'default',
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              // TODO: Implement API call for account action
-              // await settingsService.performAccountAction(action);
-              
-              Alert.alert(
-                'Bilgi', 
-                `Hesap ${isDelete ? 'silme' : 'dondurma'} özelliği yakında eklenecek.`
-              );
-            } catch (error) {
-              Alert.alert('Hata', 'İşlem gerçekleştirilemedi.');
-            } finally {
-              setIsLoading(false);
-            }
-          },
-        },
-      ],
+      async () => {
+        setIsLoading(true);
+        try {
+          // TODO: Implement API call for account action
+          // await settingsService.performAccountAction(action);
+          
+          showAlert.info(`Hesap ${isDelete ? 'silme' : 'dondurma'} özelliği yakında eklenecek.`);
+        } catch (error) {
+          showAlert.error('İşlem gerçekleştirilemedi.');
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      undefined,
+      isDelete ? 'Sil' : 'Dondur'
     );
   }, []);
 
@@ -112,7 +98,7 @@ export const useSettings = () => {
    */
   const navigateToSection = useCallback((section: string) => {
     // TODO: Implement navigation to specific settings sections
-    Alert.alert('Bilgi', `${section} sayfası yakında eklenecek.`);
+    showAlert.info(`${section} sayfası yakında eklenecek.`);
   }, []);
 
   return {

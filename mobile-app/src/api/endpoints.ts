@@ -50,6 +50,7 @@ export const endpoints = {
   deviceToken: '/device-token',
   upload: {
     profilePhoto: '/upload/profile-photo',
+    registerPhoto: '/upload/register-photo',
   },
 } as const;
 

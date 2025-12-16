@@ -1,95 +1,165 @@
+/**
+ * @file PendingApprovalScreen.tsx
+ * @description Admin onayı bekleme ekranı
+ */
+
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useAuthStore } from '@/store/authStore';
-import { colors, spacing, borderRadius } from '@/theme';
-import { ScreenContainer } from '@/components/layout/ScreenContainer';
-import { Card } from '@/components/ui/Card';
+import { View, StyleSheet, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
-import { Button } from '@/components/ui/Button';
-import { useLogout } from '../hooks/useLogout';
+import { GradientButton } from '@/components/ui/GradientButton';
+import type { AuthStackParamList } from '@/navigation/types';
 
 export const PendingApprovalScreen = () => {
-  const user = useAuthStore((state) => state.user);
-  const logoutMutation = useLogout();
-
-  const handleLogout = () => {
-    logoutMutation.mutate();
-  };
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 
   return (
-    <ScreenContainer
-      scrollable={false}
-      contentContainerStyle={styles.screenContent}
-    >
-      <Card padding="3xl" shadow="md" style={styles.card}>
-        <Typography variant="heading" style={styles.icon}>
-          ⏳
+    <View style={styles.container}>
+      <LinearGradient
+        colors={['#4A90E2', '#2E5C8A']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
+        <View style={styles.iconContainer}>
+          <Ionicons name="hourglass-outline" size={64} color="#ffffff" />
+        </View>
+      </LinearGradient>
+
+      <View style={styles.content}>
+        <Typography variant="h1" style={styles.title}>
+          Kayıt Başarılı! 🎉
         </Typography>
-        <Typography variant="heading">Onay Bekleniyor</Typography>
-        <Typography variant="bodySecondary" style={styles.message}>
-          Hesabınız admin tarafından onaylanmayı bekliyor.
+
+        <Typography variant="body" style={styles.subtitle}>
+          Hesabınız başarıyla oluşturuldu
         </Typography>
-        {user && (
-          <View style={styles.userInfo}>
-            <Typography variant="title" style={styles.userName}>
-              {user.first_name} {user.last_name}
-            </Typography>
-            <Typography variant="bodySecondary" style={styles.userEmail}>
-              {user.email}
+
+        <View style={styles.infoCard}>
+          <View style={styles.infoRow}>
+            <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+            <Typography variant="body" style={styles.infoText}>
+              Bilgileriniz alındı
             </Typography>
           </View>
-        )}
-        <Typography variant="bodySecondary" style={styles.subMessage}>
-          Onaylandıktan sonra sisteme giriş yapabileceksiniz. Lütfen bekleyiniz.
-        </Typography>
-        <Button
-          label="Çıkış Yap"
-          variant="ghost"
-          onPress={handleLogout}
+
+          <View style={styles.infoRow}>
+            <Ionicons name="time-outline" size={24} color="#F59E0B" />
+            <Typography variant="body" style={styles.infoText}>
+              Admin onayı bekleniyor
+            </Typography>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="mail-outline" size={24} color="#3B82F6" />
+            <Typography variant="body" style={styles.infoText}>
+              Onay sonrası e-posta gelecek
+            </Typography>
+          </View>
+        </View>
+
+        <View style={styles.messageCard}>
+          <Typography variant="body" style={styles.message}>
+            Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve giriş yapabileceksiniz.
+          </Typography>
+          
+          <Typography variant="bodySmall" style={styles.note}>
+            Bu işlem genellikle 24 saat içinde tamamlanır.
+          </Typography>
+        </View>
+
+        <GradientButton
+          label="Giriş Ekranına Dön"
+          onPress={() => navigation.navigate('Login')}
+          colors={['#4A90E2', '#2E5C8A']}
           fullWidth
-          loading={logoutMutation.isPending}
+          size="lg"
         />
-      </Card>
-    </ScreenContainer>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  screenContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: spacing['2xl'],
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FE',
   },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    alignSelf: 'center',
+  header: {
+    paddingTop: 80,
+    paddingBottom: 60,
     alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
-  icon: {
-    fontSize: 64,
-    marginBottom: spacing.lg,
+  iconContainer: {
+    width: 120,
+    height: 120,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 40,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  infoCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  infoText: {
+    marginLeft: 12,
+    fontSize: 15,
+    color: '#1F2937',
+    flex: 1,
+  },
+  messageCard: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 32,
+    borderLeftWidth: 4,
+    borderLeftColor: '#3B82F6',
   },
   message: {
-    textAlign: 'center',
-    marginBottom: spacing['2xl'],
+    fontSize: 14,
+    color: '#1F2937',
+    lineHeight: 22,
+    marginBottom: 12,
   },
-  userInfo: {
-    width: '100%',
-    backgroundColor: colors.neutral[100],
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing['2xl'],
-  },
-  userName: {
-    marginBottom: spacing.xs,
-    textAlign: 'center',
-  },
-  userEmail: {
-    textAlign: 'center',
-  },
-  subMessage: {
-    textAlign: 'center',
-    marginBottom: spacing['2xl'],
+  note: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontStyle: 'italic',
   },
 });

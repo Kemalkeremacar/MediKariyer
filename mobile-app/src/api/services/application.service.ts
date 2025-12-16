@@ -77,9 +77,9 @@ export const applicationService = {
    * @returns {Promise<void>}
    */
   async withdraw(applicationId: number, reason?: string): Promise<void> {
-    await apiClient.post<ApiResponse<null>>(
+    await apiClient.patch<ApiResponse<null>>(
       endpoints.applications.withdraw(applicationId),
-      { reason },
+      { reason: reason || '' },
     );
   },
 };

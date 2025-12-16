@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -31,17 +32,10 @@ export const EducationScreen = () => {
   };
 
   const handleDeleteEducation = (id: number) => {
-    Alert.alert(
+    showAlert.confirmDestructive(
       'Eğitim Sil',
       'Bu eğitim kaydını silmek istediğinizden emin misiniz?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: () => educationMutations.delete.mutate(id),
-        },
-      ]
+      () => educationMutations.delete.mutate(id)
     );
   };
 

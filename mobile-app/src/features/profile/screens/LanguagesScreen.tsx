@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { showAlert } from '@/utils/alert';
 import { View, FlatList, StyleSheet, RefreshControl, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -31,17 +32,10 @@ export const LanguagesScreen = () => {
   };
 
   const handleDeleteLanguage = (id: number) => {
-    Alert.alert(
+    showAlert.confirmDestructive(
       'Dil Sil',
       'Bu dil kaydını silmek istediğinizden emin misiniz?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Sil',
-          style: 'destructive',
-          onPress: () => languageMutations.delete.mutate(id),
-        },
-      ]
+      () => languageMutations.delete.mutate(id)
     );
   };
 
