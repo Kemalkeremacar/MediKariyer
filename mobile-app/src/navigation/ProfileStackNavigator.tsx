@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DashboardScreen } from '@/features/profile/screens/DashboardScreen';
 import { ProfileEditScreen } from '@/features/profile/screens/ProfileEditScreen';
+import { PhotoManagementScreen } from '@/features/profile/screens/PhotoManagementScreen';
 import { EducationScreen } from '@/features/profile/screens/EducationScreen';
 import { ExperienceScreen } from '@/features/profile/screens/ExperienceScreen';
 import { CertificatesScreen } from '@/features/profile/screens/CertificatesScreen';
@@ -35,6 +36,10 @@ export const ProfileStackNavigator = () => (
         presentation: 'modal',
         animation: 'slide_from_bottom',
       }}
+    />
+    <Stack.Screen 
+      name="PhotoManagement" 
+      component={PhotoManagementScreen}
     />
     <Stack.Screen 
       name="Education" 

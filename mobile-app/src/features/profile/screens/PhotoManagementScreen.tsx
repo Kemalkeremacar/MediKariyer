@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { showAlert } from '@/utils/alert';
 import {
   View,
@@ -10,15 +10,22 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
+  Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { profileService } from '@/api/services/profile.service';
 import { colors, shadows, spacing, borderRadius, typography } from '@/theme';
 // Icons will be replaced with @expo/vector-icons or simple text
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+
+const mimeToExt = (mime: string) => {
+  if (mime === 'image/png') return 'png';
+  return 'jpg';
+};
 
 // Image compression helper
 const compressImage = async (uri: string): Promise<string> => {
@@ -30,7 +37,11 @@ const compressImage = async (uri: string): Promise<string> => {
 export const PhotoManagementScreen = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [historySectionY, setHistorySectionY] = useState<number | null>(null);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<any | null>(null);
+  const [detailsVisible, setDetailsVisible] = useState(false);
   const queryClient = useQueryClient();
+  const scrollRef = useRef<ScrollView | null>(null);
 
   const { data: photoRequestStatus, isLoading: statusLoading, refetch: refetchStatus } = useQuery({
     queryKey: ['photoRequestStatus'],
@@ -49,12 +60,13 @@ export const PhotoManagementScreen = () => {
 
   const requestPhotoChangeMutation = useMutation({
     mutationFn: (fileUrl: string) => profileService.uploadPhoto({ file_url: fileUrl }),
-    onSuccess: () => {
+    onSuccess: async (request) => {
       queryClient.invalidateQueries({ queryKey: ['photoRequestStatus'] });
       queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      await Promise.all([refetchStatus(), refetchHistory()]);
+      setPhotoPreview(request?.file_url || null);
       showAlert.success('Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
-      setPhotoPreview(null);
     },
     onError: (error: any) => {
       showAlert.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
@@ -92,7 +104,9 @@ export const PhotoManagementScreen = () => {
 
     // Pick image
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes:
+        ((ImagePicker as any).MediaType?.Images ??
+          (ImagePicker as any).MediaTypeOptions?.Images),
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.85,
@@ -110,7 +124,7 @@ export const PhotoManagementScreen = () => {
 
       // Validate file type
       if (asset.mimeType && !ALLOWED_TYPES.includes(asset.mimeType)) {
-        showAlert.error('Sadece JPEG, PNG veya WebP formatları desteklenir');
+        showAlert.error('Sadece JPEG veya PNG formatları desteklenir');
         return;
       }
 
@@ -118,35 +132,64 @@ export const PhotoManagementScreen = () => {
       try {
         setIsUploading(true);
         const compressedUri = await compressImage(asset.uri);
-        
-        // Read file as base64
-        const response = await fetch(compressedUri);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        
-        reader.onloadend = () => {
-          const base64data = reader.result as string;
-          // Remove data:image/...;base64, prefix if present
-          const base64 = base64data.includes(',') 
-            ? base64data.split(',')[1] 
-            : base64data;
-          
-          setPhotoPreview(compressedUri);
-          requestPhotoChangeMutation.mutate(base64);
-          setIsUploading(false);
-        };
-        
-        reader.onerror = () => {
-          showAlert.error('Fotoğraf okunurken bir hata oluştu');
-          setIsUploading(false);
-        };
-        
-        reader.readAsDataURL(blob);
+
+        const mime = asset.mimeType || 'image/jpeg';
+        const uriToRead = compressedUri.startsWith('content://')
+          ? (() => {
+              const ext = mimeToExt(mime);
+              const tempPath = `${FileSystem.cacheDirectory}photo_${Date.now()}.${ext}`;
+              return FileSystem.copyAsync({ from: compressedUri, to: tempPath }).then(
+                () => tempPath,
+              );
+            })()
+          : Promise.resolve(compressedUri);
+
+        const base64 = await FileSystem.readAsStringAsync(await uriToRead, {
+          // Some expo-file-system versions/types don't expose EncodingType in TS,
+          // but the runtime accepts the string literal.
+          encoding: 'base64' as any,
+        });
+
+        // Backend /api/doctor/profile/photo expects data-url format in file_url,
+        // and validates it with file_url.startsWith('data:image/')
+        const dataUrl = `data:${mime};base64,${base64}`;
+
+        setPhotoPreview(compressedUri);
+        requestPhotoChangeMutation.mutate(dataUrl);
+        setIsUploading(false);
       } catch (error) {
+        console.error('Photo processing failed', error);
         showAlert.error('Fotoğraf işlenirken bir hata oluştu');
         setIsUploading(false);
       }
     }
+  };
+
+  const openDetails = (item: any) => {
+    setSelectedHistoryItem(item);
+    setDetailsVisible(true);
+  };
+
+  const closeDetails = () => {
+    setDetailsVisible(false);
+    setSelectedHistoryItem(null);
+  };
+
+  const getStatusLabel = (status?: string) => {
+    if (!status) return 'Bilinmiyor';
+    if (status === 'pending') return 'Onay Bekleniyor';
+    if (status === 'approved') return 'Onaylandı';
+    if (status === 'rejected') return 'Reddedildi';
+    if (status === 'cancelled') return 'İptal Edildi';
+    return status;
+  };
+
+  const getStatusBadgeStyle = (status?: string) => {
+    if (status === 'approved') return styles.badgeApproved;
+    if (status === 'rejected') return styles.badgeRejected;
+    if (status === 'pending') return styles.badgePending;
+    if (status === 'cancelled') return styles.badgeCancelled;
+    return styles.badgeDefault;
   };
 
   const handleCancelRequest = () => {
@@ -166,11 +209,114 @@ export const PhotoManagementScreen = () => {
   const isLoading = statusLoading || historyLoading;
   const hasPendingRequest = photoRequestStatus?.status === 'pending';
 
+  const latestRequest = useMemo(() => {
+    if (photoRequestStatus) return photoRequestStatus;
+    if (photoHistory && photoHistory.length > 0) return photoHistory[0];
+    return null;
+  }, [photoHistory, photoRequestStatus]);
+
+  const scrollToHistory = () => {
+    if (!photoHistory || photoHistory.length === 0) {
+      showAlert.info('Henüz geçmiş kayıt bulunmuyor');
+      return;
+    }
+    if (historySectionY == null) {
+      // Layout henüz hesaplanmadıysa fallback
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 150);
+      return;
+    }
+    scrollRef.current?.scrollTo({ y: historySectionY, animated: true });
+  };
+
   return (
     <ScrollView
+      ref={scrollRef}
       style={styles.container}
       refreshControl={<RefreshControl refreshing={isLoading} onRefresh={onRefresh} />}
     >
+      <Modal
+        visible={detailsVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeDetails}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Talep Detayı</Text>
+              <TouchableOpacity onPress={closeDetails} style={styles.modalCloseButton}>
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Durum</Text>
+                <View style={[styles.statusBadge, getStatusBadgeStyle(selectedHistoryItem?.status)]}>
+                  <Text style={styles.statusBadgeText}>
+                    {getStatusLabel(selectedHistoryItem?.status)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Tarih</Text>
+                <Text style={styles.detailValue}>
+                  {selectedHistoryItem?.created_at
+                    ? new Date(selectedHistoryItem.created_at).toLocaleString('tr-TR')
+                    : '-'}
+                </Text>
+              </View>
+
+              {!!selectedHistoryItem?.reason && (
+                <View style={styles.detailNote}>
+                  <Text style={styles.detailNoteLabel}>Not</Text>
+                  <Text style={styles.detailNoteText}>{selectedHistoryItem.reason}</Text>
+                </View>
+              )}
+
+              <View style={styles.compareSection}>
+                <Text style={styles.compareTitle}>Fotoğraf Karşılaştırması</Text>
+                <View style={styles.compareRow}>
+                  <View style={styles.compareCol}>
+                    <Text style={styles.compareLabel}>Mevcut</Text>
+                    <View style={styles.compareImageWrap}>
+                      {selectedHistoryItem?.old_photo ? (
+                        <Image
+                          source={{ uri: selectedHistoryItem.old_photo }}
+                          style={styles.compareImage}
+                        />
+                      ) : (
+                        <Text style={styles.compareEmptyText}>Yok</Text>
+                      )}
+                    </View>
+                  </View>
+                  <View style={styles.compareCol}>
+                    <Text style={styles.compareLabel}>Yeni</Text>
+                    <View style={styles.compareImageWrap}>
+                      {selectedHistoryItem?.file_url ? (
+                        <Image
+                          source={{ uri: selectedHistoryItem.file_url }}
+                          style={styles.compareImage}
+                        />
+                      ) : (
+                        <Text style={styles.compareEmptyText}>Yok</Text>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.modalPrimaryButton} onPress={closeDetails}>
+              <Text style={styles.modalPrimaryButtonText}>Kapat</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Current Photo */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Mevcut Fotoğraf</Text>
@@ -238,14 +384,66 @@ export const PhotoManagementScreen = () => {
             )}
           </TouchableOpacity>
           <Text style={styles.uploadHint}>
-            Max 5MB • JPEG, PNG, WebP
+            Max 5MB • JPEG, PNG
           </Text>
+
+          <View style={styles.trackingCard}>
+            <View style={styles.trackingHeader}>
+              <Text style={styles.trackingTitle}>Talep Takibi</Text>
+              <TouchableOpacity
+                style={styles.trackingLinkButton}
+                onPress={scrollToHistory}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.trackingLinkText}>Geçmişe Git</Text>
+              </TouchableOpacity>
+            </View>
+
+            {latestRequest ? (
+              <>
+                <View style={styles.trackingRow}>
+                  <Text style={styles.trackingLabel}>Durum:</Text>
+                  <Text style={styles.trackingValue}>
+                    {latestRequest.status === 'pending' && 'Onay Bekleniyor'}
+                    {latestRequest.status === 'approved' && 'Onaylandı'}
+                    {latestRequest.status === 'rejected' && 'Reddedildi'}
+                    {latestRequest.status === 'cancelled' && 'İptal Edildi'}
+                  </Text>
+                </View>
+                {latestRequest.created_at && (
+                  <View style={styles.trackingRow}>
+                    <Text style={styles.trackingLabel}>Tarih:</Text>
+                    <Text style={styles.trackingValue}>
+                      {new Date(latestRequest.created_at).toLocaleDateString('tr-TR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                  </View>
+                )}
+                {!!latestRequest.reason && (
+                  <View style={styles.trackingNote}>
+                    <Text style={styles.trackingNoteLabel}>Not:</Text>
+                    <Text style={styles.trackingNoteText}>{latestRequest.reason}</Text>
+                  </View>
+                )}
+              </>
+            ) : (
+              <Text style={styles.trackingEmptyText}>
+                Henüz fotoğraf değişiklik talebiniz yok.
+              </Text>
+            )}
+          </View>
         </View>
       )}
 
       {/* Photo History */}
       {photoHistory && photoHistory.length > 0 && (
-        <View style={styles.section}>
+        <View
+          style={styles.section}
+          onLayout={(e) => setHistorySectionY(e.nativeEvent.layout.y)}
+        >
           <View style={styles.historyHeader}>
             <Text style={styles.historyIcon}>📜</Text>
             <Text style={styles.sectionTitle}>Fotoğraf Geçmişi</Text>
@@ -293,9 +491,18 @@ export const PhotoManagementScreen = () => {
                     <Text style={styles.historyItemReason}>{item.reason}</Text>
                   )}
                 </View>
-                {item.file_url && (
-                  <Image source={{ uri: item.file_url }} style={styles.historyItemPhoto} />
-                )}
+                <View style={styles.historyRight}>
+                  {item.file_url && (
+                    <Image source={{ uri: item.file_url }} style={styles.historyItemPhoto} />
+                  )}
+                  <TouchableOpacity
+                    style={styles.historyDetailButton}
+                    onPress={() => openDetails(item)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.historyDetailButtonText}>Detay</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           ))}
@@ -433,6 +640,76 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: 'center',
   },
+  trackingCard: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.background.secondary,
+    borderRadius: borderRadius.md,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  trackingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  trackingTitle: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.primary,
+  },
+  trackingLinkButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.primary[50],
+  },
+  trackingLinkText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.primary[700],
+  },
+  trackingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    marginBottom: spacing.sm,
+  },
+  trackingLabel: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+  },
+  trackingValue: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.primary,
+  },
+  trackingNote: {
+    marginTop: spacing.xs,
+    backgroundColor: colors.background.primary,
+    borderRadius: borderRadius.sm,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  trackingNoteLabel: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  trackingNoteText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.primary,
+  },
+  trackingEmptyText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+  },
   historyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -483,11 +760,187 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
     fontStyle: 'italic',
   },
+  historyRight: {
+    marginLeft: spacing.md,
+    alignItems: 'flex-end',
+    gap: spacing.sm,
+  },
+  historyDetailButton: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary[50],
+    borderWidth: 1,
+    borderColor: colors.primary[100],
+  },
+  historyDetailButtonText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.primary[700],
+  },
   historyItemPhoto: {
     width: 60,
     height: 60,
     borderRadius: 30,
     backgroundColor: colors.border.light,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: colors.background.primary,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    padding: spacing.lg,
+    ...shadows.md,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  modalTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.primary,
+  },
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.background.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseText: {
+    fontSize: 16,
+    color: colors.text.secondary,
+    fontWeight: typography.fontWeight.bold,
+  },
+  modalBody: {
+    gap: spacing.md,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.md,
+  },
+  detailLabel: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.secondary,
+  },
+  detailValue: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.primary,
+    fontWeight: typography.fontWeight.medium,
+    textAlign: 'right',
+    flex: 1,
+  },
+  statusBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  statusBadgeText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+  },
+  badgeApproved: {
+    backgroundColor: colors.success[50],
+    borderColor: colors.success[200],
+  },
+  badgeRejected: {
+    backgroundColor: colors.error[50],
+    borderColor: colors.error[200],
+  },
+  badgePending: {
+    backgroundColor: colors.warning[50],
+    borderColor: colors.warning[200],
+  },
+  badgeCancelled: {
+    backgroundColor: colors.neutral[50],
+    borderColor: colors.neutral[200],
+  },
+  badgeDefault: {
+    backgroundColor: colors.neutral[50],
+    borderColor: colors.neutral[200],
+  },
+  detailNote: {
+    backgroundColor: colors.background.secondary,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+  },
+  detailNoteLabel: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+  },
+  detailNoteText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.primary,
+  },
+  compareSection: {
+    marginTop: spacing.sm,
+  },
+  compareTitle: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.primary,
+    marginBottom: spacing.md,
+  },
+  compareRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  compareCol: {
+    flex: 1,
+  },
+  compareLabel: {
+    fontSize: typography.fontSize.xs,
+    color: colors.text.secondary,
+    marginBottom: spacing.xs,
+    textAlign: 'center',
+  },
+  compareImageWrap: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.background.secondary,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compareImage: {
+    width: '100%',
+    height: '100%',
+  },
+  compareEmptyText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.text.tertiary,
+  },
+  modalPrimaryButton: {
+    marginTop: spacing.lg,
+    backgroundColor: colors.primary[600],
+    borderRadius: borderRadius.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalPrimaryButtonText: {
+    color: colors.text.inverse,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
   },
 });
 

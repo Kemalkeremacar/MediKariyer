@@ -49,7 +49,7 @@ export const jobService = {
       params,
     });
     const responseData = response.data;
-    const pagination = responseData.pagination || responseData.meta;
+    const pagination = responseData.pagination;
     
     if (!pagination) {
       throw new Error('Pagination bilgisi alınamadı');

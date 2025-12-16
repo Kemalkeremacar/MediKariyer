@@ -332,11 +332,14 @@ export const profileService = {
    * @returns {Promise<PhotoRequest>} Fotoğraf yükleme isteği
    */
   async uploadPhoto(payload: UploadPhotoPayload): Promise<PhotoRequest> {
-    const response = await rootApiClient.post<ApiResponse<PhotoRequest>>(
+    const response = await rootApiClient.post<ApiResponse<any>>(
       rootEndpoints.doctor.profile.photo,
       payload,
     );
-    return response.data.data;
+
+    // Backend may wrap the created request as { request }
+    const data = response.data.data as any;
+    return (data?.request ?? data) as PhotoRequest;
   },
 
   /**
@@ -344,10 +347,13 @@ export const profileService = {
    * @returns {Promise<PhotoRequest | null>} Fotoğraf yükleme isteği durumu
    */
   async getPhotoRequestStatus(): Promise<PhotoRequest | null> {
-    const response = await rootApiClient.get<ApiResponse<PhotoRequest | null>>(
+    const response = await rootApiClient.get<ApiResponse<any>>(
       rootEndpoints.doctor.profile.photoStatus,
     );
-    return response.data.data;
+
+    // Backend returns: { status, history }
+    const data = response.data.data as any;
+    return (data?.status ?? data ?? null) as PhotoRequest | null;
   },
 
   /**
@@ -355,10 +361,13 @@ export const profileService = {
    * @returns {Promise<PhotoRequest[]>} Fotoğraf yükleme geçmişi
    */
   async getPhotoRequestHistory(): Promise<PhotoRequest[]> {
-    const response = await rootApiClient.get<ApiResponse<PhotoRequest[]>>(
+    const response = await rootApiClient.get<ApiResponse<any>>(
       rootEndpoints.doctor.profile.photoHistory,
     );
-    return response.data.data;
+
+    // Backend returns: { history }
+    const data = response.data.data as any;
+    return (data?.history ?? data ?? []) as PhotoRequest[];
   },
 
   /**

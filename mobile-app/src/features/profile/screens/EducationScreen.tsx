@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { showAlert } from '@/utils/alert';
 import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/components/layout/Screen';
@@ -66,22 +67,41 @@ export const EducationScreen = () => {
         <BackButton onPress={() => navigation.goBack()} />
       </View>
 
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Modern Gradient Header */}
+      <LinearGradient
+        colors={['#667eea', '#764ba2', '#f093fb']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientHeader}
+      >
+        <View style={styles.headerDecoration}>
+          <View style={styles.decorCircle1} />
+          <View style={styles.decorCircle2} />
+        </View>
+        
         <View style={styles.headerContent}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="school" size={28} color={colors.primary[600]} />
+          <View style={styles.headerIconWrapper}>
+            <LinearGradient
+              colors={['#4CAF50', '#388E3C']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.headerIconGradient}
+            >
+              <Ionicons name="school-sharp" size={28} color="#FFFFFF" />
+            </LinearGradient>
           </View>
-          <View style={styles.headerText}>
-            <Typography variant="h2" style={styles.headerTitle}>
-              Eğitim Bilgileri
-            </Typography>
-            <Typography variant="caption" style={styles.headerSubtitle}>
+          <Typography variant="h1" style={styles.headerTitle}>
+            Eğitim Bilgileri
+          </Typography>
+          <View style={styles.headerSubtitleContainer}>
+            <View style={styles.headerDot} />
+            <Typography variant="body" style={styles.headerSubtitle}>
               {educations.length} eğitim kaydı
             </Typography>
+            <View style={styles.headerDot} />
           </View>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Education List */}
       <FlatList
@@ -145,38 +165,93 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     backgroundColor: colors.background.primary,
   },
-  header: {
+  gradientHeader: {
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
+    marginBottom: spacing.md,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  headerDecoration: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  decorCircle1: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    top: -50,
+    right: -30,
+  },
+  decorCircle2: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    bottom: -30,
+    left: -20,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    position: 'relative',
+    zIndex: 1,
   },
-  headerIcon: {
+  headerIconWrapper: {
+    marginBottom: spacing.sm,
+  },
+  headerIconGradient: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  headerText: {
-    flex: 1,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: 2,
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: spacing.xs,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  headerSubtitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  headerDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
   headerSubtitle: {
-    color: colors.text.secondary,
-    fontSize: 13,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 18,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   listContent: {
     paddingHorizontal: spacing.lg,

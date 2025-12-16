@@ -12,6 +12,7 @@ import {
   Modal,
   Dimensions,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { lookupService } from '@/api/services/lookup.service';
@@ -26,7 +27,7 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 export interface JobFilters {
   specialtyId?: number;
   cityId?: number;
-  workType?: string;
+  employmentType?: string;
 }
 
 interface JobFilterSheetProps {
@@ -56,16 +57,18 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   // Lookup data
-  const { data: specialties = [] } = useQuery({
+  const { data: specialties = [], isLoading: isLoadingSpecialties } = useQuery({
     queryKey: ['lookup', 'specialties'],
     queryFn: lookupService.getSpecialties,
     staleTime: 1000 * 60 * 30, // 30 dakika cache
+    gcTime: 1000 * 60 * 60, // 1 saat garbage collection
   });
 
-  const { data: cities = [] } = useQuery({
+  const { data: cities = [], isLoading: isLoadingCities } = useQuery({
     queryKey: ['lookup', 'cities'],
     queryFn: lookupService.getCities,
     staleTime: 1000 * 60 * 30,
+    gcTime: 1000 * 60 * 60, // 1 saat garbage collection
   });
 
   // Sync draft with props when sheet opens
@@ -102,7 +105,7 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
   }, [draftFilters.cityId, cities]);
 
   const activeFilterCount = useMemo(() => {
-    return [draftFilters.specialtyId, draftFilters.cityId, draftFilters.workType].filter(
+    return [draftFilters.specialtyId, draftFilters.cityId, draftFilters.employmentType].filter(
       Boolean
     ).length;
   }, [draftFilters]);
@@ -153,41 +156,58 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                 setDraftFilters((prev) => ({ ...prev, specialtyId: undefined }))
               }
             >
-              <View style={styles.optionList}>
-                {specialties.map((specialty) => (
-                  <TouchableOpacity
-                    key={specialty.id}
-                    style={[
-                      styles.optionItem,
-                      draftFilters.specialtyId === specialty.id &&
-                        styles.optionItemSelected,
-                    ]}
-                    onPress={() =>
-                      setDraftFilters((prev) => ({
-                        ...prev,
-                        specialtyId:
-                          prev.specialtyId === specialty.id
-                            ? undefined
-                            : specialty.id,
-                      }))
-                    }
-                  >
-                    <Typography
-                      variant="body"
-                      style={{
-                        ...styles.optionText,
-                        ...(draftFilters.specialtyId === specialty.id &&
-                          styles.optionTextSelected),
-                      }}
+              {isLoadingSpecialties ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={colors.primary[600]} />
+                  <Typography variant="caption" style={styles.loadingText}>
+                    Branşlar yükleniyor...
+                  </Typography>
+                </View>
+              ) : specialties.length === 0 ? (
+                <Typography variant="body" style={styles.emptyText}>
+                  Branş bulunamadı
+                </Typography>
+              ) : (
+                <ScrollView 
+                  style={styles.optionListScroll}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {specialties.map((specialty) => (
+                    <TouchableOpacity
+                      key={specialty.id}
+                      style={[
+                        styles.optionItem,
+                        draftFilters.specialtyId === specialty.id &&
+                          styles.optionItemSelected,
+                      ]}
+                      onPress={() =>
+                        setDraftFilters((prev) => ({
+                          ...prev,
+                          specialtyId:
+                            prev.specialtyId === specialty.id
+                              ? undefined
+                              : specialty.id,
+                        }))
+                      }
                     >
-                      {specialty.name}
-                    </Typography>
-                    {draftFilters.specialtyId === specialty.id && (
-                      <Ionicons name="checkmark" size={18} color={colors.primary[600]} />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Typography
+                        variant="body"
+                        style={{
+                          ...styles.optionText,
+                          ...(draftFilters.specialtyId === specialty.id &&
+                            styles.optionTextSelected),
+                        }}
+                      >
+                        {specialty.name}
+                      </Typography>
+                      {draftFilters.specialtyId === specialty.id && (
+                        <Ionicons name="checkmark" size={18} color={colors.primary[600]} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </FilterSection>
 
             <Divider spacing="sm" />
@@ -203,39 +223,56 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                 setDraftFilters((prev) => ({ ...prev, cityId: undefined }))
               }
             >
-              <View style={styles.optionList}>
-                {cities.map((city) => (
-                  <TouchableOpacity
-                    key={city.id}
-                    style={[
-                      styles.optionItem,
-                      draftFilters.cityId === city.id &&
-                        styles.optionItemSelected,
-                    ]}
-                    onPress={() =>
-                      setDraftFilters((prev) => ({
-                        ...prev,
-                        cityId:
-                          prev.cityId === city.id ? undefined : city.id,
-                      }))
-                    }
-                  >
-                    <Typography
-                      variant="body"
-                      style={{
-                        ...styles.optionText,
-                        ...(draftFilters.cityId === city.id &&
-                          styles.optionTextSelected),
-                      }}
+              {isLoadingCities ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={colors.primary[600]} />
+                  <Typography variant="caption" style={styles.loadingText}>
+                    Şehirler yükleniyor...
+                  </Typography>
+                </View>
+              ) : cities.length === 0 ? (
+                <Typography variant="body" style={styles.emptyText}>
+                  Şehir bulunamadı
+                </Typography>
+              ) : (
+                <ScrollView 
+                  style={styles.optionListScroll}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {cities.map((city) => (
+                    <TouchableOpacity
+                      key={city.id}
+                      style={[
+                        styles.optionItem,
+                        draftFilters.cityId === city.id &&
+                          styles.optionItemSelected,
+                      ]}
+                      onPress={() =>
+                        setDraftFilters((prev) => ({
+                          ...prev,
+                          cityId:
+                            prev.cityId === city.id ? undefined : city.id,
+                        }))
+                      }
                     >
-                      {city.name}
-                    </Typography>
-                    {draftFilters.cityId === city.id && (
-                      <Ionicons name="checkmark" size={18} color={colors.primary[600]} />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Typography
+                        variant="body"
+                        style={{
+                          ...styles.optionText,
+                          ...(draftFilters.cityId === city.id &&
+                            styles.optionTextSelected),
+                        }}
+                      >
+                        {city.name}
+                      </Typography>
+                      {draftFilters.cityId === city.id && (
+                        <Ionicons name="checkmark" size={18} color={colors.primary[600]} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </FilterSection>
 
             <Divider spacing="sm" />
@@ -244,11 +281,11 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
             <FilterSection
               title="Çalışma Tipi"
               icon={<Ionicons name="business" size={20} color={colors.primary[600]} />}
-              selectedValue={draftFilters.workType}
-              expanded={expandedSection === 'workType'}
-              onToggle={() => toggleSection('workType')}
+              selectedValue={draftFilters.employmentType}
+              expanded={expandedSection === 'employmentType'}
+              onToggle={() => toggleSection('employmentType')}
               onClear={() =>
-                setDraftFilters((prev) => ({ ...prev, workType: undefined }))
+                setDraftFilters((prev) => ({ ...prev, employmentType: undefined }))
               }
             >
               <View style={styles.chipContainer}>
@@ -257,14 +294,14 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                     key={type.value}
                     style={[
                       styles.chip,
-                      draftFilters.workType === type.value &&
+                      draftFilters.employmentType === type.value &&
                         styles.chipSelected,
                     ]}
                     onPress={() =>
                       setDraftFilters((prev) => ({
                         ...prev,
-                        workType:
-                          prev.workType === type.value ? undefined : type.value,
+                        employmentType:
+                          prev.employmentType === type.value ? undefined : type.value,
                       }))
                     }
                   >
@@ -272,7 +309,7 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                       variant="body"
                       style={{
                         ...styles.chipText,
-                        ...(draftFilters.workType === type.value &&
+                        ...(draftFilters.employmentType === type.value &&
                           styles.chipTextSelected),
                       }}
                     >
@@ -469,6 +506,9 @@ const styles = StyleSheet.create({
   optionList: {
     maxHeight: 200,
   },
+  optionListScroll: {
+    maxHeight: 200,
+  },
   optionItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -523,5 +563,20 @@ const styles = StyleSheet.create({
   },
   footerButton: {
     flex: 1,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+  },
+  loadingText: {
+    color: colors.text.secondary,
+  },
+  emptyText: {
+    color: colors.text.secondary,
+    textAlign: 'center',
+    paddingVertical: spacing.lg,
   },
 });

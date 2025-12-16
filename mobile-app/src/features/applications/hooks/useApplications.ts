@@ -6,7 +6,7 @@ export interface ApplicationFilters {
   status?: string;
 }
 
-export const useApplications = (filters: ApplicationFilters = {}) => {
+export const useApplications = (filters: ApplicationFilters = {}, enabled: boolean = true) => {
   return useInfiniteQuery({
     queryKey: ['applications', filters],
     initialPageParam: 1,
@@ -19,14 +19,17 @@ export const useApplications = (filters: ApplicationFilters = {}) => {
       });
     },
     getNextPageParam: (lastPage) => {
-      const pagination = lastPage.meta;
+      const pagination = lastPage.pagination;
       if (!pagination) {
         return undefined;
       }
       if (pagination.has_next) {
-        return (pagination.current_page ?? 1) + 1;
+        return pagination.current_page + 1;
       }
       return undefined;
     },
+    enabled,
+    staleTime: 1000 * 60 * 3, // 3 dakika cache (başvurular daha dinamik)
+    gcTime: 1000 * 60 * 10, // 10 dakika garbage collection
   });
 };

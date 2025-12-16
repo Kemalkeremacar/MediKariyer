@@ -30,7 +30,7 @@ export interface ApplicationListParams {
 
 export interface ApplicationsListResponse {
   data: ApplicationListItem[];
-  meta: PaginationMeta;
+  pagination: PaginationMeta;
 }
 
 export const applicationService = {
@@ -46,15 +46,15 @@ export const applicationService = {
       params,
     });
     const responseData = response.data;
-    const meta = responseData.pagination || responseData.meta;
+    const pagination = responseData.pagination;
     
-    if (!meta) {
+    if (!pagination) {
       throw new Error('Pagination bilgisi alınamadı');
     }
     
     return {
       data: responseData.data || [],
-      meta,
+      pagination,
     };
   },
 

@@ -22,6 +22,10 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface ApplicationFilters {
   status?: string;
+  // Gelecekte eklenebilecek filtreler:
+  // dateFrom?: string;
+  // dateTo?: string;
+  // hospitalId?: number;
 }
 
 interface ApplicationFilterSheetProps {

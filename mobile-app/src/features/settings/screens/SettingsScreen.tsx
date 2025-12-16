@@ -175,7 +175,7 @@ export const SettingsScreen = ({ navigation }: any) => {
       >
         {/* Premium Gradient Header */}
         <LinearGradient
-          colors={['#EEF2FF', '#E0E7FF', '#C7D2FE']}
+          colors={['#667eea', '#764ba2', '#f093fb']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientHeader}
@@ -512,7 +512,7 @@ export const SettingsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFBFC',
+    backgroundColor: '#F8F9FE',
   },
   content: {
     paddingBottom: spacing['4xl'],
@@ -520,13 +520,18 @@ const styles = StyleSheet.create({
 
   // Premium Gradient Header - STANDARD SIZE
   gradientHeader: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
   },
   headerDecoration: {
     position: 'absolute',
@@ -537,23 +542,21 @@ const styles = StyleSheet.create({
   },
   decorCircle1: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#6366F1',
-    opacity: 0.2,
-    top: -40,
-    right: -20,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    top: -50,
+    right: -30,
   },
   decorCircle2: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#818CF8',
-    opacity: 0.15,
-    bottom: -20,
-    left: -10,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    bottom: -30,
+    left: -20,
   },
   headerContent: {
     alignItems: 'center',
@@ -576,11 +579,14 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
-    color: '#3730A3',
+    color: '#FFFFFF',
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   headerSubtitleContainer: {
     flexDirection: 'row',
@@ -591,11 +597,11 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#6366F1',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: '#4F46E5',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 18,
     textAlign: 'center',
     fontWeight: '500',
@@ -632,13 +638,15 @@ const styles = StyleSheet.create({
   // Settings Card
   settingsCard: {
     padding: 0,
-    borderRadius: 16,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
-    shadowColor: colors.neutral[400],
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   settingItem: {
     flexDirection: 'row',
@@ -648,12 +656,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   settingIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   settingContent: {
     flex: 1,
@@ -684,8 +697,8 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: colors.neutral[100],
-    marginLeft: spacing.lg + 44 + spacing.md,
-    opacity: 0.5,
+    marginLeft: spacing.lg + 48 + spacing.md,
+    opacity: 0.4,
   },
 
 

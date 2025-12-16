@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { jobService } from '@/api/services/job.service';
+import { useDebounce } from '@/hooks/useDebounce';
 import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -34,6 +35,9 @@ export const JobsScreen = () => {
   const [filters, setFilters] = useState<JobFilters>({});
   const [showFilterSheet, setShowFilterSheet] = useState(false);
 
+  // Debounce search query - Her tuş vuruşunda API çağrısı yapmamak için
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
   // Query with filters
   const {
     data,
@@ -45,21 +49,22 @@ export const JobsScreen = () => {
     refetch,
     isRefetching,
   } = useInfiniteQuery({
-    queryKey: ['jobs', searchQuery, filters],
+    queryKey: ['jobs', debouncedSearchQuery, filters],
     queryFn: ({ pageParam = 1 }) =>
       jobService.listJobs({
         page: pageParam,
         limit: 10,
-        ...(searchQuery ? { keyword: searchQuery } : {}),
+        ...(debouncedSearchQuery ? { keyword: debouncedSearchQuery } : {}),
         ...(filters.specialtyId ? { specialty_id: filters.specialtyId } : {}),
         ...(filters.cityId ? { city_id: filters.cityId } : {}),
-        ...(filters.workType ? { employment_type: filters.workType } : {}),
+        ...(filters.employmentType ? { employment_type: filters.employmentType } : {}),
       }),
     getNextPageParam: (lastPage) =>
       lastPage.pagination?.has_next
         ? lastPage.pagination.current_page + 1
         : undefined,
     initialPageParam: 1,
+    staleTime: 1000 * 60 * 5, // 5 dakika cache
   });
 
   // Get total count from pagination
@@ -67,17 +72,9 @@ export const JobsScreen = () => {
     return data?.pages?.[0]?.pagination?.total ?? 0;
   }, [data]);
 
-  // Remove duplicate jobs by ID
   const jobs = useMemo(() => {
     if (!data?.pages) return [];
-    const allJobs = data.pages.flatMap((page) => page.data);
-    const uniqueJobsMap = new Map<number, JobListItem>();
-    allJobs.forEach((job) => {
-      if (!uniqueJobsMap.has(job.id)) {
-        uniqueJobsMap.set(job.id, job);
-      }
-    });
-    return Array.from(uniqueJobsMap.values());
+    return data.pages.flatMap((page) => page.data);
   }, [data]);
 
   const handleLoadMore = useCallback(() => {
@@ -119,16 +116,19 @@ export const JobsScreen = () => {
 
   // Active filter count
   const activeFilterCount = useMemo(() => {
-    return [filters.specialtyId, filters.cityId, filters.workType].filter(Boolean).length;
+    return [filters.specialtyId, filters.cityId, filters.employmentType].filter(Boolean).length;
   }, [filters]);
 
-  const hasActiveFilters = activeFilterCount > 0 || searchQuery.length > 0;
+  const hasActiveFilters = activeFilterCount > 0 || debouncedSearchQuery.length > 0;
+  
+  // Arama yapılıyor mu kontrolü
+  const isSearching = searchQuery !== debouncedSearchQuery;
 
   const renderListHeader = () => (
     <>
       {/* Premium Gradient Header */}
       <LinearGradient
-        colors={['#FFFFFF', '#F0FDF4', '#DCFCE7']}
+        colors={['#667eea', '#764ba2', '#f093fb']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientHeader}
@@ -173,6 +173,11 @@ export const JobsScreen = () => {
           style={styles.searchBar}
         />
         <View style={styles.filterButtonWrapper}>
+          {isSearching && (
+            <View style={styles.searchingIndicator}>
+              <ActivityIndicator size="small" color={colors.primary[600]} />
+            </View>
+          )}
           <IconButton
             icon={
               <Ionicons
@@ -222,13 +227,13 @@ export const JobsScreen = () => {
               onDelete={() => handleRemoveFilter('cityId')}
             />
           )}
-          {filters.workType && (
+          {filters.employmentType && (
             <Chip
-              label={filters.workType}
+              label={filters.employmentType}
               variant="soft"
               color="primary"
               size="sm"
-              onDelete={() => handleRemoveFilter('workType')}
+              onDelete={() => handleRemoveFilter('employmentType')}
             />
           )}
         </View>
@@ -344,14 +349,19 @@ export const JobsScreen = () => {
 const styles = StyleSheet.create({
   // Premium Gradient Header - STANDARD SIZE
   gradientHeader: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    paddingHorizontal: 0,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
     marginBottom: spacing.md,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
   },
   headerDecoration: {
     position: 'absolute',
@@ -362,23 +372,21 @@ const styles = StyleSheet.create({
   },
   decorCircle1: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#10B981',
-    opacity: 0.15,
-    top: -40,
-    right: -20,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    top: -50,
+    right: -30,
   },
   decorCircle2: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#34D399',
-    opacity: 0.1,
-    bottom: -20,
-    left: -10,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    bottom: -30,
+    left: -20,
   },
   headerContent: {
     alignItems: 'center',
@@ -402,11 +410,14 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
-    color: '#065F46',
+    color: '#FFFFFF',
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   headerSubtitleContainer: {
     flexDirection: 'row',
@@ -417,11 +428,11 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#10B981',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: '#059669',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 18,
     textAlign: 'center',
     fontWeight: '500',
@@ -461,6 +472,12 @@ const styles = StyleSheet.create({
   },
   filterButtonWrapper: {
     position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  searchingIndicator: {
+    marginRight: spacing.xs,
   },
   filterBadge: {
     position: 'absolute',

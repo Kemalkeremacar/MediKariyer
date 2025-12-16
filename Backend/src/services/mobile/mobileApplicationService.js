@@ -61,12 +61,12 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
     .whereRaw(`[a].[doctor_profile_id] = ${parseInt(profile.id)}`)
     .whereNull('a.deleted_at');
 
+  // Status filter
   if (status) {
     const turkishStatus = statusMapping[status.toLowerCase()] || status;
     baseQuery.andWhere('st.name', turkishStatus);
   }
 
-  // Basit çözüm: Tüm veriyi çek, JavaScript'te pagination yap
   const dataQuery = baseQuery
     .clone()
     .select(
@@ -81,7 +81,9 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
       'st.name as status_label'
     )
     .orderBy('a.applied_at', 'desc')
-    .orderBy('a.id', 'desc');
+    .orderBy('a.id', 'desc')
+    .limit(perPage)
+    .offset((currentPage - 1) * perPage);
 
   // Önce count query'sini test et
   let countResults;
@@ -94,10 +96,10 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
   }
 
   // Sonra data query'sini çalıştır
-  let allRows;
+  let rows;
   try {
-    allRows = await dataQuery;
-    logger.debug('✅ Data query başarılı, row count:', allRows.length);
+    rows = await dataQuery;
+    logger.debug('✅ Data query başarılı, row count:', rows.length);
   } catch (error) {
     logger.error('❌ Data query error:', error.message);
     logger.error('Profile ID:', profile.id);
@@ -105,11 +107,6 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
   }
   
   const total = normalizeCountResult(countResults[0]);
-  
-  // JavaScript'te pagination
-  const startIndex = (currentPage - 1) * perPage;
-  const endIndex = startIndex + perPage;
-  const rows = allRows.slice(startIndex, endIndex);
 
   return {
     data: rows.map(applicationTransformer.toListItem),

@@ -420,18 +420,18 @@ export const ApplicationsScreen = () => {
   const query = useApplications({ status: filters.status });
 
   const totalCount = useMemo(() => {
-    return query.data?.pages?.[0]?.meta?.total ?? 0;
+    return query.data?.pages?.[0]?.pagination?.total ?? 0;
   }, [query.data]);
 
   const applications = useMemo(() => {
     if (!query.data) return [];
     const pages = query.data.pages ?? [];
-    let allApplications = pages.flatMap((page) => page.data);
+    const allApplications = pages.flatMap((page) => page.data);
     
-    // Search filter
+    // Client-side search filter
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
-      allApplications = allApplications.filter((app) => 
+      return allApplications.filter((app) => 
         app.hospital_name?.toLowerCase().includes(lowerQuery) ||
         app.job_title?.toLowerCase().includes(lowerQuery)
       );
@@ -473,7 +473,7 @@ export const ApplicationsScreen = () => {
     <>
       {/* Premium Gradient Header */}
       <LinearGradient
-        colors={['#FFFBEB', '#FEF3C7', '#FDE68A']}
+        colors={['#667eea', '#764ba2', '#f093fb']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientHeader}
@@ -666,14 +666,19 @@ const styles = StyleSheet.create({
   },
   // Premium Gradient Header - STANDARD SIZE
   gradientHeader: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
     paddingHorizontal: 0,
     marginBottom: spacing.md,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     position: 'relative',
     overflow: 'hidden',
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
   },
   headerDecoration: {
     position: 'absolute',
@@ -684,23 +689,21 @@ const styles = StyleSheet.create({
   },
   decorCircle1: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#F59E0B',
-    opacity: 0.2,
-    top: -40,
-    right: -20,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    top: -50,
+    right: -30,
   },
   decorCircle2: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FBBF24',
-    opacity: 0.15,
-    bottom: -20,
-    left: -10,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    bottom: -30,
+    left: -20,
   },
   headerContent: {
     alignItems: 'center',
@@ -724,9 +727,12 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '800',
-    color: '#92400E',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
     marginBottom: spacing.xs,
     letterSpacing: 0.5,
   },
@@ -739,12 +745,13 @@ const styles = StyleSheet.create({
     width: 4,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#F59E0B',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: '#D97706',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
     lineHeight: 18,
+    fontWeight: '500',
   },
   statsContainer: {
     flexDirection: 'row',

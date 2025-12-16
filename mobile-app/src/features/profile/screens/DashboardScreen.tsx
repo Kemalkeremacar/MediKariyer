@@ -103,7 +103,7 @@ export const DashboardScreen = () => {
       >
         {/* Modern Header with Gradient */}
         <LinearGradient
-          colors={['#4A90E2', '#2E5C8A']}
+          colors={['#667eea', '#764ba2', '#f093fb']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -210,9 +210,12 @@ export const DashboardScreen = () => {
 
         {/* Profile Details Section */}
         <View style={styles.section}>
-          <Typography variant="h3" style={styles.sectionTitle}>
-            Profil Detayları
-          </Typography>
+          <View style={styles.sectionHeader}>
+            <Typography variant="h3" style={styles.sectionTitle}>
+              Profil Detayları
+            </Typography>
+            <Ionicons name="person-circle" size={20} color="#667eea" />
+          </View>
           
           <View style={styles.cardsRow}>
             <DashboardCard
@@ -323,6 +326,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     borderWidth: 4,
     borderColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   avatarPlaceholder: {
     width: 100,
@@ -333,6 +341,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 4,
     borderColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   editBadge: {
     position: 'absolute',
@@ -364,9 +377,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   progressContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 16,
     padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -414,6 +429,53 @@ const styles = StyleSheet.create({
   },
   cardsRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  statsSection: {
+    paddingHorizontal: 24,
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
   },

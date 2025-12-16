@@ -44,6 +44,7 @@ export type JobsStackParamList = {
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   ProfileEdit: undefined;
+  PhotoManagement: undefined;
   Education: undefined;
   Experience: undefined;
   Certificates: undefined;

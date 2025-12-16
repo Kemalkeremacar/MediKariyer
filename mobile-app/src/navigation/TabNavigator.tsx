@@ -77,6 +77,7 @@ export const TabNavigator = () => {
         },
         sceneStyle: {
           backgroundColor: colors.background.primary,
+          paddingBottom: Platform.OS === 'ios' ? 88 : 68,
         },
         tabBarItemStyle: {
           paddingVertical: 4,

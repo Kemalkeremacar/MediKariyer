@@ -67,7 +67,12 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
   }
 
   if (filters.keyword) {
-    baseQuery.andWhere('j.title', 'like', `%${filters.keyword}%`);
+    baseQuery.andWhere(function() {
+      this.where('j.title', 'like', `%${filters.keyword}%`)
+        .orWhere('hp.institution_name', 'like', `%${filters.keyword}%`)
+        .orWhere('c.name', 'like', `%${filters.keyword}%`)
+        .orWhere('s.name', 'like', `%${filters.keyword}%`);
+    });
   }
 
   const dataQuery = baseQuery
@@ -83,19 +88,16 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
       's.name as specialty_name',
       'hp.institution_name as hospital_name'
     )
-    .orderBy('j.id', 'desc');
+    .orderBy('j.id', 'desc')
+    .limit(perPage)
+    .offset((currentPage - 1) * perPage);
 
-  const [countResults, allRows] = await Promise.all([
+  const [countResults, rows] = await Promise.all([
     baseQuery.clone().clearSelect().clearOrder().count({ count: '*' }),
     dataQuery
   ]);
   
   const total = normalizeCountResult(countResults[0]);
-  
-  // JavaScript'te pagination
-  const startIndex = (currentPage - 1) * perPage;
-  const endIndex = startIndex + perPage;
-  const rows = allRows.slice(startIndex, endIndex);
 
   // Başvuru kontrolü için job id'leri topla
   const jobIds = rows.map(r => r.id);
