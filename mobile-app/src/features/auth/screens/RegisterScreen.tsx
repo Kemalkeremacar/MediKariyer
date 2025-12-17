@@ -30,6 +30,7 @@ import { useRegister } from '../hooks/useRegister';
 import { lookupService } from '@/api/services/lookup.service';
 import { uploadService } from '@/api/services/upload.service';
 import { useTheme } from '@/contexts/ThemeContext';
+import { handleApiError } from '@/utils/errorHandler';
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'Ad en az 2 karakter olmalı'),
@@ -186,7 +187,13 @@ export const RegisterScreen = () => {
       setProfilePhotoUrl(uploadResult.url);
       showAlert.success('Fotoğraf yüklendi');
     } catch (error: any) {
-      showAlert.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
+      const message = handleApiError(
+        error,
+        '/upload/register-photo',
+        (msg) => showAlert.error(msg)
+      );
+      // Ekstra olarak form üstünde de gösterebiliriz
+      setServerError(message);
       setPhotoUri('');
     } finally {
       setIsUploadingPhoto(false);
@@ -215,9 +222,12 @@ export const RegisterScreen = () => {
       navigation.navigate('PendingApproval');
     },
     onError: (err) => {
-      const errorMessage = err.message || 'Kayıt işlemi başarısız oldu. Lütfen tekrar deneyin.';
+      const errorMessage = handleApiError(
+        err,
+        '/auth/register',
+        (msg) => showAlert.error(msg)
+      );
       setServerError(errorMessage);
-      showAlert.error(errorMessage);
     },
   });
 

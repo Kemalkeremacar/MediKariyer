@@ -1,4 +1,4 @@
-import { useMutation, UseMutationOptions } from '@tanstack/react-query';
+import { useMutation, UseMutationOptions, useQueryClient } from '@tanstack/react-query';
 import { tokenManager } from '@/utils/tokenManager';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
@@ -15,6 +15,14 @@ type UseLoginOptions = Omit<
  */
 export const useLogin = (options?: UseLoginOptions) => {
   const setAuthState = useAuthStore((state) => state.markAuthenticated);
+  const queryClient = useQueryClient();
+
+  const {
+    onSuccess: userOnSuccess,
+    onError: userOnError,
+    onSettled: userOnSettled,
+    ...restOptions
+  } = options || {};
 
   return useMutation({
     mutationFn: async (credentials: LoginPayload) => {
@@ -22,16 +30,29 @@ export const useLogin = (options?: UseLoginOptions) => {
       return response;
     },
     onSuccess: async (data, variables, context) => {
-      try {
-        // Save tokens to SecureStore (single source of truth)
-        await tokenManager.saveTokens(data.accessToken, data.refreshToken);
+      // Core auth side-effects (single source of truth)
+      await tokenManager.saveTokens(data.accessToken, data.refreshToken);
+      setAuthState(data.user);
 
-        // Update auth state (user only, no tokens)
-        setAuthState(data.user);
-      } catch (error) {
-        throw error;
+      // Clear all user-scoped query cache so the new user never sees stale data
+      // (e.g. previous user's profile, applications, notifications)
+      queryClient.clear();
+
+      // Let consumer run additional side-effects
+      if (userOnSuccess) {
+        await userOnSuccess(data, variables, context);
       }
     },
-    ...options,
+    onError: (error, variables, context) => {
+      if (userOnError) {
+        userOnError(error, variables, context);
+      }
+    },
+    onSettled: (data, error, variables, context) => {
+      if (userOnSettled) {
+        userOnSettled(data, error, variables, context);
+      }
+    },
+    ...restOptions,
   });
 };

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
-import { Alert } from 'react-native';
 import { showAlert } from '@/utils/alert';
 import { authService } from '@/api/services/authService';
+import { handleApiError } from '@/utils/errorHandler';
 
 interface ChangePasswordPayload {
   currentPassword: string;
@@ -17,10 +17,7 @@ export const useChangePassword = () => {
       showAlert.success('Şifreniz başarıyla değiştirildi');
     },
     onError: (error: any) => {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'Şifre değiştirme başarısız';
+      const errorMessage = handleApiError(error, '/auth/change-password');
       showAlert.error(errorMessage);
     },
   });

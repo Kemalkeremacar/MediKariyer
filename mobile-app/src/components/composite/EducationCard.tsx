@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
 import { colors, spacing } from '@/theme';
+import { formatExperiencePeriod } from '@/utils/date';
 
 export interface EducationCardProps {
   degree: string;
@@ -65,17 +66,15 @@ export const EducationCard: React.FC<EducationCardProps> = ({
           </View>
         </View>
 
-        {endDate && (
-          <View style={styles.footer}>
-            <Chip
-              label={endDate}
-              icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
-              variant="soft"
-              color="neutral"
-              size="sm"
-            />
-          </View>
-        )}
+        <View style={styles.footer}>
+          <Chip
+            label={formatExperiencePeriod(startDate, endDate, current)}
+            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
+            variant="soft"
+            color="neutral"
+            size="sm"
+          />
+        </View>
       </Card>
     </Container>
   );

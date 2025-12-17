@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { colors, spacing } from '@/theme';
-import { formatRelativeTime } from '@/utils/date';
+import { formatSmartDate } from '@/utils/date';
 
 export interface NotificationCardProps {
   id: number;
@@ -43,8 +43,8 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   const iconName = iconMap[safeType];
   const color = colorMap[safeType];
   
-  // Merkezi date utility ile güvenli tarih formatı
-  const timeAgo = formatRelativeTime(timestamp, { fallback: 'Bilinmiyor' });
+  // Akıllı tarih formatlama (örn: "2 saat önce", "Dün, 14:30", "17 Aralık 2025")
+  const timeAgo = formatSmartDate(timestamp, { fallback: 'Bilinmiyor' });
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>

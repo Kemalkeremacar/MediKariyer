@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
 import { colors, spacing } from '@/theme';
+import { formatDate as formatDateUtil } from '@/utils/date';
 
 export interface DatePickerProps {
   value?: Date;
@@ -28,12 +29,8 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const [show, setShow] = useState(false);
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
+  const formatDateDisplay = (date: Date) => {
+    return formatDateUtil(date);
   };
 
   const handlePress = () => {
@@ -76,7 +73,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
           variant="body"
           style={value ? styles.text : styles.placeholder}
         >
-          {value ? formatDate(value) : placeholder}
+          {value ? formatDateDisplay(value) : placeholder}
         </Typography>
       </TouchableOpacity>
       {error && (

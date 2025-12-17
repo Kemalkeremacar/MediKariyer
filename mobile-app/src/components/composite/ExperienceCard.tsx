@@ -6,6 +6,7 @@ import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
 import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
+import { formatExperiencePeriod } from '@/utils/date';
 
 export interface ExperienceCardProps {
   title: string;
@@ -74,7 +75,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
 
         <View style={styles.footer}>
           <Chip
-            label={`${startDate} - ${current ? 'Devam Ediyor' : endDate}`}
+            label={formatExperiencePeriod(startDate, endDate, current)}
             icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
             variant="soft"
             color="neutral"

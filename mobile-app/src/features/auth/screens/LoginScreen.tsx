@@ -8,8 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuthStore } from '@/store/authStore';
-import { tokenManager } from '@/utils/tokenManager';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { AuthStackParamList } from '@/navigation/types';
 import { Typography } from '@/components/ui/Typography';
@@ -19,6 +17,7 @@ import { Input } from '@/components/ui/Input';
 import { useLogin } from '../hooks/useLogin';
 import { useBiometricLogin } from '../hooks/useBiometricLogin';
 import { useBiometricAuth } from '@/hooks/useBiometricAuth';
+import { handleApiError, isAuthError, isNetworkError } from '@/utils/errorHandler';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta girin'),
@@ -43,7 +42,6 @@ export const LoginScreen = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  const markAuthenticated = useAuthStore((state) => state.markAuthenticated);
   const { isAvailable, isEnabled, biometricTypes } = useBiometricAuth();
   const { loginWithBiometric, saveBiometricCredentials, isBiometricLoginAvailable } = useBiometricLogin();
 
@@ -59,45 +57,35 @@ export const LoginScreen = () => {
   const loginMutation = useLogin({
     onSuccess: async (data) => {
       setServerError(null);
-      
-      // Token'ları kaydet ve auth state'i güncelle
-      try {
-        await tokenManager.saveTokens(data.accessToken, data.refreshToken);
-        markAuthenticated(data.user);
-        
-        // Biometric enabled ise email'i kaydet
-        if (isEnabled && data.user.email) {
+
+      // Biometric enabled ise email'i kaydet
+      if (isEnabled && data.user.email) {
+        try {
           await saveBiometricCredentials(data.user.email);
+        } catch {
+          // Biyometrik kayıt hatası login'i bozmasın, sadece kullanıcıya bilgi verilebilir
+          showAlert.error('Biyometrik giriş bilgileri kaydedilemedi.');
         }
-      } catch (err) {
-        setServerError('⚠️ Token kaydetme hatası. Lütfen tekrar deneyin.');
       }
     },
     onError: (error) => {
-      let message = '❌ Giriş başarısız. Lütfen bilgilerinizi kontrol edin.';
-      
-      if (error instanceof Error) {
-        message = error.message;
-      } else if (
-        typeof error === 'object' &&
-        error !== null &&
-        'message' in error &&
-        typeof (error as { message?: unknown }).message === 'string'
-      ) {
-        message = (error as { message: string }).message;
-      }
-      
-      // Kullanıcı dostu hata mesajları
-      if (message.toLowerCase().includes('unauthorized') || message.toLowerCase().includes('invalid')) {
+      let message: string;
+
+      // Merkezî error util'leriyle sınıflandırma
+      if (isAuthError(error)) {
         message = '❌ E-posta veya şifre hatalı';
-      } else if (message.toLowerCase().includes('network')) {
+      } else if (isNetworkError(error)) {
         message = '🌐 İnternet bağlantınızı kontrol edin';
-      } else if (message.toLowerCase().includes('timeout')) {
-        message = '⏱️ İstek zaman aşımına uğradı. Tekrar deneyin.';
+      } else {
+        // Varsayılan kullanıcı dostu mesaj + logging + toast
+        message = handleApiError(
+          error,
+          '/auth/login',
+          (msg) => showAlert.error(msg)
+        );
       }
-      
+
       setServerError(message);
-      showAlert.error(message);
     },
   });
 

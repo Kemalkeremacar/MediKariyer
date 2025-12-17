@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import { authService } from '@/api/services/authService';
@@ -8,6 +8,7 @@ import { authService } from '@/api/services/authService';
  */
 export const useLogout = () => {
   const markUnauthenticated = useAuthStore((state) => state.markUnauthenticated);
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
@@ -25,6 +26,9 @@ export const useLogout = () => {
       
       // Clear tokens from secure storage
       await tokenManager.clearTokens();
+      
+      // Clear all user-scoped query cache so no data from the previous user leaks
+      queryClient.clear();
       
       // Clear auth state
       markUnauthenticated();

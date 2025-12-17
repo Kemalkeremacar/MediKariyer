@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showAlert } from '@/utils/alert';
 import { profileService } from '@/api/services/profile.service';
+import { handleApiError } from '@/utils/errorHandler';
 import type {
   UpdatePersonalInfoPayload,
   CreateEducationPayload,
@@ -52,7 +53,8 @@ export const useUpdatePersonalInfo = () => {
       showAlert.success('Kişisel bilgiler güncellendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Bilgiler güncellenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/profile/personal');
+      showAlert.error(message);
     },
   });
 };
@@ -83,7 +85,8 @@ export const useEducation = () => {
       showAlert.success('Eğitim bilgisi eklendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Eğitim bilgisi eklenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/educations');
+      showAlert.error(message);
     },
   });
 
@@ -96,7 +99,8 @@ export const useEducation = () => {
       showAlert.success('Eğitim bilgisi güncellendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Eğitim bilgisi güncellenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/educations');
+      showAlert.error(message);
     },
   });
 
@@ -108,7 +112,8 @@ export const useEducation = () => {
       showAlert.success('Eğitim bilgisi silindi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Eğitim bilgisi silinirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/educations');
+      showAlert.error(message);
     },
   });
 
@@ -145,7 +150,8 @@ export const useExperience = () => {
       showAlert.success('Deneyim bilgisi eklendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Deneyim bilgisi eklenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/experiences');
+      showAlert.error(message);
     },
   });
 
@@ -158,7 +164,8 @@ export const useExperience = () => {
       showAlert.success('Deneyim bilgisi güncellendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Deneyim bilgisi güncellenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/experiences');
+      showAlert.error(message);
     },
   });
 
@@ -170,7 +177,8 @@ export const useExperience = () => {
       showAlert.success('Deneyim bilgisi silindi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Deneyim bilgisi silinirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/experiences');
+      showAlert.error(message);
     },
   });
 
@@ -207,7 +215,8 @@ export const useCertificate = () => {
       showAlert.success('Sertifika bilgisi eklendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Sertifika bilgisi eklenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/certificates');
+      showAlert.error(message);
     },
   });
 
@@ -220,7 +229,8 @@ export const useCertificate = () => {
       showAlert.success('Sertifika bilgisi güncellendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Sertifika bilgisi güncellenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/certificates');
+      showAlert.error(message);
     },
   });
 
@@ -232,7 +242,8 @@ export const useCertificate = () => {
       showAlert.success('Sertifika bilgisi silindi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Sertifika bilgisi silinirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/certificates');
+      showAlert.error(message);
     },
   });
 
@@ -271,7 +282,8 @@ export const useLanguage = () => {
       showAlert.success('Dil bilgisi eklendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Dil bilgisi eklenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/languages');
+      showAlert.error(message);
     },
   });
 
@@ -284,7 +296,8 @@ export const useLanguage = () => {
       showAlert.success('Dil bilgisi güncellendi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Dil bilgisi güncellenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/languages');
+      showAlert.error(message);
     },
   });
 
@@ -296,7 +309,8 @@ export const useLanguage = () => {
       showAlert.success('Dil bilgisi silindi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Dil bilgisi silinirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/languages');
+      showAlert.error(message);
     },
   });
 
@@ -322,7 +336,8 @@ export const useProfilePhoto = () => {
       showAlert.success('Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Fotoğraf yüklenirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/profile/photo');
+      showAlert.error(message);
     },
   });
 
@@ -334,7 +349,8 @@ export const useProfilePhoto = () => {
       showAlert.success('Fotoğraf değişiklik talebi iptal edildi');
     },
     onError: (error: any) => {
-      showAlert.error(error.message || 'Talep iptal edilirken bir hata oluştu');
+      const message = handleApiError(error, '/doctor/profile/photo/request');
+      showAlert.error(message);
     },
   });
 

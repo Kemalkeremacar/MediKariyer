@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationService } from '@/api/services/application.service';
 import { showAlert } from '@/utils/alert';
+import { handleApiError } from '@/utils/errorHandler';
 
 /**
  * Başvuru geri çekme hook'u
@@ -27,10 +28,7 @@ export const useWithdrawApplication = () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] }); // Job list may show application status
     },
     onError: (error: any) => {
-      const errorMessage = 
-        error?.response?.data?.message || 
-        error?.message || 
-        'Başvuru geri çekilemedi. Lütfen tekrar deneyin.';
+      const errorMessage = handleApiError(error, '/applications/withdraw');
       showAlert.error(errorMessage);
     },
   });

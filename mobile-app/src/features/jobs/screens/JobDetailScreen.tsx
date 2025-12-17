@@ -26,6 +26,7 @@ import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
 import { formatRelativeTime } from '@/utils/date';
+import { handleApiError } from '@/utils/errorHandler';
 
 type Props = NativeStackScreenProps<JobsStackParamList, 'JobDetail'>;
 
@@ -64,12 +65,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
       showToast('Başvurunuz başarıyla iletildi', 'success');
     },
     onError: (error: any) => {
-      // Backend'den gelen error mesajını göster
-      const errorMessage = 
-        error?.response?.data?.message || 
-        error?.message || 
-        'Başvuru yapılırken bir sorun oluştu.';
-      showToast(errorMessage, 'error');
+      handleApiError(error, '/jobs/apply', showToast);
     },
   });
 
