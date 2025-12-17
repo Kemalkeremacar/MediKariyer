@@ -8,20 +8,13 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { isWithinDays } from '@/utils/date';
 import type { JobListItem } from '@/types/job';
 
 interface JobCardProps {
   job: JobListItem;
   onPress: () => void;
 }
-
-// Helper function to check if job is new (posted within last 3 days)
-const isNew = (createdAt: string): boolean => {
-  const jobDate = new Date(createdAt);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - jobDate.getTime()) / (1000 * 60 * 60 * 24));
-  return diffDays <= 3;
-};
 
 export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
   return (
@@ -38,7 +31,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
               <Typography variant="h3" style={styles.title}>
                 {job.title}
               </Typography>
-              {job.created_at && isNew(job.created_at) && (
+              {job.created_at && isWithinDays(job.created_at, 3) && (
                 <Badge variant="success" size="sm">
                   YENİ
                 </Badge>

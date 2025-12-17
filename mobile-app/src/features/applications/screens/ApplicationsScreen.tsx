@@ -37,6 +37,7 @@ import { useApplications } from '../hooks/useApplications';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
 import { Ionicons } from '@expo/vector-icons';
+import { formatDate, formatDayMonth } from '@/utils/date';
 
 // Status display mapping
 const STATUS_DISPLAY: Record<string, string> = {
@@ -180,11 +181,7 @@ const DetailsModal = ({
                     Başvuru Tarihi
                   </Typography>
                   <Typography variant="body" style={styles.modalInfoValue}>
-                    {new Date(data.created_at).toLocaleDateString('tr-TR', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
+                    {formatDate(data.created_at)}
                   </Typography>
                 </View>
               </View>
@@ -266,20 +263,14 @@ const DetailsModal = ({
               <Card variant="outlined" padding="lg">
                 <TimelineItem
                   title="Başvuru Gönderildi"
-                  date={new Date(data.created_at).toLocaleDateString('tr-TR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
+                  date={formatDayMonth(data.created_at)}
                   description="Başvurunuz başarıyla iletildi"
                   status="completed"
                   icon={<Ionicons name="checkmark-circle" size={16} color={colors.background.primary} />}
                 />
                 <TimelineItem
                   title={data.status || 'İnceleniyor'}
-                  date={new Date(data.updated_at || data.created_at).toLocaleDateString('tr-TR', {
-                    day: 'numeric',
-                    month: 'short',
-                  })}
+                  date={formatDayMonth(data.updated_at || data.created_at)}
                   description={
                     data.status?.toLowerCase() === 'kabul edildi'
                       ? 'Tebrikler! Başvurunuz kabul edildi'

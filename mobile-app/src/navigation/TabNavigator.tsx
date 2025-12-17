@@ -1,6 +1,9 @@
 import React from 'react';
-import { Animated, Platform } from 'react-native';
+import { Animated, Platform, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { JobsStackNavigator } from './JobsStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
@@ -11,25 +14,34 @@ import type { AppTabParamList } from './types';
 
 const AnimatedIcon = ({ iconName, focused }: { iconName: keyof typeof Ionicons.glyphMap; focused: boolean }) => {
   const scale = React.useRef(new Animated.Value(1)).current;
+  const opacity = React.useRef(new Animated.Value(0.7)).current;
 
   React.useEffect(() => {
-    Animated.spring(scale, {
-      toValue: focused ? 1.1 : 1,
-      useNativeDriver: true,
-      friction: 5,
-      tension: 100,
-    }).start();
-  }, [focused, scale]);
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: focused ? 1.15 : 1,
+        useNativeDriver: true,
+        friction: 5,
+        tension: 100,
+      }),
+      Animated.timing(opacity, {
+        toValue: focused ? 1 : 0.7,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [focused, scale, opacity]);
 
   return (
     <Animated.View
       style={{
         transform: [{ scale }],
+        opacity,
       }}
     >
       <Ionicons
         name={iconName}
-        size={24}
+        size={26}
         color={focused ? colors.primary[600] : colors.neutral[500]}
       />
     </Animated.View>
@@ -49,6 +61,12 @@ const Tab = createBottomTabNavigator<AppTabParamList>();
  * - SettingsTab: Ayarlar (Settings)
  */
 export const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
+  
+  // Dinamik tab bar yüksekliği - cihazın güvenli alanına göre hesaplanır
+  const TAB_BAR_HEIGHT = 56;
+  const tabBarHeight = TAB_BAR_HEIGHT + (Platform.OS === 'ios' ? insets.bottom : 12);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -59,42 +77,54 @@ export const TabNavigator = () => {
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: colors.background.primary,
-          borderTopWidth: 1,
-          borderTopColor: colors.neutral[100],
-          height: Platform.OS === 'ios' ? 88 : 68,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-          paddingTop: 8,
-          paddingHorizontal: 16,
-          elevation: 0,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
+          bottom: Platform.OS === 'ios' ? 0 : 12,
+          left: Platform.OS === 'ios' ? 0 : 16,
+          right: Platform.OS === 'ios' ? 0 : 16,
+          backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.background.primary,
+          borderTopWidth: 0,
+          height: tabBarHeight,
+          borderRadius: Platform.OS === 'ios' ? 0 : 24,
+          ...Platform.select({
+            ios: {
+              shadowColor: colors.neutral[900],
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 16,
+            },
+            android: {
+              elevation: 12,
+              shadowColor: colors.primary[900],
+            },
+          }),
         },
+        tabBarBackground: () =>
+          Platform.OS === 'ios' ? (
+            <BlurView
+              tint="light"
+              intensity={85}
+              style={StyleSheet.absoluteFill}
+            />
+          ) : null,
         sceneStyle: {
           backgroundColor: colors.background.primary,
-          paddingBottom: Platform.OS === 'ios' ? 88 : 68,
+          paddingBottom: tabBarHeight + (Platform.OS === 'ios' ? 0 : 12),
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
-          marginHorizontal: 2,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 0 : 8,
+          marginHorizontal: 4,
           borderRadius: 12,
           justifyContent: 'center',
-          height: Platform.OS === 'ios' ? 56 : 52,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: '600',
-          marginTop: 4,
-          marginBottom: 0,
+          marginTop: 2,
+          paddingBottom: Platform.OS === 'ios' ? 0 : 4,
         },
         tabBarIconStyle: {
           marginTop: 0,
-          marginBottom: -2,
+          marginBottom: 0,
         },
       }}
     >
@@ -109,6 +139,7 @@ export const TabNavigator = () => {
       }}
       listeners={({ navigation }) => ({
         tabPress: () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
         },
       })}
@@ -124,6 +155,7 @@ export const TabNavigator = () => {
       }}
       listeners={({ navigation }) => ({
         tabPress: () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           navigation.navigate('JobsTab', { screen: 'JobsList' });
         },
       })}
@@ -137,6 +169,9 @@ export const TabNavigator = () => {
           <AnimatedIcon iconName={focused ? "checkmark-done" : "checkmark-done-outline"} focused={focused} />
         ),
       }}
+      listeners={() => ({
+        tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+      })}
     />
     <Tab.Screen
       name="SettingsTab"
@@ -149,6 +184,7 @@ export const TabNavigator = () => {
       }}
       listeners={({ navigation }) => ({
         tabPress: () => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
         },
       })}

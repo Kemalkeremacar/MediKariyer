@@ -8,8 +8,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { formatRelativeTime } from '@/utils/date';
 
 interface ApplicationCardProps {
   application: any;
@@ -18,13 +17,7 @@ interface ApplicationCardProps {
 
 export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onPress }) => {
   const dateToUse = application.applied_at || application.created_at;
-  
-  const timeAgo = dateToUse
-    ? formatDistanceToNow(new Date(dateToUse), { 
-        addSuffix: true,
-        locale: tr 
-      })
-    : null;
+  const timeAgo = formatRelativeTime(dateToUse) || null;
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>

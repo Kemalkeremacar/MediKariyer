@@ -17,6 +17,7 @@ import { Select, SelectOption } from '@/components/ui/Select';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { colors, spacing } from '@/theme';
 import { useSpecialties } from '@/hooks/useLookup';
+import { toDateString, parseDateOnly } from '@/utils/date';
 import type { DoctorExperience, CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
 
 interface ExperienceFormModalProps {
@@ -60,8 +61,8 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
         role_title: experience.role_title || '',
         organization: experience.organization || '',
         specialty_id: experience.specialty_id || 0,
-        start_date: experience.start_date ? new Date(experience.start_date) : undefined,
-        end_date: experience.end_date ? new Date(experience.end_date) : undefined,
+        start_date: parseDateOnly(experience.start_date) || undefined,
+        end_date: parseDateOnly(experience.end_date) || undefined,
         is_current: experience.is_current || false,
       });
     } else {
@@ -111,8 +112,8 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
       role_title: formData.role_title,
       organization: formData.organization,
       specialty_id: formData.specialty_id,
-      start_date: formData.start_date!.toISOString().split('T')[0],
-      end_date: formData.is_current ? null : formData.end_date?.toISOString().split('T')[0] || null,
+      start_date: toDateString(formData.start_date),
+      end_date: formData.is_current ? null : toDateString(formData.end_date),
       is_current: formData.is_current,
     };
 

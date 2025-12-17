@@ -516,13 +516,7 @@ export const PhotoManagementScreen = () => {
                   </View>
                   {item.created_at && (
                     <Text style={styles.historyItemDate}>
-                      {new Date(item.created_at).toLocaleDateString('tr-TR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDateTime(item.created_at)}
                     </Text>
                   )}
                   {item.reason && (

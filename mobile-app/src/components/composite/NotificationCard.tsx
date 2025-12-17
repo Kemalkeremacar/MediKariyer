@@ -4,8 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { colors, spacing } from '@/theme';
-import { formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { formatRelativeTime } from '@/utils/date';
 
 export interface NotificationCardProps {
   id: number;
@@ -44,21 +43,8 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   const iconName = iconMap[safeType];
   const color = colorMap[safeType];
   
-  // Handle null or invalid timestamp with defensive checks
-  let timeAgo = 'Bilinmiyor';
-  try {
-    if (timestamp && typeof timestamp === 'string') {
-      const date = new Date(timestamp);
-      if (!isNaN(date.getTime())) {
-        timeAgo = formatDistanceToNow(date, { 
-          addSuffix: true,
-          locale: tr 
-        });
-      }
-    }
-  } catch (error) {
-    console.warn('Invalid timestamp in NotificationCard:', timestamp, error);
-  }
+  // Merkezi date utility ile güvenli tarih formatı
+  const timeAgo = formatRelativeTime(timestamp, { fallback: 'Bilinmiyor' });
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.7}>

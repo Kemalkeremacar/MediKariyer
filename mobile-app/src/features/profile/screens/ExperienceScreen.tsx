@@ -12,6 +12,7 @@ import { ExperienceCard } from '@/components/composite/ExperienceCard';
 import { ExperienceFormModal } from '../components/ExperienceFormModal';
 import { colors, spacing } from '@/theme';
 import { useExperiences, useExperience } from '../hooks/useProfile';
+import { formatYear } from '@/utils/date';
 import type { DoctorExperience, CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
 
 export const ExperienceScreen = () => {
@@ -60,11 +61,6 @@ export const ExperienceScreen = () => {
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.getFullYear().toString();
-  };
 
   return (
     <Screen scrollable={false}>
@@ -118,8 +114,8 @@ export const ExperienceScreen = () => {
             title={item.role_title || 'Pozisyon'}
             company={item.organization || 'Kurum'}
             location={item.specialty_name || ''}
-            startDate={formatDate(item.start_date)}
-            endDate={item.is_current ? 'Devam ediyor' : formatDate(item.end_date)}
+            startDate={formatYear(item.start_date)}
+            endDate={item.is_current ? 'Devam ediyor' : formatYear(item.end_date)}
             current={item.is_current}
             onEdit={() => handleEditExperience(item)}
             onDelete={() => handleDeleteExperience(item.id)}

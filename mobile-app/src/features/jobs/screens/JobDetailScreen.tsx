@@ -25,6 +25,7 @@ import { Screen } from '@/components/layout/Screen';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
+import { formatRelativeTime } from '@/utils/date';
 
 type Props = NativeStackScreenProps<JobsStackParamList, 'JobDetail'>;
 
@@ -102,21 +103,6 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   // Maaş Formatı (Backend'den zaten formatlanmış geliyor)
   const salaryText = job.salary_range || 'Maaş Belirtilmemiş';
 
-  // Tarih formatı (basit)
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Tarih belirtilmemiş';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Bugün';
-    if (diffDays === 1) return 'Dün';
-    if (diffDays < 7) return `${diffDays} gün önce`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} hafta önce`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} ay önce`;
-    return `${Math.floor(diffDays / 365)} yıl önce`;
-  };
 
   return (
     <Screen scrollable={false} contentContainerStyle={styles.container}>
@@ -148,7 +134,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
                   {job.hospital_name ?? 'Kurum bilgisi yok'}
                 </Typography>
                 <Typography variant="caption" style={styles.postedDate}>
-                  {formatDate(job.created_at)}
+                  {formatRelativeTime(job.created_at, { fallback: 'Tarih belirtilmemiş' })}
                 </Typography>
               </View>
             </View>
@@ -187,7 +173,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
                   Yayınlanma
                 </Typography>
                 <Typography variant="body" style={styles.infoValue}>
-                  {formatDate(job.created_at)}
+                  {formatRelativeTime(job.created_at, { fallback: 'Tarih belirtilmemiş' })}
                 </Typography>
               </View>
 

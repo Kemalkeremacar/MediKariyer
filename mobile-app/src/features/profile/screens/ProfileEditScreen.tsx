@@ -29,6 +29,7 @@ import { useProfile, useUpdatePersonalInfo } from '../hooks/useProfile';
 import { useAuthStore } from '@/store/authStore';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { useToast } from '@/providers/ToastProvider';
+import { toDateString, parseDateOnly } from '@/utils/date';
 
 // Title options
 const TITLE_OPTIONS: SelectOption[] = [
@@ -83,7 +84,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
         specialty_id: profile.specialty_id || undefined,
         subspecialty_id: profile.subspecialty_id || undefined,
         phone: profile.phone || '',
-        dob: profile.dob ? new Date(profile.dob) : undefined,
+        dob: parseDateOnly(profile.dob) || undefined,
         birth_place_id: profile.birth_place_id || undefined,
         residence_city_id: profile.residence_city_id || undefined,
       });
@@ -162,7 +163,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
         specialty_id: formData.specialty_id!,
         subspecialty_id: formData.subspecialty_id || null,
         phone: formData.phone || null,
-        dob: formData.dob ? formData.dob.toISOString().split('T')[0] : null,
+        dob: toDateString(formData.dob),
         birth_place_id: formData.birth_place_id || null,
         residence_city_id: formData.residence_city_id || null,
       });
@@ -178,8 +179,8 @@ export const ProfileEditScreen = ({ navigation }: any) => {
   const hasChanges = useMemo(() => {
     if (!profile) return false;
     
-    const profileDob = profile.dob ? new Date(profile.dob).toISOString().split('T')[0] : null;
-    const formDob = formData.dob ? formData.dob.toISOString().split('T')[0] : null;
+    const profileDob = toDateString(profile.dob);
+    const formDob = toDateString(formData.dob);
     
     return (
       formData.first_name !== (profile.first_name || '') ||
