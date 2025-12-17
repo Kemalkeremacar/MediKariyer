@@ -49,7 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
       return gradientColors;
     }
     if (variant === 'gradient') {
-      return ['#667eea', '#764ba2']; // Purple gradient (default)
+      return ['#6096B4', '#93BFCF']; // Blue gradient (matches web)
     }
     if (variant === 'primary') {
       return ['#60A5FA', '#3B82F6']; // Modern light blue gradient
@@ -165,7 +165,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   secondary: {
     backgroundColor: theme.colors.secondary[500], // #764ba2
     // Modern: Soft pastel shadow
-    shadowColor: '#764ba2',
+    shadowColor: theme.colors.secondary[500],
     shadowOffset: {
       width: 0,
       height: 4,

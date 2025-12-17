@@ -3,7 +3,26 @@ import { Alert } from 'react-native';
 import { showAlert } from '@/utils/alert';
 import { useAuthStore } from '@/store/authStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
-import { SettingsData, SettingsUpdatePayload, AccountAction } from '../types';
+
+type AccountAction = 'freeze' | 'delete';
+
+interface NotificationSettings {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+}
+
+interface SettingsData {
+  notifications: NotificationSettings;
+  language: string;
+  theme: string;
+}
+
+interface SettingsUpdatePayload {
+  notifications?: Partial<NotificationSettings>;
+  language?: string;
+  theme?: string;
+}
 
 /**
  * Hook for managing user settings
@@ -34,7 +53,7 @@ export const useSettings = () => {
       // TODO: Implement API call to update settings
       // await settingsService.updateSettings(payload);
       
-      setSettings((prev): SettingsData => ({
+      setSettings((prev: SettingsData): SettingsData => ({
         notifications: payload.notifications 
           ? { ...prev.notifications, ...payload.notifications }
           : prev.notifications,

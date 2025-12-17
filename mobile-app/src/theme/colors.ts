@@ -94,12 +94,13 @@ export const lightColors = {
     tertiary: '#f9fafb',
     overlay: 'rgba(0, 0, 0, 0.5)',
     card: '#ffffff',
-    gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    gradient: 'linear-gradient(135deg, #6096B4 0%, #93BFCF 100%)',
   },
   // Brand gradient colors (used in headers, buttons)
   gradient: {
     primary: ['#60A5FA', '#3B82F6'], // Light blue gradient
     secondary: ['#38BDF8', '#0EA5E9'], // Sky blue gradient
+    header: ['#6096B4', '#7BA8BE', '#93BFCF'], // New blue gradient for headers (matches web)
   },
   text: {
     primary: '#1F2937',

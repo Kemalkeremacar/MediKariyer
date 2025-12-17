@@ -17,7 +17,10 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { profileService } from '@/api/services/profile.service';
 import { colors, shadows, spacing, borderRadius, typography } from '@/theme';
-// Icons will be replaced with @expo/vector-icons or simple text
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { formatDateTime } from '@/utils/date';
+import { BackButton } from '@/components/ui/BackButton';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -35,6 +38,7 @@ const compressImage = async (uri: string): Promise<string> => {
 };
 
 export const PhotoManagementScreen = () => {
+  const navigation = useNavigation();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [historySectionY, setHistorySectionY] = useState<number | null>(null);
@@ -231,11 +235,13 @@ export const PhotoManagementScreen = () => {
   };
 
   return (
-    <ScrollView
-      ref={scrollRef}
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={isLoading} onRefresh={onRefresh} />}
-    >
+    <View style={styles.container}>
+      <BackButton onPress={() => navigation.goBack()} />
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scrollContainer}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={onRefresh} />}
+      >
       <Modal
         visible={detailsVisible}
         transparent
@@ -265,7 +271,7 @@ export const PhotoManagementScreen = () => {
                 <Text style={styles.detailLabel}>Tarih</Text>
                 <Text style={styles.detailValue}>
                   {selectedHistoryItem?.created_at
-                    ? new Date(selectedHistoryItem.created_at).toLocaleString('tr-TR')
+                    ? formatDateTime(selectedHistoryItem.created_at)
                     : '-'}
                 </Text>
               </View>
@@ -317,19 +323,55 @@ export const PhotoManagementScreen = () => {
         </View>
       </Modal>
 
-      {/* Current Photo */}
+      {/* Current Photo - Show side by side if pending request */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mevcut Fotoğraf</Text>
-        <View style={styles.photoContainer}>
-          {photoPreview ? (
-            <Image source={{ uri: photoPreview }} style={styles.photo} />
-          ) : (
-            <View style={styles.photoPlaceholder}>
-              <Text style={styles.cameraIcon}>📷</Text>
-              <Text style={styles.placeholderText}>Fotoğraf Yok</Text>
+        {hasPendingRequest && photoRequestStatus ? (
+          <>
+            <Text style={styles.sectionTitle}>Fotoğraf Karşılaştırması</Text>
+            <View style={styles.photoCompareContainer}>
+              <View style={styles.photoCompareItem}>
+                <Text style={styles.photoCompareLabel}>Mevcut Fotoğraf</Text>
+                <View style={styles.photoContainerSmall}>
+                  {profile?.profile_photo ? (
+                    <Image source={{ uri: profile.profile_photo }} style={styles.photoSmall} />
+                  ) : (
+                    <View style={styles.photoPlaceholderSmall}>
+                      <Text style={styles.cameraIconSmall}>📷</Text>
+                      <Text style={styles.placeholderTextSmall}>Yok</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <View style={styles.photoCompareItem}>
+                <Text style={styles.photoCompareLabel}>Yeni Fotoğraf</Text>
+                <View style={styles.photoContainerSmall}>
+                  {photoRequestStatus.file_url ? (
+                    <Image source={{ uri: photoRequestStatus.file_url }} style={styles.photoSmall} />
+                  ) : (
+                    <View style={styles.photoPlaceholderSmall}>
+                      <Text style={styles.cameraIconSmall}>📷</Text>
+                      <Text style={styles.placeholderTextSmall}>Yok</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
             </View>
-          )}
-        </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>Mevcut Fotoğraf</Text>
+            <View style={styles.photoContainer}>
+              {photoPreview ? (
+                <Image source={{ uri: photoPreview }} style={styles.photo} />
+              ) : (
+                <View style={styles.photoPlaceholder}>
+                  <Text style={styles.cameraIcon}>📷</Text>
+                  <Text style={styles.placeholderText}>Fotoğraf Yok</Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
       </View>
 
       {/* Pending Request Status */}
@@ -414,11 +456,7 @@ export const PhotoManagementScreen = () => {
                   <View style={styles.trackingRow}>
                     <Text style={styles.trackingLabel}>Tarih:</Text>
                     <Text style={styles.trackingValue}>
-                      {new Date(latestRequest.created_at).toLocaleDateString('tr-TR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
+                      {formatDateTime(latestRequest.created_at)}
                     </Text>
                   </View>
                 )}
@@ -508,7 +546,8 @@ export const PhotoManagementScreen = () => {
           ))}
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -517,12 +556,56 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.secondary,
   },
+  scrollContainer: {
+    flex: 1,
+  },
   section: {
     backgroundColor: colors.background.primary,
     margin: spacing.lg,
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
     ...shadows.sm,
+  },
+  photoCompareContainer: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    justifyContent: 'space-between',
+  },
+  photoCompareItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  photoCompareLabel: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text.primary,
+    marginBottom: spacing.sm,
+  },
+  photoContainerSmall: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoSmall: {
+    width: 140,
+    height: 140,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.border.light,
+  },
+  photoPlaceholderSmall: {
+    width: 140,
+    height: 140,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.border.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraIconSmall: {
+    fontSize: 32,
+  },
+  placeholderTextSmall: {
+    marginTop: spacing.xs,
+    fontSize: typography.fontSize.xs,
+    color: colors.text.tertiary,
   },
   sectionTitle: {
     fontSize: typography.fontSize.lg,

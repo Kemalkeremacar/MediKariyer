@@ -6,6 +6,8 @@ import {
   RefreshControl,
   TouchableOpacity,
   Image,
+  Dimensions,
+  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,10 +18,15 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useQueryClient } from '@tanstack/react-query';
 import { Typography } from '@/components/ui/Typography';
 import { DashboardCard } from '@/components/ui/DashboardCard';
+import { FeaturedJobCard } from '@/components/ui/FeaturedJobCard';
+import { RecentApplicationItem } from '@/components/ui/RecentApplicationItem';
 import { useProfile, useProfileCompletion } from '../hooks/useProfile';
+import { useJobs } from '@/features/jobs/hooks/useJobs';
+import { useApplications } from '@/features/applications/hooks/useApplications';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { profileService } from '@/api/services/profile.service';
+import { colors } from '@/theme';
 import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 
 type DashboardScreenNavigationProp = CompositeNavigationProp<
@@ -30,9 +37,35 @@ type DashboardScreenNavigationProp = CompositeNavigationProp<
 export const DashboardScreen = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
   const queryClient = useQueryClient();
-  const { data: profile, refetch, isRefetching } = useProfile();
-  const { data: completionData, refetch: refetchCompletion } = useProfileCompletion();
-  const { unreadCount } = useNotifications({ limit: 1 });
+  const { data: profile, refetch: refetchProfile, isRefetching: isRefetchingProfile } = useProfile();
+  const { data: completionData, refetch: refetchCompletion, isRefetching: isRefetchingCompletion } = useProfileCompletion();
+  const { unreadCount, refetch: refetchNotifications } = useNotifications({ limit: 1 });
+  
+  // Fetch Featured Jobs (Last 5 jobs)
+  const { 
+    data: jobsData, 
+    isLoading: isLoadingJobs, 
+    refetch: refetchJobs,
+    isRefetching: isRefetchingJobs
+  } = useJobs({ limit: 5 });
+
+  // Fetch Recent Applications (Last 3 applications)
+  const { 
+    data: applicationsData, 
+    isLoading: isLoadingApplications, 
+    refetch: refetchApplications,
+    isRefetching: isRefetchingApplications
+  } = useApplications({ limit: 3 });
+
+  const isRefetching = isRefetchingProfile || isRefetchingCompletion || isRefetchingJobs || isRefetchingApplications;
+
+  const handleRefresh = () => {
+    refetchProfile();
+    refetchCompletion();
+    refetchNotifications();
+    refetchJobs();
+    refetchApplications();
+  };
 
   // Prefetch profile data when user hovers/focuses on cards
   const prefetchLanguages = () => {
@@ -94,16 +127,15 @@ export const DashboardScreen = () => {
         refreshControl={
           <RefreshControl 
             refreshing={isRefetching} 
-            onRefresh={() => {
-              refetch();
-              refetchCompletion();
-            }} 
+            onRefresh={handleRefresh} 
+            tintColor="#ffffff"
+            colors={['#1D4ED8']}
           />
         }
       >
         {/* Modern Header with Gradient */}
         <LinearGradient
-          colors={['#667eea', '#764ba2', '#f093fb']}
+          colors={['#1D4ED8', '#2563EB', '#3B82F6']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -111,7 +143,7 @@ export const DashboardScreen = () => {
           {/* Header Top */}
           <View style={styles.headerTop}>
             <Typography variant="title" style={styles.appTitle}>
-              MediKariyer
+              medikariyer.net
             </Typography>
             <TouchableOpacity 
               onPress={() => navigation.navigate('Notifications')}
@@ -138,6 +170,12 @@ export const DashboardScreen = () => {
                   <Ionicons name="person" size={56} color="#4A90E2" />
                 </View>
               )}
+              <TouchableOpacity 
+                style={styles.editBadge}
+                onPress={() => navigation.navigate('ProfileEdit')}
+              >
+                <Ionicons name="pencil" size={16} color="#ffffff" />
+              </TouchableOpacity>
             </View>
             
             <View style={styles.profileInfo}>
@@ -171,41 +209,122 @@ export const DashboardScreen = () => {
           </View>
         </LinearGradient>
 
-        {/* Care & Treatment Section */}
+        {/* Featured Jobs Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Typography variant="h3" style={styles.sectionTitle}>
+              Vitrin İlanlar
+            </Typography>
+            <TouchableOpacity onPress={() => navigation.navigate('JobsTab', { screen: 'JobsList' })}>
+              <Typography variant="caption" style={styles.seeAllText}>
+                Tümünü Gör
+              </Typography>
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalList}
+          >
+            {isLoadingJobs ? (
+              // Loading skeletons could be here, for now just empty
+              [1, 2].map((i) => (
+                <View key={i} style={[styles.skeletonCard, { marginRight: 16 }]} />
+              ))
+            ) : jobsData?.pages[0]?.data.length === 0 ? (
+              <View style={styles.emptyStateContainer}>
+                <Typography variant="bodySmall" style={styles.emptyStateText}>
+                  Henüz ilan bulunmamaktadır.
+                </Typography>
+              </View>
+            ) : (
+              jobsData?.pages[0]?.data.map((job) => (
+                <FeaturedJobCard
+                  key={job.id}
+                  job={job}
+                  onPress={() => navigation.navigate('JobsTab', { 
+                    screen: 'JobDetail', 
+                    params: { id: job.id } 
+                  })}
+                />
+              ))
+            )}
+          </ScrollView>
+        </View>
+
+        {/* Quick Actions Grid */}
         <View style={styles.section}>
           <Typography variant="h3" style={styles.sectionTitle}>
-            Kariyer & Fırsatlar
+            Hızlı Erişim
           </Typography>
           
           <View style={styles.cardsRow}>
             <DashboardCard
-              title="İş İlanları"
-              icon={<Ionicons name="briefcase" size={32} color="#E91E63" />}
-              onPress={() => navigation.navigate('JobsTab', { screen: 'JobsList' })}
-              variant="large"
+              title="Özgeçmiş"
+              icon={<Ionicons name="document-text" size={28} color="#4A90E2" />}
+              onPress={() => navigation.navigate('ProfileEdit')}
+              variant="default"
+              style={{ flex: 1 }}
             />
             <DashboardCard
-              title="Başvurularım"
-              icon={<Ionicons name="document-text" size={32} color="#9C27B0" />}
-              onPress={() => navigation.navigate('Applications')}
-              variant="large"
+              title="Fotoğraf"
+              icon={<Ionicons name="camera" size={28} color="#9C27B0" />}
+              onPress={() => navigation.navigate('PhotoManagement')}
+              variant="default"
+              style={{ flex: 1 }}
             />
+            <DashboardCard
+              title="Ayarlar"
+              icon={<Ionicons name="settings" size={28} color="#607D8B" />}
+              onPress={() => navigation.navigate('SettingsTab', { screen: 'SettingsMain' })}
+              variant="default"
+              style={{ flex: 1 }}
+            />
+          </View>
+        </View>
+
+        {/* Recent Applications Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Typography variant="h3" style={styles.sectionTitle}>
+              Son Başvurular
+            </Typography>
+            <TouchableOpacity onPress={() => navigation.navigate('Applications')}>
+              <Typography variant="caption" style={styles.seeAllText}>
+                Tümünü Gör
+              </Typography>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.cardsRow}>
-            <DashboardCard
-              title="Profilim"
-              icon={<Ionicons name="person" size={32} color="#00BCD4" />}
-              onPress={() => navigation.navigate('ProfileEdit')}
-              variant="large"
-            />
-            <DashboardCard
-              title="Bildirimler"
-              icon={<Ionicons name="notifications" size={32} color="#FF9800" />}
-              onPress={() => navigation.navigate('Notifications')}
-              variant="large"
-            />
-          </View>
+          {isLoadingApplications ? (
+            <View style={styles.skeletonList} />
+          ) : applicationsData?.pages[0]?.data.length === 0 ? (
+            <View style={styles.emptyStateCard}>
+              <Ionicons name="document-text-outline" size={48} color={colors.neutral[300]} />
+              <Typography variant="body" style={styles.emptyStateText}>
+                Henüz bir başvuru yapmadınız.
+              </Typography>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => navigation.navigate('JobsTab', { screen: 'JobsList' })}
+              >
+                <Typography variant="caption" style={styles.emptyStateButtonText}>
+                  İlanlara Göz At
+                </Typography>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.verticalList}>
+              {applicationsData?.pages[0]?.data.map((application) => (
+                <RecentApplicationItem
+                  key={application.id}
+                  application={application}
+                  onPress={() => navigation.navigate('Applications')}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Profile Details Section */}
@@ -214,40 +333,44 @@ export const DashboardScreen = () => {
             <Typography variant="h3" style={styles.sectionTitle}>
               Profil Detayları
             </Typography>
-            <Ionicons name="person-circle" size={20} color="#667eea" />
+            <Ionicons name="person-circle" size={20} color="#1D4ED8" />
           </View>
           
           <View style={styles.cardsRow}>
             <DashboardCard
               title="Eğitim"
-              icon={<Ionicons name="school" size={32} color="#4CAF50" />}
+              icon={<Ionicons name="school" size={28} color="#4CAF50" />}
               onPress={() => navigation.navigate('Education')}
               onPressIn={prefetchEducations}
-              variant="large"
+              variant="default"
+              style={{ flex: 1 }}
             />
             <DashboardCard
               title="Deneyim"
-              icon={<Ionicons name="briefcase" size={32} color="#2196F3" />}
+              icon={<Ionicons name="briefcase" size={28} color="#2196F3" />}
               onPress={() => navigation.navigate('Experience')}
               onPressIn={prefetchExperiences}
-              variant="large"
+              variant="default"
+              style={{ flex: 1 }}
             />
           </View>
 
           <View style={styles.cardsRow}>
             <DashboardCard
               title="Sertifikalar"
-              icon={<Ionicons name="ribbon" size={32} color="#FF5722" />}
+              icon={<Ionicons name="ribbon" size={28} color="#FF5722" />}
               onPress={() => navigation.navigate('Certificates')}
               onPressIn={prefetchCertificates}
-              variant="large"
+              variant="default"
+              style={{ flex: 1 }}
             />
             <DashboardCard
               title="Diller"
-              icon={<Ionicons name="language" size={32} color="#9C27B0" />}
+              icon={<Ionicons name="language" size={28} color="#9C27B0" />}
               onPress={() => navigation.navigate('Languages')}
               onPressIn={prefetchLanguages}
-              variant="large"
+              variant="default"
+              style={{ flex: 1 }}
             />
           </View>
         </View>
@@ -478,5 +601,62 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
+  },
+  seeAllText: {
+    color: '#1D4ED8',
+    fontWeight: '600',
+  },
+  horizontalList: {
+    paddingRight: 24,
+  },
+  skeletonCard: {
+    width: Dimensions.get('window').width * 0.75,
+    height: 140,
+    backgroundColor: '#e1e4e8',
+    borderRadius: 16,
+  },
+  emptyStateContainer: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  emptyStateText: {
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  verticalList: {
+    gap: 0,
+  },
+  skeletonList: {
+    height: 100,
+    backgroundColor: '#e1e4e8',
+    borderRadius: 12,
+  },
+  emptyStateCard: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+  },
+  emptyStateButton: {
+    marginTop: 12,
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  emptyStateButtonText: {
+    color: '#4B5563',
+    fontWeight: '600',
   },
 });

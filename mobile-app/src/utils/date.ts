@@ -23,6 +23,7 @@ export const formatDate = (
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'Europe/Istanbul',
     ...options,
   };
 
@@ -45,6 +46,7 @@ export const formatDateShort = (date: Date | string | number): string => {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
+    timeZone: 'Europe/Istanbul',
   });
 };
 
@@ -66,6 +68,7 @@ export const formatDateTime = (date: Date | string | number): string => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'Europe/Istanbul',
   });
 };
 

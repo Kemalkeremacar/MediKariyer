@@ -4,6 +4,7 @@ import type { ApplicationsListResponse } from '@/api/services/application.servic
 
 export interface ApplicationFilters {
   status?: string;
+  limit?: number;
 }
 
 export const useApplications = (filters: ApplicationFilters = {}, enabled: boolean = true) => {
@@ -14,7 +15,7 @@ export const useApplications = (filters: ApplicationFilters = {}, enabled: boole
       const page = typeof pageParam === 'number' ? pageParam : 1;
       return applicationService.listApplications({
         page,
-        limit: 10,
+        limit: filters.limit || 10,
         status: filters.status || undefined,
       });
     },

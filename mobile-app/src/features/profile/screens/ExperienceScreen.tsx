@@ -75,7 +75,7 @@ export const ExperienceScreen = () => {
 
       {/* Modern Gradient Header */}
       <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
+        colors={['#6096B4', '#7BA8BE', '#93BFCF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientHeader}
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#667eea',
+    shadowColor: '#059669',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,

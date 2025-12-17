@@ -4,7 +4,7 @@
  */
 
 import { useAuthStore } from '@/store/authStore';
-import type { AuthUser } from '../types';
+import type { AuthUser } from '@/types/auth';
 
 /**
  * Hook for accessing authentication state

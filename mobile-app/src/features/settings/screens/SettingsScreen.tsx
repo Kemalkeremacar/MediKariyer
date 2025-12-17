@@ -175,7 +175,7 @@ export const SettingsScreen = ({ navigation }: any) => {
       >
         {/* Premium Gradient Header */}
         <LinearGradient
-          colors={['#667eea', '#764ba2', '#f093fb']}
+          colors={['#1D4ED8', '#2563EB', '#3B82F6']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientHeader}
@@ -189,7 +189,7 @@ export const SettingsScreen = ({ navigation }: any) => {
           <View style={styles.headerContent}>
             <View style={styles.headerIconWrapper}>
               <LinearGradient
-                colors={[colors.primary[500], colors.primary[600]]}
+                colors={['#2563EB', '#1D4ED8']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.headerIconGradient}
@@ -239,12 +239,12 @@ export const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <SectionHeader
             title="Bildirim Tercihleri"
-            icon={<Ionicons name="notifications-outline" size={16} color="#8B5CF6" />}
+            icon={<Ionicons name="notifications-outline" size={16} color="#6096B4" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="notifications" size={20} color="#8B5CF6" />}
-              iconBgColor="#F3E8FF"
+              icon={<Ionicons name="notifications" size={20} color="#6096B4" />}
+              iconBgColor="#E0F2FE"
               title="Anlık Bildirimler"
               subtitle="Tarayıcı ve uygulama bildirimleri"
               showChevron={false}
@@ -254,7 +254,7 @@ export const SettingsScreen = ({ navigation }: any) => {
                   onValueChange={setPushNotifications}
                   trackColor={{
                     false: colors.neutral[300],
-                    true: '#8B5CF6',
+                    true: '#6096B4',
                   }}
                   thumbColor={colors.background.primary}
                 />
@@ -262,8 +262,8 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="mail" size={20} color="#8B5CF6" />}
-              iconBgColor="#F3E8FF"
+              icon={<Ionicons name="mail" size={20} color="#6096B4" />}
+              iconBgColor="#E0F2FE"
               title="E-posta Bildirimleri"
               subtitle="Önemli güncellemeler e-posta ile"
               showChevron={false}
@@ -273,7 +273,7 @@ export const SettingsScreen = ({ navigation }: any) => {
                   onValueChange={setEmailNotifications}
                   trackColor={{
                     false: colors.neutral[300],
-                    true: '#8B5CF6',
+                    true: '#6096B4',
                   }}
                   thumbColor={colors.background.primary}
                 />
@@ -281,8 +281,8 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="document-text" size={20} color="#8B5CF6" />}
-              iconBgColor="#F3E8FF"
+              icon={<Ionicons name="document-text" size={20} color="#6096B4" />}
+              iconBgColor="#E0F2FE"
               title="Başvuru Güncellemeleri"
               subtitle="Başvurularınızla ilgili bildirimler"
               showChevron={false}
@@ -292,7 +292,7 @@ export const SettingsScreen = ({ navigation }: any) => {
                   onValueChange={setApplicationUpdates}
                   trackColor={{
                     false: colors.neutral[300],
-                    true: '#8B5CF6',
+                    true: '#6096B4',
                   }}
                   thumbColor={colors.background.primary}
                 />
@@ -300,8 +300,8 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="briefcase" size={20} color="#8B5CF6" />}
-              iconBgColor="#F3E8FF"
+              icon={<Ionicons name="briefcase" size={20} color="#6096B4" />}
+              iconBgColor="#E0F2FE"
               title="İş İlanı Uyarıları"
               subtitle="Yeni iş ilanları hakkında bildirim"
               showChevron={false}
@@ -311,7 +311,7 @@ export const SettingsScreen = ({ navigation }: any) => {
                   onValueChange={setJobAlerts}
                   trackColor={{
                     false: colors.neutral[300],
-                    true: '#8B5CF6',
+                    true: '#6096B4',
                   }}
                   thumbColor={colors.background.primary}
                 />
@@ -319,8 +319,8 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="megaphone" size={20} color="#8B5CF6" />}
-              iconBgColor="#F3E8FF"
+              icon={<Ionicons name="megaphone" size={20} color="#6096B4" />}
+              iconBgColor="#E0F2FE"
               title="Sistem Mesajları"
               subtitle="Önemli sistem duyuruları"
               showChevron={false}
@@ -330,7 +330,7 @@ export const SettingsScreen = ({ navigation }: any) => {
                   onValueChange={setSystemMessages}
                   trackColor={{
                     false: colors.neutral[300],
-                    true: '#8B5CF6',
+                    true: '#6096B4',
                   }}
                   thumbColor={colors.background.primary}
                 />
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#667eea',
+    shadowColor: '#1D4ED8',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,

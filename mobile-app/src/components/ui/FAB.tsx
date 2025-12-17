@@ -36,7 +36,7 @@ export const FAB: React.FC<FABProps> = ({
 
   const getGradientColors = (): [string, string] => {
     if (color === 'primary') {
-      return ['#667eea', '#764ba2'];
+      return ['#6096B4', '#93BFCF'];
     }
     if (color === 'secondary') {
       return ['#f093fb', '#f5576c'];

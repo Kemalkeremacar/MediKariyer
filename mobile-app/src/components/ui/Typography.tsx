@@ -7,6 +7,7 @@ interface TypographyProps {
   variant?: 'title' | 'subtitle' | 'h1' | 'h2' | 'h3' | 'body' | 'bodyMedium' | 'bodySemibold' | 'bodyLarge' | 'bodySmall' | 'caption';
   style?: TextStyle;
   color?: string;
+  numberOfLines?: number;
 }
 
 export const Typography: React.FC<TypographyProps> = ({
@@ -14,6 +15,7 @@ export const Typography: React.FC<TypographyProps> = ({
   variant = 'body',
   style,
   color,
+  numberOfLines,
 }) => {
   const { theme } = useTheme();
   
@@ -22,6 +24,8 @@ export const Typography: React.FC<TypographyProps> = ({
       allowFontScaling={false}
       maxFontSizeMultiplier={1}
       textBreakStrategy="simple"
+      numberOfLines={numberOfLines}
+      ellipsizeMode="tail"
       style={[
         styles[variant], 
         { fontFamily: theme.typography.fontFamily.default },

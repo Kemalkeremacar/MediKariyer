@@ -128,7 +128,7 @@ export const JobsScreen = () => {
     <>
       {/* Premium Gradient Header */}
       <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
+        colors={['#1D4ED8', '#2563EB', '#3B82F6']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientHeader}
@@ -142,7 +142,7 @@ export const JobsScreen = () => {
         <View style={styles.headerContent}>
           <View style={styles.headerIconWrapper}>
             <LinearGradient
-              colors={['#10B981', '#059669']}
+              colors={['#2563EB', '#1D4ED8']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.headerIconGradient}
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#667eea',
+    shadowColor: '#1D4ED8',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,

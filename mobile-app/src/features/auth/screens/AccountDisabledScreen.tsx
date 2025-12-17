@@ -27,11 +27,11 @@ export const AccountDisabledScreen = () => {
       contentContainerStyle={styles.screenContent}
     >
       <Card padding="3xl" shadow="md" style={styles.card}>
-        <Typography variant="heading" style={styles.icon}>
+        <Typography variant="h1" style={styles.icon}>
           🚫
         </Typography>
-        <Typography variant="heading">Hesap Pasif</Typography>
-        <Typography variant="bodySecondary" style={styles.message}>
+        <Typography variant="h1">Hesap Pasif</Typography>
+        <Typography variant="body" style={styles.message}>
           Hesabınız sistem yöneticisi tarafından pasif duruma alınmıştır.
         </Typography>
         {user && (
@@ -39,12 +39,12 @@ export const AccountDisabledScreen = () => {
             <Typography variant="title" style={styles.userName}>
               {user.first_name} {user.last_name}
             </Typography>
-            <Typography variant="bodySecondary" style={styles.userEmail}>
+            <Typography variant="bodySmall" style={styles.userEmail}>
               {user.email}
             </Typography>
           </View>
         )}
-        <Typography variant="bodySecondary" style={styles.subMessage}>
+        <Typography variant="body" style={styles.subMessage}>
           Hesabınızın neden pasif duruma alındığını öğrenmek için lütfen sistem yöneticisi ile iletişime geçin.
         </Typography>
         <Button
