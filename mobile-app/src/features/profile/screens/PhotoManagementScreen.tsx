@@ -91,9 +91,11 @@ export const PhotoManagementScreen = () => {
 
   // Load pending request preview
   useEffect(() => {
-    if (photoRequestStatus?.file_url) {
+    // Only update preview if there's a pending request with a file_url
+    if (photoRequestStatus?.status === 'pending' && photoRequestStatus?.file_url) {
       setPhotoPreview(photoRequestStatus.file_url);
     } else if (profile?.profile_photo) {
+      // Otherwise, show the current approved profile photo
       setPhotoPreview(profile.profile_photo);
     }
   }, [photoRequestStatus, profile]);
