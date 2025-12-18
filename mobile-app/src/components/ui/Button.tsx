@@ -22,6 +22,10 @@ export interface ButtonProps {
   style?: ViewStyle;
   textStyle?: TextStyle;
   gradientColors?: [string, string];
+  /** TD-012: Accessibility label for screen readers */
+  accessibilityLabel?: string;
+  /** Accessibility hint for screen readers */
+  accessibilityHint?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -36,6 +40,8 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   textStyle,
   gradientColors,
+  accessibilityLabel,
+  accessibilityHint,
 }) => {
   const { theme } = useTheme();
   const isDisabled = disabled || loading;
@@ -97,6 +103,10 @@ export const Button: React.FC<ButtonProps> = ({
         onPress={onPress}
         disabled={isDisabled}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel || (typeof label === 'string' ? label : undefined)}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
       >
         <LinearGradient
           colors={getGradientColors()}
@@ -126,6 +136,10 @@ export const Button: React.FC<ButtonProps> = ({
       onPress={onPress}
       disabled={isDisabled}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || (typeof label === 'string' ? label : undefined)}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {renderContent()}
     </TouchableOpacity>

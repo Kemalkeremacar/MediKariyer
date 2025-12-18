@@ -26,16 +26,34 @@ const processQueue = (error: unknown, token: string | null) => {
   failedQueue.length = 0;
 };
 
+// TD-007: Console.log'lar sadece development'ta çalışır
+const devLog = (...args: unknown[]) => {
+  if (__DEV__) {
+    console.log(...args);
+  }
+};
+
+const devWarn = (...args: unknown[]) => {
+  if (__DEV__) {
+    console.warn(...args);
+  }
+};
+
+const devError = (...args: unknown[]) => {
+  if (__DEV__) {
+    console.error(...args);
+  }
+};
+
 const attachInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     async (config) => {
-      console.log('📤 API Request:', config.method?.toUpperCase(), config.url);
-      // Don't log request data to avoid logging base64 images
+      devLog('📤 API Request:', config.method?.toUpperCase(), config.url);
       
       // Check if token needs refresh before making request
       const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
       if (shouldRefresh && !config.url?.includes('/auth/refresh')) {
-        console.log('🔄 Token needs refresh, triggering proactive refresh...');
+        devLog('🔄 Token needs refresh, triggering proactive refresh...');
         try {
           const refreshToken = await tokenManager.getRefreshToken();
           if (refreshToken) {
@@ -46,10 +64,10 @@ const attachInterceptors = (instance: AxiosInstance) => {
             const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
             await tokenManager.saveTokens(accessToken, newRefreshToken);
             useAuthStore.getState().markAuthenticated(user);
-            console.log('✅ Proactive token refresh successful');
+            devLog('✅ Proactive token refresh successful');
           }
         } catch (error) {
-          console.warn('⚠️ Proactive token refresh failed, will retry on 401');
+          devWarn('⚠️ Proactive token refresh failed, will retry on 401');
         }
       }
       
@@ -64,7 +82,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
     },
     (error) => {
       // Request error (network error, timeout, etc.)
-      console.error('❌ Request error:', error);
+      devError('❌ Request error:', error);
       errorLogger.logError(error, {
         type: 'request',
         phase: 'interceptor',
@@ -75,14 +93,13 @@ const attachInterceptors = (instance: AxiosInstance) => {
 
   instance.interceptors.response.use(
     (response) => {
-      console.log('📥 API Response:', response.config.method?.toUpperCase(), response.config.url);
-      console.log('📥 Response status:', response.status);
-      // Don't log response data to avoid logging base64 images
+      devLog('📥 API Response:', response.config.method?.toUpperCase(), response.config.url);
+      devLog('📥 Response status:', response.status);
       return response;
     },
     async (error) => {
-      console.error('❌ API Error:', error.config?.url, error.response?.status);
-      console.error('❌ Error response:', JSON.stringify(error.response?.data, null, 2));
+      devError('❌ API Error:', error.config?.url, error.response?.status);
+      devError('❌ Error response:', JSON.stringify(error.response?.data, null, 2));
       
       // Network error handling
       if (!error.response) {

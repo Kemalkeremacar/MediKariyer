@@ -10,11 +10,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
-import { jobService } from '@/api/services/job.service';
+import type { JobsStackNavigationProp } from '@/navigation/types';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useJobs } from '../hooks/useJobs';
 import { colors, spacing } from '@/theme';
+import { SEARCH_DEBOUNCE_DELAY, PAGINATION } from '@/config/constants';
 import { Typography } from '@/components/ui/Typography';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { IconButton } from '@/components/ui/IconButton';
@@ -28,7 +29,7 @@ import { Ionicons } from '@expo/vector-icons';
 import type { JobListItem } from '@/types/job';
 
 export const JobsScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<JobsStackNavigationProp>();
   
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,9 +37,9 @@ export const JobsScreen = () => {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
 
   // Debounce search query - Her tuş vuruşunda API çağrısı yapmamak için
-  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+  const debouncedSearchQuery = useDebounce(searchQuery, SEARCH_DEBOUNCE_DELAY);
 
-  // Query with filters
+  // Query with filters - useJobs hook'u kullanılıyor
   const {
     data,
     isLoading,
@@ -48,23 +49,12 @@ export const JobsScreen = () => {
     isFetchingNextPage,
     refetch,
     isRefetching,
-  } = useInfiniteQuery({
-    queryKey: ['jobs', debouncedSearchQuery, filters],
-    queryFn: ({ pageParam = 1 }) =>
-      jobService.listJobs({
-        page: pageParam,
-        limit: 10,
-        ...(debouncedSearchQuery ? { keyword: debouncedSearchQuery } : {}),
-        ...(filters.specialtyId ? { specialty_id: filters.specialtyId } : {}),
-        ...(filters.cityId ? { city_id: filters.cityId } : {}),
-        ...(filters.employmentType ? { employment_type: filters.employmentType } : {}),
-      }),
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination?.has_next
-        ? lastPage.pagination.current_page + 1
-        : undefined,
-    initialPageParam: 1,
-    staleTime: 1000 * 60 * 5, // 5 dakika cache
+  } = useJobs({
+    keyword: debouncedSearchQuery || undefined,
+    specialty_id: filters.specialtyId,
+    city_id: filters.cityId,
+    employment_type: filters.employmentType,
+    limit: PAGINATION.JOBS_PAGE_SIZE,
   });
 
   // Get total count from pagination
@@ -88,7 +78,6 @@ export const JobsScreen = () => {
       <JobCard
         job={item}
         onPress={() => {
-          // @ts-ignore - Navigation type issue
           navigation.navigate('JobDetail', { id: item.id });
         }}
       />

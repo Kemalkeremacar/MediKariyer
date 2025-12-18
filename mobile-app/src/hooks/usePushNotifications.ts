@@ -13,14 +13,15 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { errorLogger } from '@/utils/errorLogger';
+import type { RootNavigationParamList } from '@/navigation/types';
 
 export const usePushNotifications = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootNavigationParamList>>();
   const { isAuthenticated } = useAuth();
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
@@ -89,20 +90,16 @@ export const usePushNotifications = () => {
 
       // Navigate based on notification type
       if (data?.type === 'application_status' && data?.applicationId) {
-        // @ts-ignore - Navigation typing
         navigation.navigate('Applications');
       } else if (data?.type === 'new_job' && data?.jobId) {
-        // @ts-ignore - Navigation typing
         navigation.navigate('JobsTab', {
           screen: 'JobDetail',
           params: { id: data.jobId },
         });
       } else if (data?.type === 'message') {
-        // @ts-ignore - Navigation typing
         navigation.navigate('Notifications');
       } else {
         // Default: navigate to notifications
-        // @ts-ignore - Navigation typing
         navigation.navigate('Notifications');
       }
     } catch (error) {

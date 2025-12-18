@@ -1,3 +1,8 @@
+/**
+ * Screen Component
+ * TD-004: theme: any → Theme tipi ile değiştirildi
+ */
+
 import React, { useMemo } from 'react';
 import {
   View,
@@ -11,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import type { Theme } from '@/theme';
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -64,9 +70,7 @@ export const Screen: React.FC<ScreenProps> = ({
             {error.message || 'Beklenmeyen bir hata oluştu'}
           </Typography>
           {onRetry && (
-            <Button onPress={onRetry} style={styles.retryButton}>
-              Tekrar Dene
-            </Button>
+            <Button onPress={onRetry} style={styles.retryButton} label="Tekrar Dene" />
           )}
         </View>
       );
@@ -100,7 +104,7 @@ export const Screen: React.FC<ScreenProps> = ({
   );
 };
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background.primary,

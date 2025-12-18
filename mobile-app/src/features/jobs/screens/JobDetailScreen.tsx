@@ -56,7 +56,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
       refetch();
       showToast('Başvurunuz başarıyla iletildi', 'success');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       handleApiError(error, '/jobs/apply', showToast);
     },
   });

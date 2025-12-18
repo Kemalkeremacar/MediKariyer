@@ -1,7 +1,13 @@
+/**
+ * Profile Hooks
+ * TD-003: CRUD hook'ları useCRUDMutation generic hook'u kullanacak şekilde refactor edildi
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showAlert } from '@/utils/alert';
 import { profileService } from '@/api/services/profile.service';
 import { handleApiError } from '@/utils/errorHandler';
+import { useCRUDMutation } from '@/hooks/useCRUDMutation';
 import type {
   UpdatePersonalInfoPayload,
   CreateEducationPayload,
@@ -13,6 +19,10 @@ import type {
   CreateLanguagePayload,
   UpdateLanguagePayload,
   UploadPhotoPayload,
+  DoctorEducation,
+  DoctorExperience,
+  DoctorCertificate,
+  DoctorLanguage,
 } from '@/types/profile';
 
 /**
@@ -73,55 +83,19 @@ export const useEducations = () => {
 
 /**
  * Hook for managing education entries
+ * Uses generic useCRUDMutation hook
  */
 export const useEducation = () => {
-  const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (data: CreateEducationPayload) => profileService.createEducation(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
-      showAlert.success('Eğitim bilgisi eklendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/educations');
-      showAlert.error(message);
+  return useCRUDMutation<CreateEducationPayload, UpdateEducationPayload, DoctorEducation>({
+    entityName: 'Eğitim bilgisi',
+    queryKey: ['profile', 'educations'],
+    endpoint: '/doctor/educations',
+    service: {
+      create: profileService.createEducation,
+      update: profileService.updateEducation,
+      delete: profileService.deleteEducation,
     },
   });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateEducationPayload }) =>
-      profileService.updateEducation(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
-      showAlert.success('Eğitim bilgisi güncellendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/educations');
-      showAlert.error(message);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => profileService.deleteEducation(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
-      showAlert.success('Eğitim bilgisi silindi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/educations');
-      showAlert.error(message);
-    },
-  });
-
-  return {
-    create: createMutation,
-    update: updateMutation,
-    delete: deleteMutation,
-  };
 };
 
 /**
@@ -138,55 +112,19 @@ export const useExperiences = () => {
 
 /**
  * Hook for managing experience entries
+ * Uses generic useCRUDMutation hook
  */
 export const useExperience = () => {
-  const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (data: CreateExperiencePayload) => profileService.createExperience(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
-      showAlert.success('Deneyim bilgisi eklendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/experiences');
-      showAlert.error(message);
+  return useCRUDMutation<CreateExperiencePayload, UpdateExperiencePayload, DoctorExperience>({
+    entityName: 'Deneyim bilgisi',
+    queryKey: ['profile', 'experiences'],
+    endpoint: '/doctor/experiences',
+    service: {
+      create: profileService.createExperience,
+      update: profileService.updateExperience,
+      delete: profileService.deleteExperience,
     },
   });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateExperiencePayload }) =>
-      profileService.updateExperience(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
-      showAlert.success('Deneyim bilgisi güncellendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/experiences');
-      showAlert.error(message);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => profileService.deleteExperience(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
-      showAlert.success('Deneyim bilgisi silindi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/experiences');
-      showAlert.error(message);
-    },
-  });
-
-  return {
-    create: createMutation,
-    update: updateMutation,
-    delete: deleteMutation,
-  };
 };
 
 /**
@@ -203,55 +141,19 @@ export const useCertificates = () => {
 
 /**
  * Hook for managing certificate entries
+ * Uses generic useCRUDMutation hook
  */
 export const useCertificate = () => {
-  const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (data: CreateCertificatePayload) => profileService.createCertificate(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
-      showAlert.success('Sertifika bilgisi eklendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/certificates');
-      showAlert.error(message);
+  return useCRUDMutation<CreateCertificatePayload, UpdateCertificatePayload, DoctorCertificate>({
+    entityName: 'Sertifika bilgisi',
+    queryKey: ['profile', 'certificates'],
+    endpoint: '/doctor/certificates',
+    service: {
+      create: profileService.createCertificate,
+      update: profileService.updateCertificate,
+      delete: profileService.deleteCertificate,
     },
   });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateCertificatePayload }) =>
-      profileService.updateCertificate(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
-      showAlert.success('Sertifika bilgisi güncellendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/certificates');
-      showAlert.error(message);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => profileService.deleteCertificate(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
-      showAlert.success('Sertifika bilgisi silindi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/certificates');
-      showAlert.error(message);
-    },
-  });
-
-  return {
-    create: createMutation,
-    update: updateMutation,
-    delete: deleteMutation,
-  };
 };
 
 /**
@@ -270,55 +172,19 @@ export const useLanguages = () => {
 
 /**
  * Hook for managing language entries
+ * Uses generic useCRUDMutation hook
  */
 export const useLanguage = () => {
-  const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (data: CreateLanguagePayload) => profileService.createLanguage(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
-      showAlert.success('Dil bilgisi eklendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/languages');
-      showAlert.error(message);
+  return useCRUDMutation<CreateLanguagePayload, UpdateLanguagePayload, DoctorLanguage>({
+    entityName: 'Dil bilgisi',
+    queryKey: ['profile', 'languages'],
+    endpoint: '/doctor/languages',
+    service: {
+      create: profileService.createLanguage,
+      update: profileService.updateLanguage,
+      delete: profileService.deleteLanguage,
     },
   });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateLanguagePayload }) =>
-      profileService.updateLanguage(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
-      showAlert.success('Dil bilgisi güncellendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/languages');
-      showAlert.error(message);
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => profileService.deleteLanguage(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
-      showAlert.success('Dil bilgisi silindi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/languages');
-      showAlert.error(message);
-    },
-  });
-
-  return {
-    create: createMutation,
-    update: updateMutation,
-    delete: deleteMutation,
-  };
 };
 
 /**

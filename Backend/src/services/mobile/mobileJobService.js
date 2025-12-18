@@ -182,11 +182,11 @@ const getJobDetail = async (userId, jobId) => {
     throw error;
   }
 
-  if (!jobQuery || jobQuery.length === 0) {
+  // TD-006: Array indexing güvenliği - tek check yeterli
+  const jobData = jobQuery?.[0];
+  if (!jobData) {
     throw new AppError('İlan bulunamadı', 404);
   }
-
-  const jobData = jobQuery[0];
 
   // Başvuru kontrolü ayrı query ile yap
   const applicationCheck = await db('applications')
@@ -196,20 +196,10 @@ const getJobDetail = async (userId, jobId) => {
     .whereNull('deleted_at')
     .first();
 
-  const jobs = [{
-    ...jobData,
-    application_id: applicationCheck?.id || null
-  }];
-
-  if (!jobs || jobs.length === 0) {
-    throw new AppError('İlan bulunamadı', 404);
-  }
-
-  const job = jobs[0];
-
   return jobTransformer.toDetail({
-    ...job,
-    is_applied: Boolean(job.application_id)
+    ...jobData,
+    application_id: applicationCheck?.id || null,
+    is_applied: Boolean(applicationCheck?.id)
   });
 };
 
