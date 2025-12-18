@@ -5,11 +5,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
-  FlatList,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import type { JobsStackNavigationProp } from '@/navigation/types';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -74,9 +74,10 @@ export const JobsScreen = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderJob = useCallback(
-    ({ item }: { item: JobListItem }) => (
+    ({ item, index }: { item: JobListItem; index: number }) => (
       <JobCard
         job={item}
+        index={index}
         onPress={() => {
           navigation.navigate('JobDetail', { id: item.id });
         }}
@@ -206,7 +207,7 @@ export const JobsScreen = () => {
     if (!data) return null;
 
     return (
-      <FlatList
+      <FlashList
           data={jobs}
           renderItem={renderJob}
           keyExtractor={(item) => item.id.toString()}

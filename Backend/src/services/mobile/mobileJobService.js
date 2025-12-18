@@ -43,8 +43,10 @@ const buildJobsBaseQuery = () => {
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id') // Hastane kullanıcı bilgisi
     .whereNull('j.deleted_at')
-    .where('j.status_id', 3); // Sadece onaylanmış ilanları göster (status_id = 3 = Onaylandı)
+    .where('j.status_id', 3) // Sadece onaylanmış ilanları göster (status_id = 3 = Onaylandı)
+    .where('hospital_users.is_active', true); // Pasif hastanelerin ilanlarını gösterme (web ile uyumlu)
 };
 
 const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => {
@@ -54,12 +56,35 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
 
   const baseQuery = buildJobsBaseQuery();
 
+  // ID bazlı filtreler (web ile uyumlu)
   if (filters.city_id) {
-    baseQuery.andWhere('j.city_id', filters.city_id);
+    const cityId = typeof filters.city_id === 'number' ? filters.city_id : parseInt(filters.city_id);
+    if (!isNaN(cityId)) {
+      baseQuery.andWhere('j.city_id', cityId);
+    }
   }
 
   if (filters.specialty_id) {
-    baseQuery.andWhere('j.specialty_id', filters.specialty_id);
+    const specId = typeof filters.specialty_id === 'number' ? filters.specialty_id : parseInt(filters.specialty_id);
+    if (!isNaN(specId)) {
+      baseQuery.andWhere('j.specialty_id', specId);
+    }
+  }
+
+  // Yan dal filtresi (web ile uyumlu)
+  if (filters.subspecialty_id) {
+    const subSpecId = typeof filters.subspecialty_id === 'number' ? filters.subspecialty_id : parseInt(filters.subspecialty_id);
+    if (!isNaN(subSpecId)) {
+      baseQuery.andWhere('j.subspecialty_id', subSpecId);
+    }
+  }
+
+  // Hastane filtresi (web ile uyumlu)
+  if (filters.hospital_id) {
+    const hospId = typeof filters.hospital_id === 'number' ? filters.hospital_id : parseInt(filters.hospital_id);
+    if (!isNaN(hospId)) {
+      baseQuery.andWhere('j.hospital_id', hospId);
+    }
   }
 
   if (filters.employment_type) {
@@ -86,7 +111,8 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
       'j.employment_type',
       'c.name as city_name',
       's.name as specialty_name',
-      'hp.institution_name as hospital_name'
+      'hp.institution_name as hospital_name',
+      'hp.logo as hospital_logo'
     )
     .orderBy('j.id', 'desc')
     .limit(perPage)
@@ -100,6 +126,8 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
   const total = normalizeCountResult(countResults[0]);
 
   // Başvuru kontrolü için job id'leri topla
+  // Not: status_id = 5 (Geri Çekildi) olan başvurular hariç tutulur
+  // Bu sayede kullanıcı geri çektikten sonra tekrar başvurabilir
   const jobIds = rows.map(r => r.id);
   const applications = jobIds.length > 0 
     ? await db('applications')
@@ -107,6 +135,7 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
         .whereIn('job_id', jobIds)
         .where('doctor_profile_id', profile.id)
         .whereNull('deleted_at')
+        .whereNot('status_id', 5) // 5 = Geri Çekildi (withdrawn)
     : [];
 
   // Application map oluştur
@@ -148,6 +177,7 @@ const getJobDetail = async (userId, jobId) => {
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id') // Hastane kullanıcı bilgisi
     .select(
       'j.id',
       'j.title',
@@ -162,6 +192,7 @@ const getJobDetail = async (userId, jobId) => {
       's.name as specialty_name',
       'ss.name as subspecialty_name',
       'hp.institution_name as hospital_name',
+      'hp.logo as hospital_logo',
       'hp.address as hospital_address',
       'hp.phone as hospital_phone',
       'hp.email as hospital_email',
@@ -170,7 +201,8 @@ const getJobDetail = async (userId, jobId) => {
     )
     .where('j.id', jobId)
     .whereNull('j.deleted_at')
-    .where('j.status_id', 3); // Sadece onaylanmış ilanları göster
+    .where('j.status_id', 3) // Sadece onaylanmış ilanları göster
+    .where('hospital_users.is_active', true); // Pasif hastanelerin ilanlarını gösterme (web ile uyumlu)
   } catch (error) {
     logger.error('❌ Job detail query error:', error.message);
     logger.error('Error details:', {
@@ -189,11 +221,14 @@ const getJobDetail = async (userId, jobId) => {
   }
 
   // Başvuru kontrolü ayrı query ile yap
+  // Not: status_id = 5 (Geri Çekildi) olan başvurular hariç tutulur
+  // Bu sayede kullanıcı geri çektikten sonra tekrar başvurabilir
   const applicationCheck = await db('applications')
     .select('id')
     .where('job_id', jobId)
     .where('doctor_profile_id', profile.id)
     .whereNull('deleted_at')
+    .whereNot('status_id', 5) // 5 = Geri Çekildi (withdrawn)
     .first();
 
   return jobTransformer.toDetail({

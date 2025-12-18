@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
@@ -14,16 +15,19 @@ import type { JobListItem } from '@/types/job';
 interface JobCardProps {
   job: JobListItem;
   onPress: () => void;
+  index?: number;
 }
 
-export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
+export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => {
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-      <Card variant="elevated" padding="lg" style={styles.card}>
+    <Animated.View entering={FadeInUp.delay(index * 50).springify().damping(15)}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        <Card variant="elevated" padding="lg" style={styles.card}>
         {/* Header */}
         <View style={styles.header}>
           <Avatar
             size="md"
+            source={job.hospital_logo ?? undefined}
             initials={job.hospital_name?.substring(0, 2).toUpperCase()}
           />
           <View style={styles.headerContent}>
@@ -70,7 +74,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
           )}
         </View>
       </Card>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 

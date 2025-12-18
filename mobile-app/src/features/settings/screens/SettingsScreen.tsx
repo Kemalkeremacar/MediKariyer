@@ -12,6 +12,7 @@ import {
   Switch,
   Animated,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
@@ -21,6 +22,8 @@ import { Screen } from '@/components/layout/Screen';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { colors, spacing } from '@/theme';
 import { useLogout } from '@/features/auth/hooks/useLogout';
+import { useMutation } from '@tanstack/react-query';
+import { accountService } from '@/api/services/account.service';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -127,6 +130,19 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, icon }) => (
 export const SettingsScreen = ({ navigation }: any) => {
   const logoutMutation = useLogout();
 
+  // Hesap kapatma mutation
+  const deactivateAccountMutation = useMutation({
+    mutationFn: () => accountService.deactivateAccount(),
+    onSuccess: () => {
+      showAlert.success('Hesabınız başarıyla kapatıldı. Uygulama giriş sayfasına yönlendiriliyorsunuz.');
+      // Backend zaten oturumları sonlandırdı, kullanıcıyı logout yap
+      logoutMutation.mutate();
+    },
+    onError: () => {
+      showAlert.error('Hesap kapatılırken bir hata oluştu. Lütfen tekrar deneyin.');
+    },
+  });
+
   // Bildirim ayarları
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
@@ -146,18 +162,18 @@ export const SettingsScreen = ({ navigation }: any) => {
 
   const handleDeleteAccount = () => {
     showAlert.confirmDestructive(
-      'Hesabı Sil',
-      'Hesabınızı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      'Hesabı Kapat',
+      'Hesabınızı kapatmak istediğinizden emin misiniz? Bu işlem geri alınamaz.',
       () => {
         // İkinci onay
         showAlert.confirmDestructive(
           'Son Onay',
-          'Tüm verileriniz kalıcı olarak silinecektir. Bu işlem geri alınamaz!',
+          'Hesabınız pasifleştirilecek ve tüm oturumlarınız sonlandırılacaktır. Bu işlem geri alınamaz!',
           () => {
-            showAlert.info('Hesap silme özelliği yakında aktif olacak');
+            deactivateAccountMutation.mutate();
           },
           undefined,
-          'Hesabı Sil'
+          'Hesabı Kapat'
         );
       },
       undefined,
@@ -442,11 +458,13 @@ export const SettingsScreen = ({ navigation }: any) => {
             />
             <View style={styles.divider} />
             <SettingItem
-              icon={<Ionicons name="trash" size={20} color="#EF4444" />}
+              icon={deactivateAccountMutation.isPending 
+                ? <ActivityIndicator size="small" color="#EF4444" />
+                : <Ionicons name="trash" size={20} color="#EF4444" />}
               iconBgColor="#FEE2E2"
-              title="Hesabı Sil"
-              subtitle="Hesabınızı kalıcı olarak silin"
-              onPress={handleDeleteAccount}
+              title="Hesabı Kapat"
+              subtitle="Hesabınızı kalıcı olarak kapatın"
+              onPress={deactivateAccountMutation.isPending ? undefined : handleDeleteAccount}
               showChevron={false}
             />
           </Card>

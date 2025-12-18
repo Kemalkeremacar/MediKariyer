@@ -1,7 +1,10 @@
 /**
  * Error Logger Utility
  * Centralized error logging for debugging and monitoring
+ * Integrated with Sentry for production error tracking
  */
+
+import * as Sentry from '@sentry/react-native';
 
 interface ErrorContext {
   component?: string;
@@ -10,8 +13,71 @@ interface ErrorContext {
   [key: string]: any;
 }
 
+interface SentryConfig {
+  dsn: string;
+  environment?: string;
+  debug?: boolean;
+  tracesSampleRate?: number;
+}
+
 class ErrorLogger {
   private isDevelopment = __DEV__;
+  private isInitialized = false;
+
+  /**
+   * Initialize Sentry SDK
+   * Call this in App.tsx before any other code
+   */
+  initSentry(config: SentryConfig): void {
+    if (this.isInitialized) {
+      console.warn('Sentry is already initialized');
+      return;
+    }
+
+    try {
+      Sentry.init({
+        dsn: config.dsn,
+        environment: config.environment || (this.isDevelopment ? 'development' : 'production'),
+        debug: config.debug ?? this.isDevelopment,
+        tracesSampleRate: config.tracesSampleRate ?? (this.isDevelopment ? 1.0 : 0.2),
+        // Only send errors in production
+        enabled: !this.isDevelopment,
+        // Attach user info if available
+        beforeSend: (event) => {
+          // Filter out development errors
+          if (this.isDevelopment) {
+            return null;
+          }
+          return event;
+        },
+      });
+      this.isInitialized = true;
+      
+      if (this.isDevelopment) {
+        console.log('✅ Sentry initialized (disabled in development)');
+      }
+    } catch (error) {
+      console.error('Failed to initialize Sentry:', error);
+    }
+  }
+
+  /**
+   * Set user context for Sentry
+   */
+  setUser(userId: string, email?: string, username?: string): void {
+    Sentry.setUser({
+      id: userId,
+      email,
+      username,
+    });
+  }
+
+  /**
+   * Clear user context (on logout)
+   */
+  clearUser(): void {
+    Sentry.setUser(null);
+  }
 
   /**
    * Log an error with context
@@ -30,9 +96,17 @@ class ErrorLogger {
       console.error('🔴 Error logged:', errorInfo);
     }
 
-    // In production, you would send this to a logging service
-    // Example: Sentry, LogRocket, Firebase Crashlytics, etc.
-    // this.sendToLoggingService(errorInfo);
+    // Send to Sentry in production
+    if (!this.isDevelopment) {
+      Sentry.withScope((scope) => {
+        if (context) {
+          scope.setExtras(context);
+          if (context.component) scope.setTag('component', context.component);
+          if (context.action) scope.setTag('action', context.action);
+        }
+        Sentry.captureException(error);
+      });
+    }
   }
 
   /**
@@ -50,8 +124,16 @@ class ErrorLogger {
       console.warn('⚠️ Warning logged:', warningInfo);
     }
 
-    // In production, send to logging service
-    // this.sendToLoggingService(warningInfo);
+    // Send to Sentry in production
+    if (!this.isDevelopment) {
+      Sentry.withScope((scope) => {
+        scope.setLevel('warning');
+        if (context) {
+          scope.setExtras(context);
+        }
+        Sentry.captureMessage(message);
+      });
+    }
   }
 
   /**
@@ -69,8 +151,8 @@ class ErrorLogger {
       console.log('ℹ️ Info logged:', infoLog);
     }
 
-    // In production, send to logging service if needed
-    // this.sendToLoggingService(infoLog);
+    // Info logs typically not sent to Sentry to reduce noise
+    // Only log critical info in production if needed
   }
 
   /**
@@ -95,25 +177,48 @@ class ErrorLogger {
   }
 
   /**
-   * Log an unhandled error
+   * Log an unhandled error (for global error boundary)
    */
   logUnhandledError(error: Error, isFatal: boolean = false): void {
     this.logError(error, {
       type: 'unhandled',
       isFatal,
     });
+
+    // For fatal crashes, ensure Sentry captures it immediately
+    if (isFatal && !this.isDevelopment) {
+      Sentry.captureException(error, {
+        level: 'fatal',
+        tags: {
+          fatal: 'true',
+        },
+      });
+    }
   }
 
-  // TODO: Uncomment and implement when external logging service is configured
-  // private sendToLoggingService(logData: unknown): void {
-  //   // Example implementation:
-  //   // Sentry.captureException(logData);
-  //   // or
-  //   // fetch('https://your-logging-service.com/logs', {
-  //   //   method: 'POST',
-  //   //   body: JSON.stringify(logData),
-  //   // });
-  // }
+  /**
+   * Add breadcrumb for better error context
+   */
+  addBreadcrumb(message: string, category?: string, data?: Record<string, any>): void {
+    Sentry.addBreadcrumb({
+      message,
+      category: category || 'app',
+      data,
+      level: 'info',
+    });
+  }
+
+  /**
+   * Capture a custom event/message
+   */
+  captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): void {
+    if (this.isDevelopment) {
+      console.log(`📝 [${level}] ${message}`);
+      return;
+    }
+    
+    Sentry.captureMessage(message, level);
+  }
 }
 
 export const errorLogger = new ErrorLogger();

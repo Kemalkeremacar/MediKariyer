@@ -31,6 +31,23 @@ export const endpoints = {
     // Language CRUD
     languages: '/doctor/language',
     language: (id: number) => `/doctor/language/${id}`,
+    // Photo Request (Mobile Backend)
+    profilePhoto: '/doctor/profile/photo',
+    photoStatus: '/doctor/profile/photo/status',
+    photoHistory: '/doctor/profile/photo/history',
+    photoRequest: '/doctor/profile/photo/request',
+    // Account Management (Mobile Backend)
+    deactivateAccount: '/doctor/account/deactivate',
+  },
+  lookup: {
+    cities: '/lookup/cities',
+    specialties: '/lookup/specialties',
+    subspecialties: (specialtyId?: number) =>
+      specialtyId ? `/lookup/subspecialties/${specialtyId}` : '/lookup/subspecialties',
+    educationTypes: '/lookup/education-types',
+    languages: '/lookup/languages',
+    languageLevels: '/lookup/language-levels',
+    applicationStatuses: '/lookup/application-statuses',
   },
   jobs: {
     list: '/jobs',

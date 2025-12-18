@@ -61,7 +61,8 @@ const toListItem = (job = {}) => ({
   updated_at: toUTC(job.updated_at),
   is_applied: Boolean(job.is_applied),
   hospital_id: job.hospital_id || null,
-  hospital_name: job.hospital_name || job.institution_name || null
+  hospital_name: job.hospital_name || job.institution_name || null,
+  hospital_logo: job.hospital_logo || null
 });
 
 const toDetail = (job = {}) => ({

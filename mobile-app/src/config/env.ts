@@ -25,6 +25,10 @@ export const env = {
   
   // Feature Flags
   ENABLE_PUSH_NOTIFICATIONS: getEnvVar('EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS', 'true') === 'true',
+
+  // Error Tracking (Sentry)
+  // Set your Sentry DSN in .env as EXPO_PUBLIC_SENTRY_DSN
+  SENTRY_DSN: getEnvVar('EXPO_PUBLIC_SENTRY_DSN', ''),
 } as const;
 
 export type Env = typeof env;

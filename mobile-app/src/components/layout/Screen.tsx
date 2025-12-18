@@ -1,6 +1,11 @@
 /**
  * Screen Component
  * TD-004: theme: any → Theme tipi ile değiştirildi
+ * 
+ * Features:
+ * - Offline awareness with OfflineBanner
+ * - Loading and error states
+ * - Pull-to-refresh support
  */
 
 import React, { useMemo } from 'react';
@@ -16,6 +21,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import type { Theme } from '@/theme';
 
 export interface ScreenProps {
@@ -30,6 +37,8 @@ export interface ScreenProps {
   safeArea?: boolean;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
+  /** Whether to show offline banner (default: true) */
+  showOfflineBanner?: boolean;
 }
 
 export const Screen: React.FC<ScreenProps> = ({
@@ -44,8 +53,10 @@ export const Screen: React.FC<ScreenProps> = ({
   safeArea = true,
   style,
   contentContainerStyle,
+  showOfflineBanner = true,
 }) => {
   const { theme } = useTheme();
+  const { isOffline } = useNetworkStatus();
   const Container = safeArea ? SafeAreaView : View;
   const ContentWrapper = scrollable ? ScrollView : View;
   
@@ -81,6 +92,8 @@ export const Screen: React.FC<ScreenProps> = ({
 
   return (
     <Container style={[styles.container, style]}>
+      {/* Offline Banner - shows when internet is disconnected */}
+      {showOfflineBanner && <OfflineBanner visible={isOffline} />}
       {header}
       <ContentWrapper
         style={styles.content}

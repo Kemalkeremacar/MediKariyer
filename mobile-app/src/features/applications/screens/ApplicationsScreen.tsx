@@ -6,12 +6,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   StyleSheet,
-  FlatList,
   RefreshControl,
   View,
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { SkeletonCard } from '@/components/ui/Skeleton';
@@ -156,13 +156,14 @@ export const ApplicationsScreen = () => {
           ))}
         </View>
       ) : (
-        <FlatList
+        <FlashList
           ListHeaderComponent={renderListHeader}
           data={applications}
           keyExtractor={(item, index) => `app-${item.id}-${index}`}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <ApplicationCard
               application={item}
+              index={index}
               onPress={() => setSelectedApplicationId(item.id)}
             />
           )}

@@ -6,6 +6,11 @@ export interface ApplicationListItem {
   status: string | null;
   created_at: string;
   updated_at: string | null;
+  // Web ile uyumlu ek alanlar
+  city: string | null;
+  job_status: string | null;
+  is_job_deleted: boolean;
+  is_hospital_active: boolean;
 }
 
 export interface ApplicationDetail extends ApplicationListItem {

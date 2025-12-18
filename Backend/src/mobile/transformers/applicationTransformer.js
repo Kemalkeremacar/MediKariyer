@@ -34,7 +34,13 @@ const toListItem = (application = {}) => ({
   status_id: application.status_id || null,
   applied_at: toUTC(application.applied_at || application.created_at),
   created_at: toUTC(application.created_at || application.applied_at),
-  updated_at: toUTC(application.updated_at)
+  updated_at: toUTC(application.updated_at),
+  // Şehir bilgisi (web ile uyumlu)
+  city: application.city_name || application.job_city || application.city || null,
+  // İş ilanı durumu bilgileri (web ile uyumlu)
+  job_status: application.job_status || null,
+  is_job_deleted: Boolean(application.job_deleted_at),
+  is_hospital_active: application.hospital_is_active !== false && application.hospital_is_active !== 0
 });
 
 const toDetail = (application = {}) => ({

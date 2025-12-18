@@ -1,10 +1,12 @@
 /**
  * Photo Service
  * ARCH-002: Profile servisinden ayrılan fotoğraf işlemleri
+ * 
+ * Not: Mobile kendi backend'ini kullanıyor (/api/mobile/doctor/profile/photo/...)
  */
 
-import { rootApiClient } from '@/api/client';
-import { rootEndpoints } from '@/api/endpoints';
+import { apiClient } from '@/api/client';
+import { endpoints } from '@/api/endpoints';
 import { ApiResponse } from '@/types/api';
 import type {
   UploadPhotoPayload,
@@ -15,11 +17,11 @@ import type {
 
 export const photoService = {
   /**
-   * Profil fotoğrafı yükler (Web API - admin onayı gerekir)
+   * Profil fotoğrafı yükler (Mobile API - admin onayı gerekir)
    */
   async uploadPhoto(payload: UploadPhotoPayload): Promise<PhotoRequest> {
-    const response = await rootApiClient.post<ApiResponse<PhotoUploadResponse | PhotoRequest>>(
-      rootEndpoints.doctor.profile.photo,
+    const response = await apiClient.post<ApiResponse<PhotoUploadResponse | PhotoRequest>>(
+      endpoints.doctor.profilePhoto,
       payload,
     );
 
@@ -35,8 +37,8 @@ export const photoService = {
    * Fotoğraf yükleme isteği durumunu getirir
    */
   async getPhotoRequestStatus(): Promise<PhotoRequest | null> {
-    const response = await rootApiClient.get<ApiResponse<PhotoStatusResponse | PhotoRequest | null>>(
-      rootEndpoints.doctor.profile.photoStatus,
+    const response = await apiClient.get<ApiResponse<PhotoStatusResponse | PhotoRequest | null>>(
+      endpoints.doctor.photoStatus,
     );
 
     // Backend returns: { status, history } or direct PhotoRequest
@@ -57,8 +59,8 @@ export const photoService = {
    * Fotoğraf yükleme geçmişini getirir
    */
   async getPhotoRequestHistory(): Promise<PhotoRequest[]> {
-    const response = await rootApiClient.get<ApiResponse<PhotoStatusResponse | PhotoRequest[]>>(
-      rootEndpoints.doctor.profile.photoHistory,
+    const response = await apiClient.get<ApiResponse<PhotoStatusResponse | PhotoRequest[]>>(
+      endpoints.doctor.photoHistory,
     );
 
     // Backend returns: { history } or direct array
@@ -73,8 +75,8 @@ export const photoService = {
    * Fotoğraf yükleme isteğini iptal eder
    */
   async cancelPhotoRequest(): Promise<void> {
-    await rootApiClient.delete<ApiResponse<null>>(
-      rootEndpoints.doctor.profile.photoRequest,
+    await apiClient.delete<ApiResponse<null>>(
+      endpoints.doctor.photoRequest,
     );
   },
 };

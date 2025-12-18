@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
 import { Avatar } from '@/components/ui/Avatar';
@@ -47,6 +48,8 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         coverLetter: coverLetter.trim() || undefined,
       }),
     onSuccess: () => {
+      // Success haptic feedback for successful application
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Başarılı başvuru sonrası coverLetter'ı temizle
       setCoverLetter('');
       // Cache'i güncelle (butonu "Başvuruldu" yapmak için)
@@ -106,6 +109,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             <View style={styles.row}>
               <Avatar
                 size="lg"
+                source={job.hospital_logo ?? undefined}
                 initials={job.hospital_name?.substring(0, 2).toUpperCase()}
               />
               <View style={{ flex: 1, gap: spacing.xs }}>

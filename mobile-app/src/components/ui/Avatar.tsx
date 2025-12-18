@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Image, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 import { Typography } from './Typography';
@@ -46,9 +47,11 @@ export const Avatar: React.FC<AvatarProps> = ({
       <View style={[styles.avatar, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}>
         {source ? (
           <Image 
-            source={{ uri: source }} 
+            source={source}
             style={[styles.image, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}
-            resizeMode="cover"
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={200}
           />
         ) : initials ? (
           <Typography 

@@ -79,10 +79,24 @@ const getUnreadCount = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Okunmamış bildirim sayısı', { count });
 });
 
+const deleteNotification = catchAsync(async (req, res) => {
+  const { notificationId } = req.params;
+  await mobileNotificationService.deleteNotification(req.user.id, parseInt(notificationId));
+  return sendSuccess(res, 'Bildirim silindi', { success: true });
+});
+
+const deleteNotifications = catchAsync(async (req, res) => {
+  const { notification_ids } = req.body;
+  const deleted = await mobileNotificationService.deleteNotifications(req.user.id, notification_ids);
+  return sendSuccess(res, `${deleted} bildirim silindi`, { deleted_count: deleted });
+});
+
 module.exports = {
   listNotifications,
   markAsRead,
   registerDeviceToken,
-  getUnreadCount
+  getUnreadCount,
+  deleteNotification,
+  deleteNotifications
 };
 

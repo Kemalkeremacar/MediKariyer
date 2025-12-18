@@ -8,6 +8,7 @@ export interface JobListItem {
   created_at: string | null;
   is_applied: boolean;
   hospital_name: string | null;
+  hospital_logo: string | null;
 }
 
 export interface JobDetail extends JobListItem {

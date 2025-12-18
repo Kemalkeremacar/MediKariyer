@@ -57,7 +57,10 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
   const baseQuery = db('applications as a')
     .leftJoin('jobs as j', 'j.id', 'a.job_id')
     .leftJoin('hospital_profiles as hp', 'hp.id', 'j.hospital_id')
+    .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id') // Hastane aktiflik durumu için
     .leftJoin('application_statuses as st', 'st.id', 'a.status_id')
+    .leftJoin('job_statuses as js', 'j.status_id', 'js.id') // İş ilanı durumu için
+    .leftJoin('cities as c', 'j.city_id', 'c.id') // Şehir bilgisi için
     .whereRaw(`[a].[doctor_profile_id] = ${parseInt(profile.id)}`)
     .whereNull('a.deleted_at');
 
@@ -77,8 +80,12 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
       'a.cover_letter',
       'a.notes',
       'j.title as job_title',
+      'j.deleted_at as job_deleted_at', // İş ilanı silinme tarihi (web ile uyumlu)
       'hp.institution_name as hospital_name',
-      'st.name as status_label'
+      'st.name as status_label',
+      'js.name as job_status', // İş ilanı durumu (web ile uyumlu)
+      'c.name as city_name', // Şehir bilgisi (web ile uyumlu)
+      'hospital_users.is_active as hospital_is_active' // Hastane aktiflik durumu (web ile uyumlu)
     )
     .orderBy('a.applied_at', 'desc')
     .orderBy('a.id', 'desc')

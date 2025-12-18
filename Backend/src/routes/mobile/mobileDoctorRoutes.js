@@ -83,6 +83,15 @@ router.get('/language', mobileDoctorController.getLanguages);
 router.put('/language/:id', validateParams(mobileLanguageParamsSchema), validateBody(mobileLanguageSchema), mobileDoctorController.updateLanguage);
 router.delete('/language/:id', validateParams(mobileLanguageParamsSchema), mobileDoctorController.deleteLanguage);
 
+// Photo Request endpoints
+router.post('/profile/photo', mobileDoctorController.requestProfilePhotoChange);
+router.get('/profile/photo/status', mobileDoctorController.getPhotoRequestStatus);
+router.get('/profile/photo/history', mobileDoctorController.getPhotoRequestHistory);
+router.delete('/profile/photo/request', mobileDoctorController.cancelPhotoRequest);
+
+// Account Management endpoints
+router.post('/account/deactivate', mobileDoctorController.deactivateAccount);
+
 router.use(mobileErrorBoundary);
 
 // ============================================================================

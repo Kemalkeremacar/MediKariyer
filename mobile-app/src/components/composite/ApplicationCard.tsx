@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -13,15 +14,23 @@ import { formatRelativeTime } from '@/utils/date';
 interface ApplicationCardProps {
   application: any;
   onPress: () => void;
+  index?: number;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onPress }) => {
+export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onPress, index = 0 }) => {
   const dateToUse = application.applied_at || application.created_at;
   const timeAgo = formatRelativeTime(dateToUse) || null;
 
+  // İlan durumu kontrolleri (web ile uyumlu)
+  const isJobUnavailable = application.is_job_deleted || application.is_hospital_active === false;
+  const unavailableReason = application.is_job_deleted 
+    ? 'İlan Kaldırıldı' 
+    : (application.is_hospital_active === false ? 'Hastane Pasif' : null);
+
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-      <Card variant="elevated" padding="lg" style={styles.card}>
+    <Animated.View entering={FadeInUp.delay(index * 50).springify().damping(15)}>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+        <Card variant="elevated" padding="lg" style={isJobUnavailable ? {...styles.card, ...styles.cardUnavailable} : styles.card}>
         {/* Header with Status Badge */}
         <View style={styles.header}>
           <Avatar
@@ -29,7 +38,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
             initials={application.hospital_name?.substring(0, 2).toUpperCase()}
           />
           <View style={styles.headerContent}>
-            <Typography variant="h3" style={styles.title}>
+            <Typography variant="h3" style={isJobUnavailable ? {...styles.title, ...styles.titleUnavailable} : styles.title}>
               {application.job_title || application.position_title}
             </Typography>
             <View style={styles.hospitalRow}>
@@ -51,6 +60,16 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
         
         {/* Details */}
         <View style={styles.details}>
+          {/* Uyarı: İlan yayından kaldırıldı veya hastane pasif */}
+          {isJobUnavailable && unavailableReason && (
+            <Chip
+              label={unavailableReason}
+              icon={<Ionicons name="warning" size={12} color={colors.warning[700]} />}
+              variant="soft"
+              color="warning"
+              size="sm"
+            />
+          )}
           {application.city && (
             <Chip
               label={application.city}
@@ -71,13 +90,23 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
           )}
         </View>
       </Card>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     marginBottom: spacing.md,
+  },
+  cardUnavailable: {
+    opacity: 0.7,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.warning[400],
+  },
+  titleUnavailable: {
+    textDecorationLine: 'line-through',
+    color: colors.text.tertiary,
   },
   header: {
     flexDirection: 'row',

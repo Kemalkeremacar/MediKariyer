@@ -151,6 +151,41 @@ const deleteLanguage = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Dil bilgisi silindi', null);
 });
 
+// ============================================================================
+// PHOTO REQUEST ENDPOINTS
+// ============================================================================
+
+const requestProfilePhotoChange = catchAsync(async (req, res) => {
+  const { file_url } = req.body;
+  const data = await mobileDoctorService.requestProfilePhotoChange(req.user.id, file_url);
+  return sendSuccess(res, 'Fotoğraf değişiklik talebi oluşturuldu', data, 201);
+});
+
+const getPhotoRequestStatus = catchAsync(async (req, res) => {
+  const data = await mobileDoctorService.getMyPhotoRequestStatus(req.user.id);
+  return sendSuccess(res, 'Fotoğraf talep durumu', data);
+});
+
+const getPhotoRequestHistory = catchAsync(async (req, res) => {
+  const limit = req.query.limit ? parseInt(req.query.limit) : 50;
+  const data = await mobileDoctorService.getMyPhotoRequestHistory(req.user.id, limit);
+  return sendSuccess(res, 'Fotoğraf talep geçmişi', data);
+});
+
+const cancelPhotoRequest = catchAsync(async (req, res) => {
+  const success = await mobileDoctorService.cancelPhotoRequest(req.user.id);
+  return sendSuccess(res, success ? 'Fotoğraf talebi iptal edildi' : 'İptal edilecek talep bulunamadı', { success });
+});
+
+// ============================================================================
+// ACCOUNT MANAGEMENT ENDPOINTS
+// ============================================================================
+
+const deactivateAccount = catchAsync(async (req, res) => {
+  await mobileDoctorService.deactivateAccount(req.user.id);
+  return sendSuccess(res, 'Hesabınız başarıyla kapatıldı', null);
+});
+
 module.exports = {
   getDashboard,
   getProfile,
@@ -179,6 +214,15 @@ module.exports = {
   addLanguage,
   getLanguages,
   updateLanguage,
-  deleteLanguage
+  deleteLanguage,
+  
+  // Photo Request
+  requestProfilePhotoChange,
+  getPhotoRequestStatus,
+  getPhotoRequestHistory,
+  cancelPhotoRequest,
+  
+  // Account Management
+  deactivateAccount
 };
 

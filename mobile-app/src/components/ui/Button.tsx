@@ -1,14 +1,22 @@
 import React, { useMemo } from 'react';
 import {
-  TouchableOpacity,
   Text,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
   TextStyle,
+  Pressable,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { useTheme } from '@/contexts/ThemeContext';
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export interface ButtonProps {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient';
@@ -49,6 +57,25 @@ export const Button: React.FC<ButtonProps> = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
   
   const content = label || children;
+
+  // Bouncy press animation
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    // Light haptic feedback on button press
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1.02, { damping: 15, stiffness: 400 }, () => {
+      scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+    });
+  };
 
   const getGradientColors = (): [string, string] => {
     if (gradientColors) {
@@ -92,17 +119,19 @@ export const Button: React.FC<ButtonProps> = ({
 
   if (variant === 'primary' || variant === 'secondary' || variant === 'gradient') {
     return (
-      <TouchableOpacity
+      <AnimatedPressable
         style={[
           styles.base,
           styles[`size_${size}`],
           fullWidth && styles.fullWidth,
           isDisabled && styles.disabled,
           style,
+          animatedStyle,
         ]}
         onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         disabled={isDisabled}
-        activeOpacity={0.8}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel || (typeof label === 'string' ? label : undefined)}
         accessibilityHint={accessibilityHint}
@@ -119,12 +148,12 @@ export const Button: React.FC<ButtonProps> = ({
         >
           {renderContent()}
         </LinearGradient>
-      </TouchableOpacity>
+      </AnimatedPressable>
     );
   }
 
   return (
-    <TouchableOpacity
+    <AnimatedPressable
       style={[
         styles.base,
         styles[variant],
@@ -132,17 +161,19 @@ export const Button: React.FC<ButtonProps> = ({
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
+        animatedStyle,
       ]}
       onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={isDisabled}
-      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || (typeof label === 'string' ? label : undefined)}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
     >
       {renderContent()}
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 };
 

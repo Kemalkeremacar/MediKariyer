@@ -193,10 +193,50 @@ const getUnreadCount = async (userId) => {
   return parseInt(result.count) || 0;
 };
 
+/**
+ * Tek bildirimi sil
+ * @param {number} userId - Kullanıcı ID'si
+ * @param {number} notificationId - Bildirim ID'si
+ * @returns {Promise<boolean>} Silme başarılı mı
+ */
+const deleteNotification = async (userId, notificationId) => {
+  const deleted = await db('notifications')
+    .where('id', notificationId)
+    .where('user_id', userId)
+    .del();
+
+  if (!deleted) {
+    throw new AppError('Bildirim bulunamadı', 404);
+  }
+
+  return true;
+};
+
+/**
+ * Çoklu bildirim sil
+ * @param {number} userId - Kullanıcı ID'si
+ * @param {number[]} ids - Silinecek bildirim ID'leri
+ * @returns {Promise<number>} Silinen bildirim sayısı
+ */
+const deleteNotifications = async (userId, ids) => {
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return 0;
+  }
+
+  const deleted = await db('notifications')
+    .whereIn('id', ids)
+    .where('user_id', userId)
+    .del();
+
+  return deleted;
+};
+
 module.exports = {
   listNotifications,
   markAsRead,
   registerDeviceToken,
-  getUnreadCount
+  getUnreadCount,
+  deleteNotification,
+  deleteNotifications
 };
 

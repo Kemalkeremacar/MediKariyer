@@ -1,9 +1,11 @@
 /**
  * Lookup Service
  * Sistem lookup verilerini getiren servis
+ * 
+ * Not: Mobile kendi backend'ini kullanıyor (/api/mobile/lookup/...)
  */
 
-import { rootApiClient } from '../client';
+import { apiClient } from '../client';
 
 export interface Specialty {
   id: number;
@@ -61,7 +63,7 @@ export const lookupService = {
    * Uzmanlık alanlarını getir
    */
   getSpecialties: async (): Promise<Specialty[]> => {
-    const response = await rootApiClient.get<ApiResponse<Specialty[]>>('/lookup/specialties');
+    const response = await apiClient.get<ApiResponse<Specialty[]>>('/lookup/specialties');
     return response.data.data;
   },
 
@@ -72,7 +74,7 @@ export const lookupService = {
     const url = specialtyId 
       ? `/lookup/subspecialties/${specialtyId}`
       : '/lookup/subspecialties';
-    const response = await rootApiClient.get<ApiResponse<Subspecialty[]>>(url);
+    const response = await apiClient.get<ApiResponse<Subspecialty[]>>(url);
     return response.data.data;
   },
 
@@ -80,7 +82,7 @@ export const lookupService = {
    * Şehirleri getir
    */
   getCities: async (): Promise<City[]> => {
-    const response = await rootApiClient.get<ApiResponse<City[]>>('/lookup/cities');
+    const response = await apiClient.get<ApiResponse<City[]>>('/lookup/cities');
     return response.data.data;
   },
 
@@ -88,7 +90,7 @@ export const lookupService = {
    * Doktor eğitim türlerini getir
    */
   getEducationTypes: async (): Promise<EducationType[]> => {
-    const response = await rootApiClient.get<ApiResponse<EducationType[]>>('/lookup/doctor-education-types');
+    const response = await apiClient.get<ApiResponse<EducationType[]>>('/lookup/education-types');
     return response.data.data;
   },
 
@@ -96,7 +98,7 @@ export const lookupService = {
    * Dilleri getir
    */
   getLanguages: async (): Promise<Language[]> => {
-    const response = await rootApiClient.get<ApiResponse<Language[]>>('/lookup/languages');
+    const response = await apiClient.get<ApiResponse<Language[]>>('/lookup/languages');
     return response.data.data;
   },
 
@@ -104,15 +106,15 @@ export const lookupService = {
    * Dil seviyelerini getir
    */
   getLanguageLevels: async (): Promise<LanguageLevel[]> => {
-    const response = await rootApiClient.get<ApiResponse<LanguageLevel[]>>('/lookup/language-levels');
+    const response = await apiClient.get<ApiResponse<LanguageLevel[]>>('/lookup/language-levels');
     return response.data.data;
   },
 
   /**
-   * Sertifika türlerini getir
+   * Sertifika türlerini getir (deprecated - artık kullanılmıyor)
    */
   getCertificateTypes: async (): Promise<CertificateType[]> => {
-    const response = await rootApiClient.get<ApiResponse<CertificateType[]>>('/lookup/certificate-types');
-    return response.data.data;
+    // Certificate types tablosu kaldırıldı, boş array döndür
+    return [];
   },
 };

@@ -114,15 +114,20 @@ const getDashboard = async (userId) => {
     .orderBy('a.id', 'desc')
     .limit(5);
 
+  // Not: status_id = 5 (Geri Çekildi) olan başvurular hariç tutulur
+  // Bu sayede kullanıcı geri çektikten sonra tekrar başvurabilir
+  // Pasif hastanelerin ilanları gösterilmez (web ile uyumlu)
   const recommendedJobs = await db('jobs as j')
     .distinct('j.id', 'j.title', 'j.employment_type')
     .leftJoin('cities as c', 'j.city_id', 'c.id')
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id') // Hastane kullanıcı bilgisi
     .leftJoin('applications as a', function joinApplications() {
       this.on('a.job_id', '=', 'j.id')
         .andOn('a.doctor_profile_id', '=', db.raw('?', [profile.id]))
-        .andOnNull('a.deleted_at');
+        .andOnNull('a.deleted_at')
+        .andOn('a.status_id', '!=', db.raw('?', [5])); // 5 = Geri Çekildi (withdrawn)
     })
     .select(
       'j.id',
@@ -134,6 +139,8 @@ const getDashboard = async (userId) => {
       'a.id as application_id'
     )
     .whereNull('j.deleted_at')
+    .where('j.status_id', 3) // Sadece onaylanmış ilanlar (web ile uyumlu)
+    .where('hospital_users.is_active', true) // Pasif hastanelerin ilanlarını gösterme (web ile uyumlu)
     .orderBy('j.id', 'desc')
     .limit(5);
 
@@ -282,6 +289,39 @@ const deleteLanguage = async (userId, languageId) => {
   return await doctorService.deleteLanguage(userId, languageId);
 };
 
+// ============================================================================
+// PHOTO REQUEST (Web Service Wrappers)
+// ============================================================================
+
+const requestProfilePhotoChange = async (userId, fileUrl) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.requestProfilePhotoChange(userId, fileUrl);
+};
+
+const getMyPhotoRequestStatus = async (userId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.getMyPhotoRequestStatus(userId);
+};
+
+const getMyPhotoRequestHistory = async (userId, limit = 50) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.getMyPhotoRequestHistory(userId, limit);
+};
+
+const cancelPhotoRequest = async (userId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.cancelPhotoRequest(userId);
+};
+
+// ============================================================================
+// ACCOUNT MANAGEMENT (Web Service Wrappers)
+// ============================================================================
+
+const deactivateAccount = async (userId) => {
+  const doctorService = require('../doctorService');
+  return await doctorService.deactivateAccount(userId);
+};
+
 module.exports = {
   getDashboard,
   getProfile,
@@ -311,6 +351,15 @@ module.exports = {
   addLanguage,
   getLanguages,
   updateLanguage,
-  deleteLanguage
+  deleteLanguage,
+  
+  // Photo Request
+  requestProfilePhotoChange,
+  getMyPhotoRequestStatus,
+  getMyPhotoRequestHistory,
+  cancelPhotoRequest,
+  
+  // Account Management
+  deactivateAccount
 };
 
