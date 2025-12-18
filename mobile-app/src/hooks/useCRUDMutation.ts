@@ -18,6 +18,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { showAlert } from '@/utils/alert';
 import { handleApiError } from '@/utils/errorHandler';
+import { queryKeys } from '@/api/queryKeys';
 
 /**
  * CRUD servis metodları için interface
@@ -30,18 +31,19 @@ export interface CRUDService<TCreate, TUpdate, TItem> {
 
 /**
  * CRUD hook konfigürasyonu
+ * ARCH-003: queryKey artık readonly tuple tipinde
  */
 export interface CRUDConfig<TCreate, TUpdate, TItem> {
   /** Entity'nin Türkçe adı (alert mesajlarında kullanılır) */
   entityName: string;
   /** React Query cache key */
-  queryKey: string[];
+  queryKey: readonly unknown[];
   /** API endpoint (error logging için) */
   endpoint: string;
   /** CRUD servis metodları */
   service: CRUDService<TCreate, TUpdate, TItem>;
   /** Opsiyonel: Ek invalidate edilecek query key'ler */
-  additionalInvalidateKeys?: string[][];
+  additionalInvalidateKeys?: readonly unknown[][];
 }
 
 /**
@@ -65,10 +67,10 @@ export function useCRUDMutation<TCreate, TUpdate, TItem>(
 
   // Tüm ilgili query'leri invalidate et
   const invalidateQueries = () => {
-    queryClient.invalidateQueries({ queryKey: ['profile'] });
-    queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+    queryClient.invalidateQueries({ queryKey: queryKey as unknown[] });
     additionalInvalidateKeys.forEach((key) => {
-      queryClient.invalidateQueries({ queryKey: key });
+      queryClient.invalidateQueries({ queryKey: key as unknown[] });
     });
   };
 

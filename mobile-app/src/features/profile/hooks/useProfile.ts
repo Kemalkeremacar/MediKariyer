@@ -1,13 +1,15 @@
 /**
  * Profile Hooks
  * TD-003: CRUD hook'ları useCRUDMutation generic hook'u kullanacak şekilde refactor edildi
+ * ARCH-003: queryKeys factory pattern uygulandı
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { showAlert } from '@/utils/alert';
-import { profileService } from '@/api/services/profile.service';
+import { profileService } from '@/api/services/profile';
 import { handleApiError } from '@/utils/errorHandler';
 import { useCRUDMutation } from '@/hooks/useCRUDMutation';
+import { queryKeys } from '@/api/queryKeys';
 import type {
   UpdatePersonalInfoPayload,
   CreateEducationPayload,
@@ -30,7 +32,7 @@ import type {
  */
 export const useProfile = () => {
   return useQuery({
-    queryKey: ['profile', 'complete'],
+    queryKey: queryKeys.profile.complete(),
     queryFn: () => profileService.getCompleteProfile(),
     retry: 2,
     retryDelay: 1000,
@@ -42,7 +44,7 @@ export const useProfile = () => {
  */
 export const useProfileCompletion = () => {
   return useQuery({
-    queryKey: ['profile', 'completion'],
+    queryKey: queryKeys.profile.completion(),
     queryFn: () => profileService.getProfileCompletion(),
     retry: 2,
     retryDelay: 1000,
@@ -59,7 +61,7 @@ export const useUpdatePersonalInfo = () => {
     mutationFn: (payload: UpdatePersonalInfoPayload) =>
       profileService.updatePersonalInfo(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
       showAlert.success('Kişisel bilgiler güncellendi');
     },
     onError: (error) => {
@@ -74,7 +76,7 @@ export const useUpdatePersonalInfo = () => {
  */
 export const useEducations = () => {
   return useQuery({
-    queryKey: ['profile', 'educations'],
+    queryKey: queryKeys.profile.educations(),
     queryFn: () => profileService.getEducations(),
     retry: 2,
     retryDelay: 1000,
@@ -88,7 +90,7 @@ export const useEducations = () => {
 export const useEducation = () => {
   return useCRUDMutation<CreateEducationPayload, UpdateEducationPayload, DoctorEducation>({
     entityName: 'Eğitim bilgisi',
-    queryKey: ['profile', 'educations'],
+    queryKey: queryKeys.profile.educations(),
     endpoint: '/doctor/educations',
     service: {
       create: profileService.createEducation,
@@ -103,7 +105,7 @@ export const useEducation = () => {
  */
 export const useExperiences = () => {
   return useQuery({
-    queryKey: ['profile', 'experiences'],
+    queryKey: queryKeys.profile.experiences(),
     queryFn: () => profileService.getExperiences(),
     retry: 2,
     retryDelay: 1000,
@@ -117,7 +119,7 @@ export const useExperiences = () => {
 export const useExperience = () => {
   return useCRUDMutation<CreateExperiencePayload, UpdateExperiencePayload, DoctorExperience>({
     entityName: 'Deneyim bilgisi',
-    queryKey: ['profile', 'experiences'],
+    queryKey: queryKeys.profile.experiences(),
     endpoint: '/doctor/experiences',
     service: {
       create: profileService.createExperience,
@@ -132,7 +134,7 @@ export const useExperience = () => {
  */
 export const useCertificates = () => {
   return useQuery({
-    queryKey: ['profile', 'certificates'],
+    queryKey: queryKeys.profile.certificates(),
     queryFn: () => profileService.getCertificates(),
     retry: 2,
     retryDelay: 1000,
@@ -146,7 +148,7 @@ export const useCertificates = () => {
 export const useCertificate = () => {
   return useCRUDMutation<CreateCertificatePayload, UpdateCertificatePayload, DoctorCertificate>({
     entityName: 'Sertifika bilgisi',
-    queryKey: ['profile', 'certificates'],
+    queryKey: queryKeys.profile.certificates(),
     endpoint: '/doctor/certificates',
     service: {
       create: profileService.createCertificate,
@@ -161,7 +163,7 @@ export const useCertificate = () => {
  */
 export const useLanguages = () => {
   return useQuery({
-    queryKey: ['profile', 'languages'], // Unique key - lookup ile çakışmasın
+    queryKey: queryKeys.profile.languages(),
     queryFn: () => profileService.getLanguages(),
     retry: 2,
     retryDelay: 1000,
@@ -177,7 +179,7 @@ export const useLanguages = () => {
 export const useLanguage = () => {
   return useCRUDMutation<CreateLanguagePayload, UpdateLanguagePayload, DoctorLanguage>({
     entityName: 'Dil bilgisi',
-    queryKey: ['profile', 'languages'],
+    queryKey: queryKeys.profile.languages(),
     endpoint: '/doctor/languages',
     service: {
       create: profileService.createLanguage,
@@ -196,9 +198,9 @@ export const useProfilePhoto = () => {
   const uploadMutation = useMutation({
     mutationFn: (payload: UploadPhotoPayload) => profileService.uploadPhoto(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photoRequestStatus'] });
-      queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
-      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.photo.status() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.photo.history() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
       showAlert.success('Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
     },
     onError: (error) => {
@@ -210,8 +212,8 @@ export const useProfilePhoto = () => {
   const cancelMutation = useMutation({
     mutationFn: () => profileService.cancelPhotoRequest(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['photoRequestStatus'] });
-      queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.photo.status() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.photo.history() });
       showAlert.success('Fotoğraf değişiklik talebi iptal edildi');
     },
     onError: (error) => {
@@ -221,12 +223,12 @@ export const useProfilePhoto = () => {
   });
 
   const statusQuery = useQuery({
-    queryKey: ['photoRequestStatus'],
+    queryKey: queryKeys.photo.status(),
     queryFn: () => profileService.getPhotoRequestStatus(),
   });
 
   const historyQuery = useQuery({
-    queryKey: ['photoHistory'],
+    queryKey: queryKeys.photo.history(),
     queryFn: () => profileService.getPhotoRequestHistory(),
   });
 

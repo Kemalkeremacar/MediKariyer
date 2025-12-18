@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { applicationService } from '@/api/services/application.service';
 import { showAlert } from '@/utils/alert';
 import { handleApiError } from '@/utils/errorHandler';
+import { queryKeys } from '@/api/queryKeys';
 
 /**
  * Başvuru geri çekme hook'u
@@ -21,13 +22,12 @@ export const useWithdrawApplication = () => {
       applicationService.withdraw(applicationId),
     onSuccess: () => {
       showAlert.success('Başvuru başarıyla geri çekildi');
-      // Invalidate all related queries to refresh data (web frontend ile aynı)
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-      queryClient.invalidateQueries({ queryKey: ['application'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-      queryClient.invalidateQueries({ queryKey: ['jobs'] }); // Job list may show application status
+      // Invalidate all related queries to refresh data
+      queryClient.invalidateQueries({ queryKey: queryKeys.applications.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       const errorMessage = handleApiError(error, '/applications/withdraw');
       showAlert.error(errorMessage);
     },

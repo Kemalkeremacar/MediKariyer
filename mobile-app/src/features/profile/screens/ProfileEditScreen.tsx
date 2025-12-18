@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { lookupService } from '@/api/services/lookup.service';
+import { queryKeys } from '@/api/queryKeys';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
@@ -48,13 +49,13 @@ export const ProfileEditScreen = ({ navigation }: any) => {
 
   // Lookup data
   const { data: specialties = [] } = useQuery({
-    queryKey: ['lookup', 'specialties'],
+    queryKey: queryKeys.lookup.specialties(),
     queryFn: lookupService.getSpecialties,
     staleTime: 1000 * 60 * 30,
   });
 
   const { data: cities = [] } = useQuery({
-    queryKey: ['lookup', 'cities'],
+    queryKey: queryKeys.lookup.cities(),
     queryFn: lookupService.getCities,
     staleTime: 1000 * 60 * 30,
   });
@@ -93,7 +94,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
 
   // Get subspecialties for selected specialty
   const { data: subspecialties = [] } = useQuery({
-    queryKey: ['lookup', 'subspecialties', formData.specialty_id],
+    queryKey: queryKeys.lookup.subspecialties(formData.specialty_id),
     queryFn: () => lookupService.getSubspecialties(formData.specialty_id),
     enabled: !!formData.specialty_id,
     staleTime: 1000 * 60 * 30,

@@ -1,3 +1,13 @@
+/**
+ * API Client
+ * ARCH-001: Factory pattern ile refactor edildi
+ * 
+ * Export'lar:
+ * - apiClient: Mobile API için (/api/mobile)
+ * - rootApiClient: Root API için (/api)
+ * - createApiClient: Custom client oluşturmak için factory
+ */
+
 import axios, { AxiosInstance } from 'axios';
 import { env } from '@/config/env';
 import { REQUEST_TIMEOUT_MS } from '@/config/constants';
@@ -6,11 +16,25 @@ import { useAuthStore } from '@/store/authStore';
 import { endpoints } from './endpoints';
 import { errorLogger } from '@/utils/errorLogger';
 import { getUserFriendlyErrorMessage } from '@/utils/errorHandler';
+import { devLog, devWarn, devError } from '@/utils/devLogger';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 type FailedRequest = {
   resolve: (value?: unknown) => void;
   reject: (reason?: unknown) => void;
 };
+
+interface CreateClientOptions {
+  baseURL: string;
+  timeout?: number;
+}
+
+// ============================================================================
+// STATE (shared across all clients)
+// ============================================================================
 
 let isRefreshing = false;
 const failedQueue: FailedRequest[] = [];
@@ -24,25 +48,6 @@ const processQueue = (error: unknown, token: string | null) => {
     resolve(token);
   });
   failedQueue.length = 0;
-};
-
-// TD-007: Console.log'lar sadece development'ta çalışır
-const devLog = (...args: unknown[]) => {
-  if (__DEV__) {
-    console.log(...args);
-  }
-};
-
-const devWarn = (...args: unknown[]) => {
-  if (__DEV__) {
-    console.warn(...args);
-  }
-};
-
-const devError = (...args: unknown[]) => {
-  if (__DEV__) {
-    console.error(...args);
-  }
 };
 
 const attachInterceptors = (instance: AxiosInstance) => {
@@ -247,19 +252,48 @@ const attachInterceptors = (instance: AxiosInstance) => {
   return instance;
 };
 
-const apiClient = attachInterceptors(
-  axios.create({
-    baseURL: env.API_BASE_URL,
-    timeout: REQUEST_TIMEOUT_MS,
-  }),
-);
+// ============================================================================
+// FACTORY FUNCTION
+// ============================================================================
 
-const rootApiClient = attachInterceptors(
-  axios.create({
-    baseURL: env.PRIMARY_API_BASE_URL,
-    timeout: REQUEST_TIMEOUT_MS,
-  }),
-);
+/**
+ * Creates a new API client with interceptors attached
+ * Use this to create custom clients for different APIs
+ */
+export const createApiClient = (options: CreateClientOptions): AxiosInstance => {
+  const instance = axios.create({
+    baseURL: options.baseURL,
+    timeout: options.timeout ?? REQUEST_TIMEOUT_MS,
+  });
+  
+  return attachInterceptors(instance);
+};
+
+// ============================================================================
+// PRE-CONFIGURED CLIENTS
+// ============================================================================
+
+/**
+ * Mobile API Client
+ * Base URL: /api/mobile
+ * Used for: jobs, applications, notifications, profile CRUD
+ */
+const apiClient = createApiClient({
+  baseURL: env.API_BASE_URL,
+});
+
+/**
+ * Root API Client
+ * Base URL: /api
+ * Used for: lookup data, photo management
+ */
+const rootApiClient = createApiClient({
+  baseURL: env.PRIMARY_API_BASE_URL,
+});
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
 
 export { rootApiClient, apiClient };
 export default apiClient;

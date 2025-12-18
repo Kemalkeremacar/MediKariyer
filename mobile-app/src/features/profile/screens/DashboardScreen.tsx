@@ -24,7 +24,7 @@ import { useJobs } from '@/features/jobs/hooks/useJobs';
 import { useApplications } from '@/features/applications/hooks/useApplications';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { getFullImageUrl } from '@/utils/imageUrl';
-import { profileService } from '@/api/services/profile.service';
+import { profileService } from '@/api/services/profile';
 import { colors } from '@/theme';
 import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 

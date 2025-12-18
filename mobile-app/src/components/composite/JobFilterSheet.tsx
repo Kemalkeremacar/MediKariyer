@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { lookupService } from '@/api/services/lookup.service';
+import { queryKeys } from '@/api/queryKeys';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Divider } from '@/components/ui/Divider';
@@ -59,14 +60,14 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
 
   // Lookup data
   const { data: specialties = [], isLoading: isLoadingSpecialties } = useQuery({
-    queryKey: ['lookup', 'specialties'],
+    queryKey: queryKeys.lookup.specialties(),
     queryFn: lookupService.getSpecialties,
     staleTime: 1000 * 60 * 30, // 30 dakika cache
     gcTime: 1000 * 60 * 60, // 1 saat garbage collection
   });
 
   const { data: cities = [], isLoading: isLoadingCities } = useQuery({
-    queryKey: ['lookup', 'cities'],
+    queryKey: queryKeys.lookup.cities(),
     queryFn: lookupService.getCities,
     staleTime: 1000 * 60 * 30,
     gcTime: 1000 * 60 * 60, // 1 saat garbage collection

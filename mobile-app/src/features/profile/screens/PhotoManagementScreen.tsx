@@ -14,7 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { profileService } from '@/api/services/profile.service';
+import { profileService } from '@/api/services/profile';
 import { colors, shadows, spacing, borderRadius, typography } from '@/theme';
 import { useNavigation } from '@react-navigation/native';
 import { formatDateTime } from '@/utils/date';

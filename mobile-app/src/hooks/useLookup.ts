@@ -1,6 +1,7 @@
 /**
  * Lookup Hooks
  * Lookup verilerini getiren React Query hooks
+ * ARCH-003: queryKeys factory pattern uygulandı
  * 
  * Cache Strategy:
  * - staleTime: 24 saat - Lookup verileri nadiren değişir
@@ -10,6 +11,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { lookupService } from '@/api/services/lookup.service';
+import { queryKeys } from '@/api/queryKeys';
 
 // Lookup verileri için cache süreleri
 const LOOKUP_STALE_TIME = 1000 * 60 * 60 * 24; // 24 saat
@@ -20,7 +22,7 @@ const LOOKUP_GC_TIME = 1000 * 60 * 60 * 48; // 48 saat
  */
 export const useSpecialties = () => {
   return useQuery({
-    queryKey: ['specialties'],
+    queryKey: queryKeys.lookup.specialties(),
     queryFn: lookupService.getSpecialties,
     staleTime: LOOKUP_STALE_TIME,
     gcTime: LOOKUP_GC_TIME,
@@ -32,7 +34,7 @@ export const useSpecialties = () => {
  */
 export const useSubspecialties = (specialtyId?: number) => {
   return useQuery({
-    queryKey: ['subspecialties', specialtyId],
+    queryKey: queryKeys.lookup.subspecialties(specialtyId),
     queryFn: () => lookupService.getSubspecialties(specialtyId),
     staleTime: LOOKUP_STALE_TIME,
     gcTime: LOOKUP_GC_TIME,
@@ -45,7 +47,7 @@ export const useSubspecialties = (specialtyId?: number) => {
  */
 export const useCities = () => {
   return useQuery({
-    queryKey: ['cities'],
+    queryKey: queryKeys.lookup.cities(),
     queryFn: lookupService.getCities,
     staleTime: LOOKUP_STALE_TIME,
     gcTime: LOOKUP_GC_TIME,
@@ -57,7 +59,7 @@ export const useCities = () => {
  */
 export const useEducationTypes = () => {
   return useQuery({
-    queryKey: ['educationTypes'],
+    queryKey: queryKeys.lookup.educationTypes(),
     queryFn: lookupService.getEducationTypes,
     staleTime: LOOKUP_STALE_TIME,
     gcTime: LOOKUP_GC_TIME,
@@ -65,11 +67,12 @@ export const useEducationTypes = () => {
 };
 
 /**
- * Dilleri getir
+ * Dilleri getir (lookup data)
+ * Not: Profile languages ile karıştırılmaması için "lookup" prefix'i kullanılabilir
  */
 export const useLanguages = () => {
   return useQuery({
-    queryKey: ['languages'],
+    queryKey: queryKeys.lookup.languages(),
     queryFn: lookupService.getLanguages,
     staleTime: LOOKUP_STALE_TIME,
     gcTime: LOOKUP_GC_TIME,
@@ -81,7 +84,7 @@ export const useLanguages = () => {
  */
 export const useLanguageLevels = () => {
   return useQuery({
-    queryKey: ['languageLevels'],
+    queryKey: queryKeys.lookup.languageLevels(),
     queryFn: lookupService.getLanguageLevels,
     staleTime: LOOKUP_STALE_TIME,
     gcTime: LOOKUP_GC_TIME,
@@ -93,7 +96,7 @@ export const useLanguageLevels = () => {
  */
 export const useCertificateTypes = () => {
   return useQuery({
-    queryKey: ['certificateTypes'],
+    queryKey: queryKeys.lookup.certificateTypes(),
     queryFn: lookupService.getCertificateTypes,
     staleTime: LOOKUP_STALE_TIME,
     gcTime: LOOKUP_GC_TIME,

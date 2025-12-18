@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { applicationService } from '@/api/services/application.service';
+import { queryKeys } from '@/api/queryKeys';
 
 export interface ApplicationFilters {
   status?: string;
@@ -8,7 +9,7 @@ export interface ApplicationFilters {
 
 export const useApplications = (filters: ApplicationFilters = {}, enabled: boolean = true) => {
   return useInfiniteQuery({
-    queryKey: ['applications', filters],
+    queryKey: queryKeys.applications.list(filters),
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       const page = typeof pageParam === 'number' ? pageParam : 1;

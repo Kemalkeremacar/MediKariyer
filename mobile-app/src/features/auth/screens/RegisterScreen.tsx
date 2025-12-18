@@ -18,6 +18,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
+import { queryKeys } from '@/api/queryKeys';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { AuthStackParamList } from '@/navigation/types';
@@ -66,13 +67,13 @@ export const RegisterScreen = () => {
 
   // Fetch specialties
   const { data: specialties = [], isLoading: specialtiesLoading } = useQuery({
-    queryKey: ['specialties'],
+    queryKey: queryKeys.lookup.specialties(),
     queryFn: lookupService.getSpecialties,
   });
 
   // Fetch subspecialties
   const { data: allSubspecialties = [], isLoading: subspecialtiesLoading } = useQuery({
-    queryKey: ['subspecialties'],
+    queryKey: queryKeys.lookup.subspecialties(),
     queryFn: () => lookupService.getSubspecialties(),
   });
 

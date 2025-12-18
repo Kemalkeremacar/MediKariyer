@@ -1,10 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { jobService, JobListParams } from '@/api/services/job.service';
 import { CACHE_STALE_TIME, CACHE_TIME, PAGINATION } from '@/config/constants';
+import { queryKeys } from '@/api/queryKeys';
 
 export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => {
   return useInfiniteQuery({
-    queryKey: ['jobs', params],
+    queryKey: queryKeys.jobs.list(params),
     queryFn: ({ pageParam = 1 }) =>
       jobService.listJobs({
         ...params,

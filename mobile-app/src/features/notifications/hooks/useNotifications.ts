@@ -19,16 +19,8 @@ import type { InfiniteData } from '@tanstack/react-query';
 import { notificationService } from '@/api/services/notification.service';
 import { useToast } from '@/providers/ToastProvider';
 import { showAlert } from '@/utils/alert';
+import { queryKeys } from '@/api/queryKeys';
 import type { NotificationsResponse } from '@/types/notification';
-
-// ============================================================================
-// CONSTANTS
-// ============================================================================
-
-const QUERY_KEYS = {
-  notifications: 'notifications',
-  unreadCount: 'unreadNotificationCount',
-} as const;
 
 const RETRY_DELAY = (attempt: number) => Math.min(1000 * 2 ** attempt, 8000);
 
@@ -54,7 +46,7 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
   const { showUnreadOnly = false, limit = 20 } = params;
 
   const query = useInfiniteQuery({
-    queryKey: [QUERY_KEYS.notifications, { showUnreadOnly }],
+    queryKey: queryKeys.notifications.list({ showUnreadOnly }),
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       const response = await notificationService.listNotifications({
@@ -92,7 +84,7 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
  */
 export const useUnreadCount = () => {
   return useQuery({
-    queryKey: [QUERY_KEYS.unreadCount],
+    queryKey: queryKeys.notifications.unreadCount(),
     queryFn: async () => {
       const response = await notificationService.getUnreadCount();
       return response.count;
@@ -118,8 +110,7 @@ export const useMarkAsRead = () => {
       notificationService.markAsRead(notificationId),
     onSuccess: () => {
       // Bildirim listesini ve sayacı yenile
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.notifications] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.unreadCount] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
     onError: () => {
       showAlert.error('Bildirim okundu olarak işaretlenemedi. Lütfen tekrar deneyin.');
@@ -144,8 +135,7 @@ export const useMarkAllAsRead = () => {
       return { success: true, count: notificationIds.length };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.notifications] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.unreadCount] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
       showToast(`${data.count} bildirim okundu işaretlendi`, 'success');
     },
     onError: () => {
@@ -166,11 +156,10 @@ export const useDeleteNotification = () => {
     mutationFn: (notificationId: number) => 
       notificationService.deleteNotification(notificationId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.notifications] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.unreadCount] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
       showToast('Bildirim silindi', 'success');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Failed to delete notification:', error);
       showToast('Bildirim silinemedi', 'error');
     },
@@ -189,11 +178,10 @@ export const useDeleteNotifications = () => {
     mutationFn: (notificationIds: number[]) => 
       notificationService.deleteNotifications(notificationIds),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.notifications] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.unreadCount] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
       showToast(`${data.deleted_count} bildirim silindi`, 'success');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error('Failed to delete notifications:', error);
       showToast('Bildirimler silinemedi', 'error');
     },
