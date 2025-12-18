@@ -174,3 +174,21 @@ export interface UploadPhotoPayload {
   file_url: string;
 }
 
+// Backend response tipleri
+export interface ProfileCompletionResponse {
+  completion_percentage: number;
+  details?: {
+    personal?: { completed: number; total: number };
+  };
+  missing_fields?: string[];
+}
+
+export interface PhotoUploadResponse {
+  request?: PhotoRequest;
+}
+
+export interface PhotoStatusResponse {
+  status?: PhotoRequest;
+  history?: PhotoRequest[];
+}
+

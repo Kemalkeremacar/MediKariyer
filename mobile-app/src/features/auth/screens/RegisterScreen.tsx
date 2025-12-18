@@ -29,7 +29,6 @@ import { Select } from '@/components/ui/Select';
 import { useRegister } from '../hooks/useRegister';
 import { lookupService } from '@/api/services/lookup.service';
 import { uploadService } from '@/api/services/upload.service';
-import { useTheme } from '@/contexts/ThemeContext';
 import { handleApiError } from '@/utils/errorHandler';
 
 const registerSchema = z.object({
@@ -57,7 +56,6 @@ const TITLES = [
 
 export const RegisterScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const { theme } = useTheme();
   const [serverError, setServerError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<typeof TITLES[number]['value']>('Dr');
   const [selectedSpecialty, setSelectedSpecialty] = useState<number | undefined>();

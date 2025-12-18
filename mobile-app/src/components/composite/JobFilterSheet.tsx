@@ -13,6 +13,7 @@ import {
   Dimensions,
   Pressable,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { lookupService } from '@/api/services/lookup.service';
@@ -168,14 +169,11 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                   Branş bulunamadı
                 </Typography>
               ) : (
-                <ScrollView 
-                  style={styles.optionListScroll}
-                  nestedScrollEnabled={true}
-                  showsVerticalScrollIndicator={true}
-                >
-                  {specialties.map((specialty) => (
+                <FlatList
+                  data={specialties}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item: specialty }) => (
                     <TouchableOpacity
-                      key={specialty.id}
                       style={[
                         styles.optionItem,
                         draftFilters.specialtyId === specialty.id &&
@@ -205,8 +203,11 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                         <Ionicons name="checkmark" size={18} color={colors.primary[600]} />
                       )}
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                  )}
+                  style={styles.optionListScroll}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                />
               )}
             </FilterSection>
 
@@ -235,14 +236,11 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                   Şehir bulunamadı
                 </Typography>
               ) : (
-                <ScrollView 
-                  style={styles.optionListScroll}
-                  nestedScrollEnabled={true}
-                  showsVerticalScrollIndicator={true}
-                >
-                  {cities.map((city) => (
+                <FlatList
+                  data={cities}
+                  keyExtractor={(item) => item.id.toString()}
+                  renderItem={({ item: city }) => (
                     <TouchableOpacity
-                      key={city.id}
                       style={[
                         styles.optionItem,
                         draftFilters.cityId === city.id &&
@@ -270,8 +268,11 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                         <Ionicons name="checkmark" size={18} color={colors.primary[600]} />
                       )}
                     </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                  )}
+                  style={styles.optionListScroll}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                />
               )}
             </FilterSection>
 

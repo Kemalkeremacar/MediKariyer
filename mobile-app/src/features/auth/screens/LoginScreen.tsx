@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { showAlert } from '@/utils/alert';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -6,17 +6,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '@/contexts/ThemeContext';
 import type { AuthStackParamList } from '@/navigation/types';
 import { Typography } from '@/components/ui/Typography';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useLogin } from '../hooks/useLogin';
-import { useBiometricLogin } from '../hooks/useBiometricLogin';
-import { useBiometricAuth } from '@/hooks/useBiometricAuth';
 import { handleApiError, isAuthError, isNetworkError } from '@/utils/errorHandler';
 
 const loginSchema = z.object({
@@ -30,8 +26,6 @@ export const LoginScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [showBiometric, setShowBiometric] = useState(false);
-  const { theme } = useTheme();
 
   const {
     control,
@@ -42,31 +36,9 @@ export const LoginScreen = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  const { isAvailable, isEnabled, biometricTypes } = useBiometricAuth();
-  const { loginWithBiometric, saveBiometricCredentials, isBiometricLoginAvailable } = useBiometricLogin();
-
-  useEffect(() => {
-    checkBiometricAvailability();
-  }, []);
-
-  const checkBiometricAvailability = async () => {
-    const available = await isBiometricLoginAvailable();
-    setShowBiometric(available);
-  };
-
   const loginMutation = useLogin({
-    onSuccess: async (data) => {
+    onSuccess: () => {
       setServerError(null);
-
-      // Biometric enabled ise email'i kaydet
-      if (isEnabled && data.user.email) {
-        try {
-          await saveBiometricCredentials(data.user.email);
-        } catch {
-          // Biyometrik kayıt hatası login'i bozmasın, sadece kullanıcıya bilgi verilebilir
-          showAlert.error('Biyometrik giriş bilgileri kaydedilemedi.');
-        }
-      }
     },
     onError: (error) => {
       let message: string;
@@ -91,15 +63,6 @@ export const LoginScreen = () => {
 
   const onSubmit = (values: LoginFormValues) => {
     loginMutation.mutate(values);
-  };
-
-  const handleBiometricLogin = async () => {
-    try {
-      await loginWithBiometric.mutateAsync();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Biyometrik giriş başarısız';
-      showAlert.error(message);
-    }
   };
 
   return (

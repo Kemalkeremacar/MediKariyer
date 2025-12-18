@@ -58,17 +58,8 @@ import {
   endOfDay,
   startOfMonth,
   endOfMonth,
-  parse,
 } from 'date-fns';
 import { tr } from 'date-fns/locale';
-
-// ============================================================================
-// TÜRKIYE TIMEZONE SABITI
-// ============================================================================
-
-/** Türkiye saat dilimi (UTC+3) */
-const TURKEY_TIMEZONE = 'Europe/Istanbul';
-const TURKEY_UTC_OFFSET_MS = 3 * 60 * 60 * 1000; // +3 saat milisaniye cinsinden
 
 // ============================================================================
 // TYPES

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextStyle, ViewStyle } from 'react-native';
-import { Input, InputProps } from './Input';
 
 interface FormFieldProps {
   label?: string;

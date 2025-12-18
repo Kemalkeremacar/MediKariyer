@@ -1,6 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { applicationService } from '@/api/services/application.service';
-import type { ApplicationsListResponse } from '@/api/services/application.service';
 
 export interface ApplicationFilters {
   status?: string;

@@ -3,11 +3,12 @@
  * Provides user-friendly error messages and handles different error types
  */
 
+import { isAxiosError } from 'axios';
 import { errorLogger } from './errorLogger';
 
 export interface ApiError extends Error {
   statusCode?: number;
-  data?: any;
+  data?: unknown;
 }
 
 export interface NetworkError extends Error {
@@ -51,15 +52,13 @@ export const getUserFriendlyErrorMessage = (error: unknown): string => {
   }
 
   // Handle axios errors
-  if (typeof error === 'object' && error !== null) {
-    const axiosError = error as any;
-    
-    if (axiosError.response?.data?.message) {
-      return axiosError.response.data.message;
+  if (isAxiosError(error)) {
+    if (error.response?.data?.message) {
+      return error.response.data.message;
     }
 
-    if (axiosError.message) {
-      return axiosError.message;
+    if (error.message) {
+      return error.message;
     }
   }
 
@@ -131,18 +130,17 @@ export const isNetworkError = (error: unknown): boolean => {
     return error.name === 'NetworkError';
   }
 
-  if (typeof error === 'object' && error !== null) {
-    const axiosError = error as any;
+  if (isAxiosError(error)) {
     // Check for network errors (no response from server)
-    if (!axiosError.response && axiosError.request) {
+    if (!error.response && error.request) {
       return true;
     }
     // Check for timeout errors
-    if (axiosError.code === 'ECONNABORTED') {
+    if (error.code === 'ECONNABORTED') {
       return true;
     }
     // Check for connection refused
-    if (axiosError.code === 'ECONNREFUSED') {
+    if (error.code === 'ECONNREFUSED') {
       return true;
     }
   }
@@ -154,9 +152,8 @@ export const isNetworkError = (error: unknown): boolean => {
  * Check if error is an authentication error
  */
 export const isAuthError = (error: unknown): boolean => {
-  if (typeof error === 'object' && error !== null) {
-    const axiosError = error as any;
-    return axiosError.response?.status === 401;
+  if (isAxiosError(error)) {
+    return error.response?.status === 401;
   }
 
   return false;
@@ -170,9 +167,8 @@ export const isValidationError = (error: unknown): boolean => {
     return error.name === 'ValidationError';
   }
 
-  if (typeof error === 'object' && error !== null) {
-    const axiosError = error as any;
-    return axiosError.response?.status === 422 || axiosError.response?.status === 400;
+  if (isAxiosError(error)) {
+    return error.response?.status === 422 || error.response?.status === 400;
   }
 
   return false;

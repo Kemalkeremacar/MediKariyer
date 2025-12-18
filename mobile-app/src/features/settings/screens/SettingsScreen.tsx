@@ -9,7 +9,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Alert,
   Switch,
   Animated,
   Pressable,
@@ -195,14 +194,6 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Şifre Değiştir"
               subtitle="Hesap şifrenizi güncelleyin"
               onPress={() => navigation.navigate('ChangePassword')}
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="finger-print" size={20} color={colors.primary[600]} />}
-              iconBgColor="#EEF2FF"
-              title="Biyometrik Giriş"
-              subtitle="Parmak izi veya yüz tanıma"
-              onPress={() => navigation.navigate('BiometricSettings')}
             />
           </Card>
         </View>

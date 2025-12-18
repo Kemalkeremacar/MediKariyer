@@ -104,19 +104,16 @@ class ErrorLogger {
     });
   }
 
-  /**
-   * Private method to send logs to external service
-   * Implement this based on your logging service
-   */
-  private sendToLoggingService(logData: any): void {
-    // Example implementation:
-    // Sentry.captureException(logData);
-    // or
-    // fetch('https://your-logging-service.com/logs', {
-    //   method: 'POST',
-    //   body: JSON.stringify(logData),
-    // });
-  }
+  // TODO: Uncomment and implement when external logging service is configured
+  // private sendToLoggingService(logData: unknown): void {
+  //   // Example implementation:
+  //   // Sentry.captureException(logData);
+  //   // or
+  //   // fetch('https://your-logging-service.com/logs', {
+  //   //   method: 'POST',
+  //   //   body: JSON.stringify(logData),
+  //   // });
+  // }
 }
 
 export const errorLogger = new ErrorLogger();

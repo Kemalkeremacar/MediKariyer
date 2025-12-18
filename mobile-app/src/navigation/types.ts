@@ -59,7 +59,6 @@ export type ProfileStackParamList = {
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   ChangePassword: undefined;
-  BiometricSettings: undefined;
 };
 
 /**

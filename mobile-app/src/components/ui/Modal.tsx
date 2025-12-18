@@ -3,7 +3,6 @@ import {
   Modal as RNModal,
   View,
   StyleSheet,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   ScrollView,
   KeyboardAvoidingView,

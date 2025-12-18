@@ -32,6 +32,7 @@ import type {
   CompleteProfile,
   DoctorProfile,
   ProfileCompletion,
+  ProfileCompletionResponse,
   UpdatePersonalInfoPayload,
   CreateEducationPayload,
   UpdateEducationPayload,
@@ -47,6 +48,8 @@ import type {
   DoctorLanguage,
   UploadPhotoPayload,
   PhotoRequest,
+  PhotoUploadResponse,
+  PhotoStatusResponse,
 } from '@/types/profile';
 
 export const profileService = {
@@ -85,7 +88,7 @@ export const profileService = {
    * @returns {Promise<ProfileCompletion>} Profil tamamlanma bilgileri
    */
   async getProfileCompletion(): Promise<ProfileCompletion> {
-    const response = await apiClient.get<ApiResponse<any>>(
+    const response = await apiClient.get<ApiResponse<ProfileCompletionResponse>>(
       endpoints.doctor.profileCompletion
     );
     
@@ -332,14 +335,17 @@ export const profileService = {
    * @returns {Promise<PhotoRequest>} Fotoğraf yükleme isteği
    */
   async uploadPhoto(payload: UploadPhotoPayload): Promise<PhotoRequest> {
-    const response = await rootApiClient.post<ApiResponse<any>>(
+    const response = await rootApiClient.post<ApiResponse<PhotoUploadResponse | PhotoRequest>>(
       rootEndpoints.doctor.profile.photo,
       payload,
     );
 
     // Backend may wrap the created request as { request }
-    const data = response.data.data as any;
-    return (data?.request ?? data) as PhotoRequest;
+    const data = response.data.data;
+    if ('request' in data && data.request) {
+      return data.request;
+    }
+    return data as PhotoRequest;
   },
 
   /**
@@ -347,13 +353,22 @@ export const profileService = {
    * @returns {Promise<PhotoRequest | null>} Fotoğraf yükleme isteği durumu
    */
   async getPhotoRequestStatus(): Promise<PhotoRequest | null> {
-    const response = await rootApiClient.get<ApiResponse<any>>(
+    const response = await rootApiClient.get<ApiResponse<PhotoStatusResponse | PhotoRequest | null>>(
       rootEndpoints.doctor.profile.photoStatus,
     );
 
-    // Backend returns: { status, history }
-    const data = response.data.data as any;
-    return (data?.status ?? data ?? null) as PhotoRequest | null;
+    // Backend returns: { status, history } or direct PhotoRequest
+    const data = response.data.data;
+    if (!data) {
+      return null;
+    }
+    // Check if it's a wrapper object with status property
+    if (typeof data === 'object' && 'status' in data && !('id' in data)) {
+      const statusData = data as PhotoStatusResponse;
+      return statusData.status ?? null;
+    }
+    // Direct PhotoRequest object
+    return data as PhotoRequest;
   },
 
   /**
@@ -361,13 +376,16 @@ export const profileService = {
    * @returns {Promise<PhotoRequest[]>} Fotoğraf yükleme geçmişi
    */
   async getPhotoRequestHistory(): Promise<PhotoRequest[]> {
-    const response = await rootApiClient.get<ApiResponse<any>>(
+    const response = await rootApiClient.get<ApiResponse<PhotoStatusResponse | PhotoRequest[]>>(
       rootEndpoints.doctor.profile.photoHistory,
     );
 
-    // Backend returns: { history }
-    const data = response.data.data as any;
-    return (data?.history ?? data ?? []) as PhotoRequest[];
+    // Backend returns: { history } or direct array
+    const data = response.data.data;
+    if (data && 'history' in data) {
+      return data.history ?? [];
+    }
+    return Array.isArray(data) ? data : [];
   },
 
   /**

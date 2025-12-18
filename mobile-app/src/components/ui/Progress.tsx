@@ -64,13 +64,9 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
   value,
   size = 80,
   strokeWidth = 8,
-  color = 'primary',
   showLabel = true,
 }) => {
   const clampedValue = Math.min(Math.max(value, 0), 100);
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (clampedValue / 100) * circumference;
 
   return (
     <View style={[styles.circularContainer, { width: size, height: size }]}>

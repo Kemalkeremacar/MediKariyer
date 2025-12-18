@@ -20,17 +20,14 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BackButton } from '@/components/ui/BackButton';
-import { Modal } from '@/components/ui/Modal';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Screen } from '@/components/layout/Screen';
-import { IconButton } from '@/components/ui/IconButton';
 import { SearchBar } from '@/components/ui/SearchBar';
 import {
   ApplicationFilterSheet,
   ApplicationFilters,
 } from '@/components/composite/ApplicationFilterSheet';
 import { ApplicationCard } from '@/components/composite/ApplicationCard';
-import { StatCard } from '@/components/composite/StatCard';
 import { TimelineItem } from '@/components/composite/TimelineItem';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { useApplications } from '../hooks/useApplications';
@@ -430,14 +427,6 @@ export const ApplicationsScreen = () => {
     
     return allApplications;
   }, [query.data, searchQuery]);
-
-  const stats = useMemo(() => {
-    return {
-      pending: applications.filter((a) => a.status?.toLowerCase() === 'başvuruldu').length,
-      approved: applications.filter((a) => a.status?.toLowerCase() === 'kabul edildi').length,
-      reviewing: applications.filter((a) => a.status?.toLowerCase() === 'inceleniyor').length,
-    };
-  }, [applications]);
 
   const loadMore = useCallback(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {

@@ -52,7 +52,7 @@ export const useUpdatePersonalInfo = () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       showAlert.success('Kişisel bilgiler güncellendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/profile/personal');
       showAlert.error(message);
     },
@@ -84,7 +84,7 @@ export const useEducation = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
       showAlert.success('Eğitim bilgisi eklendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/educations');
       showAlert.error(message);
     },
@@ -98,7 +98,7 @@ export const useEducation = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
       showAlert.success('Eğitim bilgisi güncellendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/educations');
       showAlert.error(message);
     },
@@ -111,7 +111,7 @@ export const useEducation = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'educations'] });
       showAlert.success('Eğitim bilgisi silindi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/educations');
       showAlert.error(message);
     },
@@ -149,7 +149,7 @@ export const useExperience = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
       showAlert.success('Deneyim bilgisi eklendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/experiences');
       showAlert.error(message);
     },
@@ -163,7 +163,7 @@ export const useExperience = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
       showAlert.success('Deneyim bilgisi güncellendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/experiences');
       showAlert.error(message);
     },
@@ -176,7 +176,7 @@ export const useExperience = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'experiences'] });
       showAlert.success('Deneyim bilgisi silindi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/experiences');
       showAlert.error(message);
     },
@@ -214,7 +214,7 @@ export const useCertificate = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
       showAlert.success('Sertifika bilgisi eklendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/certificates');
       showAlert.error(message);
     },
@@ -228,7 +228,7 @@ export const useCertificate = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
       showAlert.success('Sertifika bilgisi güncellendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/certificates');
       showAlert.error(message);
     },
@@ -241,7 +241,7 @@ export const useCertificate = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'certificates'] });
       showAlert.success('Sertifika bilgisi silindi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/certificates');
       showAlert.error(message);
     },
@@ -281,7 +281,7 @@ export const useLanguage = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
       showAlert.success('Dil bilgisi eklendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/languages');
       showAlert.error(message);
     },
@@ -295,7 +295,7 @@ export const useLanguage = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
       showAlert.success('Dil bilgisi güncellendi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/languages');
       showAlert.error(message);
     },
@@ -308,7 +308,7 @@ export const useLanguage = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'languages'] });
       showAlert.success('Dil bilgisi silindi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/languages');
       showAlert.error(message);
     },
@@ -335,7 +335,7 @@ export const useProfilePhoto = () => {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       showAlert.success('Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/profile/photo');
       showAlert.error(message);
     },
@@ -348,7 +348,7 @@ export const useProfilePhoto = () => {
       queryClient.invalidateQueries({ queryKey: ['photoHistory'] });
       showAlert.success('Fotoğraf değişiklik talebi iptal edildi');
     },
-    onError: (error: any) => {
+    onError: (error) => {
       const message = handleApiError(error, '/doctor/profile/photo/request');
       showAlert.error(message);
     },

@@ -340,6 +340,22 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text.primary,
+    marginBottom: 2,
+  },
+  headerSubtitle: {
+    color: colors.text.secondary,
+    fontSize: 13,
+  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',

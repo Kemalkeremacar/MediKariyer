@@ -19,6 +19,7 @@ import {
   useMarkAsRead, 
   useDeleteNotifications 
 } from '@/features/notifications/hooks/useNotifications';
+import type { NotificationItem } from '@/types/notification';
 import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 
 type NotificationsScreenNavigationProp = CompositeNavigationProp<
@@ -48,18 +49,18 @@ export const NotificationsScreen = () => {
 
   const filteredNotifications = React.useMemo(() => {
     if (activeTab === 'unread') {
-      return notificationList.filter((n: any) => !n.is_read);
+      return notificationList.filter((n) => !n.is_read);
     }
     
     return notificationList;
   }, [notificationList, activeTab]);
 
-  const unreadCount = notificationList.filter((n: any) => !n.is_read).length;
+  const unreadCount = notificationList.filter((n) => !n.is_read).length;
 
   /**
    * Bildirime tıklandığında ilgili sayfaya yönlendirir
    */
-  const handleNotificationPress = useCallback(async (notification: any) => {
+  const handleNotificationPress = useCallback(async (notification: NotificationItem) => {
     // Mark as read
     if (!notification.is_read) {
       try {
@@ -86,7 +87,7 @@ export const NotificationsScreen = () => {
         case 'new_job':
         case 'job_alert':
           // İş ilanı bildirimi - İlan detayına git (job_id varsa)
-          if (notificationData.job_id) {
+          if (notificationData.job_id && typeof notificationData.job_id === 'number') {
             navigation.navigate('JobsTab', {
               screen: 'JobDetail',
               params: { id: notificationData.job_id },
@@ -121,17 +122,21 @@ export const NotificationsScreen = () => {
     }
   }, [navigation, markAsRead]);
 
-  const handleMarkAllRead = async () => {
-    // Mark all unread notifications as read
-    const unreadNotifications = notificationList.filter((n: any) => !n.is_read);
+  /**
+   * Tüm bildirimleri okundu olarak işaretler
+   */
+  const handleMarkAllRead = useCallback(async () => {
+    const unreadNotifications = notificationList.filter((n) => !n.is_read);
+    if (unreadNotifications.length === 0) return;
+    
     try {
       await Promise.all(
-        unreadNotifications.map((n: any) => markAsRead(n.id))
+        unreadNotifications.map((n) => markAsRead(n.id))
       );
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }
-  };
+  }, [notificationList, markAsRead]);
 
   const toggleSelectionMode = () => {
     setSelectionMode(!selectionMode);
@@ -142,7 +147,7 @@ export const NotificationsScreen = () => {
     if (selectedIds.size === filteredNotifications.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredNotifications.map((n: any) => n.id)));
+      setSelectedIds(new Set(filteredNotifications.map((n) => n.id)));
     }
   };
 
@@ -225,12 +230,22 @@ export const NotificationsScreen = () => {
             </Typography>
           </View>
         </View>
-        <IconButton
-          icon={selectionMode ? <Ionicons name="checkbox" size={20} color={colors.primary[600]} /> : <Ionicons name="square-outline" size={20} color={colors.primary[600]} />}
-          onPress={toggleSelectionMode}
-          size="md"
-          variant="ghost"
-        />
+        <View style={styles.headerActions}>
+          {!selectionMode && unreadCount > 0 && (
+            <IconButton
+              icon={<Ionicons name="checkmark-done" size={20} color={colors.primary[600]} />}
+              onPress={handleMarkAllRead}
+              size="md"
+              variant="ghost"
+            />
+          )}
+          <IconButton
+            icon={selectionMode ? <Ionicons name="checkbox" size={20} color={colors.primary[600]} /> : <Ionicons name="square-outline" size={20} color={colors.primary[600]} />}
+            onPress={toggleSelectionMode}
+            size="md"
+            variant="ghost"
+          />
+        </View>
       </View>
 
       {/* Selection Actions */}
@@ -368,6 +383,11 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   headerTitle: {
     fontSize: 22,

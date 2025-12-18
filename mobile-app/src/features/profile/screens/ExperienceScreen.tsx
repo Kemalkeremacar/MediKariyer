@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { showAlert } from '@/utils/alert';
-import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/components/layout/Screen';
@@ -20,7 +20,7 @@ export const ExperienceScreen = () => {
   const [selectedExperience, setSelectedExperience] = useState<DoctorExperience | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   
-  const { data: experiences = [], isLoading, error, refetch, isRefetching } = useExperiences();
+  const { data: experiences = [], refetch, isRefetching } = useExperiences();
   const experienceMutations = useExperience();
 
   const handleAddExperience = () => {

@@ -7,14 +7,8 @@ import {
 } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
-import { Tabs } from '@/components/ui/Tabs';
-import { FAB } from '@/components/ui/FAB';
-import { Divider } from '@/components/ui/Divider';
-import { Chip } from '@/components/ui/Chip';
 import { Avatar } from '@/components/ui/Avatar';
-import { Badge } from '@/components/ui/Badge';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useToast } from '@/providers/ToastProvider';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,11 +26,9 @@ type Props = NativeStackScreenProps<JobsStackParamList, 'JobDetail'>;
 
 export const JobDetailScreen = ({ route, navigation }: Props) => {
   const { id } = route.params;
-  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [coverLetter, setCoverLetter] = useState('');
-  const [activeTab, setActiveTab] = useState('details');
 
   const {
     data: job,
@@ -95,10 +87,6 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
       </Screen>
     );
   }
-
-  // Maaş Formatı (Backend'den zaten formatlanmış geliyor)
-  const salaryText = job.salary_range || 'Maaş Belirtilmemiş';
-
 
   return (
     <Screen scrollable={false} contentContainerStyle={styles.container}>

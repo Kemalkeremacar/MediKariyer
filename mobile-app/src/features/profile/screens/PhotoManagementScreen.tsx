@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   Modal,
 } from 'react-native';
@@ -17,7 +16,6 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { profileService } from '@/api/services/profile.service';
 import { colors, shadows, spacing, borderRadius, typography } from '@/theme';
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { formatDateTime } from '@/utils/date';
 import { BackButton } from '@/components/ui/BackButton';

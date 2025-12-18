@@ -5,7 +5,6 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
-  interpolate,
 } from 'react-native-reanimated';
 import { colors } from '@/theme';
 

@@ -4,6 +4,8 @@
     "strict": true,
     "baseUrl": ".",
     "moduleResolution": "bundler",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "paths": {
       "@/*": ["./src/*"],
       "~/*": ["./*"]

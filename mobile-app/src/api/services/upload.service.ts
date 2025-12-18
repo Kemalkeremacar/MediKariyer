@@ -33,7 +33,7 @@ export const uploadService = {
    * @param {string} base64 - Base64 encoded fotoğraf
    * @returns {Promise<UploadResponse>} Upload sonucu (URL, filename, size)
    */
-  async uploadProfilePhoto(uri: string, base64: string): Promise<UploadResponse> {
+  async uploadProfilePhoto(_uri: string, base64: string): Promise<UploadResponse> {
     const base64String = `data:image/jpeg;base64,${base64}`;
     
     const response = await apiClient.post<ApiResponse<UploadResponse>>(
@@ -52,7 +52,7 @@ export const uploadService = {
    * @param {string} base64 - Base64 encoded fotoğraf
    * @returns {Promise<UploadResponse>} Upload sonucu (URL, filename, size)
    */
-  async uploadRegisterPhoto(uri: string, base64: string): Promise<UploadResponse> {
+  async uploadRegisterPhoto(_uri: string, base64: string): Promise<UploadResponse> {
     const base64String = `data:image/jpeg;base64,${base64}`;
     
     const response = await apiClient.post<ApiResponse<UploadResponse>>(

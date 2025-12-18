@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { showAlert } from '@/utils/alert';
-import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/components/layout/Screen';
@@ -19,7 +19,7 @@ export const CertificatesScreen = () => {
   const [selectedCertificate, setSelectedCertificate] = useState<DoctorCertificate | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   
-  const { data: certificates = [], isLoading, error, refetch, isRefetching } = useCertificates();
+  const { data: certificates = [], refetch, isRefetching } = useCertificates();
   const certificateMutations = useCertificate();
 
   const handleAddCertificate = () => {

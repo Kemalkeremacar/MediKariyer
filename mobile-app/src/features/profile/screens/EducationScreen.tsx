@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { showAlert } from '@/utils/alert';
-import { View, FlatList, StyleSheet, RefreshControl, Alert } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/components/layout/Screen';
@@ -19,7 +19,7 @@ export const EducationScreen = () => {
   const [selectedEducation, setSelectedEducation] = useState<DoctorEducation | null>(null);
   const [showModal, setShowModal] = useState(false);
   
-  const { data: educations = [], isLoading, error, refetch, isRefetching } = useEducations();
+  const { data: educations = [], refetch, isRefetching } = useEducations();
   const educationMutations = useEducation();
 
   const handleAddEducation = () => {

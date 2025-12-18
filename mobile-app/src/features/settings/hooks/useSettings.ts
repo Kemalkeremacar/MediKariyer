@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { showAlert } from '@/utils/alert';
 import { useAuthStore } from '@/store/authStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
