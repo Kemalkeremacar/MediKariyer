@@ -14,12 +14,12 @@ import {
   Animated,
   Pressable,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Screen } from '@/components/layout/Screen';
+import { GradientHeader } from '@/components/composite/GradientHeader';
 import { colors, spacing } from '@/theme';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 
@@ -174,41 +174,13 @@ export const SettingsScreen = ({ navigation }: any) => {
         showsVerticalScrollIndicator={false}
       >
         {/* Premium Gradient Header */}
-        <LinearGradient
-          colors={['#1D4ED8', '#2563EB', '#3B82F6']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradientHeader}
-        >
-          {/* Decorative Elements */}
-          <View style={styles.headerDecoration}>
-            <View style={styles.decorCircle1} />
-            <View style={styles.decorCircle2} />
-          </View>
-          
-          <View style={styles.headerContent}>
-            <View style={styles.headerIconWrapper}>
-              <LinearGradient
-                colors={['#2563EB', '#1D4ED8']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.headerIconGradient}
-              >
-                <Ionicons name="settings-sharp" size={28} color="#FFFFFF" />
-              </LinearGradient>
-            </View>
-            <Typography variant="h1" style={styles.headerTitle}>
-              Ayarlar
-            </Typography>
-            <View style={styles.headerSubtitleContainer}>
-              <View style={styles.headerDot} />
-              <Typography variant="body" style={styles.headerSubtitle}>
-                Tercihler ve ayarlar
-              </Typography>
-              <View style={styles.headerDot} />
-            </View>
-          </View>
-        </LinearGradient>
+        <GradientHeader
+          title="Ayarlar"
+          subtitle="Tercihler ve ayarlar"
+          icon={<Ionicons name="settings-sharp" size={28} color="#FFFFFF" />}
+          variant="primary"
+          iconColorPreset="blue"
+        />
 
         {/* Güvenlik */}
         <View style={styles.section}>
@@ -516,95 +488,6 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingBottom: spacing['4xl'],
-  },
-
-  // Premium Gradient Header - STANDARD SIZE
-  gradientHeader: {
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    position: 'relative',
-    overflow: 'hidden',
-    shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  headerDecoration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  decorCircle1: {
-    position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    top: -50,
-    right: -30,
-  },
-  decorCircle2: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    bottom: -30,
-    left: -20,
-  },
-  headerContent: {
-    alignItems: 'center',
-    position: 'relative',
-    zIndex: 1,
-  },
-  headerIconWrapper: {
-    marginBottom: spacing.sm,
-  },
-  headerIconGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: spacing.xs,
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  headerSubtitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  headerDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 18,
-    textAlign: 'center',
-    fontWeight: '500',
   },
 
   // Section

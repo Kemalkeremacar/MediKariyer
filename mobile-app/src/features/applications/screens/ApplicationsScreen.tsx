@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { showAlert } from '@/utils/alert';
-import { LinearGradient } from 'expo-linear-gradient';
 import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -33,6 +32,7 @@ import {
 import { ApplicationCard } from '@/components/composite/ApplicationCard';
 import { StatCard } from '@/components/composite/StatCard';
 import { TimelineItem } from '@/components/composite/TimelineItem';
+import { GradientHeader } from '@/components/composite/GradientHeader';
 import { useApplications } from '../hooks/useApplications';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
@@ -463,41 +463,13 @@ export const ApplicationsScreen = () => {
   const renderListHeader = () => (
     <>
       {/* Premium Gradient Header */}
-      <LinearGradient
-        colors={['#1D4ED8', '#2563EB', '#3B82F6']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientHeader}
-      >
-        {/* Decorative Elements */}
-        <View style={styles.headerDecoration}>
-          <View style={styles.decorCircle1} />
-          <View style={styles.decorCircle2} />
-        </View>
-        
-        <View style={styles.headerContent}>
-          <View style={styles.headerIconWrapper}>
-            <LinearGradient
-              colors={['#2563EB', '#1D4ED8']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.headerIconGradient}
-            >
-              <Ionicons name="document-text-sharp" size={28} color="#FFFFFF" />
-            </LinearGradient>
-          </View>
-          <Typography variant="h1" style={styles.headerTitle}>
-            Başvurularım
-          </Typography>
-          <View style={styles.headerSubtitleContainer}>
-            <View style={styles.headerDot} />
-            <Typography variant="body" style={styles.headerSubtitle}>
-              {totalCount} başvuru
-            </Typography>
-            <View style={styles.headerDot} />
-          </View>
-        </View>
-      </LinearGradient>
+      <GradientHeader
+        title="Başvurularım"
+        subtitle={`${totalCount} başvuru`}
+        icon={<Ionicons name="document-text-sharp" size={28} color="#FFFFFF" />}
+        variant="primary"
+        iconColorPreset="blue"
+      />
 
       {/* Modern Search & Filter */}
       <View style={styles.searchContainer}>
@@ -654,95 +626,6 @@ export const ApplicationsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  // Premium Gradient Header - STANDARD SIZE
-  gradientHeader: {
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: 0,
-    marginBottom: spacing.md,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    position: 'relative',
-    overflow: 'hidden',
-    shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
-  },
-  headerDecoration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  decorCircle1: {
-    position: 'absolute',
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    top: -50,
-    right: -30,
-  },
-  decorCircle2: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    bottom: -30,
-    left: -20,
-  },
-  headerContent: {
-    alignItems: 'center',
-    position: 'relative',
-    zIndex: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  headerIconWrapper: {
-    marginBottom: spacing.sm,
-  },
-  headerIconGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#F59E0B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-    marginBottom: spacing.xs,
-    letterSpacing: 0.5,
-  },
-  headerSubtitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  headerDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
-    lineHeight: 18,
-    fontWeight: '500',
   },
   statsContainer: {
     flexDirection: 'row',

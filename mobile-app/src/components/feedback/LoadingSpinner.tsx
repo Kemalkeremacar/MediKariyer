@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
-import { colors } from '@/theme';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { colors, spacing } from '@/theme';
 
 interface LoadingSpinnerProps {
   message?: string;
@@ -13,16 +13,31 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'large',
   fullScreen = false,
 }) => {
-  const content = (
-    <View className={fullScreen ? 'flex-1 items-center justify-center bg-white' : 'items-center justify-center py-8'}>
+  return (
+    <View style={fullScreen ? styles.containerFullScreen : styles.container}>
       <ActivityIndicator size={size} color={colors.primary[600]} />
-      {message && (
-        <Text className="mt-4 text-base text-neutral-600 text-center px-4">
-          {message}
-        </Text>
-      )}
+      {message && <Text style={styles.message}>{message}</Text>}
     </View>
   );
-
-  return content;
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.xl,
+  },
+  containerFullScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background.primary,
+  },
+  message: {
+    marginTop: spacing.md,
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.md,
+  },
+});

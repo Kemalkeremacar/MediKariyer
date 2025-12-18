@@ -111,5 +111,30 @@ export const notificationService = {
     );
     return response.data.data;
   },
+
+  /**
+   * Bildirimi siler
+   * @param {number} notificationId - Bildirim ID'si
+   * @returns {Promise<{ success: boolean }>} İşlem sonucu
+   */
+  async deleteNotification(notificationId: number): Promise<{ success: boolean }> {
+    const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(
+      endpoints.notifications.delete(notificationId),
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Birden fazla bildirimi siler
+   * @param {number[]} notificationIds - Bildirim ID'leri
+   * @returns {Promise<{ success: boolean; deleted_count: number }>} İşlem sonucu
+   */
+  async deleteNotifications(notificationIds: number[]): Promise<{ success: boolean; deleted_count: number }> {
+    const response = await apiClient.post<ApiResponse<{ success: boolean; deleted_count: number }>>(
+      endpoints.notifications.deleteMany,
+      { notification_ids: notificationIds },
+    );
+    return response.data.data;
+  },
 };
 

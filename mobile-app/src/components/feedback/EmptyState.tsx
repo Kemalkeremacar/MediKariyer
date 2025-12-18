@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/ui/Button';
-import { colors } from '@/theme';
+import { colors, spacing } from '@/theme';
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -22,16 +22,12 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   fullScreen = false,
 }) => {
   return (
-    <View className={fullScreen ? 'flex-1 items-center justify-center bg-white px-6' : 'items-center justify-center py-12 px-6'}>
+    <View style={fullScreen ? styles.containerFullScreen : styles.container}>
       {icon || <Ionicons name="file-tray-outline" size={64} color={colors.neutral[400]} />}
-      <Text className="mt-6 text-xl font-semibold text-neutral-900 text-center">
-        {title}
-      </Text>
-      <Text className="mt-2 text-base text-neutral-600 text-center">
-        {message}
-      </Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.message}>{message}</Text>
       {actionText && onAction && (
-        <View className="mt-6">
+        <View style={styles.actionContainer}>
           <Button onPress={onAction} variant="primary">
             {actionText}
           </Button>
@@ -40,3 +36,35 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing['3xl'],
+    paddingHorizontal: spacing.lg,
+  },
+  containerFullScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background.primary,
+    paddingHorizontal: spacing.lg,
+  },
+  title: {
+    marginTop: spacing.lg,
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text.primary,
+    textAlign: 'center',
+  },
+  message: {
+    marginTop: spacing.sm,
+    fontSize: 16,
+    color: colors.text.secondary,
+    textAlign: 'center',
+  },
+  actionContainer: {
+    marginTop: spacing.lg,
+  },
+});

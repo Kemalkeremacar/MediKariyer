@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { showAlert } from '@/utils/alert';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { IconButton } from '@/components/ui/IconButton';
@@ -9,11 +14,20 @@ import { Tabs } from '@/components/ui/Tabs';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { NotificationCard } from '@/components/composite/NotificationCard';
 import { colors, spacing } from '@/theme';
-import { notificationService } from '@/api/services/notification.service';
-import { useNotifications } from '@/features/notifications/hooks/useNotifications';
-import { useMarkAsRead } from '@/features/notifications/hooks/useMarkAsRead';
+import { 
+  useNotifications, 
+  useMarkAsRead, 
+  useDeleteNotifications 
+} from '@/features/notifications/hooks/useNotifications';
+import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
+
+type NotificationsScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<ProfileStackParamList, 'Notifications'>,
+  BottomTabNavigationProp<AppTabParamList>
+>;
 
 export const NotificationsScreen = () => {
+  const navigation = useNavigation<NotificationsScreenNavigationProp>();
   const [activeTab, setActiveTab] = useState('all');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -30,6 +44,7 @@ export const NotificationsScreen = () => {
   } = useNotifications({ limit: 20 });
 
   const { mutateAsync: markAsRead } = useMarkAsRead();
+  const deleteNotificationsMutation = useDeleteNotifications();
 
   const filteredNotifications = React.useMemo(() => {
     if (activeTab === 'unread') {
@@ -41,7 +56,10 @@ export const NotificationsScreen = () => {
 
   const unreadCount = notificationList.filter((n: any) => !n.is_read).length;
 
-  const handleNotificationPress = async (notification: any) => {
+  /**
+   * Bildirime tıklandığında ilgili sayfaya yönlendirir
+   */
+  const handleNotificationPress = useCallback(async (notification: any) => {
     // Mark as read
     if (!notification.is_read) {
       try {
@@ -51,9 +69,57 @@ export const NotificationsScreen = () => {
       }
     }
     
-    // Navigate based on notification type
-    // TODO: Add navigation logic
-  };
+    // Navigate based on notification type and data
+    const notificationType = notification.type?.toLowerCase();
+    const notificationData = notification.data || {};
+    
+    try {
+      switch (notificationType) {
+        case 'application':
+        case 'application_status':
+        case 'application_update':
+          // Başvuru bildirimi - Başvurular ekranına git
+          navigation.navigate('Applications');
+          break;
+          
+        case 'job':
+        case 'new_job':
+        case 'job_alert':
+          // İş ilanı bildirimi - İlan detayına git (job_id varsa)
+          if (notificationData.job_id) {
+            navigation.navigate('JobsTab', {
+              screen: 'JobDetail',
+              params: { id: notificationData.job_id },
+            });
+          } else {
+            // job_id yoksa ilanlar listesine git
+            navigation.navigate('JobsTab', { screen: 'JobsList' });
+          }
+          break;
+          
+        case 'profile':
+        case 'profile_update':
+          // Profil bildirimi - Profil düzenleme ekranına git
+          navigation.navigate('ProfileEdit');
+          break;
+          
+        case 'photo':
+        case 'photo_status':
+          // Fotoğraf onay bildirimi - Fotoğraf yönetim ekranına git
+          navigation.navigate('PhotoManagement');
+          break;
+          
+        case 'system':
+        case 'info':
+        case 'message':
+        default:
+          // Sistem bildirimi veya bilinmeyen tip - Sadece okundu işaretlendi, navigasyon yok
+          break;
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  }, [navigation, markAsRead]);
 
   const handleMarkAllRead = async () => {
     // Mark all unread notifications as read
@@ -109,12 +175,31 @@ export const NotificationsScreen = () => {
     }
   };
 
-  const handleDeleteSelected = async () => {
-    // TODO: Implement delete API
-    setSelectedIds(new Set());
-    setSelectionMode(false);
-    refetch();
-  };
+  /**
+   * Seçili bildirimleri siler
+   */
+  const handleDeleteSelected = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    
+    const selectedCount = selectedIds.size;
+    
+    showAlert.confirmDestructive(
+      'Bildirimleri Sil',
+      `${selectedCount} bildirim silinecek. Bu işlem geri alınamaz.`,
+      async () => {
+        try {
+          const idsArray = Array.from(selectedIds);
+          await deleteNotificationsMutation.mutateAsync(idsArray);
+          setSelectedIds(new Set());
+          setSelectionMode(false);
+        } catch (error) {
+          console.error('Failed to delete notifications:', error);
+        }
+      },
+      undefined,
+      'Sil'
+    );
+  }, [selectedIds, deleteNotificationsMutation]);
 
   return (
     <Screen
@@ -168,11 +253,11 @@ export const NotificationsScreen = () => {
               disabled={selectedIds.size === 0}
             />
             <IconButton
-              icon={<Ionicons name="trash" size={18} color={selectedIds.size > 0 ? colors.error[600] : colors.neutral[400]} />}
+              icon={<Ionicons name="trash" size={18} color={selectedIds.size > 0 && !deleteNotificationsMutation.isPending ? colors.error[600] : colors.neutral[400]} />}
               onPress={handleDeleteSelected}
               size="sm"
               variant="ghost"
-              disabled={selectedIds.size === 0}
+              disabled={selectedIds.size === 0 || deleteNotificationsMutation.isPending}
             />
           </View>
         </View>

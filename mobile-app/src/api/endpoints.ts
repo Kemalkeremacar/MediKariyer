@@ -45,6 +45,8 @@ export const endpoints = {
   notifications: {
     list: '/notifications',
     markAsRead: (id: number) => `/notifications/${id}/read`,
+    delete: (id: number) => `/notifications/${id}`,
+    deleteMany: '/notifications/delete-many',
     unreadCount: '/notifications/unread-count',
   },
   deviceToken: '/device-token',
