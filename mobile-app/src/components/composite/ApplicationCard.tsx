@@ -28,7 +28,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
     : (application.is_hospital_active === false ? 'Hastane Pasif' : null);
 
   return (
-    <Animated.View entering={FadeInUp.delay(index * 50).springify().damping(15)}>
+    <Animated.View entering={FadeInUp.delay(index * 20).duration(300).springify().damping(30).stiffness(80)}>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
         <Card variant="elevated" padding="lg" style={isJobUnavailable ? {...styles.card, ...styles.cardUnavailable} : styles.card}>
         {/* Header with Status Badge */}

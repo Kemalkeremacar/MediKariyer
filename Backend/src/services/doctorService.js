@@ -1211,6 +1211,8 @@ const createApplication = async (doctorProfileId, data) => {
 
   // Aynı doktorun aynı ilana daha önce aktif başvuru yapıp yapmadığını kontrol et
   // (Geri çekilmiş başvuruları hariç tut - status_id = 5)
+  // Web tarafındaki mantık: Geri çekilmiş başvurular yeni başvuru oluşturmayı engellemez
+  // Kullanıcı geri çekilmiş başvurudan sonra yeni bir başvuru oluşturabilir (ön yazıyı değiştirebilir)
   // (Soft delete edilmiş başvuruları da hariç tut - deleted_at is null)
   const existingApplications = await db('applications')
     .where({
@@ -1230,6 +1232,7 @@ const createApplication = async (doctorProfileId, data) => {
   const pendingStatusId = 1;
 
   // Başvuru oluştur - SQL Server için OUTPUT clause kullan
+  // Not: Geri çekilmiş başvuru varsa bile yeni başvuru oluşturulur (web mantığı ile uyumlu)
   const insertedApplications = await db('applications')
     .insert({
       job_id: jobId,

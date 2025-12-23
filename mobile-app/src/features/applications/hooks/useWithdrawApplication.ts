@@ -26,28 +26,66 @@ export const useWithdrawApplication = () => {
     onMutate: async (applicationId: number) => {
       // İlgili query'leri iptal et (race condition önleme)
       await queryClient.cancelQueries({ queryKey: queryKeys.applications.all });
+      await queryClient.cancelQueries({ queryKey: queryKeys.jobs.all });
 
       // Mevcut veriyi snapshot olarak al (rollback için)
       const previousApplications = queryClient.getQueriesData<InfiniteData<ApplicationsListResponse>>({
         queryKey: queryKeys.applications.all,
       });
 
+      // Application verisinden job_id'yi bul (job detail cache'ini invalidate etmek için)
+      let jobId: number | null = null;
+      const applicationDetail = queryClient.getQueryData<import('@/types/application').ApplicationDetail>(
+        queryKeys.applications.detail(applicationId)
+      );
+      
+      if (applicationDetail?.job_id) {
+        jobId = applicationDetail.job_id;
+      } else {
+        // Eğer detail cache'de yoksa, list'ten bul
+        const allApplications = queryClient.getQueriesData<InfiniteData<ApplicationsListResponse>>({
+          queryKey: queryKeys.applications.all,
+        });
+        
+        for (const [, data] of allApplications) {
+          if (data?.pages && Array.isArray(data.pages)) {
+            for (const page of data.pages) {
+              if (page?.data && Array.isArray(page.data)) {
+                const app = page.data.find((a) => a?.id === applicationId);
+                if (app?.job_id) {
+                  jobId = app.job_id;
+                  break;
+                }
+              }
+            }
+            if (jobId) break;
+          }
+        }
+      }
+
       // Tüm applications query'lerini optimistic olarak güncelle
       queryClient.setQueriesData<InfiniteData<ApplicationsListResponse>>(
         { queryKey: queryKeys.applications.all },
         (oldData) => {
-          if (!oldData) return oldData;
+          if (!oldData || !oldData.pages || !Array.isArray(oldData.pages)) {
+            return oldData;
+          }
 
           return {
             ...oldData,
-            pages: oldData.pages.map((page) => ({
-              ...page,
-              data: page.data.map((app) =>
-                app.id === applicationId
-                  ? { ...app, status: 'withdrawn' }
-                  : app
-              ),
-            })),
+            pages: oldData.pages.map((page) => {
+              if (!page || !page.data || !Array.isArray(page.data)) {
+                return page;
+              }
+              return {
+                ...page,
+                data: page.data.map((app) =>
+                  app.id === applicationId
+                    ? { ...app, status: 'withdrawn' }
+                    : app
+                ),
+              };
+            }),
           };
         }
       );
@@ -62,7 +100,7 @@ export const useWithdrawApplication = () => {
       );
 
       // Rollback için önceki veriyi döndür
-      return { previousApplications };
+      return { previousApplications, jobId };
     },
 
     // Hata durumunda rollback
@@ -79,11 +117,17 @@ export const useWithdrawApplication = () => {
     },
 
     // Her durumda (başarılı/başarısız) çalışır
-    onSettled: () => {
+    onSettled: (_data, _error, _applicationId, context) => {
       // Sunucudan güncel veriyi al
       queryClient.invalidateQueries({ queryKey: queryKeys.applications.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all });
+      
+      // Job detail cache'ini de invalidate et (eğer job_id bulunduysa)
+      // Bu sayede geri çekilmiş başvuru sonrası job detail'de "Başvuruldu" yerine "Hemen Başvur" butonu gösterilir
+      if (context?.jobId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.jobs.detail(context.jobId) });
+      }
     },
 
     onSuccess: () => {

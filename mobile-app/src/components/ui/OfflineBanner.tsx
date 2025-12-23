@@ -14,6 +14,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useDerivedValue,
   withSpring,
   withTiming,
   interpolate,
@@ -87,10 +88,9 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
     ],
   }));
 
-  // Don't render if not visible and animation complete
-  if (!visible && opacity.value === 0) {
-    return null;
-  }
+  // Note: We removed the `opacity.value === 0` check from render to fix Reanimated warning
+  // The component will render based on `visible` prop only
+  // Animation will handle the opacity transition smoothly
 
   return (
     <Animated.View style={[styles.container, animatedStyle]}>

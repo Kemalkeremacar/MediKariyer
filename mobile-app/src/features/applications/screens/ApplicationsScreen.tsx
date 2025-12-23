@@ -177,6 +177,7 @@ export const ApplicationsScreen = () => {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}
+          estimatedItemSize={140}
           ListFooterComponent={
             query.isFetchingNextPage ? (
               <View style={styles.listFooter}>

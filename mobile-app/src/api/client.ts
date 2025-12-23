@@ -53,12 +53,14 @@ const processQueue = (error: unknown, token: string | null) => {
 const attachInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     async (config) => {
-      devLog('📤 API Request:', config.method?.toUpperCase(), config.url);
+      const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+      devLog('📤 API Request:', config.method?.toUpperCase(), fullUrl);
       
       // Check if token needs refresh before making request
       const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
-      if (shouldRefresh && !config.url?.includes('/auth/refresh')) {
+      if (shouldRefresh && !config.url?.includes('/auth/refresh') && !isRefreshing) {
         devLog('🔄 Token needs refresh, triggering proactive refresh...');
+        isRefreshing = true;
         try {
           const refreshToken = await tokenManager.getRefreshToken();
           if (refreshToken) {
@@ -73,6 +75,8 @@ const attachInterceptors = (instance: AxiosInstance) => {
           }
         } catch (error) {
           devWarn('⚠️ Proactive token refresh failed, will retry on 401');
+        } finally {
+          isRefreshing = false;
         }
       }
       

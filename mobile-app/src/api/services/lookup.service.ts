@@ -6,6 +6,7 @@
  */
 
 import { apiClient } from '../client';
+import { endpoints } from '../endpoints';
 
 export interface Specialty {
   id: number;
@@ -63,7 +64,7 @@ export const lookupService = {
    * Uzmanlık alanlarını getir
    */
   getSpecialties: async (): Promise<Specialty[]> => {
-    const response = await apiClient.get<ApiResponse<Specialty[]>>('/lookup/specialties');
+    const response = await apiClient.get<ApiResponse<Specialty[]>>(endpoints.lookup.specialties);
     return response.data.data;
   },
 
@@ -71,9 +72,7 @@ export const lookupService = {
    * Yan dal alanlarını getir
    */
   getSubspecialties: async (specialtyId?: number): Promise<Subspecialty[]> => {
-    const url = specialtyId 
-      ? `/lookup/subspecialties/${specialtyId}`
-      : '/lookup/subspecialties';
+    const url = endpoints.lookup.subspecialties(specialtyId);
     const response = await apiClient.get<ApiResponse<Subspecialty[]>>(url);
     return response.data.data;
   },
@@ -82,7 +81,7 @@ export const lookupService = {
    * Şehirleri getir
    */
   getCities: async (): Promise<City[]> => {
-    const response = await apiClient.get<ApiResponse<City[]>>('/lookup/cities');
+    const response = await apiClient.get<ApiResponse<City[]>>(endpoints.lookup.cities);
     return response.data.data;
   },
 
@@ -90,7 +89,7 @@ export const lookupService = {
    * Doktor eğitim türlerini getir
    */
   getEducationTypes: async (): Promise<EducationType[]> => {
-    const response = await apiClient.get<ApiResponse<EducationType[]>>('/lookup/education-types');
+    const response = await apiClient.get<ApiResponse<EducationType[]>>(endpoints.lookup.educationTypes);
     return response.data.data;
   },
 
@@ -98,7 +97,7 @@ export const lookupService = {
    * Dilleri getir
    */
   getLanguages: async (): Promise<Language[]> => {
-    const response = await apiClient.get<ApiResponse<Language[]>>('/lookup/languages');
+    const response = await apiClient.get<ApiResponse<Language[]>>(endpoints.lookup.languages);
     return response.data.data;
   },
 
@@ -106,7 +105,7 @@ export const lookupService = {
    * Dil seviyelerini getir
    */
   getLanguageLevels: async (): Promise<LanguageLevel[]> => {
-    const response = await apiClient.get<ApiResponse<LanguageLevel[]>>('/lookup/language-levels');
+    const response = await apiClient.get<ApiResponse<LanguageLevel[]>>(endpoints.lookup.languageLevels);
     return response.data.data;
   },
 

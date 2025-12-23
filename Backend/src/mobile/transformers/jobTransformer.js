@@ -62,6 +62,8 @@ const toListItem = (job = {}) => ({
   is_applied: Boolean(job.is_applied),
   hospital_id: job.hospital_id || null,
   hospital_name: job.hospital_name || job.institution_name || null,
+  // Logo: Database'de base64 (data:image/...) veya path (logo22.png) formatında olabilir
+  // Mobile app'te her iki formatı da destekliyoruz
   hospital_logo: job.hospital_logo || null
 });
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,17 +41,29 @@ export const Avatar: React.FC<AvatarProps> = ({
   const avatarSize = sizeMap[size];
   const iconSize = iconSizeMap[size];
   const badgeSize = size === 'xs' ? 12 : size === 'sm' ? 16 : 20;
+  const [imageError, setImageError] = useState(false);
+
+  // Determine if source is base64 or URL
+  const isBase64 = source?.startsWith('data:image/');
+  // Expo Image accepts both string (base64) and object ({ uri: string })
+  const imageSource = isBase64 
+    ? source  // Base64 string - pass directly
+    : (source ? { uri: source } : null);  // URL - wrap in object
 
   return (
     <View style={[styles.container, { width: avatarSize, height: avatarSize }, style]}>
       <View style={[styles.avatar, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}>
-        {source ? (
+        {source && !imageError ? (
           <Image 
-            source={source}
+            source={imageSource as any}  // Expo Image accepts both string and { uri: string }
             style={[styles.image, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}
             contentFit="cover"
-            cachePolicy="disk"
+            cachePolicy={isBase64 ? "none" : "disk"}  // Base64 doesn't need caching
             transition={200}
+            onError={() => {
+              // Image failed to load, show fallback
+              setImageError(true);
+            }}
           />
         ) : initials ? (
           <Typography 

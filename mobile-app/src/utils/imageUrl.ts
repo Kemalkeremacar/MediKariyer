@@ -26,8 +26,31 @@ export const getFullImageUrl = (path: string | null | undefined): string | null 
   // Remove /api/mobile or /api from base URL to get server root
   const baseUrl = env.PRIMARY_API_BASE_URL.replace(/\/api.*$/, '');
   
-  // Ensure path starts with /
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  // Normalize path - handle different formats:
+  // - "/uploads/logo.png" -> "/uploads/logo.png"
+  // - "uploads/logo.png" -> "/uploads/logo.png"
+  // - "logo.png" -> "/uploads/logo.png" (if no uploads prefix)
+  let normalizedPath = path.trim();
   
-  return `${baseUrl}${normalizedPath}`;
+  // If path doesn't start with /, add it
+  if (!normalizedPath.startsWith('/')) {
+    normalizedPath = `/${normalizedPath}`;
+  }
+  
+  // If path doesn't include 'uploads' prefix, add it
+  // Backend'den gelen path'ler genelde "logo22.png" formatında geliyor (uploads prefix'i yok)
+  if (!normalizedPath.includes('uploads') && !normalizedPath.startsWith('/api')) {
+    // Eğer extension varsa (resim dosyası gibi görünüyorsa), /uploads/ ekle
+    // Bu, backend'den gelen "logo22.png" -> "/uploads/logo22.png" dönüşümünü yapar
+    if (normalizedPath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+      normalizedPath = `/uploads${normalizedPath}`;
+    } else if (normalizedPath.match(/^\/[^\/]+$/)) {
+      // Tek seviye path (sadece dosya adı, extension olmasa bile) -> /uploads/ ekle
+      normalizedPath = `/uploads${normalizedPath}`;
+    }
+  }
+  
+  const fullUrl = `${baseUrl}${normalizedPath}`;
+  
+  return fullUrl;
 };

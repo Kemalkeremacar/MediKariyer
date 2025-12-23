@@ -218,6 +218,7 @@ export const JobsScreen = () => {
           refreshing={isRefetching}
           onRefresh={refetch}
           showsVerticalScrollIndicator={false}
+          estimatedItemSize={140}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon}>

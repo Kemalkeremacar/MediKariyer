@@ -17,6 +17,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import apiClient from '@/api/client';
+import { endpoints } from '@/api/endpoints';
 
 export const useAuthInitialization = () => {
   const markAuthenticated = useAuthStore((state) => state.markAuthenticated);
@@ -63,7 +64,7 @@ export const useAuthInitialization = () => {
           }
           
           try {
-            const response = await apiClient.post('/auth/refresh', {
+            const response = await apiClient.post(endpoints.auth.refreshToken, {
               refreshToken,
             });
             const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
@@ -82,7 +83,7 @@ export const useAuthInitialization = () => {
         // Token valid and not expired, fetch user data
         try {
           console.log('🔵 Fetching user data...');
-          const response = await apiClient.get('/auth/me');
+          const response = await apiClient.get(endpoints.auth.me);
           const user = response.data.data.user;
           markAuthenticated(user);
           console.log('✅ User data fetched successfully');

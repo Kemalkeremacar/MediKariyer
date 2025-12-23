@@ -22,6 +22,7 @@ import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
 import { formatRelativeTime } from '@/utils/date';
 import { handleApiError } from '@/utils/errorHandler';
+import { getFullImageUrl } from '@/utils/imageUrl';
 
 type Props = NativeStackScreenProps<JobsStackParamList, 'JobDetail'>;
 
@@ -109,8 +110,17 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             <View style={styles.row}>
               <Avatar
                 size="lg"
-                source={job.hospital_logo ?? undefined}
-                initials={job.hospital_name?.substring(0, 2).toUpperCase()}
+                source={(() => {
+                  // Logo işleme mantığı: Base64 → direkt kullan, Path → null (fallback)
+                  if (!job.hospital_logo) return undefined;
+                  if (job.hospital_logo.startsWith('data:image/')) return job.hospital_logo;
+                  if (job.hospital_logo.startsWith('http://') || job.hospital_logo.startsWith('https://')) {
+                    return job.hospital_logo;
+                  }
+                  // Path formatındaki logolar (logo.png) → null, fallback göster
+                  return undefined;
+                })()}
+                initials={job.hospital_name?.substring(0, 2).toUpperCase() || '??'}
               />
               <View style={{ flex: 1, gap: spacing.xs }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>

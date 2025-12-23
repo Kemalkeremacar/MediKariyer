@@ -1,6 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import Animated, { 
+  FadeInUp, 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring 
+} from 'react-native-reanimated';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
@@ -19,16 +24,60 @@ interface JobCardProps {
 }
 
 export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => {
+  // Logo işleme mantığı:
+  // 1. Base64 string'ler (data:image/...) → direkt kullan (hastane yüklediği logolar)
+  // 2. Path formatındaki logolar (logo.png) → null geç, fallback göster (dosyalar uploads klasöründe yok)
+  // 3. Full URL'ler → direkt kullan
+  const hospitalLogoUrl = (() => {
+    if (!job.hospital_logo) return null;
+    
+    // Base64 string ise direkt kullan
+    if (job.hospital_logo.startsWith('data:image/')) {
+      return job.hospital_logo;
+    }
+    
+    // Full URL ise direkt kullan
+    if (job.hospital_logo.startsWith('http://') || job.hospital_logo.startsWith('https://')) {
+      return job.hospital_logo;
+    }
+    
+    // Path formatındaki logolar (logo.png, logo22.png vb.) → null
+    // Çünkü bu dosyalar uploads klasöründe yok, 404 verecek
+    // Avatar component'i fallback (initials) gösterecek
+    return null;
+  })();
+
+  // Smooth press animation for detail button only
+  const scale = useSharedValue(1);
+  
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handleButtonPressIn = () => {
+    scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
+  };
+
+  const handleButtonPressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 400 });
+  };
+  
   return (
-    <Animated.View entering={FadeInUp.delay(index * 50).springify().damping(15)}>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-        <Card variant="elevated" padding="lg" style={styles.card}>
+    // Wrapper for layout animation (FadeInUp) - separate from transform animations
+    <Animated.View 
+      entering={FadeInUp.delay(index * 20).duration(300).springify().damping(30).stiffness(80)}
+    >
+      <Card 
+        variant="elevated" 
+        padding="lg" 
+        style={styles.card}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Avatar
             size="md"
-            source={job.hospital_logo ?? undefined}
-            initials={job.hospital_name?.substring(0, 2).toUpperCase()}
+            source={hospitalLogoUrl ?? undefined}
+            initials={job.hospital_name?.substring(0, 2).toUpperCase() || '??'}
           />
           <View style={styles.headerContent}>
             <View style={styles.titleRow}>
@@ -48,7 +97,6 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => 
               </Typography>
             </View>
           </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
         </View>
 
         <Divider spacing="sm" />
@@ -73,8 +121,25 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => 
             />
           )}
         </View>
+
+        {/* Detay Butonu - Smooth animasyon ile */}
+        <View style={styles.footer}>
+          <Animated.View style={animatedButtonStyle}>
+            <TouchableOpacity 
+              style={styles.detailButton}
+              onPress={onPress}
+              onPressIn={handleButtonPressIn}
+              onPressOut={handleButtonPressOut}
+              activeOpacity={1}
+            >
+              <Typography variant="caption" style={styles.detailButtonText}>
+                Detay
+              </Typography>
+              <Ionicons name="arrow-forward" size={14} color={colors.primary[600]} />
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
       </Card>
-      </TouchableOpacity>
     </Animated.View>
   );
 };
@@ -128,6 +193,26 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
     marginTop: spacing.xs,
+  },
+  footer: {
+    marginTop: spacing.md,
+    alignItems: 'flex-end',
+  },
+  detailButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.primary[50],
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary[200],
+  },
+  detailButtonText: {
+    color: colors.primary[600],
+    fontWeight: '600',
+    fontSize: 13,
   },
 });
 
