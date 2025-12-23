@@ -27,6 +27,11 @@ type FailedRequest = {
   reject: (reason?: unknown) => void;
 };
 
+type PendingRequest = {
+  resolve: () => void;
+  reject: (reason?: unknown) => void;
+};
+
 interface CreateClientOptions {
   baseURL: string;
   timeout?: number;
@@ -38,6 +43,7 @@ interface CreateClientOptions {
 
 let isRefreshing = false;
 const failedQueue: FailedRequest[] = [];
+const pendingQueue: PendingRequest[] = []; // Queue for requests waiting during proactive refresh
 
 const processQueue = (error: unknown, token: string | null) => {
   failedQueue.forEach(({ resolve, reject }) => {
@@ -50,15 +56,54 @@ const processQueue = (error: unknown, token: string | null) => {
   failedQueue.length = 0;
 };
 
+const processPendingQueue = (error: unknown) => {
+  pendingQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+      return;
+    }
+    resolve();
+  });
+  pendingQueue.length = 0;
+};
+
 const attachInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     async (config) => {
       const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
       devLog('📤 API Request:', config.method?.toUpperCase(), fullUrl);
       
+      // Skip queue for refresh token endpoint
+      if (config.url?.includes('/auth/refresh')) {
+        const token = await tokenManager.getAccessToken();
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        config.headers = config.headers ?? {
+          'Content-Type': 'application/json',
+        };
+        return config;
+      }
+      
       // Check if token needs refresh before making request
       const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
-      if (shouldRefresh && !config.url?.includes('/auth/refresh') && !isRefreshing) {
+      
+      // If refresh is needed or in progress, wait for it to complete
+      if (shouldRefresh || isRefreshing) {
+        if (isRefreshing) {
+          devLog('⏳ Refresh in progress, waiting...');
+        } else {
+          devLog('🔄 Token needs refresh, waiting for refresh to start...');
+        }
+        
+        // Wait for refresh to complete
+        await new Promise<void>((resolve, reject) => {
+          pendingQueue.push({ resolve, reject });
+        });
+      }
+      
+      // Start proactive refresh if needed (only one request will trigger this)
+      if (shouldRefresh && !isRefreshing) {
         devLog('🔄 Token needs refresh, triggering proactive refresh...');
         isRefreshing = true;
         try {
@@ -72,9 +117,17 @@ const attachInterceptors = (instance: AxiosInstance) => {
             await tokenManager.saveTokens(accessToken, newRefreshToken);
             useAuthStore.getState().markAuthenticated(user);
             devLog('✅ Proactive token refresh successful');
+            // Release pending requests - they will use the new token
+            processPendingQueue(null);
+          } else {
+            // No refresh token, let requests proceed (they will get 401 and be handled by response interceptor)
+            devWarn('⚠️ No refresh token available, requests will proceed');
+            processPendingQueue(null);
           }
         } catch (error) {
-          devWarn('⚠️ Proactive token refresh failed, will retry on 401');
+          // Refresh failed, let requests proceed (they will get 401 and be handled by response interceptor)
+          devWarn('⚠️ Proactive token refresh failed, requests will proceed and retry on 401');
+          processPendingQueue(null);
         } finally {
           isRefreshing = false;
         }
