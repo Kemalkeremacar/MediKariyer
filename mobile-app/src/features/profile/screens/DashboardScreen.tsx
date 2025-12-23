@@ -26,6 +26,7 @@ import { useNotifications } from '@/features/notifications/hooks/useNotification
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { profileService } from '@/api/services/profile';
 import { colors } from '@/theme';
+import { formatFullName } from '@/utils/formatTitle';
 import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 
 type DashboardScreenNavigationProp = CompositeNavigationProp<
@@ -106,8 +107,8 @@ export const DashboardScreen = () => {
     return '🚀 Profilini tamamlayarak başla';
   };
 
-  // Unvan + İsim + Soyisim
-  const fullName = `${profile?.title || ''} ${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Kullanıcı';
+  // Unvan + İsim + Soyisim (ünvanın sonuna nokta eklenir)
+  const fullName = formatFullName(profile?.title, profile?.first_name, profile?.last_name);
   
   // Uzmanlık - Yan Dal
   const specialtyInfo = profile?.specialty_name 
@@ -606,6 +607,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   horizontalList: {
+    paddingBottom: 20, // Kartların alt kısmına boşluk ekle (2cm ≈ 60px)
     paddingRight: 24,
   },
   skeletonCard: {

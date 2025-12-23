@@ -32,13 +32,13 @@ import { getFullImageUrl } from '@/utils/imageUrl';
 import { useToast } from '@/providers/ToastProvider';
 import { toDateString, parseDateOnly } from '@/utils/date';
 
-// Title options
+// Title options (label'larda nokta var, value'larda yok - backend'e value gönderilir)
 const TITLE_OPTIONS: SelectOption[] = [
-  { label: 'Dr', value: 'Dr' },
-  { label: 'Uz.Dr', value: 'Uz.Dr' },
-  { label: 'Dr.Öğr.Üyesi', value: 'Dr.Öğr.Üyesi' },
-  { label: 'Doç.Dr', value: 'Doç.Dr' },
-  { label: 'Prof.Dr', value: 'Prof.Dr' },
+  { label: 'Dr.', value: 'Dr' },
+  { label: 'Uz. Dr.', value: 'Uz.Dr' },
+  { label: 'Dr. Öğr. Üyesi', value: 'Dr.Öğr.Üyesi' },
+  { label: 'Doç. Dr.', value: 'Doç.Dr' },
+  { label: 'Prof. Dr.', value: 'Prof.Dr' },
 ];
 
 export const ProfileEditScreen = ({ navigation }: any) => {

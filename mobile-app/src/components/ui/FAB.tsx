@@ -18,10 +18,13 @@ const sizeMap = {
   lg: 64,
 };
 
+// FAB position: Bottom navigation bar'ın hemen üstünde olacak şekilde ayarlandı
+// Bottom nav bar genellikle ~70px + safe area padding (~20px) = ~90px
+// FAB'ı nav bar'ın hemen üstünde tutmak için bottom: 20-30px yeterli
 const positionMap = {
-  'bottom-right': { bottom: 100, right: 24 },
-  'bottom-left': { bottom: 100, left: 24 },
-  'bottom-center': { bottom: 100, alignSelf: 'center' as const },
+  'bottom-right': { bottom: 30, right: 24 },
+  'bottom-left': { bottom: 30, left: 24 },
+  'bottom-center': { bottom: 30, alignSelf: 'center' as const },
 };
 
 export const FAB: React.FC<FABProps> = ({

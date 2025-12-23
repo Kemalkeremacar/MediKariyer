@@ -21,6 +21,7 @@ import { useToast } from '@/providers/ToastProvider';
 import { showAlert } from '@/utils/alert';
 import { queryKeys } from '@/api/queryKeys';
 import type { NotificationsResponse } from '@/types/notification';
+import { CACHE_DURATIONS } from '@/config/constants';
 
 const RETRY_DELAY = (attempt: number) => Math.min(1000 * 2 ** attempt, 8000);
 
@@ -60,6 +61,9 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
       const { pagination } = lastPage;
       return pagination.has_next ? pagination.current_page + 1 : undefined;
     },
+    staleTime: CACHE_DURATIONS.NOTIFICATIONS, // 2 dakika - bildirimler daha sık güncellenir
+    refetchOnMount: true, // Sayfa açıldığında fresh data çek
+    refetchOnWindowFocus: false, // Window focus'ta refetch yapma (mobilde gereksiz)
     retry: 2,
     retryDelay: RETRY_DELAY,
   });

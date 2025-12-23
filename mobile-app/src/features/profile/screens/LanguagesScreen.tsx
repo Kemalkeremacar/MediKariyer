@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { showAlert } from '@/utils/alert';
-import { View, FlatList, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { Screen } from '@/components/layout/Screen';
@@ -19,7 +19,7 @@ export const LanguagesScreen = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<DoctorLanguage | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   
-  const { data: languages = [], isLoading, refetch, isRefetching } = useLanguages();
+  const { data: languages = [], isLoading, error, refetch, isRefetching } = useLanguages();
   const languageMutations = useLanguage();
 
   const handleAddLanguage = () => {
@@ -83,6 +83,21 @@ export const LanguagesScreen = () => {
           <Typography variant="body" style={styles.loadingText}>
             Diller yükleniyor...
           </Typography>
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={64} color={colors.error[500]} />
+          <Typography variant="h3" style={styles.errorTitle}>
+            Hata Oluştu
+          </Typography>
+          <Typography variant="body" style={styles.errorText}>
+            {error instanceof Error ? error.message : 'Diller yüklenirken bir hata oluştu'}
+          </Typography>
+          <TouchableOpacity style={styles.errorButton} onPress={() => refetch()}>
+            <Typography variant="body" style={styles.retryButton}>
+              Tekrar Dene
+            </Typography>
+          </TouchableOpacity>
         </View>
       ) : (
         <FlatList
@@ -178,5 +193,31 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     color: colors.text.secondary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing['3xl'],
+  },
+  errorTitle: {
+    marginTop: spacing.lg,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+    color: colors.text.primary,
+  },
+  errorText: {
+    color: colors.text.secondary,
+    textAlign: 'center',
+    fontSize: 14,
+    marginBottom: spacing.lg,
+  },
+  errorButton: {
+    marginTop: spacing.md,
+  },
+  retryButton: {
+    color: colors.primary[600],
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
