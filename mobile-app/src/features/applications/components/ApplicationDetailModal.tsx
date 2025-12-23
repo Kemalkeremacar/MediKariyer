@@ -18,11 +18,10 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { BackButton } from '@/components/ui/BackButton';
-import { TimelineItem } from '@/components/composite/TimelineItem';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
 import { Ionicons } from '@expo/vector-icons';
-import { formatDate, formatDayMonth } from '@/utils/date';
+import { formatDate } from '@/utils/date';
 
 export interface ApplicationDetailModalProps {
   applicationId: number | null;
@@ -62,8 +61,8 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
     );
   };
 
-  const canWithdraw =
-    data?.status?.toLowerCase() === 'başvuruldu' && !withdrawMutation.isPending;
+  // Sadece "Başvuruldu" (status_id = 1) durumundaki başvurular geri çekilebilir
+  const canWithdraw = (data as any)?.status_id === 1 && !withdrawMutation.isPending;
 
   return (
     <RNModal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -111,31 +110,28 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               </Typography>
             </View>
 
-            <Card variant="elevated" padding="lg" style={styles.jobInfoCard}>
-              <View style={styles.jobInfoHeader}>
-                <View style={styles.jobIconContainer}>
-                  <Ionicons name="document-text" size={24} color={colors.primary[600]} />
+            {/* Başvuru Bilgileri */}
+            <Card variant="elevated" padding="lg" style={styles.infoCard}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconContainer}>
+                  <Ionicons name="calendar" size={20} color={colors.primary[600]} />
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Typography variant="h2" style={styles.jobTitle}>
-                    {data.job_title ?? 'Başvuru'}
-                  </Typography>
-                  <Typography variant="body" style={styles.hospitalName}>
-                    {data.hospital_name ?? 'Kurum bilgisi yok'}
-                  </Typography>
-                  {data.city_name && (
-                    <Typography variant="caption" style={styles.cityText}>
-                      📍 {data.city_name}
-                    </Typography>
-                  )}
-                </View>
+                <Typography variant="h3" style={styles.cardTitle}>
+                  Başvuru Bilgileri
+                </Typography>
               </View>
-
-              <View style={styles.modalDivider} />
-
-              <View style={styles.modalInfoRow}>
-                <View style={styles.modalInfoItem}>
-                  <Typography variant="caption" style={styles.modalInfoLabel}>
+              <View style={styles.cardDivider} />
+              <View style={styles.cardInfoRow}>
+                <View style={styles.cardInfoItem}>
+                  <Typography variant="caption" style={styles.cardInfoLabel}>
+                    Başvuru Tarihi
+                  </Typography>
+                  <Typography variant="body" style={styles.cardInfoValue}>
+                    {formatDate(data.created_at)}
+                  </Typography>
+                </View>
+                <View style={styles.cardInfoItem}>
+                  <Typography variant="caption" style={styles.cardInfoLabel}>
                     Durum
                   </Typography>
                   <Badge
@@ -153,63 +149,87 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                     {data.status ?? 'Durum yok'}
                   </Badge>
                 </View>
-                <View style={styles.modalInfoItem}>
-                  <Typography variant="caption" style={styles.modalInfoLabel}>
-                    Başvuru Tarihi
-                  </Typography>
-                  <Typography variant="body" style={styles.modalInfoValue}>
-                    {formatDate(data.created_at)}
-                  </Typography>
-                </View>
               </View>
-
-              {(data.employment_type ||
-                data.min_experience_years !== null ||
-                data.specialty_name) && (
-                <>
-                  <View style={styles.modalDivider} />
-                  <View style={styles.jobDetailsGrid}>
-                    {data.employment_type && (
-                      <View style={styles.jobDetailItem}>
-                        <Typography variant="caption" style={styles.modalInfoLabel}>
-                          Çalışma Tipi
-                        </Typography>
-                        <Typography variant="body" style={styles.modalInfoValue}>
-                          {data.employment_type}
-                        </Typography>
-                      </View>
-                    )}
-                    {data.min_experience_years !== null &&
-                      data.min_experience_years !== undefined && (
-                        <View style={styles.jobDetailItem}>
-                          <Typography variant="caption" style={styles.modalInfoLabel}>
-                            Min. Deneyim
-                          </Typography>
-                          <Typography variant="body" style={styles.modalInfoValue}>
-                            {data.min_experience_years} yıl
-                          </Typography>
-                        </View>
-                      )}
-                    {data.specialty_name && (
-                      <View style={styles.jobDetailItem}>
-                        <Typography variant="caption" style={styles.modalInfoLabel}>
-                          Uzmanlık
-                        </Typography>
-                        <Typography variant="body" style={styles.modalInfoValue}>
-                          {data.specialty_name}
-                        </Typography>
-                        {data.subspecialty_name && (
-                          <Typography variant="caption" style={styles.subspecialtyText}>
-                            {data.subspecialty_name}
-                          </Typography>
-                        )}
-                      </View>
-                    )}
-                  </View>
-                </>
-              )}
             </Card>
 
+            {/* İş İlanı Bilgileri */}
+            <Card variant="elevated" padding="lg" style={styles.infoCard}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardIconContainer}>
+                  <Ionicons name="briefcase" size={20} color={colors.primary[600]} />
+                </View>
+                <Typography variant="h3" style={styles.cardTitle}>
+                  İş İlanı Bilgileri
+                </Typography>
+              </View>
+              <View style={styles.cardDivider} />
+              <View style={styles.jobDetailsGrid}>
+                <View style={styles.jobDetailItem}>
+                  <Typography variant="caption" style={styles.cardInfoLabel}>
+                    İlan Başlığı
+                  </Typography>
+                  <Typography variant="body" style={styles.cardInfoValue}>
+                    {data.job_title ?? 'İlan başlığı yok'}
+                  </Typography>
+                </View>
+                <View style={styles.jobDetailItem}>
+                  <Typography variant="caption" style={styles.cardInfoLabel}>
+                    Hastane
+                  </Typography>
+                  <Typography variant="body" style={styles.cardInfoValue}>
+                    {data.hospital_name ?? 'Kurum bilgisi yok'}
+                  </Typography>
+                </View>
+                {data.city_name && (
+                  <View style={styles.jobDetailItem}>
+                    <Typography variant="caption" style={styles.cardInfoLabel}>
+                      Şehir
+                    </Typography>
+                    <Typography variant="body" style={styles.cardInfoValue}>
+                      {data.city_name}
+                    </Typography>
+                  </View>
+                )}
+                {data.specialty_name && (
+                  <View style={styles.jobDetailItem}>
+                    <Typography variant="caption" style={styles.cardInfoLabel}>
+                      Uzmanlık Alanı
+                    </Typography>
+                    <Typography variant="body" style={styles.cardInfoValue}>
+                      {data.specialty_name}
+                    </Typography>
+                    {data.subspecialty_name && (
+                      <Typography variant="caption" style={styles.subspecialtyText}>
+                        Yan Dal: {data.subspecialty_name}
+                      </Typography>
+                    )}
+                  </View>
+                )}
+                {data.employment_type && (
+                  <View style={styles.jobDetailItem}>
+                    <Typography variant="caption" style={styles.cardInfoLabel}>
+                      Çalışma Türü
+                    </Typography>
+                    <Typography variant="body" style={styles.cardInfoValue}>
+                      {data.employment_type}
+                    </Typography>
+                  </View>
+                )}
+                {data.min_experience_years !== null &&
+                  data.min_experience_years !== undefined && (
+                    <View style={styles.jobDetailItem}>
+                      <Typography variant="caption" style={styles.cardInfoLabel}>
+                        Min. Deneyim
+                      </Typography>
+                      <Typography variant="body" style={styles.cardInfoValue}>
+                        {data.min_experience_years} yıl
+                      </Typography>
+                    </View>
+                  )}
+              </View>
+            </Card>
+
+            {/* İş Tanımı */}
             {data.description && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -221,60 +241,14 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                   </Typography>
                 </View>
                 <Card variant="outlined" padding="lg">
-                  <Typography variant="body" style={styles.coverLetterText}>
+                  <Typography variant="body" style={styles.descriptionText}>
                     {data.description}
                   </Typography>
                 </Card>
               </View>
             )}
 
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIconContainer}>
-                  <Ionicons name="time" size={18} color={colors.primary[600]} />
-                </View>
-                <Typography variant="h3" style={styles.sectionTitle}>
-                  Başvuru Süreci
-                </Typography>
-              </View>
-              <Card variant="outlined" padding="lg">
-                <TimelineItem
-                  title="Başvuru Gönderildi"
-                  date={formatDayMonth(data.created_at)}
-                  description="Başvurunuz başarıyla iletildi"
-                  status="completed"
-                  icon={<Ionicons name="checkmark-circle" size={16} color={colors.background.primary} />}
-                />
-                <TimelineItem
-                  title={data.status || 'İnceleniyor'}
-                  date={formatDayMonth(data.updated_at || data.created_at)}
-                  description={
-                    data.status?.toLowerCase() === 'kabul edildi'
-                      ? 'Tebrikler! Başvurunuz kabul edildi'
-                      : data.status?.toLowerCase() === 'red edildi'
-                      ? 'Başvurunuz değerlendirildi'
-                      : 'Başvurunuz inceleniyor'
-                  }
-                  status={
-                    data.status?.toLowerCase() === 'kabul edildi' ||
-                    data.status?.toLowerCase() === 'red edildi'
-                      ? 'completed'
-                      : 'current'
-                  }
-                  icon={
-                    data.status?.toLowerCase() === 'kabul edildi' ? (
-                      <Ionicons name="checkmark-circle" size={16} color={colors.background.primary} />
-                    ) : data.status?.toLowerCase() === 'red edildi' ? (
-                      <Ionicons name="close-circle" size={16} color={colors.background.primary} />
-                    ) : (
-                      <Ionicons name="time" size={16} color={colors.background.primary} />
-                    )
-                  }
-                  isLast
-                />
-              </Card>
-            </View>
-
+            {/* Ön Yazı */}
             {data.cover_letter && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
@@ -282,7 +256,7 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
                     <Ionicons name="document-text" size={18} color={colors.primary[600]} />
                   </View>
                   <Typography variant="h3" style={styles.sectionTitle}>
-                    Ön Yazınız
+                    Ön Yazı
                   </Typography>
                 </View>
                 <Card variant="outlined" padding="lg">
@@ -293,59 +267,12 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               </View>
             )}
 
-            {(data.hospital_address || data.hospital_phone || data.hospital_email || data.hospital_about) && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <View style={styles.sectionIconContainer}>
-                    <Ionicons name="business" size={18} color={colors.primary[600]} />
-                  </View>
-                  <Typography variant="h3" style={styles.sectionTitle}>
-                    Hastane Bilgileri
-                  </Typography>
-                </View>
-                <Card variant="outlined" padding="lg">
-                  {data.hospital_about && (
-                    <Typography variant="body" style={styles.hospitalAboutText}>
-                      {data.hospital_about}
-                    </Typography>
-                  )}
-                  {(data.hospital_address || data.hospital_phone || data.hospital_email) && (
-                    <View style={{ gap: spacing.sm }}>
-                      {data.hospital_address && (
-                        <View style={styles.hospitalContactRow}>
-                          <Ionicons name="location" size={14} color={colors.text.secondary} />
-                          <Typography variant="caption" style={styles.hospitalContactText}>
-                            {data.hospital_address}
-                          </Typography>
-                        </View>
-                      )}
-                      {data.hospital_phone && (
-                        <View style={styles.hospitalContactRow}>
-                          <Ionicons name="call" size={14} color={colors.text.secondary} />
-                          <Typography variant="caption" style={styles.hospitalContactText}>
-                            {data.hospital_phone}
-                          </Typography>
-                        </View>
-                      )}
-                      {data.hospital_email && (
-                        <View style={styles.hospitalContactRow}>
-                          <Ionicons name="mail" size={14} color={colors.text.secondary} />
-                          <Typography variant="caption" style={styles.hospitalContactText}>
-                            {data.hospital_email}
-                          </Typography>
-                        </View>
-                      )}
-                    </View>
-                  )}
-                </Card>
-              </View>
-            )}
-
+            {/* Hastane Notu - Dinamik olarak en altta görünür (hastane işlem yaptığında) */}
             {data.notes && (
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                  <View style={[styles.sectionIconContainer, { backgroundColor: colors.warning[50] }]}>
-                    <Ionicons name="alert-circle" size={18} color={colors.warning[600]} />
+                  <View style={[styles.sectionIconContainer, { backgroundColor: colors.primary[50] }]}>
+                    <Ionicons name="checkmark-circle" size={18} color={colors.primary[600]} />
                   </View>
                   <Typography variant="h3" style={styles.sectionTitle}>
                     Hastane Notu
@@ -362,7 +289,7 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
             {canWithdraw && (
               <Button
                 label="Başvuruyu Geri Çek"
-                variant="outline"
+                variant="destructive"
                 onPress={handleWithdrawPress}
                 fullWidth
                 size="lg"
@@ -420,55 +347,46 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
-  jobInfoCard: {
-    marginTop: spacing.md,
+  infoCard: {
+    marginBottom: spacing.md,
   },
-  jobInfoHeader: {
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
-  jobIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  cardIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
   },
-  jobTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+  cardTitle: {
+    fontWeight: '600',
     color: colors.text.primary,
-    marginBottom: spacing.xs,
+    fontSize: 16,
   },
-  hospitalName: {
-    color: colors.text.secondary,
-    fontSize: 14,
-  },
-  cityText: {
-    color: colors.text.secondary,
-    fontSize: 12,
-    marginTop: spacing.xs,
-  },
-  modalDivider: {
+  cardDivider: {
     height: 1,
-    backgroundColor: colors.neutral[100],
-    marginVertical: spacing.md,
+    backgroundColor: colors.border.light,
+    marginBottom: spacing.md,
   },
-  modalInfoRow: {
+  cardInfoRow: {
     flexDirection: 'row',
     gap: spacing.lg,
   },
-  modalInfoItem: {
+  cardInfoItem: {
     flex: 1,
     gap: spacing.xs,
   },
-  modalInfoLabel: {
+  cardInfoLabel: {
     color: colors.text.secondary,
     fontSize: 11,
   },
-  modalInfoValue: {
+  cardInfoValue: {
     color: colors.text.primary,
     fontSize: 14,
     fontWeight: '600',
@@ -508,28 +426,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text.primary,
   },
+  descriptionText: {
+    color: colors.text.primary,
+    lineHeight: 22,
+  },
   coverLetterText: {
     color: colors.text.primary,
     lineHeight: 22,
   },
-  hospitalAboutText: {
-    color: colors.text.primary,
-    lineHeight: 22,
-    marginBottom: spacing.md,
-  },
-  hospitalContactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  hospitalContactText: {
-    color: colors.text.secondary,
-    fontSize: 12,
-    flex: 1,
-  },
   notesCard: {
-    backgroundColor: colors.warning[50],
-    borderColor: colors.warning[200],
+    backgroundColor: colors.primary[50],
+    borderColor: colors.primary[200],
   },
   notesText: {
     color: colors.text.primary,

@@ -55,6 +55,7 @@ const toListItem = (job = {}) => ({
   city_name: job.city_name || job.city || null,
   specialty_id: job.specialty_id || null,
   specialty: job.specialty_name || job.specialty || null,
+  subspecialty_name: job.subspecialty_name || null,
   salary_range: job.salary_range || formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency),
   work_type: job.work_type || job.employment_type || null,
   created_at: toUTC(job.created_at),

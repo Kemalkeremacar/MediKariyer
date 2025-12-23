@@ -4,6 +4,7 @@ import { queryKeys } from '@/api/queryKeys';
 
 export interface ApplicationFilters {
   status?: string;
+  keyword?: string;
   limit?: number;
 }
 
@@ -17,6 +18,7 @@ export const useApplications = (filters: ApplicationFilters = {}, enabled: boole
         page,
         limit: filters.limit || 10,
         status: filters.status || undefined,
+        keyword: filters.keyword || undefined,
       });
     },
     getNextPageParam: (lastPage) => {
@@ -32,5 +34,8 @@ export const useApplications = (filters: ApplicationFilters = {}, enabled: boole
     enabled,
     staleTime: 1000 * 60 * 3, // 3 dakika cache (başvurular daha dinamik)
     gcTime: 1000 * 60 * 10, // 10 dakika garbage collection
+    // Debounce için: queryKey değiştiğinde hemen tetikleme, biraz bekle
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };

@@ -8,7 +8,6 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Button } from '@/components/ui/Button';
 import { BackButton } from '@/components/ui/BackButton';
-import { Avatar } from '@/components/ui/Avatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useToast } from '@/providers/ToastProvider';
@@ -20,9 +19,9 @@ import { Screen } from '@/components/layout/Screen';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
-import { formatRelativeTime } from '@/utils/date';
+import { Modal } from '@/components/ui/Modal';
+import { formatDate } from '@/utils/date';
 import { handleApiError } from '@/utils/errorHandler';
-import { getFullImageUrl } from '@/utils/imageUrl';
 
 type Props = NativeStackScreenProps<JobsStackParamList, 'JobDetail'>;
 
@@ -30,7 +29,17 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   const { id } = route.params;
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
+
+  // Kelime sayısını hesapla
+  const getWordCount = (text: string) => {
+    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+  };
+
+  const MAX_WORDS = 200;
+  const wordCount = getWordCount(coverLetter);
+  const maxLength = 1200; // 200 kelime için güvenli limit (ortalama 6 karakter/kelime)
 
   const {
     data: job,
@@ -51,7 +60,8 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
     onSuccess: () => {
       // Success haptic feedback for successful application
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // Başarılı başvuru sonrası coverLetter'ı temizle
+      // Başarılı başvuru sonrası modal'ı kapat ve coverLetter'ı temizle
+      setShowApplicationModal(false);
       setCoverLetter('');
       // Cache'i güncelle (butonu "Başvuruldu" yapmak için)
       queryClient.invalidateQueries({ queryKey: ['jobDetail', id] });
@@ -64,6 +74,19 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
       handleApiError(error, '/jobs/apply', showToast);
     },
   });
+
+  const handleOpenApplicationModal = () => {
+    setShowApplicationModal(true);
+  };
+
+  const handleCloseApplicationModal = () => {
+    setShowApplicationModal(false);
+    setCoverLetter('');
+  };
+
+  const handleApplicationSubmit = () => {
+    applyMutation.mutate();
+  };
 
   if (isLoading) {
     return (
@@ -99,293 +122,292 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Back Button */}
-        <View style={styles.backButtonContainer}>
+        {/* Header - Back Button ve Başlık */}
+        <View style={styles.headerContainer}>
           <BackButton />
+          <View style={styles.headerContent}>
+            <Typography variant="h2" style={styles.headerTitle}>
+              {job.title ?? 'İş İlanı'}
+            </Typography>
+            <View style={styles.headerSubtitle}>
+              <Ionicons name="briefcase" size={16} color={colors.text.secondary} />
+              <Typography variant="body" style={styles.headerSubtitleText}>
+                {job.hospital_name ?? 'Kurum bilgisi yok'} - {job.city_name ?? ''}
+              </Typography>
+            </View>
+          </View>
         </View>
-        {/* Header Card */}
-        <Card variant="elevated" padding="2xl" style={styles.headerCard}>
-          <View style={{ gap: spacing.lg }}>
-            {/* Hospital Logo & Title */}
-            <View style={styles.row}>
-              <Avatar
-                size="lg"
-                source={(() => {
-                  // Logo işleme mantığı: Base64 → direkt kullan, Path → null (fallback)
-                  if (!job.hospital_logo) return undefined;
-                  if (job.hospital_logo.startsWith('data:image/')) return job.hospital_logo;
-                  if (job.hospital_logo.startsWith('http://') || job.hospital_logo.startsWith('https://')) {
-                    return job.hospital_logo;
-                  }
-                  // Path formatındaki logolar (logo.png) → null, fallback göster
-                  return undefined;
-                })()}
-                initials={job.hospital_name?.substring(0, 2).toUpperCase() || '??'}
-              />
-              <View style={{ flex: 1, gap: spacing.xs }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-                  <Typography variant="h2" style={styles.jobTitle}>
-                    {job.title ?? 'İş İlanı'}
+
+        {/* İlan Bilgileri - Web'deki sıralamaya göre ilk */}
+        {(job.specialty || job.subspecialty_name || job.work_type || job.min_experience_years || job.city_name) && (
+          <Card variant="elevated" padding="2xl" style={styles.contentCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <Ionicons name="briefcase" size={20} color={colors.primary[600]} />
+              </View>
+              <Typography variant="h3" style={styles.sectionTitle}>
+                İlan Bilgileri
+              </Typography>
+            </View>
+            <View style={styles.jobInfoGrid}>
+              {job.specialty && (
+                <View style={styles.jobInfoItem}>
+                  <Typography variant="caption" style={styles.jobInfoLabel}>
+                    Uzmanlık Alanı
+                  </Typography>
+                  <Typography variant="body" style={styles.jobInfoValue}>
+                    {job.specialty}
+                  </Typography>
+                  {job.subspecialty_name && (
+                    <Typography variant="caption" style={styles.subspecialtyLabel}>
+                      Yan Dal: {job.subspecialty_name}
+                    </Typography>
+                  )}
+                </View>
+              )}
+              {job.work_type && (
+                <View style={styles.jobInfoItem}>
+                  <Typography variant="caption" style={styles.jobInfoLabel}>
+                    Çalışma Türü
+                  </Typography>
+                  <Typography variant="body" style={styles.jobInfoValue}>
+                    {job.work_type}
                   </Typography>
                 </View>
-                <Typography variant="body" style={styles.hospitalName}>
-                  {job.hospital_name ?? 'Kurum bilgisi yok'}
-                </Typography>
-                <Typography variant="caption" style={styles.postedDate}>
-                  {formatRelativeTime(job.created_at, { fallback: 'Tarih belirtilmemiş' })}
-                </Typography>
-              </View>
-            </View>
-
-            {/* Info Grid */}
-            <View style={styles.infoGrid}>
-              <View style={styles.infoCard}>
-                <View style={styles.infoIconContainer}>
-                  <Ionicons name="location" size={18} color={colors.primary[600]} />
-                </View>
-                <Typography variant="caption" style={styles.infoLabel}>
-                  Lokasyon
-                </Typography>
-                <Typography variant="body" style={styles.infoValue}>
-                  {job.city_name ?? '-'}
-                </Typography>
-              </View>
-
-              <View style={styles.infoCard}>
-                <View style={styles.infoIconContainer}>
-                  <Ionicons name="briefcase" size={18} color={colors.primary[600]} />
-                </View>
-                <Typography variant="caption" style={styles.infoLabel}>
-                  Çalışma Tipi
-                </Typography>
-                <Typography variant="body" style={styles.infoValue}>
-                  {job.work_type ?? '-'}
-                </Typography>
-              </View>
-
-              <View style={styles.infoCard}>
-                <View style={styles.infoIconContainer}>
-                  <Ionicons name="calendar" size={18} color={colors.primary[600]} />
-                </View>
-                <Typography variant="caption" style={styles.infoLabel}>
-                  Yayınlanma
-                </Typography>
-                <Typography variant="body" style={styles.infoValue}>
-                  {formatRelativeTime(job.created_at, { fallback: 'Tarih belirtilmemiş' })}
-                </Typography>
-              </View>
-
+              )}
               {job.min_experience_years !== null && job.min_experience_years !== undefined && (
-                <View style={styles.infoCard}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons name="people" size={18} color={colors.primary[600]} />
-                  </View>
-                  <Typography variant="caption" style={styles.infoLabel}>
+                <View style={styles.jobInfoItem}>
+                  <Typography variant="caption" style={styles.jobInfoLabel}>
                     Min. Deneyim
                   </Typography>
-                  <Typography variant="body" style={styles.infoValue}>
+                  <Typography variant="body" style={styles.jobInfoValue}>
                     {job.min_experience_years} yıl
                   </Typography>
                 </View>
               )}
-
-              {job.salary_range && (
-                <View style={styles.infoCard}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons name="cash" size={18} color={colors.success[600]} />
-                  </View>
-                  <Typography variant="caption" style={styles.infoLabel}>
-                    Maaş Aralığı
+              {job.city_name && (
+                <View style={styles.jobInfoItem}>
+                  <Typography variant="caption" style={styles.jobInfoLabel}>
+                    Şehir
                   </Typography>
-                  <Typography variant="body" style={styles.salaryInfoValue}>
-                    {job.salary_range}
+                  <Typography variant="body" style={styles.jobInfoValue}>
+                    {job.city_name}
                   </Typography>
                 </View>
               )}
             </View>
+          </Card>
+        )}
 
-            {/* Specialty Info */}
-            {(job.specialty || job.subspecialty_name) && (
-              <View style={styles.specialtyContainer}>
-                {job.specialty && (
-                  <View style={styles.specialtyBadge}>
-                    <Typography variant="caption" style={styles.specialtyText}>
-                      {job.specialty}
-                    </Typography>
-                  </View>
-                )}
-                {job.subspecialty_name && (
-                  <View style={[styles.specialtyBadge, styles.subspecialtyBadge]}>
-                    <Typography variant="caption" style={styles.subspecialtyText}>
-                      {job.subspecialty_name}
-                    </Typography>
-                  </View>
-                )}
+        {/* Hastane Bilgileri - Web'deki sıralamaya göre ikinci */}
+        {(job.hospital_name || job.hospital_address || job.hospital_phone || job.hospital_email || job.hospital_website || job.city_name) && (
+          <Card variant="elevated" padding="2xl" style={styles.contentCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <Ionicons name="business" size={20} color={colors.primary[600]} />
               </View>
-            )}
-
-            {/* Applied Badge */}
-            {job.is_applied && (
-              <View style={styles.appliedBadgeInline}>
-                <Ionicons name="checkmark-circle" size={18} color={colors.success[600]} />
-                <Typography variant="body" style={styles.appliedTextInline}>
-                  Başvuruldu
-                </Typography>
-              </View>
-            )}
-          </View>
-        </Card>
-
-        {/* Hastane Bilgileri */}
-        {(job.hospital_address || job.hospital_phone || job.hospital_email || job.hospital_website || job.hospital_about) && (
-          <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              Hastane Bilgileri
-            </Typography>
-            <View style={{ gap: spacing.md }}>
-              {job.hospital_about && (
-                <View>
-                  <Typography variant="body" style={styles.hospitalAbout}>
-                    {job.hospital_about}
+              <Typography variant="h3" style={styles.sectionTitle}>
+                Hastane Bilgileri
+              </Typography>
+            </View>
+            <View style={styles.hospitalInfoGrid}>
+              {job.hospital_name && (
+                <View style={styles.hospitalInfoItem}>
+                  <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                    Hastane Adı
                   </Typography>
-                  <View style={styles.divider} />
+                  <Typography variant="body" style={styles.hospitalInfoValue}>
+                    {job.hospital_name}
+                  </Typography>
                 </View>
               )}
               {job.hospital_address && (
-                <View style={styles.hospitalInfoRow}>
-                  <Ionicons name="location" size={16} color={colors.text.secondary} />
-                  <View style={{ flex: 1 }}>
-                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
-                      Adres
-                    </Typography>
-                    <Typography variant="body" style={styles.hospitalInfoValue}>
-                      {job.hospital_address}
-                    </Typography>
-                  </View>
+                <View style={styles.hospitalInfoItem}>
+                  <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                    Adres
+                  </Typography>
+                  <Typography variant="body" style={styles.hospitalInfoValue}>
+                    {job.hospital_address}
+                  </Typography>
                 </View>
               )}
               {job.hospital_phone && (
-                <View style={styles.hospitalInfoRow}>
-                  <Ionicons name="call" size={16} color={colors.text.secondary} />
-                  <View style={{ flex: 1 }}>
-                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
-                      Telefon
-                    </Typography>
-                    <Typography variant="body" style={styles.hospitalInfoValue}>
-                      {job.hospital_phone}
-                    </Typography>
-                  </View>
-                </View>
-              )}
-              {job.hospital_email && (
-                <View style={styles.hospitalInfoRow}>
-                  <Ionicons name="mail" size={16} color={colors.text.secondary} />
-                  <View style={{ flex: 1 }}>
-                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
-                      E-posta
-                    </Typography>
-                    <Typography variant="body" style={styles.hospitalInfoValue}>
-                      {job.hospital_email}
-                    </Typography>
-                  </View>
+                <View style={styles.hospitalInfoItem}>
+                  <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                    Telefon
+                  </Typography>
+                  <Typography variant="body" style={styles.hospitalInfoValue}>
+                    {job.hospital_phone}
+                  </Typography>
                 </View>
               )}
               {job.hospital_website && (
-                <View style={styles.hospitalInfoRow}>
-                  <Ionicons name="globe" size={16} color={colors.text.secondary} />
-                  <View style={{ flex: 1 }}>
-                    <Typography variant="caption" style={styles.hospitalInfoLabel}>
-                      Website
-                    </Typography>
-                    <Typography variant="body" style={styles.linkText}>
-                      {job.hospital_website}
-                    </Typography>
-                  </View>
+                <View style={styles.hospitalInfoItem}>
+                  <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                    Website
+                  </Typography>
+                  <Typography variant="body" style={styles.hospitalInfoValueLink}>
+                    {job.hospital_website}
+                  </Typography>
                 </View>
               )}
             </View>
           </Card>
         )}
 
-        {/* İş Tanımı */}
+        {/* İş Tanımı - Web'deki sıralamaya göre üçüncü */}
         {job.description && (
-          <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              İş Tanımı
-            </Typography>
-            <Typography variant="body" style={styles.descriptionText}>
-              {job.description}
-            </Typography>
-          </Card>
-        )}
-
-        {/* Gereksinimler */}
-        {job.requirements && (
-          <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              Aranan Nitelikler
-            </Typography>
-            <Typography variant="body" style={styles.descriptionText}>
-              {job.requirements}
-            </Typography>
-          </Card>
-        )}
-
-        {/* Avantajlar */}
-        {job.benefits && (
-          <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              Avantajlar
-            </Typography>
-            <Typography variant="body" style={styles.descriptionText}>
-              {job.benefits}
-            </Typography>
-          </Card>
-        )}
-
-        {/* Ön Yazı (Başvuru için) */}
-        {!job.is_applied && (
-          <Card padding="2xl" style={styles.contentCard}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              Ön Yazı (Opsiyonel)
-            </Typography>
-            <Input
-              multiline
-              numberOfLines={4}
-              placeholder="Kendinizden bahsetmek ister misiniz?"
-              value={coverLetter}
-              onChangeText={setCoverLetter}
-              containerStyle={styles.coverLetterInput}
-            />
-          </Card>
-        )}
-
-        {/* Başvuruldu Badge */}
-        {job.is_applied && (
-          <Card padding="2xl" style={styles.contentCard}>
-            <View style={styles.appliedBadge}>
-              <Ionicons name="checkmark-circle" size={20} color={colors.success[600]} />
-              <Typography variant="h3" style={styles.appliedText}>
-                Bu ilana başvurdunuz
+          <Card variant="elevated" padding="2xl" style={styles.contentCard}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionIconContainer}>
+                <Ionicons name="document-text" size={20} color={colors.primary[600]} />
+              </View>
+              <Typography variant="h3" style={styles.sectionTitle}>
+                İş Tanımı
+              </Typography>
+            </View>
+            <View style={styles.descriptionBox}>
+              <Typography variant="body" style={styles.descriptionText}>
+                {job.description}
               </Typography>
             </View>
           </Card>
         )}
 
-        {/* Başvur Butonu */}
-        {!job.is_applied && (
-          <Button
-            label={applyMutation.isPending ? 'İşleniyor...' : 'Hemen Başvur'}
-            size="lg"
-            variant="primary"
-            onPress={() => applyMutation.mutate()}
-            loading={applyMutation.isPending}
-            disabled={job.is_applied || applyMutation.isPending}
-            fullWidth
-            style={styles.applyButton}
-          />
+        {/* İlan Tarihi */}
+        {job.created_at && (
+          <View style={styles.dateCard}>
+            <View style={styles.dateRow}>
+              <Ionicons name="time" size={18} color={colors.text.secondary} />
+              <Typography variant="body" style={styles.dateText}>
+                İlan Tarihi: {formatDate(job.created_at)}
+              </Typography>
+            </View>
+          </View>
+        )}
+
+        {/* Başvurunuz Var Banner */}
+        {job.is_applied && (
+          <View style={styles.infoBanner}>
+            <Ionicons name="checkmark-circle" size={20} color={colors.success[600]} />
+            <Typography variant="body" style={styles.infoBannerText}>
+              Bu ilana zaten bir başvurunuz var. Detayları Başvurularım sayfasından takip edebilirsiniz.
+            </Typography>
+          </View>
         )}
       </ScrollView>
+
+      {/* Alt Butonlar */}
+      <View style={styles.bottomButtons}>
+        <Button
+          label="Geri"
+          variant="outline"
+          onPress={() => navigation.goBack()}
+          style={styles.bottomBackButton}
+        />
+        {job.is_applied ? (
+          <Button
+            variant="secondary"
+            onPress={() => {}}
+            disabled={true}
+            style={styles.bottomAppliedButton}
+          >
+            <View style={styles.buttonContentContainer}>
+              <Ionicons name="paper-plane" size={18} color={colors.text.inverse} />
+              <Typography variant="body" style={styles.buttonText}>
+                Başvurunuz Bulunuyor
+              </Typography>
+            </View>
+          </Button>
+        ) : (
+          <Button
+            label="Hemen Başvur"
+            variant="primary"
+            onPress={handleOpenApplicationModal}
+            style={styles.bottomApplyButton}
+            size="lg"
+          />
+        )}
+      </View>
+
+      {/* Başvuru Modal */}
+      {job && (
+        <Modal
+          visible={showApplicationModal}
+          onClose={handleCloseApplicationModal}
+          title="Başvuru Yap"
+          size="md"
+          dismissable={true}
+        >
+          <View style={styles.modalContent}>
+            {/* İlan Bilgisi */}
+            <View style={styles.modalJobInfo}>
+              <View style={styles.modalJobInfoRow}>
+                <Ionicons name="briefcase" size={18} color={colors.primary[600]} />
+                <Typography variant="body" style={styles.modalJobTitle} numberOfLines={1}>
+                  {job.title || 'İş İlanı'}
+                </Typography>
+              </View>
+              <Typography variant="caption" style={styles.modalHospitalName} numberOfLines={1}>
+                {job.hospital_name || 'Kurum bilgisi yok'}
+              </Typography>
+            </View>
+
+          {/* Ön Yazı Input */}
+          <View style={styles.modalInputContainer}>
+            <Typography variant="body" style={styles.modalInputLabel}>
+              Ön Yazı <Typography variant="caption" style={styles.optionalText}>(İsteğe bağlı)</Typography>
+            </Typography>
+            <Input
+              multiline
+              numberOfLines={6}
+              placeholder="Kendinizi tanıtın ve neden bu pozisyon için uygun olduğunuzu açıklayın..."
+              value={coverLetter}
+              onChangeText={(text) => {
+                const words = getWordCount(text);
+                if (words <= MAX_WORDS || text.length <= coverLetter.length) {
+                  setCoverLetter(text);
+                }
+              }}
+              containerStyle={styles.modalCoverLetterInput}
+              maxLength={maxLength}
+            />
+            <Typography 
+              variant="caption" 
+              style={wordCount > MAX_WORDS ? styles.characterCountError : styles.characterCount}
+            >
+              {wordCount}/{MAX_WORDS} kelime
+            </Typography>
+          </View>
+
+          {/* Bilgi Mesajı */}
+          <View style={styles.modalInfoBox}>
+            <Ionicons name="information-circle" size={16} color={colors.primary[600]} />
+            <Typography variant="caption" style={styles.modalInfoText}>
+              Profil bilgileriniz ve CV'niz otomatik olarak gönderilecektir.
+            </Typography>
+          </View>
+
+          {/* Butonlar */}
+          <View style={styles.modalButtons}>
+            <Button
+              label="İptal"
+              variant="secondary"
+              onPress={handleCloseApplicationModal}
+              style={styles.modalCancelButton}
+            />
+            <Button
+              label={applyMutation.isPending ? 'İşleniyor...' : 'Başvur'}
+              variant="primary"
+              onPress={handleApplicationSubmit}
+              loading={applyMutation.isPending}
+              disabled={applyMutation.isPending}
+              style={styles.modalSubmitButton}
+            />
+          </View>
+        </View>
+      </Modal>
+      )}
     </Screen>
   );
 };
@@ -402,6 +424,29 @@ const styles = StyleSheet.create({
   backButtonContainer: {
     marginBottom: spacing.md,
     paddingHorizontal: spacing.sm, // BackButton için padding
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.sm,
+  },
+  headerContent: {
+    flex: 1,
+    gap: spacing.xs,
+  },
+  headerTitle: {
+    color: colors.text.primary,
+    fontWeight: '600',
+  },
+  headerSubtitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  headerSubtitleText: {
+    color: colors.text.secondary,
   },
   jobTitle: {
     fontSize: 20,
@@ -517,7 +562,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
-    paddingBottom: 100, // Bottom bar için boşluk
+    paddingBottom: spacing.xl, // Bottom buttons için boşluk
   },
   headerCard: {
     marginBottom: spacing.md,
@@ -600,5 +645,213 @@ const styles = StyleSheet.create({
   },
   applyButton: {
     marginTop: spacing.lg,
+  },
+  modalContent: {
+    gap: spacing.md,
+  },
+  modalJobInfo: {
+    paddingBottom: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  modalJobInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  modalJobTitle: {
+    flex: 1,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  modalHospitalName: {
+    color: colors.text.secondary,
+    marginLeft: 26, // Icon width + gap
+  },
+  modalInputContainer: {
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  modalInputLabel: {
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  optionalText: {
+    color: colors.text.secondary,
+    fontWeight: '400',
+  },
+  modalCoverLetterInput: {
+    minHeight: 100,
+    maxHeight: 120,
+  },
+  characterCount: {
+    textAlign: 'right',
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
+  },
+  characterCountError: {
+    textAlign: 'right',
+    color: colors.error[600],
+    marginTop: spacing.xs,
+  },
+  modalInfoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: colors.primary[50],
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary[200],
+    marginBottom: spacing.xs,
+  },
+  modalInfoText: {
+    flex: 1,
+    color: colors.primary[800],
+    lineHeight: 18,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.xs,
+  },
+  modalCancelButton: {
+    flex: 1,
+  },
+  modalSubmitButton: {
+    flex: 1,
+  },
+  // Web benzeri yeni stiller
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  sectionIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primary[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  descriptionBox: {
+    backgroundColor: colors.primary[50],
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.sm,
+  },
+  dateCard: {
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  dateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  dateText: {
+    color: colors.text.primary,
+  },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.success[50],
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.success[200],
+  },
+  infoBannerText: {
+    flex: 1,
+    color: colors.text.primary,
+    lineHeight: 20,
+  },
+  bottomButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.background.primary,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+  },
+  bottomBackButton: {
+    flex: 0.4, // Küçük buton
+  },
+  bottomAppliedButton: {
+    flex: 1.6, // Büyük buton
+    opacity: 0.6,
+    minHeight: 56, // Daha büyük yükseklik
+  },
+  bottomApplyButton: {
+    flex: 1.6, // Büyük buton
+    minHeight: 56, // Daha büyük yükseklik
+  },
+  buttonIconContainer: {
+    marginRight: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonContentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  buttonText: {
+    color: colors.text.inverse,
+    fontWeight: '600',
+  },
+  // İlan Bilgileri stilleri - Modern ve temiz
+  jobInfoGrid: {
+    gap: spacing.lg,
+    marginTop: spacing.md,
+  },
+  jobInfoItem: {
+    gap: spacing.xs,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
+  },
+  jobInfoLabel: {
+    color: colors.text.secondary,
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: spacing.xs,
+  },
+  jobInfoValue: {
+    color: colors.text.primary,
+    fontWeight: '600',
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  subspecialtyLabel: {
+    color: colors.primary[600],
+    fontSize: 13,
+    marginTop: spacing.xs,
+    fontWeight: '500',
+  },
+  // Hastane Bilgileri stilleri - Modern ve temiz
+  hospitalInfoGrid: {
+    gap: spacing.lg,
+    marginTop: spacing.md,
+  },
+  hospitalInfoItem: {
+    gap: spacing.xs,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
+  },
+  hospitalInfoValueLink: {
+    color: colors.primary[600],
+    fontSize: 15,
+    fontWeight: '500',
   },
 });

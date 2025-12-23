@@ -92,25 +92,29 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
   }
 
   if (filters.keyword) {
-    baseQuery.andWhere(function() {
-      this.where('j.title', 'like', `%${filters.keyword}%`)
-        .orWhere('hp.institution_name', 'like', `%${filters.keyword}%`)
-        .orWhere('c.name', 'like', `%${filters.keyword}%`)
-        .orWhere('s.name', 'like', `%${filters.keyword}%`);
-    });
+    const searchTerm = filters.keyword.trim();
+    if (searchTerm) {
+      baseQuery.andWhere(function() {
+        this.where('j.title', 'like', `%${searchTerm}%`)
+          .orWhere('hp.institution_name', 'like', `%${searchTerm}%`);
+      });
+    }
   }
 
   const dataQuery = baseQuery
     .clone()
+    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .select(
       'j.id',
       'j.title',
       'j.city_id',
       'j.specialty_id',
+      'j.subspecialty_id',
       'j.hospital_id',
       'j.employment_type',
       'c.name as city_name',
       's.name as specialty_name',
+      'ss.name as subspecialty_name',
       'hp.institution_name as hospital_name',
       'hp.logo as hospital_logo'
     )
@@ -119,7 +123,7 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
     .offset((currentPage - 1) * perPage);
 
   const [countResults, rows] = await Promise.all([
-    baseQuery.clone().clearSelect().clearOrder().count({ count: '*' }),
+    baseQuery.clone().clearSelect().clearOrder().count('* as count'),
     dataQuery
   ]);
   
@@ -173,44 +177,45 @@ const getJobDetail = async (userId, jobId) => {
   let jobQuery;
   try {
     jobQuery = await db('jobs as j')
-    .leftJoin('cities as c', 'j.city_id', 'c.id')
-    .leftJoin('specialties as s', 'j.specialty_id', 's.id')
-    .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
-    .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
-    .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id') // Hastane kullanıcı bilgisi
-    .select(
-      'j.id',
-      'j.title',
-      'j.description',
-      'j.city_id',
-      'j.specialty_id',
-      'j.subspecialty_id',
-      'j.hospital_id',
-      'j.employment_type',
-      'j.min_experience_years',
-      'c.name as city_name',
-      's.name as specialty_name',
-      'ss.name as subspecialty_name',
-      'hp.institution_name as hospital_name',
-      'hp.logo as hospital_logo',
-      'hp.address as hospital_address',
-      'hp.phone as hospital_phone',
-      'hp.email as hospital_email',
-      'hp.website as hospital_website',
-      'hp.about as hospital_about'
-    )
-    .where('j.id', jobId)
-    .whereNull('j.deleted_at')
-    .where('j.status_id', 3) // Sadece onaylanmış ilanları göster
-    .where('hospital_users.is_active', true); // Pasif hastanelerin ilanlarını gösterme (web ile uyumlu)
+      .leftJoin('cities as c', 'j.city_id', 'c.id')
+      .leftJoin('specialties as s', 'j.specialty_id', 's.id')
+      .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
+      .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+      .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id') // Hastane kullanıcı bilgisi
+      .select(
+        'j.id',
+        'j.title',
+        'j.description',
+        'j.city_id',
+        'j.specialty_id',
+        'j.subspecialty_id',
+        'j.hospital_id',
+        'j.employment_type',
+        'j.min_experience_years',
+        'c.name as city_name',
+        's.name as specialty_name',
+        'ss.name as subspecialty_name',
+        'hp.institution_name as hospital_name',
+        'hp.logo as hospital_logo',
+        'hp.address as hospital_address',
+        'hp.phone as hospital_phone',
+        'hp.email as hospital_email',
+        'hp.website as hospital_website',
+        'hp.about as hospital_about'
+      )
+      .where('j.id', jobId)
+      .whereNull('j.deleted_at')
+      .where('j.status_id', 3) // Sadece onaylanmış ilanları göster
+      .where('hospital_users.is_active', true); // Pasif hastanelerin ilanlarını gösterme (web ile uyumlu)
   } catch (error) {
     logger.error('❌ Job detail query error:', error.message);
+    logger.error('❌ Job detail query error stack:', error.stack);
     logger.error('Error details:', {
       code: error.code,
       number: error.number,
-      message: error.message
+      message: error.message,
+      jobId
     });
-    console.error('FULL JOB ERROR:', error);
     throw error;
   }
 

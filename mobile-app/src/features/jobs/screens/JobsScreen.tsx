@@ -8,14 +8,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import type { JobsStackNavigationProp } from '@/navigation/types';
-import { useDebounce } from '@/hooks/useDebounce';
+import { useSearch } from '@/hooks/useSearch';
 import { useJobs } from '../hooks/useJobs';
 import { colors, spacing } from '@/theme';
-import { SEARCH_DEBOUNCE_DELAY, PAGINATION } from '@/config/constants';
+import { PAGINATION } from '@/config/constants';
 import { Typography } from '@/components/ui/Typography';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { IconButton } from '@/components/ui/IconButton';
@@ -36,10 +37,29 @@ export const JobsScreen = () => {
   const [filters, setFilters] = useState<JobFilters>({});
   const [showFilterSheet, setShowFilterSheet] = useState(false);
 
-  // Debounce search query - Her tuş vuruşunda API çağrısı yapmamak için
-  const debouncedSearchQuery = useDebounce(searchQuery, SEARCH_DEBOUNCE_DELAY);
+  // Search handlers - useCallback ile optimize et, imleç kaybolmasını önle
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
+  }, []);
+
+  const handleSearchClear = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
+  // Global search hook - Modern, kullanıcı dostu arama
+  const { debouncedQuery, clientQuery, shouldFetch, isSearching: isSearchingDebounce } = useSearch(searchQuery, { minLength: 2 });
+
+  // Query params - useMemo ile normalize et, gereksiz re-render'ları önle
+  const queryParams = useMemo(() => ({
+    keyword: shouldFetch ? debouncedQuery : undefined,
+    specialty_id: filters.specialtyId,
+    city_id: filters.cityId,
+    employment_type: filters.employmentType,
+    limit: PAGINATION.JOBS_PAGE_SIZE,
+  }), [shouldFetch, debouncedQuery, filters.specialtyId, filters.cityId, filters.employmentType]);
 
   // Query with filters - useJobs hook'u kullanılıyor
+  // Sadece debounced query değiştiğinde API çağrısı yap
   const {
     data,
     isLoading,
@@ -49,23 +69,43 @@ export const JobsScreen = () => {
     isFetchingNextPage,
     refetch,
     isRefetching,
-  } = useJobs({
-    keyword: debouncedSearchQuery || undefined,
-    specialty_id: filters.specialtyId,
-    city_id: filters.cityId,
-    employment_type: filters.employmentType,
-    limit: PAGINATION.JOBS_PAGE_SIZE,
-  });
+  } = useJobs(queryParams);
 
   // Get total count from pagination
   const totalCount = useMemo(() => {
     return data?.pages?.[0]?.pagination?.total ?? 0;
   }, [data]);
 
-  const jobs = useMemo(() => {
+  // Backend'den gelen tüm işler
+  const allJobs = useMemo(() => {
     if (!data?.pages) return [];
     return data.pages.flatMap((page) => page.data);
   }, [data]);
+
+  // Client-side filtreleme - Yazarken sonuçlar kaybolmaz, sadece filtrelenir
+  const jobs = useMemo(() => {
+    // Backend'den veri yoksa boş döndür
+    if (allJobs.length === 0) return [];
+    
+    // Client-side arama sorgusu yoksa tüm sonuçları göster
+    if (!clientQuery) return allJobs;
+    
+    // Client-side filtreleme yap (yazarken anında filtrele)
+    const lowerQuery = clientQuery.toLowerCase();
+    return allJobs.filter((job) => {
+      const title = job.title?.toLowerCase() || '';
+      const hospital = job.hospital_name?.toLowerCase() || '';
+      const city = job.city_name?.toLowerCase() || '';
+      const specialty = job.specialty?.toLowerCase() || '';
+      
+      return (
+        title.includes(lowerQuery) ||
+        hospital.includes(lowerQuery) ||
+        city.includes(lowerQuery) ||
+        specialty.includes(lowerQuery)
+      );
+    });
+  }, [allJobs, clientQuery]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -109,10 +149,10 @@ export const JobsScreen = () => {
     return [filters.specialtyId, filters.cityId, filters.employmentType].filter(Boolean).length;
   }, [filters]);
 
-  const hasActiveFilters = activeFilterCount > 0 || debouncedSearchQuery.length > 0;
+  const hasActiveFilters = activeFilterCount > 0 || clientQuery.length > 0;
   
-  // Arama yapılıyor mu kontrolü
-  const isSearching = searchQuery !== debouncedSearchQuery;
+  // Arama yapılıyor mu kontrolü (backend isteği için)
+  const isSearching = isSearchingDebounce;
 
   const renderListHeader = () => (
     <>
@@ -129,10 +169,11 @@ export const JobsScreen = () => {
       <View style={styles.searchContainer}>
         <SearchBar
           value={searchQuery}
-          onChangeText={setSearchQuery}
+          onChangeText={handleSearchChange}
           placeholder="Hastane, şehir veya branş ara..."
-          onClear={() => setSearchQuery('')}
+          onClear={handleSearchClear}
           style={styles.searchBar}
+          isSearching={isSearching}
         />
         <View style={styles.filterButtonWrapper}>
           {isSearching && (
@@ -215,10 +256,14 @@ export const JobsScreen = () => {
           contentContainerStyle={styles.listContent}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.5}
-          refreshing={isRefetching}
-          onRefresh={refetch}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={colors.primary[600]}
+            />
+          }
           showsVerticalScrollIndicator={false}
-          estimatedItemSize={140}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon}>

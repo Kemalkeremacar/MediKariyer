@@ -19,7 +19,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export interface ButtonProps {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient' | 'destructive';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
@@ -90,6 +90,9 @@ export const Button: React.FC<ButtonProps> = ({
     if (variant === 'secondary') {
       return ['#38BDF8', '#0EA5E9']; // Sky blue gradient
     }
+    if (variant === 'destructive') {
+      return ['#EF4444', '#DC2626']; // Red gradient
+    }
     return ['transparent', 'transparent'];
   };
 
@@ -97,7 +100,13 @@ export const Button: React.FC<ButtonProps> = ({
     <>
       {loading ? (
         <ActivityIndicator
-          color={variant === 'outline' || variant === 'ghost' ? theme.colors.primary[600] : theme.colors.text.inverse}
+          color={
+            variant === 'outline' || variant === 'ghost'
+              ? theme.colors.primary[600]
+              : variant === 'destructive'
+              ? theme.colors.text.inverse
+              : theme.colors.text.inverse
+          }
         />
       ) : (
         <Text
@@ -117,7 +126,7 @@ export const Button: React.FC<ButtonProps> = ({
     </>
   );
 
-  if (variant === 'primary' || variant === 'secondary' || variant === 'gradient') {
+  if (variant === 'primary' || variant === 'secondary' || variant === 'gradient' || variant === 'destructive') {
     return (
       <AnimatedPressable
         style={[
@@ -219,6 +228,18 @@ const createStyles = (theme: any) => StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
+  destructive: {
+    backgroundColor: theme.colors.error[500] || '#EF4444', // Red
+    // Modern: Soft pastel shadow
+    shadowColor: theme.colors.error[500] || '#EF4444',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 3,
+  },
   outline: {
     backgroundColor: 'transparent',
   },
@@ -262,6 +283,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.primary[500],
   },
   text_gradient: {
+    color: theme.colors.text.inverse,
+  },
+  text_destructive: {
     color: theme.colors.text.inverse,
   },
   textDisabled: {

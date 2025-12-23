@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { 
-  FadeInUp, 
   useSharedValue, 
   useAnimatedStyle, 
   withSpring 
@@ -63,10 +62,8 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => 
   };
   
   return (
-    // Wrapper for layout animation (FadeInUp) - separate from transform animations
-    <Animated.View 
-      entering={FadeInUp.delay(index * 20).duration(300).springify().damping(30).stiffness(80)}
-    >
+    // Wrapper - no animation
+    <View>
       <Card 
         variant="elevated" 
         padding="lg" 
@@ -101,24 +98,28 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => 
 
         <Divider spacing="sm" />
         
-        {/* Details */}
+        {/* Details - Ana Dal ve Yan Dal */}
         <View style={styles.details}>
-          {job.city_name && (
-            <Chip
-              label={job.city_name}
-              icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
-              variant="soft"
-              color="primary"
-              size="sm"
-            />
-          )}
-          {job.work_type && (
-            <Chip
-              label={job.work_type}
-              variant="soft"
-              color="secondary"
-              size="sm"
-            />
+          {job.specialty && (
+            <View style={styles.specialtyContainer}>
+              <Chip
+                label={job.specialty}
+                variant="soft"
+                color="primary"
+                size="sm"
+              />
+              {job.subspecialty_name && (
+                <View style={styles.subspecialtyRow}>
+                  <Chip
+                    label={job.subspecialty_name}
+                    variant="soft"
+                    color="secondary"
+                    size="sm"
+                    style={styles.subspecialtyChip}
+                  />
+                </View>
+              )}
+            </View>
           )}
         </View>
 
@@ -140,7 +141,7 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => 
           </Animated.View>
         </View>
       </Card>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -193,6 +194,17 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
     marginTop: spacing.xs,
+  },
+  specialtyContainer: {
+    flexDirection: 'column',
+    gap: spacing.xs,
+    alignItems: 'flex-start',
+  },
+  subspecialtyRow: {
+    marginTop: spacing.xs,
+  },
+  subspecialtyChip: {
+    marginTop: 0,
   },
   footer: {
     marginTop: spacing.md,

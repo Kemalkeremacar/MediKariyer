@@ -36,8 +36,13 @@ const { catchAsync } = require('../../utils/errorHandler');
 const mobileApplicationService = require('../../services/mobile/mobileApplicationService');
 
 const listApplications = catchAsync(async (req, res) => {
-  const { page, limit, status } = req.query;
-  const result = await mobileApplicationService.listApplications(req.user.id, { page, limit, status });
+  const { page, limit, status, keyword, search } = req.query;
+  const result = await mobileApplicationService.listApplications(req.user.id, { 
+    page, 
+    limit, 
+    status,
+    keyword: keyword || search 
+  });
   
   // sendPaginated kullanarak standart pagination response formatı
   // Response: { success, message, data: [...], pagination: {...}, timestamp }

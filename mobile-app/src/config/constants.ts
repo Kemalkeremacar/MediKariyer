@@ -29,7 +29,7 @@ export const MAX_NAME_LENGTH = 50;
 // UI
 export const TOAST_DURATION = 3000; // 3 seconds
 export const DEBOUNCE_DELAY = 300; // 300ms
-export const SEARCH_DEBOUNCE_DELAY = 500; // 500ms - search için daha uzun
+export const SEARCH_DEBOUNCE_DELAY = 800; // 800ms - search için daha uzun (kullanıcı yazmayı bitirene kadar bekle)
 export const ANIMATION_DURATION = 200; // 200ms
 
 // TD-008: Pagination constants

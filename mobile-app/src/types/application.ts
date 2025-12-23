@@ -4,6 +4,7 @@ export interface ApplicationListItem {
   job_title: string | null;
   hospital_name: string | null;
   status: string | null;
+  status_id: number | null;
   created_at: string;
   updated_at: string | null;
   // Web ile uyumlu ek alanlar

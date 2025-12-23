@@ -4,6 +4,7 @@
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
+import { useSearch } from '@/hooks/useSearch';
 import {
   StyleSheet,
   RefreshControl,
@@ -42,28 +43,58 @@ export const ApplicationsScreen = () => {
   const [showFilterSheet, setShowFilterSheet] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const query = useApplications({ status: filters.status });
+  // Search handlers - useCallback ile optimize et, imleç kaybolmasını önle
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchQuery(text);
+  }, []);
+
+  const handleSearchClear = useCallback(() => {
+    setSearchQuery('');
+  }, []);
+
+  // Global search hook - Modern, kullanıcı dostu arama
+  const { debouncedQuery, clientQuery, shouldFetch, isSearching: isSearchingDebounce } = useSearch(searchQuery, { minLength: 2 });
+
+  // Query filters - useMemo ile normalize et, gereksiz re-render'ları önle
+  const queryFilters = useMemo(() => ({
+    status: filters.status || undefined,
+    keyword: shouldFetch ? debouncedQuery : undefined,
+  }), [filters.status, shouldFetch, debouncedQuery]);
+
+  // Sadece debounced query değiştiğinde API çağrısı yap
+  const query = useApplications(queryFilters);
 
   const totalCount = useMemo(() => {
     return query.data?.pages?.[0]?.pagination?.total ?? 0;
   }, [query.data]);
 
-  const applications = useMemo(() => {
+  // Backend'den gelen tüm başvurular
+  const allApplications = useMemo(() => {
     if (!query.data) return [];
     const pages = query.data.pages ?? [];
-    const allApplications = pages.flatMap((page) => page.data);
+    return pages.flatMap((page) => page.data);
+  }, [query.data]);
+
+  // Client-side filtreleme - Yazarken sonuçlar kaybolmaz, sadece filtrelenir
+  const applications = useMemo(() => {
+    // Backend'den veri yoksa boş döndür
+    if (allApplications.length === 0) return [];
     
-    // Client-side search filter
-    if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
-      return allApplications.filter((app) => 
-        app.hospital_name?.toLowerCase().includes(lowerQuery) ||
-        app.job_title?.toLowerCase().includes(lowerQuery)
-      );
-    }
+    // Client-side arama sorgusu yoksa tüm sonuçları göster
+    if (!clientQuery) return allApplications;
     
-    return allApplications;
-  }, [query.data, searchQuery]);
+    // Client-side filtreleme yap (yazarken anında filtrele)
+    const lowerQuery = clientQuery.toLowerCase();
+    return allApplications.filter((app) => {
+      const jobTitle = app.job_title?.toLowerCase() || '';
+      const hospital = app.hospital_name?.toLowerCase() || '';
+      
+      return jobTitle.includes(lowerQuery) || hospital.includes(lowerQuery);
+    });
+  }, [allApplications, clientQuery]);
+
+  // Arama yapılıyor mu kontrolü (backend isteği için)
+  const isSearching = isSearchingDebounce;
 
   const loadMore = useCallback(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {
@@ -101,12 +132,18 @@ export const ApplicationsScreen = () => {
       <View style={styles.searchContainer}>
         <SearchBar
           value={searchQuery}
-          onChangeText={setSearchQuery}
+          onChangeText={handleSearchChange}
           placeholder="Hastane veya pozisyon ara..."
-          onClear={() => setSearchQuery('')}
+          onClear={handleSearchClear}
           style={styles.searchBar}
+          isSearching={isSearching}
         />
         <View style={styles.filterButtonWrapper}>
+          {isSearching && (
+            <View style={styles.searchingIndicator}>
+              <ActivityIndicator size="small" color={colors.primary[600]} />
+            </View>
+          )}
           <TouchableOpacity
             onPress={() => setShowFilterSheet(true)}
             style={[
@@ -177,7 +214,6 @@ export const ApplicationsScreen = () => {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}
-          estimatedItemSize={140}
           ListFooterComponent={
             query.isFetchingNextPage ? (
               <View style={styles.listFooter}>
@@ -201,17 +237,23 @@ export const ApplicationsScreen = () => {
                   <Ionicons name="document-text" size={64} color={colors.neutral[300]} />
                 </View>
                 <Typography variant="h3" style={styles.emptyTitle}>
-                  {hasActiveFilter ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
+                  {(hasActiveFilter || clientQuery) ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
                 </Typography>
                 <Typography variant="body" style={styles.emptyText}>
-                  {hasActiveFilter
-                    ? 'Bu durumda başvuru bulunmuyor'
+                  {(hasActiveFilter || clientQuery)
+                    ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
                     : 'Yeni ilanlara başvurarak kariyer yolculuğuna başla'}
                 </Typography>
-                {hasActiveFilter && (
-                  <TouchableOpacity style={styles.emptyButton} onPress={handleResetFilters}>
+                {(hasActiveFilter || clientQuery) && (
+                  <TouchableOpacity 
+                    style={styles.emptyButton} 
+                    onPress={() => {
+                      handleResetFilters();
+                      setSearchQuery('');
+                    }}
+                  >
                     <Typography variant="body" style={styles.emptyButtonText}>
-                      Tüm Başvuruları Göster
+                      Filtreleri Temizle
                     </Typography>
                   </TouchableOpacity>
                 )}
@@ -275,6 +317,12 @@ const styles = StyleSheet.create({
   },
   filterButtonWrapper: {
     position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  searchingIndicator: {
+    marginRight: spacing.xs,
   },
   filterButton: {
     width: 44,

@@ -40,7 +40,7 @@ const doctorService = require('../doctorService');
 const { getDoctorProfile } = require('./mobileDoctorService');
 const { normalizeCountResult, buildPaginationSQL, normalizeRawResult } = require('../../utils/queryHelper');
 
-const listApplications = async (userId, { page = 1, limit = 20, status } = {}) => {
+const listApplications = async (userId, { page = 1, limit = 20, status, keyword } = {}) => {
   const profile = await getDoctorProfile(userId);
   const currentPage = Math.max(Number(page) || 1, 1);
   const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
@@ -61,13 +61,25 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
     .leftJoin('application_statuses as st', 'st.id', 'a.status_id')
     .leftJoin('job_statuses as js', 'j.status_id', 'js.id') // İş ilanı durumu için
     .leftJoin('cities as c', 'j.city_id', 'c.id') // Şehir bilgisi için
-    .whereRaw(`[a].[doctor_profile_id] = ${parseInt(profile.id)}`)
+    .where('a.doctor_profile_id', parseInt(profile.id))
     .whereNull('a.deleted_at');
 
   // Status filter
   if (status) {
     const turkishStatus = statusMapping[status.toLowerCase()] || status;
     baseQuery.andWhere('st.name', turkishStatus);
+  }
+
+  // Keyword search filter
+  if (keyword) {
+    const searchTerm = keyword.trim();
+    if (searchTerm) {
+      baseQuery.andWhere(function() {
+        this.where('j.title', 'like', `%${searchTerm}%`)
+          .orWhere('hp.institution_name', 'like', `%${searchTerm}%`)
+          .orWhere('c.name', 'like', `%${searchTerm}%`);
+      });
+    }
   }
 
   const dataQuery = baseQuery
@@ -92,23 +104,17 @@ const listApplications = async (userId, { page = 1, limit = 20, status } = {}) =
     .limit(perPage)
     .offset((currentPage - 1) * perPage);
 
-  // Önce count query'sini test et
-  let countResults;
+  // Count ve data query'lerini paralel çalıştır
+  let countResults, rows;
   try {
-    countResults = await baseQuery.clone().clearSelect().clearOrder().count({ count: '*' });
-    logger.debug('✅ Count query başarılı:', countResults);
+    [countResults, rows] = await Promise.all([
+      baseQuery.clone().clearSelect().clearOrder().count('* as count'),
+      dataQuery
+    ]);
+    logger.debug('✅ Queries başarılı - Count:', countResults.length, 'Rows:', rows.length);
   } catch (error) {
-    logger.error('❌ Count query error:', error.message);
-    throw error;
-  }
-
-  // Sonra data query'sini çalıştır
-  let rows;
-  try {
-    rows = await dataQuery;
-    logger.debug('✅ Data query başarılı, row count:', rows.length);
-  } catch (error) {
-    logger.error('❌ Data query error:', error.message);
+    logger.error('❌ Query error:', error.message);
+    logger.error('❌ Query error stack:', error.stack);
     logger.error('Profile ID:', profile.id);
     throw error;
   }
@@ -160,7 +166,8 @@ const getApplicationDetail = async (userId, applicationId) => {
       .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
       .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
       .select(
-        'j.id as hospital_id',
+        'j.id as job_id',
+        'j.hospital_id',
         'j.title as job_title',
         'j.description',
         'j.employment_type',

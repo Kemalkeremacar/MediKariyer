@@ -26,6 +26,7 @@ export interface ApplicationListParams {
   page?: number;
   limit?: number;
   status?: string;
+  keyword?: string;
 }
 
 export interface ApplicationsListResponse {

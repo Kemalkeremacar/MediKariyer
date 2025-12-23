@@ -151,10 +151,25 @@ const buildPaginationSQL = (queryBuilder, page = 1, pageSize = 10, orderByPatter
     const hasOrderBy = /order\s+by/i.test(sql);
     if (!hasOrderBy) {
       logger.error('❌ SQL\'de ORDER BY clause yok!');
+      logger.error('Full SQL:', sql);
       throw new AppError('Sorgu oluşturulamadı: ORDER BY clause bulunamadı. SQL Server pagination için ORDER BY zorunludur.', 500);
     } else {
-      logger.error('⚠️ ORDER BY var ama pattern eşleşmedi. SQL son 200 karakter:', sql.substring(Math.max(0, sql.length - 200)));
-      throw new AppError('Sorgu oluşturulamadı: ORDER BY clause pattern eşleşmedi', 500);
+      // ORDER BY var ama pattern eşleşmedi - daha esnek bir yaklaşım dene
+      logger.warn('⚠️ ORDER BY var ama pattern eşleşmedi. Manuel ekleme deneniyor...');
+      logger.warn('SQL son 200 karakter:', sql.substring(Math.max(0, sql.length - 200)));
+      
+      // ORDER BY'ı bul ve sonuna OFFSET/FETCH ekle
+      const orderByMatch = sql.match(/order\s+by[\s\S]*$/i);
+      if (orderByMatch) {
+        const nextParamIndex = querySQL.bindings.length;
+        const offsetParam = `@p${nextParamIndex}`;
+        const limitParam = `@p${nextParamIndex + 1}`;
+        sql = sql.replace(/order\s+by[\s\S]*$/i, `${orderByMatch[0]} OFFSET ${offsetParam} ROWS FETCH NEXT ${limitParam} ROWS ONLY`);
+        logger.warn('✅ ORDER BY manuel olarak eklendi');
+      } else {
+        logger.error('❌ ORDER BY bulundu ama extract edilemedi');
+        throw new AppError('Sorgu oluşturulamadı: ORDER BY clause pattern eşleşmedi', 500);
+      }
     }
   }
 

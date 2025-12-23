@@ -3,6 +3,7 @@ export interface JobListItem {
   title: string | null;
   city_name: string | null;
   specialty: string | null;
+  subspecialty_name: string | null;
   salary_range: string | null;
   work_type: string | null;
   created_at: string | null;

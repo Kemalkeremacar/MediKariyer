@@ -4,7 +4,6 @@ import {
   View,
   StyleSheet,
   TouchableWithoutFeedback,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -46,44 +45,45 @@ export const Modal: React.FC<ModalProps> = ({
       animationType="fade"
       onRequestClose={dismissable ? onClose : undefined}
     >
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={styles.overlay}>
         <TouchableWithoutFeedback onPress={dismissable ? onClose : undefined}>
           <View style={styles.backdrop} />
         </TouchableWithoutFeedback>
 
-        <View style={[styles.container, sizeStyles[size]]}>
-          {/* Header */}
-          {(title || showCloseButton) && (
-            <View style={styles.header}>
-              {title && (
-                <Typography variant="h3" style={styles.title}>
-                  {title}
-                </Typography>
+        <KeyboardAvoidingView
+          style={styles.modalWrapper}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          pointerEvents="box-none"
+        >
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <View style={[styles.container, sizeStyles[size]]}>
+              {/* Header */}
+              {(title || showCloseButton) && (
+                <View style={styles.header}>
+                  {title && (
+                    <Typography variant="h3" style={styles.title}>
+                      {title}
+                    </Typography>
+                  )}
+                  {showCloseButton && (
+                    <IconButton
+                      icon={<Ionicons name="close" size={20} color={colors.neutral[600]} />}
+                      onPress={onClose}
+                      size="sm"
+                      variant="ghost"
+                    />
+                  )}
+                </View>
               )}
-              {showCloseButton && (
-                <IconButton
-                  icon={<Ionicons name="close" size={20} color={colors.neutral[600]} />}
-                  onPress={onClose}
-                  size="sm"
-                  variant="ghost"
-                />
-              )}
-            </View>
-          )}
 
-          {/* Content */}
-          <ScrollView
-            style={styles.content}
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={false}
-          >
-            {children}
-          </ScrollView>
-        </View>
-      </KeyboardAvoidingView>
+              {/* Content */}
+              <View style={styles.content}>
+                {children}
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </View>
     </RNModal>
   );
 };
@@ -91,15 +91,25 @@ export const Modal: React.FC<ModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'relative',
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.background.overlay,
+    backgroundColor: colors.background.overlay || 'rgba(0, 0, 0, 0.5)',
+  },
+  modalWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   container: {
     width: '90%',
+    maxWidth: 500,
     backgroundColor: colors.background.card,
     borderRadius: 28,
     overflow: 'hidden',
@@ -109,6 +119,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 32,
     elevation: 6,
+    maxHeight: '90%',
+    minHeight: 300,
   },
   header: {
     flexDirection: 'row',
@@ -125,16 +137,13 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
   content: {
-    flex: 1,
-  },
-  contentContainer: {
     padding: spacing.lg,
   },
   sizeSm: {
     maxHeight: '40%',
   },
   sizeMd: {
-    maxHeight: '60%',
+    maxHeight: '85%',
   },
   sizeLg: {
     maxHeight: '80%',

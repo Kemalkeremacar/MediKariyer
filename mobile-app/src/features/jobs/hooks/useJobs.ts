@@ -20,5 +20,8 @@ export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => 
     enabled,
     staleTime: CACHE_STALE_TIME,
     gcTime: CACHE_TIME,
+    // Debounce için: queryKey değiştiğinde hemen tetikleme, biraz bekle
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };
