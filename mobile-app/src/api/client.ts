@@ -73,11 +73,21 @@ const attachInterceptors = (instance: AxiosInstance) => {
       const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
       devLog('📤 API Request:', config.method?.toUpperCase(), fullUrl);
       
-      // Skip queue for refresh token endpoint
-      if (config.url?.includes('/auth/refresh')) {
-        const token = await tokenManager.getAccessToken();
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
+      // Skip token refresh logic for public endpoints that don't require authentication
+      const isPublicEndpoint = 
+        config.url?.includes('/auth/login') || 
+        config.url?.includes('/auth/registerDoctor') ||
+        config.url?.includes('/auth/refresh') ||
+        config.url?.includes('/lookup/') ||
+        config.url?.includes('/upload/register-photo');
+      
+      if (isPublicEndpoint) {
+        // For refresh endpoint, we might have a token, but for other public endpoints we don't
+        if (config.url?.includes('/auth/refresh')) {
+          const token = await tokenManager.getAccessToken();
+          if (token && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
         }
         config.headers = config.headers ?? {
           'Content-Type': 'application/json',

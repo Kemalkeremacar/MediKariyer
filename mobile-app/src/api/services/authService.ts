@@ -31,6 +31,7 @@ import type {
  * Normalizes auth response from various API response formats
  */
 const normalizeAuthResponse = (payload: any): AuthResponsePayload => {
+  // Backend'den gelen format: { tokens: { accessToken, refreshToken }, user, profile }
   const accessToken =
     payload?.accessToken ??
     payload?.token ??
@@ -44,6 +45,13 @@ const normalizeAuthResponse = (payload: any): AuthResponsePayload => {
   const profile = payload?.profile ?? null;
 
   if (!accessToken || !refreshToken || !user) {
+    console.error('Auth response normalization failed:', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      hasUser: !!user,
+      payloadKeys: payload ? Object.keys(payload) : 'null',
+      tokensKeys: payload?.tokens ? Object.keys(payload.tokens) : 'null',
+    });
     throw new Error('Sunucudan geçerli kimlik bilgisi alınamadı.');
   }
 
@@ -63,11 +71,27 @@ export const authService = {
    * Login with email and password
    */
   async login(payload: LoginPayload): Promise<AuthResponsePayload> {
-    const response = await apiClient.post<ApiResponse<any>>(
-      endpoints.auth.login,
-      payload,
-    );
-    return normalizeAuthResponse(response.data.data);
+    try {
+      console.log('🔐 Login attempt:', { email: payload.email, endpoint: endpoints.auth.login });
+      const response = await apiClient.post<ApiResponse<any>>(
+        endpoints.auth.login,
+        payload,
+      );
+      console.log('✅ Login response received:', {
+        hasData: !!response.data,
+        hasDataData: !!response.data?.data,
+        dataKeys: response.data?.data ? Object.keys(response.data.data) : 'null',
+      });
+      return normalizeAuthResponse(response.data.data);
+    } catch (error: any) {
+      console.error('❌ Login error:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+        url: error?.config?.url,
+      });
+      throw error;
+    }
   },
 
   /**
