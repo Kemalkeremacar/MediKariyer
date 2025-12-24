@@ -1,8 +1,7 @@
 import React from 'react';
-import { Animated, Platform, StyleSheet } from 'react-native';
+import { Animated, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { JobsStackNavigator } from './JobsStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
@@ -80,31 +79,27 @@ export const TabNavigator = () => {
           bottom: Platform.OS === 'ios' ? 0 : 12,
           left: Platform.OS === 'ios' ? 0 : 16,
           right: Platform.OS === 'ios' ? 0 : 16,
-          backgroundColor: Platform.OS === 'ios' ? 'transparent' : colors.background.primary,
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 0,
+          borderTopColor: 'transparent',
+          borderWidth: 0,
+          borderColor: 'transparent',
           height: tabBarHeight,
           borderRadius: Platform.OS === 'ios' ? 0 : 24,
           ...Platform.select({
             ios: {
-              shadowColor: colors.neutral[900],
-              shadowOffset: { width: 0, height: -4 },
-              shadowOpacity: 0.1,
-              shadowRadius: 16,
+              shadowColor: 'transparent',
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0,
+              shadowRadius: 0,
             },
             android: {
-              elevation: 12,
-              shadowColor: colors.primary[900],
+              elevation: 0,
+              shadowColor: 'transparent',
             },
           }),
         },
-        tabBarBackground: () =>
-          Platform.OS === 'ios' ? (
-            <BlurView
-              tint="light"
-              intensity={85}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : null,
+        tabBarBackground: () => null,
         sceneStyle: {
           backgroundColor: colors.background.primary,
           paddingBottom: tabBarHeight + (Platform.OS === 'ios' ? 0 : 12),

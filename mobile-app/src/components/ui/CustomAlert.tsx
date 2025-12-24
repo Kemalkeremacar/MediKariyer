@@ -10,6 +10,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
@@ -84,6 +85,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
       transparent
       animationType="fade"
       onRequestClose={onClose}
+      {...(Platform.OS === 'ios' ? { presentationStyle: 'overFullScreen' as const } : { statusBarTranslucent: true })}
     >
       <View style={styles.overlay}>
         <TouchableOpacity 

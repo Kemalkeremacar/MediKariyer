@@ -7,7 +7,10 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -37,6 +40,7 @@ type DashboardScreenNavigationProp = CompositeNavigationProp<
 export const DashboardScreen = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
   const queryClient = useQueryClient();
+  const insets = useSafeAreaInsets();
   const { data: profile, refetch: refetchProfile, isRefetching: isRefetchingProfile } = useProfile();
   const { data: completionData, refetch: refetchCompletion, isRefetching: isRefetchingCompletion } = useProfileCompletion();
   const { unreadCount, refetch: refetchNotifications } = useNotifications({ limit: 1 });
@@ -119,11 +123,17 @@ export const DashboardScreen = () => {
   
   const photoUrl = getFullImageUrl(profile?.profile_photo);
 
+  // Tab bar yüksekliği hesaplaması (TabNavigator ile aynı mantık)
+  const TAB_BAR_HEIGHT = 56;
+  const tabBarHeight = TAB_BAR_HEIGHT + (Platform.OS === 'ios' ? insets.bottom : 12);
+  // ScrollView için alt padding - tab bar'ın arkasında kalmaması için
+  const scrollBottomPadding = tabBarHeight + 20;
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPadding }]}
         refreshControl={
           <RefreshControl 
             refreshing={isRefetching} 
@@ -375,7 +385,7 @@ export const DashboardScreen = () => {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -386,7 +396,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 100,
   },
   header: {
     paddingTop: 16,

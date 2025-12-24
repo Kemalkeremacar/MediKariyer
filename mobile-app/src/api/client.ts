@@ -98,6 +98,42 @@ const attachInterceptors = (instance: AxiosInstance) => {
       // Check if token needs refresh before making request
       const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
       
+      // Start proactive refresh if needed (only one request will trigger this)
+      // This must be checked BEFORE waiting, to prevent race conditions
+      if (shouldRefresh && !isRefreshing) {
+        devLog('🔄 Token needs refresh, triggering proactive refresh...');
+        isRefreshing = true;
+        
+        // Start refresh in background (don't await here, let it run async)
+        (async () => {
+          try {
+            const refreshToken = await tokenManager.getRefreshToken();
+            if (refreshToken) {
+              const response = await axios.post(
+                `${env.API_BASE_URL}${endpoints.auth.refreshToken}`,
+                { refreshToken },
+              );
+              const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
+              await tokenManager.saveTokens(accessToken, newRefreshToken);
+              useAuthStore.getState().markAuthenticated(user);
+              devLog('✅ Proactive token refresh successful');
+              // Release pending requests - they will use the new token
+              processPendingQueue(null);
+            } else {
+              // No refresh token, let requests proceed (they will get 401 and be handled by response interceptor)
+              devWarn('⚠️ No refresh token available, requests will proceed');
+              processPendingQueue(null);
+            }
+          } catch (error) {
+            // Refresh failed, let requests proceed (they will get 401 and be handled by response interceptor)
+            devWarn('⚠️ Proactive token refresh failed, requests will proceed and retry on 401');
+            processPendingQueue(null);
+          } finally {
+            isRefreshing = false;
+          }
+        })();
+      }
+      
       // If refresh is needed or in progress, wait for it to complete
       if (shouldRefresh || isRefreshing) {
         if (isRefreshing) {
@@ -110,37 +146,6 @@ const attachInterceptors = (instance: AxiosInstance) => {
         await new Promise<void>((resolve, reject) => {
           pendingQueue.push({ resolve, reject });
         });
-      }
-      
-      // Start proactive refresh if needed (only one request will trigger this)
-      if (shouldRefresh && !isRefreshing) {
-        devLog('🔄 Token needs refresh, triggering proactive refresh...');
-        isRefreshing = true;
-        try {
-          const refreshToken = await tokenManager.getRefreshToken();
-          if (refreshToken) {
-            const response = await axios.post(
-              `${env.API_BASE_URL}${endpoints.auth.refreshToken}`,
-              { refreshToken },
-            );
-            const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
-            await tokenManager.saveTokens(accessToken, newRefreshToken);
-            useAuthStore.getState().markAuthenticated(user);
-            devLog('✅ Proactive token refresh successful');
-            // Release pending requests - they will use the new token
-            processPendingQueue(null);
-          } else {
-            // No refresh token, let requests proceed (they will get 401 and be handled by response interceptor)
-            devWarn('⚠️ No refresh token available, requests will proceed');
-            processPendingQueue(null);
-          }
-        } catch (error) {
-          // Refresh failed, let requests proceed (they will get 401 and be handled by response interceptor)
-          devWarn('⚠️ Proactive token refresh failed, requests will proceed and retry on 401');
-          processPendingQueue(null);
-        } finally {
-          isRefreshing = false;
-        }
       }
       
       const token = await tokenManager.getAccessToken();

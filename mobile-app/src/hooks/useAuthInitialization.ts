@@ -59,49 +59,29 @@ export const useAuthInitialization = () => {
               return;
             }
             
-            // Check if access token is expired
-            const isExpired = await tokenManager.isAccessTokenExpired();
-            
-            if (isExpired) {
-              console.log('⚠️ Access token expired, attempting refresh...');
-              
-              // Try to refresh token
-              const refreshToken = await tokenManager.getRefreshToken();
-              if (!refreshToken) {
-                console.log('🔴 No refresh token, marking unauthenticated');
-                await tokenManager.clearTokens();
-                markUnauthenticated();
-                return;
-              }
-              
-              try {
-                const response = await apiClient.post(endpoints.auth.refreshToken, {
-                  refreshToken,
-                });
-                const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
-                await tokenManager.saveTokens(accessToken, newRefreshToken);
-                markAuthenticated(user);
-                console.log('✅ Token refreshed successfully');
-                return;
-              } catch (error) {
-                console.error('❌ Token refresh failed:', error);
-                await tokenManager.clearTokens();
-                markUnauthenticated();
-                return;
-              }
-            }
-            
-            // Token valid and not expired, fetch user data
+            // Fetch user data - API client interceptor will handle token refresh if needed
+            // If token is expired, the interceptor will refresh it automatically
             try {
               console.log('🔵 Fetching user data...');
               const response = await apiClient.get(endpoints.auth.me);
               const user = response.data.data.user;
               markAuthenticated(user);
               console.log('✅ User data fetched successfully');
-            } catch (error) {
-              console.error('❌ Failed to fetch user data:', error);
-              await tokenManager.clearTokens();
-              markUnauthenticated();
+            } catch (error: any) {
+              // If error is 401, token refresh was attempted but failed
+              // If error is network, we'll mark as unauthenticated
+              const isAuthError = error?.response?.status === 401 || error?.name === 'ApiError';
+              
+              if (isAuthError) {
+                console.log('🔴 Authentication failed, marking unauthenticated');
+                await tokenManager.clearTokens();
+                markUnauthenticated();
+              } else {
+                // Network error or other error - don't clear tokens, just mark as unauthenticated
+                // User can retry later
+                console.error('❌ Failed to fetch user data (network error):', error);
+                markUnauthenticated();
+              }
             }
           })(),
           timeoutPromise,
