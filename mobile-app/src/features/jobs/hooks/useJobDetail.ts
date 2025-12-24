@@ -8,6 +8,11 @@ export const useJobDetail = (jobId: number) => {
     queryKey: queryKeys.jobs.detail(jobId),
     queryFn: () => jobService.getJobDetail(jobId),
     enabled: !!jobId,
+    staleTime: 0, // Her zaman fresh (dinamik proje - başvuru durumu değişebilir)
+    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
+    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };
 

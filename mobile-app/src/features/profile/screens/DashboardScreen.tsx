@@ -232,14 +232,14 @@ export const DashboardScreen = () => {
               [1, 2].map((i) => (
                 <View key={i} style={[styles.skeletonCard, { marginRight: 16 }]} />
               ))
-            ) : jobsData?.pages[0]?.data.length === 0 ? (
+            ) : !jobsData?.pages?.[0]?.data || jobsData?.pages?.[0]?.data?.length === 0 ? (
               <View style={styles.emptyStateContainer}>
                 <Typography variant="bodySmall" style={styles.emptyStateText}>
                   Henüz ilan bulunmamaktadır.
                 </Typography>
               </View>
             ) : (
-              jobsData?.pages[0]?.data.map((job) => (
+              jobsData?.pages?.[0]?.data?.map((job) => (
                 <FeaturedJobCard
                   key={job.id}
                   job={job}
@@ -299,7 +299,7 @@ export const DashboardScreen = () => {
 
           {isLoadingApplications ? (
             <View style={styles.skeletonList} />
-          ) : applicationsData?.pages[0]?.data.length === 0 ? (
+          ) : !applicationsData?.pages?.[0]?.data || applicationsData?.pages?.[0]?.data?.length === 0 ? (
             <View style={styles.emptyStateCard}>
               <Ionicons name="document-text-outline" size={48} color={colors.neutral[300]} />
               <Typography variant="body" style={styles.emptyStateText}>
@@ -316,7 +316,7 @@ export const DashboardScreen = () => {
             </View>
           ) : (
             <View style={styles.verticalList}>
-              {applicationsData?.pages[0]?.data.map((application) => (
+              {applicationsData?.pages?.[0]?.data?.map((application) => (
                 <RecentApplicationItem
                   key={application.id}
                   application={application}

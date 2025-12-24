@@ -32,10 +32,10 @@ export const useApplications = (filters: ApplicationFilters = {}, enabled: boole
       return undefined;
     },
     enabled,
-    staleTime: 1000 * 60 * 3, // 3 dakika cache (başvurular daha dinamik)
-    gcTime: 1000 * 60 * 10, // 10 dakika garbage collection
-    // Debounce için: queryKey değiştiğinde hemen tetikleme, biraz bekle
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Her zaman fresh (dinamik proje - başvuru durumları değişebilir)
+    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
+    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };

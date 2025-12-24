@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { jobService, JobListParams } from '@/api/services/job.service';
-import { CACHE_STALE_TIME, CACHE_TIME, PAGINATION } from '@/config/constants';
+import { PAGINATION } from '@/config/constants';
 import { queryKeys } from '@/api/queryKeys';
 
 export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => {
@@ -18,10 +18,10 @@ export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => 
         : undefined,
     initialPageParam: 1,
     enabled,
-    staleTime: CACHE_STALE_TIME,
-    gcTime: CACHE_TIME,
-    // Debounce için: queryKey değiştiğinde hemen tetikleme, biraz bekle
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
+    staleTime: 0, // Her zaman fresh (dinamik proje - yeni ilanlar eklenebilir)
+    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
+    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };

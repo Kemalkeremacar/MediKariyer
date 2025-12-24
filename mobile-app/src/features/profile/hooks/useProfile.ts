@@ -36,6 +36,11 @@ export const useProfile = () => {
     queryFn: () => profileService.getCompleteProfile(),
     retry: 2,
     retryDelay: 1000,
+    staleTime: 0, // Her zaman fresh (dinamik proje - profil güncellenebilir)
+    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
+    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };
 
@@ -48,6 +53,11 @@ export const useProfileCompletion = () => {
     queryFn: () => profileService.getProfileCompletion(),
     retry: 2,
     retryDelay: 1000,
+    staleTime: 0, // Her zaman fresh (dinamik proje - tamamlanma yüzdesi değişebilir)
+    gcTime: 0, // Cache'i hemen temizle
+    refetchOnMount: 'always', // Her zaman fresh data çek
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };
 
@@ -80,6 +90,11 @@ export const useEducations = () => {
     queryFn: () => profileService.getEducations(),
     retry: 2,
     retryDelay: 1000,
+    staleTime: 0, // Her zaman fresh (dinamik proje - eğitimler eklenip silinebilir)
+    gcTime: 0, // Cache'i hemen temizle
+    refetchOnMount: 'always', // Her zaman fresh data çek
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };
 
@@ -109,6 +124,11 @@ export const useExperiences = () => {
     queryFn: () => profileService.getExperiences(),
     retry: 2,
     retryDelay: 1000,
+    staleTime: 0, // Her zaman fresh (dinamik proje - deneyimler eklenip silinebilir)
+    gcTime: 0, // Cache'i hemen temizle
+    refetchOnMount: 'always', // Her zaman fresh data çek
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };
 
@@ -138,6 +158,11 @@ export const useCertificates = () => {
     queryFn: () => profileService.getCertificates(),
     retry: 2,
     retryDelay: 1000,
+    staleTime: 0, // Her zaman fresh (dinamik proje - sertifikalar eklenip silinebilir)
+    gcTime: 0, // Cache'i hemen temizle
+    refetchOnMount: 'always', // Her zaman fresh data çek
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };
 
@@ -167,8 +192,11 @@ export const useLanguages = () => {
     queryFn: () => profileService.getLanguages(),
     retry: 2,
     retryDelay: 1000,
-    staleTime: 0, // Her zaman fresh data çek
-    refetchOnMount: 'always', // Mount olduğunda her zaman refetch yap
+    staleTime: 0, // Her zaman fresh (dinamik proje - diller eklenip silinebilir)
+    gcTime: 0, // Cache'i hemen temizle
+    refetchOnMount: 'always', // Her zaman fresh data çek
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };
 

@@ -14,6 +14,7 @@
  * @version 2.0.0
  */
 
+import React from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InfiniteData } from '@tanstack/react-query';
 import { notificationService } from '@/api/services/notification.service';
@@ -21,7 +22,6 @@ import { useToast } from '@/providers/ToastProvider';
 import { showAlert } from '@/utils/alert';
 import { queryKeys } from '@/api/queryKeys';
 import type { NotificationsResponse } from '@/types/notification';
-import { CACHE_DURATIONS } from '@/config/constants';
 
 const RETRY_DELAY = (attempt: number) => Math.min(1000 * 2 ** attempt, 8000);
 
@@ -46,6 +46,8 @@ export interface UseNotificationsParams {
 export const useNotifications = (params: UseNotificationsParams = {}) => {
   const { showUnreadOnly = false, limit = 20 } = params;
 
+  const queryClient = useQueryClient();
+  
   const query = useInfiniteQuery({
     queryKey: queryKeys.notifications.list({ showUnreadOnly }),
     initialPageParam: 1,
@@ -61,17 +63,43 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
       const { pagination } = lastPage;
       return pagination.has_next ? pagination.current_page + 1 : undefined;
     },
-    staleTime: CACHE_DURATIONS.NOTIFICATIONS, // 2 dakika - bildirimler daha sık güncellenir
-    refetchOnMount: true, // Sayfa açıldığında fresh data çek
-    refetchOnWindowFocus: false, // Window focus'ta refetch yapma (mobilde gereksiz)
+    staleTime: 0, // Bildirimler her zaman fresh olmalı (dinamik proje)
+    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
+    refetchOnMount: true, // İlk mount'ta fresh data çek (tüm bildirimler gelsin)
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
     retry: 2,
     retryDelay: RETRY_DELAY,
   });
 
-  const notifications =
-    (query.data as InfiniteData<NotificationsResponse, number> | undefined)?.pages.flatMap(
+  // Refetch fonksiyonunu override et: pages'i sıfırla ve sadece ilk sayfayı fetch et
+  const safeRefetch = React.useCallback(async () => {
+    // Query'yi reset et (pages'i sıfırla, duplicate önlemek için)
+    queryClient.resetQueries({ 
+      queryKey: queryKeys.notifications.list({ showUnreadOnly }) 
+    });
+    // Sonra refetch yap (sadece ilk sayfa gelecek, duplicate olmayacak)
+    return query.refetch();
+  }, [queryClient, showUnreadOnly, query]);
+
+  // Pages'leri birleştir ve duplicate'leri temizle (cache sorunlarını önlemek için)
+  const notifications = React.useMemo(() => {
+    const allNotifications = (query.data as InfiniteData<NotificationsResponse, number> | undefined)?.pages.flatMap(
       (page) => page.data
     ) ?? [];
+    
+    // Duplicate bildirimleri temizle (ID'ye göre unique)
+    const uniqueNotifications = Array.from(
+      new Map(allNotifications.map((item) => [item.id, item])).values()
+    );
+    
+    // En yeni bildirimler önce gelsin (created_at'e göre sırala)
+    return uniqueNotifications.sort((a, b) => {
+      const dateA = new Date(a.created_at || 0).getTime();
+      const dateB = new Date(b.created_at || 0).getTime();
+      return dateB - dateA; // Descending order (newest first)
+    });
+  }, [query.data]);
 
   const unreadCount = notifications.filter((item) => !item.is_read).length;
 
@@ -79,6 +107,7 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
     ...query,
     notifications,
     unreadCount,
+    refetch: safeRefetch, // Override refetch: pages'i sıfırla ve yeniden fetch et
   };
 };
 
@@ -93,8 +122,12 @@ export const useUnreadCount = () => {
       const response = await notificationService.getUnreadCount();
       return response.count;
     },
-    staleTime: 1000 * 60 * 5, // 5 dakika cache
-    refetchInterval: 1000 * 60 * 2, // 2 dakikada bir otomatik yenile
+    staleTime: 0, // Her zaman fresh (dinamik proje)
+    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
+    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
+    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
+    refetchInterval: 1000 * 30, // 30 saniyede bir otomatik yenile (daha sık)
   });
 };
 
