@@ -137,7 +137,7 @@ Bu proje [MIT](LICENSE) lisansı altında lisanslanmıştır.
 
 ## 👥 Katkıda Bulunanlar
 
-MediKariyer Team
+ -KEMAL KEREM ACAR-
 
 ---
 
