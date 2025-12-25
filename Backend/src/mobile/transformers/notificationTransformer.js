@@ -30,10 +30,11 @@ const toListItem = (notification = {}) => ({
   title: notification.title || '',
   body: notification.body || '',
   type: notification.type || 'info',
-  // is_read: read_at IS NOT NULL kontrolü (database'de is_read field'ı yok, read_at var)
-  is_read: Boolean(notification.read_at),
-  read_at: toUTC(notification.read_at),
-  created_at: toUTC(notification.created_at),
+  // Frontend camelCase formatı: is_read → isRead, created_at → createdAt
+  isRead: Boolean(notification.read_at), // read_at IS NOT NULL kontrolü (database'de is_read field'ı yok, read_at var)
+  read_at: toUTC(notification.read_at), // Geriye dönük uyumluluk için korunuyor
+  createdAt: toUTC(notification.created_at), // Frontend camelCase formatı
+  created_at: toUTC(notification.created_at), // Geriye dönük uyumluluk için korunuyor
   data: notification.data || null
 });
 

@@ -184,17 +184,24 @@ const processExpoResponse = (response, tokens) => {
 
 /**
  * Tek bir kullanıcıya push notification gönderir
+ * 
+ * **BATCH GÖNDERİM:** Kullanıcının birden fazla aktif cihazı varsa (örn: iPad, iPhone, Android),
+ * tüm tokenlar toplanır ve Expo API'ye tek bir HTTP isteğinde batch olarak gönderilir.
+ * Bu performansı artırır ve API rate limit'lerini optimize eder.
+ * 
  * @param {number} userId - Hedef kullanıcı ID'si
  * @param {string} title - Bildirim başlığı
  * @param {string} body - Bildirim içeriği
  * @param {object} [data] - Opsiyonel ek veri (deep linking için)
- * @returns {Promise<object>} Gönderim sonucu
+ * @returns {Promise<object>} Gönderim sonucu { success, sent, failed, invalidTokensCount }
  * 
  * @example
+ * // Kullanıcının 3 cihazı varsa (iPad, iPhone, Android), tek bir HTTP isteğinde 3 bildirim gönderilir
  * await sendPushNotification(123, "Yeni İş İlanı", "Kardiyoloji uzmanı aranıyor", { jobId: 456 });
  */
 const sendPushNotification = async (userId, title, body, data = {}) => {
   try {
+    // Kullanıcının tüm aktif cihaz token'larını topla (batch için)
     const tokens = await db('device_tokens')
       .where('user_id', userId)
       .where('is_active', true)
@@ -206,10 +213,12 @@ const sendPushNotification = async (userId, title, body, data = {}) => {
       return { success: false, message: 'Kullanıcının aktif cihaz token\'ı bulunamadı', sent: 0, failed: 0 };
     }
 
+    // Tüm tokenlar için mesajları oluştur (batch array)
     const messages = tokens.map(({ expo_push_token, platform }) => 
       buildNotificationMessage(expo_push_token, platform, title, body, { ...data, userId })
     );
 
+    // Expo API'ye tek bir HTTP isteğinde batch gönderim (tüm cihazlar için)
     const response = await sendHttpPost(EXPO_PUSH_API_URL, messages);
     const { sent, failed, invalidTokens } = processExpoResponse(response, tokens);
 
@@ -234,13 +243,19 @@ const sendPushNotification = async (userId, title, body, data = {}) => {
 
 /**
  * Birden fazla kullanıcıya push notification gönderir
+ * 
+ * **BATCH GÖNDERİM:** Tüm kullanıcıların tüm aktif cihaz token'ları toplanır ve
+ * Expo API'ye tek bir HTTP isteğinde batch olarak gönderilir. Bu performansı artırır
+ * ve API rate limit'lerini optimize eder.
+ * 
  * @param {Array<number>} userIds - Hedef kullanıcı ID'leri
  * @param {string} title - Bildirim başlığı
  * @param {string} body - Bildirim içeriği
  * @param {object} [data] - Opsiyonel ek veri
- * @returns {Promise<object>} Gönderim sonucu
+ * @returns {Promise<object>} Gönderim sonucu { success, sent, failed, invalidTokensCount, totalUsers }
  * 
  * @example
+ * // 10 kullanıcı, her birinin 2 cihazı varsa = 20 bildirim tek bir HTTP isteğinde gönderilir
  * await sendBulkPushNotification([123, 456], "Sistem Bakımı", "30 dakika bakım yapılacak");
  */
 const sendBulkPushNotification = async (userIds, title, body, data = {}) => {
@@ -249,6 +264,7 @@ const sendBulkPushNotification = async (userIds, title, body, data = {}) => {
   }
 
   try {
+    // Tüm kullanıcıların tüm aktif cihaz token'larını topla (batch için)
     const tokens = await db('device_tokens')
       .whereIn('user_id', userIds)
       .where('is_active', true)
@@ -260,10 +276,12 @@ const sendBulkPushNotification = async (userIds, title, body, data = {}) => {
       return { success: false, message: 'Aktif cihaz token\'ı bulunamadı', sent: 0, failed: 0 };
     }
 
+    // Tüm tokenlar için mesajları oluştur (batch array)
     const messages = tokens.map(({ expo_push_token, platform, user_id }) => 
       buildNotificationMessage(expo_push_token, platform, title, body, { ...data, userId: user_id })
     );
 
+    // Expo API'ye tek bir HTTP isteğinde batch gönderim (tüm kullanıcıların tüm cihazları için)
     const response = await sendHttpPost(EXPO_PUSH_API_URL, messages);
     const { sent, failed, invalidTokens } = processExpoResponse(response, tokens);
 
@@ -291,8 +309,20 @@ const sendBulkPushNotification = async (userIds, title, body, data = {}) => {
 // MODULE EXPORTS
 // ============================================================================
 
+/**
+ * sendPushToUser - sendPushNotification için alias
+ * notificationService.js'den çağrılabilmesi için
+ * @param {number} userId - Hedef kullanıcı ID'si
+ * @param {string} title - Bildirim başlığı
+ * @param {string} body - Bildirim içeriği
+ * @param {object} [data] - Opsiyonel ek veri
+ * @returns {Promise<object>} Gönderim sonucu
+ */
+const sendPushToUser = sendPushNotification;
+
 module.exports = {
   sendPushNotification,
+  sendPushToUser, // Alias for notificationService integration
   sendBulkPushNotification
 };
 

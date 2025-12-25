@@ -38,25 +38,34 @@ export const Modal: React.FC<ModalProps> = ({
     full: styles.sizeFull,
   };
 
+  // Modal kapatıldığında pointerEvents'i temizle
+  const handleClose = React.useCallback(() => {
+    onClose();
+  }, [onClose]);
+
   return (
     <RNModal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={dismissable ? onClose : undefined}
+      onRequestClose={dismissable ? handleClose : undefined}
+      onDismiss={() => {
+        // Modal tamamen kapandığında state'i temizle
+        // Bu, modal kapatıldıktan sonra tıklama sorunlarını önler
+      }}
     >
-      <View style={styles.overlay}>
-        <TouchableWithoutFeedback onPress={dismissable ? onClose : undefined}>
+      <View style={styles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
+        <TouchableWithoutFeedback onPress={dismissable ? handleClose : undefined}>
           <View style={styles.backdrop} />
         </TouchableWithoutFeedback>
 
         <KeyboardAvoidingView
           style={styles.modalWrapper}
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          pointerEvents="box-none"
+          pointerEvents={visible ? 'box-none' : 'none'}
         >
           <TouchableWithoutFeedback onPress={() => {}}>
-            <View style={[styles.container, sizeStyles[size]]}>
+            <View style={[styles.container, sizeStyles[size]]} pointerEvents="auto">
               {/* Header */}
               {(title || showCloseButton) && (
                 <View style={styles.header}>
@@ -68,7 +77,7 @@ export const Modal: React.FC<ModalProps> = ({
                   {showCloseButton && (
                     <IconButton
                       icon={<Ionicons name="close" size={20} color={colors.neutral[600]} />}
-                      onPress={onClose}
+                      onPress={handleClose}
                       size="sm"
                       variant="ghost"
                     />

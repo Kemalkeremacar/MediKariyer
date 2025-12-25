@@ -35,6 +35,8 @@ export interface ScreenProps {
   refreshing?: boolean;
   onRefresh?: () => void;
   safeArea?: boolean;
+  /** SafeAreaView edges - default: ['top'] to avoid gray space above tab bar */
+  safeAreaEdges?: ('top' | 'bottom' | 'left' | 'right')[];
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
   /** Whether to show offline banner (default: true) */
@@ -51,6 +53,7 @@ export const Screen: React.FC<ScreenProps> = ({
   refreshing = false,
   onRefresh,
   safeArea = true,
+  safeAreaEdges = ['top'],
   style,
   contentContainerStyle,
   showOfflineBanner = true,
@@ -91,7 +94,10 @@ export const Screen: React.FC<ScreenProps> = ({
   };
 
   return (
-    <Container style={[styles.container, style]}>
+    <Container 
+      style={[styles.container, style]}
+      {...(safeArea && Container === SafeAreaView ? { edges: safeAreaEdges } : {})}
+    >
       {/* Offline Banner - shows when internet is disconnected */}
       {showOfflineBanner && <OfflineBanner visible={isOffline} />}
       {header}

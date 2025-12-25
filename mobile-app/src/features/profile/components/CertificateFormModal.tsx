@@ -86,14 +86,28 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
     onSubmit(payload);
   };
 
+  // Modal kapatıldığında state'i temizle
+  const handleClose = React.useCallback(() => {
+    onClose();
+  }, [onClose]);
+
   return (
-    <RNModal visible={visible} animationType="slide" onRequestClose={onClose}>
+    <RNModal 
+      visible={visible} 
+      animationType="slide" 
+      onRequestClose={handleClose}
+      onDismiss={() => {
+        // Modal tamamen kapandığında state'i temizle
+        // Bu, modal kapatıldıktan sonra tıklama sorunlarını önler
+      }}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}
+        pointerEvents={visible ? 'auto' : 'none'}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Ionicons name="close" size={24} color={colors.text.primary} />
           </TouchableOpacity>
           <Typography variant="h2" style={styles.title}>
@@ -138,7 +152,7 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
           <Button
             label="İptal"
             variant="outline"
-            onPress={onClose}
+            onPress={handleClose}
             style={styles.cancelButton}
             size="lg"
           />

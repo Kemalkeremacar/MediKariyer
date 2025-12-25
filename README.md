@@ -78,7 +78,7 @@ cd mobile-app
 npm install
 npm start
 ```
-
+npx expo start --tunnel --clear
 ---
 
 ## 🛠️ Teknolojiler

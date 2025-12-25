@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -47,22 +47,35 @@ export const NotificationsScreen = () => {
   const { mutateAsync: markAsRead } = useMarkAsRead();
   const deleteNotificationsMutation = useDeleteNotifications();
 
+  // Screen focus olduğunda bildirimleri yenile (sayfa açıldığında fresh data)
+  useFocusEffect(
+    useCallback(() => {
+      // Screen focus olduğunda refetch yap
+      refetch();
+    }, [refetch])
+  );
+
   const filteredNotifications = React.useMemo(() => {
     if (activeTab === 'unread') {
-      return notificationList.filter((n) => !n.is_read);
+      // Backend'den camelCase (isRead) geliyor, geriye dönük uyumluluk için is_read de kontrol et
+      return notificationList.filter((n) => !(n.isRead ?? n.is_read ?? false));
     }
     
     return notificationList;
   }, [notificationList, activeTab]);
 
-  const unreadCount = notificationList.filter((n) => !n.is_read).length;
+  // isRead veya is_read field'ını kullan (camelCase öncelikli)
+  const unreadCount = notificationList.filter((n) => {
+    return !(n.isRead ?? n.is_read ?? false);
+  }).length;
 
   /**
    * Bildirime tıklandığında ilgili sayfaya yönlendirir
    */
   const handleNotificationPress = useCallback(async (notification: NotificationItem) => {
-    // Mark as read
-    if (!notification.is_read) {
+    // Mark as read (isRead veya is_read kontrolü)
+    const isRead = notification.isRead ?? notification.is_read ?? false;
+    if (!isRead) {
       try {
         await markAsRead(notification.id);
       } catch (error) {
@@ -126,7 +139,10 @@ export const NotificationsScreen = () => {
    * Tüm bildirimleri okundu olarak işaretler
    */
   const handleMarkAllRead = useCallback(async () => {
-    const unreadNotifications = notificationList.filter((n) => !n.is_read);
+    // isRead veya is_read field'ını kullan (camelCase öncelikli)
+    const unreadNotifications = notificationList.filter((n) => {
+      return !(n.isRead ?? n.is_read ?? false);
+    });
     if (unreadNotifications.length === 0) return;
     
     try {
@@ -312,8 +328,8 @@ export const NotificationsScreen = () => {
                 type={(item.type as 'application' | 'job' | 'system' | 'message') || 'system'}
                 title={item.title}
                 message={item.body}
-                timestamp={item.created_at || new Date().toISOString()}
-                read={item.is_read}
+                timestamp={item.createdAt || item.created_at || new Date().toISOString()}
+                read={item.isRead ?? item.is_read ?? false}
                 onPress={() => selectionMode ? toggleSelectNotification(item.id) : handleNotificationPress(item)}
               />
             </View>

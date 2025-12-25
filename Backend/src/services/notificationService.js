@@ -46,6 +46,7 @@ const { AppError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 const { PAGINATION } = require('../config/appConstants');
 const sseManager = require('../utils/sseManager');
+const expoPushService = require('./mobile/expoPushService');
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -486,6 +487,30 @@ const sendNotification = async (notificationData) => {
     logger.error('[Notification Service] ❌ SSE bildirim gönderme hatası:', sseError);
   }
   
+  // Mobile push notification gönder (SSE'den sonra, return'den önce)
+  try {
+    logger.info(`[Notification Service] Mobile push bildirim gönderiliyor - User ID: ${user_id}, Title: ${notification.title}`);
+    const pushResult = await expoPushService.sendPushToUser(
+      user_id,
+      notification.title,
+      notification.body,
+      {
+        notificationId: notification.id,
+        type: notification.type,
+        ...notification.data
+      }
+    );
+    
+    if (pushResult.success) {
+      logger.info(`[Notification Service] ✅ Mobile push bildirim gönderildi - User ID: ${user_id}, Sent: ${pushResult.sent}`);
+    } else {
+      logger.warn(`[Notification Service] ⚠️ Mobile push bildirim gönderilemedi - User ID: ${user_id}, Message: ${pushResult.message}`);
+    }
+  } catch (pushError) {
+    // Push notification hatası bildirim gönderimini engellemez
+    logger.error('[Notification Service] ❌ Mobile push bildirim gönderme hatası:', pushError);
+  }
+  
   return notification;
 };
 
@@ -527,6 +552,30 @@ const sendBulkNotification = async (userIds, notificationData) => {
        VALUES (?, ?, ?, ?, ?, ?, NULL, GETDATE())`,
       [userId, notificationType, title, body, dataJson, channel]
     );
+  }
+  
+  // Toplu push notification gönder (her kullanıcı için mobile'a bildirim gitmeli)
+  // Web'den hiç oturum açmamış kullanıcılar için de mobile'a bildirim gitmeli
+  try {
+    logger.info(`[Notification Service] Toplu mobile push bildirim gönderiliyor - ${userIds.length} kullanıcı`);
+    const pushResult = await expoPushService.sendBulkPushNotification(
+      userIds,
+      title,
+      body,
+      {
+        type: notificationType,
+        ...data
+      }
+    );
+    
+    if (pushResult.success) {
+      logger.info(`[Notification Service] ✅ Toplu mobile push bildirim gönderildi - ${pushResult.sent} gönderildi, ${pushResult.failed} başarısız`);
+    } else {
+      logger.warn(`[Notification Service] ⚠️ Toplu mobile push bildirim gönderilemedi - ${pushResult.message}`);
+    }
+  } catch (pushError) {
+    // Push notification hatası bildirim gönderimini engellemez
+    logger.error('[Notification Service] ❌ Toplu mobile push bildirim gönderme hatası:', pushError);
   }
   
   return { sent_count: userIds.length };

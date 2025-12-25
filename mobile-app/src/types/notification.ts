@@ -3,8 +3,11 @@ export interface NotificationItem {
   title: string;
   body: string;
   type: 'info' | 'success' | 'warning' | 'error' | string;
-  is_read: boolean;
-  created_at: string | null;
+  isRead: boolean; // camelCase format (backend'den geliyor)
+  createdAt: string | null; // camelCase format (backend'den geliyor)
+  // Geriye dönük uyumluluk için eski field'lar da destekleniyor
+  is_read?: boolean;
+  created_at?: string | null;
   data: Record<string, unknown> | null;
 }
 

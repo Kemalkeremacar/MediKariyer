@@ -14,17 +14,24 @@
 
 import { useEffect, useRef } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { AppState, AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 import { errorLogger } from '@/utils/errorLogger';
+import { queryKeys } from '@/api/queryKeys';
+import { navigationRef } from '@/navigation/navigationRef';
 import type { RootNavigationParamList } from '@/navigation/types';
 
 export const usePushNotifications = () => {
   const navigation = useNavigation<NavigationProp<RootNavigationParamList>>();
   const { isAuthenticated } = useAuth();
+  const queryClient = useQueryClient();
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
+  const appStateListener = useRef<any>(null);
+  const lastNotificationResponse = useRef<any>(null);
 
   useEffect(() => {
     // Only register if user is authenticated
@@ -43,19 +50,71 @@ export const usePushNotifications = () => {
     notificationListener.current =
       pushNotificationService.addNotificationReceivedListener(
         (notification) => {
-          console.log('Notification received:', notification);
-          // You can show in-app notification here if needed
+          console.log('[usePushNotifications] Foreground notification received:', notification);
+          // Foreground'da bildirim geldiğinde query'leri invalidate et
+          queryClient.invalidateQueries({ 
+            queryKey: queryKeys.notifications.all,
+            exact: false,
+          });
+          queryClient.invalidateQueries({ 
+            queryKey: queryKeys.notifications.unreadCount(),
+          });
         }
       );
 
-    // Listen for notification tapped by user
+    // Listen for notification tapped by user (works for both foreground and background)
     responseListener.current =
       pushNotificationService.addNotificationResponseReceivedListener(
         (response) => {
-          console.log('Notification tapped:', response);
-          handleNotificationTapped(response);
+          console.log('[usePushNotifications] Notification tapped:', response);
+          lastNotificationResponse.current = response;
+          
+          // Uygulama durumuna göre işlem yap
+          const appState = AppState.currentState;
+          if (appState === 'active') {
+            // Uygulama açıkken tıklandı - hemen navigate et
+            handleNotificationTapped(response);
+          } else {
+            // Uygulama kapalı/arka plandayken tıklandı - appState değiştiğinde handle edilecek
+            // AppState listener'da handle edilecek
+          }
         }
       );
+
+    // Background notification handling: Uygulama kapalıyken gelen bildirimler
+    // Uygulama açıldığında veya arka plandan döndüğünde son bildirimi kontrol et
+    appStateListener.current = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && lastNotificationResponse.current) {
+        // Uygulama aktif oldu ve bir bildirim tıklanmış
+        // Kısa bir gecikme ile navigate et (navigation hazır olması için)
+        setTimeout(() => {
+          handleNotificationTapped(lastNotificationResponse.current);
+          lastNotificationResponse.current = null; // İşlendikten sonra temizle
+        }, 500);
+      }
+    });
+
+    // Uygulama açıldığında bekleyen bildirimleri kontrol et (cold start)
+    // Expo Notifications API'si uygulama kapalıyken tıklanan bildirimleri otomatik olarak
+    // getLastNotificationResponseAsync() ile alabiliriz
+    const checkLastNotification = async () => {
+      try {
+        const lastNotification = await Notifications.getLastNotificationResponseAsync();
+        if (lastNotification) {
+          console.log('[usePushNotifications] Last notification on app start:', lastNotification);
+          // Uygulama açıldığında son bildirimi handle et
+          setTimeout(() => {
+            handleNotificationTapped(lastNotification);
+          }, 1000); // Navigation hazır olması için bekle
+        }
+      } catch (error) {
+        // Hata durumunda sessizce ignore et
+        console.warn('[usePushNotifications] Failed to get last notification:', error);
+      }
+    };
+
+    // Uygulama açıldığında kontrol et
+    checkLastNotification();
 
     // Cleanup listeners on unmount
     return () => {
@@ -75,37 +134,107 @@ export const usePushNotifications = () => {
           // Ignore cleanup errors
         }
       }
+      if (appStateListener.current) {
+        appStateListener.current.remove();
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, queryClient]);
 
   /**
-   * Handle notification tapped - navigate to relevant screen
+   * Handle notification tapped - navigate to relevant screen (Deep Linking)
+   * 
+   * Notification data structure from backend:
+   * - notificationId: Bildirim ID'si
+   * - type: Bildirim tipi (application, job, system, message, etc.)
+   * - application_id: Başvuru ID'si (varsa)
+   * - job_id: İş ilanı ID'si (varsa)
+   * - job_title: İş ilanı başlığı (varsa)
+   * - hospital_name: Hastane adı (varsa)
+   * - status: Durum bilgisi (varsa)
    */
   const handleNotificationTapped = (
     response: any
   ) => {
     try {
       const data = response.notification.request.content.data;
+      const notificationId = data?.notificationId || data?.notification_id;
 
-      // Navigate based on notification type
-      if (data?.type === 'application_status' && data?.applicationId) {
-        navigation.navigate('Applications');
-      } else if (data?.type === 'new_job' && data?.jobId) {
-        navigation.navigate('JobsTab', {
-          screen: 'JobDetail',
-          params: { id: data.jobId },
+      // Deep linking: Bildirim tipine göre ilgili sayfaya yönlendir
+      
+      // 1. Başvuru durumu bildirimleri (application_id varsa)
+      if (data?.application_id) {
+        // Applications tab'ına git (başvuru detayına gidebiliriz ama şimdilik liste yeterli)
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('Applications' as any);
+        } else {
+          navigation.navigate('Applications');
+        }
+        return;
+      }
+
+      // 2. İş ilanı bildirimleri (job_id varsa)
+      if (data?.job_id) {
+        // İş ilanı detay sayfasına git
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('JobsTab' as any, {
+            screen: 'JobDetail',
+            params: { id: Number(data.job_id) },
+          });
+        } else {
+          navigation.navigate('JobsTab', {
+            screen: 'JobDetail',
+            params: { id: Number(data.job_id) },
+          });
+        }
+        return;
+      }
+
+      // 3. Bildirim detay sayfası (notificationId varsa ve tip bildirim ise)
+      if (notificationId && (data?.type === 'system' || data?.type === 'message' || data?.type === 'info')) {
+        // Bildirimler sayfasına git (gelecekte notification detail sayfası eklenebilir)
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('ProfileTab' as any, {
+            screen: 'Notifications',
+          });
+        } else {
+          navigation.navigate('ProfileTab', {
+            screen: 'Notifications',
+          });
+        }
+        return;
+      }
+
+      // 4. Varsayılan: Bildirimler sayfasına git
+      if (navigationRef.isReady()) {
+        navigationRef.navigate('ProfileTab' as any, {
+          screen: 'Notifications',
         });
-      } else if (data?.type === 'message') {
-        navigation.navigate('Notifications');
       } else {
-        // Default: navigate to notifications
-        navigation.navigate('Notifications');
+        navigation.navigate('ProfileTab', {
+          screen: 'Notifications',
+        });
       }
     } catch (error) {
       errorLogger.logError(error as Error, {
         context: 'handleNotificationTapped',
+        extra: { response },
       });
+      // Hata durumunda bildirimler sayfasına git
+      try {
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('ProfileTab' as any, {
+            screen: 'Notifications',
+          });
+        } else {
+          navigation.navigate('ProfileTab', {
+            screen: 'Notifications',
+          });
+        }
+      } catch (navError) {
+        // Navigation hatası - sessizce ignore et
+        console.warn('[usePushNotifications] Navigation failed after notification tap:', navError);
+      }
     }
   };
 
