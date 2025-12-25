@@ -30,6 +30,7 @@
 // ============================================================================
 
 const express = require('express');
+const Joi = require('joi');
 const { authMiddleware } = require('../../middleware/authMiddleware');
 const { requireDoctor } = require('../../middleware/roleGuard');
 const { mobileErrorHandler, mobileErrorBoundary } = require('../../middleware/mobileErrorHandler');
@@ -91,6 +92,20 @@ router.delete('/profile/photo/request', mobileDoctorController.cancelPhotoReques
 
 // Account Management endpoints
 router.post('/account/deactivate', mobileDoctorController.deactivateAccount);
+
+// Profile Update Notification endpoint
+const mobileProfileNotifyUpdateSchema = Joi.object({
+  updateType: Joi.string().valid('personal_info', 'education', 'experience', 'certificate', 'language').required().messages({
+    'any.only': 'updateType personal_info, education, experience, certificate veya language olmalıdır',
+    'any.required': 'updateType zorunludur'
+  }),
+  updateDescription: Joi.string().min(1).max(500).required().messages({
+    'string.min': 'updateDescription en az 1 karakter olmalıdır',
+    'string.max': 'updateDescription en fazla 500 karakter olabilir',
+    'any.required': 'updateDescription zorunludur'
+  })
+});
+router.post('/profile/notify-update', validateBody(mobileProfileNotifyUpdateSchema), mobileDoctorController.sendProfileUpdateNotification);
 
 router.use(mobileErrorBoundary);
 

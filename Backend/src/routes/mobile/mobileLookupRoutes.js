@@ -38,6 +38,8 @@ router.get('/education-types', mobileLookupController.getDoctorEducationTypes);
 router.get('/languages', mobileLookupController.getLanguages);
 router.get('/language-levels', mobileLookupController.getLanguageLevels);
 router.get('/application-statuses', mobileLookupController.getApplicationStatuses);
+router.get('/certificate-types', mobileLookupController.getCertificateTypes);
+router.get('/job-statuses', mobileLookupController.getJobStatuses);
 
 router.use(mobileErrorBoundary);
 

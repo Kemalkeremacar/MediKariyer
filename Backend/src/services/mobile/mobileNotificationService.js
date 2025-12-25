@@ -35,18 +35,33 @@ const logger = require('../../utils/logger');
 const notificationTransformer = require('../../mobile/transformers/notificationTransformer');
 const { normalizeCountResult } = require('../../utils/queryHelper');
 
-const listNotifications = async (userId, { page = 1, limit = 20 } = {}) => {
+const listNotifications = async (userId, { page = 1, limit = 20, is_read } = {}) => {
   const currentPage = Math.max(Number(page) || 1, 1);
   const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
 
-  const countQuery = db('notifications')
-    .where('user_id', userId)
-    .count({ count: '*' })
-    .first();
+  // is_read filter desteği: Frontend'den gelen "Sadece Okunmamışları Göster" filtresini destekler
+  const buildBaseQuery = () => {
+    let query = db('notifications').where('user_id', userId);
+    
+    // is_read filter: false ise sadece okunmamışları, true ise sadece okunmuşları getir
+    if (is_read !== undefined && is_read !== null) {
+      if (is_read === false || is_read === 'false') {
+        query = query.whereNull('read_at'); // Okunmamış bildirimler
+      } else if (is_read === true || is_read === 'true') {
+        query = query.whereNotNull('read_at'); // Okunmuş bildirimler
+      }
+    }
+    
+    return query;
+  };
+
+  const baseQuery = buildBaseQuery();
+
+  const countQuery = baseQuery.clone().count({ count: '*' }).first();
 
   // Explicit column selection - is_read computed field olarak hesaplanacak
-  const notificationsQuery = db('notifications')
-    .where('user_id', userId)
+  const notificationsQuery = baseQuery
+    .clone()
     .select(
       'id',
       'user_id',
@@ -123,60 +138,65 @@ const markAsRead = async (userId, notificationId) => {
  * @returns {Promise<object>} Kayıt sonucu
  */
 const registerDeviceToken = async (userId, expoPushToken, deviceId, platform, appVersion = null) => {
-  // Önce aynı user_id ve device_id ile kayıt var mı kontrol et
-  const existing = await db('device_tokens')
-    .where('user_id', userId)
-    .where('device_id', deviceId)
-    .where('platform', platform)
-    .first();
+  // Transaction içinde upsert mantığını güvenli hale getir
+  // Aynı cihaz için eşzamanlı token kayıtları çakışmasını önler
+  return await db.transaction(async (trx) => {
+    // Önce aynı user_id ve device_id ile kayıt var mı kontrol et
+    const existing = await trx('device_tokens')
+      .where('user_id', userId)
+      .where('device_id', deviceId)
+      .where('platform', platform)
+      .first();
 
-  if (existing) {
-    // Mevcut kaydı güncelle
-    await db('device_tokens')
-      .where('id', existing.id)
+    if (existing) {
+      // Mevcut kaydı güncelle
+      await trx('device_tokens')
+        .where('id', existing.id)
+        .update({
+          expo_push_token: expoPushToken,
+          app_version: appVersion,
+          is_active: true,
+          updated_at: new Date()
+        });
+
+      return {
+        success: true,
+        message: 'Device token güncellendi',
+        device_token_id: existing.id
+      };
+    }
+
+    // Aynı token'a sahip başka cihazlar varsa onları deaktif et (aynı cihaz, farklı kullanıcı)
+    // Bu işlem transaction içinde yapılarak tutarlılık sağlanır
+    await trx('device_tokens')
+      .where('expo_push_token', expoPushToken)
+      .where('device_id', deviceId)
+      .where('user_id', '!=', userId) // Sadece farklı kullanıcıların token'larını deaktif et
       .update({
-        expo_push_token: expoPushToken,
-        app_version: appVersion,
-        is_active: true,
+        is_active: false,
         updated_at: new Date()
       });
 
+    // Yeni kayıt oluştur
+    const [newToken] = await trx('device_tokens')
+      .insert({
+        user_id: userId,
+        expo_push_token: expoPushToken,
+        device_id: deviceId,
+        platform: platform,
+        app_version: appVersion,
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      })
+      .returning('id');
+
     return {
       success: true,
-      message: 'Device token güncellendi',
-      device_token_id: existing.id
+      message: 'Device token kaydedildi',
+      device_token_id: newToken.id
     };
-  }
-
-  // Aynı token'a sahip başka cihazlar varsa onları deaktif et (aynı cihaz, farklı kullanıcı)
-  await db('device_tokens')
-    .where('expo_push_token', expoPushToken)
-    .where('device_id', deviceId)
-    .where('user_id', '!=', userId) // Sadece farklı kullanıcıların token'larını deaktif et
-    .update({
-      is_active: false,
-      updated_at: new Date()
-    });
-
-  // Yeni kayıt oluştur
-  const [newToken] = await db('device_tokens')
-    .insert({
-      user_id: userId,
-      expo_push_token: expoPushToken,
-      device_id: deviceId,
-      platform: platform,
-      app_version: appVersion,
-      is_active: true,
-      created_at: new Date(),
-      updated_at: new Date()
-    })
-    .returning('id');
-
-  return {
-    success: true,
-    message: 'Device token kaydedildi',
-    device_token_id: newToken.id
-  };
+  });
 };
 
 // ============================================================================
@@ -231,12 +251,34 @@ const deleteNotifications = async (userId, ids) => {
   return deleted;
 };
 
+/**
+ * Tüm bildirimleri okundu olarak işaretle
+ * @param {number} userId - Kullanıcı ID'si
+ * @returns {Promise<Object>} Güncellenen bildirim sayısı
+ */
+const markAllAsRead = async (userId) => {
+  const notificationService = require('../notificationService');
+  return await notificationService.markAllAsRead(userId);
+};
+
+/**
+ * Okunmuş bildirimleri temizle
+ * @param {number} userId - Kullanıcı ID'si
+ * @returns {Promise<Object>} Silinen bildirim sayısı
+ */
+const clearReadNotifications = async (userId) => {
+  const notificationService = require('../notificationService');
+  return await notificationService.clearReadNotifications(userId);
+};
+
 module.exports = {
   listNotifications,
   markAsRead,
   registerDeviceToken,
   getUnreadCount,
   deleteNotification,
-  deleteNotifications
+  deleteNotifications,
+  markAllAsRead,
+  clearReadNotifications
 };
 

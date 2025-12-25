@@ -32,6 +32,7 @@ const express = require('express');
 const mobileAuthController = require('../../controllers/mobile/mobileAuthController');
 const { mobileErrorHandler, mobileErrorBoundary } = require('../../middleware/mobileErrorHandler');
 const { validateBody } = require('../../middleware/validationMiddleware');
+const { authLimiter } = require('../../middleware/rateLimitMiddleware');
 const {
   mobileLoginSchema,
   mobileRefreshTokenSchema,
@@ -44,8 +45,9 @@ const router = express.Router();
 
 router.use(mobileErrorHandler);
 
-router.post('/registerDoctor', validateBody(mobileRegisterDoctorSchema), mobileAuthController.registerDoctor);
-router.post('/login', validateBody(mobileLoginSchema), mobileAuthController.login);
+// Rate limiting: Brute force saldırılarına karşı koruma
+router.post('/registerDoctor', authLimiter, validateBody(mobileRegisterDoctorSchema), mobileAuthController.registerDoctor);
+router.post('/login', authLimiter, validateBody(mobileLoginSchema), mobileAuthController.login);
 router.post('/refresh', validateBody(mobileRefreshTokenSchema), mobileAuthController.refreshToken);
 router.post('/logout', validateBody(mobileLogoutSchema), mobileAuthController.logout);
 

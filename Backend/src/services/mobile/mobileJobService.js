@@ -94,9 +94,12 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
   if (filters.keyword) {
     const searchTerm = filters.keyword.trim();
     if (searchTerm) {
+      // Search optimizasyonu: LIKE '%term%' yerine prefix search (LIKE 'term%') kullanılıyor
+      // Bu sayede index kullanımı mümkün olur ve performans artar
+      // Kullanıcı deneyimini korumak için her iki alanda da arama yapılıyor
       baseQuery.andWhere(function() {
-        this.where('j.title', 'like', `%${searchTerm}%`)
-          .orWhere('hp.institution_name', 'like', `%${searchTerm}%`);
+        this.where('j.title', 'like', `${searchTerm}%`)
+          .orWhere('hp.institution_name', 'like', `${searchTerm}%`);
       });
     }
   }

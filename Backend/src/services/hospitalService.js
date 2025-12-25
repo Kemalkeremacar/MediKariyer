@@ -671,6 +671,11 @@ const sendJobStatusChangeNotification = async (jobId, newStatus, oldStatus) => {
           title: 'İlan Durumu Değişti',
           body: `${job.hospital_name} hastanesindeki ${job.job_title} pozisyonu için ilan durumu "${oldStatus}" → "${newStatus}" olarak değiştirildi.`,
           data: {
+            // In-App State Update için kritik alanlar
+            action: 'job_status_changed',
+            entity_type: 'job',
+            entity_id: jobId,
+            // Mevcut veriler (geriye dönük uyumluluk için)
             job_id: jobId,
             job_title: job.job_title,
             hospital_name: job.hospital_name,
@@ -1225,69 +1230,76 @@ const getAllApplications = async (userId, params = {}) => {
  */
 const updateApplicationStatus = async (userId, applicationId, statusId, notes = null) => {
   try {
-    // Hastane profil ID'sini al
-    const hospitalProfile = await db('hospital_profiles')
-      .where('user_id', userId)
-      .select('id')
-      .first();
-
-    if (!hospitalProfile) {
-      throw new AppError('Hastane profili bulunamadı', 404);
-    }
-
-    // Başvurunun sahipliğini kontrol et
-    const application = await db('applications as a')
-      .join('jobs as j', 'a.job_id', 'j.id')
-      .join('application_statuses as ast', 'a.status_id', 'ast.id')
-      .where({ 'a.id': applicationId, 'j.hospital_id': hospitalProfile.id })
-      .select('a.*', 'j.title as job_title', 'j.hospital_id', 'ast.name as current_status')
-      .first();
-
-    if (!application) {
-      throw new AppError('Başvuru bulunamadı veya yetkiniz yok', 404);
-    }
-
-    // Geri çekilen başvurular için durum değişikliği yapılamaz
-    if (application.current_status === 'Geri Çekildi') {
-      throw new AppError('Geri çekilen başvurular için durum değişikliği yapılamaz', 400);
-    }
-
-    // Başvuru durumunu güncelle (direkt status_id kullan - string desteği kaldırıldı)
-    await db('applications')
-      .where('id', applicationId)
-      .update({
-        status_id: statusId,
-        notes: notes,
-        updated_at: db.fn.now()
-      });
-
-    // Güncellenmiş başvuruyu getir
-    const updatedApplication = await db('applications as a')
-      .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
-      .join('users as u', 'dp.user_id', 'u.id')
-      .join('application_statuses as ast', 'a.status_id', 'ast.id')
-      .join('jobs as j', 'a.job_id', 'j.id')
-      .where('a.id', applicationId)
-      .select(
-        'a.*',
-        'dp.first_name',
-        'dp.last_name',
-        'u.email',
-        'ast.name as status',
-        'j.title as job_title'
-      )
-      .first();
-
-    // Bildirim gönder
-    try {
-      // doctor_profile_id'den user_id'yi al
-      const doctorUser = await db('doctor_profiles')
-        .join('users', 'doctor_profiles.user_id', 'users.id')
-        .where('doctor_profiles.id', application.doctor_profile_id)
-        .select('users.id as user_id')
+    // Transaction içinde tüm işlemleri yap (Deadlock riskini önlemek için)
+    // Mobil tarafı zaten transaction kullanıyor, web tarafı da aynı standardı kullanmalı
+    const updatedApplication = await db.transaction(async (trx) => {
+      // Hastane profil ID'sini al
+      const hospitalProfile = await trx('hospital_profiles')
+        .where('user_id', userId)
+        .select('id')
         .first();
 
-      if (doctorUser) {
+      if (!hospitalProfile) {
+        throw new AppError('Hastane profili bulunamadı', 404);
+      }
+
+      // Başvurunun sahipliğini kontrol et - SELECT FOR UPDATE ile row-level locking
+      const application = await trx.raw(`
+        SELECT a.*, j.title as job_title, j.hospital_id, ast.name as current_status, j.id as job_id
+        FROM applications a WITH (UPDLOCK, ROWLOCK)
+        INNER JOIN jobs j ON a.job_id = j.id
+        INNER JOIN application_statuses ast ON a.status_id = ast.id
+        WHERE a.id = ? AND j.hospital_id = ?
+      `, [applicationId, hospitalProfile.id]);
+
+      if (!application || !application[0] || application[0].length === 0) {
+        throw new AppError('Başvuru bulunamadı veya yetkiniz yok', 404);
+      }
+
+      const appData = Array.isArray(application[0]) ? application[0][0] : application[0];
+
+      // Geri çekilen başvurular için durum değişikliği yapılamaz
+      if (appData.current_status === 'Geri Çekildi') {
+        throw new AppError('Geri çekilen başvurular için durum değişikliği yapılamaz', 400);
+      }
+
+      // Başvuru durumunu güncelle (direkt status_id kullan - string desteği kaldırıldı)
+      await trx('applications')
+        .where('id', applicationId)
+        .update({
+          status_id: statusId,
+          notes: notes,
+          updated_at: db.fn.now()
+        });
+
+      // Güncellenmiş başvuruyu getir (transaction içinde)
+      const applicationData = await trx('applications as a')
+        .join('doctor_profiles as dp', 'a.doctor_profile_id', 'dp.id')
+        .join('users as u', 'dp.user_id', 'u.id')
+        .join('application_statuses as ast', 'a.status_id', 'ast.id')
+        .join('jobs as j', 'a.job_id', 'j.id')
+        .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+        .where('a.id', applicationId)
+        .select(
+          'a.*',
+          'dp.first_name',
+          'dp.last_name',
+          'dp.id as doctor_profile_id',
+          'u.email',
+          'u.id as doctor_user_id',
+          'ast.name as status',
+          'j.title as job_title',
+          'j.id as job_id',
+          'hp.institution_name as hospital_name'
+        )
+        .first();
+
+      return applicationData;
+    });
+
+    // Bildirim gönder (transaction dışında - bildirim hatası işlemi engellemez)
+    try {
+      if (updatedApplication && updatedApplication.doctor_user_id) {
         // Status ID'yi status string'ine çevir
         const statusMap = {
           1: 'pending',      // Beklemede
@@ -1299,21 +1311,15 @@ const updateApplicationStatus = async (userId, applicationId, statusId, notes = 
         
         const statusString = statusMap[statusId] || 'pending';
         
-        // Hastane adını al
-        const hospitalInfo = await db('jobs as j')
-          .join('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
-          .where('j.id', application.job_id)
-          .select('hp.institution_name')
-          .first();
-        
-        await notificationService.sendDoctorNotification(doctorUser.user_id, statusString, {
+        await notificationService.sendDoctorNotification(updatedApplication.doctor_user_id, statusString, {
           application_id: applicationId,
-          job_title: application.job_title,
-          hospital_name: hospitalInfo?.institution_name || 'Hastane',
+          job_id: updatedApplication.job_id,
+          job_title: updatedApplication.job_title,
+          hospital_name: updatedApplication.hospital_name || 'Hastane',
           notes: notes
         });
         
-        logger.info(`Application status change notification sent to doctor ${doctorUser.user_id}`);
+        logger.info(`Application status change notification sent to doctor ${updatedApplication.doctor_user_id}`);
       }
     } catch (notificationError) {
       logger.warn('Application status change notification failed:', notificationError);

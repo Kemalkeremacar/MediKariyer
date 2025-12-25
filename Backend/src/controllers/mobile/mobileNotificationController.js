@@ -34,8 +34,19 @@ const { catchAsync } = require('../../utils/errorHandler');
 const mobileNotificationService = require('../../services/mobile/mobileNotificationService');
 
 const listNotifications = catchAsync(async (req, res) => {
-  const { page, limit } = req.query;
-  const result = await mobileNotificationService.listNotifications(req.user.id, { page, limit });
+  const { page, limit, is_read } = req.query;
+  
+  // is_read parametresini boolean'a çevir (query string'den gelen 'true'/'false' string'lerini handle et)
+  let isReadFilter = undefined;
+  if (is_read !== undefined && is_read !== null) {
+    isReadFilter = is_read === 'true' || is_read === true;
+  }
+  
+  const result = await mobileNotificationService.listNotifications(req.user.id, { 
+    page, 
+    limit, 
+    is_read: isReadFilter 
+  });
   
   // sendPaginated kullanarak düz response döndür
   const { sendPaginated } = require('../../utils/response');
@@ -91,12 +102,34 @@ const deleteNotifications = catchAsync(async (req, res) => {
   return sendSuccess(res, `${deleted} bildirim silindi`, { deleted_count: deleted });
 });
 
+/**
+ * Tüm bildirimleri okundu olarak işaretle
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+const markAllAsRead = catchAsync(async (req, res) => {
+  const result = await mobileNotificationService.markAllAsRead(req.user.id);
+  return sendSuccess(res, 'Tüm bildirimler okundu olarak işaretlendi', { count: result.count });
+});
+
+/**
+ * Okunmuş bildirimleri temizle
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+const clearReadNotifications = catchAsync(async (req, res) => {
+  const result = await mobileNotificationService.clearReadNotifications(req.user.id);
+  return sendSuccess(res, 'Okunmuş bildirimler temizlendi', { count: result.count });
+});
+
 module.exports = {
   listNotifications,
   markAsRead,
   registerDeviceToken,
   getUnreadCount,
   deleteNotification,
-  deleteNotifications
+  deleteNotifications,
+  markAllAsRead,
+  clearReadNotifications
 };
 

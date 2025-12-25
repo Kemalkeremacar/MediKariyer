@@ -58,6 +58,16 @@ const getApplicationStatuses = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Başvuru durumları', data);
 });
 
+const getCertificateTypes = catchAsync(async (req, res) => {
+  const data = await mobileLookupService.getCertificateTypes();
+  return sendSuccess(res, 'Sertifika türleri', data);
+});
+
+const getJobStatuses = catchAsync(async (req, res) => {
+  const data = await mobileLookupService.getJobStatuses();
+  return sendSuccess(res, 'İş durumları', data);
+});
+
 module.exports = {
   getCities,
   getSpecialties,
@@ -65,5 +75,7 @@ module.exports = {
   getDoctorEducationTypes,
   getLanguages,
   getLanguageLevels,
-  getApplicationStatuses
+  getApplicationStatuses,
+  getCertificateTypes,
+  getJobStatuses
 };

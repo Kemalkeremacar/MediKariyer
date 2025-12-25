@@ -24,6 +24,82 @@ import { queryKeys } from '@/api/queryKeys';
 import { navigationRef } from '@/navigation/navigationRef';
 import type { RootNavigationParamList } from '@/navigation/types';
 
+/**
+ * In-App State Update Handler
+ * Backend'den gelen bildirimdeki action ve entity_id'ye göre ilgili query'leri invalidate eder
+ * Bu sayede bildirim geldiğinde UI otomatik olarak güncellenir
+ * 
+ * @param data - Bildirim data objesi (action, entity_id, entity_type içerir)
+ * @param queryClient - React Query client
+ */
+const handleInAppStateUpdate = (
+  data: import('@/types/notification').NotificationData | null | undefined,
+  queryClient: ReturnType<typeof useQueryClient>
+) => {
+  if (!data) {
+    console.log('[handleInAppStateUpdate] No data found in notification');
+    return;
+  }
+  
+  const { action, entity_id, entity_type } = data;
+  
+  if (!action) {
+    console.log('[handleInAppStateUpdate] No action found in notification data');
+    return;
+  }
+  
+  console.log(`[handleInAppStateUpdate] Action: ${action}, Entity ID: ${entity_id}, Entity Type: ${entity_type}`);
+  
+  switch (action) {
+    case 'application_created':
+    case 'application_status_changed':
+    case 'application_withdrawn':
+      // Başvuru ile ilgili bildirimler
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.applications.all,
+        exact: false,
+      });
+      
+      // Eğer entity_id varsa, spesifik başvuru detayını da invalidate et
+      if (entity_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: queryKeys.applications.detail(Number(entity_id)),
+        });
+      }
+      
+      // Dashboard'daki özet sayıları da güncelle
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.dashboard.all,
+      });
+      break;
+      
+    // NOT: profile_updated action'ı kaldırıldı - Profil güncelleme bildirimleri gönderilmiyor
+    // case 'profile_updated':
+    //   queryClient.invalidateQueries({ queryKey: queryKeys.profile.all, exact: false });
+    //   break;
+      
+    case 'job_status_changed':
+      // İş ilanı durumu değişikliği
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.jobs.all,
+        exact: false,
+      });
+      
+      // Eğer entity_id varsa, spesifik iş ilanı detayını da invalidate et
+      if (entity_id) {
+        queryClient.invalidateQueries({ 
+          queryKey: queryKeys.jobs.detail(Number(entity_id)),
+        });
+      }
+      break;
+      
+    default:
+      console.log(`[handleInAppStateUpdate] Unknown action: ${action}`);
+      // Bilinmeyen action için sadece bildirim listesini güncelle
+      break;
+  }
+};
+
 export const usePushNotifications = () => {
   const navigation = useNavigation<NavigationProp<RootNavigationParamList>>();
   const { isAuthenticated } = useAuth();
@@ -51,7 +127,12 @@ export const usePushNotifications = () => {
       pushNotificationService.addNotificationReceivedListener(
         (notification) => {
           console.log('[usePushNotifications] Foreground notification received:', notification);
-          // Foreground'da bildirim geldiğinde query'leri invalidate et
+          const data = notification.request?.content?.data || {};
+          
+          // In-App State Update: Backend'den gelen action ve entity_id'ye göre ilgili query'leri invalidate et
+          handleInAppStateUpdate(data, queryClient);
+          
+          // Bildirim listesini de güncelle
           queryClient.invalidateQueries({ 
             queryKey: queryKeys.notifications.all,
             exact: false,
@@ -68,6 +149,10 @@ export const usePushNotifications = () => {
         (response) => {
           console.log('[usePushNotifications] Notification tapped:', response);
           lastNotificationResponse.current = response;
+          
+          // In-App State Update: Bildirime tıklandığında da state'i güncelle
+          const data = (response.notification?.request?.content?.data || {}) as import('@/types/notification').NotificationData;
+          handleInAppStateUpdate(data, queryClient);
           
           // Uygulama durumuna göre işlem yap
           const appState = AppState.currentState;

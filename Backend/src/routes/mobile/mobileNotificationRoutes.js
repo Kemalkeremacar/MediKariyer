@@ -65,6 +65,8 @@ const notificationIdParamsSchema = Joi.object({
 router.get('/', validateQuery(mobileNotificationsQuerySchema), mobileNotificationController.listNotifications);
 router.get('/unread-count', mobileNotificationController.getUnreadCount);
 router.post('/:notificationId/read', validateParams(notificationIdParamsSchema), mobileNotificationController.markAsRead);
+router.patch('/mark-all-read', mobileNotificationController.markAllAsRead);
+router.delete('/clear-read', mobileNotificationController.clearReadNotifications);
 router.delete('/:notificationId', validateParams(notificationIdParamsSchema), mobileNotificationController.deleteNotification);
 router.post('/delete-many', mobileNotificationController.deleteNotifications);
 

@@ -186,6 +186,23 @@ const deactivateAccount = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Hesabınız başarıyla kapatıldı', null);
 });
 
+/**
+ * Profil güncelleme bildirimi gönder
+ * @description Doktor profil güncellemesi yapıldığında bildirim gönderir
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object
+ */
+const sendProfileUpdateNotification = catchAsync(async (req, res) => {
+  const { updateType, updateDescription } = req.body;
+  const doctorService = require('../../services/doctorService');
+  const notification = await doctorService.sendProfileUpdateNotification(
+    req.user.id,
+    updateType,
+    updateDescription
+  );
+  return sendSuccess(res, 'Profil güncelleme bildirimi gönderildi', { notification });
+});
+
 module.exports = {
   getDashboard,
   getProfile,
@@ -223,6 +240,9 @@ module.exports = {
   cancelPhotoRequest,
   
   // Account Management
-  deactivateAccount
+  deactivateAccount,
+  
+  // Profile Update Notification
+  sendProfileUpdateNotification
 };
 

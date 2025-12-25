@@ -74,6 +74,21 @@ const getApplicationStatuses = async () => {
   return await lookupService.getApplicationStatuses();
 };
 
+/**
+ * Sertifika türlerini getir (mobile optimized)
+ * Not: certificate_types tablosu kaldırıldı, boş array döner (geriye dönük uyumluluk için)
+ */
+const getCertificateTypes = async () => {
+  return await lookupService.getCertificateTypes();
+};
+
+/**
+ * İş durumlarını getir (mobile optimized)
+ */
+const getJobStatuses = async () => {
+  return await lookupService.getJobStatuses();
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -85,5 +100,7 @@ module.exports = {
   getDoctorEducationTypes,
   getLanguages,
   getLanguageLevels,
-  getApplicationStatuses
+  getApplicationStatuses,
+  getCertificateTypes,
+  getJobStatuses
 };

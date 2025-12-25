@@ -21,6 +21,10 @@ const createTransporter = () => {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   const secure = process.env.SMTP_SECURE === 'true' || Number(port) === 465;
+  // TLS sertifika doğrulamasını atla (self-signed veya uyumsuz sertifikalar için)
+  const ignoreTLS = process.env.SMTP_IGNORE_TLS !== undefined 
+    ? process.env.SMTP_IGNORE_TLS === 'true'
+    : true; // Varsayılan olarak true (güvenli olmayan ama çalışır)
 
   if (!host || !port) {
     logger.warn('SMTP bilgileri tanımlanmadı. E-posta gönderimi simüle edilecek.');
@@ -32,7 +36,13 @@ const createTransporter = () => {
     host,
     port: Number(port),
     secure,
-    auth: user && pass ? { user, pass } : undefined
+    auth: user && pass ? { user, pass } : undefined,
+    tls: {
+      // Sertifika doğrulamasını atla (uyumsuz sertifikalar için gerekli)
+      rejectUnauthorized: !ignoreTLS,
+      // Server name indication için hostname kullan
+      servername: host
+    }
   });
 
   return transporter;

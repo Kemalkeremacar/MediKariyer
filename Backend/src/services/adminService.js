@@ -1646,6 +1646,11 @@ const sendJobStatusChangeNotification = async (jobId, newStatus, oldStatus, admi
           title: 'İlan Durumu Değişti',
           body: `${job.hospital_name} hastanesindeki ${job.job_title} pozisyonu için ilan durumu "${oldStatus}" → "${newStatus}" olarak değiştirildi.`,
           data: {
+            // In-App State Update için kritik alanlar
+            action: 'job_status_changed',
+            entity_type: 'job',
+            entity_id: jobId,
+            // Mevcut veriler (geriye dönük uyumluluk için)
             job_id: jobId,
             job_title: job.job_title,
             hospital_name: job.hospital_name,

@@ -429,6 +429,17 @@ const sendNotification = async (notificationData) => {
     throw new AppError('Kullanıcı bulunamadı', 404);
   }
   
+  // In-App State Update için: data objesine action ve entity_id ekle (eğer yoksa)
+  // Bu sayede mobil ve web frontend'ler bildirim geldiğinde ilgili state'i otomatik güncelleyebilir
+  const enhancedData = {
+    ...data,
+    // Eğer data içinde action yoksa, varsayılan olarak 'info' kullan
+    action: data?.action || 'info',
+    // entity_id ve entity_type bilgilerini ekle (mobil için kritik)
+    entity_id: data?.entity_id || data?.application_id || data?.job_id || null,
+    entity_type: data?.entity_type || (data?.application_id ? 'application' : data?.job_id ? 'job' : null)
+  };
+  
   // SQL Server için INSERT sonrası ID'yi almak için raw query kullan
   const result = await db.raw(
     `INSERT INTO notifications (user_id, type, title, body, data_json, channel, read_at, created_at)
@@ -439,7 +450,7 @@ const sendNotification = async (notificationData) => {
       type || 'info',
       title,
       body,
-      data ? JSON.stringify(data) : null,
+      enhancedData ? JSON.stringify(enhancedData) : null,
       channel
     ]
   );
@@ -678,16 +689,39 @@ const sendDoctorNotification = async (doctorUserId, status, applicationData) => 
       notificationType = 'info';
   }
 
+  // Status ID'yi belirle (string'den number'a çevir)
+  let statusId = null;
+  if (typeof status === 'number') {
+    statusId = status;
+  } else {
+    const statusMap = {
+      'pending': 1,
+      'reviewing': 2,
+      'accepted': 3,
+      'rejected': 4,
+      'withdrawn': 5
+    };
+    statusId = statusMap[status] || null;
+  }
+
   return await sendNotification({
     user_id: doctorUserId,
     type: notificationType,
     title: notificationTitle,
     body: notificationBody,
     data: {
+      // In-App State Update için kritik alanlar
+      action: 'application_status_changed',
+      entity_type: 'application',
+      entity_id: applicationData.application_id,
+      status_id: statusId,
+      // Mevcut veriler (geriye dönük uyumluluk için)
       application_id: applicationData.application_id,
-      job_title: applicationData.job_title,
-      hospital_name: applicationData.hospital_name,
-      status: status
+      job_id: applicationData.job_id || applicationData.jobId || null,
+      job_title: applicationData.job_title || applicationData.jobTitle || null,
+      hospital_name: applicationData.hospital_name || applicationData.hospitalName || null,
+      status: status,
+      notes: applicationData.notes || null
     }
   });
 };
@@ -759,6 +793,11 @@ const sendDoctorJobStatusNotification = async (doctorUserId, jobStatus, jobData)
     title: notificationTitle,
     body: notificationBody,
     data: {
+      // In-App State Update için kritik alanlar
+      action: 'job_status_changed',
+      entity_type: 'job',
+      entity_id: jobData.job_id,
+      // Mevcut veriler (geriye dönük uyumluluk için)
       job_id: jobData.job_id,
       job_title: jobData.job_title,
       hospital_name: jobData.hospital_name,
@@ -792,9 +831,16 @@ const sendHospitalNotification = async (hospitalUserId, applicationData) => {
     title: 'Yeni Başvuru Aldınız',
     body: `${applicationData.job_title} pozisyonu için ${applicationData.doctor_name} doktorundan yeni bir başvuru aldınız.`,
     data: {
+      // In-App State Update için kritik alanlar
+      action: 'application_created',
+      entity_type: 'application',
+      entity_id: applicationData.application_id,
+      // Mevcut veriler (geriye dönük uyumluluk için)
       application_id: applicationData.application_id,
+      job_id: applicationData.job_id || null,
       job_title: applicationData.job_title,
-      doctor_name: applicationData.doctor_name
+      doctor_name: applicationData.doctor_name,
+      doctor_profile_id: applicationData.doctor_profile_id || null
     }
   });
 };
@@ -824,12 +870,20 @@ const sendHospitalWithdrawalNotification = async (hospitalUserId, applicationDat
     user_id: hospitalUserId,
     type: 'warning',
     title: 'Başvuru Geri Çekildi',
-    body: `${applicationData.doctor_name} doktoru ${applicationData.job_title} pozisyonu için başvurusunu geri çekti.`,
+    body: `${applicationData.doctor_name} doktoru ${applicationData.job_title} pozisyonu için başvurusunu geri çekti.${applicationData.reason ? ` Sebep: ${applicationData.reason}` : ''}`,
     data: {
+      // In-App State Update için kritik alanlar
+      action: 'application_withdrawn',
+      entity_type: 'application',
+      entity_id: applicationData.application_id,
+      status_id: 5, // Geri Çekildi
+      // Mevcut veriler (geriye dönük uyumluluk için)
       application_id: applicationData.application_id,
+      job_id: applicationData.job_id || null,
       job_title: applicationData.job_title,
       doctor_name: applicationData.doctor_name,
-      reason: applicationData.reason || 'Belirtilmedi'
+      doctor_profile_id: applicationData.doctor_profile_id || null,
+      reason: applicationData.reason || null
     }
   });
 };
