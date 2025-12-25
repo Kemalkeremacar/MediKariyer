@@ -92,6 +92,7 @@ const toMobileExperience = (experience = {}) => {
 const toMobileCertificate = (certificate = {}) => {
   return {
     id: certificate.id,
+    doctor_profile_id: certificate.doctor_profile_id || null,
     certificate_name: certificate.certificate_name || null,
     institution: certificate.institution || null,
     certificate_year: certificate.certificate_year || null,

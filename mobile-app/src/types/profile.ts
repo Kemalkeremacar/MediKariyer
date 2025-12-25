@@ -3,10 +3,10 @@
 export interface DoctorProfile {
   id: number;
   user_id: number;
-  first_name: string;
-  last_name: string;
+  first_name: string | null;
+  last_name: string | null;
   title: string | null;
-  specialty_id: number;
+  specialty_id: number | null;
   specialty_name: string | null;
   subspecialty_id: number | null;
   subspecialty_name: string | null;
@@ -52,10 +52,10 @@ export interface DoctorExperience {
 
 export interface DoctorCertificate {
   id: number;
-  doctor_profile_id: number;
-  certificate_name: string;
-  institution: string;
-  certificate_year: number;
+  doctor_profile_id: number | null;
+  certificate_name: string | null;
+  institution: string | null;
+  certificate_year: number | null;
   created_at?: string | null;
   updated_at?: string | null;
   deleted_at?: string | null;

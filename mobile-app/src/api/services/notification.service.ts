@@ -136,5 +136,16 @@ export const notificationService = {
     );
     return response.data.data;
   },
+
+  /**
+   * Okunmuş bildirimleri temizler
+   * @returns {Promise<{ count: number }>} Silinen bildirim sayısı
+   */
+  async clearReadNotifications(): Promise<{ count: number }> {
+    const response = await apiClient.delete<ApiResponse<{ count: number }>>(
+      endpoints.notifications.clearRead,
+    );
+    return response.data.data;
+  },
 };
 

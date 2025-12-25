@@ -41,6 +41,9 @@ export interface NotificationItem {
   // Geriye dönük uyumluluk için eski field'lar da destekleniyor
   is_read?: boolean;
   created_at?: string | null;
+  // Backend'den gelen ek alanlar
+  user_id?: number | null;
+  read_at?: string | null;
   data: NotificationData | null;
 }
 

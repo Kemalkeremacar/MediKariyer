@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { showAlert } from '@/utils/alert';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
@@ -9,9 +9,10 @@ import { z } from 'zod';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { AuthStackParamList } from '@/navigation/types';
 import { Typography } from '@/components/ui/Typography';
-
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Screen } from '@/components/layout/Screen';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
 import { handleApiError, isAuthError, isNetworkError } from '@/utils/errorHandler';
 
@@ -23,9 +24,12 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const LoginScreen = () => {
+  const { theme } = useTheme();
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [serverError, setServerError] = useState<string | null>(null);
+  
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const {
     control,
@@ -66,38 +70,40 @@ export const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <Screen scrollable={false} safeArea={true} safeAreaEdges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        {/* Header with Gradient - Daha Mavi Tonlama */}
-        <LinearGradient
-          colors={['#4A90E2', '#2E5C8A']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image 
-              source={require('../../../../assets/logo.jpg')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-          
-          {/* MediKariyer Yazısı */}
-          <Typography variant="h1" style={styles.brandName}>
-            MediKariyer
-          </Typography>
-        </LinearGradient>
+          {/* Header with Gradient */}
+          <LinearGradient
+            colors={(theme.colors.gradient as any).header || theme.colors.gradient.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
+          >
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image 
+                source={require('../../../../assets/logo.jpg')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+            
+            {/* MediKariyer Yazısı */}
+            <Typography variant="h1" style={styles.brandName}>
+              MediKariyer
+            </Typography>
+          </LinearGradient>
 
-        {/* Content */}
-        <View style={styles.content}>
+          {/* Content */}
+          <View style={styles.content}>
 
           <Typography variant="body" style={styles.subtitle}>
             Hesabına giriş yap ve kariyer fırsatlarını keşfet
@@ -177,7 +183,7 @@ export const LoginScreen = () => {
               loading={loginMutation.isPending}
               fullWidth
               size="lg"
-              gradientColors={['#4A90E2', '#2E5C8A']}
+              gradientColors={(theme.colors.gradient as any).header || theme.colors.gradient.primary}
               style={styles.loginButton}
             />
 
@@ -192,38 +198,38 @@ export const LoginScreen = () => {
                 </Typography>
               </TouchableOpacity>
             </View>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
+const createStyles = (theme: any) => StyleSheet.create({
+  keyboardView: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
   },
   scrollContent: {
     flexGrow: 1,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
+    paddingTop: theme.spacing['5xl'],
+    paddingBottom: theme.spacing['4xl'],
+    paddingHorizontal: theme.spacing['2xl'],
     alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: theme.borderRadius.header,
+    borderBottomRightRadius: theme.borderRadius.header,
   },
   logoContainer: {
     width: 80,
     height: 80,
-    backgroundColor: '#ffffff',
-    borderRadius: 40,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius['3xl'],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
+    marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.neutral[900],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -235,71 +241,70 @@ const styles = StyleSheet.create({
     height: 70,
   },
   brandName: {
-    color: '#ffffff',
-    fontSize: 32,
-    fontWeight: '700',
+    color: theme.colors.text.inverse,
+    ...theme.textVariants.title,
     textAlign: 'center',
     letterSpacing: 0.5,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingHorizontal: theme.spacing['2xl'],
+    paddingTop: theme.spacing['4xl'],
   },
   subtitle: {
     textAlign: 'center',
-    color: '#6B7280',
-    marginBottom: 40,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing['4xl'],
   },
   form: {
     flex: 1,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: theme.spacing.xl,
   },
   label: {
-    color: '#6B7280',
-    marginBottom: 8,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
   },
   input: {
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background.secondary,
     borderWidth: 0,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: theme.colors.border.medium,
     borderRadius: 0,
     paddingHorizontal: 0,
-    paddingVertical: 12,
+    paddingVertical: theme.spacing.md,
   },
   errorText: {
-    color: '#DC2626',
-    marginTop: 4,
+    color: theme.colors.error[600],
+    marginTop: theme.spacing.xs,
   },
   serverError: {
-    color: '#DC2626',
+    color: theme.colors.error[600],
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: theme.spacing.lg,
   },
   forgotButton: {
     alignSelf: 'flex-end',
-    marginBottom: 32,
+    marginBottom: theme.spacing['3xl'],
   },
   forgotText: {
-    color: '#4A90E2',
+    color: theme.colors.primary[600],
   },
   loginButton: {
-    marginBottom: 24,
+    marginBottom: theme.spacing['2xl'],
   },
   registerSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 40,
+    paddingBottom: theme.spacing['4xl'],
   },
   registerText: {
-    color: '#6B7280',
+    color: theme.colors.text.secondary,
   },
   registerLink: {
-    color: '#4A90E2',
-    fontWeight: '600',
+    color: theme.colors.primary[600],
+    fontWeight: theme.typography.fontWeight.semibold,
   },
 });

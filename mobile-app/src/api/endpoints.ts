@@ -62,6 +62,8 @@ export const endpoints = {
   notifications: {
     list: '/notifications',
     markAsRead: (id: number) => `/notifications/${id}/read`,
+    markAllAsRead: '/notifications/mark-all-read',
+    clearRead: '/notifications/clear-read',
     delete: (id: number) => `/notifications/${id}`,
     deleteMany: '/notifications/delete-many',
     unreadCount: '/notifications/unread-count',
@@ -70,42 +72,6 @@ export const endpoints = {
   upload: {
     profilePhoto: '/upload/profile-photo',
     registerPhoto: '/upload/register-photo',
-  },
-} as const;
-
-/**
- * Root API Endpoints - Ana API için endpoint tanımları
- * 
- * Not: Bu endpoint'ler rootApiClient ile kullanılır (PRIMARY_API_BASE_URL)
- * Base URL: `/api` (mobile değil)
- */
-export const rootEndpoints = {
-  lookup: {
-    specialties: '/lookup/specialties',
-    subspecialties: (specialtyId?: number) =>
-      specialtyId ? `/lookup/subspecialties/${specialtyId}` : '/lookup/subspecialties',
-    cities: '/lookup/cities',
-    applicationStatuses: '/lookup/application-statuses',
-    educationTypes: '/lookup/doctor-education-types',
-    languages: '/lookup/languages',
-    languageLevels: '/lookup/language-levels',
-  },
-  doctor: {
-    profile: {
-      personal: '/doctor/profile/personal',
-      photo: '/doctor/profile/photo',
-      photoStatus: '/doctor/profile/photo/status',
-      photoHistory: '/doctor/profile/photo/history',
-      photoRequest: '/doctor/profile/photo/request',
-    },
-    educations: '/doctor/educations',
-    education: (id: number) => `/doctor/educations/${id}`,
-    experiences: '/doctor/experiences',
-    experience: (id: number) => `/doctor/experiences/${id}`,
-    certificates: '/doctor/certificates',
-    certificate: (id: number) => `/doctor/certificates/${id}`,
-    languages: '/doctor/languages',
-    language: (id: number) => `/doctor/languages/${id}`,
   },
 } as const;
 

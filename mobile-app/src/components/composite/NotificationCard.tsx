@@ -30,7 +30,7 @@ const colorMap = {
   message: 'secondary',
 } as const;
 
-export const NotificationCard: React.FC<NotificationCardProps> = ({
+export const NotificationCard: React.FC<NotificationCardProps> = React.memo(({
   type,
   title,
   message,
@@ -78,7 +78,18 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       </Card>
     </TouchableOpacity>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison: sadece değişen prop'ları kontrol et
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.type === nextProps.type &&
+    prevProps.title === nextProps.title &&
+    prevProps.message === nextProps.message &&
+    prevProps.timestamp === nextProps.timestamp &&
+    prevProps.read === nextProps.read &&
+    prevProps.onPress === nextProps.onPress
+  );
+});
 
 const styles = StyleSheet.create({
   card: {

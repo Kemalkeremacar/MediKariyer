@@ -1,9 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Linking } from 'react-native';
+import { View, StyleSheet, Linking, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '@/store/authStore';
-import { colors, spacing, borderRadius } from '@/theme';
-import { Screen } from '@/components/layout/Screen';
-import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useLogout } from '../hooks/useLogout';
@@ -22,88 +20,155 @@ export const AccountDisabledScreen = () => {
   };
 
   return (
-    <Screen
-      scrollable={false}
-      contentContainerStyle={styles.screenContent}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Card padding="3xl" shadow="md" style={styles.card}>
-        <Typography variant="h1" style={styles.icon}>
-          🚫
-        </Typography>
-        <Typography variant="h1">Hesap Pasif</Typography>
-        <Typography variant="body" style={styles.message}>
-          Hesabınız sistem yöneticisi tarafından pasif duruma alınmıştır.
-        </Typography>
-        {user && (
-          <View style={styles.userInfo}>
-            <Typography variant="title" style={styles.userName}>
-              {user.first_name} {user.last_name}
-            </Typography>
-            <Typography variant="bodySmall" style={styles.userEmail}>
-              {user.email}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header with Gradient - Login/Register pattern ile tutarlı */}
+        <LinearGradient
+          colors={['#4A90E2', '#2E5C8A']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View style={styles.iconContainer}>
+            <Typography variant="h1" style={styles.headerIcon}>
+              🚫
             </Typography>
           </View>
-        )}
-        <Typography variant="body" style={styles.subMessage}>
-          Hesabınızın neden pasif duruma alındığını öğrenmek için lütfen sistem yöneticisi ile iletişime geçin.
-        </Typography>
-        <Button
-          label="İletişime Geç"
-          onPress={handleContact}
-          fullWidth
-          style={styles.button}
-        />
-        <Button
-          label="Çıkış Yap"
-          variant="ghost"
-          onPress={handleLogout}
-          fullWidth
-          loading={logoutMutation.isPending}
-        />
-      </Card>
-    </Screen>
+          <Typography variant="h1" style={styles.headerTitle}>
+            Hesap Pasif
+          </Typography>
+        </LinearGradient>
+
+        {/* Content */}
+        <View style={styles.content}>
+          <Typography variant="body" style={styles.message}>
+            Hesabınız sistem yöneticisi tarafından pasif duruma alınmıştır.
+          </Typography>
+
+          {user && (
+            <View style={styles.userInfo}>
+              {(user.first_name || user.last_name) && (
+                <Typography variant="title" style={styles.userName}>
+                  {[user.first_name, user.last_name].filter(Boolean).join(' ') || 'Kullanıcı'}
+                </Typography>
+              )}
+              {user.email && (
+                <Typography variant="bodySmall" style={styles.userEmail}>
+                  {user.email}
+                </Typography>
+              )}
+            </View>
+          )}
+
+          <Typography variant="body" style={styles.subMessage}>
+            Hesabınızın neden pasif duruma alındığını öğrenmek için lütfen sistem yöneticisi ile iletişime geçin.
+          </Typography>
+
+          <Button
+            variant="gradient"
+            label="İletişime Geç"
+            onPress={handleContact}
+            fullWidth
+            gradientColors={['#4A90E2', '#2E5C8A']}
+            size="lg"
+            style={styles.button}
+          />
+
+          <Button
+            label="Çıkış Yap"
+            variant="ghost"
+            onPress={handleLogout}
+            fullWidth
+            loading={logoutMutation.isPending}
+          />
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  screenContent: {
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FE',
+  },
+  scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: spacing['2xl'],
   },
-  card: {
-    width: '100%',
-    maxWidth: 420,
-    alignSelf: 'center',
+  header: {
+    paddingTop: 80,
+    paddingBottom: 60,
     alignItems: 'center',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
-  icon: {
+  iconContainer: {
+    width: 120,
+    height: 120,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  headerIcon: {
     fontSize: 64,
-    marginBottom: spacing.lg,
+    color: '#ffffff',
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 32,
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 40,
+    paddingBottom: 40,
   },
   message: {
     textAlign: 'center',
-    marginBottom: spacing['2xl'],
+    color: '#6B7280',
+    marginBottom: 32,
+    fontSize: 16,
   },
   userInfo: {
     width: '100%',
-    backgroundColor: colors.neutral[100],
-    borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing['2xl'],
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   userName: {
-    marginBottom: spacing.xs,
+    marginBottom: 8,
     textAlign: 'center',
+    color: '#1F2937',
   },
   userEmail: {
     textAlign: 'center',
+    color: '#6B7280',
   },
   subMessage: {
     textAlign: 'center',
-    marginBottom: spacing['2xl'],
+    marginBottom: 32,
+    color: '#6B7280',
+    fontSize: 14,
+    lineHeight: 22,
   },
   button: {
-    marginBottom: spacing.md,
+    marginBottom: 16,
   },
 });

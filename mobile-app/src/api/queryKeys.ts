@@ -23,6 +23,7 @@ export interface ApplicationFilters {
 
 export interface NotificationFilters {
   showUnreadOnly?: boolean;
+  limit?: number;
 }
 
 /**

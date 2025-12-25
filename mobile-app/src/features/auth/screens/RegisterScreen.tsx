@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { showAlert } from '@/utils/alert';
 import {
   View,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   TouchableOpacity,
-  Text,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
@@ -27,6 +26,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
 import { Select } from '@/components/ui/Select';
+import { Screen } from '@/components/layout/Screen';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRegister } from '../hooks/useRegister';
 import { lookupService } from '@/api/services/lookup.service';
 import { uploadService } from '@/api/services/upload.service';
@@ -56,6 +57,7 @@ const TITLES = [
 
 
 export const RegisterScreen = () => {
+  const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [serverError, setServerError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<typeof TITLES[number]['value']>('Dr');
@@ -64,6 +66,8 @@ export const RegisterScreen = () => {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>('');
   const [photoUri, setPhotoUri] = useState<string>('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   // Fetch specialties
   const { data: specialties = [], isLoading: specialtiesLoading } = useQuery({
@@ -261,42 +265,44 @@ export const RegisterScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+    <Screen scrollable={false} safeArea={true} safeAreaEdges={['top']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        {/* Header with Gradient */}
-        <LinearGradient
-          colors={['#4A90E2', '#2E5C8A']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.header}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image 
-              source={require('../../../../assets/logo.jpg')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-          </View>
-          
-          {/* MediKariyer Yazısı */}
-          <Typography variant="h1" style={styles.brandName}>
-            MediKariyer
-          </Typography>
-          
-          <Typography variant="body" style={styles.headerSubtitle}>
-            Doktor hesabı oluştur
-          </Typography>
-        </LinearGradient>
+          {/* Header with Gradient */}
+          <LinearGradient
+            colors={(theme.colors.gradient as any).header || theme.colors.gradient.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.header}
+          >
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image 
+                source={require('../../../../assets/logo.jpg')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View>
+            
+            {/* MediKariyer Yazısı */}
+            <Typography variant="h1" style={styles.brandName}>
+              MediKariyer
+            </Typography>
+            
+            <Typography variant="body" style={styles.headerSubtitle}>
+              Doktor hesabı oluştur
+            </Typography>
+          </LinearGradient>
 
-        {/* Content */}
-        <View style={styles.content}>
+          {/* Content */}
+          <View style={styles.content}>
           <View style={[styles.sectionHeader, styles.sectionHeaderFirst]}>
             <Typography variant="h3" style={styles.sectionTitle}>
               Kişisel Bilgiler
@@ -344,14 +350,16 @@ export const RegisterScreen = () => {
                     ]}
                     onPress={() => setSelectedTitle(title.value)}
                   >
-                    <Text
-                      style={[
-                        styles.chipText,
-                        selectedTitle === title.value && styles.chipTextSelected,
-                      ]}
+                    <Typography
+                      variant="bodySmall"
+                      style={
+                        selectedTitle === title.value
+                          ? styles.chipTextSelected
+                          : styles.chipText
+                      }
                     >
                       {title.label}
-                    </Text>
+                    </Typography>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -366,8 +374,8 @@ export const RegisterScreen = () => {
             <FormField label="Uzmanlık Alanı *">
               {specialtiesLoading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#4A90E2" />
-                  <Text style={styles.loadingText}>Branşlar yükleniyor...</Text>
+                  <ActivityIndicator size="small" color={theme.colors.primary[600]} />
+                  <Typography variant="bodySmall" style={styles.loadingText}>Branşlar yükleniyor...</Typography>
                 </View>
               ) : (
                 <Select
@@ -387,8 +395,8 @@ export const RegisterScreen = () => {
               <FormField label="Yan Dal (Opsiyonel)">
                 {subspecialtiesLoading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color="#4A90E2" />
-                    <Text style={styles.loadingText}>Yükleniyor...</Text>
+                    <ActivityIndicator size="small" color={theme.colors.primary[600]} />
+                    <Typography variant="bodySmall" style={styles.loadingText}>Yükleniyor...</Typography>
                   </View>
                 ) : (
                   <Select
@@ -469,19 +477,19 @@ export const RegisterScreen = () => {
                       <Image source={{ uri: photoUri }} style={styles.photoPreview} />
                       {isUploadingPhoto && (
                         <View style={styles.uploadingOverlay}>
-                          <ActivityIndicator size="large" color="#ffffff" />
-                          <Text style={styles.uploadingText}>Yükleniyor...</Text>
+                          <ActivityIndicator size="large" color={theme.colors.text.inverse} />
+                          <Typography variant="caption" style={styles.uploadingText}>Yükleniyor...</Typography>
                         </View>
                       )}
                       <View style={styles.photoEditBadge}>
-                        <Ionicons name="camera" size={16} color="#ffffff" />
+                        <Ionicons name="camera" size={16} color={theme.colors.text.inverse} />
                       </View>
                     </View>
                   ) : (
                     <View style={styles.photoPlaceholder}>
-                      <Ionicons name="person" size={48} color="#9CA3AF" />
-                      <Text style={styles.photoPlaceholderText}>Fotoğraf Ekle</Text>
-                      <Text style={styles.photoPlaceholderHint}>Kamera veya galeriden seç</Text>
+                      <Ionicons name="person" size={48} color={theme.colors.text.tertiary} />
+                      <Typography variant="bodySmall" style={styles.photoPlaceholderText}>Fotoğraf Ekle</Typography>
+                      <Typography variant="caption" style={styles.photoPlaceholderHint}>Kamera veya galeriden seç</Typography>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -503,7 +511,7 @@ export const RegisterScreen = () => {
               loading={registerMutation.isPending}
               fullWidth
               size="lg"
-              gradientColors={['#4A90E2', '#2E5C8A']}
+              gradientColors={(theme.colors.gradient as any).header || theme.colors.gradient.primary}
               style={styles.buttonSpacing}
             />
             
@@ -518,36 +526,36 @@ export const RegisterScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
+const createStyles = (theme: any) => StyleSheet.create({
+  keyboardView: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
   },
   scrollContent: {
     flexGrow: 1,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 40,
-    paddingHorizontal: 24,
+    paddingTop: theme.spacing['5xl'],
+    paddingBottom: theme.spacing['4xl'],
+    paddingHorizontal: theme.spacing['2xl'],
     alignItems: 'center',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    borderBottomLeftRadius: theme.borderRadius.header,
+    borderBottomRightRadius: theme.borderRadius.header,
   },
   logoContainer: {
     width: 80,
     height: 80,
-    backgroundColor: '#ffffff',
-    borderRadius: 40,
+    backgroundColor: theme.colors.background.secondary,
+    borderRadius: theme.borderRadius['3xl'],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
+    marginBottom: theme.spacing.lg,
+    shadowColor: theme.colors.neutral[900],
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -559,89 +567,90 @@ const styles = StyleSheet.create({
     height: 70,
   },
   brandName: {
-    color: '#ffffff',
-    fontSize: 32,
-    fontWeight: '700',
+    color: theme.colors.text.inverse,
+    ...theme.textVariants.title,
     textAlign: 'center',
     letterSpacing: 0.5,
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
   headerSubtitle: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: theme.colors.text.inverse,
+    opacity: 0.9,
     textAlign: 'center',
-    fontSize: 16,
+    ...theme.textVariants.body,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
+    paddingHorizontal: theme.spacing['2xl'],
+    paddingTop: theme.spacing['2xl'],
+    paddingBottom: theme.spacing['4xl'],
   },
   chipContainer: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
   chip: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 24,
+    paddingHorizontal: theme.spacing.lg + 2,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.full,
     borderWidth: 2,
-    borderColor: '#D1D5DB',
-    backgroundColor: '#ffffff',
-    marginRight: 10,
-    shadowColor: '#000',
+    borderColor: theme.colors.border.medium,
+    backgroundColor: theme.colors.background.secondary,
+    marginRight: theme.spacing.md + 2,
+    shadowColor: theme.colors.neutral[900],
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   chipSelected: {
-    backgroundColor: '#4A90E2',
-    borderColor: '#4A90E2',
+    backgroundColor: theme.colors.primary[600],
+    borderColor: theme.colors.primary[600],
     shadowOpacity: 0.15,
     elevation: 3,
   },
   chipText: {
-    fontSize: 14,
-    color: '#1F2937',
-    fontWeight: '500',
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.medium,
+    color: theme.colors.text.primary,
   },
   chipTextSelected: {
-    color: '#ffffff',
-    fontWeight: '600',
+    fontSize: theme.typography.fontSize.sm,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.inverse,
   },
   errorContainer: {
     minHeight: 40,
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
   serverError: {
-    color: '#DC2626',
+    color: theme.colors.error[600],
     textAlign: 'center',
-    fontSize: 14,
+    ...theme.textVariants.bodySmall,
   },
   buttonSpacing: {
-    marginBottom: 24,
-    marginTop: 24,
+    marginBottom: theme.spacing['2xl'],
+    marginTop: theme.spacing['2xl'],
   },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    padding: theme.spacing.lg,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    backgroundColor: '#F9FAFB',
+    borderColor: theme.colors.border.medium,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.background.tertiary,
   },
   loadingText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#6B7280',
+    marginLeft: theme.spacing.sm,
+    ...theme.textVariants.bodySmall,
+    color: theme.colors.text.secondary,
   },
   photoContainer: {
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: theme.spacing.lg,
   },
   photoTouchable: {
     alignItems: 'center',
@@ -652,9 +661,9 @@ const styles = StyleSheet.create({
   photoPreview: {
     width: 140,
     height: 140,
-    borderRadius: 70,
+    borderRadius: theme.borderRadius['3xl'],
     borderWidth: 4,
-    borderColor: '#4A90E2',
+    borderColor: theme.colors.primary[600],
   },
   photoEditBadge: {
     position: 'absolute',
@@ -663,32 +672,32 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#4A90E2',
+    backgroundColor: theme.colors.primary[600],
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#ffffff',
+    borderColor: theme.colors.background.secondary,
   },
   photoPlaceholder: {
     width: 140,
     height: 140,
-    borderRadius: 70,
-    backgroundColor: '#F9FAFB',
+    borderRadius: theme.borderRadius['3xl'],
+    backgroundColor: theme.colors.background.tertiary,
     borderWidth: 3,
-    borderColor: '#4A90E2',
+    borderColor: theme.colors.primary[600],
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
   },
   photoPlaceholderText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginTop: 4,
+    ...theme.textVariants.bodySmall,
+    fontWeight: theme.typography.fontWeight.semibold,
+    color: theme.colors.text.primary,
+    marginTop: theme.spacing.xs,
   },
   photoPlaceholderHint: {
-    fontSize: 11,
-    color: '#6B7280',
+    ...theme.textVariants.caption,
+    color: theme.colors.text.secondary,
     marginTop: 2,
   },
   uploadingOverlay: {
@@ -697,16 +706,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: 70,
+    backgroundColor: theme.colors.background.overlay,
+    borderRadius: theme.borderRadius['3xl'],
     justifyContent: 'center',
     alignItems: 'center',
   },
   uploadingText: {
-    color: '#ffffff',
-    fontSize: 12,
-    marginTop: 4,
-    fontWeight: '600',
+    color: theme.colors.text.inverse,
+    ...theme.textVariants.caption,
+    marginTop: theme.spacing.xs,
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   loginPrompt: {
     flexDirection: 'row',
@@ -714,26 +723,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loginPromptText: {
-    color: '#6B7280',
+    color: theme.colors.text.secondary,
   },
   loginLink: {
-    color: '#4A90E2',
-    fontWeight: '600',
+    color: theme.colors.primary[600],
+    fontWeight: theme.typography.fontWeight.semibold,
   },
   sectionHeader: {
-    marginTop: 24,
-    marginBottom: 20,
-    paddingBottom: 12,
+    marginTop: theme.spacing['2xl'],
+    marginBottom: theme.spacing.xl,
+    paddingBottom: theme.spacing.md,
     borderBottomWidth: 2,
-    borderBottomColor: '#4A90E2',
+    borderBottomColor: theme.colors.primary[600],
   },
   sectionHeaderFirst: {
     marginTop: 0,
   },
   sectionTitle: {
-    color: '#2E5C8A',
-    fontWeight: '700',
-    fontSize: 18,
+    color: theme.colors.primary[700],
+    fontWeight: theme.typography.fontWeight.bold,
+    ...theme.textVariants.h3,
     letterSpacing: 0.3,
   },
 });

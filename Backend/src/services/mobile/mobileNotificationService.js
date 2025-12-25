@@ -31,97 +31,42 @@
 
 const db = require('../../config/dbConfig').db;
 const { AppError } = require('../../utils/errorHandler');
-const logger = require('../../utils/logger');
 const notificationTransformer = require('../../mobile/transformers/notificationTransformer');
-const { normalizeCountResult } = require('../../utils/queryHelper');
+const notificationService = require('../notificationService');
 
 const listNotifications = async (userId, { page = 1, limit = 20, is_read } = {}) => {
-  const currentPage = Math.max(Number(page) || 1, 1);
-  const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
-
-  // is_read filter desteği: Frontend'den gelen "Sadece Okunmamışları Göster" filtresini destekler
-  const buildBaseQuery = () => {
-    let query = db('notifications').where('user_id', userId);
-    
-    // is_read filter: false ise sadece okunmamışları, true ise sadece okunmuşları getir
-    if (is_read !== undefined && is_read !== null) {
-      if (is_read === false || is_read === 'false') {
-        query = query.whereNull('read_at'); // Okunmamış bildirimler
-      } else if (is_read === true || is_read === 'true') {
-        query = query.whereNotNull('read_at'); // Okunmuş bildirimler
-      }
-    }
-    
-    return query;
+  // Map mobile params to web service params
+  // Convert snake_case is_read to camelCase isRead for web service
+  const webOptions = {
+    isRead: is_read,
+    page: page,
+    limit: limit
   };
 
-  const baseQuery = buildBaseQuery();
+  // Call web service (includes deleted_at check)
+  const result = await notificationService.getNotificationsByUser(userId, webOptions);
 
-  const countQuery = baseQuery.clone().count({ count: '*' }).first();
-
-  // Explicit column selection - is_read computed field olarak hesaplanacak
-  const notificationsQuery = baseQuery
-    .clone()
-    .select(
-      'id',
-      'user_id',
-      'title',
-      'body',
-      'type',
-      'read_at',
-      'created_at',
-      'data_json'
-    )
-    .orderBy('created_at', 'desc')
-    .orderBy('id', 'desc')
-    .limit(perPage)
-    .offset((currentPage - 1) * perPage);
-
-  const [countResult, notifications] = await Promise.all([
-    countQuery,
-    notificationsQuery
-  ]);
-  
-  const total = normalizeCountResult(countResult);
-
-  // data_json field'ını parse et ve data olarak ekle
-  const processedNotifications = notifications.map(notification => {
-    let parsedData = null;
-    if (notification.data_json) {
-      try {
-        parsedData = JSON.parse(notification.data_json);
-      } catch (error) {
-        logger.warn('Notification data_json parse error:', error);
-      }
-    }
-    return {
-      ...notification,
-      data: parsedData
-    };
-  });
-
+  // Transform response for mobile format
   return {
-    data: processedNotifications.map(notificationTransformer.toListItem),
+    data: result.data.map(notificationTransformer.toListItem),
     pagination: {
-      current_page: currentPage,
-      per_page: perPage,
-      total,
-      total_pages: Math.ceil(total / perPage) || 0,
-      has_next: currentPage * perPage < total,
-      has_prev: currentPage > 1
+      current_page: result.pagination.current_page,
+      per_page: result.pagination.per_page,
+      total: result.pagination.total,
+      total_pages: result.pagination.total_pages,
+      has_next: result.pagination.current_page < result.pagination.total_pages,
+      has_prev: result.pagination.current_page > 1
     }
   };
 };
 
 const markAsRead = async (userId, notificationId) => {
-  const updated = await db('notifications')
-    .where('id', notificationId)
-    .where('user_id', userId)
-    .update({
-      read_at: db.fn.now()
-    });
+  // Call web service (includes deleted_at check)
+  // Note: web service takes (notificationId, userId) but mobile signature is (userId, notificationId)
+  const result = await notificationService.markAsRead(notificationId, userId);
 
-  if (!updated) {
+  // Web service returns null if notification not found or deleted
+  if (!result) {
     throw new AppError('Bildirim bulunamadı', 404);
   }
 
@@ -257,7 +202,6 @@ const deleteNotifications = async (userId, ids) => {
  * @returns {Promise<Object>} Güncellenen bildirim sayısı
  */
 const markAllAsRead = async (userId) => {
-  const notificationService = require('../notificationService');
   return await notificationService.markAllAsRead(userId);
 };
 
@@ -267,7 +211,6 @@ const markAllAsRead = async (userId) => {
  * @returns {Promise<Object>} Silinen bildirim sayısı
  */
 const clearReadNotifications = async (userId) => {
-  const notificationService = require('../notificationService');
   return await notificationService.clearReadNotifications(userId);
 };
 

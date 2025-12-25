@@ -4,20 +4,30 @@
  */
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import type { AuthStackParamList } from '@/navigation/types';
+import { useLogout } from '../hooks/useLogout';
 
 export const PendingApprovalScreen = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const logoutMutation = useLogout();
+
+  const handleGoToLogin = () => {
+    // Logout yap, RootNavigator otomatik olarak Auth ekranına yönlendirecek
+    logoutMutation.mutate();
+  };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
       <LinearGradient
         colors={['#4A90E2', '#2E5C8A']}
         start={{ x: 0, y: 0 }}
@@ -74,13 +84,15 @@ export const PendingApprovalScreen = () => {
         <Button
           variant="gradient"
           label="Giriş Ekranına Dön"
-          onPress={() => navigation.navigate('Login')}
+          onPress={handleGoToLogin}
           gradientColors={['#4A90E2', '#2E5C8A']}
           fullWidth
           size="lg"
+          loading={logoutMutation.isPending}
         />
       </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -88,6 +100,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FE',
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     paddingTop: 80,

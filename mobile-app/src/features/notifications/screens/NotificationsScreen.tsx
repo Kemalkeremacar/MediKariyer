@@ -16,7 +16,9 @@ import { NotificationCard } from '@/components/composite/NotificationCard';
 import { colors, spacing } from '@/theme';
 import { 
   useNotifications, 
-  useMarkAsRead, 
+  useUnreadCount,
+  useMarkAsRead,
+  useMarkAllAsRead,
   useDeleteNotifications 
 } from '@/features/notifications/hooks/useNotifications';
 import type { NotificationItem } from '@/types/notification';
@@ -33,6 +35,7 @@ export const NotificationsScreen = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
+  // activeTab değiştiğinde backend'den filtreli data çek
   const { 
     notifications: notificationList, 
     isLoading, 
@@ -42,32 +45,62 @@ export const NotificationsScreen = () => {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage
-  } = useNotifications({ limit: 20 });
+  } = useNotifications({ 
+    limit: 20,
+    showUnreadOnly: activeTab === 'unread' // Backend'den sadece okunmamışları çek
+  });
 
   const { mutateAsync: markAsRead } = useMarkAsRead();
+  const { mutateAsync: markAllAsRead } = useMarkAllAsRead();
   const deleteNotificationsMutation = useDeleteNotifications();
 
   // Screen focus olduğunda bildirimleri yenile (sayfa açıldığında fresh data)
+  // NOT: refetch dependency olarak kullanılmıyor çünkü her render'da yeni referans olabilir
+  // Bu sonsuz döngüye neden olur. Bunun yerine sadece stale data varsa refetch yapıyoruz.
+  // refetchOnMount: true zaten mount'ta stale ise refetch yapıyor, bu yüzden useFocusEffect'te
+  // sadece gerçekten gerekli olduğunda (stale data varsa) refetch yapmalıyız.
+  const refetchRef = React.useRef(refetch);
+  const lastRefetchTimeRef = React.useRef<number>(0);
+  const REFETCH_COOLDOWN = 3000; // 3 saniye cooldown - çok sık refetch yapılmasını önle
+  
+  // refetch değiştiğinde ref'i güncelle (ama useFocusEffect'i tetikleme)
+  React.useEffect(() => {
+    refetchRef.current = refetch;
+  }, [refetch]);
+  
   useFocusEffect(
     useCallback(() => {
-      // Screen focus olduğunda refetch yap
-      refetch();
-    }, [refetch])
+      // Sadece belirli koşullarda refetch yap:
+      // 1. Cooldown süresi geçmiş olmalı (çok sık refetch'i önlemek için)
+      // 2. Zaten fetch işlemi devam etmiyorsa
+      const now = Date.now();
+      const timeSinceLastRefetch = now - lastRefetchTimeRef.current;
+      
+      // Eğer cooldown süresi geçmişse ve fetch işlemi devam etmiyorsa refetch yap
+      if (timeSinceLastRefetch >= REFETCH_COOLDOWN && !isFetching && !isLoading) {
+        lastRefetchTimeRef.current = now;
+        // Sadece stale data varsa refetch yap (React Query'nin kendi mekanizmasını kullan)
+        // refetchOnMount: true zaten stale data varsa otomatik refetch yapıyor
+        // Burada sadece manuel refresh için refetch çağırıyoruz
+        refetchRef.current();
+      }
+      
+      // Cleanup: Focus kaybolduğunda bir şey yapma
+      return () => {
+        // Cleanup gerekirse burada yapılabilir
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []) // Boş dependency array - sadece focus değişikliklerinde çalışsın
   );
 
-  const filteredNotifications = React.useMemo(() => {
-    if (activeTab === 'unread') {
-      // Backend'den camelCase (isRead) geliyor, geriye dönük uyumluluk için is_read de kontrol et
-      return notificationList.filter((n) => !(n.isRead ?? n.is_read ?? false));
-    }
-    
-    return notificationList;
-  }, [notificationList, activeTab]);
+  // Backend'den zaten filtreli geliyor (showUnreadOnly parametresi ile)
+  // Bu yüzden client-side filtering'e gerek yok, direkt kullan
+  const filteredNotifications = notificationList;
 
-  // isRead veya is_read field'ını kullan (camelCase öncelikli)
-  const unreadCount = notificationList.filter((n) => {
-    return !(n.isRead ?? n.is_read ?? false);
-  }).length;
+  // Unread count için backend'den tam sayıyı al (ayrı query ile)
+  // Bu sayede her tab'da doğru unread count gösterilir
+  const { unreadCount: backendUnreadCount } = useUnreadCount();
+  const unreadCount = backendUnreadCount;
 
   /**
    * Bildirime tıklandığında ilgili sayfaya yönlendirir
@@ -146,39 +179,44 @@ export const NotificationsScreen = () => {
     if (unreadNotifications.length === 0) return;
     
     try {
-      await Promise.all(
-        unreadNotifications.map((n) => markAsRead(n.id))
-      );
+      // Backend'deki mark-all-read endpoint'ini kullan (daha efficient)
+      await markAllAsRead();
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }
-  }, [notificationList, markAsRead]);
+  }, [notificationList, markAllAsRead]);
 
-  const toggleSelectionMode = () => {
-    setSelectionMode(!selectionMode);
+  const toggleSelectionMode = useCallback(() => {
+    setSelectionMode((prev) => !prev);
     setSelectedIds(new Set());
-  };
+  }, []);
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filteredNotifications.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(filteredNotifications.map((n) => n.id)));
-    }
-  };
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      if (prev.size === filteredNotifications.length) {
+        return new Set();
+      } else {
+        return new Set(filteredNotifications.map((n) => n.id));
+      }
+    });
+  }, [filteredNotifications]);
 
-  const toggleSelectNotification = (id: number) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedIds(newSelected);
-  };
+  const toggleSelectNotification = useCallback((id: number) => {
+    setSelectedIds((prev) => {
+      const newSelected = new Set(prev);
+      if (newSelected.has(id)) {
+        newSelected.delete(id);
+      } else {
+        newSelected.add(id);
+      }
+      return newSelected;
+    });
+  }, []);
 
-  const handleMarkSelectedAsRead = async () => {
+  const handleMarkSelectedAsRead = useCallback(async () => {
     const selectedNotifications = Array.from(selectedIds);
+    if (selectedNotifications.length === 0) return;
+    
     try {
       await Promise.all(
         selectedNotifications.map((id) => markAsRead(id))
@@ -188,13 +226,13 @@ export const NotificationsScreen = () => {
     } catch (error) {
       console.error('Failed to mark selected as read:', error);
     }
-  };
+  }, [selectedIds, markAsRead]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   /**
    * Seçili bildirimleri siler
