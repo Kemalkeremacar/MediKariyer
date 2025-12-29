@@ -7,6 +7,7 @@
  * - POST /api/mobile/auth/login - Mobil login (email + password)
  * - POST /api/mobile/auth/refresh - Token yenileme (refresh token)
  * - POST /api/mobile/auth/logout - Çıkış (refresh token iptal)
+ * - POST /api/mobile/auth/forgot-password - Şifre sıfırlama talebi (web ile aynı mantık)
  * 
  * Middleware'ler:
  * - mobileErrorHandler: JSON-only error handling
@@ -40,6 +41,7 @@ const {
   mobileRegisterDoctorSchema,
   mobileChangePasswordSchema
 } = require('../../validators/mobileSchemas');
+const { forgotPasswordSchema } = require('../../validators/authSchemas');
 
 const router = express.Router();
 
@@ -50,6 +52,8 @@ router.post('/registerDoctor', authLimiter, validateBody(mobileRegisterDoctorSch
 router.post('/login', authLimiter, validateBody(mobileLoginSchema), mobileAuthController.login);
 router.post('/refresh', validateBody(mobileRefreshTokenSchema), mobileAuthController.refreshToken);
 router.post('/logout', validateBody(mobileLogoutSchema), mobileAuthController.logout);
+// Forgot password - Web ile aynı mantık, aynı mail gönderilir
+router.post('/forgot-password', authLimiter, validateBody(forgotPasswordSchema), mobileAuthController.forgotPassword);
 
 // Protected routes (require authentication)
 const { authMiddleware } = require('../../middleware/authMiddleware');

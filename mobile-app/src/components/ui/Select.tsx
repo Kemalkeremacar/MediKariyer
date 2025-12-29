@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,7 @@ export const Select: React.FC<SelectProps> = ({
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef<TextInput>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
   
@@ -88,11 +89,13 @@ export const Select: React.FC<SelectProps> = ({
 
             {searchable && (
               <TextInput
+                ref={searchInputRef}
                 style={styles.searchInput}
                 placeholder="Ara..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
-                autoFocus
+                autoFocus={false}
+                editable={true}
               />
             )}
 
@@ -168,6 +171,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '80%',
+    minHeight: '50%',
     paddingBottom: spacing.xl,
   },
   modalHeader: {

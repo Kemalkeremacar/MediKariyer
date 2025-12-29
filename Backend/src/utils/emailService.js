@@ -61,6 +61,11 @@ const buildResetLink = (token) => {
   return `${defaultBase}${separator}token=${token}`;
 };
 
+const buildMobileResetLink = (token) => {
+  // Mobile deep link: medikariyer://reset-password?token=...
+  return `medikariyer://reset-password?token=${token}`;
+};
+
 const sendMail = async ({ to, subject, text, html }) => {
   const mailTransporter = createTransporter();
   const from = process.env.EMAIL_FROM || 'no-reply@medikariyer.com';
@@ -81,9 +86,14 @@ const sendMail = async ({ to, subject, text, html }) => {
   return { simulated: false };
 };
 
-const sendPasswordResetEmail = async ({ to, token, expiresAt }) => {
-  const resetLink = buildResetLink(token);
+const sendPasswordResetEmail = async ({ to, token, expiresAt, source = 'web' }) => {
+  // Kaynağa göre doğru linki seç
+  const resetLink = source === 'mobile' 
+    ? buildMobileResetLink(token) 
+    : buildResetLink(token);
+  
   const expiresInMinutes = Number(process.env.PASSWORD_RESET_EXPIRY_MINUTES || 60);
+  const isMobile = source === 'mobile';
 
   const subject = 'MediKariyer | Şifre Sıfırlama Talebi';
   const text = [
@@ -99,18 +109,21 @@ const sendPasswordResetEmail = async ({ to, token, expiresAt }) => {
     'MediKariyer Destek Ekibi'
   ].join('\n');
 
+  // Tek buton - kaynağa göre farklı link ve stil (aynı metin, farklı renk)
+  const buttonText = 'Şifreyi Sıfırla';
+  const buttonColor = isMobile ? '#10b981' : '#2563eb';
+
   const html = `
     <p>Merhaba,</p>
     <p>Şifrenizi sıfırlamak için aşağıdaki butona tıklayabilirsiniz:</p>
     <p style="margin: 24px 0;">
       <a
         href="${resetLink}"
-        target="_blank"
-        rel="noopener noreferrer"
+        ${!isMobile ? 'target="_blank" rel="noopener noreferrer"' : ''}
         style="
           display: inline-block;
           padding: 12px 28px;
-          background-color: #2563eb;
+          background-color: ${buttonColor};
           color: #ffffff;
           text-decoration: none;
           border-radius: 10px;
@@ -119,7 +132,7 @@ const sendPasswordResetEmail = async ({ to, token, expiresAt }) => {
           letter-spacing: 0.5px;
         "
       >
-        Şifreyi Sıfırla
+        ${buttonText}
       </a>
     </p>
     <p>Bu buton <strong>${expiresInMinutes} dakika</strong> boyunca geçerlidir.</p>

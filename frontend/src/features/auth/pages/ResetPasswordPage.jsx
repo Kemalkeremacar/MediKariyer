@@ -5,7 +5,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FiLock, FiEye, FiEyeOff, FiArrowLeft, FiInfo } from 'react-icons/fi';
+import { FiLock, FiEye, FiEyeOff, FiInfo } from 'react-icons/fi';
 import { useResetPassword } from '../api/useAuth';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { ButtonSpinner } from '@/components/ui/LoadingSpinner';
@@ -232,15 +232,8 @@ const ResetPasswordPage = () => {
             </ul>
 
             <div className="flex flex-col gap-4 text-sm">
-              <Link
-                to={ROUTE_CONFIG.PUBLIC.FORGOT_PASSWORD}
-                className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold transition-colors"
-              >
-                <FiArrowLeft className="h-4 w-4" />
-                Şifre sıfırlama talebi gönder
-              </Link>
               <p className="text-xs text-blue-700 leading-relaxed">
-                Şifre sıfırlama bağlantısı çalışmıyorsa yeni bir talep oluşturun veya{' '}
+                Şifre sıfırlama bağlantısı çalışmıyorsa{' '}
                 <Link
                   to={ROUTE_CONFIG.PUBLIC.CONTACT}
                   className="font-semibold text-blue-800 underline-offset-4 hover:underline"

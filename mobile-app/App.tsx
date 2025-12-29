@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Linking from 'expo-linking';
 import { AppProviders } from '@/providers/AppProviders';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { AuthInitializer } from '@/providers/AuthInitializer';
@@ -49,6 +50,53 @@ const AppContent = () => {
       hideSplash();
     }
   }, [isHydrating]);
+
+  // Handle deep link navigation
+  const handleDeepLink = useCallback((url: string) => {
+    if (!navigationRef.isReady()) {
+      // Wait for navigation to be ready
+      setTimeout(() => handleDeepLink(url), 100);
+      return;
+    }
+
+    try {
+      const { path, queryParams } = Linking.parse(url);
+      
+      // Handle reset password deep link: medikariyer://reset-password?token=...
+      if (path === 'reset-password' && queryParams?.token) {
+        // Navigate to Auth stack first, then to ResetPassword screen
+        // @ts-expect-error - Nested navigation type issue, but works at runtime
+        navigationRef.navigate('Auth', {
+          screen: 'ResetPassword',
+          params: { token: queryParams.token as string },
+        });
+      }
+    } catch (error) {
+      console.error('Error handling deep link:', error);
+    }
+  }, []);
+
+  // Deep linking handler for password reset
+  useEffect(() => {
+    // Handle initial URL (when app is opened via deep link)
+    const handleInitialURL = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        handleDeepLink(initialUrl);
+      }
+    };
+
+    // Handle URL changes (when app is already open and receives a deep link)
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleDeepLink(event.url);
+    });
+
+    handleInitialURL();
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleDeepLink]);
 
   return (
     <>

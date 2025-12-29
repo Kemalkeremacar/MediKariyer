@@ -147,4 +147,43 @@ export const authService = {
       payload,
     );
   },
+
+  /**
+   * Request password reset - sends reset link to email
+   */
+  async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.post<ApiResponse<{ success: boolean; message: string }>>(
+      endpoints.auth.forgotPassword,
+      { email },
+    );
+    // Backend'den data field'ı geliyorsa onu kullan, yoksa message'dan oluştur
+    if (response.data.data) {
+      return response.data.data;
+    }
+    // Fallback: Eğer data yoksa, response'dan message al
+    return {
+      success: response.data.success,
+      message: response.data.message || 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
+    };
+  },
+
+  /**
+   * Reset password with token - changes password using token from email
+   */
+  async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
+    // Web endpoint'ini kullanıyoruz çünkü token doğrulama aynı
+    const response = await apiClient.post<ApiResponse<{ success: boolean; message: string }>>(
+      '/api/auth/reset-password',
+      { token, password },
+    );
+    // Backend'den data field'ı geliyorsa onu kullan, yoksa message'dan oluştur
+    if (response.data.data) {
+      return response.data.data;
+    }
+    // Fallback: Eğer data yoksa, response'dan message al
+    return {
+      success: response.data.success,
+      message: response.data.message || 'Şifre başarıyla değiştirildi.',
+    };
+  },
 };

@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { enableScreens } from 'react-native-screens';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthNavigator } from './AuthNavigator';
 import { AppNavigator } from './AppNavigator';
-import { PendingApprovalScreen } from '@/features/auth/screens/PendingApprovalScreen';
 import { AccountDisabledScreen } from '@/features/auth/screens/AccountDisabledScreen';
 import { useAuthStore } from '@/store/authStore';
+import { navigationRef } from './navigationRef';
 import type { RootStackParamList } from './types';
 
 // Enable screens - safe to call with both old and new architecture
@@ -32,6 +32,46 @@ export const RootNavigator = () => {
   const user = useAuthStore((state) => state.user);
   const isHydrating = useAuthStore((state) => state.isHydrating);
 
+  // Helper function to check if user is active (handles boolean, number types)
+  const isActive = () => {
+    if (user?.is_active === undefined || user?.is_active === null) return true; // Default to true if not set
+    if (typeof user.is_active === 'boolean') return user.is_active;
+    if (typeof user.is_active === 'number') return user.is_active === 1;
+    return true;
+  };
+
+  // Helper function to check if user is approved (handles boolean, number, string types)
+  const isApproved = () => {
+    if (user?.is_approved === undefined || user?.is_approved === null) return false;
+    if (typeof user.is_approved === 'boolean') return user.is_approved;
+    if (typeof user.is_approved === 'number') return user.is_approved === 1;
+    if (typeof user.is_approved === 'string') return user.is_approved === 'true' || user.is_approved === '1';
+    return false;
+  };
+
+  // Check if user is admin (admin users bypass approval check)
+  const isAdmin = user?.role === 'admin';
+
+  // Navigate to App screen when user is authenticated and approved
+  // IMPORTANT: All hooks must be called before any early returns
+  useEffect(() => {
+    if (authStatus === 'authenticated' && user && navigationRef.isReady()) {
+      const userIsActive = isActive();
+      const userIsApproved = isApproved();
+      const userIsAdmin = user?.role === 'admin';
+      
+      if (userIsActive && (userIsApproved || userIsAdmin)) {
+        // User is authenticated, active, and approved - navigate to App
+        // Use reset to clear navigation history and set App as root
+        navigationRef.reset({
+          index: 0,
+          routes: [{ name: 'App' }],
+        });
+      }
+    }
+  }, [authStatus, user]);
+
+  // Early returns AFTER all hooks
   if (isHydrating) {
     return (
       <View
@@ -62,42 +102,28 @@ export const RootNavigator = () => {
     );
   }
 
-  // Helper function to check if user is approved (handles boolean, number, string types)
-  const isApproved = () => {
-    if (!user?.is_approved) return false;
-    if (typeof user.is_approved === 'boolean') return user.is_approved;
-    if (typeof user.is_approved === 'number') return user.is_approved === 1;
-    if (typeof user.is_approved === 'string') return user.is_approved === 'true' || user.is_approved === '1';
-    return false;
-  };
-
-  // Helper function to check if user is active (handles boolean, number types)
-  const isActive = () => {
-    if (user?.is_active === undefined || user?.is_active === null) return true; // Default to true if not set
-    if (typeof user.is_active === 'boolean') return user.is_active;
-    if (typeof user.is_active === 'number') return user.is_active === 1;
-    return true;
-  };
-
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
       }}
     >
+      {/* Auth stack - Always available for deep linking (e.g., password reset) */}
+      <Stack.Screen name="Auth" component={AuthNavigator} />
+      
       {authStatus === 'authenticated' ? (
         <>
-          {!isApproved() ? (
-            <Stack.Screen name="PendingApproval" component={PendingApprovalScreen} />
-          ) : !isActive() ? (
+          {!isActive() ? (
             <Stack.Screen name="AccountDisabled" component={AccountDisabledScreen} />
+          ) : !isApproved() && !isAdmin ? (
+            // User is authenticated but not approved - show Auth stack (PendingApproval screen)
+            // LoginScreen useEffect will redirect to PendingApproval
+            <Stack.Screen name="Auth" component={AuthNavigator} />
           ) : (
             <Stack.Screen name="App" component={AppNavigator} />
           )}
         </>
-      ) : (
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      )}
+      ) : null}
     </Stack.Navigator>
   );
 };

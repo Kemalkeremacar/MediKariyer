@@ -29,6 +29,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "scheme": "medikariyer",
     "plugins": [
       "expo-secure-store",
       "@react-native-community/datetimepicker"

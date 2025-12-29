@@ -14,7 +14,6 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 export type RootStackParamList = {
   Auth: undefined;
   App: undefined;
-  PendingApproval: undefined;
   AccountDisabled: undefined;
 };
 
@@ -26,6 +25,8 @@ export type AuthStackParamList = {
   Login: undefined;
   Register: undefined;
   PendingApproval: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { token: string } | undefined;
 };
 
 /**

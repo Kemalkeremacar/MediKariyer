@@ -7,6 +7,7 @@
  * - Mobil login işlemi (sadece doktor rolü)
  * - Token yenileme (refresh token)
  * - Logout işlemi
+ * - Şifre sıfırlama talebi (forgot password - web ile aynı mantık)
  * 
  * Veritabanı Tabloları:
  * - users: Kullanıcı bilgileri
@@ -90,6 +91,12 @@ const registerDoctor = async (registrationData, req) => {
 const login = async ({ email, password }, req) => {
   const user = await authService.loginUnified(email, password, req);
   ensureDoctorRole(user);
+
+  // Check if user is approved - unapproved users cannot login
+  const isApproved = user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true';
+  if (!isApproved) {
+    throw new AppError('Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.', 403);
+  }
 
   const tokens = {
     accessToken: generateAccessToken(buildTokenPayload(user)),
@@ -192,6 +199,25 @@ const changePassword = async (userId, { currentPassword, newPassword }) => {
   return { success: true };
 };
 
+/**
+ * Request password reset - sends reset link to email
+ * Web ile aynı mantık: authService.requestPasswordReset kullanıyor
+ * Mail gönderme işi aynı, sadece mobile'dan çağrılıyor
+ */
+const forgotPassword = async (email, req) => {
+  // Web'deki authService.requestPasswordReset'i kullan
+  // Aynı mail gönderilir, aynı token oluşturulur
+  // Aynı doktor hem web'den hem mobile'dan şifremi unuttum diyebilir
+  await authService.requestPasswordReset({
+    email,
+    ipAddress: req?.ip || null,
+    userAgent: req?.get?.('User-Agent') || 'mobile-app',
+    source: 'mobile' // Mobile'dan gelen istek
+  });
+  
+  return { success: true };
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -202,6 +228,7 @@ module.exports = {
   refresh,
   logout,
   getMe,
-  changePassword
+  changePassword,
+  forgotPassword
 };
 

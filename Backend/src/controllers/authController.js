@@ -556,7 +556,8 @@ const forgotPassword = catchAsync(async (req, res) => {
   await authService.requestPasswordReset({
     email,
     ipAddress: req.ip,
-    userAgent: req.get('user-agent') || null
+    userAgent: req.get('user-agent') || null,
+    source: 'web' // Web'den gelen istek
   });
 
   return sendSuccess(

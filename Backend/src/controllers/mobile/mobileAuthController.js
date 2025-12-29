@@ -7,11 +7,13 @@
  * - Mobil uygulama login işlemi
  * - Token yenileme (refresh token)
  * - Logout işlemi
+ * - Şifre sıfırlama talebi (forgot password)
  * 
  * Endpoint'ler:
  * - POST /api/mobile/auth/login - Mobil login
  * - POST /api/mobile/auth/refresh - Token yenileme
  * - POST /api/mobile/auth/logout - Çıkış
+ * - POST /api/mobile/auth/forgot-password - Şifre sıfırlama talebi
  * 
  * Özellikler:
  * - Sadece doktor rolü için erişim
@@ -67,12 +69,33 @@ const changePassword = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Şifre başarıyla değiştirildi');
 });
 
+/**
+ * Şifre sıfırlama talebi - Web ile aynı mantık
+ * Mail gönderme işi aynı, aynı doktor hem web'den hem mobile'dan şifremi unuttum diyebilir
+ */
+const forgotPassword = catchAsync(async (req, res) => {
+  const { email } = req.body;
+  const logger = require('../../utils/logger');
+  
+  logger.info('Mobile password reset request received', { email });
+  
+  await mobileAuthService.forgotPassword(email, req);
+  
+  // Web ile aynı mesaj - güvenlik için her zaman başarılı mesaj döner
+  return sendSuccess(
+    res,
+    'Eğer kayıtlı bir hesabınız varsa, şifre sıfırlama bağlantısı e-posta adresinize gönderildi.',
+    { success: true, message: 'Eğer kayıtlı bir hesabınız varsa, şifre sıfırlama bağlantısı e-posta adresinize gönderildi.' }
+  );
+});
+
 module.exports = {
   registerDoctor,
   login,
   refreshToken,
   logout,
   getMe,
-  changePassword
+  changePassword,
+  forgotPassword
 };
 

@@ -59,14 +59,21 @@ export const useAuthInitialization = () => {
               return;
             }
             
-            // Fetch user data - API client interceptor will handle token refresh if needed
-            // If token is expired, the interceptor will refresh it automatically
-            try {
-              console.log('🔵 Fetching user data...');
-              const response = await apiClient.get(endpoints.auth.me);
-              const user = response.data.data.user;
-              markAuthenticated(user);
-              console.log('✅ User data fetched successfully');
+              // Fetch user data - API client interceptor will handle token refresh if needed
+              // If token is expired, the interceptor will refresh it automatically
+              try {
+                console.log('🔵 Fetching user data...');
+                const response = await apiClient.get(endpoints.auth.me);
+                const user = response.data.data.user;
+                
+                // Mark user as authenticated - token'ları temizleme, sadece authenticated olarak işaretle
+                // Approved kontrolü LoginScreen ve RootNavigator'da yapılacak
+                // Bu sayede admin onayladıktan sonra token'lar kalıcı olacak
+                markAuthenticated(user);
+                console.log('✅ User data fetched successfully');
+                
+                // Note: Approved kontrolü LoginScreen'de yapılıyor
+                // Eğer user approved değilse, LoginScreen useEffect'i PendingApproval'a yönlendirecek
             } catch (error: any) {
               // If error is 401, token refresh was attempted but failed
               // If error is network, we'll mark as unauthenticated

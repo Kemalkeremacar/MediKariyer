@@ -220,7 +220,8 @@ export const RegisterScreen = () => {
   const registerMutation = useRegister({
     onSuccess: () => {
       setServerError(null);
-      // Navigate to pending approval screen
+      // Navigate to pending approval screen - only shown after new doctor registration
+      // User is NOT authenticated after registration (no tokens returned)
       navigation.navigate('PendingApproval');
     },
     onError: (err) => {
@@ -543,9 +544,13 @@ export const RegisterScreen = () => {
                     </View>
                   ) : (
                     <View style={styles.photoPlaceholder}>
-                      <Ionicons name="person" size={48} color={theme.colors.text.tertiary} />
-                      <Typography variant="bodySmall" style={styles.photoPlaceholderText}>Fotoğraf Ekle</Typography>
-                      <Typography variant="caption" style={styles.photoPlaceholderHint}>Kamera veya galeriden seç</Typography>
+                      <Ionicons name="person" size={36} color={theme.colors.text.tertiary} />
+                      <Typography variant="bodySmall" style={styles.photoPlaceholderText} numberOfLines={1}>
+                        Fotoğraf Ekle
+                      </Typography>
+                      <Typography variant="caption" style={styles.photoPlaceholderHint} numberOfLines={2}>
+                        Kamera veya galeriden seç
+                      </Typography>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -623,10 +628,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   brandName: {
     color: theme.colors.text.inverse,
-    ...theme.textVariants.title,
+    fontSize: 32,
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
-    letterSpacing: 0.5,
-    marginBottom: theme.spacing.sm,
+    letterSpacing: 1,
+    marginTop: theme.spacing.sm,
   },
   content: {
     flex: 1,
@@ -745,18 +751,27 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderColor: theme.colors.primary[600],
     borderStyle: 'dashed',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: theme.spacing.xs,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
   },
   photoPlaceholderText: {
-    ...theme.textVariants.bodySmall,
+    fontSize: 11,
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.primary,
+    textAlign: 'center',
     marginTop: theme.spacing.xs,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   photoPlaceholderHint: {
-    ...theme.textVariants.caption,
+    fontSize: 9,
     color: theme.colors.text.secondary,
+    textAlign: 'center',
     marginTop: 2,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   uploadingOverlay: {
     position: 'absolute',

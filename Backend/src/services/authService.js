@@ -1080,7 +1080,7 @@ const PASSWORD_RESET_EXPIRY_MINUTES = Number(process.env.PASSWORD_RESET_EXPIRY_M
 const hashResetToken = (token) =>
   crypto.createHash('sha256').update(token).digest('hex');
 
-const requestPasswordReset = async ({ email, ipAddress, userAgent }) => {
+const requestPasswordReset = async ({ email, ipAddress, userAgent, source = 'web' }) => {
   const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
   if (!normalizedEmail) {
@@ -1141,7 +1141,8 @@ const requestPasswordReset = async ({ email, ipAddress, userAgent }) => {
   await emailService.sendPasswordResetEmail({
     to: user.email,
     token,
-    expiresAt
+    expiresAt,
+    source // 'web' veya 'mobile'
   });
 
   return { success: true };

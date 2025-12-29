@@ -3,20 +3,80 @@
  * @description Admin onayı bekleme ekranı
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useLogout } from '../hooks/useLogout';
+import { useAuthStore } from '@/store/authStore';
+import { authService } from '@/api/services/authService';
+import type { AuthStackParamList } from '@/navigation/types';
 
 export const PendingApprovalScreen = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const logoutMutation = useLogout();
+  const authStatus = useAuthStore((state) => state.authStatus);
+  const user = useAuthStore((state) => state.user);
+  const markAuthenticated = useAuthStore((state) => state.markAuthenticated);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Determine if this is after registration (not authenticated) or after login attempt (authenticated but not approved)
+  const isAfterRegistration = authStatus !== 'authenticated';
+  
+  // Polling: Check if user is approved (only if authenticated)
+  // Admin onayladıktan sonra otomatik olarak App'e geçiş yapılacak
+  useEffect(() => {
+    if (authStatus === 'authenticated' && user) {
+      // Start polling every 10 seconds to check if user is approved
+      pollingIntervalRef.current = setInterval(async () => {
+        try {
+          const updatedUser = await authService.getMe();
+          const isApproved = updatedUser.is_approved === true || updatedUser.is_approved === 1 || updatedUser.is_approved === 'true' || updatedUser.is_approved === '1';
+          const isAdmin = updatedUser.role === 'admin';
+          
+          if (isApproved || isAdmin) {
+            // User is approved - update store and RootNavigator will handle navigation
+            markAuthenticated(updatedUser);
+            console.log('✅ User is approved, navigating to App');
+            
+            // Clear polling interval
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+          }
+        } catch (error) {
+          console.error('Error checking approval status:', error);
+          // Don't clear interval on error, keep polling
+        }
+      }, 10000); // Check every 10 seconds
+      
+      // Cleanup on unmount
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      };
+    }
+  }, [authStatus, user, markAuthenticated]);
 
   const handleGoToLogin = () => {
-    // Logout yap, RootNavigator otomatik olarak Auth ekranına yönlendirecek
-    logoutMutation.mutate();
+    // Eğer authenticated ise logout yap, değilse sadece login'e git
+    if (authStatus === 'authenticated') {
+      // Clear polling before logout
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      logoutMutation.mutate();
+    } else {
+      navigation.replace('Login');
+    }
   };
 
   return (
@@ -41,11 +101,13 @@ export const PendingApprovalScreen = () => {
 
       <View style={styles.content}>
         <Typography variant="h1" style={styles.title}>
-          Kayıt Başarılı! 🎉
+          {isAfterRegistration ? 'Kayıt Başarılı! 🎉' : 'Admin Onayı Bekleniyor ⏳'}
         </Typography>
 
         <Typography variant="body" style={styles.subtitle}>
-          Hesabınız başarıyla oluşturuldu
+          {isAfterRegistration 
+            ? 'Hesabınız başarıyla oluşturuldu'
+            : 'Hesabınız henüz admin tarafından onaylanmadı'}
         </Typography>
 
         <View style={styles.infoCard}>
@@ -73,7 +135,9 @@ export const PendingApprovalScreen = () => {
 
         <View style={styles.messageCard}>
           <Typography variant="body" style={styles.message}>
-            Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve giriş yapabileceksiniz.
+            {isAfterRegistration
+              ? 'Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve giriş yapabileceksiniz.'
+              : 'Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve otomatik olarak giriş yapabileceksiniz. Uygulamayı kapatıp açtığınızda da giriş yapmış olarak kalacaksınız.'}
           </Typography>
           
           <Typography variant="bodySmall" style={styles.note}>
@@ -83,7 +147,7 @@ export const PendingApprovalScreen = () => {
 
         <Button
           variant="gradient"
-          label="Giriş Ekranına Dön"
+          label={isAfterRegistration ? "Giriş Ekranına Dön" : "Giriş Ekranına Dön"}
           onPress={handleGoToLogin}
           gradientColors={['#4A90E2', '#2E5C8A']}
           fullWidth

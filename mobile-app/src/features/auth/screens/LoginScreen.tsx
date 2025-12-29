@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { showAlert } from '@/utils/alert';
 import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
 import { handleApiError, isAuthError, isNetworkError } from '@/utils/errorHandler';
+import { useAuthStore } from '@/store/authStore';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta girin'),
@@ -28,8 +29,25 @@ export const LoginScreen = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const [serverError, setServerError] = useState<string | null>(null);
+  const authStatus = useAuthStore((state) => state.authStatus);
+  const user = useAuthStore((state) => state.user);
   
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  // Check if user is authenticated but not approved - redirect to PendingApproval
+  // Web'deki yaklaşım: Login sayfasında kal, PendingApproval modal'ı göster
+  // Mobile'da: PendingApproval screen'ine yönlendir
+  useEffect(() => {
+    if (authStatus === 'authenticated' && user) {
+      const isApproved = user.is_approved === true || user.is_approved === 1 || user.is_approved === 'true' || user.is_approved === '1';
+      const isAdmin = user.role === 'admin';
+      
+      if (!isApproved && !isAdmin) {
+        // User is authenticated but not approved - show PendingApproval screen
+        navigation.replace('PendingApproval');
+      }
+    }
+  }, [authStatus, user, navigation]);
 
   const {
     control,
@@ -41,8 +59,23 @@ export const LoginScreen = () => {
   });
 
   const loginMutation = useLogin({
-    onSuccess: () => {
+    onSuccess: (data) => {
       setServerError(null);
+      
+      // Check if user is approved after successful login
+      const isApproved = data.user.is_approved === true || data.user.is_approved === 1 || data.user.is_approved === 'true' || data.user.is_approved === '1';
+      const isAdmin = data.user.role === 'admin';
+      
+      if (!isApproved && !isAdmin) {
+        // User is not approved - show warning and redirect to PendingApproval
+        showAlert.info('Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.');
+        // Navigate to PendingApproval screen
+        setTimeout(() => {
+          navigation.replace('PendingApproval');
+        }, 500);
+      }
+      // If approved, RootNavigator will automatically show App screen
+      // No need to manually navigate - conditional rendering handles it
     },
     onError: (error) => {
       let message: string;
@@ -168,7 +201,7 @@ export const LoginScreen = () => {
 
             <Button
               variant="ghost"
-              onPress={() => showAlert.info('Bu özellik yakında eklenecek.')}
+              onPress={() => navigation.navigate('ForgotPassword')}
               style={styles.forgotButton}
             >
               <Typography variant="bodySmall" style={styles.forgotText}>
@@ -242,9 +275,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   brandName: {
     color: theme.colors.text.inverse,
-    ...theme.textVariants.title,
+    fontSize: 32,
+    fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
+    marginTop: theme.spacing.sm,
   },
   content: {
     flex: 1,
