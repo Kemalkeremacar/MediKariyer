@@ -22,14 +22,36 @@ const CORS_OPTIONS = {
       'http://127.0.0.1:8081',
       'http://127.0.0.1:5000',
       'http://127.0.0.1:3000',
-      'http://192.168.1.198:5000', // Network IP - Frontend
-      'http://192.168.1.198:3100',  // Network IP - Backend
+      'http://192.168.1.198:5000', // Network IP - Frontend (eski)
+      'http://192.168.1.198:3100',  // Network IP - Backend (eski)
       'http://192.168.1.198:8081',
+      'http://192.168.1.134:5000', // Network IP - Frontend (güncel Wi-Fi IP)
+      'http://192.168.1.134:3100',  // Network IP - Backend (güncel Wi-Fi IP)
+      'http://192.168.1.134:8081',
+      // Tüm 192.168.1.x IP'lerine izin ver (local network için)
+      /^http:\/\/192\.168\.1\.\d{1,3}(:\d+)?$/,
       'https://mk.monassist.com' // Production Frontend Domain
     ];
     
     // Kaynağı olmayan isteklere (mobil uygulamalar, Postman gibi araçlar) izin ver.
-    if (!origin) return callback(null, true);
+    // Mobile app'ler origin header'ı göndermez, bu yüzden her zaman izin ver.
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // VPN IP range kontrolü (10.8.0.0/24) - OpenVPN için
+    // VPN IP'lerinden gelen isteklere otomatik izin ver
+    const vpnIpPattern = /^http:\/\/10\.8\.0\.\d{1,3}(:\d+)?$/;
+    if (vpnIpPattern.test(origin)) {
+      return callback(null, true);
+    }
+    
+    // Local network IP range kontrolü (192.168.1.0/24) - Wi-Fi network için
+    // Local network IP'lerinden gelen isteklere otomatik izin ver
+    const localNetworkPattern = /^http:\/\/192\.168\.1\.\d{1,3}(:\d+)?$/;
+    if (localNetworkPattern.test(origin)) {
+      return callback(null, true);
+    }
     
     // Gelen isteğin kaynağı izin verilenler listesinde varsa, isteğe izin ver.
     if (allowedOrigins.includes(origin)) {

@@ -10,8 +10,8 @@ export const lightColors = {
     200: '#bfdbfe',
     300: '#93c5fd',
     400: '#60a5fa',
-    500: '#3B82F6', // Modern blue
-    600: '#2563eb',
+    500: '#3B82F6', // Modern blue (frontend ile aynı)
+    600: '#2563eb', // blue-600 (frontend'de kullanılan ana renk)
     700: '#1d4ed8',
     800: '#1e40af',
     900: '#1e3a8a',
@@ -97,10 +97,11 @@ export const lightColors = {
     gradient: 'linear-gradient(135deg, #6096B4 0%, #93BFCF 100%)',
   },
   // Brand gradient colors (used in headers, buttons)
+  // Frontend'deki mavi renklerle uyumlu (#3B82F6 - blue-600)
   gradient: {
-    primary: ['#60A5FA', '#3B82F6'], // Light blue gradient
-    secondary: ['#38BDF8', '#0EA5E9'], // Sky blue gradient
-    header: ['#6096B4', '#7BA8BE', '#93BFCF'], // New blue gradient for headers (matches web)
+    primary: ['#3B82F6', '#2563eb'], // blue-500 to blue-600 (frontend ile aynı)
+    secondary: ['#60a5fa', '#3B82F6'], // blue-400 to blue-500
+    header: ['#3B82F6', '#2563eb', '#1d4ed8'], // blue-500 to blue-600 to blue-700 (frontend ile uyumlu)
   },
   text: {
     primary: '#1F2937',

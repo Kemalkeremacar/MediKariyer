@@ -72,6 +72,12 @@ const attachInterceptors = (instance: AxiosInstance) => {
     async (config) => {
       const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
       devLog('📤 API Request:', config.method?.toUpperCase(), fullUrl);
+      devLog('📤 Request Config:', {
+        baseURL: config.baseURL,
+        url: config.url,
+        fullUrl: fullUrl,
+        timeout: config.timeout,
+      });
       
       // Skip token refresh logic for public endpoints that don't require authentication
       const isPublicEndpoint = 
@@ -177,21 +183,43 @@ const attachInterceptors = (instance: AxiosInstance) => {
     async (error) => {
       devError('❌ API Error:', error.config?.url, error.response?.status);
       devError('❌ Error response:', JSON.stringify(error.response?.data, null, 2));
+      devError('❌ Error details:', {
+        code: error.code,
+        message: error.message,
+        request: error.request ? 'Request sent' : 'No request',
+        response: error.response ? 'Response received' : 'No response',
+        config: {
+          baseURL: error.config?.baseURL,
+          url: error.config?.url,
+          method: error.config?.method,
+          timeout: error.config?.timeout,
+        },
+      });
       
       // Network error handling
       if (!error.response) {
         // Determine specific network error message
-        let errorMessage = 'Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.';
+        let errorMessage = 'Sunucuya bağlanılamıyor. Backend sunucusunun çalıştığından emin olun.';
         
         if (error.code === 'ECONNABORTED') {
-          errorMessage = 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
+          errorMessage = 'İstek zaman aşımına uğradı (30 saniye). Backend sunucusu çalışıyor mu?';
         } else if (error.code === 'ECONNREFUSED') {
-          errorMessage = 'Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.';
+          errorMessage = 'Sunucuya bağlanılamadı. Backend sunucusu çalışmıyor olabilir.';
         } else if (error.code === 'ETIMEDOUT') {
-          errorMessage = 'Bağlantı zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.';
+          errorMessage = 'Bağlantı zaman aşımına uğradı. VPN bağlantınızı kontrol edin.';
         } else if (!error.request) {
           errorMessage = 'İstek gönderilemedi. Lütfen tekrar deneyin.';
         }
+        
+        // Daha detaylı error mesajı
+        console.error('🔴 Network Error Details:', {
+          code: error.code,
+          message: error.message,
+          url: error.config?.baseURL + error.config?.url,
+          timeout: error.config?.timeout,
+          hasRequest: !!error.request,
+          hasResponse: !!error.response,
+        });
         
         const networkError = new Error(errorMessage);
         networkError.name = 'NetworkError';
@@ -203,6 +231,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
           code: error.code,
           url: error.config?.url,
           method: error.config?.method,
+          baseURL: error.config?.baseURL,
         });
         
         return Promise.reject(networkError);

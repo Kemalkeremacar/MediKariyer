@@ -24,7 +24,6 @@ import type { AuthStackParamList } from '@/navigation/types';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { FormField } from '@/components/ui/FormField';
 import { Select } from '@/components/ui/Select';
 import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -295,21 +294,24 @@ export const RegisterScreen = () => {
             <Typography variant="h1" style={styles.brandName}>
               MediKariyer
             </Typography>
-            
-            <Typography variant="body" style={styles.headerSubtitle}>
-              Doktor hesabı oluştur
-            </Typography>
           </LinearGradient>
 
           {/* Content */}
           <View style={styles.content}>
-          <View style={[styles.sectionHeader, styles.sectionHeaderFirst]}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              Kişisel Bilgiler
+            <Typography variant="body" style={styles.subtitle}>
+              Doktor hesabı oluştur ve kariyer fırsatlarını keşfet
             </Typography>
-          </View>
 
-            <FormField label="Ad *" error={errors.firstName?.message}>
+            <View style={[styles.sectionHeader, styles.sectionHeaderFirst]}>
+              <Typography variant="h3" style={styles.sectionTitle}>
+                Kişisel Bilgiler
+              </Typography>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Ad *
+              </Typography>
               <Controller
                 control={control}
                 name="firstName"
@@ -319,12 +321,21 @@ export const RegisterScreen = () => {
                     value={value}
                     onChangeText={onChange}
                     autoCapitalize="words"
+                    variant="underline"
                   />
                 )}
               />
-            </FormField>
+              {errors.firstName && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {errors.firstName.message}
+                </Typography>
+              )}
+            </View>
 
-            <FormField label="Soyad *" error={errors.lastName?.message}>
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Soyad *
+              </Typography>
               <Controller
                 control={control}
                 name="lastName"
@@ -334,12 +345,21 @@ export const RegisterScreen = () => {
                     value={value}
                     onChangeText={onChange}
                     autoCapitalize="words"
+                    variant="underline"
                   />
                 )}
               />
-            </FormField>
+              {errors.lastName && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {errors.lastName.message}
+                </Typography>
+              )}
+            </View>
 
-            <FormField label="Unvan *">
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Unvan *
+              </Typography>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipContainer}>
                 {TITLES.map((title) => (
                   <TouchableOpacity
@@ -363,7 +383,7 @@ export const RegisterScreen = () => {
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-            </FormField>
+            </View>
 
             <View style={styles.sectionHeader}>
               <Typography variant="h3" style={styles.sectionTitle}>
@@ -371,7 +391,10 @@ export const RegisterScreen = () => {
               </Typography>
             </View>
 
-            <FormField label="Uzmanlık Alanı *">
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Uzmanlık Alanı *
+              </Typography>
               {specialtiesLoading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={theme.colors.primary[600]} />
@@ -389,10 +412,13 @@ export const RegisterScreen = () => {
                   searchable
                 />
               )}
-            </FormField>
+            </View>
 
             {selectedSpecialty && filteredSubspecialties.length > 0 && (
-              <FormField label="Yan Dal (Opsiyonel)">
+              <View style={styles.inputContainer}>
+                <Typography variant="bodySmall" style={styles.label}>
+                  Yan Dal (Opsiyonel)
+                </Typography>
                 {subspecialtiesLoading ? (
                   <View style={styles.loadingContainer}>
                     <ActivityIndicator size="small" color={theme.colors.primary[600]} />
@@ -410,7 +436,7 @@ export const RegisterScreen = () => {
                     searchable
                   />
                 )}
-              </FormField>
+              </View>
             )}
 
             <View style={styles.sectionHeader}>
@@ -419,7 +445,10 @@ export const RegisterScreen = () => {
               </Typography>
             </View>
 
-            <FormField label="E-posta *" error={errors.email?.message}>
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                E-posta *
+              </Typography>
               <Controller
                 control={control}
                 name="email"
@@ -430,12 +459,21 @@ export const RegisterScreen = () => {
                     placeholder="ornek@medikariyer.com"
                     value={value}
                     onChangeText={onChange}
+                    variant="underline"
                   />
                 )}
               />
-            </FormField>
+              {errors.email && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {errors.email.message}
+                </Typography>
+              )}
+            </View>
 
-            <FormField label="Şifre *" error={errors.password?.message}>
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Şifre *
+              </Typography>
               <Controller
                 control={control}
                 name="password"
@@ -445,12 +483,21 @@ export const RegisterScreen = () => {
                     secureTextEntry
                     value={value}
                     onChangeText={onChange}
+                    variant="underline"
                   />
                 )}
               />
-            </FormField>
+              {errors.password && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {errors.password.message}
+                </Typography>
+              )}
+            </View>
 
-            <FormField label="Şifre Tekrar *" error={errors.confirmPassword?.message}>
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Şifre Tekrar *
+              </Typography>
               <Controller
                 control={control}
                 name="confirmPassword"
@@ -460,12 +507,21 @@ export const RegisterScreen = () => {
                     secureTextEntry
                     value={value}
                     onChangeText={onChange}
+                    variant="underline"
                   />
                 )}
               />
-            </FormField>
+              {errors.confirmPassword && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {errors.confirmPassword.message}
+                </Typography>
+              )}
+            </View>
 
-            <FormField label="Profil Fotoğrafı *">
+            <View style={styles.inputContainer}>
+              <Typography variant="bodySmall" style={styles.label}>
+                Profil Fotoğrafı *
+              </Typography>
               <View style={styles.photoContainer}>
                 <TouchableOpacity 
                   onPress={showPhotoOptions} 
@@ -494,15 +550,13 @@ export const RegisterScreen = () => {
                   )}
                 </TouchableOpacity>
               </View>
-            </FormField>
-
-            <View style={styles.errorContainer}>
-              {serverError && (
-                <Typography variant="caption" style={styles.serverError}>
-                  {serverError}
-                </Typography>
-              )}
             </View>
+
+            {serverError && (
+              <Typography variant="caption" style={styles.serverError}>
+                {serverError}
+              </Typography>
+            )}
 
             <Button
               variant="gradient"
@@ -512,19 +566,20 @@ export const RegisterScreen = () => {
               fullWidth
               size="lg"
               gradientColors={(theme.colors.gradient as any).header || theme.colors.gradient.primary}
-              style={styles.buttonSpacing}
+              style={styles.registerButton}
             />
-            
-          <View style={styles.loginPrompt}>
-            <Typography variant="bodySmall" style={styles.loginPromptText}>
-              Zaten hesabın var mı?{' '}
-            </Typography>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Typography variant="bodySmall" style={styles.loginLink}>
-                Giriş Yap
+
+            {/* Login Link */}
+            <View style={styles.loginSection}>
+              <Typography variant="bodySmall" style={styles.loginText}>
+                Zaten hesabın var mı?{' '}
               </Typography>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Typography variant="bodySmall" style={styles.loginLink}>
+                  Giriş Yap
+                </Typography>
+              </TouchableOpacity>
+            </View>
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -573,17 +628,26 @@ const createStyles = (theme: any) => StyleSheet.create({
     letterSpacing: 0.5,
     marginBottom: theme.spacing.sm,
   },
-  headerSubtitle: {
-    color: theme.colors.text.inverse,
-    opacity: 0.9,
-    textAlign: 'center',
-    ...theme.textVariants.body,
-  },
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing['2xl'],
-    paddingTop: theme.spacing['2xl'],
-    paddingBottom: theme.spacing['4xl'],
+    paddingTop: theme.spacing['4xl'],
+  },
+  subtitle: {
+    textAlign: 'center',
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing['4xl'],
+  },
+  inputContainer: {
+    marginBottom: theme.spacing.xl,
+  },
+  label: {
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.sm,
+  },
+  errorText: {
+    color: theme.colors.error[600],
+    marginTop: theme.spacing.xs,
   },
   chipContainer: {
     flexDirection: 'row',
@@ -619,19 +683,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
     color: theme.colors.text.inverse,
   },
-  errorContainer: {
-    minHeight: 40,
-    justifyContent: 'center',
-    marginBottom: theme.spacing.sm,
-  },
   serverError: {
     color: theme.colors.error[600],
     textAlign: 'center',
-    ...theme.textVariants.bodySmall,
+    marginBottom: theme.spacing.lg,
   },
-  buttonSpacing: {
+  registerButton: {
     marginBottom: theme.spacing['2xl'],
-    marginTop: theme.spacing['2xl'],
   },
   loadingContainer: {
     flexDirection: 'row',
@@ -717,12 +775,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginTop: theme.spacing.xs,
     fontWeight: theme.typography.fontWeight.semibold,
   },
-  loginPrompt: {
+  loginSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: theme.spacing['4xl'],
   },
-  loginPromptText: {
+  loginText: {
     color: theme.colors.text.secondary,
   },
   loginLink: {
@@ -730,7 +789,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: theme.typography.fontWeight.semibold,
   },
   sectionHeader: {
-    marginTop: theme.spacing['2xl'],
+    marginTop: theme.spacing['3xl'],
     marginBottom: theme.spacing.xl,
     paddingBottom: theme.spacing.md,
     borderBottomWidth: 2,
@@ -740,9 +799,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginTop: 0,
   },
   sectionTitle: {
-    color: theme.colors.primary[700],
+    color: theme.colors.primary[600],
     fontWeight: theme.typography.fontWeight.bold,
-    ...theme.textVariants.h3,
+    fontSize: theme.typography.fontSize.lg,
     letterSpacing: 0.3,
   },
 });

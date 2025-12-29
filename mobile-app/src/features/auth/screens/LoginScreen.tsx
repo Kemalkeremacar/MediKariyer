@@ -125,7 +125,7 @@ export const LoginScreen = () => {
                     placeholder="ornek@medikariyer.com"
                     value={value}
                     onChangeText={onChange}
-                    style={styles.input}
+                    variant="underline"
                   />
                 )}
               />
@@ -149,7 +149,7 @@ export const LoginScreen = () => {
                     secureTextEntry
                     value={value}
                     onChangeText={onChange}
-                    style={styles.input}
+                    variant="underline"
                   />
                 )}
               />
@@ -265,15 +265,6 @@ const createStyles = (theme: any) => StyleSheet.create({
   label: {
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.sm,
-  },
-  input: {
-    backgroundColor: theme.colors.background.secondary,
-    borderWidth: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border.medium,
-    borderRadius: 0,
-    paddingHorizontal: 0,
-    paddingVertical: theme.spacing.md,
   },
   errorText: {
     color: theme.colors.error[600],

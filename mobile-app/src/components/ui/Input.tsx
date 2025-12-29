@@ -14,6 +14,7 @@ export interface InputProps extends TextInputProps {
   error?: string;
   helperText?: string;
   containerStyle?: ViewStyle;
+  variant?: 'default' | 'underline';
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -22,6 +23,7 @@ export const Input: React.FC<InputProps> = ({
   helperText,
   containerStyle,
   style,
+  variant = 'default',
   ...props
 }) => {
   const { theme } = useTheme();
@@ -37,6 +39,7 @@ export const Input: React.FC<InputProps> = ({
         maxFontSizeMultiplier={1}
         style={[
           styles.input,
+          variant === 'underline' && styles.inputUnderline,
           isFocused && styles.inputFocused,
           error && styles.inputError,
           style,
@@ -74,6 +77,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.neutral[100],
     includeFontPadding: false,
     textAlignVertical: 'center',
+  },
+  inputUnderline: {
+    height: 'auto',
+    minHeight: 44,
+    borderRadius: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border.medium,
+    backgroundColor: theme.colors.background.secondary,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
   },
   inputFocused: {
     backgroundColor: theme.colors.neutral[50],

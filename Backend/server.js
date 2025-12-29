@@ -70,11 +70,26 @@ const startServer = async () => {
     // Scheduler – 30 günlük ilan süresi kontrolü
     startJobExpirationCron();
 
-    // Sunucuyu başlat
-    server = app.listen(PORT, () => {
+    // Sunucuyu başlat - Tüm network interface'lerinde dinle (0.0.0.0)
+    // Bu sayede VPN, local network ve localhost üzerinden erişilebilir
+    server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 MediKariyer API ${PORT} portunda çalışıyor`);
       logger.info(`🌐 Ortam: ${process.env.NODE_ENV}`);
-      logger.info(`🔗 API Base URL: http://localhost:${PORT}${process.env.API_PREFIX || '/api'}`);
+      logger.info(`🔗 API Base URL: http://0.0.0.0:${PORT}${process.env.API_PREFIX || '/api'}`);
+      // Network IP'lerini dinamik olarak bul
+      const os = require('os');
+      const nets = os.networkInterfaces();
+      const networkIPs = [];
+      Object.keys(nets).forEach(name => {
+        nets[name].forEach(net => {
+          if (net.family === 'IPv4' && !net.internal) {
+            networkIPs.push(`http://${net.address}:${PORT}/api`);
+          }
+        });
+      });
+      
+      logger.info(`📱 Network IPs: ${networkIPs.join(', ')}`);
+      logger.info(`🔒 VPN Network: http://10.8.0.x:${PORT}/api (VPN IP'den erişim)`);
     });
 
   } catch (error) {
