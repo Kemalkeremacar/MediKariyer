@@ -1,3 +1,12 @@
+/**
+ * Profile Types - Stabilizasyon Faz 1
+ * Backend Mobile API endpoint'lerinden dönen profil yanıtları için tip tanımları
+ * 
+ * Endpoint'ler:
+ * - GET /api/mobile/doctor/profile
+ * - GET /api/mobile/doctor/profile/completion
+ */
+
 // Profil tipleri - Veritabanı yapısına göre
 
 export interface DoctorProfile {
@@ -78,8 +87,36 @@ export interface CompleteProfile extends DoctorProfile {
   languages: DoctorLanguage[];
 }
 
+/**
+ * Profile Completion Response from Backend
+ * GET /api/mobile/doctor/profile/completion
+ * 
+ * Backend Response Format:
+ * {
+ *   success: true,
+ *   data: {
+ *     completion_percentage: number,
+ *     details?: {
+ *       personal?: { completed: number; total: number }
+ *     },
+ *     missing_fields?: string[]
+ *   }
+ * }
+ */
+export interface ProfileCompletionResponse {
+  completion_percentage: number;
+  details?: {
+    personal?: { completed: number; total: number };
+  };
+  missing_fields?: string[];
+}
+
+/**
+ * Profile Completion (Normalized for Frontend)
+ * Backend'den gelen ProfileCompletionResponse'u normalize eder
+ */
 export interface ProfileCompletion {
-  completion_percent: number;
+  completion_percent: number; // Backend'den completion_percentage olarak gelir
   filled_fields: number;
   total_fields: number;
   missing_fields: string[];
@@ -174,15 +211,6 @@ export interface UploadPhotoPayload {
   file_url: string;
 }
 
-// Backend response tipleri
-export interface ProfileCompletionResponse {
-  completion_percentage: number;
-  details?: {
-    personal?: { completed: number; total: number };
-  };
-  missing_fields?: string[];
-}
-
 export interface PhotoUploadResponse {
   request?: PhotoRequest;
 }
@@ -191,4 +219,3 @@ export interface PhotoStatusResponse {
   status?: PhotoRequest;
   history?: PhotoRequest[];
 }
-

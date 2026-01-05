@@ -1,22 +1,85 @@
 import React from 'react';
-import { View, StyleSheet, Linking, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, Linking, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '@/store/authStore';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useLogout } from '../hooks/useLogout';
+import { tokenManager } from '@/utils/tokenManager';
 
+/**
+ * AccountDisabledScreen - Hesap Pasif Durumda Ekranı
+ * 
+ * Bu ekran, kullanıcının hesabı sistem yöneticisi tarafından pasif duruma alındığında gösterilir.
+ * Kullanıcı bu ekrandan çıkış yaparak başka bir hesapla giriş yapabilir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
+ */
 export const AccountDisabledScreen = () => {
   const user = useAuthStore((state) => state.user);
+  const markUnauthenticated = useAuthStore((state) => state.markUnauthenticated);
   const logoutMutation = useLogout();
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  /**
+   * Logout işlemi - Garanti için hem hook hem de manuel temizlik yapıyoruz
+   */
+  const handleLogout = async () => {
+    try {
+      // 1. useLogout hook'unu kullan (API çağrısı, token temizleme, cache temizleme)
+      logoutMutation.mutate(undefined, {
+        onSuccess: async () => {
+          // 2. Garanti olsun diye manuel olarak da temizlik yap
+          await performManualCleanup();
+        },
+        onError: async () => {
+          // API hatası olsa bile manuel temizlik yap
+          await performManualCleanup();
+        },
+      });
+    } catch (error) {
+      // Hata durumunda da manuel temizlik yap
+      await performManualCleanup();
+    }
   };
 
+  /**
+   * Manuel temizlik - Garanti için ekstra temizlik adımları
+   */
+  const performManualCleanup = async () => {
+    try {
+      // Token'ları temizle
+      await tokenManager.clearTokens();
+      
+      // Auth store'u temizle
+      markUnauthenticated();
+      
+      console.log('✅ Manual cleanup completed');
+    } catch (error) {
+      console.error('❌ Manual cleanup error:', error);
+      // Hata olsa bile store'u temizle
+      markUnauthenticated();
+    }
+  };
+
+  /**
+   * Destek ile iletişime geç
+   */
   const handleContact = () => {
-    // E-posta ile iletişim
-    Linking.openURL('mailto:destek@medikariyer.com?subject=Hesap Pasif Durumda');
+    const email = 'destek@medikariyer.com';
+    const subject = 'Hesap Pasif Durumda - Yardım Talebi';
+    const body = user?.email 
+      ? `Merhaba,\n\nHesabım (${user.email}) pasif duruma alınmış. Lütfen hesabımın durumunu kontrol edip bilgilendirebilir misiniz?\n\nTeşekkürler.`
+      : 'Merhaba,\n\nHesabım pasif duruma alınmış. Lütfen hesabımın durumunu kontrol edip bilgilendirebilir misiniz?\n\nTeşekkürler.';
+    
+    Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`).catch(() => {
+      Alert.alert(
+        'E-posta Açılamadı',
+        `Lütfen manuel olarak ${email} adresine e-posta gönderin.`,
+        [{ text: 'Tamam' }]
+      );
+    });
   };
 
   return (
@@ -51,6 +114,15 @@ export const AccountDisabledScreen = () => {
             Hesabınız sistem yöneticisi tarafından pasif duruma alınmıştır.
           </Typography>
 
+          <View style={styles.warningBox}>
+            <Typography variant="title" style={styles.warningTitle}>
+              ⚠️ Hesap Erişimi Engellendi
+            </Typography>
+            <Typography variant="bodySmall" style={styles.warningText}>
+              Bu hesap ile giriş yapamazsınız. Hesabınızın durumu hakkında bilgi almak veya başka bir hesapla giriş yapmak için aşağıdaki seçenekleri kullanabilirsiniz.
+            </Typography>
+          </View>
+
           {user && (
             <View style={styles.userInfo}>
               {(user.first_name || user.last_name) && (
@@ -67,12 +139,12 @@ export const AccountDisabledScreen = () => {
           )}
 
           <Typography variant="body" style={styles.subMessage}>
-            Hesabınızın neden pasif duruma alındığını öğrenmek için lütfen sistem yöneticisi ile iletişime geçin.
+            Hesabınızın neden pasif duruma alındığını öğrenmek veya hesabınızı tekrar aktif hale getirmek için destek ekibi ile iletişime geçebilirsiniz.
           </Typography>
 
           <Button
             variant="gradient"
-            label="İletişime Geç"
+            label="Destekle İletişime Geç"
             onPress={handleContact}
             fullWidth
             gradientColors={['#4A90E2', '#2E5C8A']}
@@ -81,11 +153,13 @@ export const AccountDisabledScreen = () => {
           />
 
           <Button
-            label="Çıkış Yap"
-            variant="ghost"
+            label="Çıkış Yap ve Başka Hesapla Giriş Yap"
+            variant="outline"
             onPress={handleLogout}
             fullWidth
             loading={logoutMutation.isPending}
+            disabled={logoutMutation.isPending}
+            style={styles.logoutButton}
           />
         </View>
       </ScrollView>
@@ -170,5 +244,28 @@ const styles = StyleSheet.create({
   },
   button: {
     marginBottom: 16,
+  },
+  warningBox: {
+    width: '100%',
+    backgroundColor: '#FEF3C7',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+  },
+  warningTitle: {
+    marginBottom: 8,
+    color: '#92400E',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  warningText: {
+    color: '#78350F',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  logoutButton: {
+    marginTop: 8,
   },
 });

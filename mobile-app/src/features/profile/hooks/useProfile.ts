@@ -1,225 +1,51 @@
 /**
- * Profile Hooks
- * TD-003: CRUD hook'ları useCRUDMutation generic hook'u kullanacak şekilde refactor edildi
- * ARCH-003: queryKeys factory pattern uygulandı
+ * Profile Hooks - Stabilizasyon Faz 3
+ * 
+ * Bu dosya backward compatibility için yeni hook'ları re-export ediyor
+ * Yeni hook'lar domain-driven design ile ayrı dosyalarda:
+ * - useProfileCore.ts (Ana profil + completion)
+ * - useEducations.ts (Eğitim CRUD)
+ * - useExperiences.ts (Deneyim CRUD)
+ * - useCertificates.ts (Sertifika CRUD)
+ * - useLanguages.ts (Dil CRUD)
+ * 
+ * @deprecated Yeni hook dosyalarını doğrudan import edin
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { showAlert } from '@/utils/alert';
-import { profileService } from '@/api/services/profile';
-import { handleApiError } from '@/utils/errorHandler';
-import { useCRUDMutation } from '@/hooks/useCRUDMutation';
-import { queryKeys } from '@/api/queryKeys';
-import type {
-  UpdatePersonalInfoPayload,
-  CreateEducationPayload,
-  UpdateEducationPayload,
-  CreateExperiencePayload,
-  UpdateExperiencePayload,
-  CreateCertificatePayload,
-  UpdateCertificatePayload,
-  CreateLanguagePayload,
-  UpdateLanguagePayload,
-  UploadPhotoPayload,
-  DoctorEducation,
-  DoctorExperience,
-  DoctorCertificate,
-  DoctorLanguage,
-} from '@/types/profile';
+// Re-export new domain-driven hooks
+export { useProfileCore, useProfileCompletion } from './useProfileCore';
+export { useEducations, useEducation } from './useEducations';
+export { useExperiences, useExperience } from './useExperiences';
+export { useCertificates, useCertificate } from './useCertificates';
+export { useLanguages, useLanguage } from './useLanguages';
+
+// Legacy exports for backward compatibility
+import { useProfileCore } from './useProfileCore';
 
 /**
+ * @deprecated Use useProfileCore instead
  * Hook for fetching complete profile data
  */
-export const useProfile = () => {
-  return useQuery({
-    queryKey: queryKeys.profile.complete(),
-    queryFn: () => profileService.getCompleteProfile(),
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 0, // Her zaman fresh (dinamik proje - profil güncellenebilir)
-    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
-    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-  });
-};
-
-/**
- * Hook for fetching profile completion status
- */
-export const useProfileCompletion = () => {
-  return useQuery({
-    queryKey: queryKeys.profile.completion(),
-    queryFn: () => profileService.getProfileCompletion(),
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 0, // Her zaman fresh (dinamik proje - tamamlanma yüzdesi değişebilir)
-    gcTime: 0, // Cache'i hemen temizle
-    refetchOnMount: 'always', // Her zaman fresh data çek
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-  });
-};
+export const useProfile = useProfileCore;
 
 /**
  * Hook for updating personal information
  */
-export const useUpdatePersonalInfo = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: UpdatePersonalInfoPayload) =>
-      profileService.updatePersonalInfo(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
-      showAlert.success('Kişisel bilgiler güncellendi');
-    },
-    onError: (error) => {
-      const message = handleApiError(error, '/doctor/profile/personal');
-      showAlert.error(message);
-    },
-  });
-};
-
-/**
- * Hook for fetching education list
- */
-export const useEducations = () => {
-  return useQuery({
-    queryKey: queryKeys.profile.educations(),
-    queryFn: () => profileService.getEducations(),
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 0, // Her zaman fresh (dinamik proje - eğitimler eklenip silinebilir)
-    gcTime: 0, // Cache'i hemen temizle
-    refetchOnMount: 'always', // Her zaman fresh data çek
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-  });
-};
-
-/**
- * Hook for managing education entries
- * Uses generic useCRUDMutation hook
- */
-export const useEducation = () => {
-  return useCRUDMutation<CreateEducationPayload, UpdateEducationPayload, DoctorEducation>({
-    entityName: 'Eğitim bilgisi',
-    queryKey: queryKeys.profile.educations(),
-    endpoint: '/doctor/educations',
-    service: {
-      create: profileService.createEducation,
-      update: profileService.updateEducation,
-      delete: profileService.deleteEducation,
-    },
-  });
-};
-
-/**
- * Hook for fetching experience list
- */
-export const useExperiences = () => {
-  return useQuery({
-    queryKey: queryKeys.profile.experiences(),
-    queryFn: () => profileService.getExperiences(),
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 0, // Her zaman fresh (dinamik proje - deneyimler eklenip silinebilir)
-    gcTime: 0, // Cache'i hemen temizle
-    refetchOnMount: 'always', // Her zaman fresh data çek
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-  });
-};
-
-/**
- * Hook for managing experience entries
- * Uses generic useCRUDMutation hook
- */
-export const useExperience = () => {
-  return useCRUDMutation<CreateExperiencePayload, UpdateExperiencePayload, DoctorExperience>({
-    entityName: 'Deneyim bilgisi',
-    queryKey: queryKeys.profile.experiences(),
-    endpoint: '/doctor/experiences',
-    service: {
-      create: profileService.createExperience,
-      update: profileService.updateExperience,
-      delete: profileService.deleteExperience,
-    },
-  });
-};
-
-/**
- * Hook for fetching certificate list
- */
-export const useCertificates = () => {
-  return useQuery({
-    queryKey: queryKeys.profile.certificates(),
-    queryFn: () => profileService.getCertificates(),
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 0, // Her zaman fresh (dinamik proje - sertifikalar eklenip silinebilir)
-    gcTime: 0, // Cache'i hemen temizle
-    refetchOnMount: 'always', // Her zaman fresh data çek
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-  });
-};
-
-/**
- * Hook for managing certificate entries
- * Uses generic useCRUDMutation hook
- */
-export const useCertificate = () => {
-  return useCRUDMutation<CreateCertificatePayload, UpdateCertificatePayload, DoctorCertificate>({
-    entityName: 'Sertifika bilgisi',
-    queryKey: queryKeys.profile.certificates(),
-    endpoint: '/doctor/certificates',
-    service: {
-      create: profileService.createCertificate,
-      update: profileService.updateCertificate,
-      delete: profileService.deleteCertificate,
-    },
-  });
-};
-
-/**
- * Hook for fetching language list
- */
-export const useLanguages = () => {
-  return useQuery({
-    queryKey: queryKeys.profile.languages(),
-    queryFn: () => profileService.getLanguages(),
-    retry: 2,
-    retryDelay: 1000,
-    staleTime: 0, // Her zaman fresh (dinamik proje - diller eklenip silinebilir)
-    gcTime: 0, // Cache'i hemen temizle
-    refetchOnMount: 'always', // Her zaman fresh data çek
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-  });
-};
-
-/**
- * Hook for managing language entries
- * Uses generic useCRUDMutation hook
- */
-export const useLanguage = () => {
-  return useCRUDMutation<CreateLanguagePayload, UpdateLanguagePayload, DoctorLanguage>({
-    entityName: 'Dil bilgisi',
-    queryKey: queryKeys.profile.languages(),
-    endpoint: '/doctor/languages',
-    service: {
-      create: profileService.createLanguage,
-      update: profileService.updateLanguage,
-      delete: profileService.deleteLanguage,
-    },
-  });
-};
+export { useUpdatePersonalInfo } from './useUpdatePersonalInfo';
 
 /**
  * Hook for managing profile photo
+ * 
+ * NOT: showAlert kullanmıyoruz çünkü:
+ * - PhotoManagementScreen zaten showToast kullanıyor
+ * - showAlert modal açıyor ve navigation.goBack() ile çakışıyor
+ * - Modal açık kalırsa touch events engelleniyor
  */
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { profileService } from '@/api/services/profile';
+import { queryKeys } from '@/api/queryKeys';
+import type { UploadPhotoPayload } from '@/types/profile';
+
 export const useProfilePhoto = () => {
   const queryClient = useQueryClient();
 
@@ -228,12 +54,14 @@ export const useProfilePhoto = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.photo.status() });
       queryClient.invalidateQueries({ queryKey: queryKeys.photo.history() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
-      showAlert.success('Fotoğraf değişiklik talebi gönderildi. Admin onayı bekleniyor.');
+      // Sadece core profil'i invalidate et (fotoğraf değişti)
+      queryClient.invalidateQueries({ queryKey: ['profile', 'core'] });
+      // Alert/Toast gösterimi çağıran component'e bırakıldı
+      // (PhotoManagementScreen showToast kullanıyor)
     },
     onError: (error) => {
-      const message = handleApiError(error, '/doctor/profile/photo');
-      showAlert.error(message);
+      // Error handling çağıran component'e bırakıldı
+      throw error; // Re-throw so caller can handle it
     },
   });
 
@@ -242,11 +70,12 @@ export const useProfilePhoto = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.photo.status() });
       queryClient.invalidateQueries({ queryKey: queryKeys.photo.history() });
-      showAlert.success('Fotoğraf değişiklik talebi iptal edildi');
+      // Alert/Toast gösterimi çağıran component'e bırakıldı
+      // (PhotoManagementScreen showToast kullanıyor)
     },
     onError: (error) => {
-      const message = handleApiError(error, '/doctor/profile/photo/request');
-      showAlert.error(message);
+      // Error handling çağıran component'e bırakıldı
+      throw error; // Re-throw so caller can handle it
     },
   });
 

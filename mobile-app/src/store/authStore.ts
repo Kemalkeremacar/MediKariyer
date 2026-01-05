@@ -66,9 +66,15 @@ export const useAuthStore = create<AuthState>()(
         user: state.user,
         authStatus: state.authStatus,
       }),
+      // IMPORTANT: Don't set isHydrating to false here!
+      // Let useAuthInitialization handle hydration state.
+      // Setting it to false here would cause stale persisted user data
+      // to be used for routing before fresh user data is fetched.
       onRehydrateStorage: () => (state) => {
+        // Keep isHydrating as true until useAuthInitialization completes
+        // This prevents false routing based on stale persisted data
         if (state) {
-          state.setHydrating(false);
+          state.setHydrating(true);
         }
       },
     }

@@ -1,10 +1,14 @@
 /**
- * APPLICATIONS SCREEN - Modern Başvurularım Ekranı
- * TD-002: DetailsModal ayrı dosyaya taşındı (ApplicationDetailModal.tsx)
+ * APPLICATIONS SCREEN - Stabilizasyon Faz 4
+ * 
+ * Optimizasyonlar:
+ * - useFilter hook kullanılıyor (ortak filtreleme mantığı)
+ * - FlatList performans optimizasyonları
+ * - Loading ve empty state iyileştirmeleri
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { useSearch } from '@/hooks/useSearch';
+import { useFilter } from '@/hooks/useFilter';
 import {
   StyleSheet,
   RefreshControl,
@@ -38,28 +42,16 @@ const STATUS_DISPLAY: Record<string, string> = {
 };
 
 export const ApplicationsScreen = () => {
-  const [filters, setFilters] = useState<ApplicationFilters>({});
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
-  const [showFilterSheet, setShowFilterSheet] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  // Search handlers - useCallback ile optimize et, imleç kaybolmasını önle
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
-  }, []);
-
-  const handleSearchClear = useCallback(() => {
-    setSearchQuery('');
-  }, []);
-
-  // Global search hook - Modern, kullanıcı dostu arama
-  const { debouncedQuery, clientQuery, shouldFetch, isSearching: isSearchingDebounce } = useSearch(searchQuery, { minLength: 2 });
+  
+  // Filter hook - ortak filtreleme mantığı
+  const filter = useFilter<ApplicationFilters>({}, { minLength: 2 });
 
   // Query filters - useMemo ile normalize et, gereksiz re-render'ları önle
   const queryFilters = useMemo(() => ({
-    status: filters.status || undefined,
-    keyword: shouldFetch ? debouncedQuery : undefined,
-  }), [filters.status, shouldFetch, debouncedQuery]);
+    status: filter.filters.status || undefined,
+    keyword: filter.shouldFetch ? filter.debouncedQuery : undefined,
+  }), [filter.filters.status, filter.shouldFetch, filter.debouncedQuery]);
 
   // Sadece debounced query değiştiğinde API çağrısı yap
   const query = useApplications(queryFilters);
@@ -81,20 +73,17 @@ export const ApplicationsScreen = () => {
     if (allApplications.length === 0) return [];
     
     // Client-side arama sorgusu yoksa tüm sonuçları göster
-    if (!clientQuery) return allApplications;
+    if (!filter.clientQuery) return allApplications;
     
     // Client-side filtreleme yap (yazarken anında filtrele)
-    const lowerQuery = clientQuery.toLowerCase();
+    const lowerQuery = filter.clientQuery.toLowerCase();
     return allApplications.filter((app) => {
       const jobTitle = app.job_title?.toLowerCase() || '';
       const hospital = app.hospital_name?.toLowerCase() || '';
       
       return jobTitle.includes(lowerQuery) || hospital.includes(lowerQuery);
     });
-  }, [allApplications, clientQuery]);
-
-  // Arama yapılıyor mu kontrolü (backend isteği için)
-  const isSearching = isSearchingDebounce;
+  }, [allApplications, filter.clientQuery]);
 
   const loadMore = useCallback(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {
@@ -103,14 +92,8 @@ export const ApplicationsScreen = () => {
   }, [query]);
 
   const handleApplyFilters = useCallback((newFilters: ApplicationFilters) => {
-    setFilters(newFilters);
-  }, []);
-
-  const handleResetFilters = useCallback(() => {
-    setFilters({});
-  }, []);
-
-  const hasActiveFilter = Boolean(filters.status);
+    filter.handleFilterChange(newFilters);
+  }, [filter]);
 
   const getStatusDisplayName = (status?: string): string => {
     if (!status) return 'Tüm Başvurular';
@@ -131,37 +114,37 @@ export const ApplicationsScreen = () => {
       {/* Modern Search & Filter */}
       <View style={styles.searchContainer}>
         <SearchBar
-          value={searchQuery}
-          onChangeText={handleSearchChange}
+          value={filter.searchQuery}
+          onChangeText={filter.handleSearchChange}
           placeholder="Hastane veya pozisyon ara..."
-          onClear={handleSearchClear}
+          onClear={filter.handleSearchClear}
           style={styles.searchBar}
-          isSearching={isSearching}
+          isSearching={filter.isSearching}
         />
         <View style={styles.filterButtonWrapper}>
-          {isSearching && (
+          {filter.isSearching && (
             <View style={styles.searchingIndicator}>
               <ActivityIndicator size="small" color={colors.primary[600]} />
             </View>
           )}
           <TouchableOpacity
-            onPress={() => setShowFilterSheet(true)}
+            onPress={() => filter.setShowFilterSheet(true)}
             style={[
               styles.filterButton,
-              hasActiveFilter && styles.filterButtonActive,
+              filter.activeFilterCount > 0 && styles.filterButtonActive,
             ]}
             activeOpacity={0.7}
           >
             <Ionicons
               name="filter"
               size={20}
-              color={hasActiveFilter ? colors.background.primary : colors.primary[600]}
+              color={filter.activeFilterCount > 0 ? colors.background.primary : colors.primary[600]}
             />
           </TouchableOpacity>
-          {hasActiveFilter && (
+          {filter.activeFilterCount > 0 && (
             <View style={styles.filterBadge}>
               <Typography variant="caption" style={styles.filterBadgeText}>
-                1
+                {filter.activeFilterCount}
               </Typography>
             </View>
           )}
@@ -169,16 +152,18 @@ export const ApplicationsScreen = () => {
       </View>
 
       {/* Active Filter Chip */}
-      {hasActiveFilter && (
+      {filter.hasActiveFilters && (
         <View style={styles.activeFiltersContainer}>
-          <View style={styles.activeFilterChip}>
-            <Typography variant="body" style={styles.activeFilterText}>
-              {getStatusDisplayName(filters.status)}
-            </Typography>
-            <TouchableOpacity onPress={() => setFilters({})}>
-              <Ionicons name="close-circle" size={18} color={colors.primary[600]} />
-            </TouchableOpacity>
-          </View>
+          {filter.filters.status && (
+            <View style={styles.activeFilterChip}>
+              <Typography variant="body" style={styles.activeFilterText}>
+                {getStatusDisplayName(filter.filters.status)}
+              </Typography>
+              <TouchableOpacity onPress={() => filter.handleFilterChange({})}>
+                <Ionicons name="close-circle" size={18} color={colors.primary[600]} />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
     </>
@@ -196,7 +181,7 @@ export const ApplicationsScreen = () => {
         <FlashList
           ListHeaderComponent={renderListHeader}
           data={applications}
-          keyExtractor={(item, index) => `app-${item.id}-${index}`}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={({ item, index }) => (
             <ApplicationCard
               application={item}
@@ -214,6 +199,11 @@ export const ApplicationsScreen = () => {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}
+          // FlatList Performance Optimizations
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={true}
           ListFooterComponent={
             query.isFetchingNextPage ? (
               <View style={styles.listFooter}>
@@ -237,20 +227,17 @@ export const ApplicationsScreen = () => {
                   <Ionicons name="document-text" size={64} color={colors.neutral[300]} />
                 </View>
                 <Typography variant="h3" style={styles.emptyTitle}>
-                  {(hasActiveFilter || clientQuery) ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
+                  {(filter.hasActiveFilters) ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
                 </Typography>
                 <Typography variant="body" style={styles.emptyText}>
-                  {(hasActiveFilter || clientQuery)
+                  {(filter.hasActiveFilters)
                     ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
                     : 'Yeni ilanlara başvurarak kariyer yolculuğuna başla'}
                 </Typography>
-                {(hasActiveFilter || clientQuery) && (
+                {(filter.hasActiveFilters) && (
                   <TouchableOpacity 
                     style={styles.emptyButton} 
-                    onPress={() => {
-                      handleResetFilters();
-                      setSearchQuery('');
-                    }}
+                    onPress={filter.resetFilters}
                   >
                     <Typography variant="body" style={styles.emptyButtonText}>
                       Filtreleri Temizle
@@ -271,11 +258,11 @@ export const ApplicationsScreen = () => {
       />
 
       <ApplicationFilterSheet
-        visible={showFilterSheet}
-        onClose={() => setShowFilterSheet(false)}
-        filters={filters}
+        visible={filter.showFilterSheet}
+        onClose={() => filter.setShowFilterSheet(false)}
+        filters={filter.filters}
         onApply={handleApplyFilters}
-        onReset={handleResetFilters}
+        onReset={filter.resetFilters}
       />
     </View>
   );
@@ -292,17 +279,9 @@ export const ApplicationsScreen = () => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.background.primary,
   },
   searchContainer: {
     flexDirection: 'row',

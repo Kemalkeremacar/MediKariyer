@@ -1,3 +1,12 @@
+/**
+ * DashboardScreen - Stabilizasyon Faz 3
+ * 
+ * Optimizasyonlar:
+ * - useProfileCore kullanılıyor (sadece core profil + completion)
+ * - Eğitim, Deneyim vb. veriler Dashboard'da gösterilmiyor (sadece navigation için prefetch)
+ * - Profil Doluluk Oranı backend'den gelen completion_percent ile gösteriliyor
+ */
+
 import React from 'react';
 import {
   View,
@@ -22,13 +31,17 @@ import { Typography } from '@/components/ui/Typography';
 import { DashboardCard } from '@/components/ui/DashboardCard';
 import { FeaturedJobCard } from '@/components/ui/FeaturedJobCard';
 import { RecentApplicationItem } from '@/components/ui/RecentApplicationItem';
-import { useProfile, useProfileCompletion } from '../hooks/useProfile';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useProfileCore, useProfileCompletion } from '../hooks/useProfileCore';
 import { useJobs } from '@/features/jobs/hooks/useJobs';
 import { useApplications } from '@/features/applications/hooks/useApplications';
 import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 import { getFullImageUrl } from '@/utils/imageUrl';
-import { profileService } from '@/api/services/profile';
-import { colors } from '@/theme';
+import { educationService } from '@/api/services/profile/education.service';
+import { experienceService } from '@/api/services/profile/experience.service';
+import { certificateService } from '@/api/services/profile/certificate.service';
+import { languageService } from '@/api/services/profile/language.service';
+import { colors, spacing } from '@/theme';
 import { formatFullName } from '@/utils/formatTitle';
 import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 
@@ -41,11 +54,17 @@ export const DashboardScreen = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
-  const { data: profile, refetch: refetchProfile, isRefetching: isRefetchingProfile } = useProfile();
+  
+  // Core profil bilgileri (sadece ad, soyad, fotoğraf, unvan, uzmanlık)
+  const { data: profile, refetch: refetchProfile, isRefetching: isRefetchingProfile } = useProfileCore();
+  
+  // Profil tamamlanma oranı (backend'den gelen completion_percent)
   const { data: completionData, refetch: refetchCompletion, isRefetching: isRefetchingCompletion } = useProfileCompletion();
+  
+  // Bildirimler (sadece unread count)
   const { unreadCount, refetch: refetchNotifications } = useNotifications({ limit: 1 });
   
-  // Fetch Featured Jobs (Last 5 jobs)
+  // Featured Jobs (Last 5 jobs)
   const { 
     data: jobsData, 
     isLoading: isLoadingJobs, 
@@ -53,7 +72,7 @@ export const DashboardScreen = () => {
     isRefetching: isRefetchingJobs
   } = useJobs({ limit: 5 });
 
-  // Fetch Recent Applications (Last 3 applications)
+  // Recent Applications (Last 3 applications)
   const { 
     data: applicationsData, 
     isLoading: isLoadingApplications, 
@@ -72,34 +91,36 @@ export const DashboardScreen = () => {
   };
 
   // Prefetch profile data when user hovers/focuses on cards
+  // Sadece navigation için prefetch yapıyoruz, Dashboard'da göstermiyoruz
   const prefetchLanguages = () => {
     queryClient.prefetchQuery({
-      queryKey: ['profile', 'languages'],
-      queryFn: () => profileService.getLanguages(),
+      queryKey: ['profile', 'language'],
+      queryFn: () => languageService.getLanguages(),
     });
   };
 
   const prefetchEducations = () => {
     queryClient.prefetchQuery({
-      queryKey: ['profile', 'educations'],
-      queryFn: () => profileService.getEducations(),
+      queryKey: ['profile', 'education'],
+      queryFn: () => educationService.getEducations(),
     });
   };
 
   const prefetchExperiences = () => {
     queryClient.prefetchQuery({
-      queryKey: ['profile', 'experiences'],
-      queryFn: () => profileService.getExperiences(),
+      queryKey: ['profile', 'experience'],
+      queryFn: () => experienceService.getExperiences(),
     });
   };
 
   const prefetchCertificates = () => {
     queryClient.prefetchQuery({
-      queryKey: ['profile', 'certificates'],
-      queryFn: () => profileService.getCertificates(),
+      queryKey: ['profile', 'certificate'],
+      queryFn: () => certificateService.getCertificates(),
     });
   };
 
+  // Backend'den gelen completion_percent kullanılıyor (frontend hesaplaması yok)
   const completionPercent = completionData?.completion_percent || 0;
   const unreadNotificationCount = unreadCount || 0;
 
@@ -238,9 +259,11 @@ export const DashboardScreen = () => {
             contentContainerStyle={styles.horizontalList}
           >
             {isLoadingJobs ? (
-              // Loading skeletons could be here, for now just empty
+              // Loading skeletons
               [1, 2].map((i) => (
-                <View key={i} style={[styles.skeletonCard, { marginRight: 16 }]} />
+                <View key={i} style={[styles.skeletonJobCard, { marginRight: 16 }]}>
+                  <Skeleton width={280} height={140} borderRadius={16} />
+                </View>
               ))
             ) : !jobsData?.pages?.[0]?.data || jobsData?.pages?.[0]?.data?.length === 0 ? (
               <View style={styles.emptyStateContainer}>
@@ -308,7 +331,11 @@ export const DashboardScreen = () => {
           </View>
 
           {isLoadingApplications ? (
-            <View style={styles.skeletonList} />
+            <View style={styles.skeletonList}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} width="100%" height={80} borderRadius={12} style={{ marginBottom: spacing.md }} />
+              ))}
+            </View>
           ) : !applicationsData?.pages?.[0]?.data || applicationsData?.pages?.[0]?.data?.length === 0 ? (
             <View style={styles.emptyStateCard}>
               <Ionicons name="document-text-outline" size={48} color={colors.neutral[300]} />
@@ -564,47 +591,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
-  statsSection: {
-    paddingHorizontal: 24,
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  statIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: '#6B7280',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -616,14 +602,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   horizontalList: {
-    paddingBottom: 20, // Kartların alt kısmına boşluk ekle (2cm ≈ 60px)
+    paddingBottom: 20,
     paddingRight: 24,
   },
-  skeletonCard: {
-    width: Dimensions.get('window').width * 0.75,
+  skeletonJobCard: {
+    width: 280,
     height: 140,
-    backgroundColor: '#e1e4e8',
-    borderRadius: 16,
   },
   emptyStateContainer: {
     padding: 24,
@@ -644,9 +628,7 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   skeletonList: {
-    height: 100,
-    backgroundColor: '#e1e4e8',
-    borderRadius: 12,
+    paddingVertical: spacing.sm,
   },
   emptyStateCard: {
     padding: 24,

@@ -1,9 +1,23 @@
+/**
+ * API Response Types - Stabilizasyon Faz 1
+ * Backend Mobile API endpoint'lerinden dönen yanıtlar için tip tanımları
+ * 
+ * Backend Response Format:
+ * {
+ *   success: boolean,
+ *   message?: string,
+ *   data: T,
+ *   pagination?: PaginationMeta  // Bazı endpoint'lerde
+ * }
+ */
+
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data: T;
+  // Backend'den pagination olarak gelebilir (tutarlılık için her ikisini de destekle)
   meta?: PaginationMeta;
-  pagination?: PaginationMeta; // Backend'den pagination olarak gelebilir
+  pagination?: PaginationMeta;
 }
 
 export interface PaginationMeta {
@@ -18,6 +32,15 @@ export interface PaginationMeta {
 export interface ApiError {
   success: boolean;
   message: string;
+  error?: string;
+  errors?: Record<string, string[]> | string[];
   errorCode?: string;
 }
 
+/**
+ * Helper type for paginated responses
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationMeta;
+}

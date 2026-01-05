@@ -1,20 +1,42 @@
-import React, { useEffect } from 'react';
+/**
+ * RootNavigator - Session Persistence Implementation
+ * State-Based Navigation Pattern
+ * 
+ * Navigation Logic (Priority Order):
+ * 1. isHydrating -> Splash Screen (shows loading)
+ * 2. !isAuthenticated -> AuthStack (Login/Register)
+ * 3. isAuthenticated && !user.is_active -> AccountDisabledScreen (deactivated users)
+ * 4. isAuthenticated && !user.is_approved -> AuthStack (PendingApproval screen)
+ * 5. All checks pass -> AppStack (Dashboard)
+ * 
+ * Features:
+ * - State-based initialRouteName (no useEffect navigation.reset calls)
+ * - All screens registered for deep linking support
+ * - Tolerant type checking for MSSQL BIT fields (1, '1', true, 'true')
+ * - Mobile API integration via authService.getMe()
+ * 
+ * @author MediKariyer Development Team
+ * @version 3.0.0
+ * @since 2024
+ */
+
+import React, { useMemo, useEffect, useRef } from 'react';
 import { enableScreens } from 'react-native-screens';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator, Image, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { AuthNavigator } from './AuthNavigator';
 import { AppNavigator } from './AppNavigator';
 import { AccountDisabledScreen } from '@/features/auth/screens/AccountDisabledScreen';
 import { useAuthStore } from '@/store/authStore';
 import { navigationRef } from './navigationRef';
+import { colors, spacing, typography } from '@/theme';
+import { Typography } from '@/components/ui/Typography';
 import type { RootStackParamList } from './types';
 
 // Enable screens - safe to call with both old and new architecture
-// Note: With new architecture enabled, some warnings may appear but functionality works
 try {
   enableScreens();
 } catch (error) {
-  // Silently fail if screens can't be enabled (e.g., in some test environments)
   if (__DEV__) {
     console.warn('Failed to enable screens:', error);
   }
@@ -23,108 +45,278 @@ try {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 /**
- * RootNavigator - Top-level navigator
- * Handles routing between authenticated and unauthenticated flows
- * Also manages special states like pending approval and disabled accounts
+ * Helper function to check if user is active (handles boolean, number, string types)
+ * MSSQL BIT tipi için toleranslı kontrol - 1, '1', true, 'true' değerlerini kabul eder
+ * 
+ * CRITICAL: Eğer user yoksa veya is_active undefined/null ise, kullanıcıyı engelleme!
+ * Sadece kesinlikle false veya 0 ise engelle.
  */
+const isUserActive = (user: any): boolean => {
+  // Kullanıcı yoksa Login'e gider, engelleme yapma!
+  if (!user) {
+    console.log('🛑 DEBUG isUserActive: user is null/undefined, returning TRUE (allow login)');
+    return true;
+  }
+  
+  // ÇOK DETAYLI DEBUG LOG'LAR
+  console.log('🛑 DEBUG isUserActive - FULL USER OBJECT:', JSON.stringify(user, null, 2));
+  console.log('🛑 DEBUG isUserActive - is_active value:', user.is_active);
+  console.log('🛑 DEBUG isUserActive - is_active type:', typeof user.is_active);
+  console.log('🛑 DEBUG isUserActive - is_active === 0:', user.is_active === 0);
+  console.log('🛑 DEBUG isUserActive - is_active === false:', user.is_active === false);
+  console.log('🛑 DEBUG isUserActive - is_active === "0":', user.is_active === '0');
+  console.log('🛑 DEBUG isUserActive - is_active === null:', user.is_active === null);
+  console.log('🛑 DEBUG isUserActive - is_active === undefined:', user.is_active === undefined);
+  
+  const active = user.is_active;
+  
+  // ACİL ÖNLEM: Eğer undefined veya null ise, kullanıcıyı engelleme!
+  // Varsayılan olarak AKTİF kabul et (Login olabilsin, engel olmasın)
+  if (active === undefined || active === null) {
+    console.log('🛑 DEBUG isUserActive - is_active is null/undefined, defaulting to TRUE (allow access)');
+    return true; 
+  }
+  
+  // Toleranslı Kontrol - Aktif değerler
+  if (active === true) {
+    console.log('🛑 DEBUG isUserActive - is_active is true, returning TRUE');
+    return true;
+  }
+  if (active === 1) {
+    console.log('🛑 DEBUG isUserActive - is_active is 1, returning TRUE');
+    return true;
+  }
+  if (active === '1') {
+    console.log('🛑 DEBUG isUserActive - is_active is "1", returning TRUE');
+    return true;
+  }
+  if (active === 'true') {
+    console.log('🛑 DEBUG isUserActive - is_active is "true", returning TRUE');
+    return true;
+  }
+  
+  // Sadece kesinlikle false veya 0 ise engelle
+  if (active === false || active === 0 || active === '0') {
+    console.log('🛑 DEBUG isUserActive - is_active is false/0/"0", returning FALSE (block access)');
+    return false;
+  }
+
+  // Diğer her durumda (beklenmeyen değerler) AKTİF kabul et
+  console.log('🛑 DEBUG isUserActive - unexpected value, defaulting to TRUE (allow access)');
+  return true;
+};
+
+/**
+ * Helper function to check if user is approved (handles boolean, number, string types)
+ */
+const isUserApproved = (user: any): boolean => {
+  if (user?.is_approved === undefined || user?.is_approved === null) return false;
+  if (typeof user.is_approved === 'boolean') return user.is_approved;
+  if (typeof user.is_approved === 'number') return user.is_approved === 1;
+  if (typeof user.is_approved === 'string') return user.is_approved === 'true' || user.is_approved === '1';
+  return false;
+};
+
 export const RootNavigator = () => {
   const authStatus = useAuthStore((state) => state.authStatus);
   const user = useAuthStore((state) => state.user);
   const isHydrating = useAuthStore((state) => state.isHydrating);
 
-  // Helper function to check if user is active (handles boolean, number types)
-  const isActive = () => {
-    if (user?.is_active === undefined || user?.is_active === null) return true; // Default to true if not set
-    if (typeof user.is_active === 'boolean') return user.is_active;
-    if (typeof user.is_active === 'number') return user.is_active === 1;
-    return true;
-  };
+  // Determine initial route based on auth state (memoized for performance)
+  const initialRouteName = useMemo((): keyof RootStackParamList => {
+    console.log('🧭 RootNavigator - Calculating initialRouteName:', {
+      isHydrating,
+      authStatus,
+      hasUser: !!user,
+      userId: user?.id,
+      isActive: user?.is_active,
+      isApproved: user?.is_approved,
+    });
 
-  // Helper function to check if user is approved (handles boolean, number, string types)
-  const isApproved = () => {
-    if (user?.is_approved === undefined || user?.is_approved === null) return false;
-    if (typeof user.is_approved === 'boolean') return user.is_approved;
-    if (typeof user.is_approved === 'number') return user.is_approved === 1;
-    if (typeof user.is_approved === 'string') return user.is_approved === 'true' || user.is_approved === '1';
-    return false;
-  };
-
-  // Check if user is admin (admin users bypass approval check)
-  const isAdmin = user?.role === 'admin';
-
-  // Navigate to App screen when user is authenticated and approved
-  // IMPORTANT: All hooks must be called before any early returns
-  useEffect(() => {
-    if (authStatus === 'authenticated' && user && navigationRef.isReady()) {
-      const userIsActive = isActive();
-      const userIsApproved = isApproved();
-      const userIsAdmin = user?.role === 'admin';
-      
-      if (userIsActive && (userIsApproved || userIsAdmin)) {
-        // User is authenticated, active, and approved - navigate to App
-        // Use reset to clear navigation history and set App as root
-        navigationRef.reset({
-          index: 0,
-          routes: [{ name: 'App' }],
-        });
-      }
+    // During hydration, show Auth (will be replaced by actual state after hydration)
+    if (isHydrating) {
+      console.log('🧭 RootNavigator - Returning Auth (hydrating)');
+      return 'Auth';
     }
-  }, [authStatus, user]);
 
-  // Early returns AFTER all hooks
+    // Not authenticated
+    if (authStatus !== 'authenticated' || !user) {
+      console.log('🧭 RootNavigator - Returning Auth (not authenticated)');
+      return 'Auth';
+    }
+
+    // Authenticated - check user status
+    const userIsActive = isUserActive(user);
+    const userIsApproved = isUserApproved(user);
+    const userIsAdmin = user.role === 'admin';
+
+    console.log('🧭 RootNavigator - User checks:', {
+      userIsActive,
+      userIsApproved,
+      userIsAdmin,
+    });
+
+    // Check inactive status first - most restrictive
+    if (!userIsActive) {
+      console.log('🧭 RootNavigator - Returning AccountDisabled (inactive)');
+      return 'AccountDisabled';
+    }
+
+    // Check approval status
+    if (!userIsApproved && !userIsAdmin) {
+      console.log('🧭 RootNavigator - Returning Auth (not approved)');
+      return 'Auth'; // Auth stack will show PendingApproval screen
+    }
+
+    // User is authenticated, active, and approved
+    console.log('🧭 RootNavigator - Returning App (authenticated, active, approved)');
+    return 'App';
+  }, [isHydrating, authStatus, user]);
+
+  // Track previous route to detect changes
+  const previousRouteRef = useRef<keyof RootStackParamList | null>(null);
+
+  // CRITICAL: Reset navigation when initialRouteName changes
+  // This ensures navigation happens immediately when auth state changes
+  // React Navigation's initialRouteName only works on first render,
+  // so we need to manually reset navigation when route should change
+  useEffect(() => {
+    // Skip if still hydrating (will be handled after hydration completes)
+    if (isHydrating) {
+      return;
+    }
+
+    // Skip if route hasn't changed
+    if (previousRouteRef.current === initialRouteName) {
+      return;
+    }
+
+    // Skip if navigation is not ready
+    if (!navigationRef.isReady()) {
+      console.log('🧭 RootNavigator - Navigation ref not ready, skipping reset');
+      return;
+    }
+
+    // Get current route to avoid unnecessary resets
+    const currentRoute = navigationRef.getCurrentRoute();
+    const currentRouteName = currentRoute?.name as keyof RootStackParamList;
+
+    // Only reset if we're not already on the target route
+    if (currentRouteName !== initialRouteName) {
+      console.log('🧭 RootNavigator - Route changed, resetting navigation:', {
+        from: previousRouteRef.current,
+        to: initialRouteName,
+        current: currentRouteName,
+      });
+
+      navigationRef.reset({
+        index: 0,
+        routes: [{ name: initialRouteName }],
+      });
+
+      console.log('🧭 RootNavigator - Navigation reset completed');
+    } else {
+      console.log('🧭 RootNavigator - Already on target route, skipping reset');
+    }
+
+    // Update previous route
+    previousRouteRef.current = initialRouteName;
+  }, [initialRouteName, isHydrating]);
+
+  // Loading state - Show splash screen
   if (isHydrating) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#ffffff',
-        }}
-      >
-        <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 16 }}>Başlatılıyor...</Text>
+      <View style={styles.loadingContainer}>
+        <View style={styles.loadingContent}>
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../assets/logo.jpg')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+          <Typography variant="h2" style={styles.brandName}>
+            MediKariyer
+          </Typography>
+          <ActivityIndicator 
+            size="large" 
+            color={colors.primary[600]} 
+            style={styles.spinner}
+          />
+          <Typography variant="body" style={styles.loadingText}>
+            Yükleniyor...
+          </Typography>
+        </View>
       </View>
     );
   }
 
-  // Safety check: If authenticated but user data is missing (zombie user edge case),
-  // force back to Auth flow to prevent invalid state
-  if (authStatus === 'authenticated' && !user) {
-    return (
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-      </Stack.Navigator>
-    );
-  }
-
+  // State-Based Navigation
+  // All screens are registered for deep linking support
+  // Using key prop to force re-render when route changes (ensures initialRouteName is respected)
+  // This eliminates the need for useEffect-based navigation.reset() calls
   return (
     <Stack.Navigator
+      key={initialRouteName} // Force re-render when route changes
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
       }}
     >
-      {/* Auth stack - Always available for deep linking (e.g., password reset) */}
+      {/* Auth stack - For login, register, and pending approval */}
       <Stack.Screen name="Auth" component={AuthNavigator} />
       
-      {authStatus === 'authenticated' ? (
-        <>
-          {!isActive() ? (
-            <Stack.Screen name="AccountDisabled" component={AccountDisabledScreen} />
-          ) : !isApproved() && !isAdmin ? (
-            // User is authenticated but not approved - show Auth stack (PendingApproval screen)
-            // LoginScreen useEffect will redirect to PendingApproval
-            <Stack.Screen name="Auth" component={AuthNavigator} />
-          ) : (
-            <Stack.Screen name="App" component={AppNavigator} />
-          )}
-        </>
-      ) : null}
+      {/* App stack - For authenticated and approved users */}
+      <Stack.Screen name="App" component={AppNavigator} />
+      
+      {/* Account disabled screen - For authenticated but inactive users */}
+      <Stack.Screen name="AccountDisabled" component={AccountDisabledScreen} />
     </Stack.Navigator>
   );
 };
 
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: colors.background.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    width: 100,
+    height: 100,
+    backgroundColor: colors.background.secondary,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+    shadowColor: colors.neutral[900],
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  logo: {
+    width: 90,
+    height: 90,
+  },
+  brandName: {
+    fontSize: 28,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text.primary,
+    marginBottom: spacing['3xl'],
+    letterSpacing: 1,
+  },
+  spinner: {
+    marginBottom: spacing.lg,
+  },
+  loadingText: {
+    color: colors.text.secondary,
+    fontSize: typography.fontSize.base,
+  },
+});

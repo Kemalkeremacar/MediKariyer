@@ -108,25 +108,36 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // 5. Hesap durumu kontrolü
+    // SQL Server bit tipi 0/1 olarak geliyorsa boolean'a çevir (toleranslı kontrol - string ve number değerleri kabul eder)
+    // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+    const isActive = user.is_active === null || user.is_active === undefined 
+      ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
+      : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
+    
+    const isApproved = user.is_approved === null || user.is_approved === undefined
+      ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
+      : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
+    
     // Admin için is_active kontrolü yapılmaz, diğer kullanıcılar için yapılır
-    if (user.role !== 'admin' && !user.is_active) {
+    if (user.role !== 'admin' && !isActive) {
       throw new AppError('Hesabınız pasif durumda. Lütfen yöneticinizle iletişime geçin.', 403);
     }
 
     // Güvenlik politikası: Admin rolü dışındaki (doktor, hastane) kullanıcıların, sistemdeki
     // korumalı kaynaklara erişebilmesi için yönetici tarafından onaylanmış olması zorunludur.
-    if (user.role !== 'admin' && !user.is_approved) {
+    if (user.role !== 'admin' && !isApproved) {
       throw new AppError('Hesabınız admin onayını bekliyor', 403);
     }
 
     // 6. req.user nesnesine kullanıcı bilgilerini ekleme
     // Sonraki middleware ve controller'ların kullanabilmesi için gerekli kullanıcı bilgileri
+    // Boolean değerlere çevirilmiş değerleri kullan (tutarlılık için)
     req.user = {
       id: user.id,
       email: user.email,
       role: user.role,
-      isApproved: user.is_approved,
-      isActive: user.is_active
+      isApproved: isApproved,
+      isActive: isActive
     };
 
     // Log'u kaldırdık - her request'te log atmak yerine sadece login endpoint'inde log atılıyor

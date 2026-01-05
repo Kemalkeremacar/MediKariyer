@@ -54,40 +54,28 @@ export const NotificationsScreen = () => {
   const { mutateAsync: markAllAsRead } = useMarkAllAsRead();
   const deleteNotificationsMutation = useDeleteNotifications();
 
-  // Screen focus olduğunda bildirimleri yenile (sayfa açıldığında fresh data)
-  // NOT: refetch dependency olarak kullanılmıyor çünkü her render'da yeni referans olabilir
-  // Bu sonsuz döngüye neden olur. Bunun yerine sadece stale data varsa refetch yapıyoruz.
-  // refetchOnMount: true zaten mount'ta stale ise refetch yapıyor, bu yüzden useFocusEffect'te
-  // sadece gerçekten gerekli olduğunda (stale data varsa) refetch yapmalıyız.
+  // Screen focus olduğunda bildirimleri yenile
+  // MOBILE BEST PRACTICE: Polling yerine sadece focus'ta refetch + push notifications kullan
+  // Push notifications zaten yeni bildirimleri anında gönderiyor, polling gereksiz
   const refetchRef = React.useRef(refetch);
-  const lastRefetchTimeRef = React.useRef<number>(0);
-  const REFETCH_COOLDOWN = 3000; // 3 saniye cooldown - çok sık refetch yapılmasını önle
   
-  // refetch değiştiğinde ref'i güncelle (ama useFocusEffect'i tetikleme)
+  // refetch değiştiğinde ref'i güncelle
   React.useEffect(() => {
     refetchRef.current = refetch;
   }, [refetch]);
   
   useFocusEffect(
     useCallback(() => {
-      // Sadece belirli koşullarda refetch yap:
-      // 1. Cooldown süresi geçmiş olmalı (çok sık refetch'i önlemek için)
-      // 2. Zaten fetch işlemi devam etmiyorsa
-      const now = Date.now();
-      const timeSinceLastRefetch = now - lastRefetchTimeRef.current;
-      
-      // Eğer cooldown süresi geçmişse ve fetch işlemi devam etmiyorsa refetch yap
-      if (timeSinceLastRefetch >= REFETCH_COOLDOWN && !isFetching && !isLoading) {
-        lastRefetchTimeRef.current = now;
-        // Sadece stale data varsa refetch yap (React Query'nin kendi mekanizmasını kullan)
-        // refetchOnMount: true zaten stale data varsa otomatik refetch yapıyor
-        // Burada sadece manuel refresh için refetch çağırıyoruz
+      // Screen focus olduğunda sadece stale data varsa refetch yap
+      // refetchOnMount: true zaten stale ise otomatik refetch yapıyor
+      // Burada sadece manuel refresh için çağırıyoruz
+      if (!isFetching && !isLoading) {
         refetchRef.current();
       }
       
       // Cleanup: Focus kaybolduğunda bir şey yapma
       return () => {
-        // Cleanup gerekirse burada yapılabilir
+        // No cleanup needed - React Query handles caching
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []) // Boş dependency array - sadece focus değişikliklerinde çalışsın

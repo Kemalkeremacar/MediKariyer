@@ -182,11 +182,7 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
     refetchOnMount: true, // Mount olduğunda sadece stale ise refetch yap (always yerine true - döngüyü önlemek için)
     refetchOnWindowFocus: false, // Focus'ta otomatik refetch yapma (React Native'de window focus yok, useFocusEffect kullanılıyor)
     refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-    refetchInterval: (query) => {
-      // Sadece aktif query'ler için polling yap (arka planda çalışırken)
-      // Screen focus olduğunda useFocusEffect ile manuel refetch yapılıyor
-      return query.state.data ? 1000 * 60 : false; // 1 dakikada bir otomatik yenile (sadece data varsa)
-    },
+    // refetchInterval kaldırıldı - polling sadece NotificationScreen'de yapılacak (useFocusEffect ile)
     retry: 2,
     retryDelay: RETRY_DELAY,
   });

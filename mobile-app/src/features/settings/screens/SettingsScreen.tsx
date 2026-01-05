@@ -134,7 +134,10 @@ export const SettingsScreen = ({ navigation }: any) => {
   const deactivateAccountMutation = useMutation({
     mutationFn: () => accountService.deactivateAccount(),
     onSuccess: () => {
-      showAlert.success('Hesabınız başarıyla kapatıldı. Uygulama giriş sayfasına yönlendiriliyorsunuz.');
+      // Toast kullan (modal değil - touch events engellenmez)
+      // Logout zaten navigation yapacak, modal açık kalmasın
+      // showToast kullanmak için useToast hook'u eklenmeli ama logout hemen yapılacak
+      // Bu durumda showAlert yerine direkt logout yapalım, toast gerekmez
       // Backend zaten oturumları sonlandırdı, kullanıcıyı logout yap
       logoutMutation.mutate();
     },

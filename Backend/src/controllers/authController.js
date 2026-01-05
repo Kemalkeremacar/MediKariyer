@@ -615,6 +615,16 @@ const getMe = catchAsync(async (req, res) => {
   const user = await db('users').where('id', req.user.id).first();
   if (!user) throw new AppError('Kullanıcı bulunamadı', 404);
 
+  // SQL Server bit tipini boolean'a çevir - web ve mobile için tutarlılık
+  // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+  const isActive = user.is_active === null || user.is_active === undefined 
+    ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
+    : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
+  
+  const isApproved = user.is_approved === null || user.is_approved === undefined
+    ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
+    : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
+
   // Kullanıcının profil bilgilerini al (doctor veya hospital için)
   let profileData = null;
   if (user.role === 'doctor') {
@@ -640,8 +650,8 @@ const getMe = catchAsync(async (req, res) => {
       id: user.id,
       email: user.email,
       role: user.role,
-      is_approved: user.is_approved,
-      is_active: user.is_active,
+      is_approved: isApproved,  // Boolean'a çevrilmiş değer (tutarlılık için)
+      is_active: isActive,      // Boolean'a çevrilmiş değer (tutarlılık için)
       created_at: user.created_at,
       last_login: user.last_login,
       first_name: profileData?.first_name || null,

@@ -15,6 +15,7 @@ import { Progress } from '@/components/ui/Progress';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
 import { useChangePassword } from '@/features/settings/hooks/useChangePassword';
+import { useToast } from '@/providers/ToastProvider';
 
 // Password strength calculator
 const calculatePasswordStrength = (password: string): number => {
@@ -44,6 +45,7 @@ const getPasswordStrengthColor = (password: string): string => {
 };
 
 export const ChangePasswordScreen = ({ navigation }: any) => {
+  const { showToast } = useToast();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -75,10 +77,13 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
           setNewPassword('');
           setConfirmPassword('');
           
-          // Navigate back after a short delay
+          // Show toast instead of alert (modal değil - touch events engellenmez)
+          showToast('Şifreniz başarıyla değiştirildi', 'success');
+          
+          // Navigate back after a short delay (toast'un gösterilmesi için)
           setTimeout(() => {
             navigation.goBack();
-          }, 1500);
+          }, 1000);
         },
       }
     );

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { showAlert } from '@/utils/alert';
 import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -34,20 +34,9 @@ export const LoginScreen = () => {
   
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Check if user is authenticated but not approved - redirect to PendingApproval
-  // Web'deki yaklaşım: Login sayfasında kal, PendingApproval modal'ı göster
-  // Mobile'da: PendingApproval screen'ine yönlendir
-  useEffect(() => {
-    if (authStatus === 'authenticated' && user) {
-      const isApproved = user.is_approved === true || user.is_approved === 1 || user.is_approved === 'true' || user.is_approved === '1';
-      const isAdmin = user.role === 'admin';
-      
-      if (!isApproved && !isAdmin) {
-        // User is authenticated but not approved - show PendingApproval screen
-        navigation.replace('PendingApproval');
-      }
-    }
-  }, [authStatus, user, navigation]);
+  // Note: We don't auto-redirect to PendingApproval on mount
+  // This allows users to stay on LoginScreen if they're already authenticated but not approved
+  // PendingApproval will only be shown after a successful login attempt (see onSuccess callback)
 
   const {
     control,

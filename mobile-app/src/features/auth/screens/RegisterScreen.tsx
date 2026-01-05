@@ -222,7 +222,8 @@ export const RegisterScreen = () => {
       setServerError(null);
       // Navigate to pending approval screen - only shown after new doctor registration
       // User is NOT authenticated after registration (no tokens returned)
-      navigation.navigate('PendingApproval');
+      // Use replace to prevent going back to register screen
+      navigation.replace('PendingApproval');
     },
     onError: (err) => {
       const errorMessage = handleApiError(

@@ -1,8 +1,13 @@
 /**
- * JOBS SCREEN - Modern İş İlanları Ekranı
+ * JOBS SCREEN - Stabilizasyon Faz 4
+ * 
+ * Optimizasyonlar:
+ * - useFilter hook kullanılıyor (ortak filtreleme mantığı)
+ * - FlatList performans optimizasyonları
+ * - Loading ve empty state iyileştirmeleri
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -13,7 +18,7 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { useNavigation } from '@react-navigation/native';
 import type { JobsStackNavigationProp } from '@/navigation/types';
-import { useSearch } from '@/hooks/useSearch';
+import { useFilter } from '@/hooks/useFilter';
 import { useJobs } from '../hooks/useJobs';
 import { colors, spacing } from '@/theme';
 import { PAGINATION } from '@/config/constants';
@@ -32,34 +37,19 @@ import type { JobListItem } from '@/types/job';
 export const JobsScreen = () => {
   const navigation = useNavigation<JobsStackNavigationProp>();
   
-  // Search & Filter State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState<JobFilters>({});
-  const [showFilterSheet, setShowFilterSheet] = useState(false);
-
-  // Search handlers - useCallback ile optimize et, imleç kaybolmasını önle
-  const handleSearchChange = useCallback((text: string) => {
-    setSearchQuery(text);
-  }, []);
-
-  const handleSearchClear = useCallback(() => {
-    setSearchQuery('');
-  }, []);
-
-  // Global search hook - Modern, kullanıcı dostu arama
-  const { debouncedQuery, clientQuery, shouldFetch, isSearching: isSearchingDebounce } = useSearch(searchQuery, { minLength: 2 });
+  // Filter hook - ortak filtreleme mantığı
+  const filter = useFilter<JobFilters>({}, { minLength: 2 });
 
   // Query params - useMemo ile normalize et, gereksiz re-render'ları önle
   const queryParams = useMemo(() => ({
-    keyword: shouldFetch ? debouncedQuery : undefined,
-    specialty_id: filters.specialtyId,
-    city_id: filters.cityId,
-    employment_type: filters.employmentType,
+    keyword: filter.shouldFetch ? filter.debouncedQuery : undefined,
+    specialty_id: filter.filters.specialtyId,
+    city_id: filter.filters.cityId,
+    employment_type: filter.filters.employmentType,
     limit: PAGINATION.JOBS_PAGE_SIZE,
-  }), [shouldFetch, debouncedQuery, filters.specialtyId, filters.cityId, filters.employmentType]);
+  }), [filter.shouldFetch, filter.debouncedQuery, filter.filters.specialtyId, filter.filters.cityId, filter.filters.employmentType]);
 
   // Query with filters - useJobs hook'u kullanılıyor
-  // Sadece debounced query değiştiğinde API çağrısı yap
   const {
     data,
     isLoading,
@@ -88,10 +78,10 @@ export const JobsScreen = () => {
     if (allJobs.length === 0) return [];
     
     // Client-side arama sorgusu yoksa tüm sonuçları göster
-    if (!clientQuery) return allJobs;
+    if (!filter.clientQuery) return allJobs;
     
     // Client-side filtreleme yap (yazarken anında filtrele)
-    const lowerQuery = clientQuery.toLowerCase();
+    const lowerQuery = filter.clientQuery.toLowerCase();
     return allJobs.filter((job) => {
       const title = job.title?.toLowerCase() || '';
       const hospital = job.hospital_name?.toLowerCase() || '';
@@ -105,7 +95,7 @@ export const JobsScreen = () => {
         specialty.includes(lowerQuery)
       );
     });
-  }, [allJobs, clientQuery]);
+  }, [allJobs, filter.clientQuery]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -128,31 +118,8 @@ export const JobsScreen = () => {
 
   // Filter handlers
   const handleApplyFilters = useCallback((newFilters: JobFilters) => {
-    setFilters(newFilters);
-  }, []);
-
-  const handleResetFilters = useCallback(() => {
-    setFilters({});
-    setSearchQuery('');
-  }, []);
-
-  const handleRemoveFilter = useCallback((key: keyof JobFilters) => {
-    setFilters((prev) => {
-      const newFilters = { ...prev };
-      delete newFilters[key];
-      return newFilters;
-    });
-  }, []);
-
-  // Active filter count
-  const activeFilterCount = useMemo(() => {
-    return [filters.specialtyId, filters.cityId, filters.employmentType].filter(Boolean).length;
-  }, [filters]);
-
-  const hasActiveFilters = activeFilterCount > 0 || clientQuery.length > 0;
-  
-  // Arama yapılıyor mu kontrolü (backend isteği için)
-  const isSearching = isSearchingDebounce;
+    filter.handleFilterChange(newFilters);
+  }, [filter]);
 
   const renderListHeader = () => (
     <>
@@ -168,15 +135,15 @@ export const JobsScreen = () => {
       {/* Modern Search & Filter */}
       <View style={styles.searchContainer}>
         <SearchBar
-          value={searchQuery}
-          onChangeText={handleSearchChange}
+          value={filter.searchQuery}
+          onChangeText={filter.handleSearchChange}
           placeholder="Hastane, şehir veya branş ara..."
-          onClear={handleSearchClear}
+          onClear={filter.handleSearchClear}
           style={styles.searchBar}
-          isSearching={isSearching}
+          isSearching={filter.isSearching}
         />
         <View style={styles.filterButtonWrapper}>
-          {isSearching && (
+          {filter.isSearching && (
             <View style={styles.searchingIndicator}>
               <ActivityIndicator size="small" color={colors.primary[600]} />
             </View>
@@ -187,21 +154,21 @@ export const JobsScreen = () => {
                 name="filter"
                 size={20}
                 color={
-                  activeFilterCount > 0
+                  filter.activeFilterCount > 0
                     ? colors.background.primary
                     : colors.primary[600]
                 }
               />
             }
-            onPress={() => setShowFilterSheet(true)}
+            onPress={() => filter.setShowFilterSheet(true)}
             size="md"
-            variant={activeFilterCount > 0 ? 'filled' : 'ghost'}
+            variant={filter.activeFilterCount > 0 ? 'filled' : 'ghost'}
             color="primary"
           />
-          {activeFilterCount > 0 && (
+          {filter.activeFilterCount > 0 && (
             <View style={styles.filterBadge}>
               <Typography variant="caption" style={styles.filterBadgeText}>
-                {activeFilterCount}
+                {filter.activeFilterCount}
               </Typography>
             </View>
           )}
@@ -209,34 +176,34 @@ export const JobsScreen = () => {
       </View>
 
       {/* Active Filters with Modern Chips */}
-      {hasActiveFilters && (
+      {filter.hasActiveFilters && (
         <View style={styles.activeFiltersContainer}>
-          {filters.specialtyId && (
+          {filter.filters.specialtyId && (
             <Chip
               label="Branş Filtresi"
               variant="soft"
               color="primary"
               size="sm"
-              onDelete={() => handleRemoveFilter('specialtyId')}
+              onDelete={() => filter.handleRemoveFilter('specialtyId')}
             />
           )}
-          {filters.cityId && (
+          {filter.filters.cityId && (
             <Chip
               label="Şehir"
               icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
               variant="soft"
               color="primary"
               size="sm"
-              onDelete={() => handleRemoveFilter('cityId')}
+              onDelete={() => filter.handleRemoveFilter('cityId')}
             />
           )}
-          {filters.employmentType && (
+          {filter.filters.employmentType && (
             <Chip
-              label={filters.employmentType}
+              label={filter.filters.employmentType}
               variant="soft"
               color="primary"
               size="sm"
-              onDelete={() => handleRemoveFilter('employmentType')}
+              onDelete={() => filter.handleRemoveFilter('employmentType')}
             />
           )}
         </View>
@@ -249,62 +216,67 @@ export const JobsScreen = () => {
 
     return (
       <FlashList
-          data={jobs}
-          renderItem={renderJob}
-          keyExtractor={(item) => item.id.toString()}
-          ListHeaderComponent={renderListHeader}
-          contentContainerStyle={styles.listContent}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              tintColor={colors.primary[600]}
-            />
-          }
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIcon}>
-                <Ionicons name="briefcase-outline" size={64} color={colors.neutral[300]} />
-              </View>
-              <Typography variant="h3" style={styles.emptyTitle}>
-                İlan Bulunamadı
-              </Typography>
-              <Typography variant="body" style={styles.emptyText}>
-                {hasActiveFilters
-                  ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
-                  : 'Henüz ilan bulunmuyor'}
-              </Typography>
-              {hasActiveFilters && (
-                <TouchableOpacity
-                  style={styles.emptyButton}
-                  onPress={handleResetFilters}
-                >
-                  <Typography variant="body" style={styles.emptyButtonText}>
-                    Filtreleri Temizle
-                  </Typography>
-                </TouchableOpacity>
-              )}
+        data={jobs}
+        renderItem={renderJob}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={renderListHeader}
+        contentContainerStyle={styles.listContent}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            tintColor={colors.primary[600]}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+        // FlatList Performance Optimizations
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Ionicons name="briefcase-outline" size={64} color={colors.neutral[300]} />
             </View>
-          }
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View style={styles.footer}>
-                <ActivityIndicator size="small" color={colors.primary[600]} />
-                <Typography variant="caption" style={styles.footerText}>
-                  Daha fazla ilan yükleniyor...
+            <Typography variant="h3" style={styles.emptyTitle}>
+              İlan Bulunamadı
+            </Typography>
+            <Typography variant="body" style={styles.emptyText}>
+              {filter.hasActiveFilters
+                ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
+                : 'Henüz ilan bulunmuyor'}
+            </Typography>
+            {filter.hasActiveFilters && (
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={filter.resetFilters}
+              >
+                <Typography variant="body" style={styles.emptyButtonText}>
+                  Filtreleri Temizle
                 </Typography>
-              </View>
-            ) : jobs.length > 0 && !hasNextPage ? (
-              <View style={styles.footer}>
-                <Typography variant="caption" style={styles.footerText}>
-                  Tüm ilanlar yüklendi ({jobs.length}/{totalCount})
-                </Typography>
-              </View>
-            ) : null
-          }
+              </TouchableOpacity>
+            )}
+          </View>
+        }
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <View style={styles.footer}>
+              <ActivityIndicator size="small" color={colors.primary[600]} />
+              <Typography variant="caption" style={styles.footerText}>
+                Daha fazla ilan yükleniyor...
+              </Typography>
+            </View>
+          ) : jobs.length > 0 && !hasNextPage ? (
+            <View style={styles.footer}>
+              <Typography variant="caption" style={styles.footerText}>
+                Tüm ilanlar yüklendi ({jobs.length}/{totalCount})
+              </Typography>
+            </View>
+          ) : null
+        }
       />
     );
   };
@@ -344,11 +316,11 @@ export const JobsScreen = () => {
       )}
 
       <JobFilterSheet
-        visible={showFilterSheet}
-        onClose={() => setShowFilterSheet(false)}
-        filters={filters}
+        visible={filter.showFilterSheet}
+        onClose={() => filter.setShowFilterSheet(false)}
+        filters={filter.filters}
         onApply={handleApplyFilters}
-        onReset={handleResetFilters}
+        onReset={filter.resetFilters}
       />
     </Screen>
   );

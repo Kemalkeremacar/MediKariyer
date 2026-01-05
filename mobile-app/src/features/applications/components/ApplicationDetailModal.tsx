@@ -10,14 +10,15 @@ import {
   ScrollView,
   View,
   ActivityIndicator,
+  TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { showAlert } from '@/utils/alert';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, borderRadius, shadows, typography } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { BackButton } from '@/components/ui/BackButton';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,50 +66,66 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   const canWithdraw = (data as any)?.status_id === 1 && !withdrawMutation.isPending;
 
   return (
-    <RNModal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.modalContainer}>
-        {isLoading && (
-          <View style={styles.modalLoader}>
-            <ActivityIndicator size="large" color={colors.primary[600]} />
-            <Typography variant="body" style={styles.modalLoaderText}>
-              Yükleniyor...
-            </Typography>
-          </View>
-        )}
-        {isError && (
-          <View style={styles.modalLoader}>
-            <View style={styles.errorIcon}>
-              <Ionicons name="close-circle" size={48} color={colors.error[600]} />
-            </View>
-            <Typography variant="h3" style={styles.errorTitle}>
-              Başvuru Yüklenemedi
-            </Typography>
-            <Typography variant="body" style={styles.errorText}>
-              Lütfen internet bağlantınızı kontrol edip tekrar deneyin.
-            </Typography>
-            <Button
-              label="Tekrar Dene"
-              onPress={() => refetch()}
-              variant="primary"
-              size="lg"
-            />
-          </View>
-        )}
-        {data && (
-          <ScrollView 
-            contentContainerStyle={styles.modalContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <View style={styles.backButtonContainer}>
-              <BackButton onPress={onClose} />
-            </View>
-
-            <View style={styles.modalHeaderInline}>
-              <Typography variant="h2" style={styles.modalHeaderTitle}>
-                Başvuru Detayı
+    <RNModal 
+      visible={visible} 
+      transparent
+      animationType="slide" 
+      onRequestClose={onClose}
+      statusBarTranslucent={true}
+      {...(Platform.OS === 'ios' ? { presentationStyle: 'overFullScreen' as const } : {})}
+    >
+      <TouchableOpacity 
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <TouchableOpacity 
+          style={styles.modalCard}
+          activeOpacity={1}
+          onPress={(e) => e.stopPropagation()}
+        >
+          {isLoading && (
+            <View style={styles.modalLoader}>
+              <ActivityIndicator size="large" color={colors.primary[600]} />
+              <Typography variant="body" style={styles.modalLoaderText}>
+                Yükleniyor...
               </Typography>
             </View>
+          )}
+          {isError && (
+            <View style={styles.modalLoader}>
+              <View style={styles.errorIcon}>
+                <Ionicons name="close-circle" size={48} color={colors.error[600]} />
+              </View>
+              <Typography variant="h3" style={styles.errorTitle}>
+                Başvuru Yüklenemedi
+              </Typography>
+              <Typography variant="body" style={styles.errorText}>
+                Lütfen internet bağlantınızı kontrol edip tekrar deneyin.
+              </Typography>
+              <Button
+                label="Tekrar Dene"
+                onPress={() => refetch()}
+                variant="primary"
+                size="lg"
+              />
+            </View>
+          )}
+          {data && (
+            <>
+              <View style={styles.modalHeader}>
+                <Typography variant="h2" style={styles.modalHeaderTitle}>
+                  Başvuru Detayı
+                </Typography>
+              </View>
+              
+              <ScrollView 
+                style={styles.modalBody}
+                contentContainerStyle={styles.modalContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={true}
+                nestedScrollEnabled={true}
+              >
 
             {/* Başvuru Bilgileri */}
             <Card variant="elevated" padding="lg" style={styles.infoCard}>
@@ -286,27 +303,49 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
               </View>
             )}
 
-            {canWithdraw && (
-              <Button
-                label="Başvuruyu Geri Çek"
-                variant="destructive"
-                onPress={handleWithdrawPress}
-                fullWidth
-                size="lg"
-                style={styles.withdrawButton}
-              />
-            )}
-          </ScrollView>
-        )}
-      </View>
+                {canWithdraw && (
+                  <Button
+                    label="Başvuruyu Geri Çek"
+                    variant="destructive"
+                    onPress={handleWithdrawPress}
+                    fullWidth
+                    size="lg"
+                    style={styles.withdrawButton}
+                  />
+                )}
+              </ScrollView>
+              
+              <View style={styles.modalFooter}>
+                <Button
+                  label="Kapat"
+                  variant="outline"
+                  onPress={onClose}
+                  style={styles.cancelButton}
+                  size="lg"
+                  fullWidth
+                />
+              </View>
+            </>
+          )}
+        </TouchableOpacity>
+      </TouchableOpacity>
     </RNModal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: colors.background.primary,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    ...shadows.md,
+    maxHeight: '90%',
+    flex: 1,
   },
   modalLoader: {
     flex: 1,
@@ -314,25 +353,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
+    minHeight: 300,
   },
   modalLoaderText: {
     color: colors.text.secondary,
     marginTop: spacing.sm,
   },
-  modalContent: {
+  modalHeader: {
     padding: spacing.lg,
-    paddingBottom: spacing['4xl'],
-  },
-  backButtonContainer: {
-    marginBottom: spacing.md,
-  },
-  modalHeaderInline: {
-    marginBottom: spacing.lg,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.light,
   },
   modalHeaderTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.semibold,
     color: colors.text.primary,
+  },
+  modalBody: {
+    flex: 1,
+    padding: spacing.lg,
+  },
+  modalContent: {
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  modalFooter: {
+    padding: spacing.lg,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+    backgroundColor: colors.background.primary,
+  },
+  cancelButton: {
+    minHeight: 56,
   },
   errorIcon: {
     marginBottom: spacing.md,

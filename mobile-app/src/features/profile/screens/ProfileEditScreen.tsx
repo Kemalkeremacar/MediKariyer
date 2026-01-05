@@ -26,7 +26,8 @@ import { Input } from '@/components/ui/Input';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
-import { useProfile, useUpdatePersonalInfo } from '../hooks/useProfile';
+import { useProfileCore } from '../hooks/useProfileCore';
+import { useUpdatePersonalInfo } from '../hooks/useUpdatePersonalInfo';
 import { useAuthStore } from '@/store/authStore';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { useToast } from '@/providers/ToastProvider';
@@ -43,7 +44,7 @@ const TITLE_OPTIONS: SelectOption[] = [
 
 export const ProfileEditScreen = ({ navigation }: any) => {
   const user = useAuthStore((state) => state.user);
-  const { data: profile, isLoading, error, refetch } = useProfile();
+  const { data: profile, isLoading, error, refetch } = useProfileCore();
   const updateMutation = useUpdatePersonalInfo();
   const { showToast } = useToast();
 
@@ -169,10 +170,17 @@ export const ProfileEditScreen = ({ navigation }: any) => {
         residence_city_id: formData.residence_city_id || null,
       });
       
+      // Show success toast and navigate back
+      // Using setTimeout to ensure mutation is fully completed before navigation
       showToast('Profil başarıyla güncellendi', 'success');
-      navigation.goBack();
+      
+      // Small delay to ensure toast is shown and any modals are closed
+      setTimeout(() => {
+        navigation.goBack();
+      }, 300);
     } catch (err: any) {
-      showToast(err.message || 'Profil güncellenirken bir hata oluştu', 'error');
+      const errorMessage = err?.response?.data?.message || err?.message || 'Profil güncellenirken bir hata oluştu';
+      showToast(errorMessage, 'error');
     }
   };
 
@@ -234,7 +242,14 @@ export const ProfileEditScreen = ({ navigation }: any) => {
             </View>
             <TouchableOpacity
               style={styles.changePhotoButton}
-              onPress={() => navigation.navigate('PhotoManagement')}
+              onPress={() => {
+                // Close ProfileEdit modal and open PhotoManagement
+                navigation.goBack();
+                // Use setTimeout to ensure ProfileEdit is closed before opening PhotoManagement
+                setTimeout(() => {
+                  navigation.navigate('PhotoManagement');
+                }, 100);
+              }}
             >
               <Typography variant="body" style={styles.changePhotoText}>
                 Fotoğrafı Değiştir
@@ -448,86 +463,6 @@ export const ProfileEditScreen = ({ navigation }: any) => {
             </Card>
           </View>
 
-          {/* Additional Profile Sections */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionIconContainer}>
-                <Ionicons name="document-text" size={20} color={colors.primary[600]} />
-              </View>
-              <Typography variant="h3" style={styles.sectionTitle}>
-                Ek Bilgiler
-              </Typography>
-            </View>
-
-            <Card variant="outlined" padding="md">
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => navigation.navigate('Experience')}
-              >
-                <View style={styles.menuItemLeft}>
-                  <View style={[styles.menuIcon, { backgroundColor: colors.primary[50] }]}>
-                    <Ionicons name="briefcase" size={20} color={colors.primary[600]} />
-                  </View>
-                  <Typography variant="body" style={styles.menuItemText}>
-                    Deneyimler
-                  </Typography>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
-              </TouchableOpacity>
-
-              <View style={styles.menuDivider} />
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => navigation.navigate('Education')}
-              >
-                <View style={styles.menuItemLeft}>
-                  <View style={[styles.menuIcon, { backgroundColor: colors.success[50] }]}>
-                    <Ionicons name="school" size={20} color={colors.success[600]} />
-                  </View>
-                  <Typography variant="body" style={styles.menuItemText}>
-                    Eğitim
-                  </Typography>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
-              </TouchableOpacity>
-
-              <View style={styles.menuDivider} />
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => navigation.navigate('Languages')}
-              >
-                <View style={styles.menuItemLeft}>
-                  <View style={[styles.menuIcon, { backgroundColor: colors.secondary[50] }]}>
-                    <Ionicons name="language" size={20} color={colors.secondary[600]} />
-                  </View>
-                  <Typography variant="body" style={styles.menuItemText}>
-                    Diller
-                  </Typography>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
-              </TouchableOpacity>
-
-              <View style={styles.menuDivider} />
-
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={() => navigation.navigate('Certificates')}
-              >
-                <View style={styles.menuItemLeft}>
-                  <View style={[styles.menuIcon, { backgroundColor: colors.warning[50] }]}>
-                    <Ionicons name="ribbon" size={20} color={colors.warning[600]} />
-                  </View>
-                  <Typography variant="body" style={styles.menuItemText}>
-                    Sertifikalar
-                  </Typography>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
-              </TouchableOpacity>
-            </Card>
-          </View>
-
           {/* Info Note */}
           {hasChanges && (
             <Card variant="outlined" padding="md" style={styles.infoCard}>
@@ -675,36 +610,6 @@ const styles = StyleSheet.create({
   infoText: {
     color: colors.text.secondary,
     lineHeight: 18,
-  },
-
-  // Menu Items
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  menuIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  menuItemText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: colors.text.primary,
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: colors.border.light,
-    marginVertical: spacing.xs,
   },
 });
 

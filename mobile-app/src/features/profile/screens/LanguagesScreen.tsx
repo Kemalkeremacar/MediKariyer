@@ -11,7 +11,7 @@ import { LanguageCard } from '@/components/composite/LanguageCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { LanguageFormModal } from '../components/LanguageFormModal';
 import { colors, spacing } from '@/theme';
-import { useLanguages, useLanguage } from '../hooks/useProfile';
+import { useLanguages, useLanguage } from '../hooks/useLanguages';
 import type { DoctorLanguage, CreateLanguagePayload, UpdateLanguagePayload } from '@/types/profile';
 
 export const LanguagesScreen = () => {

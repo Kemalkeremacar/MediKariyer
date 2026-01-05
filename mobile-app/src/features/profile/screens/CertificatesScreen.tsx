@@ -11,7 +11,7 @@ import { CertificateCard } from '@/components/composite/CertificateCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { CertificateFormModal } from '../components/CertificateFormModal';
 import { colors, spacing } from '@/theme';
-import { useCertificates, useCertificate } from '../hooks/useProfile';
+import { useCertificates, useCertificate } from '../hooks/useCertificates';
 import type { DoctorCertificate, CreateCertificatePayload, UpdateCertificatePayload } from '@/types/profile';
 
 export const CertificatesScreen = () => {

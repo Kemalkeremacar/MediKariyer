@@ -45,19 +45,27 @@ export const profileCoreService = {
 
   /**
    * Profil tamamlanma oranını getirir (Backend'den)
+   * Backend Response: { completion_percentage, details: { personal: { completed, total } }, missing_fields }
+   * Frontend Type: { completion_percent, filled_fields, total_fields, missing_fields }
    */
   async getProfileCompletion(): Promise<ProfileCompletion> {
     const response = await apiClient.get<ApiResponse<ProfileCompletionResponse>>(
       endpoints.doctor.profileCompletion
     );
     
+    // Validate response structure
+    if (!response.data?.data) {
+      throw new Error('Invalid profile completion response structure');
+    }
+    
     const data = response.data.data;
     
+    // Normalize backend response to frontend type
     return {
-      completion_percent: data.completion_percentage || 0,
-      filled_fields: data.details?.personal?.completed || 0,
-      total_fields: data.details?.personal?.total || 0,
-      missing_fields: data.missing_fields || [],
+      completion_percent: data.completion_percentage ?? 0,
+      filled_fields: data.details?.personal?.completed ?? 0,
+      total_fields: data.details?.personal?.total ?? 0,
+      missing_fields: data.missing_fields ?? [],
     };
   },
 

@@ -11,7 +11,7 @@ import { ExperienceCard } from '@/components/composite/ExperienceCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { ExperienceFormModal } from '../components/ExperienceFormModal';
 import { colors, spacing } from '@/theme';
-import { useExperiences, useExperience } from '../hooks/useProfile';
+import { useExperiences, useExperience } from '../hooks/useExperiences';
 import { formatYear } from '@/utils/date';
 import type { DoctorExperience, CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
 

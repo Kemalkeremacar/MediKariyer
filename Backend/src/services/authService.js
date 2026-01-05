@@ -315,9 +315,15 @@ const validateCredentials = async (email, password) => {
     passwordHashLength: user.password_hash ? user.password_hash.length : 0
   });
   
-  // SQL Server bit tipi 0/1 olarak geliyorsa boolean'a çevir
-  const isActive = user.is_active === 1 || user.is_active === true;
-  const isApproved = user.is_approved === 1 || user.is_approved === true;
+  // SQL Server bit tipi 0/1 olarak geliyorsa boolean'a çevir (toleranslı kontrol - string ve number değerleri kabul eder)
+  // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+  const isActive = user.is_active === null || user.is_active === undefined 
+    ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
+    : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
+  
+  const isApproved = user.is_approved === null || user.is_approved === undefined
+    ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
+    : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
   
   // Admin için is_active kontrolü yapılmaz, diğer kullanıcılar için yapılır
   if (user.role !== 'admin' && !isActive) {
@@ -441,8 +447,20 @@ const loginUnified = async (email, password, req = null) => {
   // Profil bilgilerini de getir (role parametresi ekli)
   const profile = await getUserProfile(user.id, user.role);
   
+  // SQL Server bit tipini boolean'a çevir - response'larda tutarlılık için (hem web hem mobile kullanıyor)
+  // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+  const isActive = user.is_active === null || user.is_active === undefined 
+    ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
+    : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
+  
+  const isApproved = user.is_approved === null || user.is_approved === undefined
+    ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
+    : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
+  
   return { 
-    ...user, 
+    ...user,
+    is_active: isActive,      // Boolean'a çevrilmiş değer (web ve mobile için tutarlılık)
+    is_approved: isApproved,  // Boolean'a çevrilmiş değer (web ve mobile için tutarlılık)
     isFirstLogin: loginInfo.isFirstLogin,
     profile: profile 
   };
@@ -482,14 +500,24 @@ const validateRefreshToken = async (refreshToken) => {
     throw new AppError('Kullanıcı bulunamadı', 401);
   }
 
+  // SQL Server bit tipi 0/1 olarak geliyorsa boolean'a çevir (toleranslı kontrol - string ve number değerleri kabul eder)
+  // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+  const isActive = user.is_active === null || user.is_active === undefined 
+    ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
+    : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
+  
+  const isApproved = user.is_approved === null || user.is_approved === undefined
+    ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
+    : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
+
   // Admin için is_active kontrolü yapılmaz, diğer kullanıcılar için yapılır
-  if (user.role !== 'admin' && !user.is_active) {
+  if (user.role !== 'admin' && !isActive) {
     await db('refresh_tokens').where('user_id', user.id).del();
     throw new AppError('Hesabınız pasif durumda. Lütfen yöneticinizle iletişime geçin.', 403);
   }
 
   // Admin için onay kontrolü yok
-  if (user.role !== 'admin' && !user.is_approved) {
+  if (user.role !== 'admin' && !isApproved) {
     await db('refresh_tokens').where('user_id', user.id).del();
     throw new AppError('Hesabınız admin onayını bekliyor. Onaylandıktan sonra giriş yapabilirsiniz.', 403);
   }
@@ -759,6 +787,23 @@ const registerDoctor = async (registrationData) => {
       const createdUser = await db('users').where('id', userId).first();
       const createdProfile = await db('doctor_profiles').where('id', profileId).first();
 
+      // SQL Server bit tipini boolean'a çevir - web ve mobile için tutarlılık
+      // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+      const isActive = createdUser.is_active === null || createdUser.is_active === undefined 
+        ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
+        : (createdUser.is_active === 1 || createdUser.is_active === true || createdUser.is_active === '1' || createdUser.is_active === 'true');
+      
+      const isApproved = createdUser.is_approved === null || createdUser.is_approved === undefined
+        ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
+        : (createdUser.is_approved === 1 || createdUser.is_approved === true || createdUser.is_approved === '1' || createdUser.is_approved === 'true');
+
+      // Boolean değerlere çevrilmiş user objesi oluştur
+      const userWithBooleanFlags = {
+        ...createdUser,
+        is_active: isActive,
+        is_approved: isApproved
+      };
+
       // Admin'lere yeni doktor kaydı bildirimi gönder
       try {
         const notificationService = require('./notificationService');
@@ -819,7 +864,7 @@ const registerDoctor = async (registrationData) => {
         hasPasswordHash: !!createdUser.password_hash
       });
 
-      return { user: createdUser, profile: createdProfile };
+      return { user: userWithBooleanFlags, profile: createdProfile };  // Boolean değerlere çevrilmiş user objesi
     } catch (error) {
       // Transaction'ı rollback et
       await trx.rollback();
@@ -915,6 +960,23 @@ const registerHospital = async (registrationData) => {
     const createdProfile = await trx('hospital_profiles').where('id', profileId).first();
 
     await trx.commit();
+
+    // SQL Server bit tipini boolean'a çevir - web ve mobile için tutarlılık
+    // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+    const isActive = createdUser.is_active === null || createdUser.is_active === undefined 
+      ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
+      : (createdUser.is_active === 1 || createdUser.is_active === true || createdUser.is_active === '1' || createdUser.is_active === 'true');
+    
+    const isApproved = createdUser.is_approved === null || createdUser.is_approved === undefined
+      ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
+      : (createdUser.is_approved === 1 || createdUser.is_approved === true || createdUser.is_approved === '1' || createdUser.is_approved === 'true');
+
+    // Boolean değerlere çevrilmiş user objesi oluştur
+    const userWithBooleanFlags = {
+      ...createdUser,
+      is_active: isActive,
+      is_approved: isApproved
+    };
 
     // OPTİMİZASYON: Admin'lere yeni hastane kaydı bildirimi gönder (async, fire-and-forget)
     // Transaction commit'ten sonra yapılır, kayıt işlemini yavaşlatmaz

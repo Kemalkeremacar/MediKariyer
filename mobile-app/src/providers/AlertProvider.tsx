@@ -12,6 +12,7 @@ interface AlertConfig {
   title: string;
   message: string;
   onConfirm?: () => void;
+  onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
 }
@@ -33,8 +34,13 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const hideAlert = useCallback(() => {
+    console.log('🔴 AlertProvider hideAlert called');
     setVisible(false);
-    setTimeout(() => setAlertConfig(null), 300);
+    // Clear alert config after animation completes
+    setTimeout(() => {
+      console.log('🔴 Clearing alert config');
+      setAlertConfig(null);
+    }, 300);
   }, []);
 
   // Set global alert handler on mount
@@ -52,7 +58,12 @@ export const AlertProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           type={alertConfig.type}
           title={alertConfig.title}
           message={alertConfig.message}
-          onClose={hideAlert}
+          onClose={() => {
+            if (alertConfig.onCancel) {
+              alertConfig.onCancel();
+            }
+            hideAlert();
+          }}
           onConfirm={alertConfig.onConfirm}
           confirmText={alertConfig.confirmText}
           cancelText={alertConfig.cancelText}

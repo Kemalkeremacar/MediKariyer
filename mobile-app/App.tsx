@@ -1,3 +1,12 @@
+/**
+ * App.tsx - Stabilizasyon Faz 5
+ * 
+ * Production-ready app root with:
+ * - ErrorBoundary (NavigationContainer'ı kapsıyor)
+ * - OfflineNotice (Global connectivity awareness)
+ * - All providers and initializers
+ */
+
 import React, { useEffect, useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -9,7 +18,9 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 import { AuthInitializer } from '@/providers/AuthInitializer';
 import { navigationRef } from '@/navigation/navigationRef';
 import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
+import { OfflineNotice } from '@/components/feedback/OfflineNotice';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useAxiosInterceptor } from '@/hooks/useAxiosInterceptor';
 import { StyleSheet, Text, TextInput } from 'react-native';
 import { errorLogger } from '@/utils/errorLogger';
 import { env } from '@/config/env';
@@ -32,6 +43,8 @@ if (env.SENTRY_DSN) {
  * AppContent - Inner app component with push notifications
  */
 const AppContent = () => {
+  // Initialize axios interceptor for navigation integration
+  useAxiosInterceptor();
   // Initialize push notifications
   usePushNotifications();
   const isHydrating = useAuthStore((state) => state.isHydrating);
@@ -100,6 +113,9 @@ const AppContent = () => {
 
   return (
     <>
+      {/* Global Offline Notice - Shows at top when internet is disconnected */}
+      <OfflineNotice />
+      
       <AuthInitializer />
       <RootNavigator />
     </>
@@ -137,6 +153,7 @@ export default function App() {
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <AppProviders>
+          {/* ErrorBoundary wraps NavigationContainer - catches all JS errors */}
           <ErrorBoundary>
             <NavigationContainer ref={navigationRef}>
               <AppContent />

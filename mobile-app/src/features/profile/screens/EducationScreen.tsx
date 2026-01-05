@@ -11,7 +11,7 @@ import { EducationCard } from '@/components/composite/EducationCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { EducationFormModal } from '../components/EducationFormModal';
 import { colors, spacing } from '@/theme';
-import { useEducations, useEducation } from '../hooks/useProfile';
+import { useEducations, useEducation } from '../hooks/useEducations';
 import type { DoctorEducation, CreateEducationPayload, UpdateEducationPayload } from '@/types/profile';
 
 export const EducationScreen = () => {

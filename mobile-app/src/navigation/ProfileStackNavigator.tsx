@@ -40,6 +40,10 @@ export const ProfileStackNavigator = () => (
     <Stack.Screen 
       name="PhotoManagement" 
       component={PhotoManagementScreen}
+      options={{
+        presentation: 'modal',
+        animation: 'slide_from_bottom',
+      }}
     />
     <Stack.Screen 
       name="Education" 

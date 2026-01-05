@@ -158,6 +158,7 @@ export const showAlert = {
         title,
         message,
         onConfirm,
+        onCancel,
         confirmText,
         cancelText: 'İptal',
       });

@@ -65,9 +65,9 @@ export function useCRUDMutation<TCreate, TUpdate, TItem>(
   const queryClient = useQueryClient();
   const { entityName, queryKey, endpoint, service, additionalInvalidateKeys = [] } = config;
 
-  // Tüm ilgili query'leri invalidate et
+  // Sadece kendi cache key'ini invalidate et (Domain-Driven Design)
+  // Global invalidate yapma - her domain kendi cache'ini yönetir
   const invalidateQueries = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
     queryClient.invalidateQueries({ queryKey: queryKey as unknown[] });
     additionalInvalidateKeys.forEach((key) => {
       queryClient.invalidateQueries({ queryKey: key as unknown[] });

@@ -6,6 +6,7 @@ import {
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from './ToastProvider';
 import { AlertProvider } from './AlertProvider';
+import { AuthInitializer } from './AuthInitializer';
 import { CACHE_STALE_TIME, CACHE_TIME, MAX_RETRY_ATTEMPTS } from '@/config/constants';
 
 /**
@@ -34,6 +35,7 @@ export const AppProviders = ({ children }: PropsWithChildren) => {
       <ThemeProvider>
         <AlertProvider>
           <ToastProvider>
+            <AuthInitializer />
             {children}
           </ToastProvider>
         </AlertProvider>

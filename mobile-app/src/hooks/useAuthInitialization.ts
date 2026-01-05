@@ -5,19 +5,21 @@
  * Features:
  * - Validate tokens from SecureStore
  * - Check token expiry
- * - Fetch user data if tokens are valid
+ * - Fetch user data using mobile API (authService.getMe)
  * - Auto logout if tokens are invalid/expired
+ * - Handle network errors gracefully (offline mode support)
+ * 
+ * CRITICAL: Only uses /api/mobile/* endpoints via authService
  * 
  * @author MediKariyer Development Team
- * @version 2.0.0
+ * @version 3.0.0
  * @since 2024
  */
 
 import { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
-import apiClient from '@/api/client';
-import { endpoints } from '@/api/endpoints';
+import { authService } from '@/api/services/authService';
 import { REQUEST_TIMEOUT_MS } from '@/config/constants';
 
 export const useAuthInitialization = () => {
@@ -59,35 +61,41 @@ export const useAuthInitialization = () => {
               return;
             }
             
-              // Fetch user data - API client interceptor will handle token refresh if needed
-              // If token is expired, the interceptor will refresh it automatically
-              try {
-                console.log('🔵 Fetching user data...');
-                const response = await apiClient.get(endpoints.auth.me);
-                const user = response.data.data.user;
-                
-                // Mark user as authenticated - token'ları temizleme, sadece authenticated olarak işaretle
-                // Approved kontrolü LoginScreen ve RootNavigator'da yapılacak
-                // Bu sayede admin onayladıktan sonra token'lar kalıcı olacak
-                markAuthenticated(user);
-                console.log('✅ User data fetched successfully');
-                
-                // Note: Approved kontrolü LoginScreen'de yapılıyor
-                // Eğer user approved değilse, LoginScreen useEffect'i PendingApproval'a yönlendirecek
+            // Fetch user data using mobile API service
+            // API client interceptor will handle token refresh if needed
+            // If token is expired, the interceptor will refresh it automatically
+            try {
+              console.log('🔵 Fetching user data via mobile API...');
+              const user = await authService.getMe();
+              
+              // Mark user as authenticated with user data
+              // RootNavigator will handle is_active and is_approved checks
+              markAuthenticated(user);
+              console.log('✅ User data fetched successfully via mobile API');
             } catch (error: any) {
-              // If error is 401, token refresh was attempted but failed
-              // If error is network, we'll mark as unauthenticated
+              // Scenario B: 401 Unauthorized - Token expired or invalid
               const isAuthError = error?.response?.status === 401 || error?.name === 'ApiError';
               
               if (isAuthError) {
-                console.log('🔴 Authentication failed, marking unauthenticated');
+                console.log('🔴 Authentication failed (401), clearing tokens and marking unauthenticated');
                 await tokenManager.clearTokens();
                 markUnauthenticated();
               } else {
-                // Network error or other error - don't clear tokens, just mark as unauthenticated
-                // User can retry later
-                console.error('❌ Failed to fetch user data (network error):', error);
-                markUnauthenticated();
+                // Scenario C: Network Error - Keep token, allow offline mode
+                // User can retry later when network is available
+                console.warn('⚠️ Network error during auth initialization, keeping token for offline mode:', error?.message);
+                // Don't clear tokens on network error - allow user to continue with cached data
+                // Check if we have persisted user data in store (from previous session)
+                // If yes, mark as authenticated to allow offline access
+                // If no, mark as unauthenticated (first time login requires network)
+                const persistedUser = useAuthStore.getState().user;
+                if (persistedUser) {
+                  console.log('✅ Using persisted user data for offline mode');
+                  markAuthenticated(persistedUser);
+                } else {
+                  console.log('⚠️ No persisted user data, marking unauthenticated');
+                  markUnauthenticated();
+                }
               }
             }
           })(),

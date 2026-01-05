@@ -3,7 +3,7 @@
  * Provides theme values and dark mode support
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { lightTheme, darkTheme, type Theme } from '../theme';
@@ -53,34 +53,42 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
   };
 
-  const setThemeMode = async (mode: ThemeMode) => {
+  const setThemeMode = useCallback(async (mode: ThemeMode) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
       setThemeModeState(mode);
     } catch (error) {
       console.error('Failed to save theme mode:', error);
     }
-  };
-
-  const toggleTheme = () => {
-    const newMode = isDark ? 'light' : 'dark';
-    setThemeMode(newMode);
-  };
+  }, []);
 
   // Determine if dark mode is active
-  const isDark =
-    themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
+  const isDark = useMemo(
+    () => themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark'),
+    [themeMode, systemColorScheme]
+  );
 
   // Select theme based on dark mode state
-  const currentTheme = isDark ? darkTheme : lightTheme;
+  const currentTheme = useMemo(
+    () => (isDark ? darkTheme : lightTheme),
+    [isDark]
+  );
 
-  const value: ThemeContextValue = {
-    theme: currentTheme,
-    themeMode,
-    isDark,
-    setThemeMode,
-    toggleTheme,
-  };
+  const toggleTheme = useCallback(() => {
+    const newMode = isDark ? 'light' : 'dark';
+    setThemeMode(newMode);
+  }, [isDark, setThemeMode]);
+
+  const value: ThemeContextValue = useMemo(
+    () => ({
+      theme: currentTheme,
+      themeMode,
+      isDark,
+      setThemeMode,
+      toggleTheme,
+    }),
+    [currentTheme, themeMode, isDark, setThemeMode, toggleTheme]
+  );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

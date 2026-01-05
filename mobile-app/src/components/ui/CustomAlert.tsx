@@ -26,6 +26,7 @@ interface CustomAlertProps {
   message: string;
   onClose: () => void;
   onConfirm?: () => void;
+  onCancel?: () => void;
   confirmText?: string;
   cancelText?: string;
 }
@@ -37,6 +38,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   message,
   onClose,
   onConfirm,
+  onCancel,
   confirmText = 'Tamam',
   cancelText = 'İptal',
 }) => {
@@ -75,8 +77,33 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   const isConfirm = type === 'confirm' || type === 'confirmDestructive';
 
   const handleConfirm = () => {
-    onConfirm?.();
+    console.log('🔴 CustomAlert handleConfirm called', {
+      hasOnConfirm: !!onConfirm,
+      type,
+      confirmText,
+    });
+    
+    // Close alert immediately to prevent UI blocking
     onClose();
+    
+    // Call onConfirm after modal closes (prevents blocking)
+    if (onConfirm) {
+      console.log('🔴 Scheduling onConfirm callback');
+      // Use requestAnimationFrame to ensure modal is fully closed
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          try {
+            console.log('🔴 Executing onConfirm callback');
+            onConfirm();
+            console.log('🔴 onConfirm callback executed successfully');
+          } catch (error) {
+            console.error('🔴 Error in onConfirm callback:', error);
+          }
+        }, 100);
+      });
+    } else {
+      console.warn('🔴 onConfirm callback is undefined!');
+    }
   };
 
   return (
@@ -87,40 +114,49 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
       onRequestClose={onClose}
       {...(Platform.OS === 'ios' ? { presentationStyle: 'overFullScreen' as const } : { statusBarTranslucent: true })}
     >
-      <View style={styles.overlay}>
-        <TouchableOpacity 
-          style={styles.backdrop} 
-          activeOpacity={1} 
-          onPress={onClose}
-        />
+      <View style={styles.overlay} pointerEvents="box-none">
+        <View style={styles.backdrop} pointerEvents="auto">
+          <TouchableOpacity 
+            style={StyleSheet.absoluteFill}
+            activeOpacity={1} 
+            onPress={onClose}
+          />
+        </View>
         <Animated.View
           style={[
             styles.alertContainer,
             { transform: [{ scale: scaleAnim }] },
           ]}
+          pointerEvents="box-none"
         >
-          {/* Icon */}
-          <View style={[styles.iconContainer, { backgroundColor: `${iconConfig.color}15` }]}>
-            <Ionicons name={iconConfig.name} size={48} color={iconConfig.color} />
-          </View>
+          <View pointerEvents="auto">
+            {/* Icon */}
+            <View style={[styles.iconContainer, { backgroundColor: `${iconConfig.color}15` }]}>
+              <Ionicons name={iconConfig.name} size={48} color={iconConfig.color} />
+            </View>
 
-          {/* Title */}
-          <Typography variant="h3" style={styles.title}>
-            {title}
-          </Typography>
+            {/* Title */}
+            <Typography variant="h3" style={styles.title}>
+              {title}
+            </Typography>
 
-          {/* Message */}
-          <Typography variant="body" style={styles.message}>
-            {message}
-          </Typography>
+            {/* Message */}
+            <Typography variant="body" style={styles.message}>
+              {message}
+            </Typography>
 
-          {/* Buttons */}
-          <View style={styles.buttonContainer}>
+            {/* Buttons */}
+            <View style={styles.buttonContainer}>
             {isConfirm ? (
               <>
                 <Button
                   variant="outline"
-                  onPress={onClose}
+                  onPress={() => {
+                    if (onCancel) {
+                      onCancel();
+                    }
+                    onClose();
+                  }}
                   style={styles.button}
                 >
                   <Typography variant="body" style={styles.cancelButtonText}>
@@ -130,7 +166,11 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                 {type === 'confirmDestructive' ? (
                   <TouchableOpacity
                     style={[styles.button, styles.destructiveButton]}
-                    onPress={handleConfirm}
+                    onPress={() => {
+                      console.log('🔴 Destructive button pressed');
+                      handleConfirm();
+                    }}
+                    activeOpacity={0.8}
                   >
                     <Typography variant="body" style={styles.destructiveButtonText}>
                       {confirmText}
@@ -155,6 +195,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
                 fullWidth
               />
             )}
+            </View>
           </View>
         </Animated.View>
       </View>

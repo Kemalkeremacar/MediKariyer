@@ -74,9 +74,12 @@ export const photoService = {
   /**
    * Fotoğraf yükleme isteğini iptal eder
    */
-  async cancelPhotoRequest(): Promise<void> {
-    await apiClient.delete<ApiResponse<null>>(
+  async cancelPhotoRequest(): Promise<{ success: boolean }> {
+    const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(
       endpoints.doctor.photoRequest,
     );
+    
+    // Backend returns { success: boolean } in data
+    return response.data.data || { success: true };
   },
 };
