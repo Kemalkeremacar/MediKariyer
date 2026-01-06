@@ -332,6 +332,44 @@ const attachInterceptors = (instance: AxiosInstance) => {
         const formattedError = new Error(errorMessage);
         formattedError.name = 'ApiError';
         
+        // CRITICAL: Eğer hata mesajı "pasif" veya "disabled" içeriyorsa,
+        // kullanıcının hesabı pasif yapılmış demektir. Store'u güncelle.
+        // RootNavigator otomatik olarak AccountDisabled ekranına yönlendirecek.
+        const isAccountDisabled = 
+          errorMessage.toLowerCase().includes('pasif') ||
+          errorMessage.toLowerCase().includes('disabled') ||
+          errorMessage.toLowerCase().includes('pasifleştirilmiş');
+        
+        if (isAccountDisabled) {
+          const currentUser = useAuthStore.getState().user;
+          if (currentUser) {
+            // Sadece is_active değeri değiştiyse güncelle (gereksiz güncellemeleri önle)
+            // MSSQL BIT tipi için toleranslı kontrol (boolean, number, string değerlerini kabul eder)
+            const currentIsActive = 
+              currentUser.is_active === true || 
+              currentUser.is_active === 1 || 
+              (typeof currentUser.is_active === 'string' && (currentUser.is_active === '1' || currentUser.is_active === 'true'));
+            
+            if (currentIsActive) {
+              // Store'u güncelle: is_active = false
+              useAuthStore.getState().markAuthenticated({
+                ...currentUser,
+                is_active: false,
+              });
+              devLog('🛑 Account disabled detected, updated store. RootNavigator will redirect to AccountDisabled screen.');
+            } else {
+              // Zaten pasif, gereksiz güncelleme yapma
+              devLog('🛑 Account disabled detected, but user already marked as inactive. Skipping store update.');
+            }
+          }
+          
+          // Hesap pasif durumu beklenen bir durumdur (admin tarafından yapılan bir işlem)
+          // Bu yüzden error logger'ı çağırmıyoruz (gereksiz error spam'ini önlemek için)
+          // Sadece hatayı reject ediyoruz, böylece UI'da gösterilebilir ama log spam'i olmaz
+          return Promise.reject(formattedError);
+        }
+        
+        // Diğer 403 hataları için normal error logging
         errorLogger.logApiError(formattedError, error.config?.url, status);
         return Promise.reject(formattedError);
       }

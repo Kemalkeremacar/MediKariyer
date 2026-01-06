@@ -33,7 +33,8 @@
 const authService = require('../authService');
 const doctorService = require('../doctorService');
 const { AppError } = require('../../utils/errorHandler');
-const { generateAccessToken, generateRefreshToken, createRefreshTokenRecord, revokeRefreshTokenByValue } = require('../../utils/jwtUtils');
+const jwtUtils = require('../../utils/jwtUtils');
+const { generateAccessToken, generateRefreshToken, createRefreshTokenRecord, revokeRefreshTokenByValue } = jwtUtils;
 const profileTransformer = require('../../mobile/transformers/profileTransformer');
 
 const ensureDoctorRole = (user) => {
@@ -56,6 +57,8 @@ const registerDoctor = async (registrationData, req) => {
   const { email, password, first_name, last_name, title, specialty_id, subspecialty_id, profile_photo } = registrationData;
 
   // AuthService ile doktor kaydı yap (web ile aynı mantık)
+  // NOTE: authService.registerDoctor uses database transaction to ensure atomicity
+  // (both users and doctor_profiles inserts succeed or both fail)
   const result = await authService.registerDoctor({
     email,
     password,
@@ -88,13 +91,65 @@ const registerDoctor = async (registrationData, req) => {
   };
 };
 
+/**
+ * Mobile-specific credential validation (allows pending users)
+ * @description Validates credentials without blocking unapproved users (for mobile waiting screen)
+ */
+const validateMobileCredentials = async (email, password) => {
+  const db = require('../../config/dbConfig').db;
+  const bcrypt = require('bcryptjs');
+  const logger = require('../../utils/logger');
+
+  // Email'i normalize et (trim ve lowercase)
+  const normalizedEmail = email ? email.trim().toLowerCase() : '';
+
+  // Case-insensitive email araması
+  const user = await db('users')
+    .whereRaw('LOWER(email) = ?', [normalizedEmail])
+    .first();
+
+  if (!user) {
+    return null;
+  }
+
+  // SQL Server bit tipini boolean'a çevir
+  const isActive = user.is_active === null || user.is_active === undefined 
+    ? true
+    : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
+
+  // Şifre kontrolü
+  if (!user.password_hash || !user.password_hash.startsWith('$2')) {
+    return null;
+  }
+
+  const passwordHashString = String(user.password_hash);
+  const isPasswordValid = await bcrypt.compare(password, passwordHashString);
+
+  if (!isPasswordValid) {
+    return null;
+  }
+
+  // Mobile: Sadece is_active kontrolü yap (suspended users cannot login)
+  // is_approved kontrolü YAPILMAZ (pending users can login to see waiting screen)
+  if (!isActive) {
+    throw new AppError('Hesabınız pasifleştirilmiştir. Lütfen sistem yöneticisi ile iletişime geçin.', 403);
+  }
+
+  return user;
+};
+
 const login = async ({ email, password }, req) => {
-  const user = await authService.loginUnified(email, password, req);
+  // Mobile-specific credential validation (allows pending users)
+  const user = await validateMobileCredentials(email, password);
+  
+  if (!user) {
+    throw new AppError('E-posta veya şifre hatalı', 401);
+  }
+
   ensureDoctorRole(user);
 
   // SQL Server bit tipini boolean'a çevir - users tablosundan gelen değerleri kullan
   // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
-  // (validateCredentials zaten kontrol ediyor, ama tutarlılık için burada da dönüştürüyoruz)
   const isActive = user.is_active === null || user.is_active === undefined 
     ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
     : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
@@ -103,17 +158,9 @@ const login = async ({ email, password }, req) => {
     ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
     : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
   
-  // NOTE: validateCredentials zaten is_active ve is_approved kontrolü yapıyor
-  // Burada ekstra bir kontrol gereksiz, ama tutarlılık için boolean değerlere çeviriyoruz
-  // Check if user is approved - unapproved users cannot login (defensive check)
-  if (!isApproved) {
-    throw new AppError('Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.', 403);
-  }
-  
-  // Defensive check: validateCredentials zaten kontrol ediyor, ama yine de kontrol edelim
-  if (!isActive) {
-    throw new AppError('Hesabınız pasifleştirilmiştir. Lütfen sistem yöneticisi ile iletişime geçin.', 403);
-  }
+  // CRITICAL CHANGE: Pending users (is_approved = false) CAN login
+  // Mobile app will show "Waiting for Approval" screen based on is_approved flag
+  // Only suspended users (is_active = false) are blocked
 
   const tokens = {
     accessToken: generateAccessToken(buildTokenPayload(user)),
@@ -130,7 +177,7 @@ const login = async ({ email, password }, req) => {
       id: user.id,
       email: user.email,
       role: user.role,
-      is_approved: isApproved, // Boolean'a çevrilmiş değer
+      is_approved: isApproved, // Boolean'a çevrilmiş değer (false = pending, true = approved)
       is_active: isActive, // Boolean'a çevrilmiş değer
       first_name: profile?.first_name || null,
       last_name: profile?.last_name || null
@@ -140,27 +187,109 @@ const login = async ({ email, password }, req) => {
   };
 };
 
+/**
+ * Mobile-specific refresh token validation (allows pending users)
+ * @description Validates refresh token without blocking unapproved users (for mobile waiting screen)
+ */
+const validateMobileRefreshToken = async (refreshToken) => {
+  const db = require('../../config/dbConfig').db;
+  
+  // Token kaydını doğrula
+  const tokenRecord = await jwtUtils.verifyRefreshTokenRecord(refreshToken);
+  if (!tokenRecord) {
+    throw new AppError('Geçersiz refresh token', 401);
+  }
+
+  const user = await db('users')
+    .where('id', tokenRecord.user_id)
+    .first();
+
+  if (!user) {
+    await db('refresh_tokens').where('id', tokenRecord.id).del();
+    throw new AppError('Kullanıcı bulunamadı', 401);
+  }
+
+  // SQL Server bit tipini boolean'a çevir
+  const isActive = user.is_active === null || user.is_active === undefined 
+    ? true
+    : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
+
+  // Mobile: Sadece is_active kontrolü yap (suspended users cannot refresh)
+  // is_approved kontrolü YAPILMAZ (pending users can refresh tokens)
+  if (user.role !== 'admin' && !isActive) {
+    await db('refresh_tokens').where('user_id', user.id).del();
+    throw new AppError('Hesabınız pasif durumda. Lütfen yöneticinizle iletişime geçin.', 403);
+  }
+
+  return { user, tokenRecord };
+};
+
 const refresh = async (refreshToken) => {
-  const result = await authService.refreshToken(refreshToken);
-  ensureDoctorRole(result.user);
+  const db = require('../../config/dbConfig').db;
+  
+  // Mobile-specific refresh token validation (allows pending users)
+  const { user, tokenRecord } = await validateMobileRefreshToken(refreshToken);
+  
+  ensureDoctorRole(user);
 
   // SQL Server bit tipini boolean'a çevir - users tablosundan gelen değerleri kullan
   // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
-  const isActive = result.user.is_active === null || result.user.is_active === undefined 
+  const isActive = user.is_active === null || user.is_active === undefined 
     ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
-    : (result.user.is_active === 1 || result.user.is_active === true || result.user.is_active === '1' || result.user.is_active === 'true');
+    : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
   
-  const isApproved = result.user.is_approved === null || result.user.is_approved === undefined
+  const isApproved = user.is_approved === null || user.is_approved === undefined
     ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
-    : (result.user.is_approved === 1 || result.user.is_approved === true || result.user.is_approved === '1' || result.user.is_approved === 'true');
+    : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
+
+  // Yeni access token oluştur
+  const newAccessToken = generateAccessToken({
+    userId: user.id,
+    role: user.role,
+    isApproved: isApproved,
+    isActive: isActive
+  });
+
+  // Refresh token rotation - sadece gerektiğinde yeni token oluştur
+  // Token'ın yarısı geçmişse yeni refresh token oluştur (güvenlik için)
+  const DAY_IN_MS = 24 * 60 * 60 * 1000;
+  const REFRESH_TOKEN_EXPIRY_DAYS = 7; // 7 gün (JWT_REFRESH_EXPIRES_IN ile uyumlu)
+  const REFRESH_TOKEN_EXPIRY_MS = REFRESH_TOKEN_EXPIRY_DAYS * DAY_IN_MS;
+  
+  let newRefreshToken = refreshToken; // Varsayılan olarak aynı token'ı kullan
+  
+  const tokenAge = Date.now() - new Date(tokenRecord.created_at).getTime();
+  const tokenMaxAge = REFRESH_TOKEN_EXPIRY_MS;
+  
+  if (tokenAge > tokenMaxAge / 2) {
+    // Token'ın yarısı geçmişse yeni refresh token oluştur (token rotation)
+    newRefreshToken = generateRefreshToken({ userId: user.id });
+    
+    const newRefreshTokenHash = jwtUtils.hashRefreshToken(newRefreshToken);
+    const expiryTime = REFRESH_TOKEN_EXPIRY_MS;
+    
+    // Transaction ile eski token'ı sil ve yeni token'ı kaydet
+    await db.transaction(async (trx) => {
+      await trx('refresh_tokens').where('id', tokenRecord.id).del();
+      
+      await trx('refresh_tokens').insert({
+        user_id: user.id,
+        token_hash: newRefreshTokenHash,
+        expires_at: new Date(Date.now() + expiryTime),
+        user_agent: tokenRecord.user_agent || 'mobile-app',
+        ip: tokenRecord.ip || null,
+        created_at: new Date()
+      });
+    });
+  }
 
   return {
-    accessToken: result.accessToken,
-    refreshToken: result.refreshToken,
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
     user: {
-      id: result.user.id,
-      email: result.user.email,
-      role: result.user.role,
+      id: user.id,
+      email: user.email,
+      role: user.role,
       is_approved: isApproved, // Boolean'a çevrilmiş değer
       is_active: isActive // Boolean'a çevrilmiş değer
     }
