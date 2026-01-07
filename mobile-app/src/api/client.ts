@@ -335,10 +335,15 @@ const attachInterceptors = (instance: AxiosInstance) => {
         // CRITICAL: Eğer hata mesajı "pasif" veya "disabled" içeriyorsa,
         // kullanıcının hesabı pasif yapılmış demektir. Store'u güncelle.
         // RootNavigator otomatik olarak AccountDisabled ekranına yönlendirecek.
-        const isAccountDisabled = 
-          errorMessage.toLowerCase().includes('pasif') ||
-          errorMessage.toLowerCase().includes('disabled') ||
-          errorMessage.toLowerCase().includes('pasifleştirilmiş');
+        // Safe implementation to prevent crash if errorMessage is undefined or not a string
+        let isAccountDisabled = false;
+        if (errorMessage && typeof errorMessage === 'string') {
+          const lowerMsg = errorMessage.toLowerCase();
+          isAccountDisabled = 
+            lowerMsg.includes('pasif') || 
+            lowerMsg.includes('disabled') || 
+            lowerMsg.includes('pasifleştirilmiş');
+        }
         
         if (isAccountDisabled) {
           const currentUser = useAuthStore.getState().user;

@@ -33,8 +33,14 @@
 const authService = require('../authService');
 const doctorService = require('../doctorService');
 const { AppError } = require('../../utils/errorHandler');
-const jwtUtils = require('../../utils/jwtUtils');
-const { generateAccessToken, generateRefreshToken, createRefreshTokenRecord, revokeRefreshTokenByValue } = jwtUtils;
+const { 
+  generateAccessToken, 
+  generateRefreshToken, 
+  createRefreshTokenRecord, 
+  revokeRefreshTokenByValue,
+  verifyRefreshTokenRecord,
+  hashRefreshToken
+} = require('../../utils/jwtUtils');
 const profileTransformer = require('../../mobile/transformers/profileTransformer');
 
 const ensureDoctorRole = (user) => {
@@ -195,7 +201,7 @@ const validateMobileRefreshToken = async (refreshToken) => {
   const db = require('../../config/dbConfig').db;
   
   // Token kaydını doğrula
-  const tokenRecord = await jwtUtils.verifyRefreshTokenRecord(refreshToken);
+  const tokenRecord = await verifyRefreshTokenRecord(refreshToken);
   if (!tokenRecord) {
     throw new AppError('Geçersiz refresh token', 401);
   }
@@ -265,7 +271,7 @@ const refresh = async (refreshToken) => {
     // Token'ın yarısı geçmişse yeni refresh token oluştur (token rotation)
     newRefreshToken = generateRefreshToken({ userId: user.id });
     
-    const newRefreshTokenHash = jwtUtils.hashRefreshToken(newRefreshToken);
+    const newRefreshTokenHash = hashRefreshToken(newRefreshToken);
     const expiryTime = REFRESH_TOKEN_EXPIRY_MS;
     
     // Transaction ile eski token'ı sil ve yeni token'ı kaydet
