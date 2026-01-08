@@ -96,10 +96,11 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
     if (searchTerm) {
       // Search optimizasyonu: LIKE '%term%' yerine prefix search (LIKE 'term%') kullanılıyor
       // Bu sayede index kullanımı mümkün olur ve performans artar
-      // Kullanıcı deneyimini korumak için her iki alanda da arama yapılıyor
+      // Requirements 7.1, 7.2, 7.3, 7.5: Search in title, hospital name, AND description
       baseQuery.andWhere(function() {
         this.where('j.title', 'like', `${searchTerm}%`)
-          .orWhere('hp.institution_name', 'like', `${searchTerm}%`);
+          .orWhere('hp.institution_name', 'like', `${searchTerm}%`)
+          .orWhere('j.description', 'like', `${searchTerm}%`);  // Add description search
       });
     }
   }

@@ -20,8 +20,8 @@ import { useToast } from '@/providers/ToastProvider';
 // Password strength calculator
 const calculatePasswordStrength = (password: string): number => {
   let strength = 0;
-  if (password.length >= 6) strength += 25;
   if (password.length >= 8) strength += 25;
+  if (password.length >= 12) strength += 25;
   if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
   if (/\d/.test(password)) strength += 15;
   if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 10;
@@ -90,9 +90,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
   };
 
   const isFormValid =
-    currentPassword.length >= 6 &&
-    newPassword.length >= 6 &&
-    confirmPassword.length >= 6 &&
+    currentPassword.length >= 1 &&
+    newPassword.length >= 8 &&
+    confirmPassword.length >= 8 &&
     newPassword === confirmPassword;
 
   return (
@@ -130,7 +130,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
           </View>
           <View style={styles.infoList}>
             <Typography variant="caption" style={styles.infoItem}>
-              • En az 6 karakter uzunluğunda olmalı
+              • En az 8 karakter uzunluğunda olmalı
             </Typography>
             <Typography variant="caption" style={styles.infoItem}>
               • Büyük ve küçük harf içermeli

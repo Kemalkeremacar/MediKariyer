@@ -3,7 +3,7 @@ import { applicationService } from '@/api/services/application.service';
 import { queryKeys } from '@/api/queryKeys';
 
 export interface ApplicationFilters {
-  status?: string;
+  status_id?: number;
   keyword?: string;
   limit?: number;
 }
@@ -17,7 +17,7 @@ export const useApplications = (filters: ApplicationFilters = {}, enabled: boole
       return applicationService.listApplications({
         page,
         limit: filters.limit || 10,
-        status: filters.status || undefined,
+        status_id: filters.status_id || undefined,
         keyword: filters.keyword || undefined,
       });
     },
@@ -32,10 +32,10 @@ export const useApplications = (filters: ApplicationFilters = {}, enabled: boole
       return undefined;
     },
     enabled,
-    staleTime: 0, // Her zaman fresh (dinamik proje - başvuru durumları değişebilir)
-    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
-    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
+    staleTime: 0,
+    gcTime: 1000 * 30,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };

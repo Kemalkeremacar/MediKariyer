@@ -55,9 +55,13 @@ export const AccountDisabledScreen = () => {
       // Auth store'u temizle
       markUnauthenticated();
       
-      console.log('✅ Manual cleanup completed');
+      if (__DEV__) {
+        console.log('✅ Manual cleanup completed');
+      }
     } catch (error) {
-      console.error('❌ Manual cleanup error:', error);
+      if (__DEV__) {
+        console.error('❌ Manual cleanup error:', error);
+      }
       // Hata olsa bile store'u temizle
       markUnauthenticated();
     }

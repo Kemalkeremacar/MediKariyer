@@ -17,8 +17,10 @@ import { useResetPassword } from '../hooks/useResetPassword';
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(6, 'Şifre en az 6 karakter olmalıdır'),
-    confirmPassword: z.string().min(6, 'Şifre tekrarı gerekli'),
+    password: z.string()
+      .min(8, 'Şifre en az 8 karakter olmalıdır')
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Şifre en az bir küçük harf, bir büyük harf ve bir rakam içermelidir'),
+    confirmPassword: z.string().min(8, 'Şifre tekrarı gerekli'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Şifreler eşleşmiyor',
@@ -86,7 +88,7 @@ export const ResetPasswordScreen = () => {
           <Typography variant="h2" style={styles.errorTitle}>
             Geçersiz Bağlantı
           </Typography>
-          <Typography variant="body" style={styles.errorText}>
+          <Typography variant="body" style={styles.errorMessage}>
             Şifre sıfırlama bağlantısı geçersiz veya eksik. Lütfen e-posta kutunuzdaki en güncel bağlantıyı kullanın.
           </Typography>
           <Button
@@ -331,7 +333,7 @@ const createStyles = (theme: any) =>
       marginTop: theme.spacing.xl,
       marginBottom: theme.spacing.md,
     },
-    errorText: {
+    errorMessage: {
       color: theme.colors.text.secondary,
       textAlign: 'center',
       marginBottom: theme.spacing['2xl'],

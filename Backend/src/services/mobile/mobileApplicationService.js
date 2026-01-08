@@ -40,19 +40,10 @@ const doctorService = require('../doctorService');
 const { getDoctorProfile } = require('./mobileDoctorService');
 const { normalizeCountResult, buildPaginationSQL, normalizeRawResult } = require('../../utils/queryHelper');
 
-const listApplications = async (userId, { page = 1, limit = 20, status, keyword } = {}) => {
+const listApplications = async (userId, { page = 1, limit = 20, status_id, keyword } = {}) => {
   const profile = await getDoctorProfile(userId);
   const currentPage = Math.max(Number(page) || 1, 1);
   const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
-
-  // Status mapping - Veritabanında Türkçe değerler var
-  const statusMapping = {
-    'pending': 'Başvuruldu',
-    'reviewing': 'İnceleniyor',
-    'approved': 'Kabul Edildi',
-    'rejected': 'Reddedildi',
-    'withdrawn': 'Geri Çekildi'
-  };
 
   const baseQuery = db('applications as a')
     .leftJoin('jobs as j', 'j.id', 'a.job_id')
@@ -64,13 +55,12 @@ const listApplications = async (userId, { page = 1, limit = 20, status, keyword 
     .where('a.doctor_profile_id', parseInt(profile.id))
     .whereNull('a.deleted_at');
 
-  // Status filter
-  if (status) {
-    const turkishStatus = statusMapping[status.toLowerCase()] || status;
-    baseQuery.andWhere('st.name', turkishStatus);
+  // Status filter using status_id (Requirements 1.1, 1.2, 1.5)
+  if (status_id) {
+    baseQuery.andWhere('a.status_id', parseInt(status_id));
   }
 
-  // Keyword search filter
+  // Keyword search filter (Requirements 6.1, 6.2, 6.3, 6.5)
   // Search optimizasyonu: LIKE '%term%' yerine prefix search (LIKE 'term%') kullanılıyor
   // Bu sayede index kullanımı mümkün olur ve performans artar (Job modülü ile tutarlı)
   if (keyword) {
@@ -79,7 +69,8 @@ const listApplications = async (userId, { page = 1, limit = 20, status, keyword 
       baseQuery.andWhere(function() {
         this.where('j.title', 'like', `${searchTerm}%`)
           .orWhere('hp.institution_name', 'like', `${searchTerm}%`)
-          .orWhere('c.name', 'like', `${searchTerm}%`);
+          .orWhere('c.name', 'like', `${searchTerm}%`)
+          .orWhere('a.notes', 'like', `${searchTerm}%`);  // Add notes search (Requirement 6.1)
       });
     }
   }
@@ -89,14 +80,14 @@ const listApplications = async (userId, { page = 1, limit = 20, status, keyword 
     .select(
       'a.id',
       'a.job_id',
-      'a.status_id',
+      'a.status_id',        // Include status_id (Requirement 1.3)
       'a.applied_at',
       'a.cover_letter',
       'a.notes',
       'j.title as job_title',
       'j.deleted_at as job_deleted_at', // İş ilanı silinme tarihi (web ile uyumlu)
       'hp.institution_name as hospital_name',
-      'st.name as status_label',
+      'st.name as status_label',  // Include status_label (Requirement 1.3)
       'js.name as job_status', // İş ilanı durumu (web ile uyumlu)
       'c.name as city_name', // Şehir bilgisi (web ile uyumlu)
       'hospital_users.is_active as hospital_is_active' // Hastane aktiflik durumu (web ile uyumlu)
@@ -394,7 +385,7 @@ const createApplication = async (userId, { job_id: jobId, cover_letter: coverLet
   return applicationTransformer.toDetail(application);
 };
 
-const withdrawApplication = async (userId, applicationId) => {
+const withdrawApplication = async (userId, applicationId, reason = null) => {
   const profile = await getDoctorProfile(userId);
   
   // Mobile için transaction wrapper: Web'deki gibi doctorService.withdrawApplication mantığını kullan
@@ -411,22 +402,35 @@ const withdrawApplication = async (userId, applicationId) => {
       throw new AppError('Başvuru bulunamadı', 404);
     }
 
-    // Zaten geri çekilmiş mi kontrol et (status_id = 5) - Web'deki mantık
+    // Zaten geri çekilmiş mi kontrol et (status_id = 5) - Web'deki mantık (Requirement 17.2)
     if (application.status_id === 5) {
       throw new AppError('Başvuru zaten geri çekilmiş', 400);
     }
 
-    // Sadece "Başvuruldu" (status_id = 1) durumundaki başvurular geri çekilebilir - Web'deki mantık
+    // Sadece "Başvuruldu" (status_id = 1) durumundaki başvurular geri çekilebilir - Web'deki mantık (Requirements 17.1, 17.4)
     if (application.status_id !== 1) {
       throw new AppError('Sadece "Başvuruldu" durumundaki başvurular geri çekilebilir', 400);
     }
+
+    // Prepare notes update (Requirements 3.2, 3.3, 3.4, 3.5)
+    let updatedNotes = application.notes || '';
+    
+    if (reason && reason.trim()) {
+      // Format reason and append (Requirement 3.4)
+      const reasonText = `Geri çekilme nedeni: ${reason.trim()}`;
+      // Preserve existing notes (Requirement 3.3)
+      updatedNotes = updatedNotes 
+        ? `${updatedNotes}\n\n${reasonText}` 
+        : reasonText;
+    }
+    // If no reason provided, notes remain unchanged (Requirement 3.5)
 
     // Başvuruyu geri çek (status_id = 5: Geri Çekildi) - Web'deki mantık
     await trx('applications')
       .where('id', applicationId)
       .update({
         status_id: 5, // Geri Çekildi
-        notes: application.notes || null
+        notes: updatedNotes || null
       });
   });
 
@@ -464,7 +468,7 @@ const withdrawApplication = async (userId, applicationId) => {
         job_title: applicationWithJob.job_title,
         doctor_name: `${doctorProfile.first_name} ${doctorProfile.last_name}`,
         doctor_profile_id: applicationWithJob.doctor_profile_id,
-        reason: null // Mobil'de reason parametresi yok
+        reason: reason || null  // Include reason in notification (Requirement 3.2)
       });
     }
   } catch (notificationError) {

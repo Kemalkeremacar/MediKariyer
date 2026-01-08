@@ -1,9 +1,23 @@
 /**
  * @file CustomAlert.tsx
- * @description Özelleştirilmiş, güzel alert component'i
+ * @description Stateless alert component - purely presentational
+ * 
+ * All callback logic is handled by AlertProvider.
+ * This component only handles:
+ * - Animation
+ * - Rendering UI based on props
+ * - Forwarding button presses to provider callbacks
+ * 
+ * Requirements:
+ * - 2.1: onConfirm callback execution (delegated to provider)
+ * - 2.2: onCancel callback execution (delegated to provider)
+ * - 2.3: onClose callback for cleanup (handled by provider)
+ * - 9.4: Validate callbacks are functions before calling
+ * - 9.6: Provide descriptive prop validation errors
+ * - 10.5: Wrap callback execution in try-catch, log errors in dev only
  */
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -14,96 +28,249 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
-
 import { Button } from './Button';
+import type { AlertType } from '@/types/alert';
 
-export type AlertType = 'success' | 'error' | 'info' | 'confirm' | 'confirmDestructive';
+// Re-export AlertType for backward compatibility
+export type { AlertType } from '@/types/alert';
 
 interface CustomAlertProps {
+  /** Whether the alert is visible */
   visible: boolean;
+  /** Type of alert determining icon and color scheme */
   type: AlertType;
+  /** Title displayed at the top of the alert */
   title: string;
+  /** Message body of the alert */
   message: string;
-  onClose: () => void;
-  onConfirm?: () => void;
-  onCancel?: () => void;
+  /** Callback when confirm button is pressed - handled by provider */
+  onConfirm: () => void;
+  /** Callback when cancel button is pressed - handled by provider */
+  onCancel: () => void;
+  /** Text for the confirm button */
   confirmText?: string;
+  /** Text for the cancel button */
   cancelText?: string;
 }
+
+const ICON_CONFIG: Record<AlertType, { name: keyof typeof Ionicons.glyphMap; color: string }> = {
+  success: { name: 'checkmark-circle', color: '#10B981' },
+  error: { name: 'close-circle', color: '#EF4444' },
+  info: { name: 'information-circle', color: '#3B82F6' },
+  confirm: { name: 'help-circle', color: '#F59E0B' },
+  confirmDestructive: { name: 'warning', color: '#EF4444' },
+};
+
+/** Valid alert types for prop validation */
+const VALID_ALERT_TYPES: AlertType[] = ['success', 'error', 'info', 'confirm', 'confirmDestructive'];
+
+/**
+ * Development-only prop validation for CustomAlert
+ * Logs descriptive errors for invalid props (Requirement 9.6)
+ * 
+ * @param props - The component props to validate
+ * @returns true if all props are valid, false otherwise
+ */
+const validateProps = (props: CustomAlertProps): boolean => {
+  if (!__DEV__) return true;
+  
+  let isValid = true;
+  
+  // Validate visible prop
+  if (typeof props.visible !== 'boolean') {
+    console.error(
+      `[CustomAlert] Invalid prop 'visible': expected boolean, received ${typeof props.visible}. ` +
+      `The alert visibility state must be a boolean value.`
+    );
+    isValid = false;
+  }
+  
+  // Validate type prop
+  if (!VALID_ALERT_TYPES.includes(props.type)) {
+    console.error(
+      `[CustomAlert] Invalid prop 'type': received '${props.type}'. ` +
+      `Valid types are: ${VALID_ALERT_TYPES.join(', ')}.`
+    );
+    isValid = false;
+  }
+  
+  // Validate title prop
+  if (typeof props.title !== 'string') {
+    console.error(
+      `[CustomAlert] Invalid prop 'title': expected string, received ${typeof props.title}. ` +
+      `The alert title must be a string.`
+    );
+    isValid = false;
+  } else if (props.title.trim() === '') {
+    console.warn(
+      `[CustomAlert] Warning: 'title' prop is an empty string. ` +
+      `Consider providing a meaningful title for better user experience.`
+    );
+  }
+  
+  // Validate message prop
+  if (typeof props.message !== 'string') {
+    console.error(
+      `[CustomAlert] Invalid prop 'message': expected string, received ${typeof props.message}. ` +
+      `The alert message must be a string.`
+    );
+    isValid = false;
+  }
+  
+  // Validate onConfirm prop
+  if (typeof props.onConfirm !== 'function') {
+    console.error(
+      `[CustomAlert] Invalid prop 'onConfirm': expected function, received ${typeof props.onConfirm}. ` +
+      `The onConfirm callback must be a function provided by AlertProvider.`
+    );
+    isValid = false;
+  }
+  
+  // Validate onCancel prop
+  if (typeof props.onCancel !== 'function') {
+    console.error(
+      `[CustomAlert] Invalid prop 'onCancel': expected function, received ${typeof props.onCancel}. ` +
+      `The onCancel callback must be a function provided by AlertProvider.`
+    );
+    isValid = false;
+  }
+  
+  // Validate optional confirmText prop
+  if (props.confirmText !== undefined && typeof props.confirmText !== 'string') {
+    console.error(
+      `[CustomAlert] Invalid prop 'confirmText': expected string or undefined, received ${typeof props.confirmText}. ` +
+      `The confirm button text must be a string.`
+    );
+    isValid = false;
+  }
+  
+  // Validate optional cancelText prop
+  if (props.cancelText !== undefined && typeof props.cancelText !== 'string') {
+    console.error(
+      `[CustomAlert] Invalid prop 'cancelText': expected string or undefined, received ${typeof props.cancelText}. ` +
+      `The cancel button text must be a string.`
+    );
+    isValid = false;
+  }
+  
+  return isValid;
+};
+
+/**
+ * Safely execute a callback with validation and error handling
+ * - Validates callback is a function before calling (Requirement 9.4)
+ * - Wraps execution in try-catch (Requirement 10.5)
+ * - Logs errors in development mode only (Requirement 10.5)
+ * 
+ * @param callback - The callback function to execute
+ * @param callbackName - Name of the callback for error logging
+ */
+const safeExecuteCallback = (
+  callback: (() => void) | undefined,
+  callbackName: string
+): void => {
+  // Validate callback is a function before calling (Requirement 9.4)
+  if (typeof callback !== 'function') {
+    if (__DEV__) {
+      console.warn(`[CustomAlert] ${callbackName} is not a function, skipping execution`);
+    }
+    return;
+  }
+
+  // Wrap callback execution in try-catch (Requirement 10.5)
+  try {
+    callback();
+  } catch (error) {
+    // Log errors in development mode only (Requirement 10.5)
+    if (__DEV__) {
+      console.error(`[CustomAlert] Error executing ${callbackName}:`, error);
+    }
+    // Continue without crashing - the alert will still dismiss
+  }
+};
 
 export const CustomAlert: React.FC<CustomAlertProps> = ({
   visible,
   type,
   title,
   message,
-  onClose,
   onConfirm,
   onCancel,
   confirmText = 'Tamam',
   cancelText = 'İptal',
 }) => {
-  const scaleAnim = React.useRef(new Animated.Value(0)).current;
+  // Validate props in development mode (Requirement 9.6)
+  useEffect(() => {
+    validateProps({ visible, type, title, message, onConfirm, onCancel, confirmText, cancelText });
+  }, [visible, type, title, message, onConfirm, onCancel, confirmText, cancelText]);
 
-  React.useEffect(() => {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+  const isMountedRef = useRef(true);
+
+  // Track mount state for animation cleanup
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Cancel any running animation on unmount to prevent memory leaks
+      if (animationRef.current) {
+        animationRef.current.stop();
+        animationRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (visible) {
-      Animated.spring(scaleAnim, {
+      // Store animation reference for cleanup
+      animationRef.current = Animated.spring(scaleAnim, {
         toValue: 1,
         useNativeDriver: true,
         tension: 50,
         friction: 7,
-      }).start();
-    } else {
-      scaleAnim.setValue(0);
-    }
-  }, [visible]);
-
-  const getIconConfig = () => {
-    switch (type) {
-      case 'success':
-        return { name: 'checkmark-circle' as const, color: '#10B981' };
-      case 'error':
-        return { name: 'close-circle' as const, color: '#EF4444' };
-      case 'info':
-        return { name: 'information-circle' as const, color: '#3B82F6' };
-      case 'confirm':
-      case 'confirmDestructive':
-        return { name: 'help-circle' as const, color: '#F59E0B' };
-      default:
-        return { name: 'information-circle' as const, color: '#3B82F6' };
-    }
-  };
-
-  const iconConfig = getIconConfig();
-  const isConfirm = type === 'confirm' || type === 'confirmDestructive';
-
-  const handleConfirm = () => {
-    console.log('🔴 CustomAlert handleConfirm called', {
-      hasOnConfirm: !!onConfirm,
-      type,
-      confirmText,
-    });
-    
-    // Close alert immediately to prevent UI blocking
-    onClose();
-    
-    // Call onConfirm after modal closes (prevents blocking)
-    if (onConfirm) {
-      console.log('🔴 Scheduling onConfirm callback');
-      // Use requestAnimationFrame to ensure modal is fully closed
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          try {
-            console.log('🔴 Executing onConfirm callback');
-            onConfirm();
-            console.log('🔴 onConfirm callback executed successfully');
-          } catch (error) {
-            console.error('🔴 Error in onConfirm callback:', error);
-          }
-        }, 100);
+      });
+      animationRef.current.start(() => {
+        // Clear reference after animation completes
+        animationRef.current = null;
       });
     } else {
-      console.warn('🔴 onConfirm callback is undefined!');
+      // Cancel any running animation before resetting
+      if (animationRef.current) {
+        animationRef.current.stop();
+        animationRef.current = null;
+      }
+      // Reset animation value when not visible
+      scaleAnim.setValue(0);
     }
+  }, [visible, scaleAnim]);
+
+  const iconConfig = ICON_CONFIG[type];
+  const isConfirmType = type === 'confirm' || type === 'confirmDestructive';
+  const isDestructive = type === 'confirmDestructive';
+
+  /**
+   * Handle confirm button press
+   * Validates and safely executes the onConfirm callback
+   */
+  const handleConfirmPress = (): void => {
+    safeExecuteCallback(onConfirm, 'onConfirm');
+  };
+
+  /**
+   * Handle cancel button press
+   * Validates and safely executes the onCancel callback
+   */
+  const handleCancelPress = (): void => {
+    safeExecuteCallback(onCancel, 'onCancel');
+  };
+
+  /**
+   * Handle dismiss action for non-confirm alert types
+   * For single-button alerts, dismiss triggers the confirm callback
+   */
+  const handleDismiss = (): void => {
+    handleConfirmPress();
   };
 
   return (
@@ -111,91 +278,59 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
-      {...(Platform.OS === 'ios' ? { presentationStyle: 'overFullScreen' as const } : { statusBarTranslucent: true })}
+      onRequestClose={isConfirmType ? handleCancelPress : handleDismiss}
+      statusBarTranslucent
+      {...(Platform.OS === 'ios' && { presentationStyle: 'overFullScreen' })}
     >
-      <View style={styles.overlay} pointerEvents="box-none">
-        <View style={styles.backdrop} pointerEvents="auto">
-          <TouchableOpacity 
-            style={StyleSheet.absoluteFill}
-            activeOpacity={1} 
-            onPress={onClose}
-          />
-        </View>
-        <Animated.View
-          style={[
-            styles.alertContainer,
-            { transform: [{ scale: scaleAnim }] },
-          ]}
-          pointerEvents="box-none"
-        >
-          <View pointerEvents="auto">
-            {/* Icon */}
-            <View style={[styles.iconContainer, { backgroundColor: `${iconConfig.color}15` }]}>
-              <Ionicons name={iconConfig.name} size={48} color={iconConfig.color} />
-            </View>
+      <View style={styles.overlay}>
+        <Animated.View style={[styles.alertContainer, { transform: [{ scale: scaleAnim }] }]}>
+          {/* Icon */}
+          <View style={[styles.iconContainer, { backgroundColor: `${iconConfig.color}15` }]}>
+            <Ionicons name={iconConfig.name} size={48} color={iconConfig.color} />
+          </View>
 
-            {/* Title */}
-            <Typography variant="h3" style={styles.title}>
-              {title}
-            </Typography>
+          {/* Title */}
+          <Typography variant="h3" style={styles.title}>
+            {title}
+          </Typography>
 
-            {/* Message */}
-            <Typography variant="body" style={styles.message}>
-              {message}
-            </Typography>
+          {/* Message */}
+          <Typography variant="body" style={styles.message}>
+            {message}
+          </Typography>
 
-            {/* Buttons */}
-            <View style={styles.buttonContainer}>
-            {isConfirm ? (
+          {/* Buttons */}
+          <View style={styles.buttonContainer}>
+            {isConfirmType ? (
               <>
                 <Button
                   variant="outline"
-                  onPress={() => {
-                    if (onCancel) {
-                      onCancel();
-                    }
-                    onClose();
-                  }}
+                  label={cancelText}
+                  onPress={handleCancelPress}
                   style={styles.button}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    isDestructive ? styles.destructiveButton : styles.confirmButton,
+                  ]}
+                  onPress={handleConfirmPress}
+                  activeOpacity={0.8}
                 >
-                  <Typography variant="body" style={styles.cancelButtonText}>
-                    {cancelText}
+                  <Typography variant="body" style={styles.confirmButtonText}>
+                    {confirmText}
                   </Typography>
-                </Button>
-                {type === 'confirmDestructive' ? (
-                  <TouchableOpacity
-                    style={[styles.button, styles.destructiveButton]}
-                    onPress={() => {
-                      console.log('🔴 Destructive button pressed');
-                      handleConfirm();
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <Typography variant="body" style={styles.destructiveButtonText}>
-                      {confirmText}
-                    </Typography>
-                  </TouchableOpacity>
-                ) : (
-                  <Button
-                    variant="gradient"
-                    label={confirmText}
-                    onPress={handleConfirm}
-                    gradientColors={['#4A90E2', '#2E5C8A']}
-                    style={styles.button}
-                  />
-                )}
+                </TouchableOpacity>
               </>
             ) : (
               <Button
                 variant="gradient"
                 label={confirmText}
-                onPress={onClose}
+                onPress={handleDismiss}
                 gradientColors={['#4A90E2', '#2E5C8A']}
                 fullWidth
               />
             )}
-            </View>
           </View>
         </Animated.View>
       </View>
@@ -209,13 +344,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
   alertContainer: {
     backgroundColor: '#FFFFFF',
@@ -260,9 +388,12 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
   },
-  cancelButtonText: {
-    color: '#6B7280',
-    fontWeight: '600',
+  confirmButton: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   destructiveButton: {
     backgroundColor: '#EF4444',
@@ -271,7 +402,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  destructiveButtonText: {
+  confirmButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 15,

@@ -56,11 +56,24 @@ const mobileErrorBoundary = (err, req, res, next) => {
     return globalErrorHandler(err, req, res, next);
   }
 
-  return res.status(err?.statusCode || 500).json({
+  // Determine status code (Requirements 15.3, 15.4, 15.5)
+  const statusCode = err?.statusCode || 500;
+
+  // Build error response (Requirement 15.1, 15.2)
+  const response = {
     success: false,
-    message: err?.message || 'Sunucu hatası',
+    message: err?.message || 'Bir hata oluştu',
+    error: err?.details || err?.error || { code: err?.code || 'UNKNOWN_ERROR' },
     timestamp: new Date().toISOString()
-  });
+  };
+
+  // Don't expose sensitive details in production for 500 errors (Requirement 15.5)
+  if (statusCode === 500 && process.env.NODE_ENV === 'production') {
+    response.message = 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.';
+    response.error = { code: 'INTERNAL_ERROR' };
+  }
+
+  return res.status(statusCode).json(response);
 };
 
 // ============================================================================

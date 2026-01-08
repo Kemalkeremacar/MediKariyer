@@ -1,66 +1,45 @@
-import React, { useState } from 'react';
-import { showAlert } from '@/utils/alert';
+import React from 'react';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { ExperienceCard } from '@/components/composite/ExperienceCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
-import { ExperienceFormModal } from '../components/ExperienceFormModal';
 import { colors, spacing } from '@/theme';
 import { useExperiences, useExperience } from '../hooks/useExperiences';
 import { formatYear } from '@/utils/date';
-import type { DoctorExperience, CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
+import type { DoctorExperience } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type ExperienceScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Experience'>;
 
 export const ExperienceScreen = () => {
-  const navigation = useNavigation();
-  const [selectedExperience, setSelectedExperience] = useState<DoctorExperience | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation<ExperienceScreenNavigationProp>();
+  const alert = useAlertHelpers();
   
   const { data: experiences = [], refetch, isRefetching } = useExperiences();
   const experienceMutations = useExperience();
 
   const handleAddExperience = () => {
-    setSelectedExperience(null);
-    setModalVisible(true);
+    navigation.navigate('ExperienceFormModal', { experience: undefined });
   };
 
   const handleEditExperience = (experience: DoctorExperience) => {
-    setSelectedExperience(experience);
-    setModalVisible(true);
+    navigation.navigate('ExperienceFormModal', { experience });
   };
 
   const handleDeleteExperience = (id: number) => {
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Deneyim Sil',
       'Bu deneyim kaydını silmek istediğinizden emin misiniz?',
       () => experienceMutations.delete.mutate(id)
     );
   };
-
-  const handleSubmitExperience = (data: CreateExperiencePayload | UpdateExperiencePayload) => {
-    if (selectedExperience) {
-      experienceMutations.update.mutate(
-        { id: selectedExperience.id, data },
-        {
-          onSuccess: () => {
-            setModalVisible(false);
-            setSelectedExperience(null);
-          },
-        }
-      );
-    } else {
-      experienceMutations.create.mutate(data as CreateExperiencePayload, {
-        onSuccess: () => {
-          setModalVisible(false);
-        },
-      });
-    }
-  };
-
 
   return (
     <Screen scrollable={false}>
@@ -116,18 +95,6 @@ export const ExperienceScreen = () => {
         icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddExperience}
         position="bottom-right"
-      />
-
-      {/* Experience Form Modal */}
-      <ExperienceFormModal
-        visible={modalVisible}
-        onClose={() => {
-          setModalVisible(false);
-          setSelectedExperience(null);
-        }}
-        onSubmit={handleSubmitExperience}
-        experience={selectedExperience}
-        isLoading={experienceMutations.create.isPending || experienceMutations.update.isPending}
       />
     </Screen>
   );

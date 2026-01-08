@@ -31,6 +31,7 @@ import { useAuthStore } from '@/store/authStore';
 import { navigationRef } from './navigationRef';
 import { colors, spacing, typography } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
+import { devLog } from '@/utils/devLogger';
 import type { RootStackParamList } from './types';
 
 // Enable screens - safe to call with both old and new architecture
@@ -38,7 +39,7 @@ try {
   enableScreens();
 } catch (error) {
   if (__DEV__) {
-    console.warn('Failed to enable screens:', error);
+    devLog.warn('Failed to enable screens:', error);
   }
 }
 
@@ -54,55 +55,55 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const isUserActive = (user: any): boolean => {
   // Kullanıcı yoksa Login'e gider, engelleme yapma!
   if (!user) {
-    console.log('🛑 DEBUG isUserActive: user is null/undefined, returning TRUE (allow login)');
+    devLog.log('🛑 DEBUG isUserActive: user is null/undefined, returning TRUE (allow login)');
     return true;
   }
   
   // ÇOK DETAYLI DEBUG LOG'LAR
-  console.log('🛑 DEBUG isUserActive - FULL USER OBJECT:', JSON.stringify(user, null, 2));
-  console.log('🛑 DEBUG isUserActive - is_active value:', user.is_active);
-  console.log('🛑 DEBUG isUserActive - is_active type:', typeof user.is_active);
-  console.log('🛑 DEBUG isUserActive - is_active === 0:', user.is_active === 0);
-  console.log('🛑 DEBUG isUserActive - is_active === false:', user.is_active === false);
-  console.log('🛑 DEBUG isUserActive - is_active === "0":', user.is_active === '0');
-  console.log('🛑 DEBUG isUserActive - is_active === null:', user.is_active === null);
-  console.log('🛑 DEBUG isUserActive - is_active === undefined:', user.is_active === undefined);
+  devLog.log('🛑 DEBUG isUserActive - FULL USER OBJECT:', JSON.stringify(user, null, 2));
+  devLog.log('🛑 DEBUG isUserActive - is_active value:', user.is_active);
+  devLog.log('🛑 DEBUG isUserActive - is_active type:', typeof user.is_active);
+  devLog.log('🛑 DEBUG isUserActive - is_active === 0:', user.is_active === 0);
+  devLog.log('🛑 DEBUG isUserActive - is_active === false:', user.is_active === false);
+  devLog.log('🛑 DEBUG isUserActive - is_active === "0":', user.is_active === '0');
+  devLog.log('🛑 DEBUG isUserActive - is_active === null:', user.is_active === null);
+  devLog.log('🛑 DEBUG isUserActive - is_active === undefined:', user.is_active === undefined);
   
   const active = user.is_active;
   
   // ACİL ÖNLEM: Eğer undefined veya null ise, kullanıcıyı engelleme!
   // Varsayılan olarak AKTİF kabul et (Login olabilsin, engel olmasın)
   if (active === undefined || active === null) {
-    console.log('🛑 DEBUG isUserActive - is_active is null/undefined, defaulting to TRUE (allow access)');
+    devLog.log('🛑 DEBUG isUserActive - is_active is null/undefined, defaulting to TRUE (allow access)');
     return true; 
   }
   
   // Toleranslı Kontrol - Aktif değerler
   if (active === true) {
-    console.log('🛑 DEBUG isUserActive - is_active is true, returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active is true, returning TRUE');
     return true;
   }
   if (active === 1) {
-    console.log('🛑 DEBUG isUserActive - is_active is 1, returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active is 1, returning TRUE');
     return true;
   }
   if (active === '1') {
-    console.log('🛑 DEBUG isUserActive - is_active is "1", returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active is "1", returning TRUE');
     return true;
   }
   if (active === 'true') {
-    console.log('🛑 DEBUG isUserActive - is_active is "true", returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active is "true", returning TRUE');
     return true;
   }
   
   // Sadece kesinlikle false veya 0 ise engelle
   if (active === false || active === 0 || active === '0') {
-    console.log('🛑 DEBUG isUserActive - is_active is false/0/"0", returning FALSE (block access)');
+    devLog.log('🛑 DEBUG isUserActive - is_active is false/0/"0", returning FALSE (block access)');
     return false;
   }
 
   // Diğer her durumda (beklenmeyen değerler) AKTİF kabul et
-  console.log('🛑 DEBUG isUserActive - unexpected value, defaulting to TRUE (allow access)');
+  devLog.log('🛑 DEBUG isUserActive - unexpected value, defaulting to TRUE (allow access)');
   return true;
 };
 
@@ -124,7 +125,7 @@ export const RootNavigator = () => {
 
   // Determine initial route based on auth state (memoized for performance)
   const initialRouteName = useMemo((): keyof RootStackParamList => {
-    console.log('🧭 RootNavigator - Calculating initialRouteName:', {
+    devLog.log('🧭 RootNavigator - Calculating initialRouteName:', {
       isHydrating,
       authStatus,
       hasUser: !!user,
@@ -135,13 +136,13 @@ export const RootNavigator = () => {
 
     // During hydration, show Auth (will be replaced by actual state after hydration)
     if (isHydrating) {
-      console.log('🧭 RootNavigator - Returning Auth (hydrating)');
+      devLog.log('🧭 RootNavigator - Returning Auth (hydrating)');
       return 'Auth';
     }
 
     // Not authenticated
     if (authStatus !== 'authenticated' || !user) {
-      console.log('🧭 RootNavigator - Returning Auth (not authenticated)');
+      devLog.log('🧭 RootNavigator - Returning Auth (not authenticated)');
       return 'Auth';
     }
 
@@ -150,7 +151,7 @@ export const RootNavigator = () => {
     const userIsApproved = isUserApproved(user);
     const userIsAdmin = user.role === 'admin';
 
-    console.log('🧭 RootNavigator - User checks:', {
+    devLog.log('🧭 RootNavigator - User checks:', {
       userIsActive,
       userIsApproved,
       userIsAdmin,
@@ -158,18 +159,18 @@ export const RootNavigator = () => {
 
     // Check inactive status first - most restrictive
     if (!userIsActive) {
-      console.log('🧭 RootNavigator - Returning AccountDisabled (inactive)');
+      devLog.log('🧭 RootNavigator - Returning AccountDisabled (inactive)');
       return 'AccountDisabled';
     }
 
     // Check approval status
     if (!userIsApproved && !userIsAdmin) {
-      console.log('🧭 RootNavigator - Returning Auth (not approved)');
+      devLog.log('🧭 RootNavigator - Returning Auth (not approved)');
       return 'Auth'; // Auth stack will show PendingApproval screen
     }
 
     // User is authenticated, active, and approved
-    console.log('🧭 RootNavigator - Returning App (authenticated, active, approved)');
+    devLog.log('🧭 RootNavigator - Returning App (authenticated, active, approved)');
     return 'App';
   }, [isHydrating, authStatus, user]);
 
@@ -193,7 +194,7 @@ export const RootNavigator = () => {
 
     // Skip if navigation is not ready
     if (!navigationRef.isReady()) {
-      console.log('🧭 RootNavigator - Navigation ref not ready, skipping reset');
+      devLog.log('🧭 RootNavigator - Navigation ref not ready, skipping reset');
       return;
     }
 
@@ -203,7 +204,7 @@ export const RootNavigator = () => {
 
     // Only reset if we're not already on the target route
     if (currentRouteName !== initialRouteName) {
-      console.log('🧭 RootNavigator - Route changed, resetting navigation:', {
+      devLog.log('🧭 RootNavigator - Route changed, resetting navigation:', {
         from: previousRouteRef.current,
         to: initialRouteName,
         current: currentRouteName,
@@ -214,9 +215,9 @@ export const RootNavigator = () => {
         routes: [{ name: initialRouteName }],
       });
 
-      console.log('🧭 RootNavigator - Navigation reset completed');
+      devLog.log('🧭 RootNavigator - Navigation reset completed');
     } else {
-      console.log('🧭 RootNavigator - Already on target route, skipping reset');
+      devLog.log('🧭 RootNavigator - Already on target route, skipping reset');
     }
 
     // Update previous route

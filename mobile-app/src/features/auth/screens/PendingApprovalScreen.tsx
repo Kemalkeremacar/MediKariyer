@@ -61,7 +61,9 @@ export const PendingApprovalScreen = () => {
       if (isApproved || isAdmin) {
         // User is approved - update store and RootNavigator will handle navigation automatically
         markAuthenticated(updatedUser);
-        console.log('✅ User is approved, RootNavigator will navigate to App');
+        if (__DEV__) {
+          console.log('✅ User is approved, RootNavigator will navigate to App');
+        }
         
         // Clear polling interval
         if (pollingIntervalRef.current) {
@@ -71,8 +73,22 @@ export const PendingApprovalScreen = () => {
       }
       
       setLastCheckTime(new Date());
-    } catch (error) {
-      console.error('Error checking approval status:', error);
+    } catch (error: any) {
+      // Check if this is an expected 403 error (user not yet approved)
+      const is403Error = error?.message?.includes('403') || 
+                         error?.message?.includes('yetkiniz yok') ||
+                         error?.message?.includes('admin onayını bekliyor') ||
+                         error?.message?.includes('onaylanmadı') ||
+                         error?.isSilent === true; // Check for silent error flag
+      
+      if (is403Error) {
+        // Expected error - user is still pending approval
+        // Silently continue polling without logging error or showing alerts
+        setLastCheckTime(new Date());
+      } else {
+        // Unexpected error - log it (but don't show alert to user)
+        console.error('Unexpected error checking approval status:', error);
+      }
       // Don't clear interval on error, keep polling
     } finally {
       setIsChecking(false);

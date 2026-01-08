@@ -20,6 +20,7 @@
 import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
 import { ApiResponse } from '@/types/api';
+import { devLog } from '@/utils/devLogger';
 import type {
   AuthResponsePayload,
   LoginPayload,
@@ -45,7 +46,7 @@ const normalizeAuthResponse = (payload: any): AuthResponsePayload => {
   const profile = payload?.profile ?? null;
 
   if (!accessToken || !refreshToken || !user) {
-    console.error('Auth response normalization failed:', {
+    devLog.error('Auth response normalization failed:', {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
       hasUser: !!user,
@@ -72,19 +73,19 @@ export const authService = {
    */
   async login(payload: LoginPayload): Promise<AuthResponsePayload> {
     try {
-      console.log('🔐 Login attempt:', { email: payload.email, endpoint: endpoints.auth.login });
+      devLog.log('🔐 Login attempt:', { email: payload.email, endpoint: endpoints.auth.login });
       const response = await apiClient.post<ApiResponse<any>>(
         endpoints.auth.login,
         payload,
       );
-      console.log('✅ Login response received:', {
+      devLog.log('✅ Login response received:', {
         hasData: !!response.data,
         hasDataData: !!response.data?.data,
         dataKeys: response.data?.data ? Object.keys(response.data.data) : 'null',
       });
       return normalizeAuthResponse(response.data.data);
     } catch (error: any) {
-      console.error('❌ Login error:', {
+      devLog.error('❌ Login error:', {
         message: error?.message,
         response: error?.response?.data,
         status: error?.response?.status,
@@ -171,10 +172,10 @@ export const authService = {
    * Reset password with token - changes password using token from email
    */
   async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
-    // Web endpoint'ini kullanıyoruz çünkü token doğrulama aynı
+    // Mobile endpoint kullanıyoruz - POST /api/mobile/auth/reset-password
     const response = await apiClient.post<ApiResponse<{ success: boolean; message: string }>>(
-      '/api/auth/reset-password',
-      { token, password },
+      endpoints.auth.resetPassword,
+      { token, new_password: password, confirm_password: password },
     );
     // Backend'den data field'ı geliyorsa onu kullan, yoksa message'dan oluştur
     if (response.data.data) {

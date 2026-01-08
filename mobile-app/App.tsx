@@ -1,16 +1,35 @@
 /**
- * App.tsx - Stabilizasyon Faz 5
+ * App.tsx - Application Root
  * 
- * Production-ready app root with:
- * - ErrorBoundary (NavigationContainer'ı kapsıyor)
- * - OfflineNotice (Global connectivity awareness)
- * - All providers and initializers
+ * ⚠️ PROVIDER HIERARCHY - SACRED ARCHITECTURE RULE
+ * ═══════════════════════════════════════════════════════
+ * BottomSheetModalProvider MUST be at ROOT level.
+ * This is the ONLY place it should exist in the entire app.
+ * 
+ * FORBIDDEN (will break Select/BottomSheet components):
+ * - Adding BottomSheetModalProvider inside ANY component
+ * - Adding BottomSheetModalProvider inside ANY screen
+ * - Using `presentation: 'modal'` for screens with Select
+ * 
+ * Provider Stack (DO NOT MODIFY ORDER):
+ * GestureHandlerRootView
+ * └── SafeAreaProvider
+ *     └── PortalProvider
+ *         └── BottomSheetModalProvider ← SINGLETON, ROOT LEVEL
+ *             └── AppProviders
+ *                 └── NavigationContainer
+ *         └── PortalHost ("root") ← Toast/Alert render here
+ * 
+ * See: src/ARCHITECTURE.md for full documentation.
+ * ═══════════════════════════════════════════════════════
  */
 
 import React, { useEffect, useCallback } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
+import { PortalProvider, PortalHost } from '@gorhom/portal';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
 import { AppProviders } from '@/providers/AppProviders';
@@ -149,17 +168,37 @@ export default function App() {
     return () => clearTimeout(timeout);
   }, []);
 
+  /**
+   * Provider Hierarchy (Optimized for Z-Index):
+   * 
+   * GestureHandlerRootView
+   * └── SafeAreaProvider
+   *     └── PortalProvider
+   *         └── BottomSheetModalProvider (ROOT LEVEL - Critical for Select/BottomSheet)
+   *             └── AppProviders (QueryClient, Theme, Alert, Toast)
+   *                 └── ErrorBoundary
+   *                     └── NavigationContainer
+   *                         └── AppContent
+   *         └── PortalHost (name="root") - For Toast/Alert overlays
+   */
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
-        <AppProviders>
-          {/* ErrorBoundary wraps NavigationContainer - catches all JS errors */}
-          <ErrorBoundary>
-            <NavigationContainer ref={navigationRef}>
-              <AppContent />
-            </NavigationContainer>
-          </ErrorBoundary>
-        </AppProviders>
+        <PortalProvider>
+          {/* BottomSheetModalProvider at ROOT level - enables Select to render above navigation */}
+          <BottomSheetModalProvider>
+            <AppProviders>
+              {/* ErrorBoundary wraps NavigationContainer - catches all JS errors */}
+              <ErrorBoundary>
+                <NavigationContainer ref={navigationRef}>
+                  <AppContent />
+                </NavigationContainer>
+              </ErrorBoundary>
+            </AppProviders>
+          </BottomSheetModalProvider>
+          {/* Global Portal Host - Renders all global overlays (Toast, Alert, etc.) */}
+          <PortalHost name="root" />
+        </PortalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

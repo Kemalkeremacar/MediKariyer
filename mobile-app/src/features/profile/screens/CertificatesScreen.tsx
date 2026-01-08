@@ -1,63 +1,43 @@
-import React, { useState } from 'react';
-import { showAlert } from '@/utils/alert';
+import React from 'react';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { CertificateCard } from '@/components/composite/CertificateCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
-import { CertificateFormModal } from '../components/CertificateFormModal';
 import { colors, spacing } from '@/theme';
 import { useCertificates, useCertificate } from '../hooks/useCertificates';
-import type { DoctorCertificate, CreateCertificatePayload, UpdateCertificatePayload } from '@/types/profile';
+import type { DoctorCertificate } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type CertificatesScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Certificates'>;
 
 export const CertificatesScreen = () => {
-  const navigation = useNavigation();
-  const [selectedCertificate, setSelectedCertificate] = useState<DoctorCertificate | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation<CertificatesScreenNavigationProp>();
+  const alert = useAlertHelpers();
   
   const { data: certificates = [], refetch, isRefetching } = useCertificates();
   const certificateMutations = useCertificate();
 
   const handleAddCertificate = () => {
-    setSelectedCertificate(null);
-    setModalVisible(true);
+    navigation.navigate('CertificateFormModal', { certificate: undefined });
   };
 
   const handleEditCertificate = (certificate: DoctorCertificate) => {
-    setSelectedCertificate(certificate);
-    setModalVisible(true);
+    navigation.navigate('CertificateFormModal', { certificate });
   };
 
   const handleDeleteCertificate = (id: number) => {
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Sertifika Sil',
       'Bu sertifika kaydını silmek istediğinizden emin misiniz?',
       () => certificateMutations.delete.mutate(id)
     );
-  };
-
-  const handleSubmitCertificate = (data: CreateCertificatePayload | UpdateCertificatePayload) => {
-    if (selectedCertificate) {
-      certificateMutations.update.mutate(
-        { id: selectedCertificate.id, data },
-        {
-          onSuccess: () => {
-            setModalVisible(false);
-            setSelectedCertificate(null);
-          },
-        }
-      );
-    } else {
-      certificateMutations.create.mutate(data as CreateCertificatePayload, {
-        onSuccess: () => {
-          setModalVisible(false);
-        },
-      });
-    }
   };
 
   return (
@@ -111,18 +91,6 @@ export const CertificatesScreen = () => {
         icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddCertificate}
         position="bottom-right"
-      />
-
-      {/* Certificate Form Modal */}
-      <CertificateFormModal
-        visible={modalVisible}
-        onClose={() => {
-          setModalVisible(false);
-          setSelectedCertificate(null);
-        }}
-        onSubmit={handleSubmitCertificate}
-        certificate={selectedCertificate}
-        isLoading={certificateMutations.create.isPending || certificateMutations.update.isPending}
       />
     </Screen>
   );

@@ -15,23 +15,24 @@ export const endpoints = {
     me: '/auth/me',
     changePassword: '/auth/change-password',
     forgotPassword: '/auth/forgot-password',
+    resetPassword: '/auth/reset-password',
   },
   doctor: {
     profile: '/doctor/profile',
     profileCompletion: '/doctor/profile/completion',
     updatePersonalInfo: '/doctor/profile/personal',
     // Education CRUD
-    educations: '/doctor/education',
-    education: (id: number) => `/doctor/education/${id}`,
+    educations: '/doctor/educations',
+    education: (id: number) => `/doctor/educations/${id}`,
     // Experience CRUD
-    experiences: '/doctor/experience',
-    experience: (id: number) => `/doctor/experience/${id}`,
+    experiences: '/doctor/experiences',
+    experience: (id: number) => `/doctor/experiences/${id}`,
     // Certificate CRUD
-    certificates: '/doctor/certificate',
-    certificate: (id: number) => `/doctor/certificate/${id}`,
+    certificates: '/doctor/certificates',
+    certificate: (id: number) => `/doctor/certificates/${id}`,
     // Language CRUD
-    languages: '/doctor/language',
-    language: (id: number) => `/doctor/language/${id}`,
+    languages: '/doctor/languages',
+    language: (id: number) => `/doctor/languages/${id}`,
     // Photo Request (Mobile Backend)
     profilePhoto: '/doctor/profile/photo',
     photoStatus: '/doctor/profile/photo/status',

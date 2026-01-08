@@ -43,7 +43,7 @@ export const educationService = {
     id: number,
     payload: UpdateEducationPayload,
   ): Promise<DoctorEducation> {
-    const response = await apiClient.put<ApiResponse<DoctorEducation>>(
+    const response = await apiClient.patch<ApiResponse<DoctorEducation>>(
       endpoints.doctor.education(id),
       payload,
     );

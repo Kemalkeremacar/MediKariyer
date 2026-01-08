@@ -17,6 +17,7 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { jwtDecode } from 'jwt-decode';
 import { deviceInfo } from './deviceInfo';
+import { devLog } from './devLogger';
 
 const ACCESS_TOKEN_KEY = 'medikariyer_access_token';
 const REFRESH_TOKEN_KEY = 'medikariyer_refresh_token';
@@ -68,7 +69,7 @@ function decodeToken(token: string): JWTPayload | null {
   try {
     return jwtDecode<JWTPayload>(token);
   } catch (error) {
-    console.error('Failed to decode JWT token:', error);
+    devLog.error('Failed to decode JWT token:', error);
     return null;
   }
 }
@@ -192,7 +193,7 @@ export const tokenManager = {
       const currentFingerprint = await deviceInfo.getDeviceFingerprint();
       return storedFingerprint === currentFingerprint;
     } catch (error) {
-      console.error('Error validating device binding:', error);
+      devLog.error('Error validating device binding:', error);
       return false;
     }
   },

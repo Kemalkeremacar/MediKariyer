@@ -17,7 +17,7 @@ import type { JobListParams } from './services/job.service';
 
 // Filter types
 export interface ApplicationFilters {
-  status?: string;
+  status_id?: number;
   keyword?: string;
 }
 
@@ -73,6 +73,7 @@ export const queryKeys = {
     languages: () => [...queryKeys.lookup.all, 'languages'] as const,
     languageLevels: () => [...queryKeys.lookup.all, 'languageLevels'] as const,
     certificateTypes: () => [...queryKeys.lookup.all, 'certificateTypes'] as const,
+    applicationStatuses: () => [...queryKeys.lookup.all, 'applicationStatuses'] as const,
   },
 
   // Photo management

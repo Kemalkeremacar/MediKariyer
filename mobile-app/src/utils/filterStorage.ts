@@ -4,6 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { devLog } from './devLogger';
 
 const FILTER_STORAGE_KEY = '@medikariyer_filters';
 
@@ -26,7 +27,7 @@ export const filterStorage = {
     try {
       await AsyncStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
     } catch (error) {
-      console.error('Filter kaydetme hatası:', error);
+      devLog.error('Filter kaydetme hatası:', error);
     }
   },
 
@@ -38,7 +39,7 @@ export const filterStorage = {
       const stored = await AsyncStorage.getItem(FILTER_STORAGE_KEY);
       return stored ? JSON.parse(stored) : null;
     } catch (error) {
-      console.error('Filter yükleme hatası:', error);
+      devLog.error('Filter yükleme hatası:', error);
       return null;
     }
   },
@@ -50,7 +51,7 @@ export const filterStorage = {
     try {
       await AsyncStorage.removeItem(FILTER_STORAGE_KEY);
     } catch (error) {
-      console.error('Filter temizleme hatası:', error);
+      devLog.error('Filter temizleme hatası:', error);
     }
   },
 

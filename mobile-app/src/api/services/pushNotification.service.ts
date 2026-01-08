@@ -132,7 +132,9 @@ async function registerDeviceToken(): Promise<void> {
       });
     }
 
-    console.log('Device token registered successfully');
+    if (__DEV__) {
+      console.log('Device token registered successfully');
+    }
   } catch (error) {
     errorLogger.logError(error as Error, {
       context: 'registerDeviceToken',

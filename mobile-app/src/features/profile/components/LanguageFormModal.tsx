@@ -2,38 +2,47 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
-  Modal as RNModal,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { colors, spacing } from '@/theme';
 import { useLanguages, useLanguageLevels } from '@/hooks/useLookup';
+import { useLanguage } from '@/features/profile/hooks/useLanguages';
 import type { DoctorLanguage, CreateLanguagePayload, UpdateLanguagePayload } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type LanguageFormModalRouteProp = RouteProp<ProfileStackParamList, 'LanguageFormModal'>;
+type LanguageFormModalNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'LanguageFormModal'>;
 
 interface LanguageFormModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSubmit: (data: CreateLanguagePayload | UpdateLanguagePayload) => void;
-  language?: DoctorLanguage | null;
+  onSubmit?: (data: CreateLanguagePayload | UpdateLanguagePayload) => void;
   isLoading?: boolean;
 }
 
 export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
-  visible,
-  onClose,
-  onSubmit,
-  language,
-  isLoading = false,
+  onSubmit: onSubmitProp,
+  isLoading: isLoadingProp = false,
 }) => {
+  const navigation = useNavigation<LanguageFormModalNavigationProp>();
+  const route = useRoute<LanguageFormModalRouteProp>();
+  const language = route.params?.language;
+
   const { data: languages = [], isLoading: isLoadingLanguages } = useLanguages();
   const { data: levels = [], isLoading: isLoadingLevels } = useLanguageLevels();
+  const languageMutations = useLanguage();
+  
+  // Combined loading state
+  const isLoading = isLoadingProp || languageMutations.create.isPending || languageMutations.update.isPending;
 
   const [formData, setFormData] = useState({
     language_id: 0,
@@ -58,13 +67,6 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
 
   useEffect(() => {
     if (language) {
-      console.log('📝 Editing language:', {
-        id: language.id,
-        language_id: language.language_id,
-        level_id: language.level_id,
-        language: language.language,
-        level: language.level,
-      });
       setFormData({
         language_id: language.language_id || 0,
         level_id: language.level_id || 0,
@@ -76,7 +78,7 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
       });
     }
     setErrors({});
-  }, [language, visible]);
+  }, [language]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -96,32 +98,47 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const payload: any = {
+    const payload: CreateLanguagePayload = {
       language_id: formData.language_id,
       level_id: formData.level_id,
     };
 
-    onSubmit(payload);
+    // If external onSubmit provided, use it (for testing/custom handling)
+    if (onSubmitProp) {
+      onSubmitProp(payload);
+      return;
+    }
+
+    // Use internal mutation hooks
+    if (language?.id) {
+      // Update existing language
+      languageMutations.update.mutate(
+        { id: language.id, data: payload },
+        { onSuccess: () => navigation.goBack() }
+      );
+    } else {
+      // Create new language
+      languageMutations.create.mutate(payload, {
+        onSuccess: () => navigation.goBack(),
+      });
+    }
   };
 
-  // Modal kapatıldığında state'i temizle
-  const handleClose = React.useCallback(() => {
-    onClose();
-  }, [onClose]);
+  const handleClose = () => {
+    navigation.goBack();
+  };
 
+  /**
+   * LanguageFormScreen - Language form as navigation screen
+   * 
+   * NOTE: No local BottomSheetModalProvider needed.
+   * The root-level provider in App.tsx handles all BottomSheetModal components.
+   */
   return (
-    <RNModal 
-      visible={visible} 
-      animationType="slide" 
-      onRequestClose={handleClose}
-      onDismiss={() => {
-        // Modal tamamen kapandığında state'i temizle
-      }}
-    >
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-        pointerEvents={visible ? 'auto' : 'none'}
+        style={styles.keyboardView}
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -154,7 +171,6 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
                 options={languageOptions}
                 value={formData.language_id > 0 ? formData.language_id.toString() : undefined}
                 onChange={(value) => {
-                  console.log('🔄 Language changed:', value);
                   setFormData({ ...formData, language_id: parseInt(value as string) });
                 }}
                 placeholder="Dil seçiniz"
@@ -215,7 +231,7 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
           />
         </View>
       </KeyboardAvoidingView>
-    </RNModal>
+    </SafeAreaView>
   );
 };
 
@@ -223,6 +239,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.primary,
+  },
+  keyboardView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',

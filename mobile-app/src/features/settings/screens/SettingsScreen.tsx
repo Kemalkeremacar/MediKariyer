@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import {
   View,
   ScrollView,
@@ -129,6 +129,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, icon }) => (
 
 export const SettingsScreen = ({ navigation }: any) => {
   const logoutMutation = useLogout();
+  const alert = useAlertHelpers();
 
   // Hesap kapatma mutation
   const deactivateAccountMutation = useMutation({
@@ -142,7 +143,7 @@ export const SettingsScreen = ({ navigation }: any) => {
       logoutMutation.mutate();
     },
     onError: () => {
-      showAlert.error('Hesap kapatılırken bir hata oluştu. Lütfen tekrar deneyin.');
+      alert.error('Hesap kapatılırken bir hata oluştu. Lütfen tekrar deneyin.');
     },
   });
 
@@ -154,7 +155,7 @@ export const SettingsScreen = ({ navigation }: any) => {
   const [systemMessages, setSystemMessages] = useState(true);
 
   const handleLogout = () => {
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Çıkış Yap',
       'Çıkış yapmak istediğinize emin misiniz?',
       () => logoutMutation.mutate(),
@@ -164,12 +165,12 @@ export const SettingsScreen = ({ navigation }: any) => {
   };
 
   const handleDeleteAccount = () => {
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Hesabı Kapat',
       'Hesabınızı kapatmak istediğinizden emin misiniz? Bu işlem geri alınamaz.',
       () => {
         // İkinci onay
-        showAlert.confirmDestructive(
+        alert.confirmDestructive(
           'Son Onay',
           'Hesabınız pasifleştirilecek ve tüm oturumlarınız sonlandırılacaktır. Bu işlem geri alınamaz!',
           () => {
@@ -337,7 +338,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               badge="Yakında"
               badgeColor="warning"
               onPress={() =>
-                showAlert.info('Tema seçimi özelliği yakında eklenecek')
+                alert.info('Tema seçimi özelliği yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -350,7 +351,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               badge="Yakında"
               badgeColor="warning"
               onPress={() =>
-                showAlert.info('Dil seçimi özelliği yakında eklenecek')
+                alert.info('Dil seçimi özelliği yakında eklenecek')
               }
             />
           </Card>
@@ -369,7 +370,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Yardım Merkezi"
               subtitle="SSS ve destek"
               onPress={() =>
-                showAlert.info('Yardım merkezi yakında eklenecek')
+                alert.info('Yardım merkezi yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -379,7 +380,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Geri Bildirim"
               subtitle="Önerilerinizi paylaşın"
               onPress={() =>
-                showAlert.info('Geri bildirim özelliği yakında eklenecek')
+                alert.info('Geri bildirim özelliği yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -389,7 +390,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Uygulamayı Değerlendir"
               subtitle="App Store'da puan verin"
               onPress={() =>
-                showAlert.info('Değerlendirme özelliği yakında eklenecek')
+                alert.info('Değerlendirme özelliği yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -399,7 +400,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Uygulamayı Paylaş"
               subtitle="Arkadaşlarınızla paylaşın"
               onPress={() =>
-                showAlert.info('Paylaşım özelliği yakında eklenecek')
+                alert.info('Paylaşım özelliği yakında eklenecek')
               }
             />
           </Card>
@@ -418,7 +419,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Gizlilik Politikası"
               subtitle="Veri koruma ve gizlilik"
               onPress={() =>
-                showAlert.info('Gizlilik politikası yakında eklenecek')
+                alert.info('Gizlilik politikası yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -428,7 +429,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Kullanım Koşulları"
               subtitle="Hizmet şartları"
               onPress={() =>
-                showAlert.info('Kullanım koşulları yakında eklenecek')
+                alert.info('Kullanım koşulları yakında eklenecek')
               }
             />
             <View style={styles.divider} />
@@ -438,7 +439,7 @@ export const SettingsScreen = ({ navigation }: any) => {
               title="Uygulama Bilgisi"
               value="Versiyon 1.0.0"
               onPress={() =>
-                showAlert.info('Versiyon: 1.0.0\nGeliştirici: MediKariyer Ekibi\n\n© 2024 MediKariyer. Tüm hakları saklıdır.')
+                alert.info('Versiyon: 1.0.0\nGeliştirici: MediKariyer Ekibi\n\n© 2024 MediKariyer. Tüm hakları saklıdır.')
               }
             />
           </Card>

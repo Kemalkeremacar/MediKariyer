@@ -61,15 +61,22 @@ const emailSchema = Joi.string()
   });
 
 /**
- * Password Schema (minimal - mobile için)
+ * Password Schema (enhanced - production ready)
+ * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5
+ * - Minimum 8 characters
+ * - At least one lowercase letter
+ * - At least one uppercase letter
+ * - At least one digit
  */
 const passwordSchema = Joi.string()
-  .min(3) // MVP için minimal (production'da güçlendirilebilir)
+  .min(8)
   .max(128)
+  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
   .required()
   .messages({
-    'string.min': 'Şifre en az 3 karakter olmalıdır',
+    'string.min': 'Şifre en az 8 karakter olmalıdır',
     'string.max': 'Şifre en fazla 128 karakter olabilir',
+    'string.pattern.base': 'Şifre en az bir küçük harf, bir büyük harf ve bir rakam içermelidir',
     'any.required': 'Şifre zorunludur'
   });
 
@@ -152,6 +159,22 @@ const mobileChangePasswordSchema = Joi.object({
   }),
   newPassword: passwordSchema,
   confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+    'any.only': 'Şifreler eşleşmiyor',
+    'any.required': 'Şifre tekrarı zorunludur'
+  })
+});
+
+/**
+ * Mobile Reset Password Schema
+ * @description Mobile şifre sıfırlama endpoint için validasyon
+ * Requirements: 10.1, 10.2
+ */
+const mobileResetPasswordSchema = Joi.object({
+  token: Joi.string().required().messages({
+    'any.required': 'Reset token zorunludur'
+  }),
+  new_password: passwordSchema,
+  confirm_password: Joi.string().valid(Joi.ref('new_password')).required().messages({
     'any.only': 'Şifreler eşleşmiyor',
     'any.required': 'Şifre tekrarı zorunludur'
   })
@@ -345,6 +368,17 @@ const mobileCreateApplicationSchema = Joi.object({
   })
 });
 
+/**
+ * Mobile Withdraw Application Schema
+ * @description Mobile application withdrawal endpoint için validasyon
+ * Requirements: 3.1
+ */
+const mobileWithdrawApplicationSchema = Joi.object({
+  reason: Joi.string().max(500).trim().allow('', null).optional().messages({
+    'string.max': 'Geri çekilme nedeni en fazla 500 karakter olabilir'
+  })
+});
+
 // ==================== MOBILE DEVICE TOKEN SCHEMAS ====================
 
 /**
@@ -519,6 +553,7 @@ module.exports = {
   mobileRefreshTokenSchema,
   mobileLogoutSchema,
   mobileChangePasswordSchema,
+  mobileResetPasswordSchema,
   
   // Doctor Profile
   mobileUpdatePersonalInfoSchema,
@@ -531,6 +566,7 @@ module.exports = {
   
   // Applications
   mobileCreateApplicationSchema,
+  mobileWithdrawApplicationSchema,
   
   // Device Token
   mobileDeviceTokenSchema,

@@ -1,6 +1,7 @@
 /**
  * @file ApplicationFilterSheet.tsx
  * @description Modern başvuru filtreleme bottom sheet bileşeni
+ * Dinamik olarak backend'den status'ları çeker ve ID bazlı filtreleme yapar
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,20 +13,18 @@ import {
   Modal,
   Dimensions,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useApplicationStatuses } from '@/hooks/useLookup';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface ApplicationFilters {
-  status?: string;
-  // Gelecekte eklenebilecek filtreler:
-  // dateFrom?: string;
-  // dateTo?: string;
-  // hospitalId?: number;
+  status_id?: number;
 }
 
 interface ApplicationFilterSheetProps {
@@ -36,37 +35,17 @@ interface ApplicationFilterSheetProps {
   onReset: () => void;
 }
 
-// Status options with icons and colors
-const STATUS_OPTIONS = [
-  {
-    value: 'pending',
-    label: 'Başvuruldu',
-    icon: 'time' as const,
-    color: colors.warning[600],
-    bgColor: colors.warning[100],
-  },
-  {
-    value: 'reviewing',
-    label: 'İnceleniyor',
-    icon: 'eye' as const,
-    color: colors.primary[600],
-    bgColor: colors.primary[100],
-  },
-  {
-    value: 'approved',
-    label: 'Kabul Edildi',
-    icon: 'checkmark-circle' as const,
-    color: colors.success[600],
-    bgColor: colors.success[100],
-  },
-  {
-    value: 'rejected',
-    label: 'Red Edildi',
-    icon: 'close-circle' as const,
-    color: colors.error[600],
-    bgColor: colors.error[100],
-  },
-];
+// Status ID'ye göre renk ve ikon mapping
+const STATUS_STYLES: Record<number, { icon: keyof typeof Ionicons.glyphMap; color: string; bgColor: string }> = {
+  1: { icon: 'time', color: colors.warning[600], bgColor: colors.warning[100] },           // Başvuruldu
+  2: { icon: 'eye', color: colors.primary[600], bgColor: colors.primary[100] },            // İnceleniyor
+  3: { icon: 'checkmark-circle', color: colors.success[600], bgColor: colors.success[100] }, // Kabul Edildi
+  4: { icon: 'close-circle', color: colors.error[600], bgColor: colors.error[100] },       // Reddedildi
+  5: { icon: 'arrow-undo', color: colors.neutral[500], bgColor: colors.neutral[100] },     // Geri Çekildi
+};
+
+// Default style for unknown statuses
+const DEFAULT_STYLE = { icon: 'help-circle' as const, color: colors.neutral[500], bgColor: colors.neutral[100] };
 
 export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
   visible,
@@ -76,6 +55,7 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
   onReset,
 }) => {
   const [draftFilters, setDraftFilters] = useState<ApplicationFilters>(filters);
+  const { data: statuses = [], isLoading } = useApplicationStatuses();
 
   // Sync draft with props when sheet opens
   useEffect(() => {
@@ -95,14 +75,19 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
     onClose();
   }, [onReset, onClose]);
 
-  const handleSelectStatus = useCallback((value: string) => {
+  const handleSelectStatus = useCallback((statusId: number) => {
     setDraftFilters((prev) => ({
       ...prev,
-      status: prev.status === value ? undefined : value,
+      status_id: prev.status_id === statusId ? undefined : statusId,
     }));
   }, []);
 
-  const hasActiveFilter = Boolean(draftFilters.status);
+  const hasActiveFilter = Boolean(draftFilters.status_id);
+
+  // Get style for a status ID
+  const getStatusStyle = (statusId: number) => {
+    return STATUS_STYLES[statusId] || DEFAULT_STYLE;
+  };
 
   if (!visible) return null;
 
@@ -139,84 +124,95 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
             style={styles.content}
             showsVerticalScrollIndicator={false}
           >
-            {/* All Applications Option */}
-            <TouchableOpacity
-              style={[
-                styles.statusCard,
-                !draftFilters.status && styles.statusCardSelected,
-              ]}
-              onPress={() => setDraftFilters({})}
-            >
-              <View
-                style={[
-                  styles.statusIcon,
-                  { backgroundColor: colors.warning[100] },
-                ]}
-              >
-                <Ionicons name="document-text" size={20} color={colors.warning[600]} />
-              </View>
-              <View style={styles.statusInfo}>
-                <Typography
-                  variant="body"
-                  style={{
-                    ...styles.statusLabel,
-                    ...(!draftFilters.status && styles.statusLabelSelected),
-                  }}
-                >
-                  Tüm Başvurular
-                </Typography>
-                <Typography variant="caption" style={styles.statusDescription}>
-                  Tüm durumları göster
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary[600]} />
+                <Typography variant="body" style={styles.loadingText}>
+                  Durumlar yükleniyor...
                 </Typography>
               </View>
-              {!draftFilters.status && (
-                <View style={styles.checkIcon}>
-                  <Ionicons name="checkmark-circle" size={24} color={colors.primary[600]} />
-                </View>
-              )}
-            </TouchableOpacity>
-
-            {/* Status Options */}
-            {STATUS_OPTIONS.map((option) => {
-              const iconName = option.icon;
-              const isSelected = draftFilters.status === option.value;
-
-              return (
+            ) : (
+              <>
+                {/* All Applications Option */}
                 <TouchableOpacity
-                  key={option.value}
                   style={[
                     styles.statusCard,
-                    isSelected && styles.statusCardSelected,
+                    !draftFilters.status_id && styles.statusCardSelected,
                   ]}
-                  onPress={() => handleSelectStatus(option.value)}
+                  onPress={() => setDraftFilters({})}
                 >
                   <View
                     style={[
                       styles.statusIcon,
-                      { backgroundColor: option.bgColor },
+                      { backgroundColor: colors.primary[100] },
                     ]}
                   >
-                    <Ionicons name={iconName} size={20} color={option.color} />
+                    <Ionicons name="documents" size={20} color={colors.primary[600]} />
                   </View>
                   <View style={styles.statusInfo}>
                     <Typography
                       variant="body"
-                      style={{
-                        ...styles.statusLabel,
-                        ...(isSelected && styles.statusLabelSelected),
-                      }}
+                      style={!draftFilters.status_id 
+                        ? { ...styles.statusLabel, ...styles.statusLabelSelected }
+                        : styles.statusLabel
+                      }
                     >
-                      {option.label}
+                      Tüm Başvurular
+                    </Typography>
+                    <Typography variant="caption" style={styles.statusDescription}>
+                      Tüm durumları göster
                     </Typography>
                   </View>
-                  {isSelected && (
+                  {!draftFilters.status_id && (
                     <View style={styles.checkIcon}>
                       <Ionicons name="checkmark-circle" size={24} color={colors.primary[600]} />
                     </View>
                   )}
                 </TouchableOpacity>
-              );
-            })}
+
+                {/* Dynamic Status Options from Backend */}
+                {statuses.map((status) => {
+                  const style = getStatusStyle(status.id);
+                  const isSelected = draftFilters.status_id === status.id;
+
+                  return (
+                    <TouchableOpacity
+                      key={status.id}
+                      style={[
+                        styles.statusCard,
+                        isSelected && styles.statusCardSelected,
+                      ]}
+                      onPress={() => handleSelectStatus(status.id)}
+                    >
+                      <View
+                        style={[
+                          styles.statusIcon,
+                          { backgroundColor: style.bgColor },
+                        ]}
+                      >
+                        <Ionicons name={style.icon} size={20} color={style.color} />
+                      </View>
+                      <View style={styles.statusInfo}>
+                        <Typography
+                          variant="body"
+                          style={isSelected 
+                            ? { ...styles.statusLabel, ...styles.statusLabelSelected }
+                            : styles.statusLabel
+                          }
+                        >
+                          {status.name}
+                        </Typography>
+                      </View>
+                      {isSelected && (
+                        <View style={styles.checkIcon}>
+                          <Ionicons name="checkmark-circle" size={24} color={colors.primary[600]} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </>
+            )}
           </ScrollView>
 
           {/* Footer Actions */}
@@ -294,6 +290,14 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 24,
     paddingVertical: spacing.md,
+  },
+  loadingContainer: {
+    padding: spacing['3xl'],
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  loadingText: {
+    color: colors.text.secondary,
   },
   statusCard: {
     flexDirection: 'row',

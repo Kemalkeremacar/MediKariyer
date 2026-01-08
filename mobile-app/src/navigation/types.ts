@@ -1,6 +1,12 @@
 /**
  * Navigation Type Definitions
  * Centralized type definitions for all navigators
+ * 
+ * IMPORTANT: Screen naming conventions:
+ * - Regular screens: Use descriptive names (e.g., ProfileMain, Education)
+ * - Form screens: Named *FormModal for backward compatibility, but they are
+ *   actually navigation screens with slide_from_bottom animation, NOT true modals.
+ *   They use the root-level BottomSheetModalProvider for Select components.
  */
 
 import type { NavigatorScreenParams } from '@react-navigation/native';
@@ -41,6 +47,10 @@ export type JobsStackParamList = {
 /**
  * Profile Stack - Profile management
  * Nested within the Profile tab
+ * 
+ * NOTE: *FormModal screens are navigation screens (NOT true modals).
+ * They use slide_from_bottom animation and rely on root-level
+ * BottomSheetModalProvider for Select components to work correctly.
  */
 export type ProfileStackParamList = {
   ProfileMain: undefined;
@@ -51,6 +61,12 @@ export type ProfileStackParamList = {
   Certificates: undefined;
   Languages: undefined;
   Notifications: undefined;
+  // Form Screens - Named *FormModal for backward compatibility
+  // These are navigation screens with slide_from_bottom animation
+  EducationFormModal: { education?: any } | undefined;
+  ExperienceFormModal: { experience?: any } | undefined;
+  LanguageFormModal: { language?: any } | undefined;
+  CertificateFormModal: { certificate?: any } | undefined;
 };
 
 /**

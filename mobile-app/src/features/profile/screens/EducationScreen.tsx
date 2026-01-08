@@ -1,63 +1,43 @@
-import React, { useState } from 'react';
-import { showAlert } from '@/utils/alert';
+import React from 'react';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { EducationCard } from '@/components/composite/EducationCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
-import { EducationFormModal } from '../components/EducationFormModal';
 import { colors, spacing } from '@/theme';
 import { useEducations, useEducation } from '../hooks/useEducations';
-import type { DoctorEducation, CreateEducationPayload, UpdateEducationPayload } from '@/types/profile';
+import type { DoctorEducation } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type EducationScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Education'>;
 
 export const EducationScreen = () => {
-  const navigation = useNavigation();
-  const [selectedEducation, setSelectedEducation] = useState<DoctorEducation | null>(null);
-  const [showModal, setShowModal] = useState(false);
+  const navigation = useNavigation<EducationScreenNavigationProp>();
+  const alert = useAlertHelpers();
   
   const { data: educations = [], refetch, isRefetching } = useEducations();
   const educationMutations = useEducation();
 
   const handleAddEducation = () => {
-    setSelectedEducation(null);
-    setShowModal(true);
+    navigation.navigate('EducationFormModal', { education: undefined });
   };
 
   const handleEditEducation = (education: DoctorEducation) => {
-    setSelectedEducation(education);
-    setShowModal(true);
+    navigation.navigate('EducationFormModal', { education });
   };
 
   const handleDeleteEducation = (id: number) => {
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Eğitim Sil',
       'Bu eğitim kaydını silmek istediğinizden emin misiniz?',
       () => educationMutations.delete.mutate(id)
     );
-  };
-
-  const handleSubmit = (data: CreateEducationPayload | UpdateEducationPayload) => {
-    if (selectedEducation) {
-      educationMutations.update.mutate(
-        { id: selectedEducation.id, data },
-        {
-          onSuccess: () => {
-            setShowModal(false);
-            setSelectedEducation(null);
-          },
-        }
-      );
-    } else {
-      educationMutations.create.mutate(data as CreateEducationPayload, {
-        onSuccess: () => {
-          setShowModal(false);
-        },
-      });
-    }
   };
 
   return (
@@ -114,18 +94,6 @@ export const EducationScreen = () => {
         icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddEducation}
         position="bottom-right"
-      />
-
-      {/* Education Form Modal */}
-      <EducationFormModal
-        visible={showModal}
-        onClose={() => {
-          setShowModal(false);
-          setSelectedEducation(null);
-        }}
-        onSubmit={handleSubmit}
-        education={selectedEducation}
-        isLoading={educationMutations.create.isPending || educationMutations.update.isPending}
       />
     </Screen>
   );

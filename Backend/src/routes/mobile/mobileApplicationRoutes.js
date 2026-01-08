@@ -43,7 +43,8 @@ const { validateBody, validateQuery, validateParams } = require('../../middlewar
 const {
   mobileCreateApplicationSchema,
   mobileApplicationsQuerySchema,
-  mobileApplicationDetailParamsSchema
+  mobileApplicationDetailParamsSchema,
+  mobileWithdrawApplicationSchema
 } = require('../../validators/mobileSchemas');
 const mobileApplicationController = require('../../controllers/mobile/mobileApplicationController');
 
@@ -57,7 +58,7 @@ router.get('/', validateQuery(mobileApplicationsQuerySchema), mobileApplicationC
 router.get('/:applicationId', validateParams(mobileApplicationDetailParamsSchema), mobileApplicationController.getApplicationDetail);
 router.post('/', validateBody(mobileCreateApplicationSchema), mobileApplicationController.createApplication);
 // PATCH kullanılıyor (web backend ile uyumlu)
-router.patch('/:applicationId/withdraw', validateParams(mobileApplicationDetailParamsSchema), mobileApplicationController.withdrawApplication);
+router.patch('/:applicationId/withdraw', validateParams(mobileApplicationDetailParamsSchema), validateBody(mobileWithdrawApplicationSchema), mobileApplicationController.withdrawApplication);
 
 router.use(mobileErrorBoundary);
 

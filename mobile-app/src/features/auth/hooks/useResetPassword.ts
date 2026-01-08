@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { authService } from '@/api/services/authService';
-import { showAlert } from '@/utils/alert';
-import { handleApiError } from '@/utils/errorHandler';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 
 interface UseResetPasswordCallbacks {
   onSuccess?: () => void | Promise<void>;
@@ -18,21 +17,18 @@ type ResetPasswordPayload = {
  * Resets password using token from email link
  */
 export const useResetPassword = (callbacks?: UseResetPasswordCallbacks) => {
+  const alert = useAlertHelpers();
+  
   return useMutation({
     mutationFn: async (payload: ResetPasswordPayload) => {
       const response = await authService.resetPassword(payload.token, payload.password);
       return response;
     },
     onSuccess: async () => {
-      showAlert.success('Şifreniz başarıyla değiştirildi. Lütfen yeni şifrenizle giriş yapın.');
+      alert.success('Şifreniz başarıyla değiştirildi. Lütfen yeni şifrenizle giriş yapın.');
       await callbacks?.onSuccess?.();
     },
     onError: (error) => {
-      const errorMessage = handleApiError(
-        error,
-        '/auth/reset-password',
-        (msg) => showAlert.error(msg)
-      );
       callbacks?.onError?.(error);
     },
   });

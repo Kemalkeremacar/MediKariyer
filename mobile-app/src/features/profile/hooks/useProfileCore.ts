@@ -14,7 +14,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { profileCoreService } from '@/api/services/profile/profile.core.service';
-import type { DoctorProfile, ProfileCompletion } from '@/types/profile';
 
 /**
  * Hook for fetching core profile data (name, photo, title, specialty)

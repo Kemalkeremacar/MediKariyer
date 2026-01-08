@@ -18,8 +18,9 @@ import React, { useEffect, useRef } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/api/services/notification.service';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
+import { devLog } from '@/utils/devLogger';
 import { useToast } from '@/providers/ToastProvider';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { queryKeys } from '@/api/queryKeys';
 import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
@@ -39,18 +40,18 @@ const handleInAppStateUpdate = (
   queryClient: ReturnType<typeof useQueryClient>
 ) => {
   if (!data) {
-    console.log('[handleInAppStateUpdate] No data found in notification');
+    devLog.log('[handleInAppStateUpdate] No data found in notification');
     return;
   }
   
   const { action, entity_id, entity_type } = data;
   
   if (!action) {
-    console.log('[handleInAppStateUpdate] No action found in notification data');
+    devLog.log('[handleInAppStateUpdate] No action found in notification data');
     return;
   }
   
-  console.log(`[handleInAppStateUpdate] Action: ${action}, Entity ID: ${entity_id}, Entity Type: ${entity_type}`);
+  devLog.log(`[handleInAppStateUpdate] Action: ${action}, Entity ID: ${entity_id}, Entity Type: ${entity_type}`);
   
   switch (action) {
     case 'application_created':
@@ -96,7 +97,7 @@ const handleInAppStateUpdate = (
       break;
       
     default:
-      console.log(`[handleInAppStateUpdate] Unknown action: ${action}`);
+      devLog.log(`[handleInAppStateUpdate] Unknown action: ${action}`);
       // Bilinmeyen action için sadece bildirim listesini güncelle
       break;
   }
@@ -130,7 +131,7 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
   useEffect(() => {
     notificationListenerRef.current = pushNotificationService.addNotificationReceivedListener(
       (notification) => {
-        console.log('[useNotifications] Foreground notification received:', notification);
+        devLog.log('[useNotifications] Foreground notification received:', notification);
         const data = (notification.request?.content?.data || {}) as import('@/types/notification').NotificationData;
         
         // In-App State Update: Backend'den gelen action ve entity_id'ye göre ilgili query'leri invalidate et
@@ -245,7 +246,7 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
         await pushNotificationService.setBadgeCount(unreadCount);
       } catch (error) {
         // Badge count hatası kritik değil, sessizce ignore et
-        console.warn('[useNotifications] Badge count güncellenemedi:', error);
+        devLog.warn('[useNotifications] Badge count güncellenemedi:', error);
       }
     };
 
@@ -292,7 +293,7 @@ export const useUnreadCount = () => {
         await pushNotificationService.setBadgeCount(unreadCount);
       } catch (error) {
         // Badge count hatası kritik değil, sessizce ignore et
-        console.warn('[useUnreadCount] Badge count güncellenemedi:', error);
+        devLog.warn('[useUnreadCount] Badge count güncellenemedi:', error);
       }
     };
 
@@ -319,6 +320,7 @@ export const useUnreadCount = () => {
  */
 export const useMarkAsRead = () => {
   const queryClient = useQueryClient();
+  const alert = useAlertHelpers();
 
   return useMutation({
     mutationFn: (notificationId: number) => 
@@ -379,7 +381,7 @@ export const useMarkAsRead = () => {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
-      showAlert.error('Bildirim okundu olarak işaretlenemedi. Lütfen tekrar deneyin.');
+      alert.error('Bildirim okundu olarak işaretlenemedi. Lütfen tekrar deneyin.');
     },
   });
 };
@@ -391,6 +393,7 @@ export const useMarkAsRead = () => {
 export const useMarkAllAsRead = () => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const alert = useAlertHelpers();
 
   return useMutation({
     mutationFn: async () => {
@@ -455,7 +458,7 @@ export const useMarkAllAsRead = () => {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
-      showAlert.error('Bildirimler okundu işaretlenemedi. Lütfen tekrar deneyin.');
+      alert.error('Bildirimler okundu işaretlenemedi. Lütfen tekrar deneyin.');
     },
   });
 };
@@ -481,7 +484,7 @@ export const useDeleteNotification = () => {
       showToast('Bildirim silindi', 'success');
     },
     onError: (error: Error) => {
-      console.error('Failed to delete notification:', error);
+      devLog.error('Failed to delete notification:', error);
       showToast('Bildirim silinemedi', 'error');
     },
   });
@@ -508,7 +511,7 @@ export const useDeleteNotifications = () => {
       showToast(`${data.deleted_count} bildirim silindi`, 'success');
     },
     onError: (error: Error) => {
-      console.error('Failed to delete notifications:', error);
+      devLog.error('Failed to delete notifications:', error);
       showToast('Bildirimler silinemedi', 'error');
     },
   });
@@ -521,6 +524,7 @@ export const useDeleteNotifications = () => {
 export const useClearReadNotifications = () => {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const alert = useAlertHelpers();
 
   return useMutation({
     mutationFn: () => notificationService.clearReadNotifications(),
@@ -566,7 +570,7 @@ export const useClearReadNotifications = () => {
         exact: false,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
-      showAlert.error('Okunmuş bildirimler temizlenemedi. Lütfen tekrar deneyin.');
+      alert.error('Okunmuş bildirimler temizlenemedi. Lütfen tekrar deneyin.');
     },
   });
 };

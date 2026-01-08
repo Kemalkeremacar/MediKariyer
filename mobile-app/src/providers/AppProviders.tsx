@@ -29,6 +29,16 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * AppProviders - Application-level providers
+ * 
+ * NOTE: BottomSheetModalProvider is intentionally NOT included here.
+ * It's placed at the ROOT level in App.tsx to ensure BottomSheetModal
+ * components (like Select) can render above the NavigationContainer.
+ * 
+ * Provider Hierarchy (see App.tsx):
+ * PortalProvider → BottomSheetModalProvider → AppProviders → NavigationContainer
+ */
 export const AppProviders = ({ children }: PropsWithChildren) => {
   return (
     <QueryClientProvider client={queryClient}>

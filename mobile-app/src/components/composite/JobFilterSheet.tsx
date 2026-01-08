@@ -1,6 +1,9 @@
 /**
  * @file JobFilterSheet.tsx
  * @description Modern iş ilanı filtreleme bottom sheet bileşeni
+ * 
+ * NOTE: No local BottomSheetModalProvider needed.
+ * The root-level provider in App.tsx handles all BottomSheetModal components.
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';

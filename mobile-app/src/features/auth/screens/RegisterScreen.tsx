@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { showAlert } from '@/utils/alert';
+import { Alert } from 'react-native';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import {
   View,
   StyleSheet,
@@ -36,7 +37,9 @@ const registerSchema = z.object({
   firstName: z.string().min(2, 'Ad en az 2 karakter olmalı'),
   lastName: z.string().min(2, 'Soyad en az 2 karakter olmalı'),
   email: z.string().min(1, 'E-posta gerekli').email('Geçerli bir e-posta girin'),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalı'),
+  password: z.string()
+    .min(8, 'Şifre en az 8 karakter olmalıdır')
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Şifre en az bir küçük harf, bir büyük harf ve bir rakam içermelidir'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Şifreler eşleşmiyor',
@@ -58,6 +61,7 @@ const TITLES = [
 export const RegisterScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const alert = useAlertHelpers();
   const [serverError, setServerError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<typeof TITLES[number]['value']>('Dr');
   const [selectedSpecialty, setSelectedSpecialty] = useState<number | undefined>();
@@ -92,7 +96,7 @@ export const RegisterScreen = () => {
 
   // Show photo picker options
   const showPhotoOptions = () => {
-    showAlert.custom(
+    Alert.alert(
       'Profil Fotoğrafı',
       'Fotoğraf nasıl eklemek istersiniz?',
       [
@@ -117,7 +121,7 @@ export const RegisterScreen = () => {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        showAlert.error('Fotoğraf çekmek için kamera izni gerekiyor.');
+        alert.error('Fotoğraf çekmek için kamera izni gerekiyor.');
         return;
       }
 
@@ -132,7 +136,7 @@ export const RegisterScreen = () => {
         processImage(result.assets[0]);
       }
     } catch (error) {
-      showAlert.error('Kamera açılırken bir hata oluştu.');
+      alert.error('Kamera açılırken bir hata oluştu.');
     }
   };
 
@@ -141,7 +145,7 @@ export const RegisterScreen = () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        showAlert.error('Galeri erişim izni gerekiyor.');
+        alert.error('Galeri erişim izni gerekiyor.');
         return;
       }
 
@@ -157,7 +161,7 @@ export const RegisterScreen = () => {
         processImage(result.assets[0]);
       }
     } catch (error) {
-      showAlert.error('Fotoğraf seçilirken bir hata oluştu.');
+      alert.error('Fotoğraf seçilirken bir hata oluştu.');
     }
   };
 
@@ -166,7 +170,7 @@ export const RegisterScreen = () => {
     setPhotoUri(asset.uri);
     
     if (!asset.base64) {
-      showAlert.error('Fotoğraf verisi alınamadı');
+      alert.error('Fotoğraf verisi alınamadı');
       return;
     }
     
@@ -179,7 +183,7 @@ export const RegisterScreen = () => {
       const sizeInKB = sizeInBytes / 1024;
       
       if (sizeInKB > 500) {
-        showAlert.error('Fotoğraf çok büyük (max 500KB). Lütfen daha küçük bir fotoğraf seçin.');
+        alert.error('Fotoğraf çok büyük (max 500KB). Lütfen daha küçük bir fotoğraf seçin.');
         setPhotoUri('');
         return;
       }
@@ -187,12 +191,12 @@ export const RegisterScreen = () => {
       // Upload photo to server (base64) - Register endpoint (no auth required)
       const uploadResult = await uploadService.uploadRegisterPhoto(asset.uri, asset.base64);
       setProfilePhotoUrl(uploadResult.url);
-      showAlert.success('Fotoğraf yüklendi');
+      alert.success('Fotoğraf yüklendi');
     } catch (error: any) {
       const message = handleApiError(
         error,
         '/upload/register-photo',
-        (msg) => showAlert.error(msg)
+        (msg) => alert.error(msg)
       );
       // Ekstra olarak form üstünde de gösterebiliriz
       setServerError(message);
@@ -229,7 +233,7 @@ export const RegisterScreen = () => {
       const errorMessage = handleApiError(
         err,
         '/auth/register',
-        (msg) => showAlert.error(msg)
+        (msg) => alert.error(msg)
       );
       setServerError(errorMessage);
     },
@@ -241,13 +245,13 @@ export const RegisterScreen = () => {
     // Validation
     if (!selectedSpecialty) {
       setServerError('⚠️ Lütfen uzmanlık alanı seçin');
-      showAlert.error('Lütfen uzmanlık alanınızı seçin.');
+      alert.error('Lütfen uzmanlık alanınızı seçin.');
       return;
     }
 
     if (!profilePhotoUrl) {
       setServerError('⚠️ Lütfen profil fotoğrafı ekleyin');
-      showAlert.error('Lütfen profil fotoğrafınızı ekleyin.');
+      alert.error('Lütfen profil fotoğrafınızı ekleyin.');
       return;
     }
     
@@ -481,7 +485,7 @@ export const RegisterScreen = () => {
                 name="password"
                 render={({ field: { onChange, value } }) => (
                   <Input
-                    placeholder="En az 6 karakter"
+                    placeholder="En az 8 karakter (büyük, küçük harf ve rakam)"
                     secureTextEntry
                     value={value}
                     onChangeText={onChange}

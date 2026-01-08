@@ -2,7 +2,6 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Badge } from '@/components/ui/Badge';
 import { Chip } from '@/components/ui/Chip';
 import { Avatar } from '@/components/ui/Avatar';
 import { Divider } from '@/components/ui/Divider';
@@ -13,10 +12,29 @@ import { formatRelativeTime } from '@/utils/date';
 interface ApplicationCardProps {
   application: any;
   onPress: () => void;
-  index?: number;
 }
 
-export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onPress, index = 0 }) => {
+// Status ID'ye göre renk ve stil mapping
+const STATUS_STYLES: Record<number, { 
+  bgColor: string; 
+  textColor: string; 
+  icon: keyof typeof Ionicons.glyphMap;
+}> = {
+  1: { bgColor: colors.warning[100], textColor: colors.warning[700], icon: 'time' },           // Başvuruldu
+  2: { bgColor: colors.primary[100], textColor: colors.primary[700], icon: 'eye' },            // İnceleniyor
+  3: { bgColor: colors.success[100], textColor: colors.success[700], icon: 'checkmark-circle' }, // Kabul Edildi
+  4: { bgColor: colors.error[100], textColor: colors.error[700], icon: 'close-circle' },       // Reddedildi
+  5: { bgColor: colors.neutral[200], textColor: colors.neutral[600], icon: 'arrow-undo' },     // Geri Çekildi
+};
+
+// Default style for unknown statuses
+const DEFAULT_STATUS_STYLE = { 
+  bgColor: colors.neutral[100], 
+  textColor: colors.neutral[600], 
+  icon: 'help-circle' as const 
+};
+
+export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onPress }) => {
   const dateToUse = application.applied_at || application.created_at;
   const timeAgo = formatRelativeTime(dateToUse) || null;
 
@@ -25,6 +43,11 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
   const unavailableReason = application.is_job_deleted 
     ? 'İlan Kaldırıldı' 
     : (application.is_hospital_active === false ? 'Hastane Pasif' : null);
+
+  // Get status style based on status_id
+  const statusId = application.status_id || 1;
+  const statusStyle = STATUS_STYLES[statusId] || DEFAULT_STATUS_STYLE;
+  const statusLabel = application.status_label || application.status || 'Başvuruldu';
 
   return (
     <View>
@@ -48,9 +71,13 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
             </View>
           </View>
           <View style={styles.headerRight}>
-            <Badge status={application.status || 'pending'} size="sm">
-              {application.status}
-            </Badge>
+            {/* Dynamic Status Badge */}
+            <View style={[styles.statusBadge, { backgroundColor: statusStyle.bgColor }]}>
+              <Ionicons name={statusStyle.icon} size={12} color={statusStyle.textColor} />
+              <Typography variant="caption" style={{ ...styles.statusText, color: statusStyle.textColor }}>
+                {statusLabel}
+              </Typography>
+            </View>
             <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} style={{ marginTop: 4 }} />
           </View>
         </View>
@@ -69,9 +96,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
               size="sm"
             />
           )}
-          {application.city && (
+          {application.city_name && (
             <Chip
-              label={application.city}
+              label={application.city_name}
               icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
               variant="soft"
               color="primary"
@@ -113,14 +140,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.sm,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.success[50],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   headerContent: {
     flex: 1,
     gap: spacing.xs,
@@ -149,5 +168,17 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     flexWrap: 'wrap',
     marginTop: spacing.xs,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

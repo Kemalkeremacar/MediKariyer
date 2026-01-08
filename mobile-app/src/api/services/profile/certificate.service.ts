@@ -43,7 +43,7 @@ export const certificateService = {
     id: number,
     payload: UpdateCertificatePayload,
   ): Promise<DoctorCertificate> {
-    const response = await apiClient.put<ApiResponse<DoctorCertificate>>(
+    const response = await apiClient.patch<ApiResponse<DoctorCertificate>>(
       endpoints.doctor.certificate(id),
       payload,
     );

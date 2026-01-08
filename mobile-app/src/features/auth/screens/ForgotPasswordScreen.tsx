@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,6 +26,7 @@ type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 export const ForgotPasswordScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const alert = useAlertHelpers();
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
@@ -46,7 +47,7 @@ export const ForgotPasswordScreen = () => {
         setServerError(null);
         const message = data?.message || 'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu ve spam klasörünü kontrol edin.';
         setSuccessMessage(message);
-        showAlert.success(message);
+        alert.success(message);
       } catch (error) {
         console.error('Error in forgot password success callback:', error);
         setServerError('Bir hata oluştu. Lütfen tekrar deneyin.');
@@ -56,7 +57,7 @@ export const ForgotPasswordScreen = () => {
       const errorMessage = handleApiError(
         error,
         '/auth/forgot-password',
-        (msg) => showAlert.error(msg)
+        (msg) => alert.error(msg)
       );
       setServerError(errorMessage);
       setSuccessMessage(null);

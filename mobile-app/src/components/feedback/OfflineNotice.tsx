@@ -14,6 +14,7 @@ import { Typography } from '@/components/ui/Typography';
 import { Ionicons } from '@expo/vector-icons';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { colors, spacing } from '@/theme';
+import { zIndex } from '@/theme/zIndex';
 
 export const OfflineNotice: React.FC = () => {
   const { isOffline, isInternetReachable } = useNetworkStatus();
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    zIndex: 9999,
+    zIndex: zIndex.offlineNotice,
     backgroundColor: colors.error[600],
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,

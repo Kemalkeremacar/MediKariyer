@@ -14,7 +14,6 @@ import { StyleSheet, View } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  useDerivedValue,
   withSpring,
   withTiming,
   interpolate,
@@ -25,6 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Typography } from './Typography';
 import { useTheme } from '@/contexts/ThemeContext';
 import type { Theme } from '@/theme';
+import { zIndex } from '@/theme/zIndex';
 
 interface OfflineBannerProps {
   /** Whether the banner should be visible */
@@ -117,7 +117,7 @@ const createStyles = (theme: Theme, topInset: number) =>
       top: 0,
       left: 0,
       right: 0,
-      zIndex: 9999,
+      zIndex: zIndex.offlineNotice,
       backgroundColor: theme.colors.warning[600],
       paddingTop: topInset + 8,
       paddingBottom: 12,

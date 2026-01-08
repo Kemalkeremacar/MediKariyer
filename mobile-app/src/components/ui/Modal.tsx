@@ -12,6 +12,13 @@ import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 import { IconButton } from './IconButton';
 
+/**
+ * Modal Component
+ * 
+ * NOTE: No local BottomSheetModalProvider needed.
+ * The root-level provider in App.tsx handles all BottomSheetModal components.
+ */
+
 export interface ModalProps {
   visible: boolean;
   onClose: () => void;

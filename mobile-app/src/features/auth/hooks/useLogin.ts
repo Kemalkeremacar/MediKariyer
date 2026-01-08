@@ -3,6 +3,7 @@ import { tokenManager } from '@/utils/tokenManager';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
 import { navigationRef } from '@/navigation/navigationRef';
+import { devLog } from '@/utils/devLogger';
 import type { LoginPayload, AuthResponsePayload } from '@/types/auth';
 
 interface UseLoginCallbacks {
@@ -26,24 +27,24 @@ export const useLogin = (callbacks?: UseLoginCallbacks) => {
       return response;
     },
     onSuccess: async (data) => {
-      console.log('🔐 useLogin onSuccess - Starting auth setup...');
-      console.log('🔐 useLogin onSuccess - User data:', JSON.stringify(data.user, null, 2));
+      devLog.log('🔐 useLogin onSuccess - Starting auth setup...');
+      devLog.log('🔐 useLogin onSuccess - User data:', JSON.stringify(data.user, null, 2));
       
       // Core auth side-effects (single source of truth)
       await tokenManager.saveTokens(data.accessToken, data.refreshToken);
-      console.log('🔐 useLogin onSuccess - Tokens saved');
+      devLog.log('🔐 useLogin onSuccess - Tokens saved');
       
       setAuthState(data.user);
-      console.log('🔐 useLogin onSuccess - Auth state updated');
+      devLog.log('🔐 useLogin onSuccess - Auth state updated');
       
       // CRITICAL: Set isHydrating to false after successful login
       // Otherwise RootNavigator will keep showing Auth screen
       setHydrating(false);
-      console.log('🔐 useLogin onSuccess - Hydration set to false');
+      devLog.log('🔐 useLogin onSuccess - Hydration set to false');
       
       // Verify state was updated
       const currentState = useAuthStore.getState();
-      console.log('🔐 useLogin onSuccess - Current auth state:', {
+      devLog.log('🔐 useLogin onSuccess - Current auth state:', {
         authStatus: currentState.authStatus,
         hasUser: !!currentState.user,
         userId: currentState.user?.id,
@@ -75,23 +76,23 @@ export const useLogin = (callbacks?: UseLoginCallbacks) => {
           const isAdmin = data.user.role === 'admin';
           
           if (isActive && (isApproved || isAdmin)) {
-            console.log('🔐 useLogin onSuccess - Resetting navigation to App screen');
+            devLog.log('🔐 useLogin onSuccess - Resetting navigation to App screen');
             navigationRef.reset({
               index: 0,
               routes: [{ name: 'App' }],
             });
-            console.log('🔐 useLogin onSuccess - Navigation reset completed');
+            devLog.log('🔐 useLogin onSuccess - Navigation reset completed');
           } else {
-            console.log('🔐 useLogin onSuccess - User not active/approved, skipping navigation reset');
+            devLog.log('🔐 useLogin onSuccess - User not active/approved, skipping navigation reset');
           }
         } else {
-          console.log('🔐 useLogin onSuccess - Navigation ref not ready, RootNavigator will handle navigation');
+          devLog.log('🔐 useLogin onSuccess - Navigation ref not ready, RootNavigator will handle navigation');
         }
       });
 
       // Let consumer run additional side-effects
       await callbacks?.onSuccess?.(data);
-      console.log('🔐 useLogin onSuccess - Callbacks completed');
+      devLog.log('🔐 useLogin onSuccess - Callbacks completed');
     },
     onError: (error) => {
       callbacks?.onError?.(error);

@@ -9,6 +9,7 @@ import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { ApplicationsScreen } from '@/features/applications/screens/ApplicationsScreen';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
+import { devLog } from '@/utils/devLogger';
 import type { AppTabParamList } from './types';
 
 const AnimatedIcon = ({ iconName, focused }: { iconName: keyof typeof Ionicons.glyphMap; focused: boolean }) => {
@@ -156,7 +157,7 @@ export const TabNavigator = () => {
             navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
           } catch (error) {
             // Hata durumunda default davranışa izin ver
-            console.warn('Tab navigation error:', error);
+            devLog.warn('Tab navigation error:', error);
           }
         },
       })}
@@ -194,7 +195,7 @@ export const TabNavigator = () => {
             navigation.navigate('JobsTab', { screen: 'JobsList' });
           } catch (error) {
             // Hata durumunda default davranışa izin ver
-            console.warn('Tab navigation error:', error);
+            devLog.warn('Tab navigation error:', error);
           }
         },
       })}
@@ -245,7 +246,7 @@ export const TabNavigator = () => {
             navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
           } catch (error) {
             // Hata durumunda default davranışa izin ver
-            console.warn('Tab navigation error:', error);
+            devLog.warn('Tab navigation error:', error);
           }
         },
       })}

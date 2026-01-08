@@ -1,9 +1,12 @@
 /**
  * APPLICATION DETAIL MODAL - Başvuru Detay Modal Bileşeni
  * ApplicationsScreen'den ayrıldı (TD-002 refactor)
+ * 
+ * NOTE: No local BottomSheetModalProvider needed.
+ * The root-level provider in App.tsx handles all BottomSheetModal components.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Modal as RNModal,
@@ -13,12 +16,13 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { colors, spacing, borderRadius, shadows, typography } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +39,8 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
   visible,
   onClose,
 }) => {
+  const [withdrawReason, setWithdrawReason] = useState('');
+  const alert = useAlertHelpers();
   const { data, isLoading, isError, refetch } = useApplicationDetail(
     applicationId,
     visible
@@ -43,17 +49,21 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
 
   const handleWithdraw = () => {
     if (applicationId) {
-      withdrawMutation.mutate(applicationId, {
-        onSuccess: () => {
-          onClose(); // Close the detail modal after successful withdrawal
-          refetch(); // Refresh the applications list
-        },
-      });
+      withdrawMutation.mutate(
+        { applicationId, reason: withdrawReason },
+        {
+          onSuccess: () => {
+            setWithdrawReason(''); // Clear reason on successful withdrawal
+            onClose(); // Close the detail modal after successful withdrawal
+            refetch(); // Refresh the applications list
+          },
+        }
+      );
     }
   };
 
   const handleWithdrawPress = () => {
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Başvuruyu Geri Çek',
       'Bu başvuruyu geri çekmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
       handleWithdraw,
@@ -304,14 +314,38 @@ export const ApplicationDetailModal: React.FC<ApplicationDetailModalProps> = ({
             )}
 
                 {canWithdraw && (
-                  <Button
-                    label="Başvuruyu Geri Çek"
-                    variant="destructive"
-                    onPress={handleWithdrawPress}
-                    fullWidth
-                    size="lg"
-                    style={styles.withdrawButton}
-                  />
+                  <>
+                    {/* Withdrawal Reason Input */}
+                    <Card variant="outlined" padding="lg" style={styles.reasonCard}>
+                      <View style={styles.reasonHeader}>
+                        <View style={styles.reasonIconContainer}>
+                          <Ionicons name="chatbox-ellipses" size={18} color={colors.primary[600]} />
+                        </View>
+                        <Typography variant="h3" style={styles.reasonTitle}>
+                          Geri Çekme Nedeni (Opsiyonel)
+                        </Typography>
+                      </View>
+                      <Input
+                        placeholder="Neden geri çekiyorsunuz?"
+                        value={withdrawReason}
+                        onChangeText={setWithdrawReason}
+                        multiline
+                        numberOfLines={3}
+                        maxLength={500}
+                        helperText="Bu bilgi hastane ile paylaşılacaktır."
+                        style={styles.reasonInput}
+                      />
+                    </Card>
+                    
+                    <Button
+                      label="Başvuruyu Geri Çek"
+                      variant="destructive"
+                      onPress={handleWithdrawPress}
+                      fullWidth
+                      size="lg"
+                      style={styles.withdrawButton}
+                    />
+                  </>
                 )}
               </ScrollView>
               
@@ -495,6 +529,35 @@ const styles = StyleSheet.create({
   notesText: {
     color: colors.text.primary,
     lineHeight: 22,
+  },
+  reasonCard: {
+    marginTop: spacing.xl,
+    backgroundColor: colors.background.secondary,
+    borderColor: colors.border.light,
+  },
+  reasonHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  reasonIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reasonTitle: {
+    fontWeight: '600',
+    color: colors.text.primary,
+    fontSize: 16,
+  },
+  reasonInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+    paddingTop: spacing.md,
   },
   withdrawButton: {
     marginTop: spacing.xl,

@@ -50,6 +50,28 @@ const mobileDoctorController = require('../../controllers/mobile/mobileDoctorCon
 
 const router = express.Router();
 
+// ============================================================================
+// DEPRECATION WARNING MIDDLEWARE (Requirement 9.5)
+// ============================================================================
+
+/**
+ * Deprecation warning middleware for old endpoints
+ * Adds deprecation headers to responses for backward compatibility
+ * @param {string} oldPath - Old endpoint path
+ * @param {string} newPath - New endpoint path
+ * @returns {Function} Express middleware
+ */
+const deprecationWarning = (oldPath, newPath) => (req, res, next) => {
+  res.setHeader('X-API-Deprecated', 'true');
+  res.setHeader('X-API-Deprecated-Message', `Use ${newPath} instead of ${oldPath}`);
+  res.setHeader('X-API-Deprecated-Sunset', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()); // 30 days from now
+  next();
+};
+
+// ============================================================================
+// MIDDLEWARE SETUP
+// ============================================================================
+
 router.use(mobileErrorHandler);
 router.use(authMiddleware);
 router.use(requireDoctor);
@@ -60,29 +82,69 @@ router.get('/profile', mobileDoctorController.getProfile);
 router.get('/profile/completion', mobileDoctorController.getProfileCompletion);
 router.patch('/profile/personal', validateBody(mobileUpdatePersonalInfoSchema), mobileDoctorController.updatePersonalInfo);
 
-// Education CRUD endpoints
-router.post('/education', validateBody(mobileEducationSchema), mobileDoctorController.addEducation);
-router.get('/education', mobileDoctorController.getEducations);
-router.put('/education/:id', validateParams(mobileEducationParamsSchema), validateBody(mobileEducationSchema), mobileDoctorController.updateEducation);
-router.delete('/education/:id', validateParams(mobileEducationParamsSchema), mobileDoctorController.deleteEducation);
+// ============================================================================
+// EDUCATION CRUD ENDPOINTS
+// ============================================================================
 
-// Experience CRUD endpoints
-router.post('/experience', validateBody(mobileExperienceSchema), mobileDoctorController.addExperience);
-router.get('/experience', mobileDoctorController.getExperiences);
-router.put('/experience/:id', validateParams(mobileExperienceParamsSchema), validateBody(mobileExperienceSchema), mobileDoctorController.updateExperience);
-router.delete('/experience/:id', validateParams(mobileExperienceParamsSchema), mobileDoctorController.deleteExperience);
+// NEW: Plural endpoints with PATCH (Requirements 8.1, 9.1)
+router.post('/educations', validateBody(mobileEducationSchema), mobileDoctorController.addEducation);
+router.get('/educations', mobileDoctorController.getEducations);
+router.patch('/educations/:id', validateParams(mobileEducationParamsSchema), validateBody(mobileEducationSchema), mobileDoctorController.updateEducation);
+router.delete('/educations/:id', validateParams(mobileEducationParamsSchema), mobileDoctorController.deleteEducation);
 
-// Certificate CRUD endpoints
-router.post('/certificate', validateBody(mobileCertificateSchema), mobileDoctorController.addCertificate);
-router.get('/certificate', mobileDoctorController.getCertificates);
-router.put('/certificate/:id', validateParams(mobileCertificateParamsSchema), validateBody(mobileCertificateSchema), mobileDoctorController.updateCertificate);
-router.delete('/certificate/:id', validateParams(mobileCertificateParamsSchema), mobileDoctorController.deleteCertificate);
+// OLD: Singular endpoints (DEPRECATED - Requirement 9.5: Backward compatibility for 30 days)
+router.post('/education', deprecationWarning('/education', '/educations'), validateBody(mobileEducationSchema), mobileDoctorController.addEducation);
+router.get('/education', deprecationWarning('/education', '/educations'), mobileDoctorController.getEducations);
+router.put('/education/:id', deprecationWarning('/education/:id', '/educations/:id'), validateParams(mobileEducationParamsSchema), validateBody(mobileEducationSchema), mobileDoctorController.updateEducation);
+router.delete('/education/:id', deprecationWarning('/education/:id', '/educations/:id'), validateParams(mobileEducationParamsSchema), mobileDoctorController.deleteEducation);
 
-// Language CRUD endpoints
-router.post('/language', validateBody(mobileLanguageSchema), mobileDoctorController.addLanguage);
-router.get('/language', mobileDoctorController.getLanguages);
-router.put('/language/:id', validateParams(mobileLanguageParamsSchema), validateBody(mobileLanguageSchema), mobileDoctorController.updateLanguage);
-router.delete('/language/:id', validateParams(mobileLanguageParamsSchema), mobileDoctorController.deleteLanguage);
+// ============================================================================
+// EXPERIENCE CRUD ENDPOINTS
+// ============================================================================
+
+// NEW: Plural endpoints with PATCH (Requirements 8.2, 9.2)
+router.post('/experiences', validateBody(mobileExperienceSchema), mobileDoctorController.addExperience);
+router.get('/experiences', mobileDoctorController.getExperiences);
+router.patch('/experiences/:id', validateParams(mobileExperienceParamsSchema), validateBody(mobileExperienceSchema), mobileDoctorController.updateExperience);
+router.delete('/experiences/:id', validateParams(mobileExperienceParamsSchema), mobileDoctorController.deleteExperience);
+
+// OLD: Singular endpoints (DEPRECATED - Requirement 9.5: Backward compatibility for 30 days)
+router.post('/experience', deprecationWarning('/experience', '/experiences'), validateBody(mobileExperienceSchema), mobileDoctorController.addExperience);
+router.get('/experience', deprecationWarning('/experience', '/experiences'), mobileDoctorController.getExperiences);
+router.put('/experience/:id', deprecationWarning('/experience/:id', '/experiences/:id'), validateParams(mobileExperienceParamsSchema), validateBody(mobileExperienceSchema), mobileDoctorController.updateExperience);
+router.delete('/experience/:id', deprecationWarning('/experience/:id', '/experiences/:id'), validateParams(mobileExperienceParamsSchema), mobileDoctorController.deleteExperience);
+
+// ============================================================================
+// CERTIFICATE CRUD ENDPOINTS
+// ============================================================================
+
+// NEW: Plural endpoints with PATCH (Requirements 8.3, 9.3)
+router.post('/certificates', validateBody(mobileCertificateSchema), mobileDoctorController.addCertificate);
+router.get('/certificates', mobileDoctorController.getCertificates);
+router.patch('/certificates/:id', validateParams(mobileCertificateParamsSchema), validateBody(mobileCertificateSchema), mobileDoctorController.updateCertificate);
+router.delete('/certificates/:id', validateParams(mobileCertificateParamsSchema), mobileDoctorController.deleteCertificate);
+
+// OLD: Singular endpoints (DEPRECATED - Requirement 9.5: Backward compatibility for 30 days)
+router.post('/certificate', deprecationWarning('/certificate', '/certificates'), validateBody(mobileCertificateSchema), mobileDoctorController.addCertificate);
+router.get('/certificate', deprecationWarning('/certificate', '/certificates'), mobileDoctorController.getCertificates);
+router.put('/certificate/:id', deprecationWarning('/certificate/:id', '/certificates/:id'), validateParams(mobileCertificateParamsSchema), validateBody(mobileCertificateSchema), mobileDoctorController.updateCertificate);
+router.delete('/certificate/:id', deprecationWarning('/certificate/:id', '/certificates/:id'), validateParams(mobileCertificateParamsSchema), mobileDoctorController.deleteCertificate);
+
+// ============================================================================
+// LANGUAGE CRUD ENDPOINTS
+// ============================================================================
+
+// NEW: Plural endpoints with PATCH (Requirements 8.4, 9.4)
+router.post('/languages', validateBody(mobileLanguageSchema), mobileDoctorController.addLanguage);
+router.get('/languages', mobileDoctorController.getLanguages);
+router.patch('/languages/:id', validateParams(mobileLanguageParamsSchema), validateBody(mobileLanguageSchema), mobileDoctorController.updateLanguage);
+router.delete('/languages/:id', validateParams(mobileLanguageParamsSchema), mobileDoctorController.deleteLanguage);
+
+// OLD: Singular endpoints (DEPRECATED - Requirement 9.5: Backward compatibility for 30 days)
+router.post('/language', deprecationWarning('/language', '/languages'), validateBody(mobileLanguageSchema), mobileDoctorController.addLanguage);
+router.get('/language', deprecationWarning('/language', '/languages'), mobileDoctorController.getLanguages);
+router.put('/language/:id', deprecationWarning('/language/:id', '/languages/:id'), validateParams(mobileLanguageParamsSchema), validateBody(mobileLanguageSchema), mobileDoctorController.updateLanguage);
+router.delete('/language/:id', deprecationWarning('/language/:id', '/languages/:id'), validateParams(mobileLanguageParamsSchema), mobileDoctorController.deleteLanguage);
 
 // Photo Request endpoints
 router.post('/profile/photo', mobileDoctorController.requestProfilePhotoChange);

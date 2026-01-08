@@ -397,6 +397,82 @@ const forgotPassword = async (email, req) => {
   return { success: true };
 };
 
+/**
+ * Reset password using reset token
+ * Requirements: 10.2, 10.3, 10.4, 10.5, 12.3
+ * @param {string} token - Password reset token
+ * @param {string} newPassword - New password
+ * @returns {Promise<object>} Success response
+ */
+const resetPassword = async (token, newPassword) => {
+  const db = require('../../config/dbConfig').db;
+  const bcrypt = require('bcryptjs');
+  const logger = require('../../utils/logger');
+
+  // Use transaction for atomicity (Requirement 12.3)
+  return await db.transaction(async (trx) => {
+    // Validate token (Requirement 10.2)
+    const resetToken = await trx('password_reset_tokens')
+      .where('token', token)
+      .where('expires_at', '>', new Date())
+      .whereNull('used_at')
+      .first();
+
+    if (!resetToken) {
+      throw new AppError('Geçersiz veya süresi dolmuş token', 400);
+    }
+
+    // Hash new password (Requirement 10.3)
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    // Update user password (Requirement 10.3)
+    await trx('users')
+      .where('id', resetToken.user_id)
+      .update({ 
+        password_hash: hashedPassword,
+        updated_at: new Date()
+      });
+
+    // Invalidate token to prevent reuse (Requirement 10.5)
+    await trx('password_reset_tokens')
+      .where('id', resetToken.id)
+      .update({ used_at: new Date() });
+
+    logger.info(`Password reset successful for user_id: ${resetToken.user_id} (mobile)`);
+
+    return { success: true };
+  });
+};
+
+/**
+ * Logout from all devices - revoke all refresh tokens
+ * Requirements: 11.2, 11.3, 11.4, 11.5
+ * @param {number} userId - User ID
+ * @returns {Promise<object>} Success response with session count
+ */
+const logoutAll = async (userId) => {
+  const db = require('../../config/dbConfig').db;
+  const logger = require('../../utils/logger');
+
+  // Use transaction for atomicity (Requirement 11.3)
+  const deletedCount = await db.transaction(async (trx) => {
+    // Delete all refresh tokens for user (Requirement 11.2)
+    const deleted = await trx('refresh_tokens')
+      .where('user_id', userId)
+      .del();
+
+    return deleted;
+  });
+
+  logger.info(`Logout all: ${deletedCount} sessions terminated for user_id: ${userId} (mobile)`);
+
+  // Return success with session count (Requirements 11.4, 11.5)
+  return {
+    success: true,
+    sessions_terminated: deletedCount
+  };
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -408,6 +484,8 @@ module.exports = {
   logout,
   getMe,
   changePassword,
-  forgotPassword
+  forgotPassword,
+  resetPassword,
+  logoutAll
 };
 

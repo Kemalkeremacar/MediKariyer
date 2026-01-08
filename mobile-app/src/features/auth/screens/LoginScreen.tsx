@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,11 +15,10 @@ import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
 import { handleApiError, isAuthError, isNetworkError } from '@/utils/errorHandler';
-import { useAuthStore } from '@/store/authStore';
 
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta girin'),
-  password: z.string().min(6, 'Şifre en az 6 karakter olmalı'),
+  password: z.string().min(1, 'Şifre gerekli'),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -28,9 +27,8 @@ export const LoginScreen = () => {
   const { theme } = useTheme();
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const alert = useAlertHelpers();
   const [serverError, setServerError] = useState<string | null>(null);
-  const authStatus = useAuthStore((state) => state.authStatus);
-  const user = useAuthStore((state) => state.user);
   
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -57,7 +55,7 @@ export const LoginScreen = () => {
       
       if (!isApproved && !isAdmin) {
         // User is not approved - show warning and redirect to PendingApproval
-        showAlert.info('Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.');
+        alert.info('Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.');
         // Navigate to PendingApproval screen
         setTimeout(() => {
           navigation.replace('PendingApproval');
@@ -79,7 +77,7 @@ export const LoginScreen = () => {
         message = handleApiError(
           error,
           '/auth/login',
-          (msg) => showAlert.error(msg)
+          (msg) => alert.error(msg)
         );
       }
 

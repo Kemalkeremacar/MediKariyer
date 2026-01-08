@@ -1,13 +1,38 @@
-import React, { useState, useRef } from 'react';
+/**
+ * @file Select.tsx
+ * @description Dropdown select component using BottomSheetModal
+ * 
+ * ⚠️ ARCHITECTURE DEPENDENCY - CRITICAL
+ * ═══════════════════════════════════════════════════════
+ * This component uses BottomSheetModal from @gorhom/bottom-sheet.
+ * It REQUIRES BottomSheetModalProvider to be at ROOT level (App.tsx).
+ * 
+ * RULES FOR SCREENS USING THIS COMPONENT:
+ * - DO NOT use `presentation: 'modal'` in navigation options
+ * - DO NOT wrap with local BottomSheetModalProvider
+ * - MUST use `presentation: 'card'` for proper z-index layering
+ * 
+ * WHY: BottomSheetModal renders relative to its nearest provider.
+ * If provider is inside NavigationContainer, modal appears BEHIND screens.
+ * 
+ * See: ARCHITECTURE.md for full provider hierarchy documentation.
+ * ═══════════════════════════════════════════════════════
+ */
+
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Modal,
-  FlatList,
   StyleSheet,
-  TextInput,
 } from 'react-native';
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetFlatList,
+  BottomSheetTextInput,
+} from '@gorhom/bottom-sheet';
+import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 
@@ -33,29 +58,54 @@ export const Select: React.FC<SelectProps> = ({
   searchable = false,
   disabled = false,
 }) => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const searchInputRef = useRef<TextInput>(null);
+
+  // Snap points: 50% and 90% of screen height
+  const snapPoints = useMemo(() => ['50%', '90%'], []);
 
   const selectedOption = options.find((opt) => opt.value === value);
   
-  const filteredOptions = searchable
-    ? options.filter((opt) =>
-        opt.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : options;
+  // Filter options based on search
+  const filteredOptions = useMemo(() => {
+    if (!searchable || !searchQuery) return options;
+    return options.filter((opt) =>
+      opt.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [options, searchQuery, searchable]);
 
-  const handleSelect = (optionValue: string | number) => {
+  const handleOpen = useCallback(() => {
+    if (!disabled) {
+      bottomSheetModalRef.current?.present();
+    }
+  }, [disabled]);
+
+  const handleSelect = useCallback((optionValue: string | number) => {
     onChange(optionValue);
-    setModalVisible(false);
+    bottomSheetModalRef.current?.dismiss();
     setSearchQuery('');
-  };
+  }, [onChange]);
+
+  // Backdrop component
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        disappearsOnIndex={-1}
+        appearsOnIndex={0}
+        opacity={0.5}
+        pressBehavior="close"
+      />
+    ),
+    []
+  );
 
   return (
     <>
+      {/* Trigger Button */}
       <TouchableOpacity
         style={[styles.selectButton, disabled && styles.selectButtonDisabled]}
-        onPress={() => !disabled && setModalVisible(true)}
+        onPress={handleOpen}
         disabled={disabled}
       >
         <Text
@@ -69,66 +119,59 @@ export const Select: React.FC<SelectProps> = ({
         <Text style={styles.selectArrow}>▼</Text>
       </TouchableOpacity>
 
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
+      {/* Bottom Sheet Modal */}
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        snapPoints={snapPoints}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        backgroundStyle={styles.bottomSheetBackground}
+        handleIndicatorStyle={styles.handleIndicator}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{placeholder}</Text>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            {searchable && (
-              <TextInput
-                ref={searchInputRef}
-                style={styles.searchInput}
-                placeholder="Ara..."
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                autoFocus={false}
-                editable={true}
-              />
-            )}
-
-            <FlatList
-              data={filteredOptions}
-              keyExtractor={(item) => String(item.value)}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[
-                    styles.option,
-                    item.value === value && styles.optionSelected,
-                  ]}
-                  onPress={() => handleSelect(item.value)}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      item.value === value && styles.optionTextSelected,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
-                </View>
-              }
-            />
-          </View>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>{placeholder}</Text>
         </View>
-      </Modal>
+
+        {/* Search Input (if searchable) */}
+        {searchable && (
+          <BottomSheetTextInput
+            style={styles.searchInput}
+            placeholder="Ara..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        )}
+
+        {/* Options List */}
+        <BottomSheetFlatList
+          data={filteredOptions}
+          keyExtractor={(item: SelectOption) => String(item.value)}
+          renderItem={({ item }: { item: SelectOption }) => (
+            <TouchableOpacity
+              style={[
+                styles.option,
+                item.value === value && styles.optionSelected,
+              ]}
+              onPress={() => handleSelect(item.value)}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  item.value === value && styles.optionTextSelected,
+                ]}
+              >
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Sonuç bulunamadı</Text>
+            </View>
+          }
+        />
+      </BottomSheetModal>
     </>
   );
 };
@@ -161,46 +204,35 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     marginLeft: spacing.sm,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
+  bottomSheetBackground: {
     backgroundColor: colors.background.card,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '80%',
-    minHeight: '50%',
-    paddingBottom: spacing.xl,
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  handleIndicator: {
+    backgroundColor: colors.neutral[300],
+    width: 40,
+    height: 4,
+  },
+  header: {
     padding: spacing.lg,
-    // Modern: Border kaldırıldı
+    paddingBottom: spacing.md,
   },
-  modalTitle: {
+  title: {
     fontSize: 18,
     fontWeight: '600',
     color: colors.text.primary,
-  },
-  closeButton: {
-    padding: spacing.sm,
-  },
-  closeButtonText: {
-    fontSize: 24,
-    color: colors.text.secondary,
   },
   searchInput: {
     height: 52,
     borderWidth: 0,
     borderRadius: 16,
     paddingHorizontal: spacing.lg,
-    margin: spacing.lg,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
     fontSize: 16,
     backgroundColor: colors.neutral[100],
+    color: colors.text.primary,
   },
   option: {
     padding: spacing.lg,

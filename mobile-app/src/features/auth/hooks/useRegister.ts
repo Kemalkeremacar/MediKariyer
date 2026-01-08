@@ -1,5 +1,6 @@
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 import { authService } from '@/api/services/authService';
+import { devLog } from '@/utils/devLogger';
 import type { DoctorRegistrationPayload, DoctorRegistrationResponse } from '@/types/auth';
 
 type UseRegisterOptions = Omit<
@@ -13,13 +14,13 @@ type UseRegisterOptions = Omit<
 export const useRegister = (options?: UseRegisterOptions) => {
   return useMutation({
     mutationFn: async (data: DoctorRegistrationPayload) => {
-      console.log('🔵 useRegister: mutationFn called');
+      devLog.log('🔵 useRegister: mutationFn called');
       try {
         const response = await authService.registerDoctor(data);
-        console.log('✅ useRegister: registration successful');
+        devLog.log('✅ useRegister: registration successful');
         return response;
       } catch (error) {
-        console.log('❌ useRegister: registration error:', error);
+        devLog.log('❌ useRegister: registration error:', error);
         throw error;
       }
     },

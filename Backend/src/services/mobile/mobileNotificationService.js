@@ -75,6 +75,7 @@ const markAsRead = async (userId, notificationId) => {
 
 /**
  * Device token kaydı - Expo Push Notification için cihaz token'ını kaydeder
+ * Requirements: 18.1, 18.4, 18.5
  * @param {number} userId - Kullanıcı ID'si
  * @param {string} expoPushToken - Expo Push Token (ExponentPushToken[...] formatında)
  * @param {string} deviceId - Cihaz unique ID'si
@@ -83,6 +84,12 @@ const markAsRead = async (userId, notificationId) => {
  * @returns {Promise<object>} Kayıt sonucu
  */
 const registerDeviceToken = async (userId, expoPushToken, deviceId, platform, appVersion = null) => {
+  // Validate Expo Push Token format (Requirement 18.1)
+  const expoTokenPattern = /^ExponentPushToken\[.+\]$/;
+  if (!expoTokenPattern.test(expoPushToken)) {
+    throw new AppError('Geçersiz Expo Push Token formatı', 400);
+  }
+
   // Transaction içinde upsert mantığını güvenli hale getir
   // Aynı cihaz için eşzamanlı token kayıtları çakışmasını önler
   return await db.transaction(async (trx) => {
@@ -94,7 +101,7 @@ const registerDeviceToken = async (userId, expoPushToken, deviceId, platform, ap
       .first();
 
     if (existing) {
-      // Mevcut kaydı güncelle
+      // Mevcut kaydı güncelle (Requirement 18.5)
       await trx('device_tokens')
         .where('id', existing.id)
         .update({
@@ -159,18 +166,20 @@ const getUnreadCount = async (userId) => {
 };
 
 /**
- * Tek bildirimi sil
+ * Tek bildirimi sil (soft delete)
+ * Requirements: 2.1, 2.4
  * @param {number} userId - Kullanıcı ID'si
  * @param {number} notificationId - Bildirim ID'si
  * @returns {Promise<boolean>} Silme başarılı mı
  */
 const deleteNotification = async (userId, notificationId) => {
-  const deleted = await db('notifications')
+  const updated = await db('notifications')
     .where('id', notificationId)
     .where('user_id', userId)
-    .del();
+    .whereNull('deleted_at')  // Don't update already soft-deleted records
+    .update({ deleted_at: new Date() });
 
-  if (!deleted) {
+  if (!updated) {
     throw new AppError('Bildirim bulunamadı', 404);
   }
 
@@ -178,7 +187,8 @@ const deleteNotification = async (userId, notificationId) => {
 };
 
 /**
- * Çoklu bildirim sil
+ * Çoklu bildirim sil (soft delete with transaction)
+ * Requirements: 2.3, 12.3
  * @param {number} userId - Kullanıcı ID'si
  * @param {number[]} ids - Silinecek bildirim ID'leri
  * @returns {Promise<number>} Silinen bildirim sayısı
@@ -188,12 +198,16 @@ const deleteNotifications = async (userId, ids) => {
     return 0;
   }
 
-  const deleted = await db('notifications')
-    .whereIn('id', ids)
-    .where('user_id', userId)
-    .del();
+  // Use transaction for atomicity (Requirement 12.3)
+  return await db.transaction(async (trx) => {
+    const updated = await trx('notifications')
+      .whereIn('id', ids)
+      .where('user_id', userId)
+      .whereNull('deleted_at')  // Don't update already soft-deleted records
+      .update({ deleted_at: new Date() });
 
-  return deleted;
+    return updated;
+  });
 };
 
 /**
@@ -206,12 +220,22 @@ const markAllAsRead = async (userId) => {
 };
 
 /**
- * Okunmuş bildirimleri temizle
+ * Okunmuş bildirimleri temizle (soft delete with transaction)
+ * Requirements: 2.5, 12.3
  * @param {number} userId - Kullanıcı ID'si
  * @returns {Promise<Object>} Silinen bildirim sayısı
  */
 const clearReadNotifications = async (userId) => {
-  return await notificationService.clearReadNotifications(userId);
+  // Use transaction for atomicity (Requirement 12.3)
+  return await db.transaction(async (trx) => {
+    const updated = await trx('notifications')
+      .where('user_id', userId)
+      .whereNotNull('read_at')  // Only read notifications
+      .whereNull('deleted_at')  // Don't update already soft-deleted records
+      .update({ deleted_at: new Date() });
+
+    return { success: true, deleted_count: updated };
+  });
 };
 
 module.exports = {

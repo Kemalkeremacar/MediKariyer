@@ -16,6 +16,7 @@ import * as Device from 'expo-device';
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { devLog } from './devLogger';
 
 export interface DeviceInfo {
   deviceId: string;
@@ -48,7 +49,7 @@ export async function getDeviceId(): Promise<string> {
       return Constants.deviceId || 'unknown-web';
     }
   } catch (error) {
-    console.error('Error getting device ID:', error);
+    devLog.error('Error getting device ID:', error);
     return Constants.deviceId || 'unknown';
   }
 }

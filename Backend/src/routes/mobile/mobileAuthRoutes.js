@@ -39,7 +39,8 @@ const {
   mobileRefreshTokenSchema,
   mobileLogoutSchema,
   mobileRegisterDoctorSchema,
-  mobileChangePasswordSchema
+  mobileChangePasswordSchema,
+  mobileResetPasswordSchema
 } = require('../../validators/mobileSchemas');
 const { forgotPasswordSchema } = require('../../validators/authSchemas');
 
@@ -54,12 +55,16 @@ router.post('/refresh', validateBody(mobileRefreshTokenSchema), mobileAuthContro
 router.post('/logout', validateBody(mobileLogoutSchema), mobileAuthController.logout);
 // Forgot password - Web ile aynı mantık, aynı mail gönderilir
 router.post('/forgot-password', authLimiter, validateBody(forgotPasswordSchema), mobileAuthController.forgotPassword);
+// Reset password - Requirement 10.1
+router.post('/reset-password', authLimiter, validateBody(mobileResetPasswordSchema), mobileAuthController.resetPassword);
 
 // Protected routes (require authentication)
 const { authMiddleware } = require('../../middleware/authMiddleware');
 const { requireDoctor } = require('../../middleware/roleGuard');
 router.get('/me', authMiddleware, requireDoctor, mobileAuthController.getMe);
 router.post('/change-password', authMiddleware, requireDoctor, validateBody(mobileChangePasswordSchema), mobileAuthController.changePassword);
+// Logout all - Requirement 11.1
+router.post('/logout-all', authMiddleware, requireDoctor, mobileAuthController.logoutAll);
 
 router.use(mobileErrorBoundary);
 

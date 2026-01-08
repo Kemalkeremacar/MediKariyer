@@ -1,8 +1,13 @@
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { applicationService, ApplicationsListResponse } from '@/api/services/application.service';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { handleApiError } from '@/utils/errorHandler';
 import { queryKeys } from '@/api/queryKeys';
+
+interface WithdrawApplicationParams {
+  applicationId: number;
+  reason?: string;
+}
 
 /**
  * Başvuru geri çekme hook'u
@@ -17,13 +22,14 @@ import { queryKeys } from '@/api/queryKeys';
  */
 export const useWithdrawApplication = () => {
   const queryClient = useQueryClient();
+  const alert = useAlertHelpers();
 
   return useMutation({
-    mutationFn: (applicationId: number) =>
-      applicationService.withdraw(applicationId),
+    mutationFn: ({ applicationId, reason }: WithdrawApplicationParams) =>
+      applicationService.withdraw(applicationId, reason),
 
     // Optimistic Update: UI'ı sunucu yanıtı beklemeden güncelle
-    onMutate: async (applicationId: number) => {
+    onMutate: async ({ applicationId }: WithdrawApplicationParams) => {
       // İlgili query'leri iptal et (race condition önleme)
       await queryClient.cancelQueries({ queryKey: queryKeys.applications.all });
       await queryClient.cancelQueries({ queryKey: queryKeys.jobs.all });
@@ -81,7 +87,7 @@ export const useWithdrawApplication = () => {
                 ...page,
                 data: page.data.map((app) =>
                   app.id === applicationId
-                    ? { ...app, status: 'withdrawn' }
+                    ? { ...app, status_id: 5, status: 'Geri Çekildi' }
                     : app
                 ),
               };
@@ -95,7 +101,7 @@ export const useWithdrawApplication = () => {
         queryKeys.applications.detail(applicationId),
         (oldData: any) => {
           if (!oldData) return oldData;
-          return { ...oldData, status: 'withdrawn' };
+          return { ...oldData, status_id: 5, status: 'Geri Çekildi' };
         }
       );
 
@@ -104,7 +110,7 @@ export const useWithdrawApplication = () => {
     },
 
     // Hata durumunda rollback
-    onError: (error: Error, _applicationId, context) => {
+    onError: (error: Error, _params, context) => {
       // Önceki veriyi geri yükle
       if (context?.previousApplications) {
         context.previousApplications.forEach(([queryKey, data]) => {
@@ -113,11 +119,11 @@ export const useWithdrawApplication = () => {
       }
 
       const errorMessage = handleApiError(error, '/applications/withdraw');
-      showAlert.error(errorMessage);
+      alert.error(errorMessage);
     },
 
     // Her durumda (başarılı/başarısız) çalışır
-    onSettled: (_data, _error, _applicationId, context) => {
+    onSettled: (_data, _error, _params, context) => {
       // Sunucudan güncel veriyi al
       queryClient.invalidateQueries({ queryKey: queryKeys.applications.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
@@ -131,7 +137,7 @@ export const useWithdrawApplication = () => {
     },
 
     onSuccess: () => {
-      showAlert.success('Başvuru başarıyla geri çekildi');
+      alert.success('Başvuru başarıyla geri çekildi');
     },
   });
 };

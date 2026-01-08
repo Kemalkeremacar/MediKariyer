@@ -2,13 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
-  Modal as RNModal,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
@@ -16,24 +18,31 @@ import { Button } from '@/components/ui/Button';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { colors, spacing } from '@/theme';
 import { useEducationTypes } from '@/hooks/useLookup';
+import { useEducation } from '@/features/profile/hooks/useEducations';
 import type { DoctorEducation, CreateEducationPayload, UpdateEducationPayload } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type EducationFormModalRouteProp = RouteProp<ProfileStackParamList, 'EducationFormModal'>;
+type EducationFormModalNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'EducationFormModal'>;
 
 interface EducationFormModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSubmit: (data: CreateEducationPayload | UpdateEducationPayload) => void;
-  education?: DoctorEducation | null;
+  onSubmit?: (data: CreateEducationPayload | UpdateEducationPayload) => void;
   isLoading?: boolean;
 }
 
 export const EducationFormModal: React.FC<EducationFormModalProps> = ({
-  visible,
-  onClose,
-  onSubmit,
-  education,
-  isLoading = false,
+  onSubmit: onSubmitProp,
+  isLoading: isLoadingProp = false,
 }) => {
+  const navigation = useNavigation<EducationFormModalNavigationProp>();
+  const route = useRoute<EducationFormModalRouteProp>();
+  const education = route.params?.education;
+
   const { data: educationTypes = [], isLoading: isLoadingTypes } = useEducationTypes();
+  const educationMutations = useEducation();
+  
+  // Combined loading state
+  const isLoading = isLoadingProp || educationMutations.create.isPending || educationMutations.update.isPending;
 
   const [formData, setFormData] = useState({
     education_type_id: 0,
@@ -71,7 +80,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
       });
     }
     setErrors({});
-  }, [education, visible]);
+  }, [education]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -103,7 +112,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
 
     const selectedType = educationTypes.find((t) => t.id === formData.education_type_id);
 
-    const payload: any = {
+    const payload: CreateEducationPayload = {
       education_type_id: formData.education_type_id,
       education_type: selectedType?.name || formData.education_type,
       education_institution: formData.education_institution,
@@ -111,27 +120,36 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
       graduation_year: formData.graduation_year ? parseInt(formData.graduation_year) : new Date().getFullYear(),
     };
 
-    onSubmit(payload);
+    // If external onSubmit provided, use it (for testing/custom handling)
+    if (onSubmitProp) {
+      onSubmitProp(payload);
+      return;
+    }
+
+    // Use internal mutation hooks
+    if (education?.id) {
+      // Update existing education
+      educationMutations.update.mutate(
+        { id: education.id, data: payload },
+        { onSuccess: () => navigation.goBack() }
+      );
+    } else {
+      // Create new education
+      educationMutations.create.mutate(payload, {
+        onSuccess: () => navigation.goBack(),
+      });
+    }
   };
 
-  // Modal kapatıldığında state'i temizle
-  const handleClose = React.useCallback(() => {
-    onClose();
-  }, [onClose]);
+  const handleClose = () => {
+    navigation.goBack();
+  };
 
   return (
-    <RNModal 
-      visible={visible} 
-      animationType="slide" 
-      onRequestClose={handleClose}
-      onDismiss={() => {
-        // Modal tamamen kapandığında state'i temizle
-      }}
-    >
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-        pointerEvents={visible ? 'auto' : 'none'}
+        style={styles.keyboardView}
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -232,7 +250,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
           />
         </View>
       </KeyboardAvoidingView>
-    </RNModal>
+    </SafeAreaView>
   );
 };
 
@@ -240,6 +258,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.primary,
+  },
+  keyboardView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',

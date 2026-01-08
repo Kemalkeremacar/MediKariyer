@@ -1,6 +1,22 @@
 /**
  * @file ProfileEditScreen.tsx
  * @description Modern profil düzenleme ekranı
+ * 
+ * ⚠️ ARCHITECTURE RULE - DO NOT MODIFY WITHOUT READING
+ * ═══════════════════════════════════════════════════════
+ * This screen contains multiple Select components (BottomSheetModal).
+ * 
+ * FORBIDDEN:
+ * - DO NOT use `presentation: 'modal'` in navigation options
+ * - DO NOT add local BottomSheetModalProvider
+ * 
+ * REQUIRED:
+ * - Must use `presentation: 'card'` with `animation: 'slide_from_bottom'`
+ * - Select components rely on ROOT-level BottomSheetModalProvider (App.tsx)
+ * 
+ * WHY: Native modal layers block BottomSheetModal rendering.
+ * See: ARCHITECTURE.md for full provider hierarchy documentation.
+ * ═══════════════════════════════════════════════════════
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -126,25 +142,20 @@ export const ProfileEditScreen = ({ navigation }: any) => {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.first_name.trim()) {
-      newErrors.first_name = 'Ad zorunludur';
+    // Only validate format if field has value (no required checks)
+    if (formData.first_name && formData.first_name.trim().length < 2) {
+      newErrors.first_name = 'Ad en az 2 karakter olmalıdır';
     }
 
-    if (!formData.last_name.trim()) {
-      newErrors.last_name = 'Soyad zorunludur';
-    }
-
-    if (!formData.title) {
-      newErrors.title = 'Ünvan zorunludur';
-    }
-
-    if (!formData.specialty_id) {
-      newErrors.specialty_id = 'Branş zorunludur';
+    if (formData.last_name && formData.last_name.trim().length < 2) {
+      newErrors.last_name = 'Soyad en az 2 karakter olmalıdır';
     }
 
     if (formData.phone && !/^[0-9+\-\s()]+$/.test(formData.phone)) {
       newErrors.phone = 'Geçerli bir telefon numarası giriniz';
     }
+
+    // No required field checks - backend handles validation
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -153,7 +164,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
   // Handle save
   const handleSave = async () => {
     if (!validate()) {
-      showToast('Lütfen tüm zorunlu alanları doldurun', 'error');
+      showToast('Lütfen geçerli bilgiler giriniz', 'error');
       return;
     }
 
@@ -270,7 +281,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
 
             <Card variant="outlined" padding="lg">
               <Input
-                label="Ad *"
+                label="Ad"
                 placeholder="Adınızı giriniz"
                 value={formData.first_name}
                 onChangeText={(text) =>
@@ -281,7 +292,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
               />
 
               <Input
-                label="Soyad *"
+                label="Soyad"
                 placeholder="Soyadınızı giriniz"
                 value={formData.last_name}
                 onChangeText={(text) =>
@@ -293,7 +304,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
 
               <View style={styles.formGroup}>
                 <Typography variant="caption" style={styles.inputLabel}>
-                  Ünvan *
+                  Ünvan
                 </Typography>
                 <Select
                   options={TITLE_OPTIONS}
@@ -326,7 +337,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
             <Card variant="outlined" padding="lg">
               <View style={styles.formGroup}>
                 <Typography variant="caption" style={styles.inputLabel}>
-                  Branş *
+                  Branş
                 </Typography>
                 <Select
                   options={specialtyOptions}

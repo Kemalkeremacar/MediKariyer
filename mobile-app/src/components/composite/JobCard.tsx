@@ -19,10 +19,9 @@ import type { JobListItem } from '@/types/job';
 interface JobCardProps {
   job: JobListItem;
   onPress: () => void;
-  index?: number;
 }
 
-export const JobCard: React.FC<JobCardProps> = ({ job, onPress, index = 0 }) => {
+export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
   // Logo işleme mantığı:
   // 1. Base64 string'ler (data:image/...) → direkt kullan (hastane yüklediği logolar)
   // 2. Path formatındaki logolar (logo.png) → null geç, fallback göster (dosyalar uploads klasöründe yok)

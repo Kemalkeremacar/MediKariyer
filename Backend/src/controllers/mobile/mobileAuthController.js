@@ -89,6 +89,32 @@ const forgotPassword = catchAsync(async (req, res) => {
   );
 });
 
+/**
+ * Reset password using reset token
+ * Requirements: 10.1, 10.2, 10.3
+ * POST /api/mobile/auth/reset-password
+ */
+const resetPassword = catchAsync(async (req, res) => {
+  const { token, new_password } = req.body;
+  
+  await mobileAuthService.resetPassword(token, new_password);
+  
+  return sendSuccess(res, 'Şifre başarıyla sıfırlandı', { success: true });
+});
+
+/**
+ * Logout from all devices
+ * Requirements: 11.1, 11.2, 11.4
+ * POST /api/mobile/auth/logout-all
+ */
+const logoutAll = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  
+  const result = await mobileAuthService.logoutAll(userId);
+  
+  return sendSuccess(res, 'Tüm oturumlar sonlandırıldı', result);
+});
+
 module.exports = {
   registerDoctor,
   login,
@@ -96,6 +122,8 @@ module.exports = {
   logout,
   getMe,
   changePassword,
-  forgotPassword
+  forgotPassword,
+  resetPassword,
+  logoutAll
 };
 

@@ -16,9 +16,8 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { handleApiError } from '@/utils/errorHandler';
-import { queryKeys } from '@/api/queryKeys';
 
 /**
  * CRUD servis metodları için interface
@@ -63,6 +62,7 @@ export function useCRUDMutation<TCreate, TUpdate, TItem>(
   config: CRUDConfig<TCreate, TUpdate, TItem>
 ): CRUDMutationResult<TCreate, TUpdate, TItem> {
   const queryClient = useQueryClient();
+  const alert = useAlertHelpers();
   const { entityName, queryKey, endpoint, service, additionalInvalidateKeys = [] } = config;
 
   // Sadece kendi cache key'ini invalidate et (Domain-Driven Design)
@@ -78,11 +78,11 @@ export function useCRUDMutation<TCreate, TUpdate, TItem>(
     mutationFn: (data: TCreate) => service.create(data),
     onSuccess: () => {
       invalidateQueries();
-      showAlert.success(`${entityName} eklendi`);
+      alert.success(`${entityName} eklendi`);
     },
     onError: (error: Error) => {
       const message = handleApiError(error, endpoint);
-      showAlert.error(message);
+      alert.error(message);
     },
   });
 
@@ -90,11 +90,11 @@ export function useCRUDMutation<TCreate, TUpdate, TItem>(
     mutationFn: ({ id, data }: { id: number; data: TUpdate }) => service.update(id, data),
     onSuccess: () => {
       invalidateQueries();
-      showAlert.success(`${entityName} güncellendi`);
+      alert.success(`${entityName} güncellendi`);
     },
     onError: (error: Error) => {
       const message = handleApiError(error, endpoint);
-      showAlert.error(message);
+      alert.error(message);
     },
   });
 
@@ -102,11 +102,11 @@ export function useCRUDMutation<TCreate, TUpdate, TItem>(
     mutationFn: (id: number) => service.delete(id),
     onSuccess: () => {
       invalidateQueries();
-      showAlert.success(`${entityName} silindi`);
+      alert.success(`${entityName} silindi`);
     },
     onError: (error: Error) => {
       const message = handleApiError(error, endpoint);
-      showAlert.error(message);
+      alert.error(message);
     },
   });
 

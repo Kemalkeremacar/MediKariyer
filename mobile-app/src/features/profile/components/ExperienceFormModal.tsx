@@ -2,13 +2,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
-  Modal as RNModal,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
@@ -17,25 +19,32 @@ import { Select, SelectOption } from '@/components/ui/Select';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { colors, spacing } from '@/theme';
 import { useSpecialties } from '@/hooks/useLookup';
+import { useExperience } from '@/features/profile/hooks/useExperiences';
 import { toDateString, parseDateOnly } from '@/utils/date';
 import type { DoctorExperience, CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type ExperienceFormModalRouteProp = RouteProp<ProfileStackParamList, 'ExperienceFormModal'>;
+type ExperienceFormModalNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'ExperienceFormModal'>;
 
 interface ExperienceFormModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSubmit: (data: CreateExperiencePayload | UpdateExperiencePayload) => void;
-  experience?: DoctorExperience | null;
+  onSubmit?: (data: CreateExperiencePayload | UpdateExperiencePayload) => void;
   isLoading?: boolean;
 }
 
 export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
-  visible,
-  onClose,
-  onSubmit,
-  experience,
-  isLoading = false,
+  onSubmit: onSubmitProp,
+  isLoading: isLoadingProp = false,
 }) => {
+  const navigation = useNavigation<ExperienceFormModalNavigationProp>();
+  const route = useRoute<ExperienceFormModalRouteProp>();
+  const experience = route.params?.experience;
+
   const { data: specialties = [], isLoading: isLoadingSpecialties } = useSpecialties();
+  const experienceMutations = useExperience();
+  
+  // Combined loading state
+  const isLoading = isLoadingProp || experienceMutations.create.isPending || experienceMutations.update.isPending;
 
   const [formData, setFormData] = useState({
     role_title: '',
@@ -76,7 +85,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
       });
     }
     setErrors({});
-  }, [experience, visible]);
+  }, [experience]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -108,36 +117,51 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const payload: any = {
+    const payload: CreateExperiencePayload = {
       role_title: formData.role_title,
       organization: formData.organization,
       specialty_id: formData.specialty_id,
-      start_date: toDateString(formData.start_date),
+      start_date: toDateString(formData.start_date) || '',
       end_date: formData.is_current ? null : toDateString(formData.end_date),
       is_current: formData.is_current,
     };
 
-    onSubmit(payload);
+    // If external onSubmit provided, use it (for testing/custom handling)
+    if (onSubmitProp) {
+      onSubmitProp(payload);
+      return;
+    }
+
+    // Use internal mutation hooks
+    if (experience?.id) {
+      // Update existing experience
+      experienceMutations.update.mutate(
+        { id: experience.id, data: payload },
+        { onSuccess: () => navigation.goBack() }
+      );
+    } else {
+      // Create new experience
+      experienceMutations.create.mutate(payload, {
+        onSuccess: () => navigation.goBack(),
+      });
+    }
   };
 
-  // Modal kapatıldığında state'i temizle
-  const handleClose = React.useCallback(() => {
-    onClose();
-  }, [onClose]);
+  const handleClose = () => {
+    navigation.goBack();
+  };
 
+  /**
+   * ExperienceFormScreen - Experience form as navigation screen
+   * 
+   * NOTE: No local BottomSheetModalProvider needed.
+   * The root-level provider in App.tsx handles all BottomSheetModal components.
+   */
   return (
-    <RNModal 
-      visible={visible} 
-      animationType="slide" 
-      onRequestClose={handleClose}
-      onDismiss={() => {
-        // Modal tamamen kapandığında state'i temizle
-      }}
-    >
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-        pointerEvents={visible ? 'auto' : 'none'}
+        style={styles.keyboardView}
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -264,7 +288,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
           />
         </View>
       </KeyboardAvoidingView>
-    </RNModal>
+    </SafeAreaView>
   );
 };
 
@@ -272,6 +296,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.primary,
+  },
+  keyboardView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',

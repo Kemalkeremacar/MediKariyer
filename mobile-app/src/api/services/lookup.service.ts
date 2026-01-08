@@ -53,6 +53,11 @@ export interface CertificateType {
   is_required?: boolean;
 }
 
+export interface ApplicationStatus {
+  id: number;
+  name: string;
+}
+
 interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -115,5 +120,13 @@ export const lookupService = {
   getCertificateTypes: async (): Promise<CertificateType[]> => {
     // Certificate types tablosu kaldırıldı, boş array döndür
     return [];
+  },
+
+  /**
+   * Başvuru durumlarını getir
+   */
+  getApplicationStatuses: async (): Promise<ApplicationStatus[]> => {
+    const response = await apiClient.get<ApiResponse<ApplicationStatus[]>>(endpoints.lookup.applicationStatuses);
+    return response.data.data;
   },
 };

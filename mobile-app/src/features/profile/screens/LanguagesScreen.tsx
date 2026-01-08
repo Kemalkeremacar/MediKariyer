@@ -1,63 +1,43 @@
-import React, { useState } from 'react';
-import { showAlert } from '@/utils/alert';
+import React from 'react';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { LanguageCard } from '@/components/composite/LanguageCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
-import { LanguageFormModal } from '../components/LanguageFormModal';
 import { colors, spacing } from '@/theme';
 import { useLanguages, useLanguage } from '../hooks/useLanguages';
-import type { DoctorLanguage, CreateLanguagePayload, UpdateLanguagePayload } from '@/types/profile';
+import type { DoctorLanguage } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type LanguagesScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Languages'>;
 
 export const LanguagesScreen = () => {
-  const navigation = useNavigation();
-  const [selectedLanguage, setSelectedLanguage] = useState<DoctorLanguage | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation<LanguagesScreenNavigationProp>();
+  const alert = useAlertHelpers();
   
   const { data: languages = [], isLoading, error, refetch, isRefetching } = useLanguages();
   const languageMutations = useLanguage();
 
   const handleAddLanguage = () => {
-    setSelectedLanguage(null);
-    setModalVisible(true);
+    navigation.navigate('LanguageFormModal', { language: undefined });
   };
 
   const handleEditLanguage = (language: DoctorLanguage) => {
-    setSelectedLanguage(language);
-    setModalVisible(true);
+    navigation.navigate('LanguageFormModal', { language });
   };
 
   const handleDeleteLanguage = (id: number) => {
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Dil Sil',
       'Bu dil kaydını silmek istediğinizden emin misiniz?',
       () => languageMutations.delete.mutate(id)
     );
-  };
-
-  const handleSubmitLanguage = (data: CreateLanguagePayload | UpdateLanguagePayload) => {
-    if (selectedLanguage) {
-      languageMutations.update.mutate(
-        { id: selectedLanguage.id, data },
-        {
-          onSuccess: () => {
-            setModalVisible(false);
-            setSelectedLanguage(null);
-          },
-        }
-      );
-    } else {
-      languageMutations.create.mutate(data as CreateLanguagePayload, {
-        onSuccess: () => {
-          setModalVisible(false);
-        },
-      });
-    }
   };
 
   return (
@@ -104,7 +84,6 @@ export const LanguagesScreen = () => {
           data={languages}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => {
-            // Eğer language veya level null ise bu item'ı gösterme
             if (!item.language || !item.level) {
               return null;
             }
@@ -140,18 +119,6 @@ export const LanguagesScreen = () => {
         icon={<Ionicons name="add" size={24} color={colors.background.primary} />}
         onPress={handleAddLanguage}
         position="bottom-right"
-      />
-
-      {/* Language Form Modal */}
-      <LanguageFormModal
-        visible={modalVisible}
-        onClose={() => {
-          setModalVisible(false);
-          setSelectedLanguage(null);
-        }}
-        onSubmit={handleSubmitLanguage}
-        language={selectedLanguage}
-        isLoading={languageMutations.create.isPending || languageMutations.update.isPending}
       />
     </Screen>
   );

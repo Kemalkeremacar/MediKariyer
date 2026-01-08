@@ -17,22 +17,10 @@ export const languageService = {
    * Dil listesini getirir
    */
   async getLanguages(): Promise<DoctorLanguage[]> {
-    try {
-      console.log('🌐 Fetching languages from:', endpoints.doctor.languages);
-      const response = await apiClient.get<ApiResponse<DoctorLanguage[]>>(
-        endpoints.doctor.languages,
-      );
-      console.log('✅ Languages fetched successfully:', response.data.data?.length || 0, 'items');
-      return response.data.data;
-    } catch (error: any) {
-      console.error('❌ Failed to fetch languages:', {
-        message: error?.message,
-        response: error?.response?.data,
-        status: error?.response?.status,
-        url: error?.config?.url,
-      });
-      throw error;
-    }
+    const response = await apiClient.get<ApiResponse<DoctorLanguage[]>>(
+      endpoints.doctor.languages,
+    );
+    return response.data.data;
   },
 
   /**
@@ -55,7 +43,7 @@ export const languageService = {
     id: number,
     payload: UpdateLanguagePayload,
   ): Promise<DoctorLanguage> {
-    const response = await apiClient.put<ApiResponse<DoctorLanguage>>(
+    const response = await apiClient.patch<ApiResponse<DoctorLanguage>>(
       endpoints.doctor.language(id),
       payload,
     );

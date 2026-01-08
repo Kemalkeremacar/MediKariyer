@@ -30,28 +30,32 @@ import { ApplicationCard } from '@/components/composite/ApplicationCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { ApplicationDetailModal } from '../components/ApplicationDetailModal';
 import { useApplications } from '../hooks/useApplications';
+import { useApplicationStatuses } from '@/hooks/useLookup';
 import { Ionicons } from '@expo/vector-icons';
 
-// Status display mapping
-const STATUS_DISPLAY: Record<string, string> = {
-  pending: 'Başvuruldu',
-  reviewing: 'İnceleniyor',
-  approved: 'Kabul Edildi',
-  rejected: 'Red Edildi',
-  withdrawn: 'Geri Çekildi',
+// Status display mapping - fallback for when lookup is not loaded
+const STATUS_DISPLAY: Record<number, string> = {
+  1: 'Başvuruldu',
+  2: 'İnceleniyor',
+  3: 'Kabul Edildi',
+  4: 'Reddedildi',
+  5: 'Geri Çekildi',
 };
 
 export const ApplicationsScreen = () => {
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
+  
+  // Fetch application statuses for display names
+  const { data: statuses = [] } = useApplicationStatuses();
   
   // Filter hook - ortak filtreleme mantığı
   const filter = useFilter<ApplicationFilters>({}, { minLength: 2 });
 
   // Query filters - useMemo ile normalize et, gereksiz re-render'ları önle
   const queryFilters = useMemo(() => ({
-    status: filter.filters.status || undefined,
+    status_id: filter.filters.status_id || undefined,
     keyword: filter.shouldFetch ? filter.debouncedQuery : undefined,
-  }), [filter.filters.status, filter.shouldFetch, filter.debouncedQuery]);
+  }), [filter.filters.status_id, filter.shouldFetch, filter.debouncedQuery]);
 
   // Sadece debounced query değiştiğinde API çağrısı yap
   const query = useApplications(queryFilters);
@@ -95,9 +99,14 @@ export const ApplicationsScreen = () => {
     filter.handleFilterChange(newFilters);
   }, [filter]);
 
-  const getStatusDisplayName = (status?: string): string => {
-    if (!status) return 'Tüm Başvurular';
-    return STATUS_DISPLAY[status] || status;
+  // Get status display name from lookup or fallback
+  const getStatusDisplayName = (statusId?: number): string => {
+    if (!statusId) return 'Tüm Başvurular';
+    // Try to find from lookup data first
+    const status = statuses.find(s => s.id === statusId);
+    if (status) return status.name;
+    // Fallback to hardcoded mapping
+    return STATUS_DISPLAY[statusId] || `Durum ${statusId}`;
   };
 
   const renderListHeader = () => (
@@ -154,10 +163,10 @@ export const ApplicationsScreen = () => {
       {/* Active Filter Chip */}
       {filter.hasActiveFilters && (
         <View style={styles.activeFiltersContainer}>
-          {filter.filters.status && (
+          {filter.filters.status_id && (
             <View style={styles.activeFilterChip}>
               <Typography variant="body" style={styles.activeFilterText}>
-                {getStatusDisplayName(filter.filters.status)}
+                {getStatusDisplayName(filter.filters.status_id)}
               </Typography>
               <TouchableOpacity onPress={() => filter.handleFilterChange({})}>
                 <Ionicons name="close-circle" size={18} color={colors.primary[600]} />
@@ -182,10 +191,9 @@ export const ApplicationsScreen = () => {
           ListHeaderComponent={renderListHeader}
           data={applications}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item, index }) => (
+          renderItem={({ item }) => (
             <ApplicationCard
               application={item}
-              index={index}
               onPress={() => setSelectedApplicationId(item.id)}
             />
           )}
@@ -199,10 +207,6 @@ export const ApplicationsScreen = () => {
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}
-          // FlatList Performance Optimizations
-          initialNumToRender={10}
-          maxToRenderPerBatch={10}
-          windowSize={5}
           removeClippedSubviews={true}
           ListFooterComponent={
             query.isFetchingNextPage ? (

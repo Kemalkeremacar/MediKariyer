@@ -22,6 +22,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { errorLogger } from '@/utils/errorLogger';
 import { queryKeys } from '@/api/queryKeys';
 import { navigationRef } from '@/navigation/navigationRef';
+import { devLog } from '@/utils/devLogger';
 import type { RootNavigationParamList } from '@/navigation/types';
 
 /**
@@ -37,18 +38,18 @@ const handleInAppStateUpdate = (
   queryClient: ReturnType<typeof useQueryClient>
 ) => {
   if (!data) {
-    console.log('[handleInAppStateUpdate] No data found in notification');
+    devLog.log('[handleInAppStateUpdate] No data found in notification');
     return;
   }
   
   const { action, entity_id, entity_type } = data;
   
   if (!action) {
-    console.log('[handleInAppStateUpdate] No action found in notification data');
+    devLog.log('[handleInAppStateUpdate] No action found in notification data');
     return;
   }
   
-  console.log(`[handleInAppStateUpdate] Action: ${action}, Entity ID: ${entity_id}, Entity Type: ${entity_type}`);
+  devLog.log(`[handleInAppStateUpdate] Action: ${action}, Entity ID: ${entity_id}, Entity Type: ${entity_type}`);
   
   switch (action) {
     case 'application_created':
@@ -94,7 +95,7 @@ const handleInAppStateUpdate = (
       break;
       
     default:
-      console.log(`[handleInAppStateUpdate] Unknown action: ${action}`);
+      devLog.log(`[handleInAppStateUpdate] Unknown action: ${action}`);
       // Bilinmeyen action için sadece bildirim listesini güncelle
       break;
   }
@@ -126,7 +127,7 @@ export const usePushNotifications = () => {
     notificationListener.current =
       pushNotificationService.addNotificationReceivedListener(
         (notification) => {
-          console.log('[usePushNotifications] Foreground notification received:', notification);
+          devLog.log('[usePushNotifications] Foreground notification received:', notification);
           const data = notification.request?.content?.data || {};
           
           // In-App State Update: Backend'den gelen action ve entity_id'ye göre ilgili query'leri invalidate et
@@ -147,7 +148,7 @@ export const usePushNotifications = () => {
     responseListener.current =
       pushNotificationService.addNotificationResponseReceivedListener(
         (response) => {
-          console.log('[usePushNotifications] Notification tapped:', response);
+          devLog.log('[usePushNotifications] Notification tapped:', response);
           lastNotificationResponse.current = response;
           
           // In-App State Update: Bildirime tıklandığında da state'i güncelle
@@ -186,7 +187,7 @@ export const usePushNotifications = () => {
       try {
         const lastNotification = await Notifications.getLastNotificationResponseAsync();
         if (lastNotification) {
-          console.log('[usePushNotifications] Last notification on app start:', lastNotification);
+          devLog.log('[usePushNotifications] Last notification on app start:', lastNotification);
           // Uygulama açıldığında son bildirimi handle et
           setTimeout(() => {
             handleNotificationTapped(lastNotification);
@@ -194,7 +195,7 @@ export const usePushNotifications = () => {
         }
       } catch (error) {
         // Hata durumunda sessizce ignore et
-        console.warn('[usePushNotifications] Failed to get last notification:', error);
+        devLog.warn('[usePushNotifications] Failed to get last notification:', error);
       }
     };
 
@@ -318,7 +319,7 @@ export const usePushNotifications = () => {
         }
       } catch (navError) {
         // Navigation hatası - sessizce ignore et
-        console.warn('[usePushNotifications] Navigation failed after notification tap:', navError);
+        devLog.warn('[usePushNotifications] Navigation failed after notification tap:', navError);
       }
     }
   };

@@ -12,7 +12,6 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileCoreService } from '@/api/services/profile/profile.core.service';
-import { handleApiError } from '@/utils/errorHandler';
 import type { UpdatePersonalInfoPayload } from '@/types/profile';
 
 /**

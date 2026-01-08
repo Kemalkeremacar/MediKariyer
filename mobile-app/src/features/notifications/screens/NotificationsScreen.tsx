@@ -5,7 +5,8 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
+import { devLog } from '@/utils/devLogger';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { IconButton } from '@/components/ui/IconButton';
@@ -31,6 +32,7 @@ type NotificationsScreenNavigationProp = CompositeNavigationProp<
 
 export const NotificationsScreen = () => {
   const navigation = useNavigation<NotificationsScreenNavigationProp>();
+  const alert = useAlertHelpers();
   const [activeTab, setActiveTab] = useState('all');
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -100,7 +102,7 @@ export const NotificationsScreen = () => {
       try {
         await markAsRead(notification.id);
       } catch (error) {
-        console.error('Failed to mark notification as read:', error);
+        devLog.error('Failed to mark notification as read:', error);
       }
     }
     
@@ -152,7 +154,7 @@ export const NotificationsScreen = () => {
           break;
       }
     } catch (error) {
-      console.error('Navigation error:', error);
+      devLog.error('Navigation error:', error);
     }
   }, [navigation, markAsRead]);
 
@@ -170,7 +172,7 @@ export const NotificationsScreen = () => {
       // Backend'deki mark-all-read endpoint'ini kullan (daha efficient)
       await markAllAsRead();
     } catch (error) {
-      console.error('Failed to mark all as read:', error);
+      devLog.error('Failed to mark all as read:', error);
     }
   }, [notificationList, markAllAsRead]);
 
@@ -212,7 +214,7 @@ export const NotificationsScreen = () => {
       setSelectedIds(new Set());
       setSelectionMode(false);
     } catch (error) {
-      console.error('Failed to mark selected as read:', error);
+      devLog.error('Failed to mark selected as read:', error);
     }
   }, [selectedIds, markAsRead]);
 
@@ -230,7 +232,7 @@ export const NotificationsScreen = () => {
     
     const selectedCount = selectedIds.size;
     
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Bildirimleri Sil',
       `${selectedCount} bildirim silinecek. Bu işlem geri alınamaz.`,
       async () => {
@@ -240,7 +242,7 @@ export const NotificationsScreen = () => {
           setSelectedIds(new Set());
           setSelectionMode(false);
         } catch (error) {
-          console.error('Failed to delete notifications:', error);
+          devLog.error('Failed to delete notifications:', error);
         }
       },
       undefined,

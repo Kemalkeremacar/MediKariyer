@@ -102,3 +102,15 @@ export const useCertificateTypes = () => {
     gcTime: LOOKUP_GC_TIME,
   });
 };
+
+/**
+ * Başvuru durumlarını getir
+ */
+export const useApplicationStatuses = () => {
+  return useQuery({
+    queryKey: queryKeys.lookup.applicationStatuses(),
+    queryFn: lookupService.getApplicationStatuses,
+    staleTime: LOOKUP_STALE_TIME,
+    gcTime: LOOKUP_GC_TIME,
+  });
+};

@@ -104,10 +104,9 @@ export const JobsScreen = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const renderJob = useCallback(
-    ({ item, index }: { item: JobListItem; index: number }) => (
+    ({ item }: { item: JobListItem }) => (
       <JobCard
         job={item}
-        index={index}
         onPress={() => {
           navigation.navigate('JobDetail', { id: item.id });
         }}
@@ -231,10 +230,6 @@ export const JobsScreen = () => {
           />
         }
         showsVerticalScrollIndicator={false}
-        // FlatList Performance Optimizations
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
         removeClippedSubviews={true}
         ListEmptyComponent={
           <View style={styles.emptyState}>

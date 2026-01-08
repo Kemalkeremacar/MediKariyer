@@ -43,7 +43,7 @@ export const experienceService = {
     id: number,
     payload: UpdateExperiencePayload,
   ): Promise<DoctorExperience> {
-    const response = await apiClient.put<ApiResponse<DoctorExperience>>(
+    const response = await apiClient.patch<ApiResponse<DoctorExperience>>(
       endpoints.doctor.experience(id),
       payload,
     );

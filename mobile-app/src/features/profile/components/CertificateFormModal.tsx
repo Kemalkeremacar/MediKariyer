@@ -2,34 +2,44 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  Modal as RNModal,
   ScrollView,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { colors, spacing } from '@/theme';
+import { useCertificate } from '@/features/profile/hooks/useCertificates';
 import type { DoctorCertificate, CreateCertificatePayload, UpdateCertificatePayload } from '@/types/profile';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type CertificateFormModalRouteProp = RouteProp<ProfileStackParamList, 'CertificateFormModal'>;
+type CertificateFormModalNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'CertificateFormModal'>;
 
 interface CertificateFormModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSubmit: (data: CreateCertificatePayload | UpdateCertificatePayload) => void;
-  certificate?: DoctorCertificate | null;
+  onSubmit?: (data: CreateCertificatePayload | UpdateCertificatePayload) => void;
   isLoading?: boolean;
 }
 
 export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
-  visible,
-  onClose,
-  onSubmit,
-  certificate,
-  isLoading = false,
+  onSubmit: onSubmitProp,
+  isLoading: isLoadingProp = false,
 }) => {
+  const navigation = useNavigation<CertificateFormModalNavigationProp>();
+  const route = useRoute<CertificateFormModalRouteProp>();
+  const certificate = route.params?.certificate;
+  
+  const certificateMutations = useCertificate();
+  
+  // Combined loading state
+  const isLoading = isLoadingProp || certificateMutations.create.isPending || certificateMutations.update.isPending;
+
   const [formData, setFormData] = useState({
     certificate_name: '',
     institution: '',
@@ -53,7 +63,7 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
       });
     }
     setErrors({});
-  }, [certificate, visible]);
+  }, [certificate]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -77,34 +87,48 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const payload: any = {
+    const payload: CreateCertificatePayload = {
       certificate_name: formData.certificate_name,
       institution: formData.institution,
       certificate_year: formData.certificate_year ? parseInt(formData.certificate_year) : new Date().getFullYear(),
     };
 
-    onSubmit(payload);
+    // If external onSubmit provided, use it (for testing/custom handling)
+    if (onSubmitProp) {
+      onSubmitProp(payload);
+      return;
+    }
+
+    // Use internal mutation hooks
+    if (certificate?.id) {
+      // Update existing certificate
+      certificateMutations.update.mutate(
+        { id: certificate.id, data: payload },
+        { onSuccess: () => navigation.goBack() }
+      );
+    } else {
+      // Create new certificate
+      certificateMutations.create.mutate(payload, {
+        onSuccess: () => navigation.goBack(),
+      });
+    }
   };
 
-  // Modal kapatıldığında state'i temizle
-  const handleClose = React.useCallback(() => {
-    onClose();
-  }, [onClose]);
+  const handleClose = () => {
+    navigation.goBack();
+  };
 
+  /**
+   * CertificateFormScreen - Certificate form as navigation screen
+   * 
+   * NOTE: No local BottomSheetModalProvider needed.
+   * The root-level provider in App.tsx handles all BottomSheetModal components.
+   */
   return (
-    <RNModal 
-      visible={visible} 
-      animationType="slide" 
-      onRequestClose={handleClose}
-      onDismiss={() => {
-        // Modal tamamen kapandığında state'i temizle
-        // Bu, modal kapatıldıktan sonra tıklama sorunlarını önler
-      }}
-    >
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.container}
-        pointerEvents={visible ? 'auto' : 'none'}
+        style={styles.keyboardView}
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
@@ -167,7 +191,7 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
           />
         </View>
       </KeyboardAvoidingView>
-    </RNModal>
+    </SafeAreaView>
   );
 };
 
@@ -175,6 +199,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.primary,
+  },
+  keyboardView: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',

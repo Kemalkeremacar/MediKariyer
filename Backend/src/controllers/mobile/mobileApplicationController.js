@@ -36,11 +36,11 @@ const { catchAsync } = require('../../utils/errorHandler');
 const mobileApplicationService = require('../../services/mobile/mobileApplicationService');
 
 const listApplications = catchAsync(async (req, res) => {
-  const { page, limit, status, keyword, search } = req.query;
+  const { page, limit, status_id, keyword, search } = req.query;
   const result = await mobileApplicationService.listApplications(req.user.id, { 
     page, 
     limit, 
-    status,
+    status_id,  // Use status_id instead of status (Requirement 1.2)
     keyword: keyword || search 
   });
   
@@ -67,7 +67,8 @@ const createApplication = catchAsync(async (req, res) => {
 
 const withdrawApplication = catchAsync(async (req, res) => {
   const { applicationId } = req.params;
-  await mobileApplicationService.withdrawApplication(req.user.id, applicationId);
+  const { reason } = req.body;  // Extract reason from request body (Requirement 3.1)
+  await mobileApplicationService.withdrawApplication(req.user.id, applicationId, reason);
   return sendSuccess(res, 'Başvuru geri çekildi', { success: true });
 });
 

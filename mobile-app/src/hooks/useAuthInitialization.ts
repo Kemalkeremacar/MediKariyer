@@ -21,6 +21,7 @@ import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import { authService } from '@/api/services/authService';
 import { REQUEST_TIMEOUT_MS } from '@/config/constants';
+import { devLog } from '@/utils/devLogger';
 
 export const useAuthInitialization = () => {
   const markAuthenticated = useAuthStore((state) => state.markAuthenticated);
@@ -46,7 +47,7 @@ export const useAuthInitialization = () => {
             const isValid = await tokenManager.validateTokens();
             
             if (!isValid) {
-              console.log('🔴 No valid tokens found, marking unauthenticated');
+              devLog.log('🔴 No valid tokens found, marking unauthenticated');
               markUnauthenticated();
               return;
             }
@@ -55,7 +56,7 @@ export const useAuthInitialization = () => {
             const isDeviceValid = await tokenManager.validateDeviceBinding();
             
             if (!isDeviceValid) {
-              console.log('🔴 Device binding validation failed, tokens from different device');
+              devLog.log('🔴 Device binding validation failed, tokens from different device');
               await tokenManager.clearTokens();
               markUnauthenticated();
               return;
@@ -65,35 +66,35 @@ export const useAuthInitialization = () => {
             // API client interceptor will handle token refresh if needed
             // If token is expired, the interceptor will refresh it automatically
             try {
-              console.log('🔵 Fetching user data via mobile API...');
+              devLog.log('🔵 Fetching user data via mobile API...');
               const user = await authService.getMe();
               
               // Mark user as authenticated with user data
               // RootNavigator will handle is_active and is_approved checks
               markAuthenticated(user);
-              console.log('✅ User data fetched successfully via mobile API');
+              devLog.log('✅ User data fetched successfully via mobile API');
             } catch (error: any) {
               // Scenario B: 401 Unauthorized - Token expired or invalid
               const isAuthError = error?.response?.status === 401 || error?.name === 'ApiError';
               
               if (isAuthError) {
-                console.log('🔴 Authentication failed (401), clearing tokens and marking unauthenticated');
+                devLog.log('🔴 Authentication failed (401), clearing tokens and marking unauthenticated');
                 await tokenManager.clearTokens();
                 markUnauthenticated();
               } else {
                 // Scenario C: Network Error - Keep token, allow offline mode
                 // User can retry later when network is available
-                console.warn('⚠️ Network error during auth initialization, keeping token for offline mode:', error?.message);
+                devLog.warn('⚠️ Network error during auth initialization, keeping token for offline mode:', error?.message);
                 // Don't clear tokens on network error - allow user to continue with cached data
                 // Check if we have persisted user data in store (from previous session)
                 // If yes, mark as authenticated to allow offline access
                 // If no, mark as unauthenticated (first time login requires network)
                 const persistedUser = useAuthStore.getState().user;
                 if (persistedUser) {
-                  console.log('✅ Using persisted user data for offline mode');
+                  devLog.log('✅ Using persisted user data for offline mode');
                   markAuthenticated(persistedUser);
                 } else {
-                  console.log('⚠️ No persisted user data, marking unauthenticated');
+                  devLog.log('⚠️ No persisted user data, marking unauthenticated');
                   markUnauthenticated();
                 }
               }
@@ -104,15 +105,15 @@ export const useAuthInitialization = () => {
       } catch (error) {
         // Handle timeout or other errors
         if (error instanceof Error && error.message === 'Auth initialization timeout') {
-          console.warn('⚠️ Auth initialization timed out, marking unauthenticated');
+          devLog.warn('⚠️ Auth initialization timed out, marking unauthenticated');
         } else {
-          console.error('❌ Auth initialization error:', error);
+          devLog.error('❌ Auth initialization error:', error);
         }
         // On timeout or error, clear tokens and mark as unauthenticated
         try {
           await tokenManager.clearTokens();
         } catch (clearError) {
-          console.error('Failed to clear tokens:', clearError);
+          devLog.error('Failed to clear tokens:', clearError);
         }
         markUnauthenticated();
       } finally {

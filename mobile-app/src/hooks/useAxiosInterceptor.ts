@@ -24,7 +24,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import { navigationRef } from '@/navigation/navigationRef';
-import { devLog, devWarn } from '@/utils/devLogger';
+import { devLog } from '@/utils/devLogger';
 
 /**
  * Axios interceptor hook for navigation integration
@@ -44,7 +44,7 @@ export const useAxiosInterceptor = () => {
     // If we need to add navigation-specific logic here in the future,
     // we can listen to auth store changes and navigate accordingly
     
-    devLog('🔧 useAxiosInterceptor: Hook initialized');
+    devLog.log('🔧 useAxiosInterceptor: Hook initialized');
     
     // Track previous auth status to detect actual logout vs login failure
     let previousAuthStatus: 'idle' | 'authenticated' | 'unauthenticated' = 'idle';
@@ -62,7 +62,7 @@ export const useAxiosInterceptor = () => {
         previousAuthStatus === 'authenticated' &&
         navigationRef.isReady()
       ) {
-        devLog('🔧 useAxiosInterceptor: User unauthenticated (logout detected), ensuring navigation to Auth');
+        devLog.log('🔧 useAxiosInterceptor: User unauthenticated (logout detected), ensuring navigation to Auth');
         // Navigation will be handled by RootNavigator based on authStatus
         // This hook is mainly for future extensibility
       } else if (
@@ -70,7 +70,7 @@ export const useAxiosInterceptor = () => {
         previousAuthStatus !== 'authenticated'
       ) {
         // This is likely a login failure or initial state, don't log or navigate
-        devLog('🔧 useAxiosInterceptor: User unauthenticated (login failure or initial state), skipping navigation');
+        devLog.log('🔧 useAxiosInterceptor: User unauthenticated (login failure or initial state), skipping navigation');
       }
       
       // Update previous status
@@ -94,7 +94,7 @@ export const useAxiosInterceptor = () => {
  * Can be called from anywhere in the app
  */
 export const handleAuthError = async () => {
-  devWarn('🔒 handleAuthError: Clearing tokens and logging out');
+  devLog.warn('🔒 handleAuthError: Clearing tokens and logging out');
   
   try {
     // Clear tokens
@@ -111,7 +111,7 @@ export const handleAuthError = async () => {
       });
     }
   } catch (error) {
-    console.error('Error during auth error handling:', error);
+    devLog.error('Error during auth error handling:', error);
   }
 };
 

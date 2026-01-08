@@ -22,7 +22,7 @@ import { useAuthStore } from '@/store/authStore';
 import { endpoints } from './endpoints';
 import { errorLogger } from '@/utils/errorLogger';
 import { getUserFriendlyErrorMessage } from '@/utils/errorHandler';
-import { devLog, devWarn, devError } from '@/utils/devLogger';
+import { devLog } from '@/utils/devLogger';
 
 // ============================================================================
 // TYPES
@@ -174,7 +174,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
-      devLog('📤 API Request:', config.method?.toUpperCase(), fullUrl);
+      devLog.log('📤 API Request:', config.method?.toUpperCase(), fullUrl);
       
       // Skip token refresh logic for public endpoints
       if (isPublicEndpoint(config.url)) {
@@ -196,7 +196,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
       
       // Start proactive refresh if needed (only one request will trigger this)
       if (shouldRefresh && !isRefreshing) {
-        devLog('🔄 Token needs refresh, triggering proactive refresh...');
+        devLog.log('🔄 Token needs refresh, triggering proactive refresh...');
         isRefreshing = true;
         
         // Start refresh in background (don't await here, let it run async)
@@ -204,7 +204,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
           try {
             const refreshToken = await tokenManager.getRefreshToken();
             if (!refreshToken) {
-              devWarn('⚠️ No refresh token available, requests will proceed');
+              devLog.warn('⚠️ No refresh token available, requests will proceed');
               processPendingQueue(null);
               isRefreshing = false;
               return;
@@ -233,10 +233,10 @@ const attachInterceptors = (instance: AxiosInstance) => {
             await tokenManager.saveTokens(accessToken, newRefreshToken);
             useAuthStore.getState().markAuthenticated(user as any);
             
-            devLog('✅ Proactive token refresh successful');
+            devLog.log('✅ Proactive token refresh successful');
             processPendingQueue(null);
           } catch (error) {
-            devWarn('⚠️ Proactive token refresh failed, requests will proceed and retry on 401');
+            devLog.warn('⚠️ Proactive token refresh failed, requests will proceed and retry on 401');
             processPendingQueue(error);
           } finally {
             isRefreshing = false;
@@ -247,9 +247,9 @@ const attachInterceptors = (instance: AxiosInstance) => {
       // If refresh is needed or in progress, wait for it to complete
       if (shouldRefresh || isRefreshing) {
         if (isRefreshing) {
-          devLog('⏳ Refresh in progress, waiting...');
+          devLog.log('⏳ Refresh in progress, waiting...');
         } else {
-          devLog('🔄 Token needs refresh, waiting for refresh to start...');
+          devLog.log('🔄 Token needs refresh, waiting for refresh to start...');
         }
         
         // Wait for refresh to complete
@@ -272,7 +272,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
     },
     (error) => {
       // Request error (network error, timeout, etc.)
-      devError('❌ Request error:', error);
+      devLog.error('❌ Request error:', error);
       errorLogger.logError(error, {
         type: 'request',
         phase: 'interceptor',
@@ -286,12 +286,12 @@ const attachInterceptors = (instance: AxiosInstance) => {
   // ============================================================================
   instance.interceptors.response.use(
     (response) => {
-      devLog('📥 API Response:', response.config.method?.toUpperCase(), response.config.url);
-      devLog('📥 Response status:', response.status);
+      devLog.log('📥 API Response:', response.config.method?.toUpperCase(), response.config.url);
+      devLog.log('📥 Response status:', response.status);
       return response;
     },
     async (error: AxiosError<BackendErrorResponse>) => {
-      devError('❌ API Error:', error.config?.url, error.response?.status);
+      devLog.error('❌ API Error:', error.config?.url, error.response?.status);
       
       // Network error handling (no response from server)
       if (!error.response) {
@@ -361,10 +361,10 @@ const attachInterceptors = (instance: AxiosInstance) => {
                 ...currentUser,
                 is_active: false,
               });
-              devLog('🛑 Account disabled detected, updated store. RootNavigator will redirect to AccountDisabled screen.');
+              devLog.log('🛑 Account disabled detected, updated store. RootNavigator will redirect to AccountDisabled screen.');
             } else {
               // Zaten pasif, gereksiz güncelleme yapma
-              devLog('🛑 Account disabled detected, but user already marked as inactive. Skipping store update.');
+              devLog.log('🛑 Account disabled detected, but user already marked as inactive. Skipping store update.');
             }
           }
           
@@ -372,6 +372,25 @@ const attachInterceptors = (instance: AxiosInstance) => {
           // Bu yüzden error logger'ı çağırmıyoruz (gereksiz error spam'ini önlemek için)
           // Sadece hatayı reject ediyoruz, böylece UI'da gösterilebilir ama log spam'i olmaz
           return Promise.reject(formattedError);
+        }
+        
+        // Check if this is an expected 403 from /auth/me for unapproved users
+        // Don't log these as errors since they're expected during approval polling
+        const isPendingApprovalError = 
+          requestUrl.includes('/auth/me') && 
+          errorMessage && 
+          typeof errorMessage === 'string' && 
+          (errorMessage.toLowerCase().includes('admin onayını bekliyor') ||
+           errorMessage.toLowerCase().includes('onaylanmadı') ||
+           errorMessage.toLowerCase().includes('yetkiniz yok'));
+        
+        if (isPendingApprovalError) {
+          // Expected 403 during approval polling - don't log as error
+          // Mark this error as "silent" so it won't trigger any UI alerts
+          devLog.log('⏳ User pending approval - expected 403 from /auth/me (silent)');
+          const silentError = formattedError as any;
+          silentError.isSilent = true; // Flag to prevent UI alerts
+          return Promise.reject(silentError);
         }
         
         // Diğer 403 hataları için normal error logging
@@ -385,7 +404,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
       const isLoginRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/login');
       const isRegisterRequest = requestUrl.includes('/auth/register') || requestUrl.includes('/register');
       
-      devLog('🔐 DEBUG 401 Check:', {
+      devLog.log('🔐 DEBUG 401 Check:', {
         status,
         requestUrl,
         isLoginRequest,
@@ -397,7 +416,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
         // Login/Register sırasında 401 = yanlış şifre/kayıt hatası
         // Token refresh yapma, direkt hatayı döndür
         // HİÇBİR ŞEY YAPMA (Logout tetikleme) - Hatayı olduğu gibi bırak
-        devLog('🔐 Login/Register 401 error - SKIPPING token refresh and logout, returning error directly');
+        devLog.log('🔐 Login/Register 401 error - SKIPPING token refresh and logout, returning error directly');
         const errorMessage = extractErrorMessage(error);
         const formattedError = new Error(errorMessage);
         formattedError.name = 'ApiError';

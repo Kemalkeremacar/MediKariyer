@@ -19,6 +19,7 @@ import { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
+import { devLog } from '@/utils/devLogger';
 
 /**
  * Hook to check active session when app comes to foreground
@@ -43,7 +44,7 @@ export const useAppState = () => {
         authStatus === 'authenticated' &&
         user
       ) {
-        console.log('🔄 App became active, checking user status...');
+        devLog.log('🔄 App became active, checking user status...');
         
         try {
           // Silently check user status via mobile API
@@ -54,7 +55,7 @@ export const useAppState = () => {
           // If user is deactivated, RootNavigator will redirect to AccountDisabledScreen
           markAuthenticated(updatedUser);
           
-          console.log('✅ User status checked successfully');
+          devLog.log('✅ User status checked successfully');
         } catch (error: any) {
           // Handle errors gracefully
           // Network errors shouldn't affect current session
@@ -62,10 +63,10 @@ export const useAppState = () => {
           
           if (isAuthError) {
             // Token expired or invalid - this will be handled by axios interceptor
-            console.warn('⚠️ Auth error during app state check:', error?.message);
+            devLog.warn('⚠️ Auth error during app state check:', error?.message);
           } else {
             // Network error - don't affect current session
-            console.warn('⚠️ Network error during app state check (ignoring):', error?.message);
+            devLog.warn('⚠️ Network error during app state check (ignoring):', error?.message);
           }
         }
       }

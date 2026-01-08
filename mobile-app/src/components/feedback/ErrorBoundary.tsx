@@ -143,8 +143,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   size="lg"
                   fullWidth
                   style={styles.button}
-                  labelStyle={styles.buttonLabel}
-                  icon={<Ionicons name="refresh" size={20} color="#1D4ED8" />}
+                  textStyle={styles.buttonLabel}
                 />
 
                 {/* Help Text */}

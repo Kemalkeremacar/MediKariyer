@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { showAlert } from '@/utils/alert';
+import { useAlertHelpers } from '@/utils/alertHelpers';
 import {
   View,
   Text,
@@ -41,6 +41,7 @@ const compressImage = async (uri: string): Promise<string> => {
 export const PhotoManagementScreen = () => {
   const navigation = useNavigation();
   const { showToast } = useToast();
+  const alert = useAlertHelpers();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any | null>(null);
@@ -84,8 +85,10 @@ export const PhotoManagementScreen = () => {
       try {
         await refetchStatus();
       } catch (error) {
-        // Hataları sessizce işle
-        console.log('Status refetch after upload:', error);
+        // Hataları sessizce işle - development'ta logla
+        if (__DEV__) {
+          console.warn('Status refetch after upload:', error);
+        }
       }
       
       // Yükleme durumunu sıfırla
@@ -183,7 +186,9 @@ export const PhotoManagementScreen = () => {
         }
       } catch (error) {
         // Yeniden getirme başarısız olursa, başarılı kabul et (iyimser güncelleme çalıştı)
-        console.log('Status refetch after cancel failed:', error);
+        if (__DEV__) {
+          console.warn('Status refetch after cancel failed:', error);
+        }
         showToast('Fotoğraf değişiklik talebi iptal edildi', 'success');
       }
     },
@@ -498,7 +503,7 @@ export const PhotoManagementScreen = () => {
     }
     
     // Native Alert kullanarak onay dialogu göster (UI donma sorunlarını düzeltir)
-    showAlert.confirmDestructive(
+    alert.confirmDestructive(
       'Talebi İptal Et',
       'Fotoğraf değişiklik talebini iptal etmek istediğinizden emin misiniz? İptal edilen talep geri alınamaz.',
       () => {

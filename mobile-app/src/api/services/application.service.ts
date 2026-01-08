@@ -25,7 +25,7 @@ import {
 export interface ApplicationListParams {
   page?: number;
   limit?: number;
-  status?: string;
+  status_id?: number;
   keyword?: string;
 }
 
@@ -41,10 +41,21 @@ export const applicationService = {
    * @returns {Promise<ApplicationsListResponse>} Başvuru listesi ve pagination bilgisi
    */
   async listApplications(params: ApplicationListParams = {}): Promise<ApplicationsListResponse> {
+    const queryParams: Record<string, any> = {
+      page: params.page,
+      limit: params.limit,
+      keyword: params.keyword,
+    };
+    
+    // Backend expects status_id (number)
+    if (params.status_id) {
+      queryParams.status_id = params.status_id;
+    }
+    
     const response = await apiClient.get<
       ApiResponse<ApplicationListItem[]> & { pagination?: PaginationMeta }
     >(endpoints.applications.list, {
-      params,
+      params: queryParams,
     });
     const responseData = response.data;
     const pagination = responseData.pagination;
