@@ -115,6 +115,18 @@ const logoutAll = catchAsync(async (req, res) => {
   return sendSuccess(res, 'Tüm oturumlar sonlandırıldı', result);
 });
 
+/**
+ * Mark onboarding as completed
+ * POST /api/mobile/auth/mark-onboarding-completed
+ */
+const markOnboardingCompleted = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  
+  await mobileAuthService.markOnboardingCompleted(userId);
+  
+  return sendSuccess(res, 'Onboarding tamamlandı', { success: true });
+});
+
 module.exports = {
   registerDoctor,
   login,
@@ -124,6 +136,7 @@ module.exports = {
   changePassword,
   forgotPassword,
   resetPassword,
-  logoutAll
+  logoutAll,
+  markOnboardingCompleted
 };
 

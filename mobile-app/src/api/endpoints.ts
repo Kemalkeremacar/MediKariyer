@@ -33,6 +33,7 @@ export const endpoints = {
     changePassword: '/auth/change-password', // Şifre değiştir
     forgotPassword: '/auth/forgot-password', // Şifre sıfırlama talebi
     resetPassword: '/auth/reset-password', // Şifre sıfırlama
+    markOnboardingCompleted: '/auth/mark-onboarding-completed', // Onboarding tamamlandı
   },
   // Doktor Profil Endpoint'leri
   doctor: {

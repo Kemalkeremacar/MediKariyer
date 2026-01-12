@@ -46,6 +46,8 @@ export interface AuthUser {
   is_approved?: boolean | number | string;
   /** Hesap aktif mi? (devre dışı bırakılmış mı?) */
   is_active?: boolean | number;
+  /** Onboarding görüldü mü? (tanıtım ekranları tamamlandı mı?) */
+  is_onboarding_seen?: boolean | number | string;
   /** Telefon numarası */
   phone?: string;
   /** Unvan (Dr., Prof. Dr., vb.) */

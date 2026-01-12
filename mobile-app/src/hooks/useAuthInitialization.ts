@@ -82,6 +82,23 @@ export const useAuthInitialization = () => {
               markAuthenticated(user);
               devLog.log('✅ Kullanıcı verisi mobile API üzerinden başarıyla getirildi');
             } catch (error: any) {
+              // Senaryo A: 403 Forbidden - Kullanıcı onay bekliyor (beklenen durum)
+              const is403Error = error?.response?.status === 403;
+              
+              if (is403Error) {
+                devLog.log('⏳ User pending approval - expected 403 from /auth/me (silent)');
+                // Onay bekleyen kullanıcı için persist edilmiş veriyi kullan
+                const persistedUser = useAuthStore.getState().user;
+                if (persistedUser) {
+                  devLog.log('✅ Onay bekleyen kullanıcı için persist edilmiş veri kullanılıyor');
+                  markAuthenticated(persistedUser);
+                } else {
+                  devLog.log('⚠️ Persist edilmiş kullanıcı verisi yok, unauthenticated olarak işaretleniyor');
+                  markUnauthenticated();
+                }
+                return;
+              }
+              
               // Senaryo B: 401 Unauthorized - Token süresi dolmuş veya geçersiz
               const isAuthError = error?.response?.status === 401 || error?.name === 'ApiError';
               

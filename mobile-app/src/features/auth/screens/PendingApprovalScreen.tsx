@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/Button';
 import { useLogout } from '../hooks/useLogout';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
+import { navigationRef } from '@/navigation/navigationRef';
 import type { AuthStackParamList } from '@/navigation/types';
 
 /**
@@ -65,6 +66,19 @@ export const PendingApprovalScreen = () => {
   const [isChecking, setIsChecking] = useState(false);
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
   
+  // Component mount/unmount tracking
+  useEffect(() => {
+    console.log('📱 PendingApprovalScreen MOUNTED');
+    return () => {
+      console.log('📱 PendingApprovalScreen UNMOUNTED');
+      // Cleanup polling on unmount
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, []);
+  
   /**
    * Kullanıcının kayıt sonrası mı yoksa giriş denemesi sonrası mı olduğunu belirle
    * - Kayıt sonrası: authenticated değil (token yok)
@@ -93,6 +107,19 @@ export const PendingApprovalScreen = () => {
       return;
     }
 
+    // Eğer kullanıcı zaten onaylıysa, tekrar kontrol etme (loop önleme)
+    const currentIsApproved = 
+      user.is_approved === true || 
+      user.is_approved === 1 || 
+      user.is_approved === 'true' || 
+      user.is_approved === '1';
+    const currentIsAdmin = user.role === 'admin';
+    
+    if (currentIsApproved || currentIsAdmin) {
+      console.log('✅ Kullanıcı zaten onaylı, kontrol atlanıyor (loop önleme)');
+      return;
+    }
+
     setIsChecking(true);
     try {
       // Backend'den güncel kullanıcı bilgilerini çek
@@ -109,17 +136,35 @@ export const PendingApprovalScreen = () => {
       if (isApproved || isAdmin) {
         // Kullanıcı onaylandı - store'u güncelle
         // RootNavigator otomatik olarak App stack'e yönlendirecek
+        console.log('✅ Kullanıcı onaylandı, store güncelleniyor');
         markAuthenticated(updatedUser);
-        
-        if (__DEV__) {
-          console.log('✅ Kullanıcı onaylandı, RootNavigator App stack\'e yönlendirecek');
-        }
         
         // Polling interval'i temizle (artık gerek yok)
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
+        
+        // CRITICAL: Component'i hemen unmount etmek için navigation'ı force et
+        // RootNavigator'ın state-based navigation'ını beklemek yerine manuel yönlendirme
+        console.log('🚀 Forcing navigation to trigger re-render...');
+        
+        // BACKUP: Manuel navigation reset (RootNavigator'a ek olarak)
+        setTimeout(() => {
+          console.log('⏰ Backup navigation - checking if still on PendingApproval');
+          const currentRoute = navigationRef.getCurrentRoute();
+          if (currentRoute?.name === 'PendingApproval') {
+            console.log('🔄 Still on PendingApproval, forcing navigation to Auth');
+            if (navigationRef.isReady()) {
+              navigationRef.reset({
+                index: 0,
+                routes: [{ name: 'Auth' }],
+              });
+            }
+          }
+        }, 200);
+        
+        return;
       }
       
       // Son kontrol zamanını güncelle
@@ -148,7 +193,7 @@ export const PendingApprovalScreen = () => {
     } finally {
       setIsChecking(false);
     }
-  }, [authStatus, user, markAuthenticated]);
+  }, [authStatus, user?.id, user?.is_approved, user?.role, markAuthenticated]); // user yerine spesifik alanları kullan
 
   /**
    * Onay durumu için polling başlat (sadece authenticated kullanıcılar için)
@@ -161,7 +206,23 @@ export const PendingApprovalScreen = () => {
    * **NOT:** Kayıt sonrası kullanıcılar için polling çalışmaz (authenticated değiller)
    */
   useEffect(() => {
+    // Sadece authenticated ve onaysız kullanıcılar için polling yap
     if (authStatus === 'authenticated' && user) {
+      const currentIsApproved = 
+        user.is_approved === true || 
+        user.is_approved === 1 || 
+        user.is_approved === 'true' || 
+        user.is_approved === '1';
+      const currentIsAdmin = user.role === 'admin';
+      
+      // Eğer kullanıcı zaten onaylıysa polling başlatma
+      if (currentIsApproved || currentIsAdmin) {
+        console.log('✅ Kullanıcı zaten onaylı, polling başlatılmıyor');
+        return;
+      }
+      
+      console.log('🔄 Onay durumu polling başlatılıyor...');
+      
       // İlk kontrol hemen yap
       checkApprovalStatus();
       
@@ -172,13 +233,14 @@ export const PendingApprovalScreen = () => {
       
       // Component unmount olduğunda temizlik yap
       return () => {
+        console.log('🧹 Polling temizleniyor...');
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
       };
     }
-  }, [authStatus, user, checkApprovalStatus]);
+  }, [authStatus, user?.id, user?.is_approved, user?.role, checkApprovalStatus]); // user yerine spesifik alanları kullan
 
   /**
    * Manuel kontrol butonu handler'ı
@@ -194,8 +256,24 @@ export const PendingApprovalScreen = () => {
    * **AKIŞ:**
    * - Authenticated kullanıcılar: Logout yap (polling'i temizle)
    * - Kayıt sonrası kullanıcılar: Direkt login'e git
+   * - Onaylı kullanıcılar: Logout yapma, RootNavigator yönlendirecek
    */
   const handleGoToLogin = useCallback(() => {
+    // Eğer kullanıcı onaylıysa logout yapma
+    if (user) {
+      const currentIsApproved = 
+        user.is_approved === true || 
+        user.is_approved === 1 || 
+        user.is_approved === 'true' || 
+        user.is_approved === '1';
+      const currentIsAdmin = user.role === 'admin';
+      
+      if (currentIsApproved || currentIsAdmin) {
+        console.log('✅ Kullanıcı onaylı, logout yapılmıyor - RootNavigator yönlendirecek');
+        return;
+      }
+    }
+    
     if (authStatus === 'authenticated') {
       // Polling'i temizle (logout öncesi)
       if (pollingIntervalRef.current) {
@@ -208,7 +286,7 @@ export const PendingApprovalScreen = () => {
       // Kayıt sonrası kullanıcılar direkt login'e git
       navigation.replace('Login');
     }
-  }, [authStatus, logoutMutation, navigation]);
+  }, [authStatus, user?.is_approved, user?.role, logoutMutation, navigation]);
 
   /**
    * Son kontrol zamanını formatla
@@ -301,13 +379,13 @@ export const PendingApprovalScreen = () => {
             <View style={styles.checkSection}>
               <Button
                 variant="outline"
-                label={isChecking ? "Kontrol Ediliyor..." : "Durumu Kontrol Et"}
                 onPress={handleManualCheck}
                 loading={isChecking}
-                fullWidth
-                size="md"
+                size="lg"
                 style={styles.checkButton}
-              />
+              >
+                {isChecking ? "Kontrol Ediliyor..." : "Durumu Kontrol Et"}
+              </Button>
               {lastCheckTime && (
                 <Typography variant="caption" style={styles.lastCheckText}>
                   {lastCheckText}
@@ -317,15 +395,14 @@ export const PendingApprovalScreen = () => {
           )}
 
           <Button
-            variant="gradient"
-            label="Giriş Ekranına Dön"
+            variant="primary"
             onPress={handleGoToLogin}
-            gradientColors={['#4A90E2', '#2E5C8A']}
-            fullWidth
             size="lg"
             loading={logoutMutation.isPending}
             style={styles.loginButton}
-          />
+          >
+            Giriş Ekranına Dön
+          </Button>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

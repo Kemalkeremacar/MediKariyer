@@ -142,18 +142,48 @@ export const useLogin = (callbacks?: UseLoginCallbacks) => {
             data.user.is_active === true || 
             data.user.is_active === 1 || 
             (typeof data.user.is_active === 'string' && (data.user.is_active === 'true' || data.user.is_active === '1'));
+          const isOnboardingSeen = 
+            data.user.is_onboarding_seen === true || 
+            data.user.is_onboarding_seen === 1 || 
+            (typeof data.user.is_onboarding_seen === 'string' && (data.user.is_onboarding_seen === 'true' || data.user.is_onboarding_seen === '1'));
           const isAdmin = data.user.role === 'admin';
           
-          // Aktif ve onaylı kullanıcıları App ekranına yönlendir
-          if (isActive && (isApproved || isAdmin)) {
+          // Aktif, onaylı VE onboarding tamamlamış kullanıcıları App ekranına yönlendir
+          if (isActive && (isApproved || isAdmin) && isOnboardingSeen) {
             devLog.log('🔐 useLogin onSuccess - Resetting navigation to App screen');
             navigationRef.reset({
               index: 0,
               routes: [{ name: 'App' }],
             });
             devLog.log('🔐 useLogin onSuccess - Navigation reset completed');
+          } else if (isActive && (isApproved || isAdmin) && !isOnboardingSeen) {
+            // Onaylı ama onboarding görmemiş - Onboarding ekranına yönlendir
+            devLog.log('🔐 useLogin onSuccess - User approved but onboarding not seen, navigating to Onboarding');
+            navigationRef.reset({
+              index: 0,
+              routes: [{ 
+                name: 'Auth',
+                state: {
+                  routes: [{ name: 'Onboarding' }],
+                },
+              }],
+            });
+            devLog.log('🔐 useLogin onSuccess - Navigation to Onboarding completed');
+          } else if (isActive && !isApproved && !isAdmin) {
+            // Onaysız kullanıcı - PendingApproval ekranına yönlendir
+            devLog.log('🔐 useLogin onSuccess - User not approved, navigating to PendingApproval');
+            navigationRef.reset({
+              index: 0,
+              routes: [{ 
+                name: 'Auth',
+                state: {
+                  routes: [{ name: 'PendingApproval' }],
+                },
+              }],
+            });
+            devLog.log('🔐 useLogin onSuccess - Navigation to PendingApproval completed');
           } else {
-            devLog.log('🔐 useLogin onSuccess - User not active/approved, skipping navigation reset');
+            devLog.log('🔐 useLogin onSuccess - Unexpected state, letting RootNavigator handle navigation');
           }
         } else {
           devLog.log('🔐 useLogin onSuccess - Navigation ref not ready, RootNavigator will handle navigation');

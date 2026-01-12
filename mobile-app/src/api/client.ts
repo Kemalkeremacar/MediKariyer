@@ -308,7 +308,22 @@ const attachInterceptors = (instance: AxiosInstance) => {
       return response;
     },
     async (error: AxiosError<BackendErrorResponse>) => {
-      devLog.error('❌ API Error:', error.config?.url, error.response?.status);
+      const status = error.response?.status;
+      const requestUrl = error.config?.url || '';
+      
+      // 403 hatası için özel kontrol - onay bekleyen kullanıcılar için sessiz
+      const isPendingApproval403 = status === 403 && (
+        requestUrl.includes('/auth/me') ||
+        error.response?.data?.message?.includes('onay') ||
+        error.response?.data?.message?.includes('bekliyor')
+      );
+      
+      if (isPendingApproval403) {
+        // Sessiz 403 - log gösterme
+        devLog.log('⏳ User pending approval - expected 403 from', requestUrl, '(silent)');
+      } else {
+        devLog.error('❌ API Error:', requestUrl, status);
+      }
       
       // Network error handling (no response from server)
       if (!error.response) {
@@ -340,8 +355,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
       }
 
       const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
-      const status = error.response?.status;
-      const requestUrl = error.config?.url || '';
+      // status ve requestUrl zaten yukarıda tanımlandı
       
       // 403 (Forbidden) hatası - yetki hatası, refresh token yapmaya gerek yok
       if (status === 403) {

@@ -215,4 +215,29 @@ export const authService = {
       message: response.data.message || 'Şifre başarıyla değiştirildi.',
     };
   },
+
+  /**
+   * Onboarding tamamlandı olarak işaretle
+   * @description Kullanıcının onboarding slides'ını gördüğünü backend'e bildirir
+   * @returns void
+   * @throws API hatası veya network hatası
+   */
+  async markOnboardingCompleted(): Promise<void> {
+    try {
+      await apiClient.post<ApiResponse<null>>(
+        endpoints.auth.markOnboardingCompleted,
+        {},
+        {
+          timeout: 10000, // 10 saniye timeout
+        }
+      );
+    } catch (error: any) {
+      devLog.error('❌ Onboarding completion failed:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+      });
+      throw error;
+    }
+  },
 };

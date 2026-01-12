@@ -46,6 +46,8 @@ export type AuthStackParamList = {
   Register: undefined;
   /** Onay bekliyor ekranı */
   PendingApproval: undefined;
+  /** Onboarding tanıtım ekranları */
+  Onboarding: undefined;
   /** Şifremi unuttum ekranı */
   ForgotPassword: undefined;
   /** Şifre sıfırlama ekranı */

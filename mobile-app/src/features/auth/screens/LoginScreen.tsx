@@ -22,7 +22,6 @@
  */
 
 import { useState, useMemo } from 'react';
-import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -37,7 +36,7 @@ import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
-import { handleApiError, isAuthError, isNetworkError } from '@/utils/errorHandler';
+import { getUserFriendlyErrorMessage, isAuthError, isNetworkError } from '@/utils/errorHandler';
 
 /**
  * Form validasyon şeması
@@ -56,7 +55,6 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export const LoginScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
-  const alert = useAlertHelpers();
   
   // Server hata mesajı için state
   const [serverError, setServerError] = useState<string | null>(null);
@@ -104,12 +102,9 @@ export const LoginScreen = () => {
       const isAdmin = data.user.role === 'admin';
       
       if (!isApproved && !isAdmin) {
-        // Kullanıcı onaylı değil - Uyarı göster ve PendingApproval'a yönlendir
-        alert.info('Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.');
-        // PendingApproval ekranına yönlendir
-        setTimeout(() => {
-          navigation.replace('PendingApproval');
-        }, 500);
+        // Kullanıcı onaylı değil - RootNavigator otomatik PendingApproval'a yönlendirir
+        // Alert gösterme - PendingApprovalScreen zaten bilgilendirme yapıyor
+        // Manuel navigasyon gerekmez - state-based routing halleder
       }
       // Onaylıysa RootNavigator otomatik App ekranını gösterir
       // Manuel navigasyon gerekmez - conditional rendering halleder
@@ -123,12 +118,8 @@ export const LoginScreen = () => {
       } else if (isNetworkError(error)) {
         message = '🌐 İnternet bağlantınızı kontrol edin';
       } else {
-        // Varsayılan kullanıcı dostu mesaj + logging + toast
-        message = handleApiError(
-          error,
-          '/auth/login',
-          (msg) => alert.error(msg)
-        );
+        // Kullanıcı dostu mesajı al (logging olmadan)
+        message = getUserFriendlyErrorMessage(error);
       }
 
       setServerError(message);

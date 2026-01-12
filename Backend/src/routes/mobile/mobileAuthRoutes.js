@@ -65,6 +65,8 @@ router.get('/me', authMiddleware, requireDoctor, mobileAuthController.getMe);
 router.post('/change-password', authMiddleware, requireDoctor, validateBody(mobileChangePasswordSchema), mobileAuthController.changePassword);
 // Logout all - Requirement 11.1
 router.post('/logout-all', authMiddleware, requireDoctor, mobileAuthController.logoutAll);
+// Mark onboarding as completed - Onboarding flow
+router.post('/mark-onboarding-completed', authMiddleware, requireDoctor, mobileAuthController.markOnboardingCompleted);
 
 router.use(mobileErrorBoundary);
 

@@ -114,6 +114,19 @@ const isUserActive = (user: any): boolean => {
 };
 
 /**
+ * Kullanıcının onboarding'i gördüğünü kontrol eden yardımcı fonksiyon
+ * @description Boolean, number, string tiplerini yönetir (MSSQL BIT tipi için)
+ * @param user - Kullanıcı objesi
+ * @returns Onboarding görüldüyse true, değilse false
+ */
+const hasUserSeenOnboarding = (user: any): boolean => {
+  if (user?.is_onboarding_seen === undefined || user?.is_onboarding_seen === null) return false;
+  if (typeof user.is_onboarding_seen === 'boolean') return user.is_onboarding_seen;
+  if (typeof user.is_onboarding_seen === 'number') return user.is_onboarding_seen === 1;
+  if (typeof user.is_onboarding_seen === 'string') return user.is_onboarding_seen === 'true' || user.is_onboarding_seen === '1';
+  return false;
+};
+/**
  * Kullanıcının onaylı olup olmadığını kontrol eden yardımcı fonksiyon
  * @description Boolean, number, string tiplerini yönetir (MSSQL BIT tipi için)
  * @param user - Kullanıcı objesi
@@ -141,6 +154,7 @@ export const RootNavigator = () => {
       userId: user?.id,
       isActive: user?.is_active,
       isApproved: user?.is_approved,
+      isOnboardingSeen: user?.is_onboarding_seen,
     });
 
     // Hydration sırasında Auth göster (hydration sonrası gerçek duruma göre değişecek)
@@ -158,11 +172,13 @@ export const RootNavigator = () => {
     // Authenticated - kullanıcı durumunu kontrol et
     const userIsActive = isUserActive(user);
     const userIsApproved = isUserApproved(user);
+    const userHasSeenOnboarding = hasUserSeenOnboarding(user);
     const userIsAdmin = user.role === 'admin';
 
     devLog.log('🧭 RootNavigator - Kullanıcı kontrolleri:', {
       userIsActive,
       userIsApproved,
+      userHasSeenOnboarding,
       userIsAdmin,
     });
 
@@ -178,10 +194,16 @@ export const RootNavigator = () => {
       return 'Auth'; // Auth stack PendingApproval ekranını gösterecek
     }
 
-    // Kullanıcı authenticated, aktif ve onaylı
-    devLog.log('🧭 RootNavigator - App döndürülüyor (authenticated, aktif, onaylı)');
+    // Onboarding durumunu kontrol et (sadece onaylı kullanıcılar için)
+    if (!userHasSeenOnboarding) {
+      devLog.log('🧭 RootNavigator - Auth döndürülüyor (onboarding görülmemiş)');
+      return 'Auth'; // Auth stack Onboarding ekranını gösterecek
+    }
+
+    // Kullanıcı authenticated, aktif, onaylı ve onboarding'i görmüş
+    devLog.log('🧭 RootNavigator - App döndürülüyor (authenticated, aktif, onaylı, onboarding tamamlanmış)');
     return 'App';
-  }, [isHydrating, authStatus, user]);
+  }, [isHydrating, authStatus, user?.id, user?.is_active, user?.is_approved, user?.is_onboarding_seen, user?.role]);
 
   // Track previous route to detect changes
   const previousRouteRef = useRef<keyof RootStackParamList | null>(null);
@@ -219,12 +241,30 @@ export const RootNavigator = () => {
         current: currentRouteName,
       });
 
-      navigationRef.reset({
-        index: 0,
-        routes: [{ name: initialRouteName }],
-      });
+      // CRITICAL: Force immediate navigation reset
+      // Use multiple strategies to ensure navigation happens
+      const performReset = () => {
+        if (navigationRef.isReady()) {
+          navigationRef.reset({
+            index: 0,
+            routes: [{ name: initialRouteName }],
+          });
+          devLog.log('🧭 RootNavigator - Navigation reset completed');
+        }
+      };
 
-      devLog.log('🧭 RootNavigator - Navigation reset completed');
+      // Strategy 1: Immediate reset
+      performReset();
+      
+      // Strategy 2: Backup reset after animation frame
+      requestAnimationFrame(() => {
+        performReset();
+      });
+      
+      // Strategy 3: Final backup after small delay
+      setTimeout(() => {
+        performReset();
+      }, 50);
     } else {
       devLog.log('🧭 RootNavigator - Already on target route, skipping reset');
     }
@@ -263,11 +303,9 @@ export const RootNavigator = () => {
 
   // State-Based Navigation
   // All screens are registered for deep linking support
-  // Using key prop to force re-render when route changes (ensures initialRouteName is respected)
-  // This eliminates the need for useEffect-based navigation.reset() calls
+  // Using manual navigation reset in useEffect instead of key prop for better performance
   return (
     <Stack.Navigator
-      key={initialRouteName} // Force re-render when route changes
       initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,

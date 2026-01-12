@@ -163,6 +163,10 @@ const login = async ({ email, password }, req) => {
   const isApproved = user.is_approved === null || user.is_approved === undefined
     ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
     : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
+
+  const isOnboardingSeen = user.is_onboarding_seen === null || user.is_onboarding_seen === undefined
+    ? false  // NULL ise varsayılan 0 (görülmemiş) - SQL DEFAULT ((0))
+    : (user.is_onboarding_seen === 1 || user.is_onboarding_seen === true || user.is_onboarding_seen === '1' || user.is_onboarding_seen === 'true');
   
   // CRITICAL CHANGE: Pending users (is_approved = false) CAN login
   // Mobile app will show "Waiting for Approval" screen based on is_approved flag
@@ -185,6 +189,7 @@ const login = async ({ email, password }, req) => {
       role: user.role,
       is_approved: isApproved, // Boolean'a çevrilmiş değer (false = pending, true = approved)
       is_active: isActive, // Boolean'a çevrilmiş değer
+      is_onboarding_seen: isOnboardingSeen, // Boolean'a çevrilmiş değer (false = görülmemiş, true = görüldü)
       first_name: profile?.first_name || null,
       last_name: profile?.last_name || null
     },
@@ -248,6 +253,10 @@ const refresh = async (refreshToken) => {
     ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
     : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
 
+  const isOnboardingSeen = user.is_onboarding_seen === null || user.is_onboarding_seen === undefined
+    ? false  // NULL ise varsayılan 0 (görülmemiş) - SQL DEFAULT ((0))
+    : (user.is_onboarding_seen === 1 || user.is_onboarding_seen === true || user.is_onboarding_seen === '1' || user.is_onboarding_seen === 'true');
+
   // Yeni access token oluştur
   const newAccessToken = generateAccessToken({
     userId: user.id,
@@ -297,7 +306,8 @@ const refresh = async (refreshToken) => {
       email: user.email,
       role: user.role,
       is_approved: isApproved, // Boolean'a çevrilmiş değer
-      is_active: isActive // Boolean'a çevrilmiş değer
+      is_active: isActive, // Boolean'a çevrilmiş değer
+      is_onboarding_seen: isOnboardingSeen // Boolean'a çevrilmiş değer
     }
   };
 };
@@ -313,9 +323,9 @@ const logout = async (refreshToken) => {
 const getMe = async (userId) => {
   const db = require('../../config/dbConfig').db;
   
-  // CRITICAL: is_active ve is_approved değerleri users tablosunda, doctor_profiles'da değil!
-  // Önce users tablosundan is_active ve is_approved değerlerini al
-  const user = await db('users').where('id', userId).select('is_active', 'is_approved', 'email').first();
+  // CRITICAL: is_active, is_approved ve is_onboarding_seen değerleri users tablosunda, doctor_profiles'da değil!
+  // Önce users tablosundan bu değerleri al
+  const user = await db('users').where('id', userId).select('is_active', 'is_approved', 'is_onboarding_seen', 'email').first();
   
   if (!user) {
     throw new AppError('Kullanıcı bulunamadı', 404);
@@ -329,7 +339,7 @@ const getMe = async (userId) => {
   }
 
   // SQL Server bit tipini boolean'a çevir - users tablosundan gelen değerleri kullan
-  // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0
+  // NULL durumunda varsayılan değerleri kullan: is_active DEFAULT 1, is_approved DEFAULT 0, is_onboarding_seen DEFAULT 0
   const isActive = user.is_active === null || user.is_active === undefined 
     ? true  // NULL ise varsayılan 1 (aktif) - SQL DEFAULT ((1))
     : (user.is_active === 1 || user.is_active === true || user.is_active === '1' || user.is_active === 'true');
@@ -338,6 +348,10 @@ const getMe = async (userId) => {
     ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
     : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
 
+  const isOnboardingSeen = user.is_onboarding_seen === null || user.is_onboarding_seen === undefined
+    ? false  // NULL ise varsayılan 0 (görülmemiş) - SQL DEFAULT ((0))
+    : (user.is_onboarding_seen === 1 || user.is_onboarding_seen === true || user.is_onboarding_seen === '1' || user.is_onboarding_seen === 'true');
+
   return {
     user: {
       id: profile.user_id,
@@ -345,6 +359,7 @@ const getMe = async (userId) => {
       role: 'doctor',
       is_approved: isApproved,
       is_active: isActive,
+      is_onboarding_seen: isOnboardingSeen,
       first_name: profile.first_name,
       last_name: profile.last_name
     },
@@ -473,6 +488,28 @@ const logoutAll = async (userId) => {
   };
 };
 
+/**
+ * Mark onboarding as completed for user
+ * @param {number} userId - User ID
+ * @returns {Promise<object>} Success response
+ */
+const markOnboardingCompleted = async (userId) => {
+  const db = require('../../config/dbConfig').db;
+  const logger = require('../../utils/logger');
+
+  // Update is_onboarding_seen to true (1)
+  await db('users')
+    .where('id', userId)
+    .update({ 
+      is_onboarding_seen: 1,
+      updated_at: new Date()
+    });
+
+  logger.info(`Onboarding marked as completed for user_id: ${userId} (mobile)`);
+
+  return { success: true };
+};
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -486,6 +523,7 @@ module.exports = {
   changePassword,
   forgotPassword,
   resetPassword,
-  logoutAll
+  logoutAll,
+  markOnboardingCompleted
 };
 
