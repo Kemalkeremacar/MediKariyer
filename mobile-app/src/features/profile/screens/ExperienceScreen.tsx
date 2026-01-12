@@ -1,3 +1,22 @@
+/**
+ * @file ExperienceScreen.tsx
+ * @description Mesleki deneyim listesi ekranı - CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Deneyim listesi görüntüleme (kurum, pozisyon, tarih aralığı)
+ * - Yeni deneyim ekleme (FAB butonu)
+ * - Deneyim düzenleme ve silme
+ * - "Devam ediyor" durumu desteği
+ * - Pull-to-refresh desteği
+ * - Empty state gösterimi
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. Deneyimler listelenir
+ * 2. FAB butonu ile yeni deneyim eklenir
+ * 3. Kart üzerinden düzenleme/silme yapılır
+ */
 import React from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';

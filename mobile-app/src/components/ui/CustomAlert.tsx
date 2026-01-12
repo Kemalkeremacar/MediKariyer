@@ -1,20 +1,44 @@
 /**
  * @file CustomAlert.tsx
- * @description Stateless alert component - purely presentational
+ * @description Özel uyarı dialog bileşeni (Stateless - sadece görsel)
  * 
- * All callback logic is handled by AlertProvider.
- * This component only handles:
- * - Animation
- * - Rendering UI based on props
- * - Forwarding button presses to provider callbacks
+ * Tüm callback mantığı AlertProvider tarafından yönetilir.
+ * Bu bileşen sadece şunları yapar:
+ * - Animasyon
+ * - Props'lara göre UI render etme
+ * - Buton tıklamalarını provider callback'lerine iletme
  * 
- * Requirements:
- * - 2.1: onConfirm callback execution (delegated to provider)
- * - 2.2: onCancel callback execution (delegated to provider)
- * - 2.3: onClose callback for cleanup (handled by provider)
- * - 9.4: Validate callbacks are functions before calling
- * - 9.6: Provide descriptive prop validation errors
- * - 10.5: Wrap callback execution in try-catch, log errors in dev only
+ * Özellikler:
+ * - Beş alert tipi (success, error, info, confirm, confirmDestructive)
+ * - Animasyonlu giriş/çıkış
+ * - İkon ve renk şeması
+ * - Tek veya çift buton desteği
+ * - Callback doğrulama ve hata yönetimi
+ * - Geliştirici modu prop validasyonu
+ * 
+ * Gereksinimler:
+ * - 2.1: onConfirm callback çalıştırma (provider'a delege edilir)
+ * - 2.2: onCancel callback çalıştırma (provider'a delege edilir)
+ * - 2.3: onClose callback temizlik için (provider tarafından yönetilir)
+ * - 9.4: Callback'leri çağırmadan önce fonksiyon olduğunu doğrula
+ * - 9.6: Açıklayıcı prop validasyon hataları sağla
+ * - 10.5: Callback çalıştırmayı try-catch ile sar, sadece dev modda logla
+ * 
+ * Kullanım:
+ * ```tsx
+ * <CustomAlert
+ *   visible={true}
+ *   type="success"
+ *   title="Başarılı"
+ *   message="İşlem tamamlandı"
+ *   onConfirm={handleConfirm}
+ *   onCancel={handleCancel}
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import React, { useRef, useEffect } from 'react';
@@ -31,28 +55,34 @@ import { Typography } from './Typography';
 import { Button } from './Button';
 import type { AlertType } from '@/types/alert';
 
-// Re-export AlertType for backward compatibility
+// Geriye dönük uyumluluk için AlertType'ı yeniden export et
 export type { AlertType } from '@/types/alert';
 
+/**
+ * CustomAlert bileşeni props interface'i
+ */
 interface CustomAlertProps {
-  /** Whether the alert is visible */
+  /** Alert görünür mü? */
   visible: boolean;
-  /** Type of alert determining icon and color scheme */
+  /** Alert tipi (ikon ve renk şemasını belirler) */
   type: AlertType;
-  /** Title displayed at the top of the alert */
+  /** Alert başlığı */
   title: string;
-  /** Message body of the alert */
+  /** Alert mesajı */
   message: string;
-  /** Callback when confirm button is pressed - handled by provider */
+  /** Onayla butonu tıklandığında çağrılır - provider tarafından yönetilir */
   onConfirm: () => void;
-  /** Callback when cancel button is pressed - handled by provider */
+  /** İptal butonu tıklandığında çağrılır - provider tarafından yönetilir */
   onCancel: () => void;
-  /** Text for the confirm button */
+  /** Onayla butonu metni */
   confirmText?: string;
-  /** Text for the cancel button */
+  /** İptal butonu metni */
   cancelText?: string;
 }
 
+/**
+ * Alert tiplerine göre ikon konfigürasyonu
+ */
 const ICON_CONFIG: Record<AlertType, { name: keyof typeof Ionicons.glyphMap; color: string }> = {
   success: { name: 'checkmark-circle', color: '#10B981' },
   error: { name: 'close-circle', color: '#EF4444' },
@@ -61,94 +91,94 @@ const ICON_CONFIG: Record<AlertType, { name: keyof typeof Ionicons.glyphMap; col
   confirmDestructive: { name: 'warning', color: '#EF4444' },
 };
 
-/** Valid alert types for prop validation */
+/** Geçerli alert tipleri (prop validasyonu için) */
 const VALID_ALERT_TYPES: AlertType[] = ['success', 'error', 'info', 'confirm', 'confirmDestructive'];
 
 /**
- * Development-only prop validation for CustomAlert
- * Logs descriptive errors for invalid props (Requirement 9.6)
+ * CustomAlert için geliştirici modu prop validasyonu
+ * Geçersiz props için açıklayıcı hatalar loglar (Gereksinim 9.6)
  * 
- * @param props - The component props to validate
- * @returns true if all props are valid, false otherwise
+ * @param {CustomAlertProps} props - Doğrulanacak bileşen props'ları
+ * @returns {boolean} Tüm props geçerliyse true, değilse false
  */
 const validateProps = (props: CustomAlertProps): boolean => {
   if (!__DEV__) return true;
   
   let isValid = true;
   
-  // Validate visible prop
+  // visible prop'unu doğrula
   if (typeof props.visible !== 'boolean') {
     console.error(
-      `[CustomAlert] Invalid prop 'visible': expected boolean, received ${typeof props.visible}. ` +
-      `The alert visibility state must be a boolean value.`
+      `[CustomAlert] Geçersiz prop 'visible': boolean bekleniyor, ${typeof props.visible} alındı. ` +
+      `Alert görünürlük durumu boolean değer olmalıdır.`
     );
     isValid = false;
   }
   
-  // Validate type prop
+  // type prop'unu doğrula
   if (!VALID_ALERT_TYPES.includes(props.type)) {
     console.error(
-      `[CustomAlert] Invalid prop 'type': received '${props.type}'. ` +
-      `Valid types are: ${VALID_ALERT_TYPES.join(', ')}.`
+      `[CustomAlert] Geçersiz prop 'type': '${props.type}' alındı. ` +
+      `Geçerli tipler: ${VALID_ALERT_TYPES.join(', ')}.`
     );
     isValid = false;
   }
   
-  // Validate title prop
+  // title prop'unu doğrula
   if (typeof props.title !== 'string') {
     console.error(
-      `[CustomAlert] Invalid prop 'title': expected string, received ${typeof props.title}. ` +
-      `The alert title must be a string.`
+      `[CustomAlert] Geçersiz prop 'title': string bekleniyor, ${typeof props.title} alındı. ` +
+      `Alert başlığı string olmalıdır.`
     );
     isValid = false;
   } else if (props.title.trim() === '') {
     console.warn(
-      `[CustomAlert] Warning: 'title' prop is an empty string. ` +
-      `Consider providing a meaningful title for better user experience.`
+      `[CustomAlert] Uyarı: 'title' prop'u boş string. ` +
+      `Daha iyi kullanıcı deneyimi için anlamlı bir başlık sağlamayı düşünün.`
     );
   }
   
-  // Validate message prop
+  // message prop'unu doğrula
   if (typeof props.message !== 'string') {
     console.error(
-      `[CustomAlert] Invalid prop 'message': expected string, received ${typeof props.message}. ` +
-      `The alert message must be a string.`
+      `[CustomAlert] Geçersiz prop 'message': string bekleniyor, ${typeof props.message} alındı. ` +
+      `Alert mesajı string olmalıdır.`
     );
     isValid = false;
   }
   
-  // Validate onConfirm prop
+  // onConfirm prop'unu doğrula
   if (typeof props.onConfirm !== 'function') {
     console.error(
-      `[CustomAlert] Invalid prop 'onConfirm': expected function, received ${typeof props.onConfirm}. ` +
-      `The onConfirm callback must be a function provided by AlertProvider.`
+      `[CustomAlert] Geçersiz prop 'onConfirm': function bekleniyor, ${typeof props.onConfirm} alındı. ` +
+      `onConfirm callback'i AlertProvider tarafından sağlanan bir fonksiyon olmalıdır.`
     );
     isValid = false;
   }
   
-  // Validate onCancel prop
+  // onCancel prop'unu doğrula
   if (typeof props.onCancel !== 'function') {
     console.error(
-      `[CustomAlert] Invalid prop 'onCancel': expected function, received ${typeof props.onCancel}. ` +
-      `The onCancel callback must be a function provided by AlertProvider.`
+      `[CustomAlert] Geçersiz prop 'onCancel': function bekleniyor, ${typeof props.onCancel} alındı. ` +
+      `onCancel callback'i AlertProvider tarafından sağlanan bir fonksiyon olmalıdır.`
     );
     isValid = false;
   }
   
-  // Validate optional confirmText prop
+  // Opsiyonel confirmText prop'unu doğrula
   if (props.confirmText !== undefined && typeof props.confirmText !== 'string') {
     console.error(
-      `[CustomAlert] Invalid prop 'confirmText': expected string or undefined, received ${typeof props.confirmText}. ` +
-      `The confirm button text must be a string.`
+      `[CustomAlert] Geçersiz prop 'confirmText': string veya undefined bekleniyor, ${typeof props.confirmText} alındı. ` +
+      `Onayla butonu metni string olmalıdır.`
     );
     isValid = false;
   }
   
-  // Validate optional cancelText prop
+  // Opsiyonel cancelText prop'unu doğrula
   if (props.cancelText !== undefined && typeof props.cancelText !== 'string') {
     console.error(
-      `[CustomAlert] Invalid prop 'cancelText': expected string or undefined, received ${typeof props.cancelText}. ` +
-      `The cancel button text must be a string.`
+      `[CustomAlert] Geçersiz prop 'cancelText': string veya undefined bekleniyor, ${typeof props.cancelText} alındı. ` +
+      `İptal butonu metni string olmalıdır.`
     );
     isValid = false;
   }
@@ -157,38 +187,42 @@ const validateProps = (props: CustomAlertProps): boolean => {
 };
 
 /**
- * Safely execute a callback with validation and error handling
- * - Validates callback is a function before calling (Requirement 9.4)
- * - Wraps execution in try-catch (Requirement 10.5)
- * - Logs errors in development mode only (Requirement 10.5)
+ * Callback'i doğrulama ve hata yönetimi ile güvenli şekilde çalıştırır
+ * - Çağırmadan önce callback'in fonksiyon olduğunu doğrular (Gereksinim 9.4)
+ * - Çalıştırmayı try-catch ile sarar (Gereksinim 10.5)
+ * - Sadece geliştirme modunda hataları loglar (Gereksinim 10.5)
  * 
- * @param callback - The callback function to execute
- * @param callbackName - Name of the callback for error logging
+ * @param {(() => void) | undefined} callback - Çalıştırılacak callback fonksiyonu
+ * @param {string} callbackName - Hata loglama için callback adı
  */
 const safeExecuteCallback = (
   callback: (() => void) | undefined,
   callbackName: string
 ): void => {
-  // Validate callback is a function before calling (Requirement 9.4)
+  // Çağırmadan önce callback'in fonksiyon olduğunu doğrula (Gereksinim 9.4)
   if (typeof callback !== 'function') {
     if (__DEV__) {
-      console.warn(`[CustomAlert] ${callbackName} is not a function, skipping execution`);
+      console.warn(`[CustomAlert] ${callbackName} fonksiyon değil, çalıştırma atlanıyor`);
     }
     return;
   }
 
-  // Wrap callback execution in try-catch (Requirement 10.5)
+  // Callback çalıştırmayı try-catch ile sar (Gereksinim 10.5)
   try {
     callback();
   } catch (error) {
-    // Log errors in development mode only (Requirement 10.5)
+    // Sadece geliştirme modunda hataları logla (Gereksinim 10.5)
     if (__DEV__) {
-      console.error(`[CustomAlert] Error executing ${callbackName}:`, error);
+      console.error(`[CustomAlert] ${callbackName} çalıştırılırken hata:`, error);
     }
-    // Continue without crashing - the alert will still dismiss
+    // Çökmeden devam et - alert yine de kapanacak
   }
 };
 
+/**
+ * CustomAlert Bileşeni
+ * Modern, animasyonlu uyarı dialog'u
+ */
 export const CustomAlert: React.FC<CustomAlertProps> = ({
   visible,
   type,
@@ -199,7 +233,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   confirmText = 'Tamam',
   cancelText = 'İptal',
 }) => {
-  // Validate props in development mode (Requirement 9.6)
+  // Geliştirme modunda props'ları doğrula (Gereksinim 9.6)
   useEffect(() => {
     validateProps({ visible, type, title, message, onConfirm, onCancel, confirmText, cancelText });
   }, [visible, type, title, message, onConfirm, onCancel, confirmText, cancelText]);
@@ -208,12 +242,12 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const isMountedRef = useRef(true);
 
-  // Track mount state for animation cleanup
+  // Animasyon temizliği için mount durumunu takip et
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
-      // Cancel any running animation on unmount to prevent memory leaks
+      // Unmount'ta çalışan animasyonu iptal et (bellek sızıntısını önle)
       if (animationRef.current) {
         animationRef.current.stop();
         animationRef.current = null;
@@ -223,7 +257,7 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
 
   useEffect(() => {
     if (visible) {
-      // Store animation reference for cleanup
+      // Temizlik için animasyon referansını sakla
       animationRef.current = Animated.spring(scaleAnim, {
         toValue: 1,
         useNativeDriver: true,
@@ -231,16 +265,16 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
         friction: 7,
       });
       animationRef.current.start(() => {
-        // Clear reference after animation completes
+        // Animasyon tamamlandıktan sonra referansı temizle
         animationRef.current = null;
       });
     } else {
-      // Cancel any running animation before resetting
+      // Sıfırlamadan önce çalışan animasyonu iptal et
       if (animationRef.current) {
         animationRef.current.stop();
         animationRef.current = null;
       }
-      // Reset animation value when not visible
+      // Görünür değilken animasyon değerini sıfırla
       scaleAnim.setValue(0);
     }
   }, [visible, scaleAnim]);
@@ -250,24 +284,24 @@ export const CustomAlert: React.FC<CustomAlertProps> = ({
   const isDestructive = type === 'confirmDestructive';
 
   /**
-   * Handle confirm button press
-   * Validates and safely executes the onConfirm callback
+   * Onayla butonu tıklamasını işle
+   * onConfirm callback'ini doğrular ve güvenli şekilde çalıştırır
    */
   const handleConfirmPress = (): void => {
     safeExecuteCallback(onConfirm, 'onConfirm');
   };
 
   /**
-   * Handle cancel button press
-   * Validates and safely executes the onCancel callback
+   * İptal butonu tıklamasını işle
+   * onCancel callback'ini doğrular ve güvenli şekilde çalıştırır
    */
   const handleCancelPress = (): void => {
     safeExecuteCallback(onCancel, 'onCancel');
   };
 
   /**
-   * Handle dismiss action for non-confirm alert types
-   * For single-button alerts, dismiss triggers the confirm callback
+   * Confirm olmayan alert tipleri için kapatma işlemini işle
+   * Tek butonlu alert'ler için kapatma, confirm callback'ini tetikler
    */
   const handleDismiss = (): void => {
     handleConfirmPress();

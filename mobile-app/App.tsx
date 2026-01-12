@@ -1,27 +1,33 @@
 /**
- * App.tsx - Application Root
+ * @file App.tsx
+ * @description MediKariyer Mobile uygulamasının ana giriş dosyası.
+ * Provider hiyerarşisi, deep linking, splash screen yönetimi ve global ayarlar bu dosyada yapılandırılır.
  * 
- * ⚠️ PROVIDER HIERARCHY - SACRED ARCHITECTURE RULE
+ * ⚠️ PROVIDER HİYERARŞİSİ - MİMARİ KURAL
  * ═══════════════════════════════════════════════════════
- * BottomSheetModalProvider MUST be at ROOT level.
- * This is the ONLY place it should exist in the entire app.
+ * BottomSheetModalProvider ROOT seviyesinde OLMALIDIR.
+ * Bu, uygulamanın tamamında bulunması gereken TEK yerdir.
  * 
- * FORBIDDEN (will break Select/BottomSheet components):
- * - Adding BottomSheetModalProvider inside ANY component
- * - Adding BottomSheetModalProvider inside ANY screen
- * - Using `presentation: 'modal'` for screens with Select
+ * YASAK (Select/BottomSheet bileşenlerini bozar):
+ * - BottomSheetModalProvider'ı HERHANGİ bir component içine eklemek
+ * - BottomSheetModalProvider'ı HERHANGİ bir screen içine eklemek
+ * - Select içeren ekranlar için `presentation: 'modal'` kullanmak
  * 
- * Provider Stack (DO NOT MODIFY ORDER):
+ * Provider Yığını (SIRAYI DEĞİŞTİRMEYİN):
  * GestureHandlerRootView
  * └── SafeAreaProvider
  *     └── PortalProvider
- *         └── BottomSheetModalProvider ← SINGLETON, ROOT LEVEL
+ *         └── BottomSheetModalProvider ← TEKİL, ROOT SEVİYESİ
  *             └── AppProviders
  *                 └── NavigationContainer
- *         └── PortalHost ("root") ← Toast/Alert render here
+ *         └── PortalHost ("root") ← Toast/Alert burada render edilir
  * 
- * See: src/ARCHITECTURE.md for full documentation.
+ * Detaylı bilgi için: src/ARCHITECTURE.md
  * ═══════════════════════════════════════════════════════
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import React, { useEffect, useCallback } from 'react';
@@ -45,11 +51,11 @@ import { errorLogger } from '@/utils/errorLogger';
 import { env } from '@/config/env';
 import { useAuthStore } from '@/store/authStore';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete
+// Splash screen'i asset yükleme tamamlanana kadar otomatik gizlenmesini engelle
 SplashScreen.preventAutoHideAsync();
 
-// Initialize Sentry for production error tracking
-// Set your Sentry DSN in .env as EXPO_PUBLIC_SENTRY_DSN
+// Production ortamında hata takibi için Sentry'yi başlat
+// Sentry DSN'inizi .env dosyasında EXPO_PUBLIC_SENTRY_DSN olarak ayarlayın
 if (env.SENTRY_DSN) {
   errorLogger.initSentry({
     dsn: env.SENTRY_DSN,
@@ -59,34 +65,35 @@ if (env.SENTRY_DSN) {
 }
 
 /**
- * AppContent - Inner app component with push notifications
+ * AppContent - Push notification ve deep linking yönetimi
+ * @description İç uygulama bileşeni, axios interceptor, push notification ve deep linking'i başlatır
  */
 const AppContent = () => {
-  // Initialize axios interceptor for navigation integration
+  // Axios interceptor'ı başlat (navigation entegrasyonu için)
   useAxiosInterceptor();
-  // Initialize push notifications
+  // Push notification'ları başlat
   usePushNotifications();
   const isHydrating = useAuthStore((state) => state.isHydrating);
 
-  // Hide splash screen when hydration is complete
+  // Hydration tamamlandığında splash screen'i gizle
   useEffect(() => {
     if (!isHydrating) {
       const hideSplash = async () => {
         try {
           await SplashScreen.hideAsync();
         } catch (error) {
-          console.warn('Failed to hide splash screen:', error);
-          // Continue even if hiding fails
+          console.warn('Splash screen gizlenemedi:', error);
+          // Hata olsa bile devam et
         }
       };
       hideSplash();
     }
   }, [isHydrating]);
 
-  // Handle deep link navigation
+  // Deep link navigasyonunu yönet
   const handleDeepLink = useCallback((url: string) => {
     if (!navigationRef.isReady()) {
-      // Wait for navigation to be ready
+      // Navigation hazır olana kadar bekle
       setTimeout(() => handleDeepLink(url), 100);
       return;
     }
@@ -94,23 +101,23 @@ const AppContent = () => {
     try {
       const { path, queryParams } = Linking.parse(url);
       
-      // Handle reset password deep link: medikariyer://reset-password?token=...
+      // Şifre sıfırlama deep link'ini yönet: medikariyer://reset-password?token=...
       if (path === 'reset-password' && queryParams?.token) {
-        // Navigate to Auth stack first, then to ResetPassword screen
-        // @ts-expect-error - Nested navigation type issue, but works at runtime
+        // Önce Auth stack'e, sonra ResetPassword ekranına yönlendir
+        // @ts-expect-error - İç içe navigation tip sorunu, ancak runtime'da çalışır
         navigationRef.navigate('Auth', {
           screen: 'ResetPassword',
           params: { token: queryParams.token as string },
         });
       }
     } catch (error) {
-      console.error('Error handling deep link:', error);
+      console.error('Deep link işlenirken hata:', error);
     }
   }, []);
 
-  // Deep linking handler for password reset
+  // Şifre sıfırlama için deep linking handler
   useEffect(() => {
-    // Handle initial URL (when app is opened via deep link)
+    // İlk URL'i işle (uygulama deep link ile açıldığında)
     const handleInitialURL = async () => {
       const initialUrl = await Linking.getInitialURL();
       if (initialUrl) {
@@ -118,7 +125,7 @@ const AppContent = () => {
       }
     };
 
-    // Handle URL changes (when app is already open and receives a deep link)
+    // URL değişikliklerini işle (uygulama zaten açıkken deep link geldiğinde)
     const subscription = Linking.addEventListener('url', (event) => {
       handleDeepLink(event.url);
     });
@@ -132,7 +139,7 @@ const AppContent = () => {
 
   return (
     <>
-      {/* Global Offline Notice - Shows at top when internet is disconnected */}
+      {/* Global Çevrimdışı Bildirimi - İnternet bağlantısı kesildiğinde üstte gösterilir */}
       <OfflineNotice />
       
       <AuthInitializer />
@@ -143,7 +150,7 @@ const AppContent = () => {
 
 export default function App() {
   useEffect(() => {
-    // Disable font scaling globally for consistent UI
+    // Tutarlı UI için font ölçeklendirmeyi global olarak devre dışı bırak
     // @ts-ignore
     Text.defaultProps = Text.defaultProps || {};
     // @ts-ignore
@@ -154,14 +161,14 @@ export default function App() {
     TextInput.defaultProps.allowFontScaling = false;
   }, []);
 
-  // Fallback: Hide splash screen after maximum wait time (5 seconds)
-  // This ensures splash screen doesn't stay forever if something goes wrong
+  // Yedek: Maksimum bekleme süresinden (5 saniye) sonra splash screen'i gizle
+  // Bu, bir şeyler ters giderse splash screen'in sonsuza kadar kalmamasını sağlar
   useEffect(() => {
     const timeout = setTimeout(async () => {
       try {
         await SplashScreen.hideAsync();
       } catch (error) {
-        // Ignore errors
+        // Hataları yoksay
       }
     }, 5000);
 
@@ -169,26 +176,26 @@ export default function App() {
   }, []);
 
   /**
-   * Provider Hierarchy (Optimized for Z-Index):
+   * Provider Hiyerarşisi (Z-Index için optimize edilmiş):
    * 
    * GestureHandlerRootView
    * └── SafeAreaProvider
    *     └── PortalProvider
-   *         └── BottomSheetModalProvider (ROOT LEVEL - Critical for Select/BottomSheet)
+   *         └── BottomSheetModalProvider (ROOT SEVİYESİ - Select/BottomSheet için kritik)
    *             └── AppProviders (QueryClient, Theme, Alert, Toast)
    *                 └── ErrorBoundary
    *                     └── NavigationContainer
    *                         └── AppContent
-   *         └── PortalHost (name="root") - For Toast/Alert overlays
+   *         └── PortalHost (name="root") - Toast/Alert overlay'leri için
    */
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <PortalProvider>
-          {/* BottomSheetModalProvider at ROOT level - enables Select to render above navigation */}
+          {/* BottomSheetModalProvider ROOT seviyesinde - Select'in navigation üzerinde render edilmesini sağlar */}
           <BottomSheetModalProvider>
             <AppProviders>
-              {/* ErrorBoundary wraps NavigationContainer - catches all JS errors */}
+              {/* ErrorBoundary NavigationContainer'ı sarar - tüm JS hatalarını yakalar */}
               <ErrorBoundary>
                 <NavigationContainer ref={navigationRef}>
                   <AppContent />
@@ -196,7 +203,7 @@ export default function App() {
               </ErrorBoundary>
             </AppProviders>
           </BottomSheetModalProvider>
-          {/* Global Portal Host - Renders all global overlays (Toast, Alert, etc.) */}
+          {/* Global Portal Host - Tüm global overlay'leri render eder (Toast, Alert, vb.) */}
           <PortalHost name="root" />
         </PortalProvider>
       </SafeAreaProvider>

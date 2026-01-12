@@ -1,3 +1,32 @@
+/**
+ * @file Input.tsx
+ * @description Metin girişi bileşeni
+ * 
+ * Özellikler:
+ * - İki varyant (default, underline)
+ * - Etiket ve yardımcı metin desteği
+ * - Hata mesajı gösterimi
+ * - Sağ ikon desteği
+ * - Focus durumu gösterimi
+ * - Performans optimizasyonu (memo)
+ * - Modern tasarım (yuvarlatılmış köşeler, gölge)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Input
+ *   label="E-posta"
+ *   value={email}
+ *   onChangeText={setEmail}
+ *   error={errors.email}
+ *   rightIcon={<Icon />}
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useState, useMemo, ReactNode, memo } from 'react';
 import {
   View,
@@ -9,15 +38,28 @@ import {
 } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
+/**
+ * Input bileşeni props interface'i
+ */
 export interface InputProps extends TextInputProps {
+  /** Etiket metni */
   label?: string;
+  /** Hata mesajı */
   error?: string;
+  /** Yardımcı metin */
   helperText?: string;
+  /** Container stili */
   containerStyle?: ViewStyle;
+  /** Input varyantı */
   variant?: 'default' | 'underline';
+  /** Sağ tarafta gösterilecek ikon */
   rightIcon?: ReactNode;
 }
 
+/**
+ * Metin Girişi Bileşeni
+ * Performans optimizasyonu ile memo edilmiş
+ */
 export const Input: React.FC<InputProps> = memo(({
   label,
   error,
@@ -64,8 +106,8 @@ export const Input: React.FC<InputProps> = memo(({
     </View>
   );
 }, (prevProps, nextProps) => {
-  // Return true if props are equal (skip re-render), false if different (re-render)
-  // Only re-render if important props change
+  // Props eşitse true döndür (re-render atla), farklıysa false (re-render yap)
+  // Sadece önemli props değişirse re-render yap
   const propsEqual = (
     prevProps.value === nextProps.value &&
     prevProps.error === nextProps.error &&
@@ -75,7 +117,7 @@ export const Input: React.FC<InputProps> = memo(({
     prevProps.secureTextEntry === nextProps.secureTextEntry &&
     prevProps.rightIcon === nextProps.rightIcon
   );
-  return propsEqual; // true = skip re-render, false = re-render
+  return propsEqual; // true = re-render atla, false = re-render yap
 });
 
 const createStyles = (theme: any) => StyleSheet.create({

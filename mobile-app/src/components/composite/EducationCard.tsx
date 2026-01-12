@@ -1,3 +1,32 @@
+/**
+ * @file EducationCard.tsx
+ * @description Eğitim kartı bileşeni
+ * 
+ * Özellikler:
+ * - Eğitim bilgileri (derece, kurum, alan, tarihler)
+ * - Düzenleme ve silme butonları
+ * - Devam ediyor durumu
+ * - İkon ve chip'ler
+ * - Tıklanabilir kart
+ * - Modern tasarım
+ * 
+ * Kullanım:
+ * ```tsx
+ * <EducationCard
+ *   degree="Tıp Fakültesi"
+ *   institution="İstanbul Üniversitesi"
+ *   startDate="2015"
+ *   endDate="2021"
+ *   onEdit={handleEdit}
+ *   onDelete={handleDelete}
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,18 +36,34 @@ import { Chip } from '@/components/ui/Chip';
 import { colors, spacing } from '@/theme';
 import { formatExperiencePeriod } from '@/utils/date';
 
+/**
+ * EducationCard bileşeni props interface'i
+ */
 export interface EducationCardProps {
+  /** Derece/diploma */
   degree: string;
+  /** Kurum adı */
   institution: string;
+  /** Alan/bölüm (opsiyonel) */
   field?: string;
+  /** Başlangıç tarihi */
   startDate: string;
+  /** Bitiş tarihi (opsiyonel) */
   endDate?: string;
+  /** Devam ediyor mu? */
   current?: boolean;
+  /** Tıklama fonksiyonu */
   onPress?: () => void;
+  /** Düzenleme fonksiyonu */
   onEdit?: () => void;
+  /** Silme fonksiyonu */
   onDelete?: () => void;
 }
 
+/**
+ * Eğitim Kartı Bileşeni
+ * Profil eğitim bilgilerini gösterir
+ */
 export const EducationCard: React.FC<EducationCardProps> = ({
   degree,
   institution,

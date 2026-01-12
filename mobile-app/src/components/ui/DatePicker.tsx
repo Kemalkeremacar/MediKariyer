@@ -1,3 +1,30 @@
+/**
+ * @file DatePicker.tsx
+ * @description Tarih seçici bileşeni
+ * 
+ * Özellikler:
+ * - Platform-specific tarih seçici (iOS/Android)
+ * - Minimum ve maksimum tarih sınırlaması
+ * - Etiket ve placeholder desteği
+ * - Hata mesajı gösterimi
+ * - Devre dışı bırakma
+ * - Takvim ikonu
+ * 
+ * Kullanım:
+ * ```tsx
+ * <DatePicker
+ *   value={selectedDate}
+ *   onChange={setSelectedDate}
+ *   label="Doğum Tarihi"
+ *   minimumDate={new Date(1900, 0, 1)}
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useState } from 'react';
 import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -6,17 +33,32 @@ import { Typography } from './Typography';
 import { colors, spacing } from '@/theme';
 import { formatDate as formatDateUtil } from '@/utils/date';
 
+/**
+ * DatePicker bileşeni props interface'i
+ */
 export interface DatePickerProps {
+  /** Seçili tarih */
   value?: Date;
+  /** Tarih değiştiğinde çağrılır */
   onChange: (date: Date) => void;
+  /** Etiket metni */
   label?: string;
+  /** Placeholder metni */
   placeholder?: string;
+  /** Minimum seçilebilir tarih */
   minimumDate?: Date;
+  /** Maksimum seçilebilir tarih */
   maximumDate?: Date;
+  /** Devre dışı durumu */
   disabled?: boolean;
+  /** Hata mesajı */
   error?: string;
 }
 
+/**
+ * DatePicker Bileşeni
+ * Platform-specific tarih seçici
+ */
 export const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
@@ -29,16 +71,25 @@ export const DatePicker: React.FC<DatePickerProps> = ({
 }) => {
   const [show, setShow] = useState(false);
 
+  /**
+   * Tarihi görüntüleme formatına çevirir
+   */
   const formatDateDisplay = (date: Date) => {
     return formatDateUtil(date);
   };
 
+  /**
+   * Tarih seçici açma işlemini yönetir
+   */
   const handlePress = () => {
     if (!disabled) {
       setShow(true);
     }
   };
 
+  /**
+   * Tarih değişikliğini yönetir
+   */
   const handleChange = (_event: unknown, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShow(false);

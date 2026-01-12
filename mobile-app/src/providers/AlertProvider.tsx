@@ -1,20 +1,23 @@
 /**
  * @file AlertProvider.tsx
- * @description Deterministic alert state management using React Context exclusively
+ * @description React Context kullanarak deterministik alert state yönetimi
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  * 
- * Key design decisions:
- * 1. No global handler - context only
- * 2. Callback refs to prevent stale closures
- * 3. Execution guard to prevent double-firing from rapid clicks
+ * **Temel Tasarım Kararları:**
+ * 1. Global handler yok - sadece context kullanımı
+ * 2. Stale closure'ları önlemek için callback ref'leri
+ * 3. Hızlı tıklamalardan kaynaklanan çift tetiklemeyi önlemek için execution guard
  * 
- * Responsibilities:
- * - showAlert: Display alert with configuration
- * - hideAlert: Close alert and clean up state
- * - Manage callback execution with proper guards
+ * **Sorumluluklar:**
+ * - showAlert: Konfigürasyonla alert gösterme
+ * - hideAlert: Alert'i kapatma ve state temizleme
+ * - Callback yürütmesini uygun guard'larla yönetme
  * 
- * Requirements:
- * - 9.3: Log lifecycle events in development mode
- * - 9.5: Ensure logs are stripped in production builds
+ * **Gereksinimler:**
+ * - 9.3: Development modunda lifecycle event'lerini loglama
+ * - 9.5: Production build'lerinde logların kaldırılmasını sağlama
  */
 
 import React, {
@@ -42,31 +45,31 @@ export type { AlertConfig, AlertContextType, AlertType } from '@/types/alert';
 const AlertContext = createContext<AlertContextType | undefined>(undefined);
 
 /**
- * Development-only logging utility for AlertProvider
- * Uses the centralized overlay logging system
+ * AlertProvider için sadece development modunda loglama utility'si
+ * Merkezi overlay loglama sistemini kullanır
  * 
- * @param message - The message to log
- * @param data - Optional data to include
+ * @param message - Loglanacak mesaj
+ * @param data - Opsiyonel ek veri
  */
 const alertDevLog = (message: string, data?: unknown): void => {
   overlayDevLog(`[Alert] ${message}`, data);
 };
 
 /**
- * Development-only warning utility for AlertProvider
+ * AlertProvider için sadece development modunda uyarı utility'si
  * 
- * @param message - The warning message
- * @param data - Optional data to include
+ * @param message - Uyarı mesajı
+ * @param data - Opsiyonel ek veri
  */
 const alertDevWarn = (message: string, data?: unknown): void => {
   overlayDevWarn(`[Alert] ${message}`, data);
 };
 
 /**
- * Development-only error utility for AlertProvider
+ * AlertProvider için sadece development modunda hata utility'si
  * 
- * @param message - The error message
- * @param error - Optional error object
+ * @param message - Hata mesajı
+ * @param error - Opsiyonel hata objesi
  */
 const alertDevError = (message: string, error?: unknown): void => {
   overlayDevError(`[Alert] ${message}`, error);
@@ -280,11 +283,11 @@ export const AlertProvider: React.FC<PropsWithChildren> = ({ children }) => {
 };
 
 /**
- * Hook to access alert functionality
- * Must be used within AlertProvider
+ * Alert fonksiyonalitesine erişim için hook
+ * AlertProvider içinde kullanılmalıdır
  * 
- * @throws Error if used outside AlertProvider
- * @returns AlertContextType with showAlert, hideAlert, and isVisible
+ * @throws Error AlertProvider dışında kullanılırsa hata fırlatır
+ * @returns showAlert, hideAlert ve isVisible içeren AlertContextType
  */
 export const useAlert = (): AlertContextType => {
   const context = useContext(AlertContext);

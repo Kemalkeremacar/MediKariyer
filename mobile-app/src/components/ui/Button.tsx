@@ -1,3 +1,29 @@
+/**
+ * @file Button.tsx
+ * @description Modern buton bileşeni
+ * 
+ * Özellikler:
+ * - Farklı varyantlar (primary, secondary, outline, ghost, gradient, destructive)
+ * - Üç boyut seçeneği (sm, md, lg)
+ * - Yükleme durumu göstergesi
+ * - Devre dışı bırakma
+ * - Tam genişlik seçeneği
+ * - Gradient renk desteği
+ * - Dokunmatik geri bildirim (haptic feedback)
+ * - Animasyonlu basma efekti
+ * - Erişilebilirlik desteği
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Button variant="primary" onPress={handlePress}>Kaydet</Button>
+ * <Button variant="gradient" loading fullWidth>Yükleniyor...</Button>
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useMemo } from 'react';
 import {
   Text,
@@ -18,24 +44,42 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+/**
+ * Button bileşeni props interface'i
+ */
 export interface ButtonProps {
+  /** Buton varyantı */
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient' | 'destructive';
+  /** Buton boyutu */
   size?: 'sm' | 'md' | 'lg';
+  /** Yükleme durumu */
   loading?: boolean;
+  /** Devre dışı durumu */
   disabled?: boolean;
+  /** Tam genişlik */
   fullWidth?: boolean;
+  /** Tıklama fonksiyonu */
   onPress: () => void;
+  /** Buton metni */
   label?: string;
+  /** Buton içeriği (label yerine kullanılabilir) */
   children?: React.ReactNode;
+  /** Ek stil */
   style?: ViewStyle;
+  /** Metin stili */
   textStyle?: TextStyle;
+  /** Gradient renkleri */
   gradientColors?: [string, string];
-  /** TD-012: Accessibility label for screen readers */
+  /** Erişilebilirlik etiketi (ekran okuyucular için) */
   accessibilityLabel?: string;
-  /** Accessibility hint for screen readers */
+  /** Erişilebilirlik ipucu (ekran okuyucular için) */
   accessibilityHint?: string;
 }
 
+/**
+ * Button Bileşeni
+ * Modern, animasyonlu ve erişilebilir buton
+ */
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md',
@@ -58,7 +102,7 @@ export const Button: React.FC<ButtonProps> = ({
   
   const content = label || children;
 
-  // Bouncy press animation
+  // Zıplayan basma animasyonu
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -66,7 +110,7 @@ export const Button: React.FC<ButtonProps> = ({
   }));
 
   const handlePressIn = () => {
-    // Light haptic feedback on button press
+    // Buton basıldığında hafif dokunsal geri bildirim
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
   };
@@ -77,21 +121,24 @@ export const Button: React.FC<ButtonProps> = ({
     });
   };
 
+  /**
+   * Gradient renklerini döndürür
+   */
   const getGradientColors = (): [string, string] => {
     if (gradientColors) {
       return gradientColors;
     }
     if (variant === 'gradient') {
-      return ['#6096B4', '#93BFCF']; // Blue gradient (matches web)
+      return ['#6096B4', '#93BFCF']; // Mavi gradient (web ile eşleşir)
     }
     if (variant === 'primary') {
-      return ['#60A5FA', '#3B82F6']; // Modern light blue gradient
+      return ['#60A5FA', '#3B82F6']; // Modern açık mavi gradient
     }
     if (variant === 'secondary') {
-      return ['#38BDF8', '#0EA5E9']; // Sky blue gradient
+      return ['#38BDF8', '#0EA5E9']; // Gök mavisi gradient
     }
     if (variant === 'destructive') {
-      return ['#EF4444', '#DC2626']; // Red gradient
+      return ['#EF4444', '#DC2626']; // Kırmızı gradient
     }
     return ['transparent', 'transparent'];
   };

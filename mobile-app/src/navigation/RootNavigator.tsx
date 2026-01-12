@@ -1,19 +1,20 @@
 /**
- * RootNavigator - Session Persistence Implementation
- * State-Based Navigation Pattern
+ * @file RootNavigator.tsx
+ * @description Ana navigasyon yöneticisi - Durum bazlı navigasyon
  * 
- * Navigation Logic (Priority Order):
- * 1. isHydrating -> Splash Screen (shows loading)
+ * Navigasyon Mantığı (Öncelik Sırası):
+ * 1. isHydrating -> Splash Screen (yükleniyor gösterir)
  * 2. !isAuthenticated -> AuthStack (Login/Register)
- * 3. isAuthenticated && !user.is_active -> AccountDisabledScreen (deactivated users)
- * 4. isAuthenticated && !user.is_approved -> AuthStack (PendingApproval screen)
- * 5. All checks pass -> AppStack (Dashboard)
+ * 3. isAuthenticated && !user.is_active -> AccountDisabledScreen (pasif kullanıcılar)
+ * 4. isAuthenticated && !user.is_approved -> AuthStack (PendingApproval ekranı)
+ * 5. Tüm kontroller geçti -> AppStack (Dashboard)
  * 
- * Features:
- * - State-based initialRouteName (no useEffect navigation.reset calls)
- * - All screens registered for deep linking support
- * - Tolerant type checking for MSSQL BIT fields (1, '1', true, 'true')
- * - Mobile API integration via authService.getMe()
+ * Özellikler:
+ * - Durum bazlı initialRouteName (useEffect navigation.reset çağrıları yok)
+ * - Deep linking desteği için tüm ekranlar kayıtlı
+ * - MSSQL BIT alanları için toleranslı tip kontrolü (1, '1', true, 'true')
+ * - Mobile API entegrasyonu (authService.getMe() üzerinden)
+ * - Otomatik yönlendirme (auth durumu değiştiğinde)
  * 
  * @author MediKariyer Development Team
  * @version 3.0.0
@@ -34,35 +35,40 @@ import { Typography } from '@/components/ui/Typography';
 import { devLog } from '@/utils/devLogger';
 import type { RootStackParamList } from './types';
 
-// Enable screens - safe to call with both old and new architecture
+// Enable screens - hem eski hem yeni mimari ile güvenli şekilde çağrılabilir
 try {
   enableScreens();
 } catch (error) {
   if (__DEV__) {
-    devLog.warn('Failed to enable screens:', error);
+    devLog.warn('Screens etkinleştirilemedi:', error);
   }
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 /**
- * Helper function to check if user is active (handles boolean, number, string types)
+ * Kullanıcının aktif olup olmadığını kontrol eden yardımcı fonksiyon
+ * @description Boolean, number, string tiplerini yönetir (MSSQL BIT tipi için)
+ * 
+ * ÖNEMLİ: Kullanıcı yoksa veya is_active undefined/null ise, kullanıcıyı engelleme!
+ * Sadece kesinlikle false veya 0 ise engelle.
+ * 
  * MSSQL BIT tipi için toleranslı kontrol - 1, '1', true, 'true' değerlerini kabul eder
  * 
- * CRITICAL: Eğer user yoksa veya is_active undefined/null ise, kullanıcıyı engelleme!
- * Sadece kesinlikle false veya 0 ise engelle.
+ * @param user - Kullanıcı objesi
+ * @returns Aktifse true, değilse false
  */
 const isUserActive = (user: any): boolean => {
   // Kullanıcı yoksa Login'e gider, engelleme yapma!
   if (!user) {
-    devLog.log('🛑 DEBUG isUserActive: user is null/undefined, returning TRUE (allow login)');
+    devLog.log('🛑 DEBUG isUserActive: kullanıcı null/undefined, TRUE döndürülüyor (login\'e izin ver)');
     return true;
   }
   
   // ÇOK DETAYLI DEBUG LOG'LAR
-  devLog.log('🛑 DEBUG isUserActive - FULL USER OBJECT:', JSON.stringify(user, null, 2));
-  devLog.log('🛑 DEBUG isUserActive - is_active value:', user.is_active);
-  devLog.log('🛑 DEBUG isUserActive - is_active type:', typeof user.is_active);
+  devLog.log('🛑 DEBUG isUserActive - TAM KULLANICI OBJESİ:', JSON.stringify(user, null, 2));
+  devLog.log('🛑 DEBUG isUserActive - is_active değeri:', user.is_active);
+  devLog.log('🛑 DEBUG isUserActive - is_active tipi:', typeof user.is_active);
   devLog.log('🛑 DEBUG isUserActive - is_active === 0:', user.is_active === 0);
   devLog.log('🛑 DEBUG isUserActive - is_active === false:', user.is_active === false);
   devLog.log('🛑 DEBUG isUserActive - is_active === "0":', user.is_active === '0');
@@ -74,41 +80,44 @@ const isUserActive = (user: any): boolean => {
   // ACİL ÖNLEM: Eğer undefined veya null ise, kullanıcıyı engelleme!
   // Varsayılan olarak AKTİF kabul et (Login olabilsin, engel olmasın)
   if (active === undefined || active === null) {
-    devLog.log('🛑 DEBUG isUserActive - is_active is null/undefined, defaulting to TRUE (allow access)');
+    devLog.log('🛑 DEBUG isUserActive - is_active null/undefined, varsayılan TRUE (erişime izin ver)');
     return true; 
   }
   
   // Toleranslı Kontrol - Aktif değerler
   if (active === true) {
-    devLog.log('🛑 DEBUG isUserActive - is_active is true, returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active true, TRUE döndürülüyor');
     return true;
   }
   if (active === 1) {
-    devLog.log('🛑 DEBUG isUserActive - is_active is 1, returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active 1, TRUE döndürülüyor');
     return true;
   }
   if (active === '1') {
-    devLog.log('🛑 DEBUG isUserActive - is_active is "1", returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active "1", TRUE döndürülüyor');
     return true;
   }
   if (active === 'true') {
-    devLog.log('🛑 DEBUG isUserActive - is_active is "true", returning TRUE');
+    devLog.log('🛑 DEBUG isUserActive - is_active "true", TRUE döndürülüyor');
     return true;
   }
   
   // Sadece kesinlikle false veya 0 ise engelle
   if (active === false || active === 0 || active === '0') {
-    devLog.log('🛑 DEBUG isUserActive - is_active is false/0/"0", returning FALSE (block access)');
+    devLog.log('🛑 DEBUG isUserActive - is_active false/0/"0", FALSE döndürülüyor (erişimi engelle)');
     return false;
   }
 
   // Diğer her durumda (beklenmeyen değerler) AKTİF kabul et
-  devLog.log('🛑 DEBUG isUserActive - unexpected value, defaulting to TRUE (allow access)');
+  devLog.log('🛑 DEBUG isUserActive - beklenmeyen değer, varsayılan TRUE (erişime izin ver)');
   return true;
 };
 
 /**
- * Helper function to check if user is approved (handles boolean, number, string types)
+ * Kullanıcının onaylı olup olmadığını kontrol eden yardımcı fonksiyon
+ * @description Boolean, number, string tiplerini yönetir (MSSQL BIT tipi için)
+ * @param user - Kullanıcı objesi
+ * @returns Onaylıysa true, değilse false
  */
 const isUserApproved = (user: any): boolean => {
   if (user?.is_approved === undefined || user?.is_approved === null) return false;
@@ -123,9 +132,9 @@ export const RootNavigator = () => {
   const user = useAuthStore((state) => state.user);
   const isHydrating = useAuthStore((state) => state.isHydrating);
 
-  // Determine initial route based on auth state (memoized for performance)
+  // Auth durumuna göre başlangıç route'unu belirle (performans için memoize edilmiş)
   const initialRouteName = useMemo((): keyof RootStackParamList => {
-    devLog.log('🧭 RootNavigator - Calculating initialRouteName:', {
+    devLog.log('🧭 RootNavigator - initialRouteName hesaplanıyor:', {
       isHydrating,
       authStatus,
       hasUser: !!user,
@@ -134,43 +143,43 @@ export const RootNavigator = () => {
       isApproved: user?.is_approved,
     });
 
-    // During hydration, show Auth (will be replaced by actual state after hydration)
+    // Hydration sırasında Auth göster (hydration sonrası gerçek duruma göre değişecek)
     if (isHydrating) {
-      devLog.log('🧭 RootNavigator - Returning Auth (hydrating)');
+      devLog.log('🧭 RootNavigator - Auth döndürülüyor (hydrating)');
       return 'Auth';
     }
 
-    // Not authenticated
+    // Authenticated değil
     if (authStatus !== 'authenticated' || !user) {
-      devLog.log('🧭 RootNavigator - Returning Auth (not authenticated)');
+      devLog.log('🧭 RootNavigator - Auth döndürülüyor (authenticated değil)');
       return 'Auth';
     }
 
-    // Authenticated - check user status
+    // Authenticated - kullanıcı durumunu kontrol et
     const userIsActive = isUserActive(user);
     const userIsApproved = isUserApproved(user);
     const userIsAdmin = user.role === 'admin';
 
-    devLog.log('🧭 RootNavigator - User checks:', {
+    devLog.log('🧭 RootNavigator - Kullanıcı kontrolleri:', {
       userIsActive,
       userIsApproved,
       userIsAdmin,
     });
 
-    // Check inactive status first - most restrictive
+    // Önce pasif durumu kontrol et - en kısıtlayıcı
     if (!userIsActive) {
-      devLog.log('🧭 RootNavigator - Returning AccountDisabled (inactive)');
+      devLog.log('🧭 RootNavigator - AccountDisabled döndürülüyor (pasif)');
       return 'AccountDisabled';
     }
 
-    // Check approval status
+    // Onay durumunu kontrol et
     if (!userIsApproved && !userIsAdmin) {
-      devLog.log('🧭 RootNavigator - Returning Auth (not approved)');
-      return 'Auth'; // Auth stack will show PendingApproval screen
+      devLog.log('🧭 RootNavigator - Auth döndürülüyor (onaysız)');
+      return 'Auth'; // Auth stack PendingApproval ekranını gösterecek
     }
 
-    // User is authenticated, active, and approved
-    devLog.log('🧭 RootNavigator - Returning App (authenticated, active, approved)');
+    // Kullanıcı authenticated, aktif ve onaylı
+    devLog.log('🧭 RootNavigator - App döndürülüyor (authenticated, aktif, onaylı)');
     return 'App';
   }, [isHydrating, authStatus, user]);
 

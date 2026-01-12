@@ -1,11 +1,12 @@
 /**
- * GradientHeader - Reusable gradient header component
+ * @file GradientHeader.tsx
+ * @description Gradient arka planlı modern header bileşeni
  * 
- * Supports:
- * - Preset variants (primary, profile)
- * - Custom gradient colors
- * - Custom icon with gradient background
- * - Title and subtitle
+ * Bu bileşen sayfa başlıklarında kullanılan gradient efektli header'ı sağlar.
+ * İkon, başlık, alt başlık ve dekoratif elementler içerir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
  */
 
 import React from 'react';
@@ -14,13 +15,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Typography } from '@/components/ui/Typography';
 import { spacing } from '@/theme';
 
-// Preset gradient colors for header background
+/**
+ * Header arka plan gradient renk setleri
+ * Hazır tema varyantları için kullanılır
+ */
 const HEADER_PRESETS = {
   primary: ['#1D4ED8', '#2563EB', '#3B82F6'] as const,
   profile: ['#6096B4', '#7BA8BE', '#93BFCF'] as const,
 } as const;
 
-// Preset icon gradient colors
+/**
+ * İkon arka plan gradient renk setleri
+ * İkon container'ı için hazır renk kombinasyonları
+ */
 const ICON_PRESETS = {
   blue: ['#2563EB', '#1D4ED8'] as const,
   green: ['#4CAF50', '#388E3C'] as const,
@@ -34,31 +41,60 @@ const ICON_PRESETS = {
 export type HeaderVariant = keyof typeof HEADER_PRESETS;
 export type IconColorPreset = keyof typeof ICON_PRESETS;
 
+/**
+ * GradientHeader bileşeni için prop tipleri
+ * 
+ * @interface GradientHeaderProps
+ * @property {string} title - Ana başlık metni
+ * @property {string} subtitle - Alt başlık metni
+ * @property {React.ReactNode} icon - Gösterilecek ikon (genellikle Ionicons)
+ * @property {HeaderVariant} [variant] - Hazır header renk teması (primary/profile)
+ * @property {readonly [string, string, string]} [gradientColors] - Özel gradient renkleri (variant'ı override eder)
+ * @property {IconColorPreset} [iconColorPreset] - Hazır ikon renk teması
+ * @property {readonly [string, string]} [iconColors] - Özel ikon gradient renkleri (preset'i override eder)
+ * @property {string} [shadowColor] - Header gölge rengi
+ * @property {string} [iconShadowColor] - İkon gölge rengi
+ * @property {StyleProp<ViewStyle>} [style] - Ek stil özellikleri
+ * @property {boolean} [showDots] - Alt başlık yanında nokta göster
+ */
 export interface GradientHeaderProps {
-  /** Header title */
   title: string;
-  /** Subtitle text */
   subtitle: string;
-  /** Icon to display (ReactNode - typically Ionicons) */
   icon: React.ReactNode;
-  /** Header background preset variant */
   variant?: HeaderVariant;
-  /** Custom header gradient colors (overrides variant) */
   gradientColors?: readonly [string, string, string];
-  /** Icon color preset */
   iconColorPreset?: IconColorPreset;
-  /** Custom icon gradient colors (overrides iconColorPreset) */
   iconColors?: readonly [string, string];
-  /** Shadow color for header */
   shadowColor?: string;
-  /** Icon shadow color */
   iconShadowColor?: string;
-  /** Additional style for container */
   style?: StyleProp<ViewStyle>;
-  /** Whether to show dots around subtitle */
   showDots?: boolean;
 }
 
+/**
+ * Gradient header bileşeni
+ * 
+ * **Özellikler:**
+ * - Gradient arka plan efekti
+ * - Dekoratif daire elementleri
+ * - İkon ile gradient container
+ * - Başlık ve alt başlık
+ * - Özelleştirilebilir renkler
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * <GradientHeader
+ *   title="Profilim"
+ *   subtitle="Kişisel bilgilerinizi yönetin"
+ *   icon={<Ionicons name="person" size={24} color="#FFF" />}
+ *   variant="profile"
+ *   iconColorPreset="blue"
+ * />
+ * ```
+ * 
+ * @param props - GradientHeader prop'ları
+ * @returns Gradient header bileşeni
+ */
 export const GradientHeader: React.FC<GradientHeaderProps> = ({
   title,
   subtitle,
@@ -72,7 +108,7 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
   style,
   showDots = true,
 }) => {
-  // Resolve colors
+  // Renk çözümlemeleri - Özel renkler varsa onları kullan, yoksa preset'leri kullan
   const headerColors = gradientColors || HEADER_PRESETS[variant];
   const resolvedIconColors = iconColors || ICON_PRESETS[iconColorPreset];
   const resolvedShadowColor = shadowColor || (variant === 'primary' ? '#1D4ED8' : '#6096B4');
@@ -89,15 +125,15 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
         style,
       ]}
     >
-      {/* Decorative Elements */}
+      {/* Dekoratif Elementler - Arka planda daireler */}
       <View style={styles.headerDecoration}>
         <View style={styles.decorCircle1} />
         <View style={styles.decorCircle2} />
       </View>
 
-      {/* Content */}
+      {/* İçerik Bölümü */}
       <View style={styles.headerContent}>
-        {/* Icon */}
+        {/* İkon Container - Gradient arka planlı */}
         <View style={styles.headerIconWrapper}>
           <LinearGradient
             colors={[...resolvedIconColors]}
@@ -112,12 +148,12 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
           </LinearGradient>
         </View>
 
-        {/* Title */}
+        {/* Ana Başlık */}
         <Typography variant="h1" style={styles.headerTitle}>
           {title}
         </Typography>
 
-        {/* Subtitle */}
+        {/* Alt Başlık - Nokta dekorasyonları ile */}
         <View style={styles.headerSubtitleContainer}>
           {showDots && <View style={styles.headerDot} />}
           <Typography variant="body" style={styles.headerSubtitle}>
@@ -130,7 +166,12 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
   );
 };
 
+/**
+ * Stil tanımlamaları
+ * Gradient efektler, gölgeler ve dekoratif elementler için stiller
+ */
 const styles = StyleSheet.create({
+  // Ana gradient header container
   gradientHeader: {
     paddingTop: spacing.lg,
     paddingBottom: spacing.xl,

@@ -29,7 +29,11 @@ import type {
 } from '@/types/auth';
 
 /**
- * Normalizes auth response from various API response formats
+ * Çeşitli API yanıt formatlarından auth yanıtını normalize eder
+ * @description Backend'den farklı formatlarda gelebilen auth yanıtlarını standart formata çevirir
+ * @param payload - API'den gelen ham veri
+ * @returns Normalize edilmiş auth yanıtı
+ * @throws Token veya kullanıcı bilgisi eksikse hata fırlatır
  */
 const normalizeAuthResponse = (payload: any): AuthResponsePayload => {
   // Backend'den gelen format: { tokens: { accessToken, refreshToken }, user, profile }
@@ -46,7 +50,7 @@ const normalizeAuthResponse = (payload: any): AuthResponsePayload => {
   const profile = payload?.profile ?? null;
 
   if (!accessToken || !refreshToken || !user) {
-    devLog.error('Auth response normalization failed:', {
+    devLog.error('Auth yanıtı normalize edilemedi:', {
       hasAccessToken: !!accessToken,
       hasRefreshToken: !!refreshToken,
       hasUser: !!user,
@@ -65,27 +69,31 @@ const normalizeAuthResponse = (payload: any): AuthResponsePayload => {
 };
 
 /**
- * Auth service for authentication-related API calls
+ * Kimlik doğrulama servisi
+ * @description Auth ile ilgili tüm API çağrılarını yönetir
  */
 export const authService = {
   /**
-   * Login with email and password
+   * Email ve şifre ile giriş yap
+   * @param payload - Login bilgileri (email, password)
+   * @returns Auth yanıtı (tokens, user, profile)
+   * @throws API hatası veya network hatası
    */
   async login(payload: LoginPayload): Promise<AuthResponsePayload> {
     try {
-      devLog.log('🔐 Login attempt:', { email: payload.email, endpoint: endpoints.auth.login });
+      devLog.log('🔐 Login denemesi:', { email: payload.email, endpoint: endpoints.auth.login });
       const response = await apiClient.post<ApiResponse<any>>(
         endpoints.auth.login,
         payload,
       );
-      devLog.log('✅ Login response received:', {
+      devLog.log('✅ Login yanıtı alındı:', {
         hasData: !!response.data,
         hasDataData: !!response.data?.data,
         dataKeys: response.data?.data ? Object.keys(response.data.data) : 'null',
       });
       return normalizeAuthResponse(response.data.data);
     } catch (error: any) {
-      devLog.error('❌ Login error:', {
+      devLog.error('❌ Login hatası:', {
         message: error?.message,
         response: error?.response?.data,
         status: error?.response?.status,
@@ -96,7 +104,10 @@ export const authService = {
   },
 
   /**
-   * Register a new doctor account
+   * Yeni doktor hesabı kaydı
+   * @param payload - Doktor kayıt bilgileri
+   * @returns Kayıt yanıtı (user, profile)
+   * @throws API hatası veya validasyon hatası
    */
   async registerDoctor(
     payload: DoctorRegistrationPayload,
@@ -108,7 +119,10 @@ export const authService = {
   },
 
   /**
-   * Refresh access token using refresh token
+   * Refresh token kullanarak access token yenile
+   * @param refreshToken - Refresh token
+   * @returns Yeni auth yanıtı (tokens, user)
+   * @throws Token geçersizse veya süresi dolmuşsa hata
    */
   async refreshToken(refreshToken: string): Promise<AuthResponsePayload> {
     const response = await apiClient.post<ApiResponse<any>>(
@@ -119,7 +133,9 @@ export const authService = {
   },
 
   /**
-   * Logout and invalidate refresh token
+   * Çıkış yap ve refresh token'ı geçersiz kıl
+   * @param refreshToken - Geçersiz kılınacak refresh token
+   * @returns void
    */
   async logout(refreshToken: string): Promise<void> {
     await apiClient.post<ApiResponse<null>>(endpoints.auth.logout, {
@@ -128,7 +144,9 @@ export const authService = {
   },
 
   /**
-   * Get current authenticated user data
+   * Mevcut authenticated kullanıcı verisini getir
+   * @returns Kullanıcı verisi
+   * @throws Auth hatası (401) veya network hatası
    */
   async getMe() {
     const response = await apiClient.get<ApiResponse<any>>(endpoints.auth.me);
@@ -136,7 +154,10 @@ export const authService = {
   },
 
   /**
-   * Change password for authenticated user
+   * Authenticated kullanıcı için şifre değiştir
+   * @param payload - Şifre değiştirme bilgileri (currentPassword, newPassword, confirmPassword)
+   * @returns void
+   * @throws Mevcut şifre yanlışsa veya validasyon hatası
    */
   async changePassword(payload: {
     currentPassword: string;
@@ -150,7 +171,10 @@ export const authService = {
   },
 
   /**
-   * Request password reset - sends reset link to email
+   * Şifre sıfırlama talebi - email'e sıfırlama linki gönderir
+   * @param email - Kullanıcı email adresi
+   * @returns Başarı durumu ve mesaj
+   * @throws Email bulunamazsa veya network hatası
    */
   async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
     const response = await apiClient.post<ApiResponse<{ success: boolean; message: string }>>(
@@ -169,7 +193,11 @@ export const authService = {
   },
 
   /**
-   * Reset password with token - changes password using token from email
+   * Token ile şifre sıfırla - email'den gelen token ile şifre değiştirir
+   * @param token - Email'den gelen sıfırlama token'ı
+   * @param password - Yeni şifre
+   * @returns Başarı durumu ve mesaj
+   * @throws Token geçersizse veya süresi dolmuşsa hata
    */
   async resetPassword(token: string, password: string): Promise<{ success: boolean; message: string }> {
     // Mobile endpoint kullanıyoruz - POST /api/mobile/auth/reset-password

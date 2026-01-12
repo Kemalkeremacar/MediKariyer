@@ -1,3 +1,28 @@
+/**
+ * @file ExperienceFormModal.tsx
+ * @description Deneyim ekleme/düzenleme modal formu
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Pozisyon, kurum, uzmanlık, tarih aralığı girişi
+ * - "Halen çalışıyorum" checkbox desteği
+ * - Form validasyonu
+ * - Lookup data ile uzmanlık seçimi
+ * - DatePicker ile tarih seçimi
+ * - Ekleme ve güncelleme işlemleri
+ * - Navigation screen olarak çalışır (modal değil)
+ * 
+ * **FORM ALANLARI:**
+ * - Pozisyon/Ünvan (zorunlu)
+ * - Kurum Adı (zorunlu)
+ * - Uzmanlık Alanı (zorunlu, dropdown)
+ * - Başlangıç Tarihi (zorunlu, date picker)
+ * - Bitiş Tarihi (opsiyonel, "halen çalışıyorum" varsa gizli)
+ * - Halen Çalışıyorum (checkbox)
+ * 
+ * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,

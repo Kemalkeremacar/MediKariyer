@@ -1,3 +1,21 @@
+/**
+ * @file ForgotPasswordScreen.tsx
+ * @description Şifremi unuttum ekranı
+ * 
+ * Bu ekran kullanıcının e-posta adresine şifre sıfırlama linki gönderir.
+ * Kullanıcı linke tıklayarak şifresini sıfırlayabilir.
+ * 
+ * **Akış:**
+ * 1. Kullanıcı e-posta adresini girer
+ * 2. Backend'e istek gönderilir
+ * 3. Kullanıcıya e-posta gönderilir
+ * 4. Başarı mesajı gösterilir
+ * 5. Kullanıcı login ekranına dönebilir
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import { useState, useMemo } from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
@@ -17,21 +35,34 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useForgotPassword } from '../hooks/useForgotPassword';
 import { handleApiError } from '@/utils/errorHandler';
 
+/**
+ * Form validasyon şeması
+ * Zod ile e-posta validasyonu
+ */
 const forgotPasswordSchema = z.object({
   email: z.string().min(1, 'E-posta gerekli').email('Geçerli bir e-posta girin'),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
+/**
+ * Şifremi unuttum ekranı bileşeni
+ */
 export const ForgotPasswordScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const alert = useAlertHelpers();
+  
+  // Server hata ve başarı mesajları için state
   const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  /**
+   * React Hook Form setup
+   * E-posta validasyonu ile form yönetimi
+   */
   const {
     control,
     handleSubmit,
@@ -41,6 +72,11 @@ export const ForgotPasswordScreen = () => {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
+  /**
+   * Forgot password mutation
+   * Başarılı olduğunda başarı mesajı göster
+   * Hata olduğunda hata mesajı göster
+   */
   const forgotPasswordMutation = useForgotPassword({
     onSuccess: (data) => {
       try {
@@ -64,6 +100,10 @@ export const ForgotPasswordScreen = () => {
     },
   });
 
+  /**
+   * Form submit handler
+   * E-posta adresini backend'e gönder
+   */
   const onSubmit = (values: ForgotPasswordFormValues) => {
     setServerError(null);
     setSuccessMessage(null);

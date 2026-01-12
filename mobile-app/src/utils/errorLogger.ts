@@ -1,32 +1,68 @@
 /**
- * Error Logger Utility
- * Centralized error logging for debugging and monitoring
- * Integrated with Sentry for production error tracking
+ * @file errorLogger.ts
+ * @description Hata loglama utility - Debugging ve monitoring için merkezi hata loglama
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **Özellikler:**
+ * - Production'da Sentry entegrasyonu
+ * - Development'ta console loglama
+ * - Kullanıcı context yönetimi
+ * - Breadcrumb desteği
  */
 
 import * as Sentry from '@sentry/react-native';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+/**
+ * Hata context bilgileri
+ */
 interface ErrorContext {
+  /** Component adı */
   component?: string;
+  /** İşlem/aksiyon adı */
   action?: string;
+  /** Kullanıcı ID */
   userId?: string;
+  /** Diğer context bilgileri */
   [key: string]: any;
 }
 
+/**
+ * Sentry konfigürasyon ayarları
+ */
 interface SentryConfig {
+  /** Sentry DSN */
   dsn: string;
+  /** Environment (development/production) */
   environment?: string;
+  /** Debug modu */
   debug?: boolean;
+  /** Trace sample rate (0.0 - 1.0) */
   tracesSampleRate?: number;
 }
 
+// ============================================================================
+// ERROR LOGGER CLASS
+// ============================================================================
+
+/**
+ * Error Logger sınıfı
+ * Merkezi hata loglama ve Sentry entegrasyonu
+ */
 class ErrorLogger {
   private isDevelopment = __DEV__;
   private isInitialized = false;
 
   /**
-   * Initialize Sentry SDK
-   * Call this in App.tsx before any other code
+   * Sentry SDK'yı başlat
+   * App.tsx'te diğer kodlardan önce çağrılmalıdır
+   * 
+   * @param config - Sentry konfigürasyon ayarları
    */
   initSentry(config: SentryConfig): void {
     if (this.isInitialized) {
@@ -40,11 +76,11 @@ class ErrorLogger {
         environment: config.environment || (this.isDevelopment ? 'development' : 'production'),
         debug: config.debug ?? this.isDevelopment,
         tracesSampleRate: config.tracesSampleRate ?? (this.isDevelopment ? 1.0 : 0.2),
-        // Only send errors in production
+        // Sadece production'da hata gönder
         enabled: !this.isDevelopment,
-        // Attach user info if available
+        // Kullanıcı bilgisi varsa ekle
         beforeSend: (event) => {
-          // Filter out development errors
+          // Development hatalarını filtrele
           if (this.isDevelopment) {
             return null;
           }
@@ -62,7 +98,11 @@ class ErrorLogger {
   }
 
   /**
-   * Set user context for Sentry
+   * Kullanıcı context'ini ayarla
+   * 
+   * @param userId - Kullanıcı ID
+   * @param email - E-posta (opsiyonel)
+   * @param username - Kullanıcı adı (opsiyonel)
    */
   setUser(userId: string, email?: string, username?: string): void {
     Sentry.setUser({
@@ -73,14 +113,17 @@ class ErrorLogger {
   }
 
   /**
-   * Clear user context (on logout)
+   * Kullanıcı context'ini temizle (logout'ta)
    */
   clearUser(): void {
     Sentry.setUser(null);
   }
 
   /**
-   * Log an error with context
+   * Context ile hata logla
+   * 
+   * @param error - Hata objesi
+   * @param context - Ek context bilgileri
    */
   logError(error: Error, context?: ErrorContext): void {
     const timestamp = new Date().toISOString();
@@ -96,7 +139,7 @@ class ErrorLogger {
       console.error('🔴 Error logged:', errorInfo);
     }
 
-    // Send to Sentry in production
+    // Production'da Sentry'ye gönder
     if (!this.isDevelopment) {
       Sentry.withScope((scope) => {
         if (context) {
@@ -110,7 +153,10 @@ class ErrorLogger {
   }
 
   /**
-   * Log a warning
+   * Uyarı logla
+   * 
+   * @param message - Uyarı mesajı
+   * @param context - Ek context bilgileri
    */
   logWarning(message: string, context?: ErrorContext): void {
     const timestamp = new Date().toISOString();
@@ -124,7 +170,7 @@ class ErrorLogger {
       console.warn('⚠️ Warning logged:', warningInfo);
     }
 
-    // Send to Sentry in production
+    // Production'da Sentry'ye gönder
     if (!this.isDevelopment) {
       Sentry.withScope((scope) => {
         scope.setLevel('warning');
@@ -137,7 +183,12 @@ class ErrorLogger {
   }
 
   /**
-   * Log an info message
+   * Bilgi mesajı logla
+   * 
+   * @param message - Bilgi mesajı
+   * @param context - Ek context bilgileri
+   * 
+   * **NOT:** Info logları genellikle Sentry'ye gönderilmez (gürültüyü azaltmak için)
    */
   logInfo(message: string, context?: ErrorContext): void {
     const timestamp = new Date().toISOString();
@@ -151,12 +202,15 @@ class ErrorLogger {
       console.log('ℹ️ Info logged:', infoLog);
     }
 
-    // Info logs typically not sent to Sentry to reduce noise
-    // Only log critical info in production if needed
+    // Info logları genellikle Sentry'ye gönderilmez
+    // Sadece kritik info'lar production'da loglanabilir
   }
 
   /**
-   * Log a network error
+   * Network hatası logla
+   * 
+   * @param error - Hata objesi
+   * @param endpoint - API endpoint (opsiyonel)
    */
   logNetworkError(error: Error, endpoint?: string): void {
     this.logError(error, {
@@ -166,7 +220,11 @@ class ErrorLogger {
   }
 
   /**
-   * Log an API error
+   * API hatası logla
+   * 
+   * @param error - Hata objesi
+   * @param endpoint - API endpoint (opsiyonel)
+   * @param statusCode - HTTP status code (opsiyonel)
    */
   logApiError(error: Error, endpoint?: string, statusCode?: number): void {
     this.logError(error, {
@@ -177,7 +235,10 @@ class ErrorLogger {
   }
 
   /**
-   * Log an unhandled error (for global error boundary)
+   * İşlenmemiş hata logla (global error boundary için)
+   * 
+   * @param error - Hata objesi
+   * @param isFatal - Fatal crash mi?
    */
   logUnhandledError(error: Error, isFatal: boolean = false): void {
     this.logError(error, {
@@ -185,7 +246,7 @@ class ErrorLogger {
       isFatal,
     });
 
-    // For fatal crashes, ensure Sentry captures it immediately
+    // Fatal crash'ler için Sentry'ye hemen gönder
     if (isFatal && !this.isDevelopment) {
       Sentry.captureException(error, {
         level: 'fatal',
@@ -197,7 +258,11 @@ class ErrorLogger {
   }
 
   /**
-   * Add breadcrumb for better error context
+   * Daha iyi hata context'i için breadcrumb ekle
+   * 
+   * @param message - Breadcrumb mesajı
+   * @param category - Kategori (varsayılan: 'app')
+   * @param data - Ek veri
    */
   addBreadcrumb(message: string, category?: string, data?: Record<string, any>): void {
     Sentry.addBreadcrumb({
@@ -209,7 +274,10 @@ class ErrorLogger {
   }
 
   /**
-   * Capture a custom event/message
+   * Özel event/mesaj yakala
+   * 
+   * @param message - Mesaj
+   * @param level - Severity level (varsayılan: 'info')
    */
   captureMessage(message: string, level: Sentry.SeverityLevel = 'info'): void {
     if (this.isDevelopment) {
@@ -221,4 +289,12 @@ class ErrorLogger {
   }
 }
 
+// ============================================================================
+// EXPORT
+// ============================================================================
+
+/**
+ * Error Logger instance
+ * Uygulama genelinde kullanılacak singleton instance
+ */
 export const errorLogger = new ErrorLogger();

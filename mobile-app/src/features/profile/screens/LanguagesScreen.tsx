@@ -1,3 +1,22 @@
+/**
+ * @file LanguagesScreen.tsx
+ * @description Yabancı dil listesi ekranı - CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Dil listesi görüntüleme (dil adı, seviye)
+ * - Yeni dil ekleme (FAB butonu)
+ * - Dil düzenleme ve silme
+ * - Pull-to-refresh desteği
+ * - Loading ve error state'leri
+ * - Empty state gösterimi
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. Diller listelenir
+ * 2. FAB butonu ile yeni dil eklenir
+ * 3. Kart üzerinden düzenleme/silme yapılır
+ */
 import React from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';

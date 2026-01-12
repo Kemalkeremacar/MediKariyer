@@ -1,3 +1,29 @@
+/**
+ * @file JobDetailScreen.tsx
+ * @description İş ilanı detay ekranı - İlan bilgilerini görüntüleme ve başvuru yapma
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖNEMLİ ÖZELLİKLER:**
+ * - İlan detaylarını görüntüleme (başlık, açıklama, hastane bilgileri)
+ * - Başvuru yapma ve ön yazı ekleme
+ * - Başvuru durumu kontrolü (başvuruldu/başvurulmadı)
+ * - Kelime sayısı limiti (200 kelime)
+ * - Haptic feedback ile kullanıcı deneyimi
+ * 
+ * **AKIŞ:**
+ * 1. İlan detayları backend'den çekilir
+ * 2. Kullanıcı başvuru yapabilir (ön yazı ile)
+ * 3. Başvuru sonrası durum güncellenir
+ * 4. Başvurulmuş ilanlarda "Başvurunuz Bulunuyor" gösterilir
+ * 
+ * **KRİTİK NOKTALAR:**
+ * - Başvuru yapılmışsa tekrar başvuru yapılamaz
+ * - Ön yazı 200 kelime ile sınırlıdır
+ * - Başvuru sonrası cache güncellenir
+ * - Haptic feedback ile başarılı/başarısız durumlar bildirilir
+ */
+
 import React, { useState } from 'react';
 import {
   View,

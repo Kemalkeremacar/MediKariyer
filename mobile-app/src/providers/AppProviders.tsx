@@ -1,3 +1,28 @@
+/**
+ * @file AppProviders.tsx
+ * @description Uygulama Seviyesi Provider'lar
+ * 
+ * Tüm global provider'ları tek bir yerde toplar.
+ * Provider hiyerarşisi:
+ * - QueryClientProvider (React Query)
+ * - ThemeProvider (Tema yönetimi)
+ * - AlertProvider (Alert/Dialog yönetimi)
+ * - ToastProvider (Toast bildirimleri)
+ * - AuthInitializer (Auth başlatma)
+ * 
+ * ÖNEMLİ NOT: BottomSheetModalProvider burada DEĞİL!
+ * BottomSheetModalProvider, App.tsx'te ROOT seviyesinde yer alır.
+ * Bu sayede BottomSheetModal bileşenleri (Select gibi) NavigationContainer
+ * üzerinde render edilebilir.
+ * 
+ * Provider Hiyerarşisi (App.tsx'te):
+ * PortalProvider → BottomSheetModalProvider → AppProviders → NavigationContainer
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { PropsWithChildren } from 'react';
 import {
   QueryClient,
@@ -10,34 +35,28 @@ import { AuthInitializer } from './AuthInitializer';
 import { CACHE_STALE_TIME, CACHE_TIME, MAX_RETRY_ATTEMPTS } from '@/config/constants';
 
 /**
- * Centralized QueryClient instance
- * All React Query configuration is managed here
+ * Merkezi QueryClient instance'ı
+ * @description Tüm React Query yapılandırması burada yönetilir
  */
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: CACHE_STALE_TIME, // 5 minutes
-      gcTime: CACHE_TIME, // 10 minutes (previously cacheTime in v4)
-      retry: MAX_RETRY_ATTEMPTS, // 2 retries
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-      refetchOnMount: true,
+      staleTime: CACHE_STALE_TIME, // 5 dakika - veriler bu süre boyunca fresh kabul edilir
+      gcTime: CACHE_TIME, // 10 dakika - memory'den temizlenmeden önce bekle (v5'te cacheTime yerine gcTime)
+      retry: MAX_RETRY_ATTEMPTS, // 2 yeniden deneme
+      refetchOnWindowFocus: false, // Pencere focus olduğunda yeniden getirme
+      refetchOnReconnect: true, // İnternet bağlantısı geri geldiğinde yeniden getir
+      refetchOnMount: true, // Component mount olduğunda yeniden getir
     },
     mutations: {
-      retry: false,
+      retry: false, // Mutation'lar için yeniden deneme yok
     },
   },
 });
 
 /**
- * AppProviders - Application-level providers
- * 
- * NOTE: BottomSheetModalProvider is intentionally NOT included here.
- * It's placed at the ROOT level in App.tsx to ensure BottomSheetModal
- * components (like Select) can render above the NavigationContainer.
- * 
- * Provider Hierarchy (see App.tsx):
- * PortalProvider → BottomSheetModalProvider → AppProviders → NavigationContainer
+ * AppProviders - Uygulama seviyesi provider'lar
+ * @description Tüm global provider'ları içerir
  */
 export const AppProviders = ({ children }: PropsWithChildren) => {
   return (

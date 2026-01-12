@@ -1,10 +1,35 @@
 /**
- * JOBS SCREEN - Stabilizasyon Faz 4
+ * @file JobsScreen.tsx
+ * @description İş ilanları listesi ekranı - İlanları listeleme, arama ve filtreleme
+ * @author MediKariyer Development Team
+ * @version 1.0.0
  * 
- * Optimizasyonlar:
- * - useFilter hook kullanılıyor (ortak filtreleme mantığı)
- * - FlatList performans optimizasyonları
- * - Loading ve empty state iyileştirmeleri
+ * **ÖNEMLİ ÖZELLİKLER:**
+ * - İş ilanlarını listeleme (FlashList ile performanslı)
+ * - Arama ve filtreleme (uzmanlık, şehir, çalışma türü)
+ * - Sonsuz scroll (pagination)
+ * - Pull-to-refresh
+ * - Client-side ve server-side filtreleme
+ * 
+ * **AKIŞ:**
+ * 1. İlanlar backend'den sayfalı olarak çekilir
+ * 2. Kullanıcı arama yapabilir (debounced)
+ * 3. Filtreler uygulanabilir (uzmanlık, şehir, çalışma türü)
+ * 4. Sonuçlar client-side'da da filtrelenir (anında)
+ * 5. Kullanıcı ilana tıklayarak detay sayfasına gider
+ * 
+ * **KRİTİK NOKTALAR:**
+ * - useFilter hook ile ortak filtreleme mantığı
+ * - Backend'den gelen veriler client-side'da da filtrelenir
+ * - FlashList ile performans optimizasyonu
+ * - Debounced search (2 karakter minimum)
+ * - Aktif filtre sayısı badge ile gösterilir
+ * 
+ * **PERFORMANS OPTİMİZASYONLARI:**
+ * - FlashList kullanımı (FlatList yerine)
+ * - useMemo ile gereksiz hesaplamaları önleme
+ * - useCallback ile fonksiyon referanslarını koruma
+ * - Skeleton loading ile kullanıcı deneyimi
  */
 
 import React, { useCallback, useMemo } from 'react';

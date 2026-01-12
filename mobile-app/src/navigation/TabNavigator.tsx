@@ -1,3 +1,17 @@
+/**
+ * @file TabNavigator.tsx
+ * @description Ana uygulama gezinme - Bottom tab navigator
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **Özellikler:**
+ * - 4 ana tab: ProfileTab (Anasayfa), JobsTab (İlanlar), Applications (Başvurular), SettingsTab (Ayarlar)
+ * - Animasyonlu ikonlar
+ * - Haptic feedback
+ * - Platform-specific styling
+ */
+
 import React from 'react';
 import { Animated, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -12,6 +26,14 @@ import { colors } from '@/theme';
 import { devLog } from '@/utils/devLogger';
 import type { AppTabParamList } from './types';
 
+// ============================================================================
+// ANIMATED ICON COMPONENT
+// ============================================================================
+
+/**
+ * Animasyonlu ikon bileşeni
+ * Tab seçildiğinde scale ve opacity animasyonu yapar
+ */
 const AnimatedIcon = ({ iconName, focused }: { iconName: keyof typeof Ionicons.glyphMap; focused: boolean }) => {
   const scale = React.useRef(new Animated.Value(1)).current;
   const opacity = React.useRef(new Animated.Value(0.7)).current;
@@ -50,15 +72,19 @@ const AnimatedIcon = ({ iconName, focused }: { iconName: keyof typeof Ionicons.g
 
 const Tab = createBottomTabNavigator<AppTabParamList>();
 
+// ============================================================================
+// TAB NAVIGATOR
+// ============================================================================
+
 /**
- * TabNavigator - Main app navigation
- * Bottom tab navigator for primary authenticated features
+ * TabNavigator - Ana uygulama gezinmesi
+ * Kimlik doğrulanmış kullanıcılar için bottom tab navigator
  * 
- * Tabs:
- * - ProfileTab: Anasayfa (Profile as home page)
- * - JobsTab: İlanlar (Job listings)
- * - Applications: Başvurular (My applications)
- * - SettingsTab: Ayarlar (Settings)
+ * **Tab'lar:**
+ * - ProfileTab: Anasayfa (Profil ana sayfa olarak)
+ * - JobsTab: İlanlar (İş ilanları listesi)
+ * - Applications: Başvurular (Başvurularım)
+ * - SettingsTab: Ayarlar (Hesap ayarları)
  */
 export const TabNavigator = () => {
   const insets = useSafeAreaInsets();
@@ -124,137 +150,146 @@ export const TabNavigator = () => {
         },
       }}
     >
-    <Tab.Screen
-      name="ProfileTab"
-      component={ProfileStackNavigator}
-      options={{
-        tabBarLabel: 'Anasayfa',
-        tabBarIcon: ({ focused }) => (
-          <AnimatedIcon iconName={focused ? "person-circle" : "person-circle-outline"} focused={focused} />
-        ),
-      }}
-      listeners={({ navigation }) => ({
-        tabPress: (e) => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          try {
-            // Eğer zaten ProfileTab'taysak ve ProfileMain ekranındaysak, sadece default davranışa izin ver
-            const state = navigation.getState();
-            if (state?.routes) {
-              const profileTabState = state.routes.find(r => r.name === 'ProfileTab');
-              if (profileTabState?.state) {
-                const profileStackState = profileTabState.state;
-                if (profileStackState?.routes && profileStackState?.index !== undefined) {
-                  const currentScreen = profileStackState.routes[profileStackState.index];
-                  if (currentScreen?.name === 'ProfileMain') {
-                    // Zaten ProfileMain'deyiz, sadece default davranışa izin ver
-                    return;
+      {/* ProfileTab - Anasayfa */}
+      <Tab.Screen
+        name="ProfileTab"
+        component={ProfileStackNavigator}
+        options={{
+          tabBarLabel: 'Anasayfa',
+          tabBarIcon: ({ focused }) => (
+            <AnimatedIcon iconName={focused ? "person-circle" : "person-circle-outline"} focused={focused} />
+          ),
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Haptic feedback
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            
+            try {
+              // Eğer zaten ProfileTab'taysak ve ProfileMain ekranındaysak, sadece default davranışa izin ver
+              const state = navigation.getState();
+              if (state?.routes) {
+                const profileTabState = state.routes.find(r => r.name === 'ProfileTab');
+                if (profileTabState?.state) {
+                  const profileStackState = profileTabState.state;
+                  if (profileStackState?.routes && profileStackState?.index !== undefined) {
+                    const currentScreen = profileStackState.routes[profileStackState.index];
+                    if (currentScreen?.name === 'ProfileMain') {
+                      // Zaten ProfileMain'deyiz, sadece default davranışa izin ver
+                      return;
+                    }
                   }
                 }
               }
+              // Farklı bir ekrandaysak veya ProfileTab'ta değilsek, ProfileMain'e navigate et
+              e.preventDefault();
+              navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
+            } catch (error) {
+              // Hata durumunda default davranışa izin ver
+              devLog.warn('Tab navigation error:', error);
             }
-            // Farklı bir ekrandaysak veya ProfileTab'ta değilsek, ProfileMain'e navigate et
-            e.preventDefault();
-            navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
-          } catch (error) {
-            // Hata durumunda default davranışa izin ver
-            devLog.warn('Tab navigation error:', error);
-          }
-        },
-      })}
-    />
-    <Tab.Screen
-      name="JobsTab"
-      component={JobsStackNavigator}
-      options={{
-        tabBarLabel: 'İlanlar',
-        tabBarIcon: ({ focused }) => (
-          <AnimatedIcon iconName={focused ? "briefcase" : "briefcase-outline"} focused={focused} />
-        ),
-      }}
-      listeners={({ navigation }) => ({
-        tabPress: (e) => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          try {
-            // Eğer zaten JobsTab'taysak ve JobsList ekranındaysak, sadece default davranışa izin ver
-            const state = navigation.getState();
-            if (state?.routes) {
-              const jobsTabState = state.routes.find(r => r.name === 'JobsTab');
-              if (jobsTabState?.state) {
-                const jobsStackState = jobsTabState.state;
-                if (jobsStackState?.routes && jobsStackState?.index !== undefined) {
-                  const currentScreen = jobsStackState.routes[jobsStackState.index];
-                  if (currentScreen?.name === 'JobsList') {
-                    // Zaten JobsList'deyiz, sadece default davranışa izin ver
-                    return;
+          },
+        })}
+      />
+      
+      {/* JobsTab - İlanlar */}
+      <Tab.Screen
+        name="JobsTab"
+        component={JobsStackNavigator}
+        options={{
+          tabBarLabel: 'İlanlar',
+          tabBarIcon: ({ focused }) => (
+            <AnimatedIcon iconName={focused ? "briefcase" : "briefcase-outline"} focused={focused} />
+          ),
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Haptic feedback
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            
+            try {
+              // Eğer zaten JobsTab'taysak ve JobsList ekranındaysak, sadece default davranışa izin ver
+              const state = navigation.getState();
+              if (state?.routes) {
+                const jobsTabState = state.routes.find(r => r.name === 'JobsTab');
+                if (jobsTabState?.state) {
+                  const jobsStackState = jobsTabState.state;
+                  if (jobsStackState?.routes && jobsStackState?.index !== undefined) {
+                    const currentScreen = jobsStackState.routes[jobsStackState.index];
+                    if (currentScreen?.name === 'JobsList') {
+                      // Zaten JobsList'deyiz, sadece default davranışa izin ver
+                      return;
+                    }
                   }
                 }
               }
+              // Farklı bir ekrandaysak veya JobsTab'ta değilsek, JobsList'e navigate et
+              e.preventDefault();
+              navigation.navigate('JobsTab', { screen: 'JobsList' });
+            } catch (error) {
+              // Hata durumunda default davranışa izin ver
+              devLog.warn('Tab navigation error:', error);
             }
-            // Farklı bir ekrandaysak veya JobsTab'ta değilsek, JobsList'e navigate et
-            e.preventDefault();
-            navigation.navigate('JobsTab', { screen: 'JobsList' });
-          } catch (error) {
-            // Hata durumunda default davranışa izin ver
-            devLog.warn('Tab navigation error:', error);
-          }
-        },
-      })}
-    />
-    <Tab.Screen
-      name="Applications"
-      component={ApplicationsScreen}
-      options={{
-        tabBarLabel: 'Başvurular',
-        tabBarIcon: ({ focused }) => (
-          <AnimatedIcon iconName={focused ? "checkmark-done" : "checkmark-done-outline"} focused={focused} />
-        ),
-      }}
-      listeners={() => ({
-        tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
-      })}
-    />
-    <Tab.Screen
-      name="SettingsTab"
-      component={SettingsStackNavigator}
-      options={{
-        tabBarLabel: 'Ayarlar',
-        tabBarIcon: ({ focused }) => (
-          <AnimatedIcon iconName={focused ? "settings" : "settings-outline"} focused={focused} />
-        ),
-      }}
-      listeners={({ navigation }) => ({
-        tabPress: (e) => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          try {
-            // Eğer zaten SettingsTab'taysak ve SettingsMain ekranındaysak, sadece default davranışa izin ver
-            const state = navigation.getState();
-            if (state?.routes) {
-              const settingsTabState = state.routes.find(r => r.name === 'SettingsTab');
-              if (settingsTabState?.state) {
-                const settingsStackState = settingsTabState.state;
-                if (settingsStackState?.routes && settingsStackState?.index !== undefined) {
-                  const currentScreen = settingsStackState.routes[settingsStackState.index];
-                  if (currentScreen?.name === 'SettingsMain') {
-                    // Zaten SettingsMain'deyiz, sadece default davranışa izin ver
-                    return;
+          },
+        })}
+      />
+      
+      {/* Applications - Başvurular */}
+      <Tab.Screen
+        name="Applications"
+        component={ApplicationsScreen}
+        options={{
+          tabBarLabel: 'Başvurular',
+          tabBarIcon: ({ focused }) => (
+            <AnimatedIcon iconName={focused ? "checkmark-done" : "checkmark-done-outline"} focused={focused} />
+          ),
+        }}
+        listeners={() => ({
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        })}
+      />
+      
+      {/* SettingsTab - Ayarlar */}
+      <Tab.Screen
+        name="SettingsTab"
+        component={SettingsStackNavigator}
+        options={{
+          tabBarLabel: 'Ayarlar',
+          tabBarIcon: ({ focused }) => (
+            <AnimatedIcon iconName={focused ? "settings" : "settings-outline"} focused={focused} />
+          ),
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Haptic feedback
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            
+            try {
+              // Eğer zaten SettingsTab'taysak ve SettingsMain ekranındaysak, sadece default davranışa izin ver
+              const state = navigation.getState();
+              if (state?.routes) {
+                const settingsTabState = state.routes.find(r => r.name === 'SettingsTab');
+                if (settingsTabState?.state) {
+                  const settingsStackState = settingsTabState.state;
+                  if (settingsStackState?.routes && settingsStackState?.index !== undefined) {
+                    const currentScreen = settingsStackState.routes[settingsStackState.index];
+                    if (currentScreen?.name === 'SettingsMain') {
+                      // Zaten SettingsMain'deyiz, sadece default davranışa izin ver
+                      return;
+                    }
                   }
                 }
               }
+              // Farklı bir ekrandaysak veya SettingsTab'ta değilsek, SettingsMain'e navigate et
+              e.preventDefault();
+              navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
+            } catch (error) {
+              // Hata durumunda default davranışa izin ver
+              devLog.warn('Tab navigation error:', error);
             }
-            // Farklı bir ekrandaysak veya SettingsTab'ta değilsek, SettingsMain'e navigate et
-            e.preventDefault();
-            navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
-          } catch (error) {
-            // Hata durumunda default davranışa izin ver
-            devLog.warn('Tab navigation error:', error);
-          }
-        },
-      })}
-    />
+          },
+        })}
+      />
     </Tab.Navigator>
   );
 };
-
-
-
-

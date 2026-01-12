@@ -1,71 +1,82 @@
 /**
  * @file alertHelpers.ts
- * @description Convenience hook for common alert patterns
+ * @description Yaygın alert pattern'leri için kolaylık hook'u
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  * 
- * This hook wraps useAlert with ergonomic helper methods for common use cases.
- * All callbacks are passed through without modification.
+ * **Özellikler:**
+ * - useAlert'i ergonomik yardımcı metodlarla wrap eder
+ * - Tüm callback'ler değiştirilmeden iletilir
  * 
- * Usage:
+ * **Kullanım:**
  * ```typescript
  * const alert = useAlertHelpers();
  * 
- * // Simple alerts
- * alert.success('Operation completed');
- * alert.error('Something went wrong');
- * alert.info('Here is some information');
+ * // Basit alert'ler
+ * alert.success('İşlem tamamlandı');
+ * alert.error('Bir şeyler yanlış gitti');
+ * alert.info('İşte bazı bilgiler');
  * 
- * // Confirmation dialogs
- * alert.confirm('Are you sure?', () => doSomething());
- * alert.confirmDestructive('Delete Item', 'This cannot be undone', () => deleteItem());
+ * // Onay dialogları
+ * alert.confirm('Emin misiniz?', () => doSomething());
+ * alert.confirmDestructive('Öğeyi Sil', 'Bu işlem geri alınamaz', () => deleteItem());
  * ```
  * 
- * Requirements: 8.1, 8.4
+ * **Gereksinimler:** 8.1, 8.4
  */
 
 import { useCallback, useMemo } from 'react';
 import { useAlert } from '@/providers/AlertProvider';
 import type { AlertConfig } from '@/types/alert';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
 /**
- * Options for confirm dialogs
+ * Onay dialogları için seçenekler
  */
 export interface ConfirmOptions {
+  /** Başlık */
   title?: string;
+  /** Onayla butonu metni */
   confirmText?: string;
+  /** İptal butonu metni */
   cancelText?: string;
 }
 
 /**
- * Alert helper methods returned by useAlertHelpers hook
+ * useAlertHelpers hook'u tarafından döndürülen alert yardımcı metodları
  */
 export interface AlertHelpers {
   /**
-   * Show a success alert
-   * @param message - Message to display
-   * @param onConfirm - Optional callback when user confirms
+   * Başarı alert'i göster
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak opsiyonel callback
    */
   success: (message: string, onConfirm?: () => void) => void;
 
   /**
-   * Show an error alert
-   * @param message - Message to display
-   * @param onConfirm - Optional callback when user confirms
+   * Hata alert'i göster
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak opsiyonel callback
    */
   error: (message: string, onConfirm?: () => void) => void;
 
   /**
-   * Show an info alert
-   * @param message - Message to display
-   * @param onConfirm - Optional callback when user confirms
+   * Bilgi alert'i göster
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak opsiyonel callback
    */
   info: (message: string, onConfirm?: () => void) => void;
 
   /**
-   * Show a confirmation dialog
-   * @param message - Message to display
-   * @param onConfirm - Callback when user confirms
-   * @param onCancel - Optional callback when user cancels
-   * @param options - Optional title and button text overrides
+   * Onay dialogu göster
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak callback
+   * @param onCancel - Kullanıcı iptal ettiğinde çalışacak opsiyonel callback
+   * @param options - Opsiyonel başlık ve buton metni override'ları
    */
   confirm: (
     message: string,
@@ -75,12 +86,12 @@ export interface AlertHelpers {
   ) => void;
 
   /**
-   * Show a destructive confirmation dialog (for delete/remove actions)
-   * @param title - Title of the alert
-   * @param message - Message to display
-   * @param onConfirm - Callback when user confirms
-   * @param onCancel - Optional callback when user cancels
-   * @param confirmText - Optional confirm button text (default: 'Sil')
+   * Yıkıcı onay dialogu göster (silme/kaldırma işlemleri için)
+   * @param title - Alert başlığı
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak callback
+   * @param onCancel - Kullanıcı iptal ettiğinde çalışacak opsiyonel callback
+   * @param confirmText - Opsiyonel onayla butonu metni (varsayılan: 'Sil')
    */
   confirmDestructive: (
     title: string,
@@ -91,25 +102,29 @@ export interface AlertHelpers {
   ) => void;
 
   /**
-   * Direct access to showAlert for custom configurations
+   * Özel konfigürasyonlar için showAlert'e direkt erişim
    */
   showAlert: (config: AlertConfig) => void;
 
   /**
-   * Hide the currently visible alert
+   * Görünür alert'i gizle
    */
   hideAlert: () => void;
 }
 
+// ============================================================================
+// HOOK
+// ============================================================================
+
 /**
- * Hook that provides convenience methods for common alert patterns.
- * Must be used within AlertProvider.
+ * Yaygın alert pattern'leri için kolaylık metodları sağlayan hook
+ * AlertProvider içinde kullanılmalıdır
  * 
- * All callbacks are passed through without modification to ensure
- * business logic remains in the calling component.
+ * Tüm callback'ler değiştirilmeden iletilir, böylece
+ * iş mantığı çağıran component'te kalır
  * 
- * @throws Error if used outside AlertProvider
- * @returns AlertHelpers object with convenience methods
+ * @throws Error AlertProvider dışında kullanılırsa hata fırlatır
+ * @returns Kolaylık metodları içeren AlertHelpers objesi
  */
 export const useAlertHelpers = (): AlertHelpers => {
   const { showAlert, hideAlert } = useAlert();
@@ -194,7 +209,7 @@ export const useAlertHelpers = (): AlertHelpers => {
     [showAlert]
   );
 
-  // Memoize the helpers object to prevent unnecessary re-renders
+  // Gereksiz re-render'ları önlemek için helpers objesini memoize et
   const helpers = useMemo<AlertHelpers>(
     () => ({
       success,

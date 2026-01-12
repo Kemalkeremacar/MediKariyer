@@ -1,57 +1,76 @@
 /**
- * Error Handler Utility
- * Provides user-friendly error messages and handles different error types
+ * @file errorHandler.ts
+ * @description Hata yönetimi yardımcı fonksiyonları
+ * 
+ * Özellikler:
+ * - Kullanıcı dostu hata mesajları
+ * - Farklı hata tiplerini yönetme (API, Network, Validation)
+ * - Hata loglama entegrasyonu
+ * - Toast bildirimi desteği
+ * 
+ * Hata Tipleri:
+ * - ApiError: API'den gelen hatalar
+ * - NetworkError: Ağ bağlantı hataları
+ * - ValidationError: Validasyon hataları
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import { isAxiosError } from 'axios';
 import { errorLogger } from './errorLogger';
 
+// API hatası tipi
 export interface ApiError extends Error {
-  statusCode?: number;
-  data?: unknown;
+  statusCode?: number; // HTTP durum kodu
+  data?: unknown; // Hata verisi
 }
 
+// Network hatası tipi
 export interface NetworkError extends Error {
-  code?: string;
+  code?: string; // Hata kodu (ECONNABORTED, ECONNREFUSED, vb.)
 }
 
 /**
- * Get user-friendly error message from error object
+ * Hata objesinden kullanıcı dostu hata mesajı al
+ * @param error - Hata objesi
+ * @returns Kullanıcı dostu hata mesajı
  */
 export const getUserFriendlyErrorMessage = (error: unknown): string => {
   if (!error) {
     return 'Bilinmeyen bir hata oluştu';
   }
 
-  // Handle Error objects
+  // Error objelerini yönet
   if (error instanceof Error) {
-    // Network errors
+    // Network hataları
     if (error.name === 'NetworkError') {
       return error.message || 'İnternet bağlantınızı kontrol edin';
     }
 
-    // API errors
+    // API hataları
     if (error.name === 'ApiError') {
       return error.message || 'Bir hata oluştu. Lütfen tekrar deneyin';
     }
 
-    // Validation errors
+    // Validasyon hataları
     if (error.name === 'ValidationError') {
       return error.message || 'Lütfen girdiğiniz bilgileri kontrol edin';
     }
 
-    // Generic error with message
+    // Mesajı olan genel hata
     if (error.message) {
       return error.message;
     }
   }
 
-  // Handle string errors
+  // String hataları yönet
   if (typeof error === 'string') {
     return error;
   }
 
-  // Handle axios errors
+  // Axios hatalarını yönet
   if (isAxiosError(error)) {
     if (error.response?.data?.message) {
       return error.response.data.message;
@@ -66,7 +85,11 @@ export const getUserFriendlyErrorMessage = (error: unknown): string => {
 };
 
 /**
- * Handle API errors with logging and user feedback
+ * API hatalarını loglama ve kullanıcı geri bildirimi ile yönet
+ * @param error - Hata objesi
+ * @param endpoint - API endpoint'i (opsiyonel)
+ * @param showToast - Toast gösterme fonksiyonu (opsiyonel)
+ * @returns Kullanıcı dostu hata mesajı
  */
 export const handleApiError = (
   error: unknown,
@@ -75,7 +98,7 @@ export const handleApiError = (
 ): string => {
   const message = getUserFriendlyErrorMessage(error);
 
-  // Log the error
+  // Hatayı logla
   if (error instanceof Error) {
     const statusCode = (error as ApiError).statusCode;
     errorLogger.logApiError(error, endpoint, statusCode);
@@ -86,7 +109,7 @@ export const handleApiError = (
     });
   }
 
-  // Show toast if provided
+  // Toast göster (sağlanmışsa)
   if (showToast) {
     showToast(message, 'error');
   }
@@ -95,7 +118,11 @@ export const handleApiError = (
 };
 
 /**
- * Handle network errors with logging and user feedback
+ * Network hatalarını loglama ve kullanıcı geri bildirimi ile yönet
+ * @param error - Hata objesi
+ * @param endpoint - API endpoint'i (opsiyonel)
+ * @param showToast - Toast gösterme fonksiyonu (opsiyonel)
+ * @returns Kullanıcı dostu hata mesajı
  */
 export const handleNetworkError = (
   error: unknown,
@@ -104,7 +131,7 @@ export const handleNetworkError = (
 ): string => {
   const message = getUserFriendlyErrorMessage(error);
 
-  // Log the error
+  // Hatayı logla
   if (error instanceof Error) {
     errorLogger.logNetworkError(error, endpoint);
   } else {
@@ -114,7 +141,7 @@ export const handleNetworkError = (
     });
   }
 
-  // Show toast if provided
+  // Toast göster (sağlanmışsa)
   if (showToast) {
     showToast(message, 'error');
   }
@@ -123,7 +150,9 @@ export const handleNetworkError = (
 };
 
 /**
- * Check if error is a network error
+ * Hatanın network hatası olup olmadığını kontrol et
+ * @param error - Hata objesi
+ * @returns Network hatası ise true, değilse false
  */
 export const isNetworkError = (error: unknown): boolean => {
   if (error instanceof Error) {
@@ -131,15 +160,15 @@ export const isNetworkError = (error: unknown): boolean => {
   }
 
   if (isAxiosError(error)) {
-    // Check for network errors (no response from server)
+    // Network hatalarını kontrol et (sunucudan yanıt yok)
     if (!error.response && error.request) {
       return true;
     }
-    // Check for timeout errors
+    // Timeout hatalarını kontrol et
     if (error.code === 'ECONNABORTED') {
       return true;
     }
-    // Check for connection refused
+    // Bağlantı reddedildi hatalarını kontrol et
     if (error.code === 'ECONNREFUSED') {
       return true;
     }
@@ -149,7 +178,9 @@ export const isNetworkError = (error: unknown): boolean => {
 };
 
 /**
- * Check if error is an authentication error
+ * Hatanın kimlik doğrulama hatası olup olmadığını kontrol et
+ * @param error - Hata objesi
+ * @returns Auth hatası ise true, değilse false
  */
 export const isAuthError = (error: unknown): boolean => {
   if (isAxiosError(error)) {
@@ -160,7 +191,9 @@ export const isAuthError = (error: unknown): boolean => {
 };
 
 /**
- * Check if error is a validation error
+ * Hatanın validasyon hatası olup olmadığını kontrol et
+ * @param error - Hata objesi
+ * @returns Validasyon hatası ise true, değilse false
  */
 export const isValidationError = (error: unknown): boolean => {
   if (error instanceof Error) {

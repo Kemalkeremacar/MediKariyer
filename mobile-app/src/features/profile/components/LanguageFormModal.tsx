@@ -1,3 +1,22 @@
+/**
+ * @file LanguageFormModal.tsx
+ * @description Dil ekleme/düzenleme modal formu
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Dil ve seviye seçimi
+ * - Form validasyonu
+ * - Lookup data ile dil ve seviye seçimi
+ * - Ekleme ve güncelleme işlemleri
+ * - Navigation screen olarak çalışır (modal değil)
+ * 
+ * **FORM ALANLARI:**
+ * - Dil (zorunlu, dropdown)
+ * - Seviye (zorunlu, dropdown - Başlangıç, Orta, İleri, vb.)
+ * 
+ * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,

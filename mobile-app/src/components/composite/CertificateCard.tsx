@@ -1,3 +1,31 @@
+/**
+ * @file CertificateCard.tsx
+ * @description Sertifika kartı bileşeni
+ * 
+ * Özellikler:
+ * - Sertifika bilgileri (ad, veren kurum, tarihler, kimlik)
+ * - Düzenleme ve silme butonları
+ * - Sertifika görüntüleme butonu
+ * - İkon ve chip'ler
+ * - Tıklanabilir kart
+ * - Modern tasarım
+ * 
+ * Kullanım:
+ * ```tsx
+ * <CertificateCard
+ *   name="CPR Sertifikası"
+ *   issuer="Kızılay"
+ *   issueDate="2023"
+ *   onEdit={handleEdit}
+ *   onDelete={handleDelete}
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,19 +35,36 @@ import { Chip } from '@/components/ui/Chip';
 import { IconButton } from '@/components/ui/IconButton';
 import { colors, spacing } from '@/theme';
 
+/**
+ * CertificateCard bileşeni props interface'i
+ */
 export interface CertificateCardProps {
+  /** Sertifika adı */
   name: string;
+  /** Veren kurum */
   issuer: string;
+  /** Verilme tarihi */
   issueDate: string;
+  /** Bitiş tarihi (opsiyonel) */
   expiryDate?: string;
+  /** Sertifika kimlik numarası (opsiyonel) */
   credentialId?: string;
+  /** Sertifika URL'i (opsiyonel) */
   credentialUrl?: string;
+  /** Tıklama fonksiyonu */
   onPress?: () => void;
+  /** Düzenleme fonksiyonu */
   onEdit?: () => void;
+  /** Sertifika görüntüleme fonksiyonu */
   onViewCredential?: () => void;
+  /** Silme fonksiyonu */
   onDelete?: () => void;
 }
 
+/**
+ * Sertifika Kartı Bileşeni
+ * Profil sertifikalarını gösterir
+ */
 export const CertificateCard: React.FC<CertificateCardProps> = ({
   name,
   issuer,

@@ -1,15 +1,48 @@
+/**
+ * @file Divider.tsx
+ * @description Ayırıcı çizgi bileşeni
+ * 
+ * Özellikler:
+ * - Yatay ve dikey yönlendirme
+ * - Etiket desteği (yatay için)
+ * - Özelleştirilebilir boşluk (sm, md, lg)
+ * - Modern tasarım (açık renk)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Divider />
+ * <Divider label="VEYA" />
+ * <Divider orientation="vertical" />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
+/**
+ * Divider bileşeni props interface'i
+ */
 export interface DividerProps {
+  /** Ayırıcı yönü */
   orientation?: 'horizontal' | 'vertical';
+  /** Etiket metni (sadece yatay için) */
   label?: string;
+  /** Boşluk boyutu */
   spacing?: 'sm' | 'md' | 'lg';
+  /** Ek stil */
   style?: ViewStyle;
 }
 
+/**
+ * Divider Bileşeni
+ * Yatay veya dikey ayırıcı çizgi
+ */
 export const Divider: React.FC<DividerProps> = ({
   orientation = 'horizontal',
   label,
@@ -22,6 +55,7 @@ export const Divider: React.FC<DividerProps> = ({
     lg: spacing.lg,
   }[spacingSize];
 
+  // Etiketli yatay ayırıcı
   if (label && orientation === 'horizontal') {
     return (
       <View style={[styles.labelContainer, { marginVertical: spacingValue }, style]}>
@@ -34,6 +68,7 @@ export const Divider: React.FC<DividerProps> = ({
     );
   }
 
+  // Dikey ayırıcı
   if (orientation === 'vertical') {
     return (
       <View
@@ -46,6 +81,7 @@ export const Divider: React.FC<DividerProps> = ({
     );
   }
 
+  // Basit yatay ayırıcı
   return (
     <View
       style={[

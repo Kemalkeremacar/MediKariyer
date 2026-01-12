@@ -1,3 +1,28 @@
+/**
+ * @file ChangePasswordScreen.tsx
+ * @description Şifre değiştirme ekranı - Güvenlik ayarları
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Mevcut şifre doğrulama
+ * - Yeni şifre güç göstergesi (zayıf, orta, güçlü, çok güçlü)
+ * - Şifre görünürlük toggle (göz ikonu)
+ * - Gerçek zamanlı validasyon
+ * - Toast bildirimleri (modal değil)
+ * 
+ * **ŞİFRE KRİTERLERİ:**
+ * - En az 8 karakter
+ * - Büyük ve küçük harf
+ * - En az bir rakam
+ * - Özel karakter önerilir
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. Mevcut şifre girişi
+ * 2. Yeni şifre girişi (güç göstergesi ile)
+ * 3. Yeni şifre tekrarı
+ * 4. Başarılı değişiklik sonrası otomatik geri dönüş
+ */
 import React, { useState } from 'react';
 import {
   View,
@@ -17,7 +42,19 @@ import { colors, spacing } from '@/theme';
 import { useChangePassword } from '@/features/settings/hooks/useChangePassword';
 import { useToast } from '@/providers/ToastProvider';
 
-// Password strength calculator
+/**
+ * Şifre gücünü hesaplayan fonksiyon
+ * 
+ * **PUANLAMA SİSTEMİ:**
+ * - 8+ karakter: +25 puan
+ * - 12+ karakter: +25 puan (ek)
+ * - Büyük ve küçük harf: +25 puan
+ * - Rakam içeriyor: +15 puan
+ * - Özel karakter: +10 puan
+ * 
+ * @param {string} password - Kontrol edilecek şifre
+ * @returns {number} Şifre gücü (0-100)
+ */
 const calculatePasswordStrength = (password: string): number => {
   let strength = 0;
   if (password.length >= 8) strength += 25;
@@ -28,6 +65,12 @@ const calculatePasswordStrength = (password: string): number => {
   return Math.min(strength, 100);
 };
 
+/**
+ * Şifre gücü metnini döndüren fonksiyon
+ * 
+ * @param {string} password - Kontrol edilecek şifre
+ * @returns {string} Güç metni (Zayıf, Orta, Güçlü, Çok Güçlü)
+ */
 const getPasswordStrengthText = (password: string): string => {
   const strength = calculatePasswordStrength(password);
   if (strength < 40) return 'Zayıf';
@@ -36,6 +79,12 @@ const getPasswordStrengthText = (password: string): string => {
   return 'Çok Güçlü';
 };
 
+/**
+ * Şifre gücüne göre renk döndüren fonksiyon
+ * 
+ * @param {string} password - Kontrol edilecek şifre
+ * @returns {string} Renk kodu (error, warning, primary, success)
+ */
 const getPasswordStrengthColor = (password: string): string => {
   const strength = calculatePasswordStrength(password);
   if (strength < 40) return colors.error[500];
@@ -44,17 +93,41 @@ const getPasswordStrengthColor = (password: string): string => {
   return colors.success[500];
 };
 
+/**
+ * ChangePasswordScreen Bileşeni
+ * 
+ * Kullanıcının şifresini güvenli bir şekilde değiştirmesini sağlar.
+ * Şifre gücü göstergesi ve gerçek zamanlı validasyon içerir.
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.navigation - React Navigation nesnesi
+ * @returns {JSX.Element} Şifre değiştirme ekranı
+ */
 export const ChangePasswordScreen = ({ navigation }: any) => {
   const { showToast } = useToast();
+  
+  // Form state'leri
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  // Şifre görünürlük state'leri
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Şifre değiştirme mutation'ı
   const changePasswordMutation = useChangePassword();
 
+  /**
+   * Form submit handler'ı
+   * 
+   * **AKIŞ:**
+   * 1. Form validasyonu
+   * 2. Şifre eşleşme kontrolü
+   * 3. Backend'e istek gönder
+   * 4. Başarılı ise toast göster ve geri dön
+   */
   const handleSubmit = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
       return;
@@ -72,15 +145,18 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
       },
       {
         onSuccess: () => {
-          // Reset form
+          // Form'u temizle
           setCurrentPassword('');
           setNewPassword('');
           setConfirmPassword('');
           
-          // Show toast instead of alert (modal değil - touch events engellenmez)
+          /**
+           * Toast göster (modal değil - touch events engellenmez)
+           * Modal açık kalırsa navigation.goBack() çalışmaz
+           */
           showToast('Şifreniz başarıyla değiştirildi', 'success');
           
-          // Navigate back after a short delay (toast'un gösterilmesi için)
+          // Toast'un gösterilmesi için kısa bir gecikme sonrası geri dön
           setTimeout(() => {
             navigation.goBack();
           }, 1000);
@@ -89,6 +165,10 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
     );
   };
 
+  /**
+   * Form validasyon kontrolü
+   * Tüm alanlar dolu ve şifreler eşleşiyor mu?
+   */
   const isFormValid =
     currentPassword.length >= 1 &&
     newPassword.length >= 8 &&

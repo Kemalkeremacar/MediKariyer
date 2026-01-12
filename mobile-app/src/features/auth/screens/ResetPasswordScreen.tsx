@@ -1,3 +1,27 @@
+/**
+ * @file ResetPasswordScreen.tsx
+ * @description Şifre sıfırlama ekranı - E-posta ile gelen link üzerinden
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Token bazlı şifre sıfırlama
+ * - Yeni şifre ve tekrar girişi
+ * - Şifre görünürlük toggle
+ * - Form validasyonu (Zod schema)
+ * - Geçersiz token kontrolü
+ * 
+ * **ŞİFRE KRİTERLERİ:**
+ * - En az 8 karakter
+ * - Büyük ve küçük harf
+ * - En az bir rakam
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. E-posta ile gelen link tıklanır
+ * 2. Token route params'tan alınır
+ * 3. Yeni şifre girilir
+ * 4. Başarılı ise Login ekranına yönlendirilir
+ */
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Image, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';

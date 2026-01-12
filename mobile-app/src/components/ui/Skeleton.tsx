@@ -1,3 +1,26 @@
+/**
+ * @file Skeleton.tsx
+ * @description Yükleme iskelet bileşenleri
+ * 
+ * Özellikler:
+ * - Animasyonlu yükleme efekti
+ * - Özelleştirilebilir boyut ve şekil
+ * - Hazır preset bileşenler (Text, Card, Avatar)
+ * - Modern tasarım (yumuşak animasyon)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Skeleton width={200} height={20} />
+ * <SkeletonText lines={3} />
+ * <SkeletonCard />
+ * <SkeletonAvatar size={56} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useEffect } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import Animated, {
@@ -8,13 +31,24 @@ import Animated, {
 } from 'react-native-reanimated';
 import { colors } from '@/theme';
 
+/**
+ * Skeleton bileşeni props interface'i
+ */
 export interface SkeletonProps {
+  /** Genişlik */
   width?: number | string;
+  /** Yükseklik */
   height?: number;
+  /** Köşe yuvarlaklığı */
   borderRadius?: number;
+  /** Ek stil */
   style?: ViewStyle;
 }
 
+/**
+ * Temel Skeleton Bileşeni
+ * Animasyonlu yükleme placeholder'ı
+ */
 export const Skeleton: React.FC<SkeletonProps> = ({
   width = '100%',
   height = 20,
@@ -51,7 +85,10 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   );
 };
 
-// Preset skeleton components
+/**
+ * Metin Skeleton Bileşeni
+ * Birden fazla satır için hazır skeleton
+ */
 export const SkeletonText: React.FC<{ lines?: number }> = ({ lines = 3 }) => (
   <View style={styles.textContainer}>
     {Array.from({ length: lines }).map((_, index) => (
@@ -65,6 +102,10 @@ export const SkeletonText: React.FC<{ lines?: number }> = ({ lines = 3 }) => (
   </View>
 );
 
+/**
+ * Kart Skeleton Bileşeni
+ * Kart içeriği için hazır skeleton
+ */
 export const SkeletonCard: React.FC = () => (
   <View style={styles.card}>
     <View style={styles.cardHeader}>
@@ -78,6 +119,10 @@ export const SkeletonCard: React.FC = () => (
   </View>
 );
 
+/**
+ * Avatar Skeleton Bileşeni
+ * Profil fotoğrafı için hazır skeleton
+ */
 export const SkeletonAvatar: React.FC<{ size?: number }> = ({ size = 56 }) => (
   <Skeleton width={size} height={size} borderRadius={size / 2} />
 );

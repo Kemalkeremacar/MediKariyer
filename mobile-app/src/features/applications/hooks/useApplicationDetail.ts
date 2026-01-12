@@ -1,3 +1,28 @@
+/**
+ * @file useApplicationDetail.ts
+ * @description Başvuru detay hook'u - Tek bir başvurunun detaylarını çeker
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **AMAÇ:**
+ * Başvuru detay bilgilerini çeker (iş ilanı bilgileri, durum, notlar, vb.)
+ * 
+ * **CACHE:** ['applications', 'detail', id] - Stale time: 0 (her zaman fresh)
+ * 
+ * **ÖZELLIKLER:**
+ * - Enabled parametresi ile kontrollü çalışma
+ * - Null ID kontrolü
+ * - Otomatik refetch (mount, focus, reconnect)
+ * 
+ * **KULLANIM ÖRNEĞİ:**
+ * ```typescript
+ * const { data, isLoading } = useApplicationDetail(applicationId, modalVisible);
+ * ```
+ * 
+ * @param {number | null} applicationId - Başvuru ID'si
+ * @param {boolean} enabled - Hook'un aktif olup olmadığı (default: true)
+ * @returns {UseQueryResult} React Query sonucu
+ */
 import { useQuery } from '@tanstack/react-query';
 import { applicationService } from '@/api/services/application.service';
 import { queryKeys } from '@/api/queryKeys';

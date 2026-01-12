@@ -1,10 +1,21 @@
 /**
- * ErrorBoundary - Stabilizasyon Faz 5
+ * @file ErrorBoundary.tsx
+ * @description React hata yakalama sınırı bileşeni
  * 
- * Production-ready error boundary with elegant fallback UI
- * - Markaya uygun tasarım
+ * Bu bileşen React component tree'sinde oluşan hataları yakalar ve
+ * kullanıcıya zarif bir hata ekranı gösterir. Production-ready tasarım.
+ * 
+ * **Özellikler:**
+ * - Gradient arka plan ile marka uyumlu tasarım
  * - "Yeniden Başlat" butonu
  * - Development mode'da detaylı hata bilgisi
+ * - Otomatik hata loglama
+ * 
+ * **ÖNEMLİ:** Bu bileşen için yerel BottomSheetModalProvider gerekmez.
+ * App.tsx'teki root-level provider tüm BottomSheetModal bileşenlerini yönetir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
  */
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
@@ -16,18 +27,42 @@ import { Ionicons } from '@expo/vector-icons';
 import { lightColors as colors, spacing } from '@/theme';
 import { errorLogger } from '@/utils/errorLogger';
 
+/**
+ * ErrorBoundary bileşeni için prop tipleri
+ * 
+ * @interface Props
+ * @property {ReactNode} children - Korunacak child component'ler
+ * @property {ReactNode} [fallback] - Özel hata UI'ı (opsiyonel)
+ * @property {Function} [onError] - Hata yakalandığında çağrılacak callback
+ */
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
+/**
+ * ErrorBoundary state tipleri
+ * 
+ * @interface State
+ * @property {boolean} hasError - Hata oluştu mu?
+ * @property {Error | null} error - Yakalanan hata objesi
+ * @property {ErrorInfo | null} errorInfo - React hata bilgisi
+ */
 interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
 }
 
+/**
+ * React Error Boundary sınıfı
+ * 
+ * **Yaşam Döngüsü:**
+ * 1. getDerivedStateFromError: Hata yakalandığında state güncellenir
+ * 2. componentDidCatch: Hata loglanır ve özel handler çağrılır
+ * 3. render: Hata UI'ı veya normal children render edilir
+ */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -38,6 +73,10 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
+  /**
+   * Hata yakalandığında state'i güncelle
+   * React lifecycle method
+   */
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
@@ -46,22 +85,33 @@ export class ErrorBoundary extends Component<Props, State> {
     };
   }
 
+  /**
+   * Hata yakalandığında loglama ve callback çağırma
+   * React lifecycle method
+   * 
+   * @param error - Yakalanan hata objesi
+   * @param errorInfo - React component stack bilgisi
+   */
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to error reporting service
+    // Hata loglama servisine gönder
     errorLogger.logError(error, {
       componentStack: errorInfo.componentStack,
       type: 'ErrorBoundary',
     });
 
-    // Call custom error handler if provided
+    // Özel hata handler'ı çağır (varsa)
     this.props.onError?.(error, errorInfo);
 
+    // State'i güncelle
     this.setState({
       error,
       errorInfo,
     });
   }
 
+  /**
+   * Hata state'ini sıfırla ve uygulamayı yeniden başlat
+   */
   handleReset = () => {
     this.setState({
       hasError: false,
@@ -71,13 +121,14 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
+    // Hata varsa fallback UI göster
     if (this.state.hasError) {
-      // Custom fallback UI
+      // Özel fallback UI varsa onu kullan
       if (this.props.fallback) {
         return this.props.fallback;
       }
 
-      // Production-ready error UI - Elegant, brand-consistent design
+      // Production-ready hata UI - Zarif, marka uyumlu tasarım
       return (
         <View style={styles.container}>
           <LinearGradient
@@ -91,24 +142,24 @@ export class ErrorBoundary extends Component<Props, State> {
               showsVerticalScrollIndicator={false}
             >
               <View style={styles.content}>
-                {/* Icon */}
+                {/* Hata İkonu */}
                 <View style={styles.iconContainer}>
                   <View style={styles.iconCircle}>
                     <Ionicons name="alert-circle" size={64} color="#FFFFFF" />
                   </View>
                 </View>
                 
-                {/* Title */}
+                {/* Başlık */}
                 <Typography variant="h1" style={styles.title}>
                   Bir Şeyler Yanlış Gitti
                 </Typography>
                 
-                {/* Description */}
+                {/* Açıklama */}
                 <Typography variant="body" style={styles.description}>
                   Üzgünüz, beklenmeyen bir hata oluştu. Uygulamayı yeniden başlatarak sorunu çözebilirsiniz.
                 </Typography>
 
-                {/* Development Error Details */}
+                {/* Development Hata Detayları - Sadece geliştirme modunda */}
                 {__DEV__ && this.state.error && (
                   <View style={styles.errorCard}>
                     <View style={styles.errorHeader}>
@@ -122,9 +173,11 @@ export class ErrorBoundary extends Component<Props, State> {
                       nestedScrollEnabled
                       showsVerticalScrollIndicator={true}
                     >
+                      {/* Hata mesajı */}
                       <Typography variant="caption" style={styles.errorText}>
                         {this.state.error.toString()}
                       </Typography>
+                      {/* Component stack trace */}
                       {this.state.errorInfo?.componentStack && (
                         <Typography variant="caption" style={styles.stackTrace}>
                           {this.state.errorInfo.componentStack}
@@ -134,7 +187,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   </View>
                 )}
 
-                {/* Action Button */}
+                {/* Yeniden Başlat Butonu */}
                 <Button
                   label="Yeniden Başlat"
                   onPress={this.handleReset}
@@ -146,7 +199,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   textStyle={styles.buttonLabel}
                 />
 
-                {/* Help Text */}
+                {/* Yardım Metni */}
                 <Typography variant="caption" style={styles.helpText}>
                   Sorun devam ederse lütfen destek ekibimizle iletişime geçin.
                 </Typography>
@@ -157,11 +210,17 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
+    // Hata yoksa normal children'ı render et
     return this.props.children;
   }
 }
 
+/**
+ * Stil tanımlamaları
+ * Gradient arka plan ve zarif hata ekranı tasarımı
+ */
 const styles = StyleSheet.create({
+  // Ana container
   container: {
     flex: 1,
     backgroundColor: colors.background.primary,

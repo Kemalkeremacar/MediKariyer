@@ -1,15 +1,49 @@
+/**
+ * @file Typography.tsx
+ * @description Tipografi (metin) bileşeni
+ * 
+ * Özellikler:
+ * - 11 varyant (title, subtitle, h1, h2, h3, body, bodyMedium, bodySemibold, bodyLarge, bodySmall, caption)
+ * - Özelleştirilebilir renk
+ * - Satır sınırlama
+ * - Font scaling devre dışı (tutarlılık için)
+ * - Platform-specific optimizasyonlar
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Typography variant="h1">Başlık</Typography>
+ * <Typography variant="body" color="#FF0000" numberOfLines={2}>Metin</Typography>
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { Text as RNText, TextStyle, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
+/**
+ * Typography bileşeni props interface'i
+ */
 interface TypographyProps {
+  /** Metin içeriği */
   children: React.ReactNode;
+  /** Tipografi varyantı */
   variant?: 'title' | 'subtitle' | 'h1' | 'h2' | 'h3' | 'body' | 'bodyMedium' | 'bodySemibold' | 'bodyLarge' | 'bodySmall' | 'caption';
+  /** Ek stil */
   style?: TextStyle;
+  /** Metin rengi */
   color?: string;
+  /** Maksimum satır sayısı */
   numberOfLines?: number;
 }
 
+/**
+ * Typography Bileşeni
+ * Tutarlı tipografi için merkezi metin bileşeni
+ */
 export const Typography: React.FC<TypographyProps> = ({
   children,
   variant = 'body',

@@ -1,3 +1,32 @@
+/**
+ * @file RegisterScreen.tsx
+ * @description Doktor kayıt ekranı - Yeni doktor hesabı oluşturma
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Kişisel bilgiler (ad, soyad, unvan)
+ * - Mesleki bilgiler (branş, yan dal)
+ * - Hesap bilgileri (e-posta, şifre)
+ * - Profil fotoğrafı yükleme (kamera veya galeri)
+ * - Form validasyonu (Zod schema)
+ * - Lookup data ile branş/yan dal seçimi
+ * 
+ * **FORM ALANLARI:**
+ * - Ad, Soyad (zorunlu)
+ * - Unvan (Dr., Uz. Dr., vb.)
+ * - Branş (zorunlu, dropdown)
+ * - Yan Dal (opsiyonel, branşa göre filtrelenir)
+ * - E-posta (zorunlu, email validasyonu)
+ * - Şifre (zorunlu, min 8 karakter, büyük/küçük harf + rakam)
+ * - Profil Fotoğrafı (zorunlu, max 500KB)
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. Form doldurulur
+ * 2. Fotoğraf yüklenir
+ * 3. Kayıt tamamlanır
+ * 4. PendingApproval ekranına yönlendirilir (admin onayı beklenir)
+ */
 import React, { useState, useEffect, useMemo } from 'react';
 import { Alert } from 'react-native';
 import { useAlertHelpers } from '@/utils/alertHelpers';

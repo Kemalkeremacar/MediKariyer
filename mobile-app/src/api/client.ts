@@ -1,17 +1,25 @@
 /**
- * API Client - Stabilizasyon Faz 1
- * ARCH-001: Factory pattern ile refactor edildi
+ * @file client.ts
+ * @description API istemci yönetimi - Axios instance'ları ve interceptor'lar
+ * 
+ * Mimari: Factory pattern ile refactor edildi (ARCH-001)
  * 
  * Export'lar:
  * - apiClient: Mobile API için (/api/mobile)
  * - rootApiClient: Root API için (/api)
- * - createApiClient: Custom client oluşturmak için factory
+ * - createApiClient: Özel client oluşturmak için factory fonksiyonu
  * 
- * Stabilizasyon İyileştirmeleri:
- * - Robust JSON error parsing
- * - Improved token refresh mechanism
- * - Better error message extraction from backend
- * - SecureStore integration validation
+ * Özellikler:
+ * - Güçlü JSON hata ayrıştırma
+ * - Geliştirilmiş token yenileme mekanizması
+ * - Backend'den hata mesajı çıkarma
+ * - SecureStore entegrasyonu ve doğrulama
+ * - Proaktif token yenileme (süresi dolmadan 5 dk önce)
+ * - Network hata yönetimi
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ * @since 2024
  */
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
@@ -25,24 +33,28 @@ import { getUserFriendlyErrorMessage } from '@/utils/errorHandler';
 import { devLog } from '@/utils/devLogger';
 
 // ============================================================================
-// TYPES
+// TİPLER
 // ============================================================================
 
+// Başarısız istek kuyruğu için tip
 type FailedRequest = {
   resolve: (value?: unknown) => void;
   reject: (reason?: unknown) => void;
 };
 
+// Bekleyen istek kuyruğu için tip
 type PendingRequest = {
   resolve: () => void;
   reject: (reason?: unknown) => void;
 };
 
+// Client oluşturma seçenekleri
 interface CreateClientOptions {
   baseURL: string;
   timeout?: number;
 }
 
+// Backend hata yanıt formatı
 interface BackendErrorResponse {
   success?: boolean;
   message?: string;
@@ -53,12 +65,12 @@ interface BackendErrorResponse {
 }
 
 // ============================================================================
-// STATE (shared across all clients)
+// DURUM YÖNETİMİ (tüm client'lar arasında paylaşılan)
 // ============================================================================
 
-let isRefreshing = false;
-const failedQueue: FailedRequest[] = [];
-const pendingQueue: PendingRequest[] = [];
+let isRefreshing = false; // Token yenileme işlemi devam ediyor mu?
+const failedQueue: FailedRequest[] = []; // 401 hatası alan istekler
+const pendingQueue: PendingRequest[] = []; // Token yenileme bekleyen istekler
 
 const processQueue = (error: unknown, token: string | null) => {
   failedQueue.forEach(({ resolve, reject }) => {
@@ -83,8 +95,10 @@ const processPendingQueue = (error: unknown) => {
 };
 
 /**
- * Extract error message from backend response
- * Handles various backend error formats
+ * Backend yanıtından hata mesajını çıkar
+ * @description Çeşitli backend hata formatlarını işler ve kullanıcı dostu mesaj döndürür
+ * @param error - Axios hata objesi
+ * @returns Kullanıcı dostu hata mesajı
  */
 const extractErrorMessage = (error: AxiosError<BackendErrorResponse>): string => {
   const response = error.response;
@@ -94,24 +108,24 @@ const extractErrorMessage = (error: AxiosError<BackendErrorResponse>): string =>
 
   const data = response.data;
 
-  // Priority 1: Direct message field
+  // Öncelik 1: Doğrudan message alanı
   if (typeof data.message === 'string' && data.message.trim()) {
     return data.message.trim();
   }
 
-  // Priority 2: Error field
+  // Öncelik 2: Error alanı
   if (typeof data.error === 'string' && data.error.trim()) {
     return data.error.trim();
   }
 
-      // Priority 3: Errors object (validation errors)
+      // Öncelik 3: Errors objesi (validasyon hataları)
       if (data.errors) {
         if (Array.isArray(data.errors)) {
-          // Array of error messages
+          // Hata mesajları dizisi
           return data.errors.join(', ');
         }
         if (typeof data.errors === 'object') {
-          // Object with field-specific errors
+          // Alan bazlı hatalar içeren obje
           const errorMessages = Object.entries(data.errors)
             .map(([, messages]) => {
               if (Array.isArray(messages)) {
@@ -126,7 +140,7 @@ const extractErrorMessage = (error: AxiosError<BackendErrorResponse>): string =>
         }
       }
 
-  // Priority 4: Status code based messages
+  // Öncelik 4: HTTP durum koduna göre mesajlar
   const status = response.status;
   switch (status) {
     case 400:
@@ -149,7 +163,10 @@ const extractErrorMessage = (error: AxiosError<BackendErrorResponse>): string =>
 };
 
 /**
- * Check if endpoint is public (doesn't require authentication)
+ * Endpoint'in public olup olmadığını kontrol et
+ * @description Public endpoint'ler kimlik doğrulama gerektirmez
+ * @param url - Kontrol edilecek URL
+ * @returns Public ise true, değilse false
  */
 const isPublicEndpoint = (url?: string): boolean => {
   if (!url) return false;
@@ -169,16 +186,16 @@ const isPublicEndpoint = (url?: string): boolean => {
 
 const attachInterceptors = (instance: AxiosInstance) => {
   // ============================================================================
-  // REQUEST INTERCEPTOR
+  // İSTEK INTERCEPTOR'I
   // ============================================================================
   instance.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
       const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
-      devLog.log('📤 API Request:', config.method?.toUpperCase(), fullUrl);
+      devLog.log('📤 API İsteği:', config.method?.toUpperCase(), fullUrl);
       
-      // Skip token refresh logic for public endpoints
+      // Public endpoint'ler için token yenileme mantığını atla
       if (isPublicEndpoint(config.url)) {
-        // For refresh endpoint, we might have a token
+        // Refresh endpoint için token olabilir
         if (config.url?.includes('/auth/refresh')) {
           const token = await tokenManager.getAccessToken();
           if (token && config.headers) {
@@ -191,7 +208,7 @@ const attachInterceptors = (instance: AxiosInstance) => {
         return config;
       }
       
-      // Check if token needs refresh before making request
+      // İstek yapmadan önce token'ın yenilenmesi gerekip gerekmediğini kontrol et
       const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
       
       // Start proactive refresh if needed (only one request will trigger this)

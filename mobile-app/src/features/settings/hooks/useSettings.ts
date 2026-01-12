@@ -1,22 +1,47 @@
+/**
+ * @file useSettings.ts
+ * @description Kullanıcı ayarları yönetim hook'u
+ * 
+ * Bu hook kullanıcı ayarlarını (bildirimler, dil, tema) ve hesap işlemlerini
+ * (çıkış, hesap dondurma, hesap silme) yönetir.
+ * 
+ * **TODO:** API entegrasyonu tamamlanacak (şu an mock data kullanılıyor)
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import { useState, useCallback } from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { useAuthStore } from '@/store/authStore';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 
+/**
+ * Hesap işlem tipleri
+ */
 type AccountAction = 'freeze' | 'delete';
 
+/**
+ * Bildirim ayarları tipi
+ */
 interface NotificationSettings {
   email: boolean;
   sms: boolean;
   push: boolean;
 }
 
+/**
+ * Ayarlar data tipi
+ */
 interface SettingsData {
   notifications: NotificationSettings;
   language: string;
   theme: string;
 }
 
+/**
+ * Ayarlar güncelleme payload tipi
+ */
 interface SettingsUpdatePayload {
   notifications?: Partial<NotificationSettings>;
   language?: string;
@@ -24,8 +49,26 @@ interface SettingsUpdatePayload {
 }
 
 /**
- * Hook for managing user settings
- * Provides functionality for updating preferences and account actions
+ * Kullanıcı ayarları hook'u
+ * 
+ * **Özellikler:**
+ * - Bildirim ayarları yönetimi
+ * - Dil ve tema seçimi
+ * - Çıkış yapma (onaylı)
+ * - Hesap dondurma/silme (onaylı)
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * const { settings, updateSettings, handleLogout } = useSettings();
+ * 
+ * // Bildirim ayarını güncelle
+ * updateSettings({ notifications: { push: false } });
+ * 
+ * // Çıkış yap
+ * handleLogout();
+ * ```
+ * 
+ * @returns Ayarlar ve işlem fonksiyonları
  */
 export const useSettings = () => {
   const user = useAuthStore((state) => state.user);

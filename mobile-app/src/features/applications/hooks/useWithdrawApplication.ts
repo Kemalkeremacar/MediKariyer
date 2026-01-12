@@ -1,9 +1,33 @@
+/**
+ * @file useWithdrawApplication.ts
+ * @description Başvuru geri çekme hook'u
+ * 
+ * Bu hook kullanıcının başvurusunu geri çekmesini sağlar.
+ * Optimistic update ile kullanıcı deneyimini iyileştirir.
+ * 
+ * **Web frontend ile uyumlu:**
+ * - PATCH /applications/:id/withdraw endpoint'ini kullanır
+ * - Optimistic Update: UI'ı hemen günceller, hata durumunda rollback yapar
+ * - Başarılı işlemde ilgili cache'leri invalidate eder
+ * - Alert helper kullanır (proje standardı)
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import { useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { applicationService, ApplicationsListResponse } from '@/api/services/application.service';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { handleApiError } from '@/utils/errorHandler';
 import { queryKeys } from '@/api/queryKeys';
 
+/**
+ * Başvuru geri çekme parametreleri
+ * 
+ * @interface WithdrawApplicationParams
+ * @property {number} applicationId - Başvuru ID'si
+ * @property {string} [reason] - Geri çekme nedeni (opsiyonel)
+ */
 interface WithdrawApplicationParams {
   applicationId: number;
   reason?: string;
@@ -12,11 +36,22 @@ interface WithdrawApplicationParams {
 /**
  * Başvuru geri çekme hook'u
  * 
- * Web frontend ile uyumlu şekilde çalışır:
- * - PATCH /applications/:id/withdraw endpoint'ini kullanır
- * - Optimistic Update: UI'ı hemen günceller, hata durumunda rollback yapar
- * - Başarılı işlemde ilgili cache'leri invalidate eder
- * - Alert helper kullanır (proje standardı)
+ * **Optimistic Update Akışı:**
+ * 1. onMutate: UI'ı hemen güncelle (durum: "Geri Çekildi")
+ * 2. mutationFn: Backend'e istek gönder
+ * 3. onError: Hata varsa rollback yap
+ * 4. onSettled: Her durumda cache'i invalidate et
+ * 5. onSuccess: Başarı mesajı göster
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * const withdraw = useWithdrawApplication();
+ * 
+ * withdraw.mutate({
+ *   applicationId: 123,
+ *   reason: 'Başka bir iş buldum'
+ * });
+ * ```
  * 
  * @returns Mutation hook
  */

@@ -1,24 +1,26 @@
 /**
  * @file alertRef.ts
- * @description Imperative alert API for non-component code
+ * @description Component olmayan kodlar için imperative alert API
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  * 
- * This module provides a ref-based approach for triggering alerts from
- * non-component code (API interceptors, utility functions, etc.).
+ * **Özellikler:**
+ * - API interceptor'lar ve utility fonksiyonlarından alert gösterme
+ * - AlertProvider mount olduğunda useImperativeHandle ile bağlanır
+ * - Provider mount değilse native Alert.alert'e fallback
  * 
- * When the AlertProvider is mounted, it connects to this ref via useImperativeHandle.
- * When the ref is not available (provider not mounted), falls back to native Alert.alert.
+ * **Gereksinim:** 8.5
  * 
- * Usage in non-component code:
+ * **Kullanım (component olmayan kodda):**
  * ```typescript
  * import { imperativeAlert } from '@/utils/alertRef';
  * 
- * // In API interceptor
+ * // API interceptor'da
  * if (error.response?.status === 401) {
- *   imperativeAlert.error('Session expired');
+ *   imperativeAlert.error('Oturum süresi doldu');
  * }
  * ```
- * 
- * Requirements: 8.5
  */
 
 import { createRef } from 'react';
@@ -26,27 +28,42 @@ import { Alert, AlertButton } from 'react-native';
 import type { AlertConfig, AlertRef } from '@/types/alert';
 import { overlayDevLog } from '@/utils/devLogger';
 
+// ============================================================================
+// ALERT REF
+// ============================================================================
+
 /**
- * Ref that AlertProvider connects to via useImperativeHandle
- * This allows non-component code to access alert functionality
+ * AlertProvider'ın useImperativeHandle ile bağlandığı ref
+ * Component olmayan kodların alert fonksiyonalitesine erişmesini sağlar
  */
 export const alertRef = createRef<AlertRef>();
 
+// ============================================================================
+// IMPERATIVE ALERT API
+// ============================================================================
+
 /**
- * Imperative alert API for non-component code.
- * Falls back to native Alert.alert when AlertProvider is not mounted.
+ * Component olmayan kodlar için imperative alert API
+ * AlertProvider mount değilse native Alert.alert'e fallback yapar
  * 
- * Note: Prefer using useAlertHelpers hook in components.
- * This API is intended for:
- * - API interceptors
- * - Utility functions called outside React component tree
- * - Error handlers in non-component code
+ * **NOT:** Component'lerde useAlertHelpers hook'unu kullanın.
+ * Bu API şunlar için tasarlanmıştır:
+ * - API interceptor'lar
+ * - React component tree dışında çağrılan utility fonksiyonlar
+ * - Component olmayan koddaki hata handler'lar
  */
 export const imperativeAlert = {
   /**
-   * Show a success alert
-   * @param message - Message to display
-   * @param onConfirm - Optional callback when user confirms
+   * Başarı alert'i göster
+   * 
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak opsiyonel callback
+   * 
+   * @example
+   * ```typescript
+   * imperativeAlert.success('İşlem başarılı');
+   * imperativeAlert.success('Kayıt tamamlandı', () => navigate('Home'));
+   * ```
    */
   success: (message: string, onConfirm?: () => void) => {
     if (alertRef.current) {
@@ -64,9 +81,16 @@ export const imperativeAlert = {
   },
 
   /**
-   * Show an error alert
-   * @param message - Message to display
-   * @param onConfirm - Optional callback when user confirms
+   * Hata alert'i göster
+   * 
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak opsiyonel callback
+   * 
+   * @example
+   * ```typescript
+   * imperativeAlert.error('Bir hata oluştu');
+   * imperativeAlert.error('Bağlantı hatası', () => retry());
+   * ```
    */
   error: (message: string, onConfirm?: () => void) => {
     if (alertRef.current) {
@@ -84,9 +108,15 @@ export const imperativeAlert = {
   },
 
   /**
-   * Show an info alert
-   * @param message - Message to display
-   * @param onConfirm - Optional callback when user confirms
+   * Bilgi alert'i göster
+   * 
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak opsiyonel callback
+   * 
+   * @example
+   * ```typescript
+   * imperativeAlert.info('Yeni güncelleme mevcut');
+   * ```
    */
   info: (message: string, onConfirm?: () => void) => {
     if (alertRef.current) {
@@ -104,11 +134,21 @@ export const imperativeAlert = {
   },
 
   /**
-   * Show a confirmation dialog
-   * @param message - Message to display
-   * @param onConfirm - Callback when user confirms
-   * @param onCancel - Optional callback when user cancels
-   * @param options - Optional title and button text overrides
+   * Onay dialogu göster
+   * 
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak callback
+   * @param onCancel - Kullanıcı iptal ettiğinde çalışacak opsiyonel callback
+   * @param options - Opsiyonel başlık ve buton metni override'ları
+   * 
+   * @example
+   * ```typescript
+   * imperativeAlert.confirm(
+   *   'Değişiklikleri kaydetmek istiyor musunuz?',
+   *   () => save(),
+   *   () => discard()
+   * );
+   * ```
    */
   confirm: (
     message: string,
@@ -136,12 +176,22 @@ export const imperativeAlert = {
   },
 
   /**
-   * Show a destructive confirmation dialog
-   * @param title - Title of the alert
-   * @param message - Message to display
-   * @param onConfirm - Callback when user confirms
-   * @param onCancel - Optional callback when user cancels
-   * @param confirmText - Optional confirm button text (default: 'Sil')
+   * Yıkıcı işlem onay dialogu göster (silme/kaldırma işlemleri için)
+   * 
+   * @param title - Alert başlığı
+   * @param message - Gösterilecek mesaj
+   * @param onConfirm - Kullanıcı onayladığında çalışacak callback
+   * @param onCancel - Kullanıcı iptal ettiğinde çalışacak opsiyonel callback
+   * @param confirmText - Opsiyonel onayla butonu metni (varsayılan: 'Sil')
+   * 
+   * @example
+   * ```typescript
+   * imperativeAlert.confirmDestructive(
+   *   'Öğeyi Sil',
+   *   'Bu işlem geri alınamaz',
+   *   () => deleteItem()
+   * );
+   * ```
    */
   confirmDestructive: (
     title: string,
@@ -170,8 +220,21 @@ export const imperativeAlert = {
   },
 
   /**
-   * Show a custom alert with full configuration
-   * @param config - Full alert configuration
+   * Tam konfigürasyonla özel alert göster
+   * 
+   * @param config - Tam alert konfigürasyonu
+   * 
+   * @example
+   * ```typescript
+   * imperativeAlert.custom({
+   *   type: 'confirm',
+   *   title: 'Özel Başlık',
+   *   message: 'Özel mesaj',
+   *   onConfirm: () => console.log('Onaylandı'),
+   *   confirmText: 'Evet',
+   *   cancelText: 'Hayır',
+   * });
+   * ```
    */
   custom: (config: AlertConfig) => {
     if (alertRef.current) {
@@ -203,8 +266,13 @@ export const imperativeAlert = {
   },
 
   /**
-   * Hide the currently visible alert
-   * Only works when AlertProvider is mounted
+   * Görünür alert'i gizle
+   * Sadece AlertProvider mount olduğunda çalışır
+   * 
+   * @example
+   * ```typescript
+   * imperativeAlert.hide();
+   * ```
    */
   hide: () => {
     if (alertRef.current) {

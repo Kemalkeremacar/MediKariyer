@@ -1,3 +1,21 @@
+/**
+ * @file EducationScreen.tsx
+ * @description Eğitim bilgileri listesi ekranı - CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Eğitim listesi görüntüleme (üniversite, derece, mezuniyet yılı)
+ * - Yeni eğitim ekleme (FAB butonu)
+ * - Eğitim düzenleme ve silme
+ * - Pull-to-refresh desteği
+ * - Empty state gösterimi
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. Eğitimler listelenir
+ * 2. FAB butonu ile yeni eğitim eklenir
+ * 3. Kart üzerinden düzenleme/silme yapılır
+ */
 import React from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';

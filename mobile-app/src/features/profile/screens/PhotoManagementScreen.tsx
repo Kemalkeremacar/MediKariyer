@@ -1,3 +1,71 @@
+/**
+ * @file PhotoManagementScreen.tsx
+ * @description Fotoğraf yönetim ekranı - Profil fotoğrafı yükleme ve onay süreci
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖNEMLİ ÖZELLİKLER:**
+ * - Profil fotoğrafı yükleme (galeri seçimi)
+ * - Fotoğraf değişiklik talebi oluşturma
+ * - Admin onay süreci takibi
+ * - Talep iptal etme
+ * - Fotoğraf karşılaştırma (mevcut vs yeni)
+ * - Talep geçmişi görüntüleme
+ * 
+ * **AKIŞ:**
+ * 1. Kullanıcı galeriden fotoğraf seçer
+ * 2. Fotoğraf sıkıştırılır ve base64'e dönüştürülür
+ * 3. Backend'e talep gönderilir (pending durumu)
+ * 4. Admin onayı beklenir (polling ile durum kontrol edilir)
+ * 5. Onaylanırsa profil fotoğrafı güncellenir
+ * 6. Reddedilirse sebep gösterilir
+ * 
+ * **TALEP DURUMLARI:**
+ * - pending: Onay bekleniyor (sarı badge)
+ * - approved: Onaylandı (yeşil badge)
+ * - rejected: Reddedildi (kırmızı badge)
+ * - cancelled: İptal edildi (gri badge)
+ * 
+ * **KRİTİK NOKTALAR:**
+ * - Bekleyen talep varsa yeni fotoğraf yüklenemez
+ * - Dosya boyutu max 5MB
+ * - Sadece JPEG ve PNG formatları desteklenir
+ * - Fotoğraf 1:1 aspect ratio ile kırpılır
+ * - Base64 formatında backend'e gönderilir
+ * 
+ * **POLLİNG MEKANİZMASI (MOBİL OPTİMİZE):**
+ * - Sadece pending durumunda polling yapılır
+ * - Aşamalı geri çekilme (progressive backoff):
+ *   * İlk 30 saniye: 5 saniye aralık
+ *   * 30-60 saniye: 10 saniye aralık
+ *   * 60+ saniye: 15 saniye aralık
+ * - Ekran odak dışı olduğunda durdurulur (pil dostu)
+ * 
+ * **İYİMSER GÜNCELLEME:**
+ * - Talep iptal edildiğinde UI hemen güncellenir
+ * - Backend yanıtı gelene kadar önizleme gösterilir
+ * - Hata durumunda geri alınır (rollback)
+ * 
+ * **KULLANIM ÖRNEĞİ:**
+ * ```typescript
+ * // Fotoğraf seçme
+ * const result = await ImagePicker.launchImageLibraryAsync({
+ *   allowsEditing: true,
+ *   aspect: [1, 1],
+ *   quality: 0.85,
+ * });
+ * 
+ * // Base64'e dönüştürme
+ * const base64 = await FileSystem.readAsStringAsync(uri, {
+ *   encoding: 'base64',
+ * });
+ * 
+ * // Backend'e gönderme
+ * const dataUrl = `data:image/jpeg;base64,${base64}`;
+ * await profileService.uploadPhoto({ file_url: dataUrl });
+ * ```
+ */
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import {

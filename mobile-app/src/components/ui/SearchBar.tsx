@@ -1,23 +1,64 @@
+/**
+ * @file SearchBar.tsx
+ * @description Arama çubuğu bileşeni
+ * 
+ * Özellikler:
+ * - Arama ikonu
+ * - Temizleme butonu
+ * - Yükleme göstergesi
+ * - Focus durumu gösterimi
+ * - Otomatik focus desteği
+ * - Performans optimizasyonu (memo)
+ * - Modern tasarım (yuvarlatılmış köşeler, gölge)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <SearchBar
+ *   value={searchQuery}
+ *   onChangeText={setSearchQuery}
+ *   placeholder="İş ara..."
+ *   isSearching={isLoading}
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 
+/**
+ * SearchBar bileşeni props interface'i
+ */
 export interface SearchBarProps {
+  /** Arama metni */
   value: string;
+  /** Metin değiştiğinde çağrılır */
   onChangeText: (text: string) => void;
+  /** Placeholder metni */
   placeholder?: string;
+  /** Temizleme fonksiyonu */
   onClear?: () => void;
+  /** Focus olduğunda çağrılır */
   onFocus?: () => void;
+  /** Blur olduğunda çağrılır */
   onBlur?: () => void;
+  /** Otomatik focus */
   autoFocus?: boolean;
+  /** Ek stil */
   style?: ViewStyle;
-  /**
-   * Arama yapılıyor mu? (loading indicator için)
-   */
+  /** Arama yapılıyor mu? (loading indicator için) */
   isSearching?: boolean;
 }
 
+/**
+ * Arama Çubuğu Bileşeni
+ * Performans optimizasyonu ile memo edilmiş
+ */
 export const SearchBar: React.FC<SearchBarProps> = React.memo(({
   value,
   onChangeText,

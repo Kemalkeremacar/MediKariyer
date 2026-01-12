@@ -1,8 +1,30 @@
+/**
+ * @file useJobDetail.ts
+ * @description İş ilanı detay ve başvuru hook'ları
+ * 
+ * Bu dosya iş ilanı detayını getirme ve ilana başvurma işlemlerini yönetir.
+ * Optimistic update desteği ile kullanıcı deneyimini iyileştirir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import { useQuery, useMutation, useQueryClient, InfiniteData } from '@tanstack/react-query';
 import { jobService, ApplyJobPayload } from '@/api/services/job.service';
 import { queryKeys } from '@/api/queryKeys';
 import { JobDetail, JobsResponse } from '@/types/job';
 
+/**
+ * İş ilanı detay hook'u
+ * 
+ * **Özellikler:**
+ * - Her zaman fresh data (staleTime: 0)
+ * - 30 saniye cache (loading sırasında boş görünmez)
+ * - Focus/reconnect'te otomatik yenileme
+ * 
+ * @param jobId - İş ilanı ID'si
+ * @returns İş ilanı detay verisi ve query durumu
+ */
 export const useJobDetail = (jobId: number) => {
   return useQuery({
     queryKey: queryKeys.jobs.detail(jobId),

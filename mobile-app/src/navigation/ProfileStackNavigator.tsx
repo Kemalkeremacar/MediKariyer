@@ -1,3 +1,27 @@
+/**
+ * @file ProfileStackNavigator.tsx
+ * @description Profil yönetimi gezinme akışı
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **Ekranlar:**
+ * - ProfileMain: Ana profil/dashboard ekranı
+ * - ProfileEdit: Profil düzenleme
+ * - PhotoManagement: Fotoğraf yönetimi
+ * - Education: Eğitim bilgileri listesi
+ * - Experience: Deneyim bilgileri listesi
+ * - Certificates: Sertifika listesi
+ * - Languages: Dil bilgileri listesi
+ * - Notifications: Bildirimler
+ * - Form Screens: Ekleme/düzenleme formları
+ * 
+ * **ÖNEMLİ NOT:**
+ * Form ekranları (*FormModal) gerçek modal değil, slide_from_bottom animasyonlu
+ * navigation ekranlarıdır. Root-level BottomSheetModalProvider'ı kullanarak
+ * Select bileşenlerinin doğru çalışmasını sağlarlar.
+ */
+
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { DashboardScreen } from '@/features/profile/screens/DashboardScreen';
@@ -8,7 +32,7 @@ import { ExperienceScreen } from '@/features/profile/screens/ExperienceScreen';
 import { CertificatesScreen } from '@/features/profile/screens/CertificatesScreen';
 import { LanguagesScreen } from '@/features/profile/screens/LanguagesScreen';
 import { NotificationsScreen } from '@/features/notifications/screens/NotificationsScreen';
-// Form Screens (renamed from *FormModal to *FormScreen for clarity)
+// Form Screens (geriye dönük uyumluluk için *FormModal isimli)
 import { EducationFormModal as EducationFormScreen } from '@/features/profile/components/EducationFormModal';
 import { ExperienceFormModal as ExperienceFormScreen } from '@/features/profile/components/ExperienceFormModal';
 import { LanguageFormModal as LanguageFormScreen } from '@/features/profile/components/LanguageFormModal';
@@ -18,22 +42,23 @@ import type { ProfileStackParamList } from './types';
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
 /**
- * ProfileStackNavigator - Profile management screens
- * Handles profile viewing and editing
+ * ProfileStackNavigator - Profil yönetimi gezinme stack'i
+ * ProfileTab içinde nested stack navigator olarak kullanılır
  * 
- * NOTE: Form screens (Education, Experience, Language, Certificate) are
- * navigation screens with slide_from_bottom animation, NOT true modals.
- * They use the root-level BottomSheetModalProvider for Select components.
+ * **NOT:** Form ekranları (Education, Experience, Language, Certificate)
+ * slide_from_bottom animasyonlu navigation ekranlarıdır, gerçek modal DEĞİL.
+ * Root-level BottomSheetModalProvider'ı Select bileşenleri için kullanırlar.
  */
 export const ProfileStackNavigator = () => (
   <Stack.Navigator
     screenOptions={{
       headerShown: false,
-      animation: 'slide_from_right', // Smooth animation
-      animationDuration: 200, // Faster animation (default: 350ms)
-      freezeOnBlur: true, // Freeze inactive screens to save resources
+      animation: 'slide_from_right', // Yumuşak animasyon
+      animationDuration: 200, // Daha hızlı animasyon (varsayılan: 350ms)
+      freezeOnBlur: true, // Kaynak tasarrufu için aktif olmayan ekranları dondur
     }}
   >
+    {/* Ana Ekranlar */}
     <Stack.Screen 
       name="ProfileMain" 
       component={DashboardScreen}
@@ -58,6 +83,8 @@ export const ProfileStackNavigator = () => (
         gestureEnabled: true,
       }}
     />
+    
+    {/* Liste Ekranları */}
     <Stack.Screen 
       name="Education" 
       component={EducationScreen}
@@ -79,8 +106,8 @@ export const ProfileStackNavigator = () => (
       component={NotificationsScreen}
     />
     
-    {/* Form Screens - Full screen forms with slide_from_bottom animation */}
-    {/* These are NOT modal presentations - they're card screens for better BottomSheet support */}
+    {/* Form Ekranları - slide_from_bottom animasyonlu tam ekran formlar */}
+    {/* Bunlar modal presentation DEĞİL - daha iyi BottomSheet desteği için card ekranlar */}
     <Stack.Screen 
       name="EducationFormModal" 
       component={EducationFormScreen}

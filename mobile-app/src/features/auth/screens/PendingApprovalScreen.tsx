@@ -1,10 +1,22 @@
 /**
- * @file PendingApprovalScreen.tsx - Stabilizasyon Faz 2
- * @description Admin onayı bekleme ekranı
+ * @file PendingApprovalScreen.tsx
+ * @description Admin onayı bekleme ekranı - Doktor kayıt sonrası veya onaysız giriş denemesi sonrası gösterilir
+ * @author MediKariyer Development Team
+ * @version 2.0.0
  * 
- * Değişiklikler:
+ * **ÖNEMLİ NOTLAR:**
+ * - Polling interval: 30 saniye (performans optimizasyonu)
+ * - Manuel "Durumu Kontrol Et" butonu ile anında kontrol imkanı
+ * - RootNavigator otomatik olarak onaylı kullanıcıları App stack'e yönlendirir
+ * - 403 hataları sessizce işlenir (beklenen durum)
+ * 
+ * **KULLANIM SENARYOLARI:**
+ * 1. Yeni kayıt sonrası: Kullanıcı authenticated değil, sadece bilgilendirme
+ * 2. Onaysız giriş denemesi: Kullanıcı authenticated ama onaysız, polling aktif
+ * 
+ * **Değişiklikler (Stabilizasyon Faz 2):**
  * - Polling interval 10 saniyeden 30 saniyeye çıkarıldı
- * - Manuel "Durumu Kontrol Et" butonu eklendi
+ * - Manuel kontrol butonu eklendi
  * - Polling mekanizması optimize edildi
  * - RootNavigator ile çift kontrol kaldırıldı (sadece store update yeterli)
  */
@@ -22,35 +34,71 @@ import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
 import type { AuthStackParamList } from '@/navigation/types';
 
-// Polling interval: 30 seconds (optimized from 10 seconds)
-const POLLING_INTERVAL_MS = 30 * 1000; // 30 seconds
+/**
+ * Polling interval sabiti
+ * 30 saniye (10 saniyeden optimize edildi - sunucu yükünü azaltmak için)
+ */
+const POLLING_INTERVAL_MS = 30 * 1000;
 
+/**
+ * PendingApprovalScreen Bileşeni
+ * 
+ * Admin onayı bekleyen doktorlar için bilgilendirme ve durum kontrol ekranı.
+ * İki farklı senaryoda kullanılır:
+ * 1. Yeni kayıt sonrası (authenticated değil)
+ * 2. Onaysız giriş denemesi (authenticated ama onaysız)
+ * 
+ * @returns {JSX.Element} Admin onay bekleme ekranı
+ */
 export const PendingApprovalScreen = () => {
+  // Navigation ve hooks
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const logoutMutation = useLogout();
+  
+  // Auth store state'leri
   const authStatus = useAuthStore((state) => state.authStatus);
   const user = useAuthStore((state) => state.user);
   const markAuthenticated = useAuthStore((state) => state.markAuthenticated);
+  
+  // Local state'ler
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const [lastCheckTime, setLastCheckTime] = useState<Date | null>(null);
   
-  // Determine if this is after registration (not authenticated) or after login attempt (authenticated but not approved)
+  /**
+   * Kullanıcının kayıt sonrası mı yoksa giriş denemesi sonrası mı olduğunu belirle
+   * - Kayıt sonrası: authenticated değil (token yok)
+   * - Giriş denemesi: authenticated ama onaysız (token var)
+   */
   const isAfterRegistration = authStatus !== 'authenticated';
 
   /**
-   * Check approval status manually or via polling
-   * RootNavigator will automatically handle navigation when user is approved
+   * Onay durumunu kontrol et (manuel veya otomatik polling ile)
+   * 
+   * **AKIŞ:**
+   * 1. Sadece authenticated kullanıcılar için çalışır
+   * 2. Backend'den güncel kullanıcı bilgilerini çeker
+   * 3. Onay durumunu kontrol eder (is_approved veya admin rolü)
+   * 4. Onaylıysa store'u günceller, RootNavigator otomatik yönlendirir
+   * 5. 403 hataları sessizce işlenir (beklenen durum)
+   * 
+   * **ÖNEMLİ:** RootNavigator otomatik olarak onaylı kullanıcıları App stack'e yönlendirir,
+   * bu fonksiyon sadece store'u günceller.
+   * 
+   * @returns {Promise<void>}
    */
   const checkApprovalStatus = useCallback(async () => {
-    // Only check if authenticated (has tokens)
+    // Sadece authenticated kullanıcılar için kontrol yap (token varsa)
     if (authStatus !== 'authenticated' || !user) {
       return;
     }
 
     setIsChecking(true);
     try {
+      // Backend'den güncel kullanıcı bilgilerini çek
       const updatedUser = await authService.getMe();
+      
+      // Onay durumunu kontrol et (farklı veri tiplerini destekle)
       const isApproved = 
         updatedUser.is_approved === true || 
         updatedUser.is_approved === 1 || 
@@ -59,56 +107,70 @@ export const PendingApprovalScreen = () => {
       const isAdmin = updatedUser.role === 'admin';
       
       if (isApproved || isAdmin) {
-        // User is approved - update store and RootNavigator will handle navigation automatically
+        // Kullanıcı onaylandı - store'u güncelle
+        // RootNavigator otomatik olarak App stack'e yönlendirecek
         markAuthenticated(updatedUser);
+        
         if (__DEV__) {
-          console.log('✅ User is approved, RootNavigator will navigate to App');
+          console.log('✅ Kullanıcı onaylandı, RootNavigator App stack\'e yönlendirecek');
         }
         
-        // Clear polling interval
+        // Polling interval'i temizle (artık gerek yok)
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
       }
       
+      // Son kontrol zamanını güncelle
       setLastCheckTime(new Date());
     } catch (error: any) {
-      // Check if this is an expected 403 error (user not yet approved)
+      /**
+       * Hata kontrolü
+       * 403 hataları beklenen durumdur (kullanıcı henüz onaylanmamış)
+       * Diğer hatalar loglanır ama kullanıcıya gösterilmez
+       */
       const is403Error = error?.message?.includes('403') || 
                          error?.message?.includes('yetkiniz yok') ||
                          error?.message?.includes('admin onayını bekliyor') ||
                          error?.message?.includes('onaylanmadı') ||
-                         error?.isSilent === true; // Check for silent error flag
+                         error?.isSilent === true;
       
       if (is403Error) {
-        // Expected error - user is still pending approval
-        // Silently continue polling without logging error or showing alerts
+        // Beklenen hata - kullanıcı hala onay bekliyor
+        // Sessizce polling'e devam et (alert gösterme)
         setLastCheckTime(new Date());
       } else {
-        // Unexpected error - log it (but don't show alert to user)
-        console.error('Unexpected error checking approval status:', error);
+        // Beklenmeyen hata - logla (ama kullanıcıya gösterme)
+        console.error('Onay durumu kontrolünde beklenmeyen hata:', error);
       }
-      // Don't clear interval on error, keep polling
+      // Hata durumunda interval'i temizleme, polling'e devam et
     } finally {
       setIsChecking(false);
     }
   }, [authStatus, user, markAuthenticated]);
 
   /**
-   * Start polling for approval status (only if authenticated)
+   * Onay durumu için polling başlat (sadece authenticated kullanıcılar için)
+   * 
+   * **AKIŞ:**
+   * 1. İlk kontrol hemen yapılır
+   * 2. 30 saniyede bir otomatik kontrol yapılır
+   * 3. Component unmount olduğunda interval temizlenir
+   * 
+   * **NOT:** Kayıt sonrası kullanıcılar için polling çalışmaz (authenticated değiller)
    */
   useEffect(() => {
     if (authStatus === 'authenticated' && user) {
-      // Initial check
+      // İlk kontrol hemen yap
       checkApprovalStatus();
       
-      // Start polling every 30 seconds
+      // 30 saniyede bir otomatik kontrol başlat
       pollingIntervalRef.current = setInterval(() => {
         checkApprovalStatus();
       }, POLLING_INTERVAL_MS);
       
-      // Cleanup on unmount
+      // Component unmount olduğunda temizlik yap
       return () => {
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
@@ -119,34 +181,54 @@ export const PendingApprovalScreen = () => {
   }, [authStatus, user, checkApprovalStatus]);
 
   /**
-   * Manual check button handler
+   * Manuel kontrol butonu handler'ı
+   * Kullanıcı istediği zaman onay durumunu kontrol edebilir
    */
   const handleManualCheck = useCallback(() => {
     checkApprovalStatus();
   }, [checkApprovalStatus]);
 
   /**
-   * Go to login handler
+   * Giriş ekranına dön handler'ı
+   * 
+   * **AKIŞ:**
+   * - Authenticated kullanıcılar: Logout yap (polling'i temizle)
+   * - Kayıt sonrası kullanıcılar: Direkt login'e git
    */
   const handleGoToLogin = useCallback(() => {
-    // Eğer authenticated ise logout yap, değilse sadece login'e git
     if (authStatus === 'authenticated') {
-      // Clear polling before logout
+      // Polling'i temizle (logout öncesi)
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
+      // Logout yap
       logoutMutation.mutate();
     } else {
+      // Kayıt sonrası kullanıcılar direkt login'e git
       navigation.replace('Login');
     }
   }, [authStatus, logoutMutation, navigation]);
 
-  // Format last check time
+  /**
+   * Son kontrol zamanını formatla
+   * Kullanıcıya son kontrolün ne zaman yapıldığını göster
+   */
   const lastCheckText = lastCheckTime
     ? `Son kontrol: ${lastCheckTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`
     : 'Henüz kontrol edilmedi';
 
+  /**
+   * Render
+   * 
+   * **EKRAN YAPISI:**
+   * 1. Gradient header (hourglass icon)
+   * 2. Başlık ve açıklama (kayıt/giriş durumuna göre)
+   * 3. Bilgilendirme kartları (süreç adımları)
+   * 4. Mesaj kartı (detaylı açıklama)
+   * 5. Manuel kontrol butonu (sadece authenticated için)
+   * 6. Giriş ekranına dön butonu
+   */
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -156,6 +238,7 @@ export const PendingApprovalScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Gradient Header */}
         <LinearGradient
           colors={['#4A90E2', '#2E5C8A']}
           start={{ x: 0, y: 0 }}
@@ -213,7 +296,7 @@ export const PendingApprovalScreen = () => {
             </Typography>
           </View>
 
-          {/* Manual Check Button - Only show if authenticated */}
+          {/* Manuel Kontrol Butonu - Sadece authenticated kullanıcılar için */}
           {authStatus === 'authenticated' && (
             <View style={styles.checkSection}>
               <Button

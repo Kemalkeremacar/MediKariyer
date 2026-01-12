@@ -1,6 +1,17 @@
 /**
- * Education Service
- * ARCH-002: Profile servisinden ayrılan eğitim CRUD işlemleri
+ * @file education.service.ts
+ * @description Education Service - Eğitim CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **ARCH-002:** Profile servisinden ayrılan eğitim CRUD işlemleri
+ * 
+ * **Endpoint'ler:**
+ * - GET /api/mobile/doctor/educations - Eğitim listesi
+ * - POST /api/mobile/doctor/educations - Yeni eğitim
+ * - PATCH /api/mobile/doctor/educations/:id - Eğitim güncelleme
+ * - DELETE /api/mobile/doctor/educations/:id - Eğitim silme
  */
 
 import apiClient from '@/api/client';
@@ -12,9 +23,17 @@ import type {
   DoctorEducation,
 } from '@/types/profile';
 
+// ============================================================================
+// EDUCATION SERVICE
+// ============================================================================
+
 export const educationService = {
   /**
    * Eğitim listesini getirir
+   * 
+   * @returns Eğitim bilgileri listesi
+   * 
+   * **Endpoint:** GET /api/mobile/doctor/educations
    */
   async getEducations(): Promise<DoctorEducation[]> {
     const response = await apiClient.get<ApiResponse<DoctorEducation[]>>(
@@ -25,6 +44,11 @@ export const educationService = {
 
   /**
    * Yeni eğitim kaydı oluşturur
+   * 
+   * @param payload - Eğitim bilgileri
+   * @returns Oluşturulan eğitim kaydı
+   * 
+   * **Endpoint:** POST /api/mobile/doctor/educations
    */
   async createEducation(
     payload: CreateEducationPayload,
@@ -38,6 +62,12 @@ export const educationService = {
 
   /**
    * Eğitim kaydını günceller
+   * 
+   * @param id - Eğitim ID
+   * @param payload - Güncellenecek eğitim bilgileri
+   * @returns Güncellenmiş eğitim kaydı
+   * 
+   * **Endpoint:** PATCH /api/mobile/doctor/educations/:id
    */
   async updateEducation(
     id: number,
@@ -52,6 +82,10 @@ export const educationService = {
 
   /**
    * Eğitim kaydını siler
+   * 
+   * @param id - Eğitim ID
+   * 
+   * **Endpoint:** DELETE /api/mobile/doctor/educations/:id
    */
   async deleteEducation(id: number): Promise<void> {
     await apiClient.delete<ApiResponse<null>>(endpoints.doctor.education(id));

@@ -1,6 +1,17 @@
 /**
- * Language Service
- * ARCH-002: Profile servisinden ayrılan dil CRUD işlemleri
+ * @file language.service.ts
+ * @description Language Service - Dil CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **ARCH-002:** Profile servisinden ayrılan dil CRUD işlemleri
+ * 
+ * **Endpoint'ler:**
+ * - GET /api/mobile/doctor/languages - Dil listesi
+ * - POST /api/mobile/doctor/languages - Yeni dil
+ * - PATCH /api/mobile/doctor/languages/:id - Dil güncelleme
+ * - DELETE /api/mobile/doctor/languages/:id - Dil silme
  */
 
 import apiClient from '@/api/client';
@@ -12,9 +23,17 @@ import type {
   DoctorLanguage,
 } from '@/types/profile';
 
+// ============================================================================
+// LANGUAGE SERVICE
+// ============================================================================
+
 export const languageService = {
   /**
    * Dil listesini getirir
+   * 
+   * @returns Dil bilgileri listesi
+   * 
+   * **Endpoint:** GET /api/mobile/doctor/languages
    */
   async getLanguages(): Promise<DoctorLanguage[]> {
     const response = await apiClient.get<ApiResponse<DoctorLanguage[]>>(
@@ -25,6 +44,11 @@ export const languageService = {
 
   /**
    * Yeni dil kaydı oluşturur
+   * 
+   * @param payload - Dil bilgileri
+   * @returns Oluşturulan dil kaydı
+   * 
+   * **Endpoint:** POST /api/mobile/doctor/languages
    */
   async createLanguage(
     payload: CreateLanguagePayload,
@@ -38,6 +62,12 @@ export const languageService = {
 
   /**
    * Dil kaydını günceller
+   * 
+   * @param id - Dil ID
+   * @param payload - Güncellenecek dil bilgileri
+   * @returns Güncellenmiş dil kaydı
+   * 
+   * **Endpoint:** PATCH /api/mobile/doctor/languages/:id
    */
   async updateLanguage(
     id: number,
@@ -52,6 +82,10 @@ export const languageService = {
 
   /**
    * Dil kaydını siler
+   * 
+   * @param id - Dil ID
+   * 
+   * **Endpoint:** DELETE /api/mobile/doctor/languages/:id
    */
   async deleteLanguage(id: number): Promise<void> {
     await apiClient.delete<ApiResponse<null>>(endpoints.doctor.language(id));

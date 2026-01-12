@@ -1,13 +1,27 @@
 /**
- * Centralized String Constants
+ * @file strings.ts
+ * @description Merkezi String Sabitleri
+ * 
  * TD-011: i18n hazırlığı - Tüm hardcoded stringler buraya taşınabilir
  * 
  * Bu dosya gelecekte i18n (react-i18next) entegrasyonu için hazırlık niteliğindedir.
  * Şimdilik en çok kullanılan stringler burada tutulur.
+ * 
+ * Kullanım:
+ * ```typescript
+ * import { STRINGS } from '@/config/strings';
+ * 
+ * <Text>{STRINGS.common.loading}</Text>
+ * <Button title={STRINGS.auth.login} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 export const STRINGS = {
-  // Common
+  // Genel
   common: {
     loading: 'Yükleniyor...',
     retry: 'Tekrar Dene',
@@ -28,7 +42,7 @@ export const STRINGS = {
     no: 'Hayır',
   },
 
-  // Error Messages
+  // Hata Mesajları
   errors: {
     generic: 'Bir hata oluştu. Lütfen tekrar deneyin.',
     network: 'İnternet bağlantınızı kontrol edin.',
@@ -39,7 +53,7 @@ export const STRINGS = {
     validation: 'Lütfen tüm alanları doğru doldurun.',
   },
 
-  // Success Messages
+  // Başarı Mesajları
   success: {
     saved: 'Başarıyla kaydedildi.',
     deleted: 'Başarıyla silindi.',
@@ -47,7 +61,7 @@ export const STRINGS = {
     sent: 'Başarıyla gönderildi.',
   },
 
-  // Auth
+  // Kimlik Doğrulama
   auth: {
     login: 'Giriş Yap',
     logout: 'Çıkış Yap',
@@ -58,7 +72,7 @@ export const STRINGS = {
     confirmPassword: 'Şifre Tekrar',
   },
 
-  // Jobs
+  // İş İlanları
   jobs: {
     title: 'İş İlanları',
     detail: 'İlan Detayı',
@@ -68,7 +82,7 @@ export const STRINGS = {
     searchPlaceholder: 'İlan ara...',
   },
 
-  // Applications
+  // Başvurular
   applications: {
     title: 'Başvurularım',
     status: {
@@ -82,7 +96,7 @@ export const STRINGS = {
     withdraw: 'Başvuruyu Geri Çek',
   },
 
-  // Profile
+  // Profil
   profile: {
     title: 'Profilim',
     completion: 'Profil Tamamlama',
@@ -93,7 +107,7 @@ export const STRINGS = {
     photo: 'Profil Fotoğrafı',
   },
 
-  // Settings
+  // Ayarlar
   settings: {
     title: 'Ayarlar',
     changePassword: 'Şifre Değiştir',
@@ -105,7 +119,7 @@ export const STRINGS = {
     terms: 'Kullanım Koşulları',
   },
 
-  // Empty States
+  // Boş Durumlar
   empty: {
     noData: 'Gösterilecek veri yok.',
     noResults: 'Sonuç bulunamadı.',
@@ -113,5 +127,5 @@ export const STRINGS = {
   },
 } as const;
 
-// Type export for autocomplete
+// Autocomplete için tip export'u
 export type StringKeys = typeof STRINGS;

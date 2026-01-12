@@ -1,3 +1,24 @@
+/**
+ * @file RecentApplicationItem.tsx
+ * @description Son başvurular listesi öğesi bileşeni
+ * 
+ * Özellikler:
+ * - Başvuru bilgileri (iş başlığı, hastane, durum, tarih)
+ * - Durum rozeti (renk kodlu)
+ * - İkon gösterimi
+ * - Tıklanabilir öğe
+ * - Modern tasarım (yuvarlatılmış köşeler)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <RecentApplicationItem application={app} onPress={handlePress} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,12 +27,24 @@ import { colors } from '@/theme';
 import { ApplicationListItem } from '@/types/application';
 import { formatDate } from '@/utils/date';
 
+/**
+ * RecentApplicationItem bileşeni props interface'i
+ */
 interface RecentApplicationItemProps {
+  /** Başvuru verisi */
   application: ApplicationListItem;
+  /** Tıklama fonksiyonu */
   onPress: () => void;
 }
 
+/**
+ * Son Başvurular Listesi Öğesi Bileşeni
+ * Dashboard'da son başvuruları göstermek için kullanılır
+ */
 export const RecentApplicationItem: React.FC<RecentApplicationItemProps> = ({ application, onPress }) => {
+  /**
+   * Duruma göre renk döndürür
+   */
   const getStatusColor = (status: string | null) => {
     switch (status?.toLowerCase()) {
       case 'approved':
@@ -26,6 +59,9 @@ export const RecentApplicationItem: React.FC<RecentApplicationItemProps> = ({ ap
     }
   };
 
+  /**
+   * Duruma göre Türkçe metin döndürür
+   */
   const getStatusText = (status: string | null) => {
     switch (status?.toLowerCase()) {
       case 'approved':

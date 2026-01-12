@@ -1,3 +1,29 @@
+/**
+ * @file Modal.tsx
+ * @description Modal (dialog) bileşeni
+ * 
+ * Özellikler:
+ * - Dört boyut seçeneği (sm, md, lg, full)
+ * - Başlık ve kapatma butonu
+ * - Dismissable (dışarı tıklayınca kapanma)
+ * - Keyboard avoiding
+ * - Modern tasarım (yuvarlatılmış köşeler, gölge)
+ * 
+ * NOT: Yerel BottomSheetModalProvider gerekmez.
+ * App.tsx'teki kök seviye provider tüm BottomSheetModal bileşenlerini yönetir.
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Modal visible={isOpen} onClose={handleClose} title="Başlık">
+ *   İçerik
+ * </Modal>
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import {
   Modal as RNModal,
@@ -13,22 +39,29 @@ import { Typography } from './Typography';
 import { IconButton } from './IconButton';
 
 /**
- * Modal Component
- * 
- * NOTE: No local BottomSheetModalProvider needed.
- * The root-level provider in App.tsx handles all BottomSheetModal components.
+ * Modal bileşeni props interface'i
  */
-
 export interface ModalProps {
+  /** Modal görünür mü? */
   visible: boolean;
+  /** Kapatma fonksiyonu */
   onClose: () => void;
+  /** Modal başlığı */
   title?: string;
+  /** Modal içeriği */
   children: React.ReactNode;
+  /** Modal boyutu */
   size?: 'sm' | 'md' | 'lg' | 'full';
+  /** Kapatma butonu göster */
   showCloseButton?: boolean;
+  /** Dışarı tıklayınca kapanabilir mi? */
   dismissable?: boolean;
 }
 
+/**
+ * Modal Bileşeni
+ * Modern, animasyonlu dialog
+ */
 export const Modal: React.FC<ModalProps> = ({
   visible,
   onClose,
@@ -73,7 +106,7 @@ export const Modal: React.FC<ModalProps> = ({
         >
           <TouchableWithoutFeedback onPress={() => {}}>
             <View style={[styles.container, sizeStyles[size]]} pointerEvents="auto">
-              {/* Header */}
+              {/* Başlık */}
               {(title || showCloseButton) && (
                 <View style={styles.header}>
                   {title && (
@@ -92,7 +125,7 @@ export const Modal: React.FC<ModalProps> = ({
                 </View>
               )}
 
-              {/* Content */}
+              {/* İçerik */}
               <View style={styles.content}>
                 {children}
               </View>

@@ -1,3 +1,26 @@
+/**
+ * @file LoginScreen.tsx
+ * @description Giriş yapma ekranı
+ * 
+ * Bu ekran kullanıcının e-posta ve şifre ile giriş yapmasını sağlar.
+ * Başarılı girişte kullanıcı durumuna göre yönlendirme yapar.
+ * 
+ * **Akış:**
+ * 1. Kullanıcı e-posta ve şifre girer
+ * 2. Backend'e giriş isteği gönderilir
+ * 3. Token'lar kaydedilir
+ * 4. Kullanıcı durumu kontrol edilir:
+ *    - Onaylı → App ekranına yönlendir
+ *    - Onaysız → PendingApproval ekranına yönlendir
+ *    - Pasif → AccountDisabled ekranına yönlendir
+ * 
+ * **ÖNEMLİ:** RootNavigator otomatik yönlendirme yapar,
+ * bu ekran sadece login işlemini halleder.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import { useState, useMemo } from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
@@ -16,6 +39,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
 import { handleApiError, isAuthError, isNetworkError } from '@/utils/errorHandler';
 
+/**
+ * Form validasyon şeması
+ * Zod ile e-posta ve şifre validasyonu
+ */
 const loginSchema = z.object({
   email: z.string().email('Geçerli bir e-posta girin'),
   password: z.string().min(1, 'Şifre gerekli'),
@@ -23,19 +50,29 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+/**
+ * Giriş yapma ekranı bileşeni
+ */
 export const LoginScreen = () => {
   const { theme } = useTheme();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const alert = useAlertHelpers();
+  
+  // Server hata mesajı için state
   const [serverError, setServerError] = useState<string | null>(null);
   
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Note: We don't auto-redirect to PendingApproval on mount
-  // This allows users to stay on LoginScreen if they're already authenticated but not approved
-  // PendingApproval will only be shown after a successful login attempt (see onSuccess callback)
+  /**
+   * NOT: Mount'ta otomatik PendingApproval yönlendirmesi yapmıyoruz.
+   * Bu, kullanıcının LoginScreen'de kalmasına izin verir.
+   * PendingApproval sadece başarılı login denemesinden sonra gösterilir.
+   */
 
+  /**
+   * React Hook Form setup
+   * E-posta ve şifre validasyonu ile form yönetimi
+   */
   const {
     control,
     handleSubmit,
@@ -45,29 +82,42 @@ export const LoginScreen = () => {
     resolver: zodResolver(loginSchema),
   });
 
+  /**
+   * Login mutation
+   * 
+   * **Başarı Durumu:**
+   * - Kullanıcı onaylı mı kontrol et
+   * - Onaysızsa PendingApproval'a yönlendir
+   * - Onaylıysa RootNavigator otomatik App ekranını gösterir
+   * 
+   * **Hata Durumu:**
+   * - Auth hatası → "E-posta veya şifre hatalı"
+   * - Network hatası → "İnternet bağlantınızı kontrol edin"
+   * - Diğer → Genel hata mesajı
+   */
   const loginMutation = useLogin({
     onSuccess: (data) => {
       setServerError(null);
       
-      // Check if user is approved after successful login
+      // Kullanıcı onay durumunu kontrol et (tip güvenli)
       const isApproved = data.user.is_approved === true || data.user.is_approved === 1 || data.user.is_approved === 'true' || data.user.is_approved === '1';
       const isAdmin = data.user.role === 'admin';
       
       if (!isApproved && !isAdmin) {
-        // User is not approved - show warning and redirect to PendingApproval
+        // Kullanıcı onaylı değil - Uyarı göster ve PendingApproval'a yönlendir
         alert.info('Hesabınız henüz admin tarafından onaylanmadı. Lütfen onay bekleyin.');
-        // Navigate to PendingApproval screen
+        // PendingApproval ekranına yönlendir
         setTimeout(() => {
           navigation.replace('PendingApproval');
         }, 500);
       }
-      // If approved, RootNavigator will automatically show App screen
-      // No need to manually navigate - conditional rendering handles it
+      // Onaylıysa RootNavigator otomatik App ekranını gösterir
+      // Manuel navigasyon gerekmez - conditional rendering halleder
     },
     onError: (error) => {
       let message: string;
 
-      // Merkezî error util'leriyle sınıflandırma
+      // Merkezi error util'leri ile hata sınıflandırma
       if (isAuthError(error)) {
         message = '❌ E-posta veya şifre hatalı';
       } else if (isNetworkError(error)) {
@@ -85,6 +135,10 @@ export const LoginScreen = () => {
     },
   });
 
+  /**
+   * Form submit handler
+   * E-posta ve şifre ile giriş yap
+   */
   const onSubmit = (values: LoginFormValues) => {
     loginMutation.mutate(values);
   };

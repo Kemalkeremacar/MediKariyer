@@ -1,3 +1,14 @@
+/**
+ * @file ExperienceCard.tsx
+ * @description İş deneyimi bilgilerini gösteren kart bileşeni
+ * 
+ * Bu bileşen kullanıcının iş deneyimlerini görsel olarak sunar.
+ * Pozisyon, şirket, lokasyon, tarih aralığı ve açıklama bilgilerini içerir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +19,21 @@ import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
 import { formatExperiencePeriod } from '@/utils/date';
 
+/**
+ * ExperienceCard bileşeni için prop tipleri
+ * 
+ * @interface ExperienceCardProps
+ * @property {string} title - Pozisyon/ünvan adı (örn: "Uzman Doktor")
+ * @property {string} company - Şirket/kurum adı
+ * @property {string} [location] - Çalışma lokasyonu (opsiyonel)
+ * @property {string} startDate - Başlangıç tarihi (ISO format)
+ * @property {string} [endDate] - Bitiş tarihi (opsiyonel, hala çalışıyorsa boş)
+ * @property {boolean} [current] - Hala bu pozisyonda çalışıyor mu?
+ * @property {string} [description] - İş tanımı/açıklama (opsiyonel)
+ * @property {Function} [onPress] - Kart tıklama callback'i
+ * @property {Function} [onEdit] - Düzenleme butonu callback'i
+ * @property {Function} [onDelete] - Silme butonu callback'i
+ */
 export interface ExperienceCardProps {
   title: string;
   company: string;
@@ -21,6 +47,33 @@ export interface ExperienceCardProps {
   onDelete?: () => void;
 }
 
+/**
+ * İş deneyimi kartı bileşeni
+ * 
+ * **Özellikler:**
+ * - Pozisyon ve şirket bilgisi gösterimi
+ * - Çalışma süresi ve lokasyon chip'leri
+ * - İş tanımı açıklaması (varsa)
+ * - Düzenleme ve silme butonları
+ * - Tıklanabilir kart (onPress varsa)
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * <ExperienceCard
+ *   title="Uzman Doktor"
+ *   company="Acıbadem Hastanesi"
+ *   location="İstanbul"
+ *   startDate="2020-01-01"
+ *   endDate="2023-12-31"
+ *   description="Kardiyoloji bölümünde uzman doktor olarak görev yaptım"
+ *   onEdit={() => handleEdit(id)}
+ *   onDelete={() => handleDelete(id)}
+ * />
+ * ```
+ * 
+ * @param props - ExperienceCard prop'ları
+ * @returns İş deneyimi kartı bileşeni
+ */
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({
   title,
   company,
@@ -33,15 +86,20 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  // onPress varsa TouchableOpacity, yoksa View kullan
   const Container = onPress ? TouchableOpacity : View;
 
   return (
     <Container onPress={onPress} activeOpacity={0.7}>
       <Card variant="outlined" padding="lg" style={styles.card}>
+        {/* Başlık Bölümü - İkon, Pozisyon, Şirket ve Aksiyon Butonları */}
         <View style={styles.header}>
+          {/* İş ikonu */}
           <View style={styles.iconContainer}>
             <Ionicons name="briefcase" size={20} color={colors.secondary[600]} />
           </View>
+          
+          {/* Pozisyon ve şirket bilgileri */}
           <View style={styles.content}>
             <Typography variant="h3" style={styles.title}>
               {title}
@@ -50,6 +108,8 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
               {company}
             </Typography>
           </View>
+          
+          {/* Düzenleme ve silme butonları */}
           <View style={styles.actions}>
             {onEdit && (
               <TouchableOpacity onPress={onEdit} style={styles.editButton}>
@@ -64,6 +124,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           </View>
         </View>
 
+        {/* İş Tanımı - Varsa göster */}
         {description && (
           <>
             <Divider spacing="sm" />
@@ -73,7 +134,9 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
           </>
         )}
 
+        {/* Alt Bilgiler - Tarih aralığı ve lokasyon chip'leri */}
         <View style={styles.footer}>
+          {/* Çalışma süresi chip'i */}
           <Chip
             label={formatExperiencePeriod(startDate, endDate, current)}
             icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
@@ -81,6 +144,7 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
             color="neutral"
             size="sm"
           />
+          {/* Lokasyon chip'i (varsa) */}
           {location && (
             <Chip
               label={location}
@@ -96,7 +160,12 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
   );
 };
 
+/**
+ * Stil tanımlamaları
+ * Modern ve temiz görünüm için optimize edilmiş stiller
+ */
 const styles = StyleSheet.create({
+  // Kart container
   card: {
     marginBottom: spacing.md,
   },

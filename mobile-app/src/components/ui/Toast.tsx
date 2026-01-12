@@ -1,10 +1,26 @@
 /**
  * @file Toast.tsx
- * @description Toast notification component for displaying non-blocking messages
+ * @description Engellemeyen mesaj bildirimi bileşeni
  * 
- * Requirements:
- * - 4.5: Support toast types: success, error, warning, info
- * - 9.6: Provide descriptive prop validation errors
+ * Özellikler:
+ * - Dört toast tipi (success, error, warning, info)
+ * - Animasyonlu giriş/çıkış
+ * - Otomatik kapanma
+ * - İkon ve renk şeması
+ * - Prop validasyonu (geliştirici modu)
+ * 
+ * Gereksinimler:
+ * - 4.5: Toast tiplerini destekle: success, error, warning, info
+ * - 9.6: Açıklayıcı prop validasyon hataları sağla
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Toast message="İşlem başarılı" type="success" duration={3000} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import React, { useEffect } from 'react';
@@ -13,79 +29,89 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
+/**
+ * Toast tipi
+ */
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
+/**
+ * Toast bileşeni props interface'i
+ */
 export interface ToastProps {
+  /** Toast mesajı */
   message: string;
+  /** Toast tipi */
   type?: ToastType;
+  /** Görünme süresi (milisaniye) */
   duration?: number;
+  /** Kapandığında çağrılır */
   onHide?: () => void;
 }
 
-/** Valid toast types for prop validation */
+/** Geçerli toast tipleri (prop validasyonu için) */
 const VALID_TOAST_TYPES: ToastType[] = ['success', 'error', 'warning', 'info'];
 
 /**
- * Development-only prop validation for Toast
- * Logs descriptive errors for invalid props (Requirement 9.6)
+ * Toast için geliştirici modu prop validasyonu
+ * Geçersiz props için açıklayıcı hatalar loglar (Gereksinim 9.6)
  * 
- * @param props - The component props to validate
- * @returns true if all props are valid, false otherwise
+ * @param {ToastProps} props - Doğrulanacak bileşen props'ları
+ * @returns {boolean} Tüm props geçerliyse true, değilse false
  */
 const validateProps = (props: ToastProps): boolean => {
   if (!__DEV__) return true;
   
   let isValid = true;
   
-  // Validate message prop
+  // message prop'unu doğrula
   if (typeof props.message !== 'string') {
     console.error(
-      `[Toast] Invalid prop 'message': expected string, received ${typeof props.message}. ` +
-      `The toast message must be a string.`
+      `[Toast] Geçersiz prop 'message': string bekleniyor, ${typeof props.message} alındı. ` +
+      `Toast mesajı string olmalıdır.`
     );
     isValid = false;
   } else if (props.message.trim() === '') {
     console.warn(
-      `[Toast] Warning: 'message' prop is an empty string. ` +
-      `Consider providing a meaningful message for better user experience.`
+      `[Toast] Uyarı: 'message' prop'u boş string. ` +
+      `Daha iyi kullanıcı deneyimi için anlamlı bir mesaj sağlamayı düşünün.`
     );
   }
   
-  // Validate type prop (optional, defaults to 'info')
+  // type prop'unu doğrula (opsiyonel, varsayılan 'info')
   if (props.type !== undefined && !VALID_TOAST_TYPES.includes(props.type)) {
     console.error(
-      `[Toast] Invalid prop 'type': received '${props.type}'. ` +
-      `Valid types are: ${VALID_TOAST_TYPES.join(', ')}. Defaulting to 'info'.`
+      `[Toast] Geçersiz prop 'type': '${props.type}' alındı. ` +
+      `Geçerli tipler: ${VALID_TOAST_TYPES.join(', ')}. Varsayılan 'info' kullanılacak.`
     );
     isValid = false;
   }
   
-  // Validate duration prop (optional)
+  // duration prop'unu doğrula (opsiyonel)
   if (props.duration !== undefined) {
     if (typeof props.duration !== 'number') {
       console.error(
-        `[Toast] Invalid prop 'duration': expected number, received ${typeof props.duration}. ` +
-        `The duration must be a number in milliseconds.`
+        `[Toast] Geçersiz prop 'duration': number bekleniyor, ${typeof props.duration} alındı. ` +
+        `Süre milisaniye cinsinden bir sayı olmalıdır.`
       );
       isValid = false;
     } else if (props.duration <= 0) {
       console.warn(
-        `[Toast] Warning: 'duration' prop is ${props.duration}ms. ` +
-        `Consider using a positive duration for the toast to be visible.`
+        `[Toast] Uyarı: 'duration' prop'u ${props.duration}ms. ` +
+        `Toast'un görünür olması için pozitif bir süre kullanmayı düşünün.`
       );
     } else if (props.duration < 500) {
       console.warn(
-        `[Toast] Warning: 'duration' prop is ${props.duration}ms which is very short. ` +
-        `Users may not have time to read the message.`
+        `[Toast] Uyarı: 'duration' prop'u ${props.duration}ms çok kısa. ` +
+        `Kullanıcılar mesajı okumak için yeterli zamana sahip olmayabilir.`
       );
     }
   }
   
-  // Validate onHide prop (optional)
+  // onHide prop'unu doğrula (opsiyonel)
   if (props.onHide !== undefined && typeof props.onHide !== 'function') {
     console.error(
-      `[Toast] Invalid prop 'onHide': expected function or undefined, received ${typeof props.onHide}. ` +
-      `The onHide callback must be a function.`
+      `[Toast] Geçersiz prop 'onHide': function veya undefined bekleniyor, ${typeof props.onHide} alındı. ` +
+      `onHide callback'i bir fonksiyon olmalıdır.`
     );
     isValid = false;
   }
@@ -93,6 +119,9 @@ const validateProps = (props: ToastProps): boolean => {
   return isValid;
 };
 
+/**
+ * İkon haritası (toast tipine göre)
+ */
 const iconMap = {
   success: 'checkmark-circle' as const,
   error: 'close-circle' as const,
@@ -100,6 +129,9 @@ const iconMap = {
   info: 'information-circle' as const,
 };
 
+/**
+ * Renk haritası (toast tipine göre)
+ */
 const colorMap = {
   success: colors.success[600],
   error: colors.error[600],
@@ -107,6 +139,9 @@ const colorMap = {
   info: colors.primary[600],
 };
 
+/**
+ * Arka plan renk haritası (toast tipine göre)
+ */
 const bgColorMap = {
   success: colors.success[50],
   error: colors.error[50],
@@ -114,22 +149,26 @@ const bgColorMap = {
   info: colors.primary[50],
 };
 
+/**
+ * Toast Bileşeni
+ * Animasyonlu bildirim mesajı
+ */
 export const Toast: React.FC<ToastProps> = ({
   message,
   type = 'info',
   duration = 3000,
   onHide,
 }) => {
-  // Validate props in development mode (Requirement 9.6)
+  // Geliştirme modunda props'ları doğrula (Gereksinim 9.6)
   useEffect(() => {
     validateProps({ message, type, duration, onHide });
   }, [message, type, duration, onHide]);
 
-  // Use useRef to persist animated values across renders
+  // Animasyon değerlerini render'lar arasında korumak için useRef kullan
   const opacity = React.useRef(new Animated.Value(0)).current;
   const translateY = React.useRef(new Animated.Value(-20)).current;
   
-  // Track animation references for cleanup on unmount (Requirement 10.6)
+  // Unmount'ta temizlik için animasyon referanslarını takip et (Gereksinim 10.6)
   const animationRef = React.useRef<Animated.CompositeAnimation | null>(null);
   const hideAnimationRef = React.useRef<Animated.CompositeAnimation | null>(null);
   const timerRef = React.useRef<NodeJS.Timeout | null>(null);
@@ -140,7 +179,7 @@ export const Toast: React.FC<ToastProps> = ({
   useEffect(() => {
     isMountedRef.current = true;
     
-    // Start show animation
+    // Gösterim animasyonunu başlat
     animationRef.current = Animated.parallel([
       Animated.timing(opacity, {
         toValue: 1,
@@ -155,14 +194,14 @@ export const Toast: React.FC<ToastProps> = ({
     ]);
     
     animationRef.current.start(() => {
-      // Clear reference after animation completes
+      // Animasyon tamamlandıktan sonra referansı temizle
       animationRef.current = null;
     });
 
     timerRef.current = setTimeout(() => {
       if (!isMountedRef.current) return;
       
-      // Start hide animation
+      // Gizleme animasyonunu başlat
       hideAnimationRef.current = Animated.parallel([
         Animated.timing(opacity, {
           toValue: 0,
@@ -177,32 +216,32 @@ export const Toast: React.FC<ToastProps> = ({
       ]);
       
       hideAnimationRef.current.start(() => {
-        // Clear reference after animation completes
+        // Animasyon tamamlandıktan sonra referansı temizle
         hideAnimationRef.current = null;
-        // Only call onHide if still mounted
+        // Sadece hala mount edilmişse onHide'ı çağır
         if (isMountedRef.current) {
           onHide?.();
         }
       });
     }, duration);
 
-    // Cleanup function - cancel animations and timers on unmount (Requirement 10.6)
+    // Temizlik fonksiyonu - unmount'ta animasyonları ve timer'ları iptal et (Gereksinim 10.6)
     return () => {
       isMountedRef.current = false;
       
-      // Clear timer
+      // Timer'ı temizle
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
       
-      // Cancel show animation if running
+      // Çalışıyorsa gösterim animasyonunu iptal et
       if (animationRef.current) {
         animationRef.current.stop();
         animationRef.current = null;
       }
       
-      // Cancel hide animation if running
+      // Çalışıyorsa gizleme animasyonunu iptal et
       if (hideAnimationRef.current) {
         hideAnimationRef.current.stop();
         hideAnimationRef.current = null;

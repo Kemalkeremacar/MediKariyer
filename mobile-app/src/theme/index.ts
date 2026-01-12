@@ -1,12 +1,36 @@
+/**
+ * @file index.ts
+ * @description Theme sistem merkezi export dosyası
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **Özellikler:**
+ * - Tüm theme modüllerini tek noktadan export etme
+ * - Light ve dark theme tanımları
+ * - TypeScript tip desteği
+ */
+
 import { lightColors, darkColors } from './colors';
 import { spacing, borderRadius } from './spacing';
 import { typography, textVariants } from './typography';
 import { shadows } from './shadows';
 import { zIndex, getZIndex } from './zIndex';
 
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
 export { lightColors, darkColors, spacing, borderRadius, typography, textVariants, shadows, zIndex, getZIndex };
 
-// Theme type definition
+// ============================================================================
+// THEME TYPE DEFINITION
+// ============================================================================
+
+/**
+ * Theme tip tanımı
+ * Light ve dark theme'ler için ortak yapı
+ */
 export type Theme = {
   colors: typeof lightColors | typeof darkColors;
   spacing: typeof spacing;
@@ -17,7 +41,14 @@ export type Theme = {
   zIndex: typeof zIndex;
 };
 
-// Theme object for useTheme hook
+// ============================================================================
+// THEME OBJECTS
+// ============================================================================
+
+/**
+ * Light theme objesi
+ * useTheme hook'u için kullanılır
+ */
 export const lightTheme: Theme = {
   colors: lightColors,
   spacing,
@@ -28,6 +59,10 @@ export const lightTheme: Theme = {
   zIndex,
 };
 
+/**
+ * Dark theme objesi
+ * useTheme hook'u için kullanılır
+ */
 export const darkTheme: Theme = {
   colors: darkColors,
   spacing,
@@ -38,5 +73,12 @@ export const darkTheme: Theme = {
   zIndex,
 };
 
-// Default export for backward compatibility
+// ============================================================================
+// BACKWARD COMPATIBILITY
+// ============================================================================
+
+/**
+ * Geriye dönük uyumluluk için default export
+ * @deprecated lightColors veya darkColors kullanın
+ */
 export const colors = lightColors;

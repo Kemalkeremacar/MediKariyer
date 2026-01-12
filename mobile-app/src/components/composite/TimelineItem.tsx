@@ -1,8 +1,31 @@
+/**
+ * @file TimelineItem.tsx
+ * @description Zaman çizelgesi öğesi bileşeni
+ * 
+ * Bu bileşen kronolojik olayları görsel bir zaman çizelgesinde gösterir.
+ * Eğitim geçmişi, iş deneyimi gibi zaman bazlı verilerde kullanılır.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { colors, spacing } from '@/theme';
 
+/**
+ * TimelineItem bileşeni için prop tipleri
+ * 
+ * @interface TimelineItemProps
+ * @property {string} title - Olay başlığı (örn: "Tıp Fakültesi")
+ * @property {string} [subtitle] - Alt başlık (örn: "İstanbul Üniversitesi")
+ * @property {string} date - Tarih bilgisi (örn: "2015 - 2021")
+ * @property {string} [description] - Detaylı açıklama (opsiyonel)
+ * @property {React.ReactNode} [icon] - Nokta içinde gösterilecek ikon (opsiyonel)
+ * @property {boolean} [isLast] - Son öğe mi? (çizgi gösterilmez)
+ * @property {'completed' | 'current' | 'upcoming'} [status] - Durum (renk belirler)
+ */
 export interface TimelineItemProps {
   title: string;
   subtitle?: string;
@@ -13,6 +36,31 @@ export interface TimelineItemProps {
   status?: 'completed' | 'current' | 'upcoming';
 }
 
+/**
+ * Zaman çizelgesi öğesi bileşeni
+ * 
+ * **Özellikler:**
+ * - Dikey zaman çizelgesi çizgisi
+ * - Durum bazlı renkli nokta
+ * - İkon desteği (nokta içinde)
+ * - Başlık, alt başlık ve tarih
+ * - Detaylı açıklama (opsiyonel)
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * <TimelineItem
+ *   title="Tıp Fakültesi"
+ *   subtitle="İstanbul Üniversitesi"
+ *   date="2015 - 2021"
+ *   description="Tıp eğitimi aldım"
+ *   status="completed"
+ *   isLast={false}
+ * />
+ * ```
+ * 
+ * @param props - TimelineItem prop'ları
+ * @returns Zaman çizelgesi öğesi bileşeni
+ */
 export const TimelineItem: React.FC<TimelineItemProps> = ({
   title,
   subtitle,
@@ -22,12 +70,20 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   isLast = false,
   status = 'completed',
 }) => {
+  /**
+   * Duruma göre nokta rengi
+   * completed → yeşil, current → mavi, upcoming → gri
+   */
   const dotColor = {
     completed: colors.success[600],
     current: colors.primary[600],
     upcoming: colors.neutral[300],
   }[status];
 
+  /**
+   * Duruma göre çizgi rengi
+   * completed → açık yeşil, current → açık mavi, upcoming → açık gri
+   */
   const lineColor = {
     completed: colors.success[300],
     current: colors.primary[300],
@@ -36,16 +92,20 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Timeline Line */}
+      {/* Zaman Çizelgesi Çizgisi */}
       <View style={styles.timeline}>
+        {/* Durum noktası */}
         <View style={[styles.dot, { backgroundColor: dotColor }]}>
+          {/* İkon (varsa) */}
           {icon && <View style={styles.icon}>{icon}</View>}
         </View>
+        {/* Dikey çizgi (son öğe değilse) */}
         {!isLast && <View style={[styles.line, { backgroundColor: lineColor }]} />}
       </View>
 
-      {/* Content */}
+      {/* İçerik Bölümü */}
       <View style={styles.content}>
+        {/* Başlık ve tarih */}
         <View style={styles.header}>
           <Typography variant="h3" style={styles.title}>
             {title}
@@ -54,11 +114,15 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
             {date}
           </Typography>
         </View>
+        
+        {/* Alt başlık (varsa) */}
         {subtitle && (
           <Typography variant="body" style={styles.subtitle}>
             {subtitle}
           </Typography>
         )}
+        
+        {/* Açıklama (varsa) */}
         {description && (
           <Typography variant="body" style={styles.description}>
             {description}
@@ -69,7 +133,12 @@ export const TimelineItem: React.FC<TimelineItemProps> = ({
   );
 };
 
+/**
+ * Stil tanımlamaları
+ * Zaman çizelgesi düzeni ve görsel elementler
+ */
 const styles = StyleSheet.create({
+  // Ana container - Yatay düzen
   container: {
     flexDirection: 'row',
     paddingBottom: spacing.lg,

@@ -1,6 +1,16 @@
 /**
- * Profile Core Service
- * ARCH-002: Profile servisinden ayrılan core profil işlemleri
+ * @file profile.core.service.ts
+ * @description Profile Core Service - Temel profil işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **ARCH-002:** Profile servisinden ayrılan core profil işlemleri
+ * 
+ * **Endpoint'ler:**
+ * - GET /api/mobile/doctor/profile - Profil bilgisi
+ * - GET /api/mobile/doctor/profile/completion - Tamamlanma oranı
+ * - PATCH /api/mobile/doctor/profile - Kişisel bilgi güncelleme
  */
 
 import apiClient from '@/api/client';
@@ -14,9 +24,17 @@ import type {
   UpdatePersonalInfoPayload,
 } from '@/types/profile';
 
+// ============================================================================
+// PROFILE CORE SERVICE
+// ============================================================================
+
 export const profileCoreService = {
   /**
    * Profil bilgisini getirir (temel bilgiler)
+   * 
+   * @returns Doktor profil bilgileri
+   * 
+   * **Endpoint:** GET /api/mobile/doctor/profile
    */
   async getProfile(): Promise<DoctorProfile> {
     const response = await apiClient.get<ApiResponse<DoctorProfile>>(
@@ -27,6 +45,13 @@ export const profileCoreService = {
 
   /**
    * Tam profil bilgisini getirir (eğitim, deneyim, sertifika, dil dahil)
+   * 
+   * @returns Tam profil bilgileri
+   * 
+   * **NOT:** Şu anda sadece temel profil bilgisi döner.
+   * İlişkili veriler (educations, experiences, vb.) ayrı endpoint'lerden çekilir.
+   * 
+   * **Endpoint:** GET /api/mobile/doctor/profile
    */
   async getCompleteProfile(): Promise<CompleteProfile> {
     const response = await apiClient.get<ApiResponse<DoctorProfile>>(
@@ -44,23 +69,46 @@ export const profileCoreService = {
   },
 
   /**
-   * Profil tamamlanma oranını getirir (Backend'den)
-   * Backend Response: { completion_percentage, details: { personal: { completed, total } }, missing_fields }
-   * Frontend Type: { completion_percent, filled_fields, total_fields, missing_fields }
+   * Profil tamamlanma oranını getirir
+   * 
+   * @returns Profil tamamlanma bilgileri
+   * 
+   * **Backend Response:**
+   * ```json
+   * {
+   *   "completion_percentage": number,
+   *   "details": {
+   *     "personal": { "completed": number, "total": number }
+   *   },
+   *   "missing_fields": string[]
+   * }
+   * ```
+   * 
+   * **Frontend Type:**
+   * ```typescript
+   * {
+   *   completion_percent: number,
+   *   filled_fields: number,
+   *   total_fields: number,
+   *   missing_fields: string[]
+   * }
+   * ```
+   * 
+   * **Endpoint:** GET /api/mobile/doctor/profile/completion
    */
   async getProfileCompletion(): Promise<ProfileCompletion> {
     const response = await apiClient.get<ApiResponse<ProfileCompletionResponse>>(
       endpoints.doctor.profileCompletion
     );
     
-    // Validate response structure
+    // Yanıt yapısını doğrula
     if (!response.data?.data) {
       throw new Error('Invalid profile completion response structure');
     }
     
     const data = response.data.data;
     
-    // Normalize backend response to frontend type
+    // Backend yanıtını frontend tipine normalize et
     return {
       completion_percent: data.completion_percentage ?? 0,
       filled_fields: data.details?.personal?.completed ?? 0,
@@ -71,6 +119,11 @@ export const profileCoreService = {
 
   /**
    * Kişisel bilgileri günceller
+   * 
+   * @param payload - Güncellenecek kişisel bilgiler
+   * @returns Güncellenmiş profil bilgileri
+   * 
+   * **Endpoint:** PATCH /api/mobile/doctor/profile
    */
   async updatePersonalInfo(
     payload: UpdatePersonalInfoPayload,

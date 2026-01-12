@@ -1,3 +1,44 @@
+/**
+ * @file NotificationsScreen.tsx
+ * @description Bildirimler ekranı - Bildirimleri listeleme, okuma ve silme
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖNEMLİ ÖZELLİKLER:**
+ * - Bildirimleri listeleme (tümü/okunmamış)
+ * - Bildirim okuma ve okundu işaretleme
+ * - Toplu işlemler (seçme, okundu işaretleme, silme)
+ * - Bildirim tipine göre yönlendirme
+ * - Otomatik yenileme (focus'ta)
+ * 
+ * **AKIŞ:**
+ * 1. Bildirimler backend'den çekilir (sayfalı)
+ * 2. Kullanıcı tab ile tümü/okunmamış arasında geçiş yapar
+ * 3. Bildirime tıklayınca ilgili sayfaya yönlendirilir
+ * 4. Toplu işlem modu ile birden fazla bildirim seçilebilir
+ * 5. Seçili bildirimler okundu işaretlenebilir veya silinebilir
+ * 
+ * **BİLDİRİM TİPLERİ VE YÖNLENDİRME:**
+ * - application: Başvurular sayfasına
+ * - job: İlan detay sayfasına (job_id varsa)
+ * - profile: Profil düzenleme sayfasına
+ * - photo: Fotoğraf yönetim sayfasına
+ * - system/info/message: Yönlendirme yok
+ * 
+ * **KRİTİK NOKTALAR:**
+ * - Backend'den filtreli veri çekilir (showUnreadOnly)
+ * - Polling yerine focus'ta refetch (mobil best practice)
+ * - Push notifications ile anında bildirim
+ * - Toplu işlem modu ile kullanıcı deneyimi
+ * - İyimser güncelleme (optimistic update)
+ * 
+ * **MOBİL OPTİMİZASYON:**
+ * - Polling yerine focus'ta refetch (pil dostu)
+ * - Push notifications ile anında bildirim
+ * - Aşamalı yükleme (pagination)
+ * - Pull-to-refresh ile manuel yenileme
+ */
+
 import React, { useState, useCallback } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';

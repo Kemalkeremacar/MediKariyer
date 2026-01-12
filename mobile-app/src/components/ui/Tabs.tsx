@@ -1,27 +1,74 @@
+/**
+ * @file Tabs.tsx
+ * @description Tab (sekme) bileşeni
+ * 
+ * Özellikler:
+ * - İki varyant (default, pills)
+ * - Rozet desteği
+ * - Aktif sekme göstergesi
+ * - Yatay kaydırma (pills için)
+ * - Modern tasarım
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Tabs
+ *   tabs={[
+ *     { key: 'all', label: 'Tümü', badge: 5 },
+ *     { key: 'pending', label: 'Bekleyen' }
+ *   ]}
+ *   activeTab={activeTab}
+ *   onTabChange={setActiveTab}
+ *   variant="pills"
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
+/**
+ * Tab (sekme) interface'i
+ */
 export interface Tab {
+  /** Sekme anahtarı (unique) */
   key: string;
+  /** Sekme etiketi */
   label: string;
+  /** Rozet sayısı (opsiyonel) */
   badge?: number;
 }
 
+/**
+ * Tabs bileşeni props interface'i
+ */
 export interface TabsProps {
+  /** Sekme listesi */
   tabs: Tab[];
+  /** Aktif sekme anahtarı */
   activeTab: string;
+  /** Sekme değiştiğinde çağrılır */
   onTabChange: (key: string) => void;
+  /** Tab varyantı */
   variant?: 'default' | 'pills';
 }
 
+/**
+ * Tabs Bileşeni
+ * Sekme navigasyonu
+ */
 export const Tabs: React.FC<TabsProps> = ({
   tabs,
   activeTab,
   onTabChange,
   variant = 'default',
 }) => {
+  // Pills varyantı (yuvarlak, kaydırılabilir)
   if (variant === 'pills') {
     return (
       <ScrollView
@@ -58,6 +105,7 @@ export const Tabs: React.FC<TabsProps> = ({
     );
   }
 
+  // Default varyantı (alt çizgili)
   return (
     <View style={styles.container}>
       {tabs.map((tab) => {

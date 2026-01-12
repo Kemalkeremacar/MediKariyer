@@ -1,32 +1,56 @@
 /**
  * @file useNetworkStatus.ts
- * @description Network connectivity status hook
+ * @description Network Bağlantı Durumu Hook'u
  * 
- * Monitors internet connection status and provides
- * reactive state for offline awareness throughout the app.
+ * Özellikler:
+ * - İnternet bağlantı durumunu izler
+ * - Reaktif state sağlar (offline awareness)
+ * - Uygulama genelinde offline durumu yönetimi
+ * - Manuel yenileme desteği
+ * 
+ * Kullanım:
+ * ```typescript
+ * const { isOffline, isConnected, refresh } = useNetworkStatus();
+ * 
+ * if (isOffline) {
+ *   return <OfflineBanner />;
+ * }
+ * ```
  * 
  * @author MediKariyer Development Team
  * @version 1.0.0
+ * @since 2024
  */
 
 import { useEffect, useState, useCallback } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
+// ============================================================================
+// TİPLER
+// ============================================================================
+
+// Network durumu tipi
 interface NetworkStatus {
-  /** Whether device is connected to a network */
+  /** Cihaz bir ağa bağlı mı? */
   isConnected: boolean | null;
-  /** Whether internet is actually reachable */
+  /** İnternet gerçekten erişilebilir mi? */
   isInternetReachable: boolean | null;
-  /** Convenience flag: true when offline */
+  /** Kolaylık flag'i: offline ise true */
   isOffline: boolean;
-  /** Network type (wifi, cellular, etc.) */
+  /** Ağ tipi (wifi, cellular, vb.) */
   type: string | null;
-  /** Manually refresh network status */
+  /** Manuel olarak network durumunu yenile */
   refresh: () => Promise<void>;
 }
 
+// ============================================================================
+// HOOK
+// ============================================================================
+
 /**
- * Hook to monitor network connectivity status
+ * Network bağlantı durumunu izleyen hook
+ * 
+ * @returns Network durumu ve aksiyonları
  * 
  * @example
  * ```tsx
@@ -35,6 +59,9 @@ interface NetworkStatus {
  * if (isOffline) {
  *   return <OfflineBanner />;
  * }
+ * 
+ * // Manuel yenileme
+ * <Button onPress={refresh} title="Yenile" />
  * ```
  */
 export const useNetworkStatus = (): NetworkStatus => {
@@ -42,24 +69,27 @@ export const useNetworkStatus = (): NetworkStatus => {
   const [isInternetReachable, setIsInternetReachable] = useState<boolean | null>(true);
   const [type, setType] = useState<string | null>(null);
 
+  // Network değişikliği handler'ı
   const handleNetworkChange = useCallback((state: NetInfoState) => {
     setIsConnected(state.isConnected);
     setIsInternetReachable(state.isInternetReachable);
     setType(state.type);
   }, []);
 
+  // Manuel yenileme fonksiyonu
   const refresh = useCallback(async () => {
     const state = await NetInfo.fetch();
     handleNetworkChange(state);
   }, [handleNetworkChange]);
 
   useEffect(() => {
-    // Get initial state
+    // İlk durumu al
     NetInfo.fetch().then(handleNetworkChange);
 
-    // Subscribe to network state changes
+    // Network durum değişikliklerini dinle
     const unsubscribe = NetInfo.addEventListener(handleNetworkChange);
 
+    // Cleanup
     return () => {
       unsubscribe();
     };

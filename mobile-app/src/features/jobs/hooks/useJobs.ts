@@ -1,8 +1,33 @@
+/**
+ * @file useJobs.ts
+ * @description İş ilanları listesi hook'u
+ * 
+ * Bu dosya iş ilanları listesini infinite scroll ile getirme işlemini yönetir.
+ * Filtreleme ve pagination desteği sağlar.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { jobService, JobListParams } from '@/api/services/job.service';
 import { PAGINATION } from '@/config/constants';
 import { queryKeys } from '@/api/queryKeys';
 
+/**
+ * İş ilanları listesi hook'u (infinite scroll destekli)
+ * 
+ * **Özellikler:**
+ * - Infinite scroll pagination
+ * - Filtreleme desteği (branş, şehir, çalışma tipi)
+ * - Her zaman fresh data (staleTime: 0)
+ * - 30 saniye cache
+ * - Focus/reconnect'te otomatik yenileme
+ * 
+ * @param params - Filtreleme parametreleri
+ * @param enabled - Query'nin aktif olup olmadığı
+ * @returns İş ilanları listesi ve pagination durumu
+ */
 export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => {
   return useInfiniteQuery({
     queryKey: queryKeys.jobs.list(params),

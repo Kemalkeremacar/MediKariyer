@@ -1,3 +1,21 @@
+/**
+ * @file CertificatesScreen.tsx
+ * @description Sertifika listesi ekranı - CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Sertifika listesi görüntüleme
+ * - Yeni sertifika ekleme (FAB butonu)
+ * - Sertifika düzenleme ve silme
+ * - Pull-to-refresh desteği
+ * - Empty state gösterimi
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. Sertifikalar listelenir
+ * 2. FAB butonu ile yeni sertifika eklenir
+ * 3. Kart üzerinden düzenleme/silme yapılır
+ */
 import React from 'react';
 import { useAlertHelpers } from '@/utils/alertHelpers';
 import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';

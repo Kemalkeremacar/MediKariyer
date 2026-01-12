@@ -1,22 +1,26 @@
 /**
  * @file alert.ts
- * @description Alert type re-exports for backward compatibility
+ * @description Alert tip re-export'ları - Geriye dönük uyumluluk için
  * 
- * NOTE: The global handler pattern has been removed.
- * Use useAlert hook or useAlertHelpers hook for alert functionality.
+ * NOT: Global handler pattern kaldırıldı.
+ * Alert fonksiyonelliği için useAlert hook veya useAlertHelpers hook kullanın.
  * 
- * For component code, use:
+ * Component kodunda kullanım:
  * ```typescript
  * import { useAlert } from '@/providers/AlertProvider';
- * // or
+ * // veya
  * import { useAlertHelpers } from '@/utils/alertHelpers';
  * ```
  * 
- * For non-component code (API interceptors, etc.), use:
+ * Component dışı kodda kullanım (API interceptor'lar, vb.):
  * ```typescript
  * import { imperativeAlert } from '@/utils/alertRef';
  * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
-// Re-export types for backward compatibility
+// Geriye dönük uyumluluk için tip re-export'ları
 export type { AlertConfig, AlertType, AlertContextType } from '@/types/alert';

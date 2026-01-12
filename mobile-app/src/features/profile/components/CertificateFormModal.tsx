@@ -1,3 +1,22 @@
+/**
+ * @file CertificateFormModal.tsx
+ * @description Sertifika ekleme/düzenleme modal formu
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * 
+ * **ÖZELLİKLER:**
+ * - Sertifika adı, kurum, yıl girişi
+ * - Form validasyonu
+ * - Ekleme ve güncelleme işlemleri
+ * - Navigation screen olarak çalışır (modal değil)
+ * 
+ * **FORM ALANLARI:**
+ * - Sertifika Adı (zorunlu)
+ * - Veren Kurum (zorunlu)
+ * - Alınma Yılı (opsiyonel, 4 haneli)
+ * 
+ * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
+ */
 import React, { useState, useEffect } from 'react';
 import {
   View,

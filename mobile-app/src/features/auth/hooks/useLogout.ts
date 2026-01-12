@@ -1,3 +1,21 @@
+/**
+ * @file useLogout.ts
+ * @description Çıkış yapma işlevi hook'u
+ * 
+ * Bu hook kullanıcı çıkışını yönetir. Token temizleme, auth state sıfırlama,
+ * cache temizleme ve navigasyon işlemlerini otomatik olarak halleder.
+ * 
+ * **KRİTİK:** Bu hook birçok yan etki içerir:
+ * - Backend'e logout isteği gönder
+ * - Token'ları secure storage'dan sil
+ * - Query cache'i temizle
+ * - Auth state'i sıfırla
+ * - Navigasyonu Auth ekranına sıfırla
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
@@ -6,7 +24,29 @@ import { navigationRef } from '@/navigation/navigationRef';
 import { devLog } from '@/utils/devLogger';
 
 /**
- * Hook for logout functionality
+ * Çıkış yapma hook'u
+ * 
+ * **İşleyiş Sırası:**
+ * 1. Backend'e logout isteği gönder (refresh token ile)
+ * 2. Token'ları secure storage'dan sil
+ * 3. Query cache'i temizle (kullanıcı verilerini sil)
+ * 4. Auth state'i sıfırla (unauthenticated)
+ * 5. Hydration flag'ini false yap
+ * 6. Navigasyonu Auth ekranına sıfırla
+ * 
+ * **ÖNEMLİ:** API çağrısı başarısız olsa bile yerel temizlik yapılır.
+ * Bu, kullanıcının her durumda çıkış yapabilmesini sağlar.
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * const logout = useLogout();
+ * 
+ * const handleLogout = () => {
+ *   logout.mutate();
+ * };
+ * ```
+ * 
+ * @returns React Query mutation objesi
  */
 export const useLogout = () => {
   const markUnauthenticated = useAuthStore((state) => state.markUnauthenticated);

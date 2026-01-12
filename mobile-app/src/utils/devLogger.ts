@@ -1,11 +1,22 @@
 /**
- * Development-only logger utility
- * Logs are only output when __DEV__ is true
+ * @file devLogger.ts
+ * @description Sadece development modunda loglama utility'si
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  * 
- * Requirements:
- * - 9.3: Log lifecycle events in development mode
- * - 9.5: Ensure logs are stripped in production builds
+ * **Özellikler:**
+ * - Loglar sadece __DEV__ true olduğunda çıktı verir
+ * - Production build'lerinde otomatik olarak kaldırılır
+ * 
+ * **Gereksinimler:**
+ * - 9.3: Development modunda lifecycle event'lerini loglama
+ * - 9.5: Production build'lerinde logların kaldırılmasını sağlama
  */
+
+// ============================================================================
+// DEV LOGGER CLASS
+// ============================================================================
 
 class DevLogger {
   private enabled: boolean;
@@ -14,37 +25,54 @@ class DevLogger {
     this.enabled = __DEV__;
   }
 
+  /**
+   * Genel log mesajı
+   */
   log(...args: any[]): void {
     if (this.enabled) {
       console.log('[DEV]', ...args);
     }
   }
 
+  /**
+   * Bilgi mesajı
+   */
   info(...args: any[]): void {
     if (this.enabled) {
       console.info('[DEV]', ...args);
     }
   }
 
+  /**
+   * Uyarı mesajı
+   */
   warn(...args: any[]): void {
     if (this.enabled) {
       console.warn('[DEV]', ...args);
     }
   }
 
+  /**
+   * Hata mesajı
+   */
   error(...args: any[]): void {
     if (this.enabled) {
       console.error('[DEV]', ...args);
     }
   }
 
+  /**
+   * Debug mesajı
+   */
   debug(...args: any[]): void {
     if (this.enabled) {
       console.debug('[DEV]', ...args);
     }
   }
 
-  // Conditional logging with custom condition
+  /**
+   * Koşullu loglama - özel koşul ile
+   */
   logIf(condition: boolean, ...args: any[]): void {
     if (this.enabled && condition) {
       console.log('[DEV]', ...args);
@@ -54,26 +82,30 @@ class DevLogger {
 
 export const devLog = new DevLogger();
 
+// ============================================================================
+// OVERLAY SYSTEM LOGGING UTILITIES
+// ============================================================================
+
 /**
- * Overlay System Development Logging Utilities
+ * Overlay System Development Loglama Utility'leri
  * 
- * These utilities provide development-only logging for the overlay system
- * (Alert, Toast, Modal). They are designed to:
- * - Log lifecycle events (show, hide, callback execution)
- * - Be completely stripped in production builds
- * - Provide consistent formatting with system prefix
+ * Bu utility'ler overlay sistemi (Alert, Toast, Modal) için
+ * sadece development modunda loglama sağlar. Özellikleri:
+ * - Lifecycle event'lerini loglar (show, hide, callback execution)
+ * - Production build'lerinde tamamen kaldırılır
+ * - Sistem prefix'i ile tutarlı formatlama sağlar
  * 
- * Requirements:
- * - 9.3: Log lifecycle events in development mode
- * - 9.5: Ensure logs are stripped in production builds
+ * **Gereksinimler:**
+ * - 9.3: Development modunda lifecycle event'lerini loglama
+ * - 9.5: Production build'lerinde logların kaldırılmasını sağlama
  */
 
 /**
- * Development-only log function for overlay system
- * Logs informational messages with [Overlay System] prefix
+ * Overlay sistemi için sadece development modunda log fonksiyonu
+ * [Overlay System] prefix'i ile bilgi mesajları loglar
  * 
- * @param message - The message to log
- * @param data - Optional data to include in the log
+ * @param message - Loglanacak mesaj
+ * @param data - Opsiyonel ek veri
  */
 export const overlayDevLog = (message: string, data?: unknown): void => {
   if (__DEV__) {
@@ -86,11 +118,11 @@ export const overlayDevLog = (message: string, data?: unknown): void => {
 };
 
 /**
- * Development-only warning function for overlay system
- * Logs warning messages with [Overlay System] prefix
+ * Overlay sistemi için sadece development modunda uyarı fonksiyonu
+ * [Overlay System] prefix'i ile uyarı mesajları loglar
  * 
- * @param message - The warning message to log
- * @param data - Optional data to include in the log
+ * @param message - Uyarı mesajı
+ * @param data - Opsiyonel ek veri
  */
 export const overlayDevWarn = (message: string, data?: unknown): void => {
   if (__DEV__) {
@@ -103,11 +135,11 @@ export const overlayDevWarn = (message: string, data?: unknown): void => {
 };
 
 /**
- * Development-only error function for overlay system
- * Logs error messages with [Overlay System] prefix
+ * Overlay sistemi için sadece development modunda hata fonksiyonu
+ * [Overlay System] prefix'i ile hata mesajları loglar
  * 
- * @param message - The error message to log
- * @param error - Optional error object to include
+ * @param message - Hata mesajı
+ * @param error - Opsiyonel hata objesi
  */
 export const overlayDevError = (message: string, error?: unknown): void => {
   if (__DEV__) {

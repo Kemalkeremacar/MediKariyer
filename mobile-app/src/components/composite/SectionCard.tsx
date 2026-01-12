@@ -1,9 +1,30 @@
+/**
+ * @file SectionCard.tsx
+ * @description Bölüm/menü kartı bileşeni
+ * 
+ * Bu bileşen ayarlar, profil bölümleri gibi menü öğelerini gösterir.
+ * İkon, başlık, alt başlık, badge ve chevron içerir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { colors, spacing } from '@/theme';
 
+/**
+ * SectionCard bileşeni için prop tipleri
+ * 
+ * @interface SectionCardProps
+ * @property {React.ReactNode} icon - Gösterilecek ikon (genellikle Ionicons)
+ * @property {string} title - Bölüm başlığı
+ * @property {string} [subtitle] - Alt başlık (opsiyonel)
+ * @property {string | number} [badge] - Badge içeriği (sayı veya metin)
+ * @property {Function} [onPress] - Kart tıklama callback'i
+ */
 export interface SectionCardProps {
   icon: React.ReactNode;
   title: string;
@@ -12,6 +33,30 @@ export interface SectionCardProps {
   onPress?: () => void;
 }
 
+/**
+ * Bölüm kartı bileşeni
+ * 
+ * **Özellikler:**
+ * - İkon container (gradient arka plan)
+ * - Başlık ve alt başlık
+ * - Badge göstergesi (sayı veya metin)
+ * - Chevron ikonu (tıklanabilirse)
+ * - Modern gölge efekti
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * <SectionCard
+ *   icon={<Ionicons name="person" size={24} color={colors.primary[600]} />}
+ *   title="Kişisel Bilgiler"
+ *   subtitle="Adınız, soyadınız ve iletişim bilgileriniz"
+ *   badge={3}
+ *   onPress={() => navigation.navigate('PersonalInfo')}
+ * />
+ * ```
+ * 
+ * @param props - SectionCard prop'ları
+ * @returns Bölüm kartı bileşeni
+ */
 export const SectionCard: React.FC<SectionCardProps> = ({
   icon,
   title,
@@ -26,10 +71,12 @@ export const SectionCard: React.FC<SectionCardProps> = ({
       disabled={!onPress}
       activeOpacity={0.7}
     >
+      {/* İkon container */}
       <View style={styles.iconContainer}>
         {icon}
       </View>
       
+      {/* Başlık ve alt başlık */}
       <View style={styles.content}>
         <Typography variant="h3" style={styles.title}>
           {title}
@@ -41,6 +88,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
         )}
       </View>
 
+      {/* Badge (varsa) */}
       {badge !== undefined && (
         <View style={styles.badge}>
           <Typography variant="caption" style={styles.badgeText}>
@@ -49,6 +97,7 @@ export const SectionCard: React.FC<SectionCardProps> = ({
         </View>
       )}
 
+      {/* Chevron ikonu (tıklanabilirse) */}
       {onPress && (
         <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
       )}
@@ -56,7 +105,12 @@ export const SectionCard: React.FC<SectionCardProps> = ({
   );
 };
 
+/**
+ * Stil tanımlamaları
+ * Modern kart tasarımı ve soft shadow efekti
+ */
 const styles = StyleSheet.create({
+  // Kart container - Yatay düzen
   card: {
     flexDirection: 'row',
     alignItems: 'center',

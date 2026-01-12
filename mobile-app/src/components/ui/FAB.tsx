@@ -1,32 +1,73 @@
+/**
+ * @file FAB.tsx
+ * @description Floating Action Button (Yüzen Aksiyon Butonu) bileşeni
+ * 
+ * Özellikler:
+ * - Üç boyut seçeneği (sm, md, lg)
+ * - Dört renk seçeneği (primary, secondary, success, error)
+ * - Üç pozisyon seçeneği (bottom-right, bottom-left, bottom-center)
+ * - Gradient arka plan
+ * - Gölge efekti
+ * - Bottom navigation bar ile uyumlu pozisyonlama
+ * 
+ * Kullanım:
+ * ```tsx
+ * <FAB icon={<Icon />} onPress={handlePress} position="bottom-right" />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors } from '@/theme';
 
+/**
+ * FAB bileşeni props interface'i
+ */
 export interface FABProps {
+  /** FAB ikonu */
   icon: React.ReactNode;
+  /** Tıklama fonksiyonu */
   onPress: () => void;
+  /** FAB boyutu */
   size?: 'sm' | 'md' | 'lg';
+  /** FAB rengi */
   color?: 'primary' | 'secondary' | 'success' | 'error';
+  /** FAB pozisyonu */
   position?: 'bottom-right' | 'bottom-left' | 'bottom-center';
+  /** Ek stil */
   style?: ViewStyle;
 }
 
+/**
+ * Boyut haritası (piksel cinsinden)
+ */
 const sizeMap = {
   sm: 48,
   md: 56,
   lg: 64,
 };
 
-// FAB position: Bottom navigation bar'ın hemen üstünde olacak şekilde ayarlandı
-// Bottom nav bar genellikle ~70px + safe area padding (~20px) = ~90px
-// FAB'ı nav bar'ın hemen üstünde tutmak için bottom: 20-30px yeterli
+/**
+ * Pozisyon haritası
+ * FAB, bottom navigation bar'ın hemen üstünde olacak şekilde ayarlandı
+ * Bottom nav bar genellikle ~70px + safe area padding (~20px) = ~90px
+ * FAB'ı nav bar'ın hemen üstünde tutmak için bottom: 20-30px yeterli
+ */
 const positionMap = {
   'bottom-right': { bottom: 30, right: 24 },
   'bottom-left': { bottom: 30, left: 24 },
   'bottom-center': { bottom: 30, alignSelf: 'center' as const },
 };
 
+/**
+ * FAB Bileşeni
+ * Yüzen aksiyon butonu
+ */
 export const FAB: React.FC<FABProps> = ({
   icon,
   onPress,
@@ -37,6 +78,9 @@ export const FAB: React.FC<FABProps> = ({
 }) => {
   const fabSize = sizeMap[size];
 
+  /**
+   * Renk seçeneğine göre gradient renklerini döndürür
+   */
   const getGradientColors = (): [string, string] => {
     if (color === 'primary') {
       return ['#6096B4', '#93BFCF'];

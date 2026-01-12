@@ -1,3 +1,15 @@
+/**
+ * @file SettingsStackNavigator.tsx
+ * @description Hesap ayarları gezinme akışı
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **Ekranlar:**
+ * - SettingsMain: Ana ayarlar ekranı
+ * - ChangePassword: Şifre değiştirme ekranı
+ */
+
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SettingsScreen } from '@/features/settings/screens/SettingsScreen';
@@ -7,8 +19,8 @@ import type { SettingsStackParamList } from './types';
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
 
 /**
- * SettingsStackNavigator - Account settings screens
- * Handles account settings and security
+ * SettingsStackNavigator - Ayarlar gezinme stack'i
+ * SettingsTab içinde nested stack navigator olarak kullanılır
  */
 export const SettingsStackNavigator = () => (
   <Stack.Navigator

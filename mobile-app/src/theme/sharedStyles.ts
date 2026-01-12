@@ -1,21 +1,40 @@
 /**
- * Shared Styles
- * TD-014: Duplicate StyleSheet tanımlarını merkezi bir yere toplar
+ * @file sharedStyles.ts
+ * @description Paylaşılan stiller - Tekrar eden StyleSheet tanımlarını merkezi bir yerde toplar
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  * 
- * Bu dosya birden fazla ekranda tekrar eden stil tanımlarını içerir.
- * Özellikle list ekranlarında (Jobs, Applications, Notifications) kullanılır.
+ * **Özellikler:**
+ * - TD-014: Duplicate StyleSheet tanımlarını merkezi bir yere toplar
+ * - List ekranları için ortak stiller (Jobs, Applications, Notifications)
+ * - Modal ekranları için ortak stiller
+ * - Form ekranları için ortak stiller
+ * - Card bileşenleri için ortak stiller
  */
 
 import { StyleSheet } from 'react-native';
 import { colors } from './colors';
 import { spacing } from './spacing';
 
+// ============================================================================
+// LIST STYLES - Liste ekranları için ortak stiller
+// ============================================================================
+
 /**
  * List ekranları için ortak stiller
- * Kullanım: import { listStyles } from '@/theme/sharedStyles';
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * import { listStyles } from '@/theme/sharedStyles';
+ * 
+ * <View style={listStyles.emptyState}>
+ *   <Text style={listStyles.emptyTitle}>Henüz başvuru yok</Text>
+ * </View>
+ * ```
  */
 export const listStyles = StyleSheet.create({
-  // Empty State
+  // Empty State - Boş liste durumu
   emptyState: {
     flex: 1,
     alignItems: 'center',
@@ -48,7 +67,7 @@ export const listStyles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // List Footer (Load More)
+  // List Footer - Daha fazla yükle
   listFooter: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -60,12 +79,12 @@ export const listStyles = StyleSheet.create({
     color: colors.text.secondary,
   },
 
-  // List Content
+  // List Content - Liste içerik padding
   listContent: {
     paddingBottom: spacing['4xl'],
   },
 
-  // Search Container
+  // Search Container - Arama çubuğu container
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -78,7 +97,7 @@ export const listStyles = StyleSheet.create({
     flex: 1,
   },
 
-  // Filter Button
+  // Filter Button - Filtre butonu
   filterButtonWrapper: {
     position: 'relative',
   },
@@ -116,15 +135,30 @@ export const listStyles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Skeleton Loading
+  // Skeleton Loading - Yükleme iskelet animasyonu
   skeletonContainer: {
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
   },
 });
 
+// ============================================================================
+// MODAL STYLES - Modal ekranları için ortak stiller
+// ============================================================================
+
 /**
  * Modal ekranları için ortak stiller
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * import { modalStyles } from '@/theme/sharedStyles';
+ * 
+ * <View style={modalStyles.container}>
+ *   <View style={modalStyles.header}>
+ *     <Text style={modalStyles.headerTitle}>Başlık</Text>
+ *   </View>
+ * </View>
+ * ```
  */
 export const modalStyles = StyleSheet.create({
   container: {
@@ -161,8 +195,23 @@ export const modalStyles = StyleSheet.create({
   },
 });
 
+// ============================================================================
+// FORM STYLES - Form ekranları için ortak stiller
+// ============================================================================
+
 /**
  * Form ekranları için ortak stiller
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * import { formStyles } from '@/theme/sharedStyles';
+ * 
+ * <View style={formStyles.container}>
+ *   <View style={formStyles.section}>
+ *     <Text style={formStyles.sectionTitle}>Bölüm Başlığı</Text>
+ *   </View>
+ * </View>
+ * ```
  */
 export const formStyles = StyleSheet.create({
   container: {
@@ -196,10 +245,24 @@ export const formStyles = StyleSheet.create({
   },
 });
 
+// ============================================================================
+// CARD STYLES - Card bileşenleri için ortak stiller
+// ============================================================================
+
 /**
  * Card bileşenleri için ortak stiller
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * import { cardStyles } from '@/theme/sharedStyles';
+ * 
+ * <View style={cardStyles.elevated}>
+ *   <Text>Card içeriği</Text>
+ * </View>
+ * ```
  */
 export const cardStyles = StyleSheet.create({
+  /** Gölgeli card - Yükseltilmiş görünüm */
   elevated: {
     backgroundColor: colors.background.primary,
     borderRadius: 16,
@@ -209,6 +272,7 @@ export const cardStyles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  /** Çerçeveli card - Border ile ayrılmış */
   outlined: {
     backgroundColor: colors.background.primary,
     borderRadius: 16,

@@ -1,18 +1,55 @@
+/**
+ * @file Badge.tsx
+ * @description Durum rozeti bileşeni
+ * 
+ * Özellikler:
+ * - Farklı varyantlar (primary, secondary, success, warning, error, neutral)
+ * - Başvuru durumları için özel status prop'u (pending, accepted, rejected, reviewed)
+ * - İki boyut seçeneği (sm, md)
+ * - Modern tasarım (yumuşak renkler, gölge efekti)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Badge variant="success">Onaylandı</Badge>
+ * <Badge status="pending">Beklemede</Badge>
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
+/**
+ * Başvuru durumu tipleri
+ */
 export type BadgeStatus = 'pending' | 'accepted' | 'rejected' | 'reviewed';
 
+/**
+ * Badge bileşeni props interface'i
+ */
 export interface BadgeProps {
+  /** Badge içeriği */
   children: React.ReactNode;
+  /** Badge varyantı */
   variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'neutral';
+  /** Başvuru durumu (variant yerine kullanılabilir) */
   status?: BadgeStatus;
+  /** Badge boyutu */
   size?: 'sm' | 'md';
+  /** Ek stil */
   style?: ViewStyle;
+  /** Metin stili */
   textStyle?: TextStyle;
 }
 
+/**
+ * Badge Bileşeni
+ * Durum göstergesi rozeti
+ */
 export const Badge: React.FC<BadgeProps> = ({
   children,
   variant,
@@ -24,12 +61,12 @@ export const Badge: React.FC<BadgeProps> = ({
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  // Map status to variant if status is provided
+  // Status varsa variant'a dönüştür
   const effectiveVariant = status 
     ? (status === 'pending' ? 'warning' 
       : status === 'accepted' ? 'success' 
       : status === 'rejected' ? 'error' 
-      : 'primary') // reviewed -> primary (blue)
+      : 'primary') // reviewed -> primary (mavi)
     : (variant || 'primary');
 
   return (

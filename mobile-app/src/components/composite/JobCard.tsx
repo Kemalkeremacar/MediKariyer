@@ -1,3 +1,14 @@
+/**
+ * @file JobCard.tsx
+ * @description İş ilanı kartı bileşeni
+ * 
+ * Bu bileşen iş ilanlarını liste görünümünde gösterir.
+ * Hastane logosu, iş başlığı, branş bilgileri ve detay butonu içerir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated, { 
@@ -16,16 +27,49 @@ import { Ionicons } from '@expo/vector-icons';
 import { isWithinDays } from '@/utils/date';
 import type { JobListItem } from '@/types/job';
 
+/**
+ * JobCard bileşeni için prop tipleri
+ * 
+ * @interface JobCardProps
+ * @property {JobListItem} job - İş ilanı verisi
+ * @property {Function} onPress - Kart tıklama callback'i (detay sayfasına gider)
+ */
 interface JobCardProps {
   job: JobListItem;
   onPress: () => void;
 }
 
+/**
+ * İş ilanı kartı bileşeni
+ * 
+ * **Özellikler:**
+ * - Hastane logosu gösterimi (Avatar ile)
+ * - İş başlığı ve hastane adı
+ * - YENİ badge'i (3 gün içinde eklenen ilanlar için)
+ * - Ana dal ve yan dal chip'leri
+ * - Detay butonu (smooth animasyon ile)
+ * 
+ * **Logo İşleme Mantığı:**
+ * 1. Base64 string'ler (data:image/...) → Direkt kullan
+ * 2. Full URL'ler (http/https) → Direkt kullan
+ * 3. Path formatı (logo.png) → null geç, Avatar fallback gösterir
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * <JobCard
+ *   job={jobData}
+ *   onPress={() => navigation.navigate('JobDetail', { id: jobData.id })}
+ * />
+ * ```
+ * 
+ * @param props - JobCard prop'ları
+ * @returns İş ilanı kartı bileşeni
+ */
 export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
-  // Logo işleme mantığı:
-  // 1. Base64 string'ler (data:image/...) → direkt kullan (hastane yüklediği logolar)
-  // 2. Path formatındaki logolar (logo.png) → null geç, fallback göster (dosyalar uploads klasöründe yok)
-  // 3. Full URL'ler → direkt kullan
+  /**
+   * Hastane logosu URL'ini işle
+   * Base64, full URL veya path formatlarını kontrol eder
+   */
   const hospitalLogoUrl = (() => {
     if (!job.hospital_logo) return null;
     
@@ -45,47 +89,61 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
     return null;
   })();
 
-  // Smooth press animation for detail button only
+  /**
+   * Detay butonu için smooth animasyon değerleri
+   * Butona basıldığında hafif küçülme efekti sağlar
+   */
   const scale = useSharedValue(1);
   
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
+  /**
+   * Butona basıldığında animasyonu başlat
+   */
   const handleButtonPressIn = () => {
     scale.value = withSpring(0.95, { damping: 15, stiffness: 400 });
   };
 
+  /**
+   * Butondan el çekildiğinde animasyonu geri al
+   */
   const handleButtonPressOut = () => {
     scale.value = withSpring(1, { damping: 15, stiffness: 400 });
   };
   
   return (
-    // Wrapper - no animation
     <View>
       <Card 
         variant="elevated" 
         padding="lg" 
         style={styles.card}
       >
-        {/* Header */}
+        {/* Başlık Bölümü - Logo, İş Başlığı, Hastane Adı */}
         <View style={styles.header}>
+          {/* Hastane logosu (Avatar ile fallback desteği) */}
           <Avatar
             size="md"
             source={hospitalLogoUrl ?? undefined}
             initials={job.hospital_name?.substring(0, 2).toUpperCase() || '??'}
           />
+          
           <View style={styles.headerContent}>
+            {/* İş başlığı ve YENİ badge'i */}
             <View style={styles.titleRow}>
               <Typography variant="h3" style={styles.title}>
                 {job.title}
               </Typography>
+              {/* Son 3 gün içinde eklenen ilanlar için YENİ badge'i */}
               {job.created_at && isWithinDays(job.created_at, 3) && (
                 <Badge variant="success" size="sm">
                   YENİ
                 </Badge>
               )}
             </View>
+            
+            {/* Hastane adı */}
             <View style={styles.hospitalRow}>
               <Ionicons name="business" size={14} color={colors.text.secondary} />
               <Typography variant="body" style={styles.hospital}>
@@ -97,16 +155,18 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
 
         <Divider spacing="sm" />
         
-        {/* Details - Ana Dal ve Yan Dal */}
+        {/* Branş Bilgileri - Ana Dal ve Yan Dal */}
         <View style={styles.details}>
           {job.specialty && (
             <View style={styles.specialtyContainer}>
+              {/* Ana dal chip'i */}
               <Chip
                 label={job.specialty}
                 variant="soft"
                 color="primary"
                 size="sm"
               />
+              {/* Yan dal chip'i (varsa) */}
               {job.subspecialty_name && (
                 <View style={styles.subspecialtyRow}>
                   <Chip
@@ -144,7 +204,12 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
   );
 };
 
+/**
+ * Stil tanımlamaları
+ * Modern kart tasarımı ve animasyon stilleri
+ */
 const styles = StyleSheet.create({
+  // Kart container
   card: {
     marginBottom: spacing.md,
   },

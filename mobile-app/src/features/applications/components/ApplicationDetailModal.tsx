@@ -1,9 +1,24 @@
 /**
- * APPLICATION DETAIL MODAL - Başvuru Detay Modal Bileşeni
- * ApplicationsScreen'den ayrıldı (TD-002 refactor)
+ * @file ApplicationDetailModal.tsx
+ * @description Başvuru detay modal bileşeni - Başvuru bilgilerini gösterir
+ * @author MediKariyer Development Team
+ * @version 1.0.0
  * 
- * NOTE: No local BottomSheetModalProvider needed.
- * The root-level provider in App.tsx handles all BottomSheetModal components.
+ * **ÖZELLİKLER:**
+ * - Başvuru bilgileri (durum, tarih)
+ * - İş ilanı bilgileri (başlık, hastane, şehir, branş)
+ * - İş tanımı
+ * - Ön yazı (cover letter)
+ * - Hastane notu (varsa)
+ * - Fotoğraf karşılaştırması (mevcut vs yeni)
+ * - Başvuru geri çekme (sadece "Başvuruldu" durumunda)
+ * 
+ * **KULLANIM:**
+ * ApplicationsScreen'den açılır, başvuru detaylarını gösterir.
+ * 
+ * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
+ * 
+ * **REFACTOR:** ApplicationsScreen'den ayrıldı (TD-002)
  */
 
 import React, { useState } from 'react';

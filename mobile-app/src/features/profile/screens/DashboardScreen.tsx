@@ -1,10 +1,42 @@
 /**
- * DashboardScreen - Stabilizasyon Faz 3
+ * @file DashboardScreen.tsx
+ * @description Ana dashboard ekranı - Profil özeti, vitrin ilanlar ve hızlı erişim
+ * @author MediKariyer Development Team
+ * @version 1.0.0
  * 
- * Optimizasyonlar:
- * - useProfileCore kullanılıyor (sadece core profil + completion)
- * - Eğitim, Deneyim vb. veriler Dashboard'da gösterilmiyor (sadece navigation için prefetch)
- * - Profil Doluluk Oranı backend'den gelen completion_percent ile gösteriliyor
+ * **ÖNEMLİ ÖZELLİKLER:**
+ * - Profil özeti (fotoğraf, ad, soyad, uzmanlık)
+ * - Profil tamamlanma oranı (backend'den)
+ * - Vitrin ilanlar (son 5 ilan)
+ * - Son başvurular (son 3 başvuru)
+ * - Hızlı erişim kartları (özgeçmiş, fotoğraf, ayarlar)
+ * - Profil detayları (eğitim, deneyim, sertifikalar, diller)
+ * 
+ * **AKIŞ:**
+ * 1. Profil bilgileri ve tamamlanma oranı çekilir
+ * 2. Vitrin ilanlar ve son başvurular gösterilir
+ * 3. Kullanıcı hızlı erişim kartlarına tıklayarak ilgili sayfalara gider
+ * 4. Profil detayları için prefetch yapılır (hover/focus)
+ * 5. Pull-to-refresh ile tüm veriler yenilenir
+ * 
+ * **KRİTİK NOKTALAR:**
+ * - useProfileCore ile sadece core profil bilgileri çekilir
+ * - Backend'den gelen completion_percent kullanılır
+ * - Prefetch ile navigation performansı artırılır
+ * - Tab bar yüksekliği hesaplanarak scroll padding ayarlanır
+ * - Gradient header ile modern görünüm
+ * 
+ * **PERFORMANS OPTİMİZASYONLARI:**
+ * - Sadece core profil bilgileri çekilir (ad, soyad, fotoğraf, uzmanlık)
+ * - Eğitim, deneyim vb. veriler prefetch ile yüklenir
+ * - Pull-to-refresh ile manuel yenileme
+ * - Skeleton loading ile kullanıcı deneyimi
+ * 
+ * **PROFİL TAMAMLANMA MESAJLARI:**
+ * - %100: "✨ Profilin tam! Harika görünüyor"
+ * - %80-99: "🎯 Neredeyse tamamlandı! Devam et"
+ * - %50-79: "📝 Profilini tamamlamaya devam et"
+ * - %0-49: "🚀 Profilini tamamlayarak başla"
  */
 
 import React from 'react';

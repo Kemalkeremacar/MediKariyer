@@ -1,6 +1,14 @@
 /**
- * Validation Utilities
- * Provides input validation functions and Zod schemas
+ * @file validators.ts
+ * @description Validasyon utility fonksiyonları ve Zod şemaları
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **Özellikler:**
+ * - Input validasyon fonksiyonları
+ * - Zod validation şemaları
+ * - Form validasyon şemaları
  */
 
 import { z } from 'zod';
@@ -11,10 +19,15 @@ import {
   MAX_NAME_LENGTH,
 } from '@/config/constants';
 
+// ============================================================================
+// EMAIL VALIDATION
+// ============================================================================
+
 /**
- * Validate email format
- * @param email - Email to validate
- * @returns True if email is valid
+ * E-posta formatını doğrula
+ * 
+ * @param email - Doğrulanacak e-posta
+ * @returns E-posta geçerli mi?
  */
 export const isValidEmail = (email: string): boolean => {
   if (!email || typeof email !== 'string') {
@@ -25,10 +38,22 @@ export const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email.trim());
 };
 
+// ============================================================================
+// PASSWORD VALIDATION
+// ============================================================================
+
 /**
- * Validate password strength
- * @param password - Password to validate
- * @returns Object with validation result and message
+ * Şifre gücünü doğrula
+ * 
+ * @param password - Doğrulanacak şifre
+ * @returns Validasyon sonucu ve mesaj
+ * 
+ * **Gereksinimler:**
+ * - Minimum uzunluk: MIN_PASSWORD_LENGTH
+ * - Maksimum uzunluk: MAX_PASSWORD_LENGTH
+ * - En az bir büyük harf
+ * - En az bir küçük harf
+ * - En az bir rakam
  */
 export const validatePassword = (
   password: string
@@ -51,7 +76,7 @@ export const validatePassword = (
     };
   }
 
-  // Check for at least one uppercase letter
+  // En az bir büyük harf kontrolü
   if (!/[A-Z]/.test(password)) {
     return {
       isValid: false,
@@ -59,7 +84,7 @@ export const validatePassword = (
     };
   }
 
-  // Check for at least one lowercase letter
+  // En az bir küçük harf kontrolü
   if (!/[a-z]/.test(password)) {
     return {
       isValid: false,
@@ -67,7 +92,7 @@ export const validatePassword = (
     };
   }
 
-  // Check for at least one number
+  // En az bir rakam kontrolü
   if (!/\d/.test(password)) {
     return {
       isValid: false,
@@ -78,10 +103,15 @@ export const validatePassword = (
   return { isValid: true };
 };
 
+// ============================================================================
+// NAME VALIDATION
+// ============================================================================
+
 /**
- * Validate name (first name or last name)
- * @param name - Name to validate
- * @returns Object with validation result and message
+ * İsim doğrula (ad veya soyad)
+ * 
+ * @param name - Doğrulanacak isim
+ * @returns Validasyon sonucu ve mesaj
  */
 export const validateName = (
   name: string
@@ -106,7 +136,7 @@ export const validateName = (
     };
   }
 
-  // Check for valid characters (letters, spaces, Turkish characters)
+  // Geçerli karakterler kontrolü (harfler, boşluklar, Türkçe karakterler)
   const nameRegex = /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]+$/;
   if (!nameRegex.test(trimmedName)) {
     return {
@@ -118,28 +148,42 @@ export const validateName = (
   return { isValid: true };
 };
 
+// ============================================================================
+// PHONE VALIDATION
+// ============================================================================
+
 /**
- * Validate phone number (Turkish format)
- * @param phone - Phone number to validate
- * @returns True if phone is valid
+ * Telefon numarası doğrula (Türk telefon formatı)
+ * 
+ * @param phone - Doğrulanacak telefon numarası
+ * @returns Telefon geçerli mi?
+ * 
+ * **Desteklenen Formatlar:**
+ * - +90XXXXXXXXXX
+ * - 0XXXXXXXXXX
  */
 export const isValidPhone = (phone: string): boolean => {
   if (!phone || typeof phone !== 'string') {
     return false;
   }
 
-  // Remove spaces, dashes, and parentheses
+  // Boşluk, tire ve parantezleri kaldır
   const cleanPhone = phone.replace(/[\s\-()]/g, '');
 
-  // Turkish phone number format: +90XXXXXXXXXX or 0XXXXXXXXXX
+  // Türk telefon numarası formatı: +90XXXXXXXXXX veya 0XXXXXXXXXX
   const phoneRegex = /^(\+90|0)?[1-9]\d{9}$/;
   return phoneRegex.test(cleanPhone);
 };
 
+// ============================================================================
+// REQUIRED FIELD VALIDATION
+// ============================================================================
+
 /**
- * Validate required field
- * @param value - Value to validate
- * @returns True if value is not empty
+ * Zorunlu alan doğrula
+ * 
+ * @param value - Doğrulanacak değer
+ * @returns Değer boş değil mi?
  */
 export const isRequired = (value: any): boolean => {
   if (value === null || value === undefined) {
@@ -157,10 +201,15 @@ export const isRequired = (value: any): boolean => {
   return true;
 };
 
+// ============================================================================
+// URL VALIDATION
+// ============================================================================
+
 /**
- * Validate URL format
- * @param url - URL to validate
- * @returns True if URL is valid
+ * URL formatını doğrula
+ * 
+ * @param url - Doğrulanacak URL
+ * @returns URL geçerli mi?
  */
 export const isValidUrl = (url: string): boolean => {
   if (!url || typeof url !== 'string') {
@@ -175,12 +224,17 @@ export const isValidUrl = (url: string): boolean => {
   }
 };
 
+// ============================================================================
+// NUMBER RANGE VALIDATION
+// ============================================================================
+
 /**
- * Validate number range
- * @param value - Number to validate
- * @param min - Minimum value
- * @param max - Maximum value
- * @returns True if number is within range
+ * Sayı aralığı doğrula
+ * 
+ * @param value - Doğrulanacak sayı
+ * @param min - Minimum değer
+ * @param max - Maksimum değer
+ * @returns Sayı aralıkta mı?
  */
 export const isInRange = (value: number, min: number, max: number): boolean => {
   if (typeof value !== 'number' || isNaN(value)) {
@@ -190,11 +244,16 @@ export const isInRange = (value: number, min: number, max: number): boolean => {
   return value >= min && value <= max;
 };
 
+// ============================================================================
+// FILE VALIDATION
+// ============================================================================
+
 /**
- * Validate file size
- * @param sizeInBytes - File size in bytes
- * @param maxSizeInBytes - Maximum allowed size in bytes
- * @returns True if file size is within limit
+ * Dosya boyutu doğrula
+ * 
+ * @param sizeInBytes - Dosya boyutu (byte)
+ * @param maxSizeInBytes - Maksimum izin verilen boyut (byte)
+ * @returns Dosya boyutu limit içinde mi?
  */
 export const isValidFileSize = (
   sizeInBytes: number,
@@ -208,10 +267,11 @@ export const isValidFileSize = (
 };
 
 /**
- * Validate file type
- * @param fileType - File MIME type
- * @param allowedTypes - Array of allowed MIME types
- * @returns True if file type is allowed
+ * Dosya tipi doğrula
+ * 
+ * @param fileType - Dosya MIME tipi
+ * @param allowedTypes - İzin verilen MIME tipleri
+ * @returns Dosya tipi izinli mi?
  */
 export const isValidFileType = (
   fileType: string,
@@ -224,33 +284,44 @@ export const isValidFileType = (
   return allowedTypes.includes(fileType.toLowerCase());
 };
 
+// ============================================================================
+// TURKISH ID VALIDATION
+// ============================================================================
+
 /**
- * Validate Turkish ID number (TC Kimlik No)
- * @param idNumber - ID number to validate
- * @returns True if ID number is valid
+ * TC Kimlik No doğrula
+ * 
+ * @param idNumber - Doğrulanacak TC Kimlik No
+ * @returns TC Kimlik No geçerli mi?
+ * 
+ * **Kurallar:**
+ * - 11 haneli olmalı
+ * - İlk hane 0 olamaz
+ * - 10. hane kontrol hanesi
+ * - 11. hane kontrol hanesi
  */
 export const isValidTurkishId = (idNumber: string): boolean => {
   if (!idNumber || typeof idNumber !== 'string') {
     return false;
   }
 
-  // Remove spaces
+  // Boşlukları kaldır
   const cleanId = idNumber.replace(/\s/g, '');
 
-  // Must be 11 digits
+  // 11 haneli olmalı
   if (!/^\d{11}$/.test(cleanId)) {
     return false;
   }
 
-  // First digit cannot be 0
+  // İlk hane 0 olamaz
   if (cleanId[0] === '0') {
     return false;
   }
 
-  // Calculate checksum
+  // Checksum hesapla
   const digits = cleanId.split('').map(Number);
   
-  // 10th digit check
+  // 10. hane kontrolü
   const sum1 = (digits[0] + digits[2] + digits[4] + digits[6] + digits[8]) * 7;
   const sum2 = digits[1] + digits[3] + digits[5] + digits[7];
   const digit10 = (sum1 - sum2) % 10;
@@ -259,18 +330,23 @@ export const isValidTurkishId = (idNumber: string): boolean => {
     return false;
   }
 
-  // 11th digit check
+  // 11. hane kontrolü
   const sum3 = digits.slice(0, 10).reduce((acc, digit) => acc + digit, 0);
   const digit11 = sum3 % 10;
   
   return digit11 === digits[10];
 };
 
+// ============================================================================
+// STRING LENGTH VALIDATION
+// ============================================================================
+
 /**
- * Validate minimum length
- * @param value - String to validate
- * @param minLength - Minimum length
- * @returns True if string meets minimum length
+ * Minimum uzunluk doğrula
+ * 
+ * @param value - Doğrulanacak string
+ * @param minLength - Minimum uzunluk
+ * @returns String minimum uzunluğu karşılıyor mu?
  */
 export const hasMinLength = (value: string, minLength: number): boolean => {
   if (!value || typeof value !== 'string') {
@@ -281,30 +357,36 @@ export const hasMinLength = (value: string, minLength: number): boolean => {
 };
 
 /**
- * Validate maximum length
- * @param value - String to validate
- * @param maxLength - Maximum length
- * @returns True if string is within maximum length
+ * Maksimum uzunluk doğrula
+ * 
+ * @param value - Doğrulanacak string
+ * @param maxLength - Maksimum uzunluk
+ * @returns String maksimum uzunluk içinde mi?
  */
 export const hasMaxLength = (value: string, maxLength: number): boolean => {
   if (!value || typeof value !== 'string') {
-    return true; // Empty string is valid for max length
+    return true; // Boş string maksimum uzunluk için geçerli
   }
 
   return value.trim().length <= maxLength;
 };
 
+// ============================================================================
+// STRING SANITIZATION
+// ============================================================================
+
 /**
- * Sanitize string input (remove special characters)
- * @param value - String to sanitize
- * @returns Sanitized string
+ * String input'u temizle (özel karakterleri kaldır)
+ * 
+ * @param value - Temizlenecek string
+ * @returns Temizlenmiş string
  */
 export const sanitizeString = (value: string): string => {
   if (!value || typeof value !== 'string') {
     return '';
   }
 
-  // Remove HTML tags and special characters
+  // HTML tag'lerini ve özel karakterleri kaldır
   return value
     .replace(/<[^>]*>/g, '')
     .replace(/[<>'"]/g, '')
@@ -316,12 +398,12 @@ export const sanitizeString = (value: string): string => {
 // ============================================================================
 
 /**
- * Email validation schema (Zod)
+ * E-posta validasyon şeması (Zod)
  */
 export const emailSchema = z.string().email('Geçerli bir e-posta girin');
 
 /**
- * Password validation schema (Zod)
+ * Şifre validasyon şeması (Zod)
  */
 export const passwordSchema = z
   .string()
@@ -329,7 +411,7 @@ export const passwordSchema = z
   .max(MAX_PASSWORD_LENGTH, `Şifre en fazla ${MAX_PASSWORD_LENGTH} karakter olabilir`);
 
 /**
- * Name validation schema (Zod)
+ * İsim validasyon şeması (Zod)
  */
 export const nameSchema = z
   .string()
@@ -337,7 +419,7 @@ export const nameSchema = z
   .max(MAX_NAME_LENGTH, `En fazla ${MAX_NAME_LENGTH} karakter olabilir`);
 
 /**
- * Login form validation schema (Zod)
+ * Login form validasyon şeması (Zod)
  */
 export const loginValidationSchema = z.object({
   email: emailSchema,
@@ -345,7 +427,7 @@ export const loginValidationSchema = z.object({
 });
 
 /**
- * Registration form validation schema (Zod)
+ * Kayıt form validasyon şeması (Zod)
  */
 export const registrationValidationSchema = z
   .object({
@@ -367,7 +449,7 @@ export const registrationValidationSchema = z
   });
 
 /**
- * Change password validation schema (Zod)
+ * Şifre değiştirme validasyon şeması (Zod)
  */
 export const changePasswordSchema = z
   .object({

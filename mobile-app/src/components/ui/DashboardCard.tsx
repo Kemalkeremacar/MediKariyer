@@ -1,17 +1,51 @@
+/**
+ * @file DashboardCard.tsx
+ * @description Dashboard kart bileşeni
+ * 
+ * Özellikler:
+ * - İki varyant (default, large)
+ * - İkon desteği
+ * - Tıklanabilir kart
+ * - Prefetch desteği (onPressIn)
+ * - Modern tasarım (yuvarlatılmış köşeler, gölge)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <DashboardCard title="İş İlanları" icon={<Icon />} onPress={handlePress} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useMemo } from 'react';
 import { View, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Typography } from './Typography';
 
+/**
+ * DashboardCard bileşeni props interface'i
+ */
 export interface DashboardCardProps {
+  /** Kart başlığı */
   title: string;
+  /** Kart ikonu */
   icon?: React.ReactNode;
+  /** Tıklama fonksiyonu */
   onPress?: () => void;
-  onPressIn?: () => void; // Prefetch için
+  /** Basma fonksiyonu (prefetch için) */
+  onPressIn?: () => void;
+  /** Ek stil */
   style?: ViewStyle;
+  /** Kart varyantı */
   variant?: 'default' | 'large';
 }
 
+/**
+ * DashboardCard Bileşeni
+ * Dashboard için modern kart bileşeni
+ */
 export const DashboardCard: React.FC<DashboardCardProps> = ({
   title,
   icon,

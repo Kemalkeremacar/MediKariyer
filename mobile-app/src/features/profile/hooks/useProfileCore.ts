@@ -1,23 +1,45 @@
 /**
- * useProfileCore Hook - Stabilizasyon Faz 3
+ * @file useProfileCore.ts
+ * @description Ana profil bilgileri ve doluluk oranı hook'u
+ * @author MediKariyer Development Team
+ * @version 3.0.0
  * 
- * Sadece Ana Profil (Ad, Soyad, Fotoğraf, Unvan) ve Doluluk Oranı verilerini çeker
- * Cache key: ['profile', 'core']
+ * **AMAÇ:**
+ * Sadece ana profil bilgilerini (ad, soyad, fotoğraf, unvan) ve doluluk oranını çeker.
+ * Domain-Driven Design prensibi ile profil modülü parçalandı.
  * 
- * Domain-Driven Design: Profil modülü parçalandı
- * - Core profil bilgileri (bu hook)
- * - Eğitimler (useEducations)
- * - Deneyimler (useExperiences)
- * - Sertifikalar (useCertificates)
- * - Diller (useLanguages)
+ * **CACHE YAPISI:**
+ * - Core profil: ['profile', 'core'] - 5 dakika stale time
+ * - Doluluk oranı: ['profile', 'completion'] - 2 dakika stale time
+ * 
+ * **İLGİLİ HOOK'LAR:**
+ * - useEducations: Eğitim bilgileri
+ * - useExperiences: Deneyim bilgileri
+ * - useCertificates: Sertifika bilgileri
+ * - useLanguages: Dil bilgileri
+ * 
+ * **KULLANIM ÖRNEĞİ:**
+ * ```typescript
+ * const { data: profile, isLoading } = useProfileCore();
+ * const { data: completion } = useProfileCompletion();
+ * ```
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { profileCoreService } from '@/api/services/profile/profile.core.service';
 
 /**
- * Hook for fetching core profile data (name, photo, title, specialty)
- * Cache key: ['profile', 'core']
+ * Ana profil bilgilerini çeken hook
+ * 
+ * **DÖNEN VERİLER:**
+ * - Ad, soyad
+ * - Profil fotoğrafı
+ * - Unvan (Dr., Uz. Dr., vb.)
+ * - Uzmanlık alanı
+ * 
+ * **CACHE:** ['profile', 'core'] - 5 dakika stale time
+ * 
+ * @returns {UseQueryResult} React Query sonucu
  */
 export const useProfileCore = () => {
   return useQuery({
@@ -34,8 +56,19 @@ export const useProfileCore = () => {
 };
 
 /**
- * Hook for fetching profile completion status
- * Cache key: ['profile', 'completion']
+ * Profil doluluk oranını çeken hook
+ * 
+ * **DÖNEN VERİLER:**
+ * - Doluluk yüzdesi (0-100)
+ * - Eksik alanlar listesi
+ * - Tamamlanmış alanlar listesi
+ * 
+ * **CACHE:** ['profile', 'completion'] - 2 dakika stale time
+ * 
+ * **NOT:** Completion sık değişebilir (kullanıcı profil güncellerken),
+ * bu yüzden stale time daha kısa tutuldu.
+ * 
+ * @returns {UseQueryResult} React Query sonucu
  */
 export const useProfileCompletion = () => {
   return useQuery({

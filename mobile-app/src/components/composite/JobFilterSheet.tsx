@@ -1,9 +1,15 @@
 /**
  * @file JobFilterSheet.tsx
- * @description Modern iş ilanı filtreleme bottom sheet bileşeni
+ * @description İş ilanı filtreleme bottom sheet bileşeni
  * 
- * NOTE: No local BottomSheetModalProvider needed.
- * The root-level provider in App.tsx handles all BottomSheetModal components.
+ * Bu bileşen iş ilanlarını filtrelemek için kullanılan modal sheet'i sağlar.
+ * Branş, şehir ve çalışma tipi filtrelerini içerir.
+ * 
+ * **ÖNEMLİ:** Bu bileşen için yerel BottomSheetModalProvider gerekmez.
+ * App.tsx'teki root-level provider tüm BottomSheetModal bileşenlerini yönetir.
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -28,12 +34,30 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+/**
+ * İş ilanı filtre değerleri
+ * 
+ * @interface JobFilters
+ * @property {number} [specialtyId] - Seçili branş ID'si
+ * @property {number} [cityId] - Seçili şehir ID'si
+ * @property {string} [employmentType] - Seçili çalışma tipi
+ */
 export interface JobFilters {
   specialtyId?: number;
   cityId?: number;
   employmentType?: string;
 }
 
+/**
+ * JobFilterSheet bileşeni için prop tipleri
+ * 
+ * @interface JobFilterSheetProps
+ * @property {boolean} visible - Sheet görünürlük durumu
+ * @property {Function} onClose - Sheet kapatma callback'i
+ * @property {JobFilters} filters - Mevcut filtre değerleri
+ * @property {Function} onApply - Filtre uygulama callback'i
+ * @property {Function} onReset - Filtreleri temizleme callback'i
+ */
 interface JobFilterSheetProps {
   visible: boolean;
   onClose: () => void;
@@ -42,6 +66,10 @@ interface JobFilterSheetProps {
   onReset: () => void;
 }
 
+/**
+ * Çalışma tipi seçenekleri
+ * İş ilanlarında kullanılan standart çalışma tipleri
+ */
 const WORK_TYPES = [
   { value: 'Tam Zamanlı', label: 'Tam Zamanlı' },
   { value: 'Yarı Zamanlı', label: 'Yarı Zamanlı' },
@@ -49,6 +77,30 @@ const WORK_TYPES = [
   { value: 'Nöbet', label: 'Nöbet' },
 ];
 
+/**
+ * İş ilanı filtreleme sheet bileşeni
+ * 
+ * **Özellikler:**
+ * - Branş, şehir ve çalışma tipi filtreleri
+ * - Genişletilebilir filtre bölümleri
+ * - Aktif filtre sayısı göstergesi
+ * - Filtre uygulama ve temizleme
+ * - Lookup verilerini cache'leyerek performans optimizasyonu
+ * 
+ * **Kullanım:**
+ * ```tsx
+ * <JobFilterSheet
+ *   visible={isFilterVisible}
+ *   onClose={() => setIsFilterVisible(false)}
+ *   filters={currentFilters}
+ *   onApply={handleApplyFilters}
+ *   onReset={handleResetFilters}
+ * />
+ * ```
+ * 
+ * @param props - JobFilterSheet prop'ları
+ * @returns Filtre sheet bileşeni
+ */
 export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
   visible,
   onClose,
@@ -56,11 +108,22 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
   onApply,
   onReset,
 }) => {
-  // Local state for draft filters
+  /**
+   * Yerel state - Taslak filtre değerleri
+   * Kullanıcı "Uygula" butonuna basana kadar geçici olarak saklanır
+   */
   const [draftFilters, setDraftFilters] = useState<JobFilters>(filters);
+  
+  /**
+   * Genişletilmiş filtre bölümü state'i
+   * Hangi filtre bölümünün açık olduğunu takip eder
+   */
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
-  // Lookup data
+  /**
+   * Branş listesini API'den çek
+   * 30 dakika cache ile performans optimizasyonu
+   */
   const { data: specialties = [], isLoading: isLoadingSpecialties } = useQuery({
     queryKey: queryKeys.lookup.specialties(),
     queryFn: lookupService.getSpecialties,
@@ -68,6 +131,10 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
     gcTime: 1000 * 60 * 60, // 1 saat garbage collection
   });
 
+  /**
+   * Şehir listesini API'den çek
+   * 30 dakika cache ile performans optimizasyonu
+   */
   const { data: cities = [], isLoading: isLoadingCities } = useQuery({
     queryKey: queryKeys.lookup.cities(),
     queryFn: lookupService.getCities,
@@ -75,45 +142,69 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
     gcTime: 1000 * 60 * 60, // 1 saat garbage collection
   });
 
-  // Sync draft with props when sheet opens
+  /**
+   * Sheet açıldığında taslak filtreleri prop'lardan senkronize et
+   */
   useEffect(() => {
     if (visible) {
       setDraftFilters(filters);
     }
   }, [visible, filters]);
 
+  /**
+   * Filtreleri uygula ve sheet'i kapat
+   */
   const handleApply = useCallback(() => {
     onApply(draftFilters);
     onClose();
   }, [draftFilters, onApply, onClose]);
 
+  /**
+   * Tüm filtreleri temizle ve sheet'i kapat
+   */
   const handleReset = useCallback(() => {
     setDraftFilters({});
     onReset();
     onClose();
   }, [onReset, onClose]);
 
+  /**
+   * Filtre bölümünü aç/kapat
+   * @param section - Bölüm adı (specialty/city/employmentType)
+   */
   const toggleSection = useCallback((section: string) => {
     setExpandedSection((prev) => (prev === section ? null : section));
   }, []);
 
-  // Get display names for selected values
+  /**
+   * Seçili branşın adını bul
+   * Memoize edilmiş değer, gereksiz hesaplamaları önler
+   */
   const selectedSpecialtyName = useMemo(() => {
     if (!draftFilters.specialtyId) return null;
     return specialties.find((s) => s.id === draftFilters.specialtyId)?.name;
   }, [draftFilters.specialtyId, specialties]);
 
+  /**
+   * Seçili şehrin adını bul
+   * Memoize edilmiş değer, gereksiz hesaplamaları önler
+   */
   const selectedCityName = useMemo(() => {
     if (!draftFilters.cityId) return null;
     return cities.find((c) => c.id === draftFilters.cityId)?.name;
   }, [draftFilters.cityId, cities]);
 
+  /**
+   * Aktif filtre sayısını hesapla
+   * Badge'de gösterilmek üzere
+   */
   const activeFilterCount = useMemo(() => {
     return [draftFilters.specialtyId, draftFilters.cityId, draftFilters.employmentType].filter(
       Boolean
     ).length;
   }, [draftFilters]);
 
+  // Sheet görünür değilse hiçbir şey render etme
   if (!visible) return null;
 
   return (
@@ -124,14 +215,17 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
+        {/* Arka plan overlay - Tıklanınca sheet'i kapat */}
         <Pressable style={styles.backdrop} onPress={onClose} />
+        
         <View style={styles.sheet}>
-          {/* Header */}
+          {/* Başlık Bölümü - Filtre başlığı, aktif filtre sayısı ve kapat butonu */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Typography variant="h3" style={styles.title}>
                 Filtrele
               </Typography>
+              {/* Aktif filtre sayısı badge'i */}
               {activeFilterCount > 0 && (
                 <View style={styles.badge}>
                   <Typography variant="caption" style={styles.badgeText}>
@@ -140,11 +234,13 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                 </View>
               )}
             </View>
+            {/* Kapat butonu */}
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
 
+          {/* İçerik Bölümü - Filtre seçenekleri */}
           <ScrollView
             style={styles.content}
             showsVerticalScrollIndicator={false}
@@ -160,7 +256,8 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                 setDraftFilters((prev) => ({ ...prev, specialtyId: undefined }))
               }
             >
-              {isLoadingSpecialties ? (
+              {/* Branş listesi yükleniyor mu? */}
+            {isLoadingSpecialties ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={colors.primary[600]} />
                   <Typography variant="caption" style={styles.loadingText}>
@@ -168,10 +265,12 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                   </Typography>
                 </View>
               ) : specialties.length === 0 ? (
+                // Branş bulunamadı mesajı
                 <Typography variant="body" style={styles.emptyText}>
                   Branş bulunamadı
                 </Typography>
               ) : (
+                // Branş listesi
                 <ScrollView 
                   style={styles.optionListContainer}
                   nestedScrollEnabled
@@ -205,6 +304,7 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                       >
                         {specialty.name}
                       </Typography>
+                      {/* Seçili branş için checkmark ikonu */}
                       {draftFilters.specialtyId === specialty.id && (
                         <Ionicons name="checkmark" size={18} color={colors.primary[600]} />
                       )}

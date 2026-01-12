@@ -1,93 +1,123 @@
 /**
- * Query Key Factory
- * ARCH-003: Merkezi, type-safe query key yönetimi
+ * @file queryKeys.ts
+ * @description Query Key Factory - Merkezi, type-safe query key yönetimi
+ * 
+ * Mimari: ARCH-003
  * 
  * Faydaları:
- * - Tutarlı query key yapısı
- * - Type-safe invalidation
- * - Autocomplete desteği
- * - Kolay refactoring
+ * - Tutarlı query key yapısı (hiyerarşik)
+ * - Type-safe invalidation (tip güvenli)
+ * - Autocomplete desteği (IDE yardımı)
+ * - Kolay refactoring (değişiklikler tek yerden)
  * 
- * Kullanım:
+ * Kullanım Örnekleri:
  * - useQuery({ queryKey: queryKeys.jobs.list(filters) })
  * - queryClient.invalidateQueries({ queryKey: queryKeys.jobs.all })
+ * - queryClient.invalidateQueries({ queryKey: queryKeys.profile.educations() })
+ * 
+ * Hiyerarşik Yapı:
+ * - jobs.all -> Tüm job query'lerini invalidate eder
+ * - jobs.list(filters) -> Sadece belirli filtreye sahip listeyi invalidate eder
+ * - jobs.detail(id) -> Sadece belirli ID'ye sahip detayı invalidate eder
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import type { JobListParams } from './services/job.service';
 
-// Filter types
+// ============================================================================
+// FİLTRE TİPLERİ
+// ============================================================================
+
+// Başvuru filtreleri
 export interface ApplicationFilters {
-  status_id?: number;
-  keyword?: string;
+  status_id?: number; // Durum ID'si
+  keyword?: string; // Arama kelimesi
 }
 
+// Bildirim filtreleri
 export interface NotificationFilters {
-  showUnreadOnly?: boolean;
-  limit?: number;
+  showUnreadOnly?: boolean; // Sadece okunmamışları göster
+  limit?: number; // Limit
 }
+
+// ============================================================================
+// MERKEZİ QUERY KEY'LER
+// ============================================================================
 
 /**
- * Centralized Query Keys
- * Hierarchical structure allows for granular or broad invalidation
+ * Merkezi Query Key'ler
+ * @description Hiyerarşik yapı, granüler veya geniş invalidation'a izin verir
+ * 
+ * Örnek Kullanım:
+ * - queryKeys.jobs.all -> ['jobs']
+ * - queryKeys.jobs.list({ city_id: 1 }) -> ['jobs', 'list', { city_id: 1 }]
+ * - queryKeys.jobs.detail(5) -> ['jobs', 'detail', 5]
  */
 export const queryKeys = {
-  // Jobs
+  // İş İlanları
   jobs: {
-    all: ['jobs'] as const,
-    list: (filters?: JobListParams) => [...queryKeys.jobs.all, 'list', filters] as const,
-    detail: (id: number) => [...queryKeys.jobs.all, 'detail', id] as const,
+    all: ['jobs'] as const, // Tüm job query'leri
+    list: (filters?: JobListParams) => [...queryKeys.jobs.all, 'list', filters] as const, // İlan listesi
+    detail: (id: number) => [...queryKeys.jobs.all, 'detail', id] as const, // İlan detayı
   },
 
-  // Profile
+  // Profil
   profile: {
-    all: ['profile'] as const,
-    complete: () => [...queryKeys.profile.all, 'complete'] as const,
-    completion: () => [...queryKeys.profile.all, 'completion'] as const,
-    educations: () => [...queryKeys.profile.all, 'educations'] as const,
-    experiences: () => [...queryKeys.profile.all, 'experiences'] as const,
-    certificates: () => [...queryKeys.profile.all, 'certificates'] as const,
-    languages: () => [...queryKeys.profile.all, 'languages'] as const,
+    all: ['profile'] as const, // Tüm profil query'leri
+    complete: () => [...queryKeys.profile.all, 'complete'] as const, // Tam profil
+    completion: () => [...queryKeys.profile.all, 'completion'] as const, // Tamamlanma yüzdesi
+    educations: () => [...queryKeys.profile.all, 'educations'] as const, // Eğitimler
+    experiences: () => [...queryKeys.profile.all, 'experiences'] as const, // Deneyimler
+    certificates: () => [...queryKeys.profile.all, 'certificates'] as const, // Sertifikalar
+    languages: () => [...queryKeys.profile.all, 'languages'] as const, // Diller
   },
 
-  // Applications
+  // Başvurular
   applications: {
-    all: ['applications'] as const,
-    list: (filters?: ApplicationFilters) => [...queryKeys.applications.all, 'list', filters] as const,
-    detail: (id: number) => [...queryKeys.applications.all, 'detail', id] as const,
+    all: ['applications'] as const, // Tüm başvuru query'leri
+    list: (filters?: ApplicationFilters) => [...queryKeys.applications.all, 'list', filters] as const, // Başvuru listesi
+    detail: (id: number) => [...queryKeys.applications.all, 'detail', id] as const, // Başvuru detayı
   },
 
-  // Notifications
+  // Bildirimler
   notifications: {
-    all: ['notifications'] as const,
-    list: (filters?: NotificationFilters) => [...queryKeys.notifications.all, 'list', filters] as const,
-    unreadCount: () => [...queryKeys.notifications.all, 'unreadCount'] as const,
+    all: ['notifications'] as const, // Tüm bildirim query'leri
+    list: (filters?: NotificationFilters) => [...queryKeys.notifications.all, 'list', filters] as const, // Bildirim listesi
+    unreadCount: () => [...queryKeys.notifications.all, 'unreadCount'] as const, // Okunmamış sayısı
   },
 
-  // Lookup (static data)
+  // Lookup (statik veri)
   lookup: {
-    all: ['lookup'] as const,
-    specialties: () => [...queryKeys.lookup.all, 'specialties'] as const,
-    subspecialties: (specialtyId?: number) => [...queryKeys.lookup.all, 'subspecialties', specialtyId] as const,
-    cities: () => [...queryKeys.lookup.all, 'cities'] as const,
-    educationTypes: () => [...queryKeys.lookup.all, 'educationTypes'] as const,
-    languages: () => [...queryKeys.lookup.all, 'languages'] as const,
-    languageLevels: () => [...queryKeys.lookup.all, 'languageLevels'] as const,
-    certificateTypes: () => [...queryKeys.lookup.all, 'certificateTypes'] as const,
-    applicationStatuses: () => [...queryKeys.lookup.all, 'applicationStatuses'] as const,
+    all: ['lookup'] as const, // Tüm lookup query'leri
+    specialties: () => [...queryKeys.lookup.all, 'specialties'] as const, // Branşlar
+    subspecialties: (specialtyId?: number) => [...queryKeys.lookup.all, 'subspecialties', specialtyId] as const, // Yan dallar
+    cities: () => [...queryKeys.lookup.all, 'cities'] as const, // Şehirler
+    educationTypes: () => [...queryKeys.lookup.all, 'educationTypes'] as const, // Eğitim tipleri
+    languages: () => [...queryKeys.lookup.all, 'languages'] as const, // Diller
+    languageLevels: () => [...queryKeys.lookup.all, 'languageLevels'] as const, // Dil seviyeleri
+    certificateTypes: () => [...queryKeys.lookup.all, 'certificateTypes'] as const, // Sertifika tipleri
+    applicationStatuses: () => [...queryKeys.lookup.all, 'applicationStatuses'] as const, // Başvuru durumları
   },
 
-  // Photo management
+  // Fotoğraf yönetimi
   photo: {
-    all: ['photo'] as const,
-    status: () => [...queryKeys.photo.all, 'status'] as const,
-    history: () => [...queryKeys.photo.all, 'history'] as const,
+    all: ['photo'] as const, // Tüm fotoğraf query'leri
+    status: () => [...queryKeys.photo.all, 'status'] as const, // Fotoğraf durumu
+    history: () => [...queryKeys.photo.all, 'history'] as const, // Fotoğraf geçmişi
   },
 
   // Dashboard
   dashboard: {
-    all: ['dashboard'] as const,
+    all: ['dashboard'] as const, // Tüm dashboard query'leri
   },
 } as const;
 
-// Type exports for external use
+// ============================================================================
+// TİP EXPORT'LARI
+// ============================================================================
+
+// Dış kullanım için tip export'u
 export type QueryKeys = typeof queryKeys;

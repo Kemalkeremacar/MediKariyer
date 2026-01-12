@@ -1,36 +1,35 @@
 /**
- * Z-Index Management System
+ * @file zIndex.ts
+ * @description Z-Index Yönetim Sistemi
  * 
- * Centralized z-index values for consistent layering across the app.
- * This is the SINGLE SOURCE OF TRUTH for all overlay z-index values.
- * Higher values appear above lower values.
+ * Uygulama genelinde tutarlı katmanlama için merkezi z-index değerleri.
+ * Tüm overlay z-index değerleri için TEK KAYNAK.
+ * Yüksek değerler, düşük değerlerin üzerinde görünür.
  * 
- * @description
- * The overlay stacking order follows a strict hierarchy to ensure
- * predictable visual layering. This hierarchy MUST be maintained:
+ * Overlay katmanlama sırası katı bir hiyerarşi izler ve bu hiyerarşi KORUNMALIDIR:
  * 
- * **Required Stacking Order (lowest to highest):**
+ * **Gerekli Katmanlama Sırası (en düşükten en yükseğe):**
  * ```
  * base (0) < dropdown/select (100) < bottomSheet (200) < modal (300) < alert (400) < toast (500)
  * ```
  * 
- * **Layer Stack (Bottom to Top):**
- * | Layer | Z-Index | Components |
- * |-------|---------|------------|
- * | 1. Base Content | 0-1 | Screens, cards, lists |
- * | 2. Sticky Elements | 10-15 | Headers, FABs |
- * | 3. Dropdowns/Select | 100 | BottomSheetModal dropdowns, Select components |
- * | 4. Bottom Sheets | 200 | Action sheets, filter sheets |
- * | 5. Modals | 300 | React Native Modal, dialogs |
- * | 6. Alerts | 400 | Confirmation dialogs, CustomAlert |
- * | 7. Toasts | 500 | Toast notifications (always above alerts) |
- * | 8. System Overlays | 600-700 | Loading screens, offline notices |
+ * **Katman Yığını (Alttan Üste):**
+ * | Katman | Z-Index | Bileşenler |
+ * |--------|---------|------------|
+ * | 1. Temel İçerik | 0-1 | Ekranlar, kartlar, listeler |
+ * | 2. Sabit Elemanlar | 10-15 | Başlıklar, FAB'ler |
+ * | 3. Açılır Menüler/Select | 100 | BottomSheetModal açılır menüleri, Select bileşenleri |
+ * | 4. Alt Sayfalar | 200 | Action sheet'ler, filtre sayfaları |
+ * | 5. Modal'lar | 300 | React Native Modal, dialog'lar |
+ * | 6. Uyarılar | 400 | Onay dialog'ları, CustomAlert |
+ * | 7. Toast'lar | 500 | Toast bildirimleri (her zaman alert'lerin üstünde) |
+ * | 8. Sistem Overlay'leri | 600-700 | Yükleme ekranları, çevrimdışı bildirimleri |
  * 
- * **Key Invariants:**
- * - Toast ALWAYS renders above Alert (toast: 500 > alert: 400)
- * - Alert ALWAYS renders above Modal (alert: 400 > modal: 300)
- * - Select renders above regular content but below modals when opened from non-modal screens
- * - Multiple overlays maintain correct stacking without manual z-index overrides
+ * **Önemli Kurallar:**
+ * - Toast HER ZAMAN Alert'in üstünde render edilir (toast: 500 > alert: 400)
+ * - Alert HER ZAMAN Modal'ın üstünde render edilir (alert: 400 > modal: 300)
+ * - Select, normal içeriğin üstünde ancak modal olmayan ekranlardan açıldığında modal'ların altında render edilir
+ * - Birden fazla overlay, manuel z-index override'ları olmadan doğru katmanlamayı korur
  * 
  * @example
  * ```typescript
@@ -42,132 +41,134 @@
  * });
  * ```
  * 
- * @see Requirements 7.1, 7.2, 7.3, 7.4, 7.5
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 export const zIndex = {
   /**
-   * Base layer - default content level
-   * Used for: screens, regular content, cards, lists
+   * Temel katman - varsayılan içerik seviyesi
+   * Kullanım: ekranlar, normal içerik, kartlar, listeler
    */
   base: 0,
   
   /**
-   * Elevated content - slightly raised surfaces
-   * Used for: elevated cards, raised surfaces
+   * Yükseltilmiş içerik - hafifçe yükseltilmiş yüzeyler
+   * Kullanım: yükseltilmiş kartlar, yükseltilmiş yüzeyler
    */
   elevated: 1,
   
   /**
-   * Sticky elements - fixed position headers
-   * Used for: sticky headers, navigation bars
+   * Sabit elemanlar - sabit konumlu başlıklar
+   * Kullanım: sabit başlıklar, navigasyon çubukları
    */
   sticky: 10,
   
   /**
-   * Floating Action Button layer
-   * Used for: FABs, floating buttons
+   * Floating Action Button katmanı
+   * Kullanım: FAB'ler, yüzen butonlar
    */
   fab: 15,
   
   /**
-   * Dropdown layer - BottomSheetModal dropdowns
-   * Used for: Select component dropdowns, autocomplete menus
+   * Açılır menü katmanı - BottomSheetModal açılır menüleri
+   * Kullanım: Select bileşeni açılır menüleri, otomatik tamamlama menüleri
    * @invariant dropdown < bottomSheet < modal < alert < toast
    */
   dropdown: 100,
   
   /**
-   * Select component layer (alias for dropdown)
-   * Used for: Select/picker components using BottomSheetModal
+   * Select bileşeni katmanı (dropdown için takma ad)
+   * Kullanım: BottomSheetModal kullanan Select/picker bileşenleri
    * @invariant select < bottomSheet < modal < alert < toast
    */
   select: 100,
   
   /**
-   * Bottom sheet layer - action sheets, filter panels
-   * Used for: BottomSheet components, action sheets, filter sheets
+   * Alt sayfa katmanı - action sheet'ler, filtre panelleri
+   * Kullanım: BottomSheet bileşenleri, action sheet'ler, filtre sayfaları
    * @invariant bottomSheet < modal < alert < toast
    */
   bottomSheet: 200,
   
   /**
-   * Action sheet layer (alias for bottomSheet)
-   * Used for: Action sheet menus
+   * Action sheet katmanı (bottomSheet için takma ad)
+   * Kullanım: Action sheet menüleri
    */
   actionSheet: 200,
   
   /**
-   * Modal layer - full screen modals and dialogs
-   * Used for: React Native Modal, dialog overlays
+   * Modal katmanı - tam ekran modal'lar ve dialog'lar
+   * Kullanım: React Native Modal, dialog overlay'leri
    * @invariant modal < alert < toast
    */
   modal: 300,
   
   /**
-   * Dialog layer (alias for modal)
-   * Used for: Dialog components
+   * Dialog katmanı (modal için takma ad)
+   * Kullanım: Dialog bileşenleri
    */
   dialog: 300,
   
   /**
-   * Alert layer - confirmation dialogs and alerts
-   * Used for: CustomAlert, confirmation dialogs
-   * @invariant alert > modal (alerts always above modals)
-   * @invariant alert < toast (toasts always above alerts)
+   * Uyarı katmanı - onay dialog'ları ve uyarılar
+   * Kullanım: CustomAlert, onay dialog'ları
+   * @invariant alert > modal (uyarılar her zaman modal'ların üstünde)
+   * @invariant alert < toast (toast'lar her zaman uyarıların üstünde)
    */
   alert: 400,
   
   /**
-   * Toast layer - notification toasts
-   * Used for: Toast notifications, snackbars
-   * @invariant toast > alert (toasts always above alerts)
-   * @invariant toast > modal (toasts always above modals)
+   * Toast katmanı - bildirim toast'ları
+   * Kullanım: Toast bildirimleri, snackbar'lar
+   * @invariant toast > alert (toast'lar her zaman uyarıların üstünde)
+   * @invariant toast > modal (toast'lar her zaman modal'ların üstünde)
    */
   toast: 500,
   
   /**
-   * System overlay layer - loading screens
-   * Used for: Full-screen loading overlays
+   * Sistem overlay katmanı - yükleme ekranları
+   * Kullanım: Tam ekran yükleme overlay'leri
    */
   overlay: 600,
   
   /**
-   * Loading layer (alias for overlay)
-   * Used for: Loading spinners, progress indicators
+   * Yükleme katmanı (overlay için takma ad)
+   * Kullanım: Yükleme spinner'ları, ilerleme göstergeleri
    */
   loading: 600,
   
   /**
-   * Offline notice layer - network status indicators
-   * Used for: Offline banners, connectivity notices
-   * Highest priority system overlay
+   * Çevrimdışı bildirim katmanı - ağ durumu göstergeleri
+   * Kullanım: Çevrimdışı banner'ları, bağlantı bildirimleri
+   * En yüksek öncelikli sistem overlay'i
    */
   offlineNotice: 700,
   
   /**
-   * Maximum z-index - for debugging or special cases
-   * @warning Use sparingly, only for debugging
+   * Maksimum z-index - hata ayıklama veya özel durumlar için
+   * @warning Dikkatli kullanın, sadece hata ayıklama için
    */
   max: 9999,
 } as const;
 
 /**
- * Z-Index key type for TypeScript support
- * @description All valid z-index layer names
+ * TypeScript desteği için Z-Index key tipi
+ * @description Tüm geçerli z-index katman isimleri
  */
 export type ZIndexKey = keyof typeof zIndex;
 
 /**
- * Z-Index value type for TypeScript support
- * @description All valid z-index numeric values
+ * TypeScript desteği için Z-Index value tipi
+ * @description Tüm geçerli z-index sayısal değerleri
  */
 export type ZIndexValue = typeof zIndex[ZIndexKey];
 
 /**
- * Helper function to get z-index value by key
- * @param key - The z-index layer name
- * @returns The numeric z-index value
+ * Key'e göre z-index değerini döndüren yardımcı fonksiyon
+ * @param {ZIndexKey} key - Z-index katman ismi
+ * @returns {number} Sayısal z-index değeri
  * @example
  * ```typescript
  * const modalZ = getZIndex('modal'); // 300
@@ -177,10 +178,10 @@ export type ZIndexValue = typeof zIndex[ZIndexKey];
 export const getZIndex = (key: ZIndexKey): number => zIndex[key];
 
 /**
- * Validates that the z-index hierarchy is correct
- * @description This function can be used in tests to verify the stacking order
- * @returns true if hierarchy is valid
- * @throws Error if hierarchy is invalid
+ * Z-index hiyerarşisinin doğru olduğunu doğrular
+ * @description Bu fonksiyon testlerde katmanlama sırasını doğrulamak için kullanılabilir
+ * @returns {boolean} Hiyerarşi geçerliyse true
+ * @throws {Error} Hiyerarşi geçersizse hata fırlatır
  */
 export const validateZIndexHierarchy = (): boolean => {
   const requiredOrder = [
@@ -197,7 +198,7 @@ export const validateZIndexHierarchy = (): boolean => {
     const curr = requiredOrder[i];
     if (prev.value >= curr.value) {
       throw new Error(
-        `Z-Index hierarchy violation: ${prev.name} (${prev.value}) must be less than ${curr.name} (${curr.value})`
+        `Z-Index hiyerarşi ihlali: ${prev.name} (${prev.value}), ${curr.name} (${curr.value}) değerinden küçük olmalıdır`
       );
     }
   }
@@ -206,32 +207,34 @@ export const validateZIndexHierarchy = (): boolean => {
 };
 
 /**
- * Provider Hierarchy Documentation
+ * Provider Hiyerarşisi Dokümantasyonu
  * 
- * The app uses a specific provider hierarchy to ensure proper z-index layering:
+ * Uygulama, doğru z-index katmanlamasını sağlamak için belirli bir provider hiyerarşisi kullanır:
  * 
  * ```
  * GestureHandlerRootView
  * └── SafeAreaProvider
  *     └── PortalProvider
- *         └── BottomSheetModalProvider (ROOT LEVEL)
+ *         └── BottomSheetModalProvider (KÖK SEVİYE)
  *             └── AppProviders
  *                 └── NavigationContainer
- *                     └── Screens
- *         └── PortalHost (name="root") - Toast/Alert render here
+ *                     └── Ekranlar
+ *         └── PortalHost (name="root") - Toast/Alert burada render edilir
  * ```
  * 
- * **Key Points:**
- * 1. BottomSheetModalProvider is at ROOT level (outside NavigationContainer)
- *    - This allows Select/BottomSheet to render above all navigation screens
+ * **Önemli Noktalar:**
+ * 1. BottomSheetModalProvider KÖK seviyededir (NavigationContainer dışında)
+ *    - Bu, Select/BottomSheet'in tüm navigasyon ekranlarının üstünde render edilmesini sağlar
  * 
- * 2. PortalHost is at ROOT level (outside NavigationContainer)
- *    - Toast and Alert use Portal to render at this level
- *    - They appear above everything including modals
+ * 2. PortalHost KÖK seviyededir (NavigationContainer dışında)
+ *    - Toast ve Alert, bu seviyede render edilmek için Portal kullanır
+ *    - Modal'lar dahil her şeyin üstünde görünürler
  * 
- * 3. No local BottomSheetModalProvider in components
- *    - All components use the root-level provider
- *    - This prevents z-index conflicts
+ * 3. Bileşenlerde yerel BottomSheetModalProvider yok
+ *    - Tüm bileşenler kök seviye provider'ı kullanır
+ *    - Bu, z-index çakışmalarını önler
  * 
- * @see Requirements 6.2, 6.3, 6.4
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */

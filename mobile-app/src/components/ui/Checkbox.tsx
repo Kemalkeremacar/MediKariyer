@@ -1,17 +1,50 @@
+/**
+ * @file Checkbox.tsx
+ * @description Onay kutusu bileşeni
+ * 
+ * Özellikler:
+ * - İki boyut seçeneği (sm, md)
+ * - Etiket desteği
+ * - Devre dışı bırakma
+ * - Modern tasarım (yuvarlatılmış köşeler)
+ * - Checkmark ikonu
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Checkbox checked={isChecked} onPress={toggleCheck} label="Kabul ediyorum" />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
+/**
+ * Checkbox bileşeni props interface'i
+ */
 export interface CheckboxProps {
+  /** Seçili durumu */
   checked: boolean;
+  /** Tıklama fonksiyonu */
   onPress: () => void;
+  /** Etiket metni */
   label?: string;
+  /** Devre dışı durumu */
   disabled?: boolean;
+  /** Checkbox boyutu */
   size?: 'sm' | 'md';
 }
 
+/**
+ * Checkbox Bileşeni
+ * Modern onay kutusu
+ */
 export const Checkbox: React.FC<CheckboxProps> = ({
   checked,
   onPress,

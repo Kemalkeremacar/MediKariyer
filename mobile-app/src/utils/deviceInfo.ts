@@ -1,15 +1,14 @@
 /**
  * @file deviceInfo.ts
- * @description Device information and unique device ID
- * 
- * Features:
- * - Get unique device ID
- * - Get device model, brand, OS version
- * - Device binding for token security
- * 
+ * @description Cihaz bilgileri ve benzersiz cihaz ID'si
  * @author MediKariyer Development Team
  * @version 1.0.0
  * @since 2024
+ * 
+ * **Özellikler:**
+ * - Benzersiz cihaz ID'si alma
+ * - Cihaz modeli, marka, OS versiyonu bilgileri
+ * - Token güvenliği için cihaz bağlama
  */
 
 import * as Device from 'expo-device';
@@ -18,21 +17,41 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { devLog } from './devLogger';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
 export interface DeviceInfo {
+  /** Benzersiz cihaz ID'si */
   deviceId: string;
+  /** Cihaz adı */
   deviceName: string;
+  /** Marka (Apple, Samsung, vb.) */
   brand: string;
+  /** Model (iPhone 14 Pro, Galaxy S23, vb.) */
   model: string;
+  /** İşletim sistemi adı (iOS, Android) */
   osName: string;
+  /** İşletim sistemi versiyonu */
   osVersion: string;
+  /** Uygulama versiyonu */
   appVersion: string;
+  /** Platform (ios, android, web) */
   platform: 'ios' | 'android' | 'web';
 }
 
+// ============================================================================
+// DEVICE ID
+// ============================================================================
+
 /**
- * Get unique device ID
- * - iOS: Uses identifierForVendor (changes if all apps from vendor are uninstalled)
- * - Android: Uses androidId (unique per device, persists across app reinstalls)
+ * Benzersiz cihaz ID'si al
+ * 
+ * **Platform Bazlı:**
+ * - iOS: identifierForVendor kullanır (vendor'dan tüm uygulamalar kaldırılırsa değişir)
+ * - Android: androidId kullanır (cihaz başına benzersiz, uygulama yeniden yüklemelerinde kalıcı)
+ * 
+ * @returns Benzersiz cihaz ID'si
  */
 export async function getDeviceId(): Promise<string> {
   try {
@@ -45,7 +64,7 @@ export async function getDeviceId(): Promise<string> {
       const id = Application.getAndroidId();
       return id || Constants.deviceId || 'unknown-android';
     } else {
-      // Web or other platforms
+      // Web veya diğer platformlar
       return Constants.deviceId || 'unknown-web';
     }
   } catch (error) {
@@ -54,57 +73,67 @@ export async function getDeviceId(): Promise<string> {
   }
 }
 
+// ============================================================================
+// DEVICE INFORMATION
+// ============================================================================
+
 /**
- * Get device name
+ * Cihaz adını al
  */
 export function getDeviceName(): string {
   return Device.deviceName || 'Unknown Device';
 }
 
 /**
- * Get device brand (Apple, Samsung, etc.)
+ * Cihaz markasını al (Apple, Samsung, vb.)
  */
 export function getDeviceBrand(): string {
   return Device.brand || 'Unknown';
 }
 
 /**
- * Get device model (iPhone 14 Pro, Galaxy S23, etc.)
+ * Cihaz modelini al (iPhone 14 Pro, Galaxy S23, vb.)
  */
 export function getDeviceModel(): string {
   return Device.modelName || Device.modelId || 'Unknown';
 }
 
 /**
- * Get OS name (iOS, Android)
+ * İşletim sistemi adını al (iOS, Android)
  */
 export function getOSName(): string {
   return Device.osName || Platform.OS;
 }
 
 /**
- * Get OS version (16.0, 13.0, etc.)
+ * İşletim sistemi versiyonunu al (16.0, 13.0, vb.)
  */
 export function getOSVersion(): string {
   return Device.osVersion || 'Unknown';
 }
 
 /**
- * Get app version
+ * Uygulama versiyonunu al
  */
 export function getAppVersion(): string {
   return Constants.expoConfig?.version || Application.nativeApplicationVersion || '1.0.0';
 }
 
 /**
- * Get platform (ios, android, web)
+ * Platform al (ios, android, web)
  */
 export function getPlatform(): 'ios' | 'android' | 'web' {
   return Platform.OS as 'ios' | 'android' | 'web';
 }
 
+// ============================================================================
+// COMPLETE DEVICE INFO
+// ============================================================================
+
 /**
- * Get complete device info
+ * Tam cihaz bilgisini al
+ * 
+ * @returns Tüm cihaz bilgileri
  */
 export async function getDeviceInfo(): Promise<DeviceInfo> {
   const deviceId = await getDeviceId();
@@ -122,17 +151,23 @@ export async function getDeviceInfo(): Promise<DeviceInfo> {
 }
 
 /**
- * Get device fingerprint (for device binding)
- * Combines multiple device properties for unique identification
+ * Cihaz parmak izi al (cihaz bağlama için)
+ * Benzersiz tanımlama için birden fazla cihaz özelliğini birleştirir
+ * 
+ * @returns Cihaz parmak izi
  */
 export async function getDeviceFingerprint(): Promise<string> {
   const info = await getDeviceInfo();
   
-  // Create fingerprint from device properties
+  // Cihaz özelliklerinden parmak izi oluştur
   const fingerprint = `${info.deviceId}-${info.platform}-${info.brand}-${info.model}`;
   
   return fingerprint;
 }
+
+// ============================================================================
+// EXPORT
+// ============================================================================
 
 export const deviceInfo = {
   getDeviceId,

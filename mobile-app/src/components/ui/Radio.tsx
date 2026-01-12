@@ -1,16 +1,49 @@
+/**
+ * @file Radio.tsx
+ * @description Radio button (seçim butonu) bileşeni
+ * 
+ * Özellikler:
+ * - İki boyut seçeneği (sm, md)
+ * - Etiket desteği
+ * - Devre dışı bırakma
+ * - Seçili/seçili değil durumu
+ * - Modern tasarım (yuvarlak)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Radio selected={isSelected} onPress={handleSelect} label="Seçenek 1" />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { colors, spacing } from '@/theme';
 import { Typography } from './Typography';
 
+/**
+ * Radio bileşeni props interface'i
+ */
 export interface RadioProps {
+  /** Seçili durumu */
   selected: boolean;
+  /** Tıklama fonksiyonu */
   onPress: () => void;
+  /** Etiket metni */
   label?: string;
+  /** Devre dışı durumu */
   disabled?: boolean;
+  /** Radio boyutu */
   size?: 'sm' | 'md';
 }
 
+/**
+ * Radio Button Bileşeni
+ * Tek seçim için kullanılır
+ */
 export const Radio: React.FC<RadioProps> = ({
   selected,
   onPress,

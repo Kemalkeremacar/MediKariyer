@@ -1,79 +1,103 @@
 /**
- * API Endpoints - Mobile API için endpoint tanımları
+ * @file endpoints.ts
+ * @description Mobile API için endpoint tanımları
  * 
- * Not: Base URL zaten `/api/mobile` içeriyor (config.ts'de tanımlı)
+ * Not: Base URL zaten `/api/mobile` içeriyor (env.ts'de tanımlı)
  * Bu yüzden burada sadece kaynak yollarını tanımlıyoruz
  * 
- * Örnek: `/doctor/profile` -> `/api/mobile/doctor/profile`
+ * Örnek Kullanım:
+ * - endpoints.doctor.profile -> `/doctor/profile`
+ * - Tam URL: `${API_BASE_URL}/doctor/profile` -> `/api/mobile/doctor/profile`
+ * 
+ * Endpoint Kategorileri:
+ * - auth: Kimlik doğrulama işlemleri
+ * - doctor: Doktor profil ve CRUD işlemleri
+ * - lookup: Referans veri listeleri
+ * - jobs: İlan listeleme ve detay
+ * - applications: Başvuru yönetimi
+ * - notifications: Bildirim yönetimi
+ * - upload: Dosya yükleme işlemleri
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 export const endpoints = {
+  // Kimlik Doğrulama Endpoint'leri
   auth: {
-    login: '/auth/login',
-    registerDoctor: '/auth/registerDoctor',
-    refreshToken: '/auth/refresh',
-    logout: '/auth/logout',
-    me: '/auth/me',
-    changePassword: '/auth/change-password',
-    forgotPassword: '/auth/forgot-password',
-    resetPassword: '/auth/reset-password',
+    login: '/auth/login', // Kullanıcı girişi
+    registerDoctor: '/auth/registerDoctor', // Doktor kaydı
+    refreshToken: '/auth/refresh', // Token yenileme
+    logout: '/auth/logout', // Çıkış
+    me: '/auth/me', // Kullanıcı bilgilerini getir
+    changePassword: '/auth/change-password', // Şifre değiştir
+    forgotPassword: '/auth/forgot-password', // Şifre sıfırlama talebi
+    resetPassword: '/auth/reset-password', // Şifre sıfırlama
   },
+  // Doktor Profil Endpoint'leri
   doctor: {
-    profile: '/doctor/profile',
-    profileCompletion: '/doctor/profile/completion',
-    updatePersonalInfo: '/doctor/profile/personal',
-    // Education CRUD
-    educations: '/doctor/educations',
-    education: (id: number) => `/doctor/educations/${id}`,
-    // Experience CRUD
-    experiences: '/doctor/experiences',
-    experience: (id: number) => `/doctor/experiences/${id}`,
-    // Certificate CRUD
-    certificates: '/doctor/certificates',
-    certificate: (id: number) => `/doctor/certificates/${id}`,
-    // Language CRUD
-    languages: '/doctor/languages',
-    language: (id: number) => `/doctor/languages/${id}`,
-    // Photo Request (Mobile Backend)
-    profilePhoto: '/doctor/profile/photo',
-    photoStatus: '/doctor/profile/photo/status',
-    photoHistory: '/doctor/profile/photo/history',
-    photoRequest: '/doctor/profile/photo/request',
-    // Account Management (Mobile Backend)
-    deactivateAccount: '/doctor/account/deactivate',
+    profile: '/doctor/profile', // Profil bilgileri
+    profileCompletion: '/doctor/profile/completion', // Profil tamamlanma yüzdesi
+    updatePersonalInfo: '/doctor/profile/personal', // Kişisel bilgileri güncelle
+    // Eğitim CRUD
+    educations: '/doctor/educations', // Eğitim listesi
+    education: (id: number) => `/doctor/educations/${id}`, // Tek eğitim
+    // Deneyim CRUD
+    experiences: '/doctor/experiences', // Deneyim listesi
+    experience: (id: number) => `/doctor/experiences/${id}`, // Tek deneyim
+    // Sertifika CRUD
+    certificates: '/doctor/certificates', // Sertifika listesi
+    certificate: (id: number) => `/doctor/certificates/${id}`, // Tek sertifika
+    // Dil CRUD
+    languages: '/doctor/languages', // Dil listesi
+    language: (id: number) => `/doctor/languages/${id}`, // Tek dil
+    // Fotoğraf İşlemleri (Mobile Backend)
+    profilePhoto: '/doctor/profile/photo', // Profil fotoğrafı
+    photoStatus: '/doctor/profile/photo/status', // Fotoğraf onay durumu
+    photoHistory: '/doctor/profile/photo/history', // Fotoğraf geçmişi
+    photoRequest: '/doctor/profile/photo/request', // Fotoğraf değişiklik talebi
+    // Hesap Yönetimi (Mobile Backend)
+    deactivateAccount: '/doctor/account/deactivate', // Hesabı pasifleştir
   },
+  // Referans Veri Endpoint'leri
   lookup: {
-    cities: '/lookup/cities',
-    specialties: '/lookup/specialties',
+    cities: '/lookup/cities', // Şehir listesi
+    specialties: '/lookup/specialties', // Branş listesi
     subspecialties: (specialtyId?: number) =>
-      specialtyId ? `/lookup/subspecialties/${specialtyId}` : '/lookup/subspecialties',
-    educationTypes: '/lookup/education-types',
-    languages: '/lookup/languages',
-    languageLevels: '/lookup/language-levels',
-    applicationStatuses: '/lookup/application-statuses',
+      specialtyId ? `/lookup/subspecialties/${specialtyId}` : '/lookup/subspecialties', // Yan dal listesi
+    educationTypes: '/lookup/education-types', // Eğitim tipleri
+    languages: '/lookup/languages', // Dil listesi
+    languageLevels: '/lookup/language-levels', // Dil seviyeleri
+    applicationStatuses: '/lookup/application-statuses', // Başvuru durumları
   },
+  // İlan Endpoint'leri
   jobs: {
-    list: '/jobs',
-    detail: (id: number) => `/jobs/${id}`,
+    list: '/jobs', // İlan listesi
+    detail: (id: number) => `/jobs/${id}`, // İlan detayı
   },
+  // Başvuru Endpoint'leri
   applications: {
-    list: '/applications',
-    detail: (id: number) => `/applications/${id}`,
-    create: '/applications',
-    withdraw: (id: number) => `/applications/${id}/withdraw`,
+    list: '/applications', // Başvuru listesi
+    detail: (id: number) => `/applications/${id}`, // Başvuru detayı
+    create: '/applications', // Başvuru oluştur
+    withdraw: (id: number) => `/applications/${id}/withdraw`, // Başvuruyu geri çek
   },
+  // Bildirim Endpoint'leri
   notifications: {
-    list: '/notifications',
-    markAsRead: (id: number) => `/notifications/${id}/read`,
-    markAllAsRead: '/notifications/mark-all-read',
-    clearRead: '/notifications/clear-read',
-    delete: (id: number) => `/notifications/${id}`,
-    deleteMany: '/notifications/delete-many',
-    unreadCount: '/notifications/unread-count',
+    list: '/notifications', // Bildirim listesi
+    markAsRead: (id: number) => `/notifications/${id}/read`, // Okundu olarak işaretle
+    markAllAsRead: '/notifications/mark-all-read', // Tümünü okundu işaretle
+    clearRead: '/notifications/clear-read', // Okunmuşları temizle
+    delete: (id: number) => `/notifications/${id}`, // Bildirimi sil
+    deleteMany: '/notifications/delete-many', // Çoklu silme
+    unreadCount: '/notifications/unread-count', // Okunmamış sayısı
   },
+  // Cihaz Token Endpoint'i (Push Notification için)
   deviceToken: '/device-token',
+  // Dosya Yükleme Endpoint'leri
   upload: {
-    profilePhoto: '/upload/profile-photo',
-    registerPhoto: '/upload/register-photo',
+    profilePhoto: '/upload/profile-photo', // Profil fotoğrafı yükle
+    registerPhoto: '/upload/register-photo', // Kayıt fotoğrafı yükle
   },
 } as const;
 

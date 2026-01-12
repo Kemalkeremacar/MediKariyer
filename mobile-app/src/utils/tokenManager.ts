@@ -1,12 +1,18 @@
 /**
  * @file tokenManager.ts
- * @description Secure token management with JWT decode and proactive refresh
+ * @description Güvenli token yönetimi - JWT decode ve proaktif yenileme
  * 
- * Features:
- * - SecureStore only (single source of truth)
- * - JWT decode for expiry check
- * - Proactive token refresh (5 min before expiry)
- * - Token validation
+ * Özellikler:
+ * - SecureStore kullanımı (tek kaynak)
+ * - JWT decode ile süre kontrolü
+ * - Proaktif token yenileme (süresi dolmadan 5 dk önce)
+ * - Token doğrulama
+ * - Cihaz bağlama (device binding) güvenliği
+ * 
+ * Token Yenileme Stratejisi:
+ * - Access token süresi dolmadan 5 dakika önce otomatik yenilenir
+ * - Bu sayede kullanıcı deneyimi kesintisiz olur
+ * - Token yenileme işlemi arka planda gerçekleşir
  * 
  * @author MediKariyer Development Team
  * @version 2.0.0
@@ -23,13 +29,14 @@ const ACCESS_TOKEN_KEY = 'medikariyer_access_token';
 const REFRESH_TOKEN_KEY = 'medikariyer_refresh_token';
 const DEVICE_FINGERPRINT_KEY = 'medikariyer_device_fingerprint';
 
-// Token will be refreshed 5 minutes before expiry
-const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
+// Token süresi dolmadan 5 dakika önce yenilenecek
+const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000; // 5 dakika
 
+// JWT payload tipi
 interface JWTPayload {
-  exp: number; // Expiry timestamp (seconds)
-  iat: number; // Issued at timestamp (seconds)
-  sub?: string; // Subject (user ID)
+  exp: number; // Süre sonu timestamp (saniye)
+  iat: number; // Oluşturulma timestamp (saniye)
+  sub?: string; // Subject (kullanıcı ID'si)
   [key: string]: any;
 }
 
@@ -63,19 +70,23 @@ const storage = {
 };
 
 /**
- * Decode JWT token and extract payload
+ * JWT token'ı decode et ve payload'ı çıkar
+ * @param token - JWT token string
+ * @returns Decode edilmiş payload veya null (hata durumunda)
  */
 function decodeToken(token: string): JWTPayload | null {
   try {
     return jwtDecode<JWTPayload>(token);
   } catch (error) {
-    devLog.error('Failed to decode JWT token:', error);
+    devLog.error('JWT token decode edilemedi:', error);
     return null;
   }
 }
 
 /**
- * Check if token is expired
+ * Token'ın süresi dolmuş mu kontrol et
+ * @param token - JWT token string
+ * @returns Süresi dolmuşsa true, değilse false
  */
 function isTokenExpired(token: string): boolean {
   const decoded = decodeToken(token);
@@ -83,12 +94,14 @@ function isTokenExpired(token: string): boolean {
     return true;
   }
 
-  const currentTime = Date.now() / 1000; // Convert to seconds
+  const currentTime = Date.now() / 1000; // Saniyeye çevir
   return decoded.exp < currentTime;
 }
 
 /**
- * Check if token needs refresh (within threshold)
+ * Token'ın yenilenmesi gerekiyor mu kontrol et (threshold içinde)
+ * @param token - JWT token string
+ * @returns Yenilenmesi gerekiyorsa true, değilse false
  */
 function shouldRefreshToken(token: string): boolean {
   const decoded = decodeToken(token);
@@ -97,43 +110,48 @@ function shouldRefreshToken(token: string): boolean {
   }
 
   const currentTime = Date.now();
-  const expiryTime = decoded.exp * 1000; // Convert to milliseconds
+  const expiryTime = decoded.exp * 1000; // Milisaniyeye çevir
   const timeUntilExpiry = expiryTime - currentTime;
 
-  // Refresh if token expires within threshold
+  // Token threshold içinde sona eriyorsa yenile
   return timeUntilExpiry < TOKEN_REFRESH_THRESHOLD_MS;
 }
 
 /**
- * Get token expiry time in milliseconds
+ * Token'ın süre sonu zamanını milisaniye cinsinden al
+ * @param token - JWT token string
+ * @returns Süre sonu zamanı (ms) veya null
  */
 function getTokenExpiryTime(token: string): number | null {
   const decoded = decodeToken(token);
   if (!decoded || !decoded.exp) {
     return null;
   }
-  return decoded.exp * 1000; // Convert to milliseconds
+  return decoded.exp * 1000; // Milisaniyeye çevir
 }
 
 export const tokenManager = {
   /**
-   * Save tokens to secure storage with device binding
+   * Token'ları cihaz bağlama ile güvenli depolamaya kaydet
+   * @param accessToken - Access token
+   * @param refreshToken - Refresh token
+   * @throws Token'lar geçersizse hata fırlatır
    */
   async saveTokens(accessToken: string, refreshToken: string) {
-    // Validate tokens before saving
+    // Kaydetmeden önce token'ları doğrula
     if (!accessToken || !refreshToken) {
-      throw new Error('Invalid tokens: accessToken and refreshToken are required');
+      throw new Error('Geçersiz token\'lar: accessToken ve refreshToken gerekli');
     }
 
-    // Check if tokens are valid JWT
+    // Token'ların geçerli JWT olup olmadığını kontrol et
     const accessDecoded = decodeToken(accessToken);
     const refreshDecoded = decodeToken(refreshToken);
 
     if (!accessDecoded || !refreshDecoded) {
-      throw new Error('Invalid JWT tokens');
+      throw new Error('Geçersiz JWT token\'ları');
     }
 
-    // Get device fingerprint for device binding
+    // Cihaz bağlama için cihaz parmak izi al
     const fingerprint = await deviceInfo.getDeviceFingerprint();
 
     await Promise.all([
@@ -144,21 +162,24 @@ export const tokenManager = {
   },
 
   /**
-   * Get access token from secure storage
+   * Güvenli depolamadan access token'ı al
+   * @returns Access token veya null
    */
   async getAccessToken(): Promise<string | null> {
     return storage.getItem(ACCESS_TOKEN_KEY);
   },
 
   /**
-   * Get refresh token from secure storage
+   * Güvenli depolamadan refresh token'ı al
+   * @returns Refresh token veya null
    */
   async getRefreshToken(): Promise<string | null> {
     return storage.getItem(REFRESH_TOKEN_KEY);
   },
 
   /**
-   * Get both tokens from secure storage
+   * Güvenli depolamadan her iki token'ı da al
+   * @returns Token'lar objesi
    */
   async getTokens() {
     const [accessToken, refreshToken] = await Promise.all([
@@ -169,7 +190,7 @@ export const tokenManager = {
   },
 
   /**
-   * Clear all tokens from secure storage
+   * Güvenli depolamadan tüm token'ları temizle
    */
   async clearTokens() {
     await Promise.all([
@@ -180,33 +201,36 @@ export const tokenManager = {
   },
 
   /**
-   * Validate device binding (check if tokens are from this device)
+   * Cihaz bağlamasını doğrula (token'lar bu cihazdan mı kontrol et)
+   * @returns Geçerliyse true, değilse false
    */
   async validateDeviceBinding(): Promise<boolean> {
     try {
       const storedFingerprint = await storage.getItem(DEVICE_FINGERPRINT_KEY);
       if (!storedFingerprint) {
-        // No fingerprint stored, tokens might be from old version
-        return true; // Allow for backward compatibility
+        // Parmak izi saklanmamış, eski versiyondan olabilir
+        return true; // Geriye dönük uyumluluk için izin ver
       }
 
       const currentFingerprint = await deviceInfo.getDeviceFingerprint();
       return storedFingerprint === currentFingerprint;
     } catch (error) {
-      devLog.error('Error validating device binding:', error);
+      devLog.error('Cihaz bağlama doğrulaması hatası:', error);
       return false;
     }
   },
 
   /**
-   * Get stored device fingerprint
+   * Saklanan cihaz parmak izini al
+   * @returns Cihaz parmak izi veya null
    */
   async getStoredDeviceFingerprint(): Promise<string | null> {
     return storage.getItem(DEVICE_FINGERPRINT_KEY);
   },
 
   /**
-   * Check if access token is expired
+   * Access token'ın süresi dolmuş mu kontrol et
+   * @returns Süresi dolmuşsa true, değilse false
    */
   async isAccessTokenExpired(): Promise<boolean> {
     const token = await this.getAccessToken();
@@ -215,7 +239,8 @@ export const tokenManager = {
   },
 
   /**
-   * Check if access token needs refresh (within threshold)
+   * Access token'ın yenilenmesi gerekiyor mu kontrol et (threshold içinde)
+   * @returns Yenilenmesi gerekiyorsa true, değilse false
    */
   async shouldRefreshAccessToken(): Promise<boolean> {
     const token = await this.getAccessToken();
@@ -224,7 +249,8 @@ export const tokenManager = {
   },
 
   /**
-   * Get access token expiry time
+   * Access token'ın süre sonu zamanını al
+   * @returns Süre sonu zamanı (ms) veya null
    */
   async getAccessTokenExpiryTime(): Promise<number | null> {
     const token = await this.getAccessToken();
@@ -233,7 +259,8 @@ export const tokenManager = {
   },
 
   /**
-   * Decode access token payload
+   * Access token payload'ını decode et
+   * @returns Decode edilmiş payload veya null
    */
   async decodeAccessToken(): Promise<JWTPayload | null> {
     const token = await this.getAccessToken();
@@ -242,7 +269,8 @@ export const tokenManager = {
   },
 
   /**
-   * Validate tokens (check if they exist and are valid JWT)
+   * Token'ları doğrula (var mı ve geçerli JWT mi kontrol et)
+   * @returns Geçerliyse true, değilse false
    */
   async validateTokens(): Promise<boolean> {
     const { accessToken, refreshToken } = await this.getTokens();

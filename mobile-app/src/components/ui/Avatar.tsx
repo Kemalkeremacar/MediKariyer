@@ -1,3 +1,24 @@
+/**
+ * @file Avatar.tsx
+ * @description Kullanıcı profil resmi bileşeni
+ * 
+ * Özellikler:
+ * - Profil fotoğrafı gösterimi (URL veya Base64)
+ * - Farklı boyut seçenekleri (xs, sm, md, lg, xl, 2xl)
+ * - Fotoğraf yoksa baş harfler gösterimi
+ * - Doğrulanmış kullanıcı rozeti
+ * - Otomatik fallback (fotoğraf yüklenemezse)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Avatar source={user.photo} size="md" initials="AB" verified />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React, { useState } from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { Image } from 'expo-image';
@@ -5,14 +26,25 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 import { Typography } from './Typography';
 
+/**
+ * Avatar bileşeni props interface'i
+ */
 export interface AvatarProps {
+  /** Profil fotoğrafı URL'i veya Base64 string */
   source?: string;
+  /** Avatar boyutu */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Fotoğraf yoksa gösterilecek baş harfler */
   initials?: string;
+  /** Doğrulanmış kullanıcı rozeti göster */
   verified?: boolean;
+  /** Ek stil */
   style?: ViewStyle;
 }
 
+/**
+ * Avatar boyut haritası (piksel cinsinden)
+ */
 const sizeMap = {
   xs: 32,
   sm: 40,
@@ -22,6 +54,9 @@ const sizeMap = {
   '2xl': 120,
 };
 
+/**
+ * İkon boyut haritası (piksel cinsinden)
+ */
 const iconSizeMap = {
   xs: 16,
   sm: 20,
@@ -31,6 +66,10 @@ const iconSizeMap = {
   '2xl': 60,
 };
 
+/**
+ * Avatar Bileşeni
+ * Kullanıcı profil fotoğrafını veya baş harflerini gösterir
+ */
 export const Avatar: React.FC<AvatarProps> = ({
   source,
   size = 'md',
@@ -43,25 +82,25 @@ export const Avatar: React.FC<AvatarProps> = ({
   const badgeSize = size === 'xs' ? 12 : size === 'sm' ? 16 : 20;
   const [imageError, setImageError] = useState(false);
 
-  // Determine if source is base64 or URL
+  // Kaynak Base64 mi yoksa URL mi kontrol et
   const isBase64 = source?.startsWith('data:image/');
-  // Expo Image accepts both string (base64) and object ({ uri: string })
+  // Expo Image hem string (base64) hem de object ({ uri: string }) kabul eder
   const imageSource = isBase64 
-    ? source  // Base64 string - pass directly
-    : (source ? { uri: source } : null);  // URL - wrap in object
+    ? source  // Base64 string - direkt geç
+    : (source ? { uri: source } : null);  // URL - obje içine sar
 
   return (
     <View style={[styles.container, { width: avatarSize, height: avatarSize }, style]}>
       <View style={[styles.avatar, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}>
         {source && !imageError ? (
           <Image 
-            source={imageSource as any}  // Expo Image accepts both string and { uri: string }
+            source={imageSource as any}  // Expo Image hem string hem de { uri: string } kabul eder
             style={[styles.image, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}
             contentFit="cover"
-            cachePolicy={isBase64 ? "none" : "disk"}  // Base64 doesn't need caching
+            cachePolicy={isBase64 ? "none" : "disk"}  // Base64 cache'e ihtiyaç duymaz
             transition={200}
             onError={() => {
-              // Image failed to load, show fallback
+              // Resim yüklenemedi, fallback göster
               setImageError(true);
             }}
           />

@@ -1,6 +1,17 @@
 /**
- * Experience Service
- * ARCH-002: Profile servisinden ayrılan deneyim CRUD işlemleri
+ * @file experience.service.ts
+ * @description Experience Service - Deneyim CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **ARCH-002:** Profile servisinden ayrılan deneyim CRUD işlemleri
+ * 
+ * **Endpoint'ler:**
+ * - GET /api/mobile/doctor/experiences - Deneyim listesi
+ * - POST /api/mobile/doctor/experiences - Yeni deneyim
+ * - PATCH /api/mobile/doctor/experiences/:id - Deneyim güncelleme
+ * - DELETE /api/mobile/doctor/experiences/:id - Deneyim silme
  */
 
 import apiClient from '@/api/client';
@@ -12,9 +23,17 @@ import type {
   DoctorExperience,
 } from '@/types/profile';
 
+// ============================================================================
+// EXPERIENCE SERVICE
+// ============================================================================
+
 export const experienceService = {
   /**
    * Deneyim listesini getirir
+   * 
+   * @returns Deneyim bilgileri listesi
+   * 
+   * **Endpoint:** GET /api/mobile/doctor/experiences
    */
   async getExperiences(): Promise<DoctorExperience[]> {
     const response = await apiClient.get<ApiResponse<DoctorExperience[]>>(
@@ -25,6 +44,11 @@ export const experienceService = {
 
   /**
    * Yeni deneyim kaydı oluşturur
+   * 
+   * @param payload - Deneyim bilgileri
+   * @returns Oluşturulan deneyim kaydı
+   * 
+   * **Endpoint:** POST /api/mobile/doctor/experiences
    */
   async createExperience(
     payload: CreateExperiencePayload,
@@ -38,6 +62,12 @@ export const experienceService = {
 
   /**
    * Deneyim kaydını günceller
+   * 
+   * @param id - Deneyim ID
+   * @param payload - Güncellenecek deneyim bilgileri
+   * @returns Güncellenmiş deneyim kaydı
+   * 
+   * **Endpoint:** PATCH /api/mobile/doctor/experiences/:id
    */
   async updateExperience(
     id: number,
@@ -52,6 +82,10 @@ export const experienceService = {
 
   /**
    * Deneyim kaydını siler
+   * 
+   * @param id - Deneyim ID
+   * 
+   * **Endpoint:** DELETE /api/mobile/doctor/experiences/:id
    */
   async deleteExperience(id: number): Promise<void> {
     await apiClient.delete<ApiResponse<null>>(

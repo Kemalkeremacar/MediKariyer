@@ -1,3 +1,20 @@
+/**
+ * @file AccountDisabledScreen.tsx
+ * @description Hesap pasif durumda ekranı
+ * 
+ * Bu ekran kullanıcının hesabı admin tarafından pasif duruma alındığında gösterilir.
+ * Kullanıcı destek ile iletişime geçebilir veya çıkış yaparak başka hesapla giriş yapabilir.
+ * 
+ * **Özellikler:**
+ * - Gradient header ile tutarlı tasarım
+ * - Kullanıcı bilgileri gösterimi
+ * - Destek e-posta linki
+ * - Çıkış yapma (double cleanup ile garanti)
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
+ */
+
 import React from 'react';
 import { View, StyleSheet, Linking, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -8,14 +25,13 @@ import { useLogout } from '../hooks/useLogout';
 import { tokenManager } from '@/utils/tokenManager';
 
 /**
- * AccountDisabledScreen - Hesap Pasif Durumda Ekranı
+ * Hesap pasif durumda ekranı
  * 
- * Bu ekran, kullanıcının hesabı sistem yöneticisi tarafından pasif duruma alındığında gösterilir.
- * Kullanıcı bu ekrandan çıkış yaparak başka bir hesapla giriş yapabilir.
- * 
- * @author MediKariyer Development Team
- * @version 2.0.0
- * @since 2024
+ * **Kullanım Senaryosu:**
+ * 1. Kullanıcı giriş yapar
+ * 2. Backend is_active = false döner
+ * 3. RootNavigator bu ekranı gösterir
+ * 4. Kullanıcı destek ile iletişime geçer veya çıkış yapar
  */
 export const AccountDisabledScreen = () => {
   const user = useAuthStore((state) => state.user);
@@ -23,7 +39,12 @@ export const AccountDisabledScreen = () => {
   const logoutMutation = useLogout();
 
   /**
-   * Logout işlemi - Garanti için hem hook hem de manuel temizlik yapıyoruz
+   * Çıkış yapma işlemi
+   * 
+   * **Double Cleanup Stratejisi:**
+   * 1. useLogout hook'unu kullan (API + token + cache temizleme)
+   * 2. Başarılı veya başarısız olsa da manuel temizlik yap
+   * 3. Bu garanti eder ki kullanıcı her durumda çıkış yapabilir
    */
   const handleLogout = async () => {
     try {
@@ -45,7 +66,14 @@ export const AccountDisabledScreen = () => {
   };
 
   /**
-   * Manuel temizlik - Garanti için ekstra temizlik adımları
+   * Manuel temizlik fonksiyonu
+   * 
+   * **Garanti Temizlik:**
+   * - Token'ları sil
+   * - Auth store'u temizle
+   * - Hata olsa bile store'u temizle
+   * 
+   * Bu fonksiyon API çağrısı başarısız olsa bile çalışır.
    */
   const performManualCleanup = async () => {
     try {
@@ -69,6 +97,12 @@ export const AccountDisabledScreen = () => {
 
   /**
    * Destek ile iletişime geç
+   * 
+   * **İşleyiş:**
+   * 1. E-posta uygulamasını aç
+   * 2. Konu ve içerik otomatik doldurulur
+   * 3. Kullanıcı e-postayı gönderir
+   * 4. E-posta açılamazsa manuel adres göster
    */
   const handleContact = () => {
     const email = 'destek@medikariyer.com';

@@ -1,22 +1,61 @@
+/**
+ * @file Progress.tsx
+ * @description İlerleme çubuğu bileşenleri
+ * 
+ * İki bileşen içerir:
+ * 1. Progress - Yatay ilerleme çubuğu
+ * 2. CircularProgress - Dairesel ilerleme göstergesi
+ * 
+ * Özellikler:
+ * - Üç boyut seçeneği (sm, md, lg)
+ * - Beş renk seçeneği (primary, secondary, success, warning, error)
+ * - Yüzde etiketi gösterimi
+ * - 0-100 arası değer desteği
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Progress value={75} showLabel color="success" />
+ * <CircularProgress value={50} size={100} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { colors } from '@/theme';
 import { Typography } from './Typography';
 
+/**
+ * Progress bileşeni props interface'i
+ */
 export interface ProgressProps {
-  value: number; // 0-100
+  /** İlerleme değeri (0-100) */
+  value: number;
+  /** Yüzde etiketi göster */
   showLabel?: boolean;
+  /** İlerleme çubuğu boyutu */
   size?: 'sm' | 'md' | 'lg';
+  /** İlerleme çubuğu rengi */
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  /** Ek stil */
   style?: ViewStyle;
 }
 
+/**
+ * Boyut haritası (yükseklik - piksel cinsinden)
+ */
 const sizeMap = {
   sm: 4,
   md: 8,
   lg: 12,
 };
 
+/**
+ * Yatay İlerleme Çubuğu Bileşeni
+ */
 export const Progress: React.FC<ProgressProps> = ({
   value,
   showLabel = false,
@@ -51,15 +90,26 @@ export const Progress: React.FC<ProgressProps> = ({
   );
 };
 
-// Circular Progress Component
+/**
+ * CircularProgress bileşeni props interface'i
+ */
 export interface CircularProgressProps {
-  value: number; // 0-100
+  /** İlerleme değeri (0-100) */
+  value: number;
+  /** Daire boyutu (piksel) */
   size?: number;
+  /** Çizgi kalınlığı (piksel) */
   strokeWidth?: number;
+  /** İlerleme rengi */
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
+  /** Yüzde etiketi göster */
   showLabel?: boolean;
 }
 
+/**
+ * Dairesel İlerleme Göstergesi Bileşeni
+ * Not: Tam implementasyon için react-native-svg gerekir
+ */
 export const CircularProgress: React.FC<CircularProgressProps> = ({
   value,
   size = 80,
@@ -70,7 +120,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
 
   return (
     <View style={[styles.circularContainer, { width: size, height: size }]}>
-      {/* Background circle */}
+      {/* Arka plan dairesi */}
       <View
         style={[
           styles.circularTrack,
@@ -83,7 +133,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
           },
         ]}
       />
-      {/* Progress circle - would need react-native-svg for proper implementation */}
+      {/* İlerleme dairesi - tam implementasyon için react-native-svg gerekir */}
       {showLabel && (
         <View style={styles.circularLabel}>
           <Typography variant="h3" style={styles.circularValue}>

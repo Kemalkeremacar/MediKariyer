@@ -1,10 +1,29 @@
 /**
- * useCertificates Hook - Stabilizasyon Faz 3
+ * @file useCertificates.ts
+ * @description Sertifika CRUD işlemleri hook'u
+ * @author MediKariyer Development Team
+ * @version 3.0.0
  * 
- * Sertifika CRUD işlemleri
- * Cache key: ['profile', 'certificate']
+ * **AMAÇ:**
+ * Doktorun sertifika bilgilerini yönetir (listeleme, ekleme, güncelleme, silme).
  * 
- * Domain-Driven Design: Sertifika domain'i ayrı hook
+ * **CACHE:** ['profile', 'certificate'] - 2 dakika stale time
+ * 
+ * **KULLANIM ÖRNEĞİ:**
+ * ```typescript
+ * // Listeleme
+ * const { data: certificates, isLoading } = useCertificates();
+ * 
+ * // CRUD işlemleri
+ * const { create, update, remove } = useCertificate();
+ * 
+ * create.mutate({
+ *   certificate_name: 'ACLS Sertifikası',
+ *   institution: 'Türk Kardiyoloji Derneği',
+ *   issue_date: '2023-01-15',
+ *   expiry_date: '2025-01-15'
+ * });
+ * ```
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -17,8 +36,17 @@ import type {
 } from '@/types/profile';
 
 /**
- * Hook for fetching certificate list
- * Cache key: ['profile', 'certificate']
+ * Sertifika listesini çeken hook
+ * 
+ * **DÖNEN VERİLER:**
+ * - Sertifika adı
+ * - Veren kurum
+ * - Veriliş tarihi
+ * - Son geçerlilik tarihi
+ * 
+ * **CACHE:** ['profile', 'certificate'] - 2 dakika stale time
+ * 
+ * @returns {UseQueryResult} React Query sonucu
  */
 export const useCertificates = () => {
   return useQuery({
@@ -35,8 +63,21 @@ export const useCertificates = () => {
 };
 
 /**
- * Hook for managing certificate entries (CRUD)
- * Sadece kendi cache key'ini invalidate eder: ['profile', 'certificate']
+ * Sertifika CRUD işlemleri için mutation hook
+ * 
+ * **İŞLEMLER:**
+ * - create: Yeni sertifika ekle
+ * - update: Mevcut sertifikayı güncelle
+ * - remove: Sertifikayı sil
+ * 
+ * **CACHE YÖNETİMİ:**
+ * Sadece ['profile', 'certificate'] cache'i invalidate edilir.
+ * Diğer profil domain'leri etkilenmez.
+ * 
+ * **KULLANIM:**
+ * useCRUDMutation hook'u ile generic CRUD işlemleri sağlanır.
+ * 
+ * @returns {Object} create, update, remove mutation'ları
  */
 export const useCertificate = () => {
   return useCRUDMutation<CreateCertificatePayload, UpdateCertificatePayload, DoctorCertificate>({

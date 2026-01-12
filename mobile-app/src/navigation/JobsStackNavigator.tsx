@@ -1,3 +1,15 @@
+/**
+ * @file JobsStackNavigator.tsx
+ * @description İş ilanları gezinme akışı - iş listesi ve detay ekranları
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **Ekranlar:**
+ * - JobsList: İş ilanları listesi
+ * - JobDetail: İş ilanı detay sayfası
+ */
+
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { JobsScreen } from '@/features/jobs/screens/JobsScreen';
@@ -7,8 +19,8 @@ import type { JobsStackParamList } from './types';
 const Stack = createNativeStackNavigator<JobsStackParamList>();
 
 /**
- * JobsStackNavigator - Job browsing flow
- * Nested stack navigator for jobs list and job details
+ * JobsStackNavigator - İş ilanları gezinme stack'i
+ * JobsTab içinde nested stack navigator olarak kullanılır
  */
 export const JobsStackNavigator = () => (
   <Stack.Navigator
@@ -28,4 +40,3 @@ export const JobsStackNavigator = () => (
     />
   </Stack.Navigator>
 );
-

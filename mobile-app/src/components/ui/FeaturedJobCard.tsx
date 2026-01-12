@@ -1,3 +1,24 @@
+/**
+ * @file FeaturedJobCard.tsx
+ * @description Öne çıkan iş ilanı kartı bileşeni
+ * 
+ * Özellikler:
+ * - Yatay kaydırma için optimize edilmiş genişlik
+ * - İş ilanı bilgileri (başlık, hastane, şehir, çalışma tipi)
+ * - Başvuru durumu rozeti
+ * - İkon ve tarih gösterimi
+ * - Modern tasarım (yuvarlatılmış köşeler, gölge)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <FeaturedJobCard job={jobData} onPress={handlePress} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,11 +30,20 @@ import { formatDate } from '@/utils/date';
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75;
 
+/**
+ * FeaturedJobCard bileşeni props interface'i
+ */
 interface FeaturedJobCardProps {
+  /** İş ilanı verisi */
   job: JobListItem;
+  /** Tıklama fonksiyonu */
   onPress: () => void;
 }
 
+/**
+ * Öne Çıkan İş İlanı Kartı Bileşeni
+ * Dashboard'da yatay kaydırmalı liste için kullanılır
+ */
 export const FeaturedJobCard: React.FC<FeaturedJobCardProps> = ({ job, onPress }) => {
   return (
     <TouchableOpacity

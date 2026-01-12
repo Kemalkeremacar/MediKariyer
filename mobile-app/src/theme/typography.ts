@@ -1,6 +1,29 @@
 /**
- * Typography System
- * Font sizes, weights, and line heights
+ * @file typography.ts
+ * @description Tipografi Sistemi - Font boyutları, ağırlıkları ve satır yükseklikleri
+ * 
+ * Özellikler:
+ * - Platform bazlı font aileleri (iOS: San Francisco, Android: Roboto)
+ * - Tutarlı font boyutları (xs: 12px - 5xl: 36px)
+ * - Font ağırlıkları (normal, medium, semibold, bold)
+ * - Hazır text varyantları (title, h1, h2, body, caption, vb.)
+ * 
+ * Kullanım:
+ * ```typescript
+ * import { typography, textVariants } from '@/theme';
+ * 
+ * <Text style={{ 
+ *   fontSize: typography.fontSize.lg,
+ *   fontWeight: typography.fontWeight.bold 
+ * }} />
+ * 
+ * // Veya hazır varyant kullan
+ * <Text style={textVariants.h1} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 export const typography = {
@@ -28,12 +51,13 @@ export const typography = {
     bold: '700' as const,
   },
   lineHeight: {
-    tight: 1.25,
-    normal: 1.5,
-    relaxed: 1.75,
+    tight: 1.25,    // Sıkı satır aralığı (başlıklar için)
+    normal: 1.5,    // Normal satır aralığı (body text için)
+    relaxed: 1.75,  // Rahat satır aralığı (uzun metinler için)
   },
 } as const;
 
+// Hazır text varyantları
 export const textVariants = {
   title: {
     fontSize: typography.fontSize['3xl'], // 28px - Başlık (Title)
@@ -46,12 +70,12 @@ export const textVariants = {
     lineHeight: typography.lineHeight.normal,
   },
   h1: {
-    fontSize: typography.fontSize['2xl'], // 24pt - Bold for main headings
+    fontSize: typography.fontSize['2xl'], // 24pt - Ana başlıklar için bold
     fontWeight: typography.fontWeight.bold,
     lineHeight: typography.lineHeight.tight,
   },
   h2: {
-    fontSize: typography.fontSize.xl, // 20pt - Bold for section headings
+    fontSize: typography.fontSize.xl, // 20pt - Bölüm başlıkları için bold
     fontWeight: typography.fontWeight.bold,
     lineHeight: typography.lineHeight.tight,
   },

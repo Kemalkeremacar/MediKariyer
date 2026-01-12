@@ -1,6 +1,17 @@
 /**
- * Certificate Service
- * ARCH-002: Profile servisinden ayrılan sertifika CRUD işlemleri
+ * @file certificate.service.ts
+ * @description Certificate Service - Sertifika CRUD işlemleri
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ * 
+ * **ARCH-002:** Profile servisinden ayrılan sertifika CRUD işlemleri
+ * 
+ * **Endpoint'ler:**
+ * - GET /api/mobile/doctor/certificates - Sertifika listesi
+ * - POST /api/mobile/doctor/certificates - Yeni sertifika
+ * - PATCH /api/mobile/doctor/certificates/:id - Sertifika güncelleme
+ * - DELETE /api/mobile/doctor/certificates/:id - Sertifika silme
  */
 
 import apiClient from '@/api/client';
@@ -12,9 +23,17 @@ import type {
   DoctorCertificate,
 } from '@/types/profile';
 
+// ============================================================================
+// CERTIFICATE SERVICE
+// ============================================================================
+
 export const certificateService = {
   /**
    * Sertifika listesini getirir
+   * 
+   * @returns Sertifika bilgileri listesi
+   * 
+   * **Endpoint:** GET /api/mobile/doctor/certificates
    */
   async getCertificates(): Promise<DoctorCertificate[]> {
     const response = await apiClient.get<ApiResponse<DoctorCertificate[]>>(
@@ -25,6 +44,11 @@ export const certificateService = {
 
   /**
    * Yeni sertifika kaydı oluşturur
+   * 
+   * @param payload - Sertifika bilgileri
+   * @returns Oluşturulan sertifika kaydı
+   * 
+   * **Endpoint:** POST /api/mobile/doctor/certificates
    */
   async createCertificate(
     payload: CreateCertificatePayload,
@@ -38,6 +62,12 @@ export const certificateService = {
 
   /**
    * Sertifika kaydını günceller
+   * 
+   * @param id - Sertifika ID
+   * @param payload - Güncellenecek sertifika bilgileri
+   * @returns Güncellenmiş sertifika kaydı
+   * 
+   * **Endpoint:** PATCH /api/mobile/doctor/certificates/:id
    */
   async updateCertificate(
     id: number,
@@ -52,6 +82,10 @@ export const certificateService = {
 
   /**
    * Sertifika kaydını siler
+   * 
+   * @param id - Sertifika ID
+   * 
+   * **Endpoint:** DELETE /api/mobile/doctor/certificates/:id
    */
   async deleteCertificate(id: number): Promise<void> {
     await apiClient.delete<ApiResponse<null>>(

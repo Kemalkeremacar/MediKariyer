@@ -1,12 +1,15 @@
 /**
  * @file ToastProvider.tsx
- * @description Toast notification system using React Context
+ * @description React Context kullanarak toast bildirim sistemi
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  * 
- * Requirements:
- * - 4.6: Clean up all pending toast timers on unmount
- * - 5.4: Generate unique identifiers for each toast instance
- * - 9.3: Log lifecycle events in development mode
- * - 9.5: Ensure logs are stripped in production builds
+ * **Gereksinimler:**
+ * - 4.6: Unmount sırasında bekleyen tüm toast timer'larını temizleme
+ * - 5.4: Her toast instance için benzersiz tanımlayıcı oluşturma
+ * - 9.3: Development modunda lifecycle event'lerini loglama
+ * - 9.5: Production build'lerinde logların kaldırılmasını sağlama
  */
 
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
@@ -18,11 +21,11 @@ import { zIndex } from '@/theme';
 import { overlayDevLog } from '@/utils/devLogger';
 
 /**
- * Development-only logging utility for ToastProvider
- * Uses the centralized overlay logging system
+ * ToastProvider için sadece development modunda loglama utility'si
+ * Merkezi overlay loglama sistemini kullanır
  * 
- * @param message - The message to log
- * @param data - Optional data to include
+ * @param message - Loglanacak mesaj
+ * @param data - Opsiyonel ek veri
  */
 const toastDevLog = (message: string, data?: unknown): void => {
   overlayDevLog(`[Toast] ${message}`, data);
@@ -37,11 +40,11 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 /**
- * Hook to access toast functionality.
- * Must be used within a ToastProvider.
+ * Toast fonksiyonalitesine erişim için hook
+ * ToastProvider içinde kullanılmalıdır
  * 
- * @throws Error if called outside ToastProvider
- * @returns ToastContextType with showToast method
+ * @throws Error ToastProvider dışında çağrılırsa hata fırlatır
+ * @returns showToast metodu içeren ToastContextType
  */
 export const useToast = (): ToastContextType => {
   const context = useContext(ToastContext);
@@ -63,12 +66,12 @@ interface ToastData {
   duration: number;
 }
 
-// Counter for generating unique IDs with collision prevention
+// Çakışma önleme ile benzersiz ID oluşturmak için sayaç
 let toastIdCounter = 0;
 
 /**
- * Generates a unique toast ID with collision prevention.
- * Combines timestamp, counter, and random string for uniqueness.
+ * Çakışma önleme ile benzersiz toast ID oluşturur
+ * Benzersizlik için timestamp, sayaç ve rastgele string kombinasyonu kullanır
  */
 const generateToastId = (): string => {
   toastIdCounter = (toastIdCounter + 1) % Number.MAX_SAFE_INTEGER;

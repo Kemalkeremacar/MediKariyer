@@ -1,10 +1,29 @@
 /**
- * APPLICATIONS SCREEN - Stabilizasyon Faz 4
+ * @file ApplicationsScreen.tsx
+ * @description Başvurular listesi ekranı - Tüm başvuruları listeler
+ * @author MediKariyer Development Team
+ * @version 1.0.0 (Stabilizasyon Faz 4)
  * 
- * Optimizasyonlar:
+ * **ÖZELLİKLER:**
+ * - Başvuru listesi (FlashList ile performanslı)
+ * - Arama ve filtreleme (durum bazlı)
+ * - Pull-to-refresh
+ * - Infinite scroll (pagination)
+ * - Empty state
+ * - Başvuru detay modal
+ * 
+ * **OPTİMİZASYONLAR:**
  * - useFilter hook kullanılıyor (ortak filtreleme mantığı)
  * - FlatList performans optimizasyonları
  * - Loading ve empty state iyileştirmeleri
+ * - Client-side filtreleme (yazarken anında)
+ * - Backend filtreleme (debounced)
+ * 
+ * **KULLANIM AKIŞI:**
+ * 1. Başvurular listelenir
+ * 2. Arama/filtreleme yapılabilir
+ * 3. Başvuruya tıklanınca detay modal açılır
+ * 4. Modal'dan başvuru geri çekilebilir
  */
 
 import React, { useCallback, useMemo, useState } from 'react';

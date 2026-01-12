@@ -1,6 +1,24 @@
 /**
- * Color Palette
- * Modern, healthcare-focused color system with light and dark variants
+ * @file colors.ts
+ * @description Renk Paleti - Modern, sağlık odaklı renk sistemi
+ * 
+ * Özellikler:
+ * - Light ve dark tema desteği
+ * - Frontend ile uyumlu renk paleti (#3B82F6 - blue-600)
+ * - Tailwind CSS benzeri renk skalası (50-900)
+ * - Gradient renkleri (header, button, vb. için)
+ * 
+ * Kullanım:
+ * ```typescript
+ * import { colors } from '@/theme';
+ * 
+ * <View style={{ backgroundColor: colors.primary[600] }} />
+ * <Text style={{ color: colors.text.primary }} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 export const lightColors = {

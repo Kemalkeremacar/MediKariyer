@@ -1,65 +1,86 @@
 /**
  * @file alert.ts
- * @description Alert system type definitions
+ * @description Alert sistemi tip tanımları
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  * 
- * These types define the contract for the deterministic alert system
- * that uses React Context exclusively without global mutable state.
+ * **Özellikler:**
+ * - Global mutable state olmadan sadece React Context kullanan
+ *   deterministik alert sistemi için tip tanımları
  */
 
+// ============================================================================
+// ALERT TYPES
+// ============================================================================
+
 /**
- * Alert types supported by the system
- * - success: Positive feedback (green icon)
- * - error: Error/failure feedback (red icon)
- * - info: Informational message (blue icon)
- * - confirm: Confirmation dialog with confirm/cancel buttons (amber icon)
- * - confirmDestructive: Destructive action confirmation (red icon, red confirm button)
+ * Alert tipleri
+ * 
+ * - success: Olumlu geri bildirim (yeşil ikon)
+ * - error: Hata/başarısızlık geri bildirimi (kırmızı ikon)
+ * - info: Bilgilendirme mesajı (mavi ikon)
+ * - confirm: Onayla/İptal butonlu onay dialogu (amber ikon)
+ * - confirmDestructive: Yıkıcı işlem onayı (kırmızı ikon, kırmızı onayla butonu)
  */
 export type AlertType = 'success' | 'error' | 'info' | 'confirm' | 'confirmDestructive';
 
+// ============================================================================
+// ALERT CONFIGURATION
+// ============================================================================
+
 /**
- * Configuration object for showing an alert
+ * Alert gösterme konfigürasyon objesi
  */
 export interface AlertConfig {
-  /** Type of alert determining icon and color scheme */
+  /** Alert tipini belirler (ikon ve renk şeması) */
   type: AlertType;
-  /** Title displayed at the top of the alert */
+  /** Alert'in üst kısmında gösterilen başlık */
   title: string;
-  /** Message body of the alert */
+  /** Alert'in mesaj içeriği */
   message: string;
-  /** Callback executed when user presses confirm button */
+  /** Kullanıcı onayla butonuna bastığında çalışacak callback */
   onConfirm?: () => void;
-  /** Callback executed when user presses cancel button (confirm types only) */
+  /** Kullanıcı iptal butonuna bastığında çalışacak callback (sadece confirm tipleri için) */
   onCancel?: () => void;
-  /** Text for the confirm button (default: 'Tamam' for info types, 'Onayla' for confirm types) */
+  /** Onayla butonu metni (varsayılan: info tipleri için 'Tamam', confirm tipleri için 'Onayla') */
   confirmText?: string;
-  /** Text for the cancel button (default: 'İptal') */
+  /** İptal butonu metni (varsayılan: 'İptal') */
   cancelText?: string;
 }
 
+// ============================================================================
+// CONTEXT TYPES
+// ============================================================================
+
 /**
- * Context type exposed by AlertProvider through useAlert hook
+ * AlertProvider tarafından useAlert hook'u ile sunulan context tipi
  */
 export interface AlertContextType {
-  /** Show an alert with the given configuration */
+  /** Verilen konfigürasyonla alert göster */
   showAlert: (config: AlertConfig) => void;
-  /** Hide the currently visible alert */
+  /** Görünür alert'i gizle */
   hideAlert: () => void;
-  /** Whether an alert is currently visible */
+  /** Şu anda bir alert görünür mü? */
   isVisible: boolean;
 }
 
 /**
- * Internal state managed by AlertProvider
+ * AlertProvider tarafından yönetilen internal state
  */
 export interface AlertProviderState {
-  /** Current alert configuration, null when no alert is visible */
+  /** Mevcut alert konfigürasyonu, alert görünür değilse null */
   config: AlertConfig | null;
-  /** Guard flag to prevent multiple callback executions from rapid clicks */
+  /** Hızlı tıklamalardan kaynaklanan çoklu callback yürütmelerini önlemek için guard flag */
   isExecuting: boolean;
 }
 
+// ============================================================================
+// REF TYPES
+// ============================================================================
+
 /**
- * Ref type for imperative alert access from non-component code
+ * Component olmayan koddan imperative alert erişimi için ref tipi
  */
 export interface AlertRef {
   showAlert: (config: AlertConfig) => void;

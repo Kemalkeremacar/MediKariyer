@@ -1,15 +1,23 @@
 /**
  * @file useAuthInitialization.ts
- * @description Initialize authentication on app startup
+ * @description Uygulama başlangıcında kimlik doğrulama başlatma hook'u
  * 
- * Features:
- * - Validate tokens from SecureStore
- * - Check token expiry
- * - Fetch user data using mobile API (authService.getMe)
- * - Auto logout if tokens are invalid/expired
- * - Handle network errors gracefully (offline mode support)
+ * Özellikler:
+ * - SecureStore'dan token'ları doğrula
+ * - Token süresini kontrol et
+ * - Mobile API kullanarak kullanıcı verilerini getir (authService.getMe)
+ * - Token'lar geçersiz/süresi dolmuşsa otomatik çıkış yap
+ * - Network hatalarını zarif şekilde yönet (offline mod desteği)
  * 
- * CRITICAL: Only uses /api/mobile/* endpoints via authService
+ * ÖNEMLİ: Sadece /api/mobile/* endpoint'lerini authService üzerinden kullanır
+ * 
+ * İşlem Akışı:
+ * 1. Token'ların varlığını ve geçerliliğini kontrol et
+ * 2. Cihaz bağlamasını doğrula (güvenlik kontrolü)
+ * 3. Kullanıcı verilerini API'den getir
+ * 4. Başarılıysa authenticated olarak işaretle
+ * 5. Başarısızsa (401) token'ları temizle ve unauthenticated olarak işaretle
+ * 6. Network hatası varsa offline mod için persist edilmiş veriyi kullan
  * 
  * @author MediKariyer Development Team
  * @version 3.0.0
@@ -33,68 +41,68 @@ export const useAuthInitialization = () => {
       try {
         setHydrating(true);
         
-        // Create a timeout promise to prevent infinite waiting
+        // Sonsuz beklemeyi önlemek için timeout promise oluştur
         const timeoutPromise = new Promise<void>((_, reject) => {
           setTimeout(() => {
-            reject(new Error('Auth initialization timeout'));
-          }, REQUEST_TIMEOUT_MS + 5000); // Add 5 seconds buffer
+            reject(new Error('Auth başlatma zaman aşımı'));
+          }, REQUEST_TIMEOUT_MS + 5000); // 5 saniye buffer ekle
         });
 
-        // Wrap the initialization in a race with timeout
+        // Başlatmayı timeout ile yarıştır
         await Promise.race([
           (async () => {
-            // Check if tokens exist and are valid JWT
+            // Token'ların var olup olmadığını ve geçerli JWT olup olmadığını kontrol et
             const isValid = await tokenManager.validateTokens();
             
             if (!isValid) {
-              devLog.log('🔴 No valid tokens found, marking unauthenticated');
+              devLog.log('🔴 Geçerli token bulunamadı, unauthenticated olarak işaretleniyor');
               markUnauthenticated();
               return;
             }
 
-            // Validate device binding (security check)
+            // Cihaz bağlamasını doğrula (güvenlik kontrolü)
             const isDeviceValid = await tokenManager.validateDeviceBinding();
             
             if (!isDeviceValid) {
-              devLog.log('🔴 Device binding validation failed, tokens from different device');
+              devLog.log('🔴 Cihaz bağlama doğrulaması başarısız, token\'lar farklı cihazdan');
               await tokenManager.clearTokens();
               markUnauthenticated();
               return;
             }
             
-            // Fetch user data using mobile API service
-            // API client interceptor will handle token refresh if needed
-            // If token is expired, the interceptor will refresh it automatically
+            // Mobile API servisi kullanarak kullanıcı verilerini getir
+            // API client interceptor gerekirse token yenilemeyi otomatik olarak yönetir
+            // Token süresi dolmuşsa, interceptor otomatik olarak yenileyecek
             try {
-              devLog.log('🔵 Fetching user data via mobile API...');
+              devLog.log('🔵 Mobile API üzerinden kullanıcı verisi getiriliyor...');
               const user = await authService.getMe();
               
-              // Mark user as authenticated with user data
-              // RootNavigator will handle is_active and is_approved checks
+              // Kullanıcıyı kullanıcı verisi ile authenticated olarak işaretle
+              // RootNavigator is_active ve is_approved kontrollerini yapacak
               markAuthenticated(user);
-              devLog.log('✅ User data fetched successfully via mobile API');
+              devLog.log('✅ Kullanıcı verisi mobile API üzerinden başarıyla getirildi');
             } catch (error: any) {
-              // Scenario B: 401 Unauthorized - Token expired or invalid
+              // Senaryo B: 401 Unauthorized - Token süresi dolmuş veya geçersiz
               const isAuthError = error?.response?.status === 401 || error?.name === 'ApiError';
               
               if (isAuthError) {
-                devLog.log('🔴 Authentication failed (401), clearing tokens and marking unauthenticated');
+                devLog.log('🔴 Kimlik doğrulama başarısız (401), token\'lar temizleniyor ve unauthenticated olarak işaretleniyor');
                 await tokenManager.clearTokens();
                 markUnauthenticated();
               } else {
-                // Scenario C: Network Error - Keep token, allow offline mode
-                // User can retry later when network is available
-                devLog.warn('⚠️ Network error during auth initialization, keeping token for offline mode:', error?.message);
-                // Don't clear tokens on network error - allow user to continue with cached data
-                // Check if we have persisted user data in store (from previous session)
-                // If yes, mark as authenticated to allow offline access
-                // If no, mark as unauthenticated (first time login requires network)
+                // Senaryo C: Network Hatası - Token\'ı tut, offline moda izin ver
+                // Kullanıcı network müsait olduğunda tekrar deneyebilir
+                devLog.warn('⚠️ Auth başlatma sırasında network hatası, offline mod için token tutuluyor:', error?.message);
+                // Network hatasında token\'ları temizleme - kullanıcının cache\'lenmiş veri ile devam etmesine izin ver
+                // Store\'da persist edilmiş kullanıcı verisi var mı kontrol et (önceki oturumdan)
+                // Varsa, offline erişim için authenticated olarak işaretle
+                // Yoksa, unauthenticated olarak işaretle (ilk giriş network gerektirir)
                 const persistedUser = useAuthStore.getState().user;
                 if (persistedUser) {
-                  devLog.log('✅ Using persisted user data for offline mode');
+                  devLog.log('✅ Offline mod için persist edilmiş kullanıcı verisi kullanılıyor');
                   markAuthenticated(persistedUser);
                 } else {
-                  devLog.log('⚠️ No persisted user data, marking unauthenticated');
+                  devLog.log('⚠️ Persist edilmiş kullanıcı verisi yok, unauthenticated olarak işaretleniyor');
                   markUnauthenticated();
                 }
               }
@@ -103,17 +111,17 @@ export const useAuthInitialization = () => {
           timeoutPromise,
         ]);
       } catch (error) {
-        // Handle timeout or other errors
-        if (error instanceof Error && error.message === 'Auth initialization timeout') {
-          devLog.warn('⚠️ Auth initialization timed out, marking unauthenticated');
+        // Timeout veya diğer hataları yönet
+        if (error instanceof Error && error.message === 'Auth başlatma zaman aşımı') {
+          devLog.warn('⚠️ Auth başlatma zaman aşımına uğradı, unauthenticated olarak işaretleniyor');
         } else {
-          devLog.error('❌ Auth initialization error:', error);
+          devLog.error('❌ Auth başlatma hatası:', error);
         }
-        // On timeout or error, clear tokens and mark as unauthenticated
+        // Timeout veya hata durumunda, token\'ları temizle ve unauthenticated olarak işaretle
         try {
           await tokenManager.clearTokens();
         } catch (clearError) {
-          devLog.error('Failed to clear tokens:', clearError);
+          devLog.error('Token\'lar temizlenemedi:', clearError);
         }
         markUnauthenticated();
       } finally {

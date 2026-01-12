@@ -1,19 +1,47 @@
+/**
+ * @file BackButton.tsx
+ * @description Modern geri dönüş butonu bileşeni
+ * 
+ * Özellikler:
+ * - Navigasyon için yeniden kullanılabilir geri butonu
+ * - Özel onPress fonksiyonu veya otomatik navigation.goBack()
+ * - Özelleştirilebilir renk ve boyut
+ * - Modern tasarım (yuvarlak, gölgeli)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <BackButton />
+ * <BackButton onPress={() => console.log('Custom back')} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 
+/**
+ * BackButton bileşeni props interface'i
+ */
 interface BackButtonProps {
+  /** Özel geri dönüş fonksiyonu (yoksa navigation.goBack() kullanılır) */
   onPress?: () => void;
+  /** Ek stil */
   style?: ViewStyle;
+  /** İkon rengi */
   color?: string;
+  /** İkon boyutu */
   size?: number;
 }
 
 /**
- * Modern Back Button Component
- * Reusable back button for navigation
+ * Modern Geri Dönüş Butonu Bileşeni
+ * Navigasyon için yeniden kullanılabilir geri butonu
  */
 export const BackButton: React.FC<BackButtonProps> = ({
   onPress,

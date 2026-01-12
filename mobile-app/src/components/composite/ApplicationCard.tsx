@@ -1,3 +1,25 @@
+/**
+ * @file ApplicationCard.tsx
+ * @description Başvuru kartı bileşeni
+ * 
+ * Özellikler:
+ * - Başvuru bilgileri (iş başlığı, hastane, durum, tarih)
+ * - Dinamik durum rozeti (renk ve ikon)
+ * - İlan durumu uyarıları (kaldırıldı, hastane pasif)
+ * - Avatar ve ikonlar
+ * - Tıklanabilir kart
+ * - Modern tasarım
+ * 
+ * Kullanım:
+ * ```tsx
+ * <ApplicationCard application={app} onPress={handlePress} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card } from '@/components/ui/Card';
@@ -9,12 +31,19 @@ import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { formatRelativeTime } from '@/utils/date';
 
+/**
+ * ApplicationCard bileşeni props interface'i
+ */
 interface ApplicationCardProps {
+  /** Başvuru verisi */
   application: any;
+  /** Tıklama fonksiyonu */
   onPress: () => void;
 }
 
-// Status ID'ye göre renk ve stil mapping
+/**
+ * Status ID'ye göre renk ve stil haritası
+ */
 const STATUS_STYLES: Record<number, { 
   bgColor: string; 
   textColor: string; 
@@ -27,13 +56,19 @@ const STATUS_STYLES: Record<number, {
   5: { bgColor: colors.neutral[200], textColor: colors.neutral[600], icon: 'arrow-undo' },     // Geri Çekildi
 };
 
-// Default style for unknown statuses
+/**
+ * Bilinmeyen durumlar için varsayılan stil
+ */
 const DEFAULT_STATUS_STYLE = { 
   bgColor: colors.neutral[100], 
   textColor: colors.neutral[600], 
   icon: 'help-circle' as const 
 };
 
+/**
+ * Başvuru Kartı Bileşeni
+ * Başvuru listesinde kullanılır
+ */
 export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, onPress }) => {
   const dateToUse = application.applied_at || application.created_at;
   const timeAgo = formatRelativeTime(dateToUse) || null;
@@ -44,7 +79,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
     ? 'İlan Kaldırıldı' 
     : (application.is_hospital_active === false ? 'Hastane Pasif' : null);
 
-  // Get status style based on status_id
+  // Status ID'ye göre stil al
   const statusId = application.status_id || 1;
   const statusStyle = STATUS_STYLES[statusId] || DEFAULT_STATUS_STYLE;
   const statusLabel = application.status_label || application.status || 'Başvuruldu';
@@ -53,7 +88,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
     <View>
       <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
         <Card variant="elevated" padding="lg" style={isJobUnavailable ? {...styles.card, ...styles.cardUnavailable} : styles.card}>
-        {/* Header with Status Badge */}
+        {/* Başlık ve Durum Rozeti */}
         <View style={styles.header}>
           <Avatar
             size="md"
@@ -71,7 +106,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
             </View>
           </View>
           <View style={styles.headerRight}>
-            {/* Dynamic Status Badge */}
+            {/* Dinamik Durum Rozeti */}
             <View style={[styles.statusBadge, { backgroundColor: statusStyle.bgColor }]}>
               <Ionicons name={statusStyle.icon} size={12} color={statusStyle.textColor} />
               <Typography variant="caption" style={{ ...styles.statusText, color: statusStyle.textColor }}>
@@ -84,7 +119,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
 
         <Divider spacing="sm" />
         
-        {/* Details */}
+        {/* Detaylar */}
         <View style={styles.details}>
           {/* Uyarı: İlan yayından kaldırıldı veya hastane pasif */}
           {isJobUnavailable && unavailableReason && (

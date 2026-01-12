@@ -1,12 +1,23 @@
 /**
  * @file OfflineBanner.tsx
- * @description Animated banner component for offline status indication
+ * @description Çevrimdışı durum göstergesi banner bileşeni
  * 
- * Shows a sleek, animated banner when the device loses internet connectivity.
- * Automatically slides in/out based on connection status.
+ * Özellikler:
+ * - Animasyonlu giriş/çıkış
+ * - İnternet bağlantısı kesildiğinde otomatik gösterim
+ * - Safe area desteği
+ * - Özelleştirilebilir mesaj
+ * - Modern tasarım (gölge, ikon)
+ * 
+ * Kullanım:
+ * ```tsx
+ * const { isOffline } = useNetworkStatus();
+ * return <OfflineBanner visible={isOffline} />;
+ * ```
  * 
  * @author MediKariyer Development Team
  * @version 1.0.0
+ * @since 2024
  */
 
 import React, { useEffect } from 'react';
@@ -26,21 +37,19 @@ import { useTheme } from '@/contexts/ThemeContext';
 import type { Theme } from '@/theme';
 import { zIndex } from '@/theme/zIndex';
 
+/**
+ * OfflineBanner bileşeni props interface'i
+ */
 interface OfflineBannerProps {
-  /** Whether the banner should be visible */
+  /** Banner görünür mü? */
   visible: boolean;
-  /** Custom message to display */
+  /** Özel mesaj */
   message?: string;
 }
 
 /**
- * Animated offline status banner
- * 
- * @example
- * ```tsx
- * const { isOffline } = useNetworkStatus();
- * return <OfflineBanner visible={isOffline} />;
- * ```
+ * Animasyonlu Çevrimdışı Durum Banner'ı
+ * Cihaz internet bağlantısını kaybettiğinde gösterilir
  */
 export const OfflineBanner: React.FC<OfflineBannerProps> = ({
   visible,
@@ -50,7 +59,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
   const insets = useSafeAreaInsets();
   const styles = React.useMemo(() => createStyles(theme, insets.top), [theme, insets.top]);
 
-  // Animation values
+  // Animasyon değerleri
   const translateY = useSharedValue(-100);
   const opacity = useSharedValue(0);
 
@@ -88,9 +97,9 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({
     ],
   }));
 
-  // Note: We removed the `opacity.value === 0` check from render to fix Reanimated warning
-  // The component will render based on `visible` prop only
-  // Animation will handle the opacity transition smoothly
+  // Not: Reanimated uyarısını düzeltmek için render'dan `opacity.value === 0` kontrolünü kaldırdık
+  // Bileşen sadece `visible` prop'una göre render edilecek
+  // Animasyon opacity geçişini sorunsuz şekilde yönetecek
 
   return (
     <Animated.View style={[styles.container, animatedStyle]}>

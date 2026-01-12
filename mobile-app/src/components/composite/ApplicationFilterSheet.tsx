@@ -1,7 +1,29 @@
 /**
  * @file ApplicationFilterSheet.tsx
  * @description Modern başvuru filtreleme bottom sheet bileşeni
- * Dinamik olarak backend'den status'ları çeker ve ID bazlı filtreleme yapar
+ * 
+ * Özellikler:
+ * - Dinamik durum listesi (backend'den çekilir)
+ * - ID bazlı filtreleme
+ * - Durum ikonları ve renkleri
+ * - Aktif filtre rozeti
+ * - Temizle ve uygula butonları
+ * - Modern tasarım (animasyonlu modal)
+ * 
+ * Kullanım:
+ * ```tsx
+ * <ApplicationFilterSheet
+ *   visible={isOpen}
+ *   onClose={handleClose}
+ *   filters={filters}
+ *   onApply={handleApply}
+ *   onReset={handleReset}
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -23,19 +45,33 @@ import { useApplicationStatuses } from '@/hooks/useLookup';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+/**
+ * Başvuru filtreleri interface'i
+ */
 export interface ApplicationFilters {
+  /** Durum ID'si */
   status_id?: number;
 }
 
+/**
+ * ApplicationFilterSheet bileşeni props interface'i
+ */
 interface ApplicationFilterSheetProps {
+  /** Sheet görünür mü? */
   visible: boolean;
+  /** Kapatma fonksiyonu */
   onClose: () => void;
+  /** Mevcut filtreler */
   filters: ApplicationFilters;
+  /** Filtreleri uygula */
   onApply: (filters: ApplicationFilters) => void;
+  /** Filtreleri temizle */
   onReset: () => void;
 }
 
-// Status ID'ye göre renk ve ikon mapping
+/**
+ * Status ID'ye göre renk ve ikon haritası
+ */
 const STATUS_STYLES: Record<number, { icon: keyof typeof Ionicons.glyphMap; color: string; bgColor: string }> = {
   1: { icon: 'time', color: colors.warning[600], bgColor: colors.warning[100] },           // Başvuruldu
   2: { icon: 'eye', color: colors.primary[600], bgColor: colors.primary[100] },            // İnceleniyor
@@ -44,9 +80,15 @@ const STATUS_STYLES: Record<number, { icon: keyof typeof Ionicons.glyphMap; colo
   5: { icon: 'arrow-undo', color: colors.neutral[500], bgColor: colors.neutral[100] },     // Geri Çekildi
 };
 
-// Default style for unknown statuses
+/**
+ * Bilinmeyen durumlar için varsayılan stil
+ */
 const DEFAULT_STYLE = { icon: 'help-circle' as const, color: colors.neutral[500], bgColor: colors.neutral[100] };
 
+/**
+ * Başvuru Filtreleme Sheet Bileşeni
+ * Bottom sheet modal ile filtreleme
+ */
 export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
   visible,
   onClose,
@@ -57,7 +99,7 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
   const [draftFilters, setDraftFilters] = useState<ApplicationFilters>(filters);
   const { data: statuses = [], isLoading } = useApplicationStatuses();
 
-  // Sync draft with props when sheet opens
+  // Sheet açıldığında draft'ı props ile senkronize et
   useEffect(() => {
     if (visible) {
       setDraftFilters(filters);
@@ -84,7 +126,9 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
 
   const hasActiveFilter = Boolean(draftFilters.status_id);
 
-  // Get style for a status ID
+  /**
+   * Status ID için stil döndürür
+   */
   const getStatusStyle = (statusId: number) => {
     return STATUS_STYLES[statusId] || DEFAULT_STYLE;
   };
@@ -101,7 +145,7 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={styles.sheet}>
-          {/* Header */}
+          {/* Başlık */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Typography variant="h3" style={styles.title}>
@@ -133,7 +177,7 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
               </View>
             ) : (
               <>
-                {/* All Applications Option */}
+                {/* Tüm Başvurular Seçeneği */}
                 <TouchableOpacity
                   style={[
                     styles.statusCard,
@@ -170,7 +214,7 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
                   )}
                 </TouchableOpacity>
 
-                {/* Dynamic Status Options from Backend */}
+                {/* Backend'den Gelen Dinamik Durum Seçenekleri */}
                 {statuses.map((status) => {
                   const style = getStatusStyle(status.id);
                   const isSelected = draftFilters.status_id === status.id;
@@ -215,7 +259,7 @@ export const ApplicationFilterSheet: React.FC<ApplicationFilterSheetProps> = ({
             )}
           </ScrollView>
 
-          {/* Footer Actions */}
+          {/* Alt Butonlar */}
           <View style={styles.footer}>
             <Button
               label="Temizle"

@@ -1,46 +1,83 @@
 /**
- * Image URL utility functions
- * Converts relative image paths to full URLs
+ * @file imageUrl.ts
+ * @description Resim URL yardımcı fonksiyonları
+ * 
+ * Özellikler:
+ * - Relative path'leri full URL'e çevirir
+ * - Base64 string'leri olduğu gibi döndürür
+ * - Backend'den gelen farklı formatları normalize eder
+ * 
+ * Kullanım:
+ * ```typescript
+ * import { getFullImageUrl } from '@/utils/imageUrl';
+ * 
+ * // Relative path -> Full URL
+ * const url = getFullImageUrl('/uploads/logo.png');
+ * // -> "http://10.0.2.2:3100/uploads/logo.png"
+ * 
+ * // Base64 -> Olduğu gibi
+ * const base64Url = getFullImageUrl('data:image/jpeg;base64,...');
+ * // -> "data:image/jpeg;base64,..."
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import { env } from '@/config/env';
 
 /**
- * Converts a relative image path to a full URL
- * @param path - Relative path (e.g., "/uploads/profiles/photo.jpg") or base64 string
- * @returns Full URL, base64 string, or null if path is invalid
+ * Relative resim path'ini full URL'e çevirir
+ * 
+ * Desteklenen formatlar:
+ * - Relative path: "/uploads/profiles/photo.jpg"
+ * - Base64 string: "data:image/jpeg;base64,..."
+ * - Full URL: "http://example.com/image.jpg"
+ * - Dosya adı: "logo22.png" (otomatik olarak /uploads/ eklenir)
+ * 
+ * @param path - Relative path, base64 string veya full URL
+ * @returns Full URL, base64 string veya null (path geçersizse)
+ * 
+ * @example
+ * // Backend'den gelen farklı formatlar:
+ * getFullImageUrl('/uploads/logo.png') // -> "http://10.0.2.2:3100/uploads/logo.png"
+ * getFullImageUrl('logo22.png') // -> "http://10.0.2.2:3100/uploads/logo22.png"
+ * getFullImageUrl('data:image/jpeg;base64,...') // -> "data:image/jpeg;base64,..."
+ * getFullImageUrl('http://example.com/image.jpg') // -> "http://example.com/image.jpg"
+ * getFullImageUrl(null) // -> null
  */
 export const getFullImageUrl = (path: string | null | undefined): string | null => {
   if (!path) return null;
   
-  // If it's a base64 string (data:image/...), return as is
+  // Base64 string ise (data:image/...), olduğu gibi döndür
   if (path.startsWith('data:image/')) {
     return path;
   }
   
-  // If already a full URL, return as is
+  // Zaten full URL ise, olduğu gibi döndür
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
   
-  // Remove /api/mobile or /api from base URL to get server root
+  // Base URL'den /api/mobile veya /api kısmını kaldır (server root'u al)
   const baseUrl = env.PRIMARY_API_BASE_URL.replace(/\/api.*$/, '');
   
-  // Normalize path - handle different formats:
+  // Path'i normalize et - farklı formatları handle et:
   // - "/uploads/logo.png" -> "/uploads/logo.png"
   // - "uploads/logo.png" -> "/uploads/logo.png"
-  // - "logo.png" -> "/uploads/logo.png" (if no uploads prefix)
+  // - "logo.png" -> "/uploads/logo.png" (uploads prefix'i yoksa)
   let normalizedPath = path.trim();
   
-  // If path doesn't start with /, add it
+  // Path / ile başlamıyorsa, ekle
   if (!normalizedPath.startsWith('/')) {
     normalizedPath = `/${normalizedPath}`;
   }
   
-  // If path doesn't include 'uploads' prefix, add it
+  // Path'te 'uploads' prefix'i yoksa, ekle
   // Backend'den gelen path'ler genelde "logo22.png" formatında geliyor (uploads prefix'i yok)
   if (!normalizedPath.includes('uploads') && !normalizedPath.startsWith('/api')) {
-    // Eğer extension varsa (resim dosyası gibi görünüyorsa), /uploads/ ekle
+    // Extension varsa (resim dosyası gibi görünüyorsa), /uploads/ ekle
     // Bu, backend'den gelen "logo22.png" -> "/uploads/logo22.png" dönüşümünü yapar
     if (normalizedPath.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
       normalizedPath = `/uploads${normalizedPath}`;

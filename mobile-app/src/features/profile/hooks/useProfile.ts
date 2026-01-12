@@ -1,15 +1,31 @@
 /**
- * Profile Hooks - Stabilizasyon Faz 3
+ * @file useProfile.ts
+ * @description Profil hook'larının merkezi export dosyası (Backward Compatibility)
+ * @author MediKariyer Development Team
+ * @version 3.0.0
  * 
- * Bu dosya backward compatibility için yeni hook'ları re-export ediyor
- * Yeni hook'lar domain-driven design ile ayrı dosyalarda:
- * - useProfileCore.ts (Ana profil + completion)
- * - useEducations.ts (Eğitim CRUD)
- * - useExperiences.ts (Deneyim CRUD)
- * - useCertificates.ts (Sertifika CRUD)
- * - useLanguages.ts (Dil CRUD)
+ * **AMAÇ:**
+ * Eski kodlarla uyumluluk için tüm profil hook'larını tek yerden export eder.
  * 
- * @deprecated Yeni hook dosyalarını doğrudan import edin
+ * **YENİ MİMARİ (Domain-Driven Design):**
+ * - useProfileCore.ts: Ana profil + doluluk oranı
+ * - useEducations.ts: Eğitim CRUD
+ * - useExperiences.ts: Deneyim CRUD
+ * - useCertificates.ts: Sertifika CRUD
+ * - useLanguages.ts: Dil CRUD
+ * - useUpdatePersonalInfo.ts: Kişisel bilgi güncelleme
+ * 
+ * **ÖNEMLİ:**
+ * @deprecated Yeni projelerde hook'ları doğrudan import edin:
+ * ```typescript
+ * import { useProfileCore } from './useProfileCore';
+ * import { useEducations } from './useEducations';
+ * ```
+ * 
+ * **KULLANIM ÖRNEĞİ (Eski Yöntem):**
+ * ```typescript
+ * import { useProfile, useEducations } from '@/features/profile/hooks/useProfile';
+ * ```
  */
 
 // Re-export new domain-driven hooks

@@ -1,3 +1,22 @@
+/**
+ * @file AuthNavigator.tsx
+ * @description Kimlik Doğrulama Navigator'ı - Unauthenticated akış
+ * 
+ * Authenticated olmayan kullanıcılar için navigasyon yapısı.
+ * Login, Register, ForgotPassword, ResetPassword ekranlarını içerir.
+ * 
+ * Ekranlar:
+ * - Login: Giriş ekranı
+ * - Register: Kayıt ekranı
+ * - PendingApproval: Onay bekleme ekranı
+ * - ForgotPassword: Şifre sıfırlama talebi ekranı
+ * - ResetPassword: Şifre sıfırlama ekranı (token ile)
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LoginScreen } from '@/features/auth/screens/LoginScreen';
@@ -10,13 +29,13 @@ import type { AuthStackParamList } from './types';
 const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 /**
- * AuthNavigator - Unauthenticated flow
- * Handles login and registration screens
+ * AuthNavigator - Unauthenticated akış
+ * @description Login ve kayıt ekranlarını yönetir
  */
 export const AuthNavigator = () => (
   <Stack.Navigator
     screenOptions={{
-      headerShown: false,
+      headerShown: false, // Header'ları gizle (custom header kullanılıyor)
     }}
   >
     <Stack.Screen name="Login" component={LoginScreen} />

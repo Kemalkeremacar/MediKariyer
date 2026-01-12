@@ -1,13 +1,44 @@
 /**
  * @file useSearch.ts
- * @description Global search hook - Modern, kullanıcı dostu arama hook'u
- * React Native docs tarzında: Yazarken sonuçlar kaybolmaz, client-side filtreleme yapılır
+ * @description Arama Hook'u - Modern, kullanıcı dostu arama deneyimi
+ * 
+ * Özellikler:
+ * - Yazarken sonuçlar kaybolmaz (client-side filtreleme)
+ * - Backend'e sadece minimum karakter geçildiğinde istek atılır
+ * - Debounce ile performans optimizasyonu
+ * - React Native docs tarzında UX
+ * 
+ * Kullanım Stratejisi:
+ * 1. clientQuery: Her zaman mevcut, liste filtreleme için kullanılır
+ * 2. debouncedQuery: Backend isteği için kullanılır (minimum karakter geçildiyse)
+ * 3. shouldFetch: Backend isteği yapılmalı mı kontrolü
+ * 
+ * @example
+ * const [searchQuery, setSearchQuery] = useState('');
+ * const { debouncedQuery, clientQuery, shouldFetch } = useSearch(searchQuery);
+ * 
+ * // Backend isteği - sadece shouldFetch true ise
+ * const query = useJobs({ keyword: shouldFetch ? debouncedQuery : undefined });
+ * 
+ * // Client-side filtreleme - her zaman çalışır
+ * const filteredJobs = jobs.filter(job => 
+ *   job.title.toLowerCase().includes(clientQuery.toLowerCase())
+ * );
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import { useMemo } from 'react';
 import { useDebounce } from './useDebounce';
 import { SEARCH_DEBOUNCE_DELAY } from '@/config/constants';
 
+// ============================================================================
+// TİPLER
+// ============================================================================
+
+// Hook seçenekleri
 export interface UseSearchOptions {
   /**
    * Minimum karakter sayısı - Backend'e istek atmak için
@@ -27,6 +58,7 @@ export interface UseSearchOptions {
   trim?: boolean;
 }
 
+// Hook dönüş tipi
 export interface UseSearchReturn {
   /**
    * Backend'e gönderilecek arama sorgusu (minimum karakter geçildiyse)
@@ -48,8 +80,12 @@ export interface UseSearchReturn {
   isSearching: boolean;
 }
 
+// ============================================================================
+// HOOK
+// ============================================================================
+
 /**
- * Global search hook - Modern, kullanıcı dostu arama
+ * Global arama hook'u - Modern, kullanıcı dostu arama
  * 
  * Özellikler:
  * - Yazarken sonuçlar kaybolmaz (client-side filtreleme)

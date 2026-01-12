@@ -1,22 +1,44 @@
 /**
  * @file Select.tsx
- * @description Dropdown select component using BottomSheetModal
+ * @description BottomSheetModal kullanan dropdown select bileşeni
  * 
- * ⚠️ ARCHITECTURE DEPENDENCY - CRITICAL
+ * ⚠️ MİMARİ BAĞIMLILIK - KRİTİK
  * ═══════════════════════════════════════════════════════
- * This component uses BottomSheetModal from @gorhom/bottom-sheet.
- * It REQUIRES BottomSheetModalProvider to be at ROOT level (App.tsx).
+ * Bu bileşen @gorhom/bottom-sheet'ten BottomSheetModal kullanır.
+ * KÖK SEVİYEDE (App.tsx) BottomSheetModalProvider GEREKTİRİR.
  * 
- * RULES FOR SCREENS USING THIS COMPONENT:
- * - DO NOT use `presentation: 'modal'` in navigation options
- * - DO NOT wrap with local BottomSheetModalProvider
- * - MUST use `presentation: 'card'` for proper z-index layering
+ * BU BİLEŞENİ KULLANAN EKRANLAR İÇİN KURALLAR:
+ * - Navigasyon seçeneklerinde `presentation: 'modal'` KULLANMAYIN
+ * - Yerel BottomSheetModalProvider ile SARMAYIN
+ * - Doğru z-index katmanlaması için `presentation: 'card'` KULLANMALISINIZ
  * 
- * WHY: BottomSheetModal renders relative to its nearest provider.
- * If provider is inside NavigationContainer, modal appears BEHIND screens.
+ * NEDEN: BottomSheetModal en yakın provider'a göre render edilir.
+ * Provider NavigationContainer içindeyse, modal ekranların ARKASINDA görünür.
  * 
- * See: ARCHITECTURE.md for full provider hierarchy documentation.
+ * Bakınız: Tam provider hiyerarşisi dokümantasyonu için ARCHITECTURE.md
  * ═══════════════════════════════════════════════════════
+ * 
+ * Özellikler:
+ * - BottomSheetModal ile dropdown
+ * - Arama desteği (opsiyonel)
+ * - Snap points (%50, %90)
+ * - Backdrop ile kapatma
+ * - Modern tasarım
+ * 
+ * Kullanım:
+ * ```tsx
+ * <Select
+ *   options={cities}
+ *   value={selectedCity}
+ *   onChange={setSelectedCity}
+ *   placeholder="Şehir Seçin"
+ *   searchable
+ * />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
  */
 
 import React, { useState, useRef, useMemo, useCallback } from 'react';
@@ -36,20 +58,38 @@ import type { BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 import { colors } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 
+/**
+ * Select seçenek interface'i
+ */
 export interface SelectOption {
+  /** Gösterilecek etiket */
   label: string;
+  /** Seçenek değeri */
   value: string | number;
 }
 
+/**
+ * Select bileşeni props interface'i
+ */
 interface SelectProps {
+  /** Seçenek listesi */
   options: SelectOption[];
+  /** Seçili değer */
   value?: string | number;
+  /** Değer değiştiğinde çağrılır */
   onChange: (value: string | number) => void;
+  /** Placeholder metni */
   placeholder?: string;
+  /** Arama özelliği aktif mi? */
   searchable?: boolean;
+  /** Devre dışı durumu */
   disabled?: boolean;
 }
 
+/**
+ * Select (Dropdown) Bileşeni
+ * BottomSheetModal ile modern dropdown
+ */
 export const Select: React.FC<SelectProps> = ({
   options,
   value,
@@ -61,12 +101,12 @@ export const Select: React.FC<SelectProps> = ({
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Snap points: 50% and 90% of screen height
+  // Snap noktaları: Ekran yüksekliğinin %50 ve %90'ı
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
   const selectedOption = options.find((opt) => opt.value === value);
   
-  // Filter options based on search
+  // Aramaya göre seçenekleri filtrele
   const filteredOptions = useMemo(() => {
     if (!searchable || !searchQuery) return options;
     return options.filter((opt) =>
@@ -86,7 +126,7 @@ export const Select: React.FC<SelectProps> = ({
     setSearchQuery('');
   }, [onChange]);
 
-  // Backdrop component
+  // Backdrop bileşeni
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
@@ -102,7 +142,7 @@ export const Select: React.FC<SelectProps> = ({
 
   return (
     <>
-      {/* Trigger Button */}
+      {/* Tetikleyici Buton */}
       <TouchableOpacity
         style={[styles.selectButton, disabled && styles.selectButtonDisabled]}
         onPress={handleOpen}
@@ -128,12 +168,12 @@ export const Select: React.FC<SelectProps> = ({
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.handleIndicator}
       >
-        {/* Header */}
+        {/* Başlık */}
         <View style={styles.header}>
           <Text style={styles.title}>{placeholder}</Text>
         </View>
 
-        {/* Search Input (if searchable) */}
+        {/* Arama Input'u (arama aktifse) */}
         {searchable && (
           <BottomSheetTextInput
             style={styles.searchInput}
@@ -143,7 +183,7 @@ export const Select: React.FC<SelectProps> = ({
           />
         )}
 
-        {/* Options List */}
+        {/* Seçenek Listesi */}
         <BottomSheetFlatList
           data={filteredOptions}
           keyExtractor={(item: SelectOption) => String(item.value)}
