@@ -93,6 +93,9 @@ export const NotificationsScreen = () => {
     showUnreadOnly: activeTab === 'unread' // Backend'den sadece okunmamışları çek
   });
 
+  // Bildirim sayıları için tek API çağrısı (toplam ve okunmamış)
+  const { unreadCount, totalCount } = useUnreadCount();
+
   const { mutateAsync: markAsRead } = useMarkAsRead();
   const { mutateAsync: markAllAsRead } = useMarkAllAsRead();
   const deleteNotificationsMutation = useDeleteNotifications();
@@ -100,38 +103,26 @@ export const NotificationsScreen = () => {
   // Screen focus olduğunda bildirimleri yenile
   // MOBILE BEST PRACTICE: Polling yerine sadece focus'ta refetch + push notifications kullan
   // Push notifications zaten yeni bildirimleri anında gönderiyor, polling gereksiz
-  const refetchRef = React.useRef(refetch);
-  
-  // refetch değiştiğinde ref'i güncelle
-  React.useEffect(() => {
-    refetchRef.current = refetch;
+  // NOT: Dependency array boş olmalı - sadece ekran focus olduğunda bir kez çalışmalı
+  const refetchOnFocus = useCallback(() => {
+    refetch();
   }, [refetch]);
   
   useFocusEffect(
     useCallback(() => {
-      // Screen focus olduğunda sadece stale data varsa refetch yap
-      // refetchOnMount: true zaten stale ise otomatik refetch yapıyor
-      // Burada sadece manuel refresh için çağırıyoruz
-      if (!isFetching && !isLoading) {
-        refetchRef.current();
-      }
+      // Screen focus olduğunda refetch yap (sadece bir kez)
+      refetchOnFocus();
       
       // Cleanup: Focus kaybolduğunda bir şey yapma
       return () => {
         // No cleanup needed - React Query handles caching
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []) // Boş dependency array - sadece focus değişikliklerinde çalışsın
+    }, [refetchOnFocus])
   );
 
   // Backend'den zaten filtreli geliyor (showUnreadOnly parametresi ile)
   // Bu yüzden client-side filtering'e gerek yok, direkt kullan
   const filteredNotifications = notificationList;
-
-  // Unread count için backend'den tam sayıyı al (ayrı query ile)
-  // Bu sayede her tab'da doğru unread count gösterilir
-  const { unreadCount: backendUnreadCount } = useUnreadCount();
-  const unreadCount = backendUnreadCount;
 
   /**
    * Bildirime tıklandığında ilgili sayfaya yönlendirir
@@ -301,9 +292,12 @@ export const NotificationsScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          <View style={styles.headerIcon}>
-            <Ionicons name="notifications" size={28} color={colors.primary[600]} />
-          </View>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.primary[600]} />
+          </TouchableOpacity>
           <View style={styles.headerText}>
             <Typography variant="h2" style={styles.headerTitle}>
               {selectionMode ? `${selectedIds.size} seçildi` : 'Bildirimler'}
@@ -367,7 +361,7 @@ export const NotificationsScreen = () => {
       {!selectionMode && (
         <Tabs
           tabs={[
-            { key: 'all', label: 'Tümü', badge: notificationList.length },
+            { key: 'all', label: 'Tümü', badge: totalCount },
             { key: 'unread', label: 'Okunmamış', badge: unreadCount },
           ]}
           activeTab={activeTab}
@@ -458,10 +452,10 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     flex: 1,
   },
-  headerIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',

@@ -39,7 +39,7 @@
  * - %0-49: "🚀 Profilini tamamlayarak başla"
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   ScrollView,
@@ -63,10 +63,11 @@ import { DashboardCard } from '@/components/ui/DashboardCard';
 import { FeaturedJobCard } from '@/components/ui/FeaturedJobCard';
 import { RecentApplicationItem } from '@/components/ui/RecentApplicationItem';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { SideMenu } from '@/components/composite/SideMenu';
 import { useProfileCore, useProfileCompletion } from '../hooks/useProfileCore';
 import { useJobs } from '@/features/jobs/hooks/useJobs';
 import { useApplications } from '@/features/applications/hooks/useApplications';
-import { useNotifications } from '@/features/notifications/hooks/useNotifications';
+import { useUnreadCount } from '@/features/notifications/hooks/useNotifications';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { educationService } from '@/api/services/profile/education.service';
 import { experienceService } from '@/api/services/profile/experience.service';
@@ -86,14 +87,17 @@ export const DashboardScreen = () => {
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   
+  // Side menu state
+  const [menuVisible, setMenuVisible] = useState(false);
+  
   // Core profil bilgileri (sadece ad, soyad, fotoğraf, unvan, uzmanlık)
   const { data: profile, refetch: refetchProfile, isRefetching: isRefetchingProfile } = useProfileCore();
   
   // Profil tamamlanma oranı (backend'den gelen completion_percent)
   const { data: completionData, refetch: refetchCompletion, isRefetching: isRefetchingCompletion } = useProfileCompletion();
   
-  // Bildirimler (sadece unread count)
-  const { unreadCount, refetch: refetchNotifications } = useNotifications({ limit: 1 });
+  // Bildirim sayıları (tek API çağrısı ile unread ve total)
+  const { unreadCount, refetch: refetchNotifications } = useUnreadCount();
   
   // Featured Jobs (Last 5 jobs)
   const { 
@@ -204,8 +208,11 @@ export const DashboardScreen = () => {
         >
           {/* Header Top */}
           <View style={styles.headerTop}>
+            <TouchableOpacity style={styles.menuButton} onPress={() => setMenuVisible(true)}>
+              <Ionicons name="eye-outline" size={24} color="#ffffff" />
+            </TouchableOpacity>
             <Typography variant="title" style={styles.appTitle}>
-              medikariyer.net
+              MediKariyer
             </Typography>
             <TouchableOpacity 
               onPress={() => navigation.navigate('Notifications')}
@@ -271,6 +278,71 @@ export const DashboardScreen = () => {
           </View>
         </LinearGradient>
 
+        {/* Profile Details Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Typography variant="h3" style={styles.sectionTitle}>
+              Profil Detayları
+            </Typography>
+            <Ionicons name="person-circle" size={20} color="#1D4ED8" />
+          </View>
+          
+          <View style={styles.cardsRow}>
+            <DashboardCard
+              title="Temel Bilgiler"
+              icon={<Ionicons name="person" size={28} color="#4A90E2" />}
+              onPress={() => navigation.navigate('ProfileEdit')}
+              variant="default"
+              style={{ flex: 1 }}
+            />
+            <DashboardCard
+              title="Fotoğraf"
+              icon={<Ionicons name="camera" size={28} color="#9C27B0" />}
+              onPress={() => navigation.navigate('PhotoManagement')}
+              variant="default"
+              style={{ flex: 1 }}
+            />
+          </View>
+
+          <View style={styles.cardsRow}>
+            <DashboardCard
+              title="Eğitim"
+              icon={<Ionicons name="school" size={28} color="#4CAF50" />}
+              onPress={() => navigation.navigate('Education')}
+              onPressIn={prefetchEducations}
+              variant="default"
+              style={{ flex: 1 }}
+            />
+            <DashboardCard
+              title="Deneyim"
+              icon={<Ionicons name="briefcase" size={28} color="#2196F3" />}
+              onPress={() => navigation.navigate('Experience')}
+              onPressIn={prefetchExperiences}
+              variant="default"
+              style={{ flex: 1 }}
+            />
+          </View>
+
+          <View style={styles.cardsRow}>
+            <DashboardCard
+              title="Sertifikalar"
+              icon={<Ionicons name="ribbon" size={28} color="#FF5722" />}
+              onPress={() => navigation.navigate('Certificates')}
+              onPressIn={prefetchCertificates}
+              variant="default"
+              style={{ flex: 1 }}
+            />
+            <DashboardCard
+              title="Diller"
+              icon={<Ionicons name="language" size={28} color="#9C27B0" />}
+              onPress={() => navigation.navigate('Languages')}
+              onPressIn={prefetchLanguages}
+              variant="default"
+              style={{ flex: 1 }}
+            />
+          </View>
+        </View>
+
         {/* Featured Jobs Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -315,37 +387,6 @@ export const DashboardScreen = () => {
               ))
             )}
           </ScrollView>
-        </View>
-
-        {/* Quick Actions Grid */}
-        <View style={styles.section}>
-          <Typography variant="h3" style={styles.sectionTitle}>
-            Hızlı Erişim
-          </Typography>
-          
-          <View style={styles.cardsRow}>
-            <DashboardCard
-              title="Özgeçmiş"
-              icon={<Ionicons name="document-text" size={28} color="#4A90E2" />}
-              onPress={() => navigation.navigate('ProfileEdit')}
-              variant="default"
-              style={{ flex: 1 }}
-            />
-            <DashboardCard
-              title="Fotoğraf"
-              icon={<Ionicons name="camera" size={28} color="#9C27B0" />}
-              onPress={() => navigation.navigate('PhotoManagement')}
-              variant="default"
-              style={{ flex: 1 }}
-            />
-            <DashboardCard
-              title="Ayarlar"
-              icon={<Ionicons name="settings" size={28} color="#607D8B" />}
-              onPress={() => navigation.navigate('SettingsTab', { screen: 'SettingsMain' })}
-              variant="default"
-              style={{ flex: 1 }}
-            />
-          </View>
         </View>
 
         {/* Recent Applications Section */}
@@ -394,55 +435,34 @@ export const DashboardScreen = () => {
             </View>
           )}
         </View>
-
-        {/* Profile Details Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Typography variant="h3" style={styles.sectionTitle}>
-              Profil Detayları
-            </Typography>
-            <Ionicons name="person-circle" size={20} color="#1D4ED8" />
-          </View>
-          
-          <View style={styles.cardsRow}>
-            <DashboardCard
-              title="Eğitim"
-              icon={<Ionicons name="school" size={28} color="#4CAF50" />}
-              onPress={() => navigation.navigate('Education')}
-              onPressIn={prefetchEducations}
-              variant="default"
-              style={{ flex: 1 }}
-            />
-            <DashboardCard
-              title="Deneyim"
-              icon={<Ionicons name="briefcase" size={28} color="#2196F3" />}
-              onPress={() => navigation.navigate('Experience')}
-              onPressIn={prefetchExperiences}
-              variant="default"
-              style={{ flex: 1 }}
-            />
-          </View>
-
-          <View style={styles.cardsRow}>
-            <DashboardCard
-              title="Sertifikalar"
-              icon={<Ionicons name="ribbon" size={28} color="#FF5722" />}
-              onPress={() => navigation.navigate('Certificates')}
-              onPressIn={prefetchCertificates}
-              variant="default"
-              style={{ flex: 1 }}
-            />
-            <DashboardCard
-              title="Diller"
-              icon={<Ionicons name="language" size={28} color="#9C27B0" />}
-              onPress={() => navigation.navigate('Languages')}
-              onPressIn={prefetchLanguages}
-              variant="default"
-              style={{ flex: 1 }}
-            />
-          </View>
-        </View>
       </ScrollView>
+      
+      {/* Side Menu */}
+      <SideMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onNavigate={(screen) => {
+          if (screen === 'Education') {
+            navigation.navigate('Education');
+          } else if (screen === 'Experience') {
+            navigation.navigate('Experience');
+          } else if (screen === 'Certificates') {
+            navigation.navigate('Certificates');
+          } else if (screen === 'Languages') {
+            navigation.navigate('Languages');
+          } else if (screen === 'Applications') {
+            navigation.navigate('Applications');
+          } else if (screen === 'SettingsMain') {
+            navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
+          } else if (screen === 'SavedJobs') {
+            navigation.navigate('JobsTab', { screen: 'JobsList' });
+          } else if (screen === 'ProfileEdit') {
+            navigation.navigate('ProfileEdit');
+          } else if (screen === 'Notifications') {
+            navigation.navigate('Notifications');
+          }
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -468,8 +488,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
+  menuButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   appTitle: {
-    fontSize: 26,
+    fontSize: 32,
     color: '#ffffff',
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -481,7 +509,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
   notificationBadge: {
     position: 'absolute',
@@ -555,7 +582,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     color: '#ffffff',
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: '800',
     marginBottom: 6,
     textAlign: 'center',

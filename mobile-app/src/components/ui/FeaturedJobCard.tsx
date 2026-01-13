@@ -23,9 +23,11 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
+import { Avatar } from './Avatar';
 import { colors } from '@/theme';
 import { JobListItem } from '@/types/job';
 import { formatDate } from '@/utils/date';
+import { getFullImageUrl } from '@/utils/imageUrl';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75;
@@ -45,6 +47,9 @@ interface FeaturedJobCardProps {
  * Dashboard'da yatay kaydırmalı liste için kullanılır
  */
 export const FeaturedJobCard: React.FC<FeaturedJobCardProps> = ({ job, onPress }) => {
+  // Hastane logosu URL'ini işle
+  const hospitalLogoUrl = getFullImageUrl(job.hospital_logo);
+  
   return (
     <TouchableOpacity
       style={styles.container}
@@ -52,9 +57,11 @@ export const FeaturedJobCard: React.FC<FeaturedJobCardProps> = ({ job, onPress }
       activeOpacity={0.9}
     >
       <View style={styles.header}>
-        <View style={styles.iconContainer}>
-          <Ionicons name="medical" size={24} color={colors.primary[600]} />
-        </View>
+        <Avatar
+          size="sm"
+          source={hospitalLogoUrl ?? undefined}
+          initials={job.hospital_name?.substring(0, 2).toUpperCase() || '??'}
+        />
         <View style={styles.headerContent}>
           <Typography variant="body" style={styles.title} numberOfLines={1}>
             {job.title}
@@ -119,15 +126,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: colors.primary[50],
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    gap: 12,
   },
   headerContent: {
     flex: 1,

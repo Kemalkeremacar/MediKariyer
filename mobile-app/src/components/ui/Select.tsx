@@ -178,8 +178,11 @@ export const Select: React.FC<SelectProps> = ({
           <BottomSheetTextInput
             style={styles.searchInput}
             placeholder="Ara..."
+            placeholderTextColor={colors.text.tertiary}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            autoComplete="off"
+            autoCorrect={false}
           />
         )}
 

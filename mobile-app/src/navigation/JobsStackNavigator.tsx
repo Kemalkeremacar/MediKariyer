@@ -27,6 +27,9 @@ export const JobsStackNavigator = () => (
     initialRouteName="JobsList"
     screenOptions={{
       headerShown: false,
+      animation: 'slide_from_right',
+      animationDuration: 200,
+      freezeOnBlur: true, // Kaynak tasarrufu için aktif olmayan ekranları dondur
     }}
   >
     <Stack.Screen name="JobsList" component={JobsScreen} />
@@ -34,8 +37,8 @@ export const JobsStackNavigator = () => (
       name="JobDetail" 
       component={JobDetailScreen}
       options={{ 
-        presentation: 'card',
-        animation: 'slide_from_right'
+        animation: 'slide_from_right',
+        gestureEnabled: true,
       }}
     />
   </Stack.Navigator>

@@ -30,10 +30,11 @@ import {
   ScrollView,
   ActivityIndicator,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Button } from '@/components/ui/Button';
-import { BackButton } from '@/components/ui/BackButton';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useToast } from '@/providers/ToastProvider';
@@ -148,21 +149,39 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header - Back Button ve Başlık */}
-        <View style={styles.headerContainer}>
-          <BackButton />
-          <View style={styles.headerContent}>
-            <Typography variant="h2" style={styles.headerTitle}>
-              {job.title ?? 'İş İlanı'}
-            </Typography>
-            <View style={styles.headerSubtitle}>
-              <Ionicons name="briefcase" size={16} color={colors.text.secondary} />
-              <Typography variant="body" style={styles.headerSubtitleText}>
-                {job.hospital_name ?? 'Kurum bilgisi yok'} - {job.city_name ?? ''}
+        {/* Compact Header */}
+        <LinearGradient
+          colors={['#1E40AF', '#3B82F6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientHeader}
+        >
+          {/* Back + Title Row */}
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={22} color="#ffffff" />
+            </TouchableOpacity>
+            
+            <View style={styles.headerTitleContainer}>
+              <Typography variant="h3" style={styles.headerJobTitle} numberOfLines={1}>
+                {job.title ?? 'İş İlanı'}
+              </Typography>
+              <Typography variant="caption" style={styles.headerHospital} numberOfLines={1}>
+                {job.hospital_name ?? 'Kurum'}
               </Typography>
             </View>
+
+            {job.is_applied && (
+              <View style={styles.appliedDot}>
+                <Ionicons name="checkmark-circle" size={20} color="#34D399" />
+              </View>
+            )}
           </View>
-        </View>
+        </LinearGradient>
 
         {/* İlan Bilgileri - Web'deki sıralamaya göre ilk */}
         {(job.specialty || job.subspecialty_name || job.work_type || job.min_experience_years || job.city_name) && (
@@ -184,11 +203,16 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {job.specialty}
                   </Typography>
-                  {job.subspecialty_name && (
-                    <Typography variant="caption" style={styles.subspecialtyLabel}>
-                      Yan Dal: {job.subspecialty_name}
-                    </Typography>
-                  )}
+                </View>
+              )}
+              {job.subspecialty_name && (
+                <View style={styles.jobInfoItem}>
+                  <Typography variant="caption" style={styles.jobInfoLabel}>
+                    Yan Dal
+                  </Typography>
+                  <Typography variant="body" style={styles.jobInfoValue}>
+                    {job.subspecialty_name}
+                  </Typography>
                 </View>
               )}
               {job.work_type && (
@@ -218,6 +242,16 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
                   </Typography>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {job.city_name}
+                  </Typography>
+                </View>
+              )}
+              {job.created_at && (
+                <View style={styles.jobInfoItem}>
+                  <Typography variant="caption" style={styles.jobInfoLabel}>
+                    İlan Tarihi
+                  </Typography>
+                  <Typography variant="body" style={styles.jobInfoValue}>
+                    {formatDate(job.created_at)}
                   </Typography>
                 </View>
               )}
@@ -267,6 +301,16 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
                   </Typography>
                 </View>
               )}
+              {job.hospital_email && (
+                <View style={styles.hospitalInfoItem}>
+                  <Typography variant="caption" style={styles.hospitalInfoLabel}>
+                    E-posta
+                  </Typography>
+                  <Typography variant="body" style={styles.hospitalInfoValueLink}>
+                    {job.hospital_email}
+                  </Typography>
+                </View>
+              )}
               {job.hospital_website && (
                 <View style={styles.hospitalInfoItem}>
                   <Typography variant="caption" style={styles.hospitalInfoLabel}>
@@ -300,18 +344,6 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
           </Card>
         )}
 
-        {/* İlan Tarihi */}
-        {job.created_at && (
-          <View style={styles.dateCard}>
-            <View style={styles.dateRow}>
-              <Ionicons name="time" size={18} color={colors.text.secondary} />
-              <Typography variant="body" style={styles.dateText}>
-                İlan Tarihi: {formatDate(job.created_at)}
-              </Typography>
-            </View>
-          </View>
-        )}
-
         {/* Başvurunuz Var Banner */}
         {job.is_applied && (
           <View style={styles.infoBanner}>
@@ -330,6 +362,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
           variant="outline"
           onPress={() => navigation.goBack()}
           style={styles.bottomBackButton}
+          size="sm"
         />
         {job.is_applied ? (
           <Button
@@ -337,11 +370,12 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             onPress={() => {}}
             disabled={true}
             style={styles.bottomAppliedButton}
+            size="sm"
           >
             <View style={styles.buttonContentContainer}>
-              <Ionicons name="paper-plane" size={18} color={colors.text.inverse} />
-              <Typography variant="body" style={styles.buttonText}>
-                Başvurunuz Bulunuyor
+              <Ionicons name="checkmark-circle" size={14} color={colors.text.inverse} />
+              <Typography variant="caption" style={styles.buttonText}>
+                Başvuruldu
               </Typography>
             </View>
           </Button>
@@ -351,7 +385,7 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             variant="primary"
             onPress={handleOpenApplicationModal}
             style={styles.bottomApplyButton}
-            size="lg"
+            size="sm"
           />
         )}
       </View>
@@ -447,32 +481,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backButtonContainer: {
+  // Gradient Header Styles
+  gradientHeader: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    borderRadius: 16,
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.sm, // BackButton için padding
   },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.sm,
-  },
-  headerContent: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  headerTitle: {
-    color: colors.text.primary,
-    fontWeight: '600',
-  },
-  headerSubtitle: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.md,
   },
-  headerSubtitleText: {
-    color: colors.text.secondary,
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  headerJobTitle: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 17,
+  },
+  headerHospital: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13,
+  },
+  appliedDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonContainer: {
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
   },
   jobTitle: {
     fontSize: 20,
@@ -588,7 +640,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.lg,
-    paddingBottom: spacing.xl, // Bottom buttons için boşluk
+    paddingBottom: spacing.xl,
   },
   headerCard: {
     marginBottom: spacing.md,
@@ -801,24 +853,25 @@ const styles = StyleSheet.create({
   },
   bottomButtons: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
     backgroundColor: colors.background.primary,
     borderTopWidth: 1,
     borderTopColor: colors.border.light,
   },
   bottomBackButton: {
-    flex: 0.4, // Küçük buton
+    flex: 0.3,
+    minHeight: 38,
   },
   bottomAppliedButton: {
-    flex: 1.6, // Büyük buton
+    flex: 1,
     opacity: 0.6,
-    minHeight: 56, // Daha büyük yükseklik
+    minHeight: 38,
   },
   bottomApplyButton: {
-    flex: 1.6, // Büyük buton
-    minHeight: 56, // Daha büyük yükseklik
+    flex: 1,
+    minHeight: 38,
   },
   buttonIconContainer: {
     marginRight: spacing.xs,

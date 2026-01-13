@@ -31,7 +31,7 @@ import { devLog } from '@/utils/devLogger';
  */
 export const useAppState = () => {
   const authStatus = useAuthStore((state) => state.authStatus);
-  const user = useAuthStore((state) => state.user);
+  const hasUser = useAuthStore((state) => !!state.user);
   const markAuthenticated = useAuthStore((state) => state.markAuthenticated);
   const appState = useRef(AppState.currentState);
 
@@ -42,7 +42,7 @@ export const useAppState = () => {
         appState.current.match(/inactive|background/) &&
         nextAppState === 'active' &&
         authStatus === 'authenticated' &&
-        user
+        hasUser
       ) {
         devLog.log('🔄 App became active, checking user status...');
         
@@ -77,6 +77,6 @@ export const useAppState = () => {
     return () => {
       subscription.remove();
     };
-  }, [authStatus, user, markAuthenticated]);
+  }, [authStatus, hasUser, markAuthenticated]);
 };
 

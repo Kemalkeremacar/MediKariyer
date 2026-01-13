@@ -166,26 +166,17 @@ export const TabNavigator = () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             
             try {
-              // Eğer zaten ProfileTab'taysak ve ProfileMain ekranındaysak, sadece default davranışa izin ver
               const state = navigation.getState();
-              if (state?.routes) {
-                const profileTabState = state.routes.find(r => r.name === 'ProfileTab');
-                if (profileTabState?.state) {
-                  const profileStackState = profileTabState.state;
-                  if (profileStackState?.routes && profileStackState?.index !== undefined) {
-                    const currentScreen = profileStackState.routes[profileStackState.index];
-                    if (currentScreen?.name === 'ProfileMain') {
-                      // Zaten ProfileMain'deyiz, sadece default davranışa izin ver
-                      return;
-                    }
-                  }
-                }
+              const profileTabRoute = state?.routes?.find(r => r.name === 'ProfileTab');
+              
+              // Eğer ProfileTab'ın içinde başka ekranlar varsa, ana ekrana dön
+              if (profileTabRoute?.state && profileTabRoute.state.index !== undefined && profileTabRoute.state.index > 0) {
+                e.preventDefault();
+                // ProfileMain'e navigate et - bu stack'i sıfırlar
+                navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
               }
-              // Farklı bir ekrandaysak veya ProfileTab'ta değilsek, ProfileMain'e navigate et
-              e.preventDefault();
-              navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
+              // Eğer zaten ProfileMain'deyse veya başka tab'taysa, default davranışa izin ver
             } catch (error) {
-              // Hata durumunda default davranışa izin ver
               devLog.warn('Tab navigation error:', error);
             }
           },
@@ -208,26 +199,15 @@ export const TabNavigator = () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             
             try {
-              // Eğer zaten JobsTab'taysak ve JobsList ekranındaysak, sadece default davranışa izin ver
               const state = navigation.getState();
-              if (state?.routes) {
-                const jobsTabState = state.routes.find(r => r.name === 'JobsTab');
-                if (jobsTabState?.state) {
-                  const jobsStackState = jobsTabState.state;
-                  if (jobsStackState?.routes && jobsStackState?.index !== undefined) {
-                    const currentScreen = jobsStackState.routes[jobsStackState.index];
-                    if (currentScreen?.name === 'JobsList') {
-                      // Zaten JobsList'deyiz, sadece default davranışa izin ver
-                      return;
-                    }
-                  }
-                }
+              const jobsTabRoute = state?.routes?.find(r => r.name === 'JobsTab');
+              
+              // Eğer JobsTab'ın içinde başka ekranlar varsa, ana ekrana dön
+              if (jobsTabRoute?.state && jobsTabRoute.state.index !== undefined && jobsTabRoute.state.index > 0) {
+                e.preventDefault();
+                navigation.navigate('JobsTab', { screen: 'JobsList' });
               }
-              // Farklı bir ekrandaysak veya JobsTab'ta değilsek, JobsList'e navigate et
-              e.preventDefault();
-              navigation.navigate('JobsTab', { screen: 'JobsList' });
             } catch (error) {
-              // Hata durumunda default davranışa izin ver
               devLog.warn('Tab navigation error:', error);
             }
           },
@@ -265,26 +245,15 @@ export const TabNavigator = () => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             
             try {
-              // Eğer zaten SettingsTab'taysak ve SettingsMain ekranındaysak, sadece default davranışa izin ver
               const state = navigation.getState();
-              if (state?.routes) {
-                const settingsTabState = state.routes.find(r => r.name === 'SettingsTab');
-                if (settingsTabState?.state) {
-                  const settingsStackState = settingsTabState.state;
-                  if (settingsStackState?.routes && settingsStackState?.index !== undefined) {
-                    const currentScreen = settingsStackState.routes[settingsStackState.index];
-                    if (currentScreen?.name === 'SettingsMain') {
-                      // Zaten SettingsMain'deyiz, sadece default davranışa izin ver
-                      return;
-                    }
-                  }
-                }
+              const settingsTabRoute = state?.routes?.find(r => r.name === 'SettingsTab');
+              
+              // Eğer SettingsTab'ın içinde başka ekranlar varsa, ana ekrana dön
+              if (settingsTabRoute?.state && settingsTabRoute.state.index !== undefined && settingsTabRoute.state.index > 0) {
+                e.preventDefault();
+                navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
               }
-              // Farklı bir ekrandaysak veya SettingsTab'ta değilsek, SettingsMain'e navigate et
-              e.preventDefault();
-              navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
             } catch (error) {
-              // Hata durumunda default davranışa izin ver
               devLog.warn('Tab navigation error:', error);
             }
           },

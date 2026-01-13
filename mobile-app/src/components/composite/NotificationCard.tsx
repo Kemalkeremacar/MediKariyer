@@ -178,10 +178,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary[50],
     borderColor: colors.primary[200],
   },
-  unreadCard: {
-    backgroundColor: colors.primary[50],
-    borderColor: colors.primary[200],
-  },
   content: {
     flexDirection: 'row',
     gap: spacing.md,

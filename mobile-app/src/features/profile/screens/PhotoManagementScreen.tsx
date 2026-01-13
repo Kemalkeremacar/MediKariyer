@@ -85,7 +85,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { profileService } from '@/api/services/profile';
 import { queryKeys } from '@/api/queryKeys';
-import { colors, shadows, spacing, borderRadius, typography } from '@/theme';
+import { lightColors, shadows, spacing, borderRadius, typography } from '@/theme';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { formatDateTime } from '@/utils/date';
 import { BackButton } from '@/components/ui/BackButton';
@@ -524,14 +524,10 @@ export const PhotoManagementScreen = () => {
     }, [detailsVisible, navigation, closeDetails])
   );
 
-  // Screen focus/blur olduğunda modal'ı yönet
+  // Screen blur olduğunda modal'ı kapat (başka ekrana geçildiğinde)
   useFocusEffect(
     useCallback(() => {
-      // Screen focus olduğunda (ekrana geldiğinde) modal'ı kapat
-      // Bu sayede anasayfadan geldiğinde modal açık kalmaz
-      if (detailsVisible) {
-        closeDetails();
-      }
+      // Focus olduğunda bir şey yapma - modal açık kalabilir
       
       return () => {
         // Screen blur olduğunda (başka ekrana geçildiğinde) modal'ı kapat
@@ -611,6 +607,193 @@ export const PhotoManagementScreen = () => {
           ) : undefined
         }
       >
+
+      {/* Current Photo - Show side by side if pending request */}
+      <View style={styles.section}>
+        {hasPendingRequest && photoRequestStatus ? (
+          <>
+            <Text style={styles.sectionTitle}>Fotoğraf Karşılaştırması</Text>
+            <View style={styles.photoCompareContainer}>
+              <View style={styles.photoCompareItem}>
+                <Text style={styles.photoCompareLabel}>Mevcut Fotoğraf</Text>
+                <View style={styles.photoContainerSmall}>
+                  {profile?.profile_photo ? (
+                    <Image source={{ uri: profile.profile_photo }} style={styles.photoSmall} />
+                  ) : (
+                    <View style={styles.photoPlaceholderSmall}>
+                      <Text style={styles.cameraIconSmall}>📷</Text>
+                      <Text style={styles.placeholderTextSmall}>Yok</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+              <View style={styles.photoCompareItem}>
+                <Text style={styles.photoCompareLabel}>Yeni Fotoğraf</Text>
+                <View style={styles.photoContainerSmall}>
+                  {photoRequestStatus.file_url ? (
+                    <Image source={{ uri: photoRequestStatus.file_url }} style={styles.photoSmall} />
+                  ) : (
+                    <View style={styles.photoPlaceholderSmall}>
+                      <Text style={styles.cameraIconSmall}>📷</Text>
+                      <Text style={styles.placeholderTextSmall}>Yok</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>Mevcut Fotoğraf</Text>
+            <View style={styles.photoContainer}>
+              {photoPreview ? (
+                <Image source={{ uri: photoPreview }} style={styles.photo} />
+              ) : (
+                <View style={styles.photoPlaceholder}>
+                  <Text style={styles.cameraIcon}>📷</Text>
+                  <Text style={styles.placeholderText}>Fotoğraf Yok</Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
+      </View>
+
+      {/* Pending Request Status */}
+      {hasPendingRequest && photoRequestStatus && (
+        <View style={styles.section}>
+          <View style={styles.statusCard}>
+            <View style={styles.statusHeader}>
+              <Text style={styles.statusIcon}>⏳</Text>
+              <Text style={styles.statusTitle}>Onay Bekleniyor</Text>
+            </View>
+            <Text style={styles.statusText}>
+              Fotoğraf değişiklik talebiniz admin onayı bekliyor.
+            </Text>
+            {photoRequestStatus.reason && (
+              <View style={styles.reasonContainer}>
+                <Text style={styles.reasonLabel}>Not:</Text>
+                <Text style={styles.reasonText}>{photoRequestStatus.reason}</Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={[
+                styles.cancelButton,
+                (!canCancelRequest || cancelPhotoRequestMutation.isPending) && styles.cancelButtonDisabled,
+              ]}
+              onPress={handleCancelRequest}
+              disabled={!canCancelRequest || cancelPhotoRequestMutation.isPending}
+              activeOpacity={canCancelRequest && !cancelPhotoRequestMutation.isPending ? 0.7 : 1}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              {cancelPhotoRequestMutation.isPending ? (
+                <>
+                  <ActivityIndicator color={lightColors.text.inverse} size="small" />
+                  <Text style={styles.cancelButtonText}>İptal ediliyor...</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.cancelButtonText}>✕ Talebi İptal Et</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Upload New Photo - Only show when NO pending request */}
+      {!hasPendingRequest && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Yeni Fotoğraf Yükle</Text>
+          <TouchableOpacity
+            style={[
+              styles.uploadButton,
+              !canUploadPhoto && styles.uploadButtonDisabled,
+            ]}
+            onPress={handlePickImage}
+            disabled={!canUploadPhoto}
+            activeOpacity={canUploadPhoto ? 0.7 : 1}
+          >
+            {isUploading || requestPhotoChangeMutation.isPending ? (
+              <>
+                <ActivityIndicator color={lightColors.text.inverse} size="small" />
+                <Text style={styles.uploadButtonText}>Yükleniyor...</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.uploadButtonText}>📤 Fotoğraf Seç</Text>
+              </>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.uploadHint}>
+            Max 5MB • JPEG, PNG
+          </Text>
+        </View>
+      )}
+
+      {/* Son Değişiklik - Sadece status'tan gelen latest request gösteriliyor */}
+      {photoRequestStatus && (
+        <View style={styles.section}>
+          <View style={styles.historyHeader}>
+            <Text style={styles.historyIcon}>📜</Text>
+            <Text style={styles.sectionTitle}>Son Değişiklik</Text>
+          </View>
+          <View style={styles.historyItem}>
+            <View style={styles.historyItemHeader}>
+              <View style={styles.historyItemContent}>
+                <View style={styles.historyItemStatus}>
+                  {photoRequestStatus.status === 'approved' && (
+                    <Text style={styles.statusIconSmall}>✓</Text>
+                  )}
+                  {photoRequestStatus.status === 'rejected' && (
+                    <Text style={styles.statusIconSmall}>✗</Text>
+                  )}
+                  {photoRequestStatus.status === 'pending' && (
+                    <Text style={styles.statusIconSmall}>⏳</Text>
+                  )}
+                  {photoRequestStatus.status === 'cancelled' && (
+                    <Text style={styles.statusIconSmall}>⊘</Text>
+                  )}
+                  <Text
+                    style={[
+                      styles.historyItemStatusText,
+                      photoRequestStatus.status === 'approved' && styles.statusApproved,
+                      photoRequestStatus.status === 'rejected' && styles.statusRejected,
+                      photoRequestStatus.status === 'pending' && styles.statusPending,
+                      photoRequestStatus.status === 'cancelled' && styles.statusCancelled,
+                    ]}
+                  >
+                    {getStatusLabel(photoRequestStatus.status)}
+                  </Text>
+                </View>
+                {photoRequestStatus.created_at && (
+                  <Text style={styles.historyItemDate}>
+                    {formatDateTime(photoRequestStatus.created_at)}
+                  </Text>
+                )}
+                {photoRequestStatus.reason && (
+                  <Text style={styles.historyItemReason}>{photoRequestStatus.reason}</Text>
+                )}
+              </View>
+              <View style={styles.historyRight}>
+                {photoRequestStatus.file_url && (
+                  <Image source={{ uri: photoRequestStatus.file_url }} style={styles.historyItemPhoto} />
+                )}
+                <TouchableOpacity
+                  style={styles.historyDetailButton}
+                  onPress={() => openDetails(photoRequestStatus)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.historyDetailButtonText}>Detay</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      )}
+      </ScrollView>
+      
+      {/* Modal - ScrollView dışında olmalı */}
       <Modal
         visible={detailsVisible}
         transparent
@@ -697,197 +880,12 @@ export const PhotoManagementScreen = () => {
 
             <View style={styles.modalFooter}>
               <TouchableOpacity style={styles.modalPrimaryButton} onPress={closeDetails}>
-                <Text style={styles.modalPrimaryButtonText}>İptal</Text>
+                <Text style={styles.modalPrimaryButtonText}>Kapat</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-
-      {/* Current Photo - Show side by side if pending request */}
-      <View style={styles.section}>
-        {hasPendingRequest && photoRequestStatus ? (
-          <>
-            <Text style={styles.sectionTitle}>Fotoğraf Karşılaştırması</Text>
-            <View style={styles.photoCompareContainer}>
-              <View style={styles.photoCompareItem}>
-                <Text style={styles.photoCompareLabel}>Mevcut Fotoğraf</Text>
-                <View style={styles.photoContainerSmall}>
-                  {profile?.profile_photo ? (
-                    <Image source={{ uri: profile.profile_photo }} style={styles.photoSmall} />
-                  ) : (
-                    <View style={styles.photoPlaceholderSmall}>
-                      <Text style={styles.cameraIconSmall}>📷</Text>
-                      <Text style={styles.placeholderTextSmall}>Yok</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-              <View style={styles.photoCompareItem}>
-                <Text style={styles.photoCompareLabel}>Yeni Fotoğraf</Text>
-                <View style={styles.photoContainerSmall}>
-                  {photoRequestStatus.file_url ? (
-                    <Image source={{ uri: photoRequestStatus.file_url }} style={styles.photoSmall} />
-                  ) : (
-                    <View style={styles.photoPlaceholderSmall}>
-                      <Text style={styles.cameraIconSmall}>📷</Text>
-                      <Text style={styles.placeholderTextSmall}>Yok</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-          </>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>Mevcut Fotoğraf</Text>
-            <View style={styles.photoContainer}>
-              {photoPreview ? (
-                <Image source={{ uri: photoPreview }} style={styles.photo} />
-              ) : (
-                <View style={styles.photoPlaceholder}>
-                  <Text style={styles.cameraIcon}>📷</Text>
-                  <Text style={styles.placeholderText}>Fotoğraf Yok</Text>
-                </View>
-              )}
-            </View>
-          </>
-        )}
-      </View>
-
-      {/* Pending Request Status */}
-      {hasPendingRequest && photoRequestStatus && (
-        <View style={styles.section}>
-          <View style={styles.statusCard}>
-            <View style={styles.statusHeader}>
-              <Text style={styles.statusIcon}>⏳</Text>
-              <Text style={styles.statusTitle}>Onay Bekleniyor</Text>
-            </View>
-            <Text style={styles.statusText}>
-              Fotoğraf değişiklik talebiniz admin onayı bekliyor.
-            </Text>
-            {photoRequestStatus.reason && (
-              <View style={styles.reasonContainer}>
-                <Text style={styles.reasonLabel}>Not:</Text>
-                <Text style={styles.reasonText}>{photoRequestStatus.reason}</Text>
-              </View>
-            )}
-            <TouchableOpacity
-              style={[
-                styles.cancelButton,
-                (!canCancelRequest || cancelPhotoRequestMutation.isPending) && styles.cancelButtonDisabled,
-              ]}
-              onPress={handleCancelRequest}
-              disabled={!canCancelRequest || cancelPhotoRequestMutation.isPending}
-              activeOpacity={canCancelRequest && !cancelPhotoRequestMutation.isPending ? 0.7 : 1}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              {cancelPhotoRequestMutation.isPending ? (
-                <>
-                  <ActivityIndicator color={colors.text.inverse} size="small" />
-                  <Text style={styles.cancelButtonText}>İptal ediliyor...</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.cancelButtonText}>✕ Talebi İptal Et</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* Upload New Photo - Only show when NO pending request */}
-      {!hasPendingRequest && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Yeni Fotoğraf Yükle</Text>
-          <TouchableOpacity
-            style={[
-              styles.uploadButton,
-              !canUploadPhoto && styles.uploadButtonDisabled,
-            ]}
-            onPress={handlePickImage}
-            disabled={!canUploadPhoto}
-            activeOpacity={canUploadPhoto ? 0.7 : 1}
-          >
-            {isUploading || requestPhotoChangeMutation.isPending ? (
-              <>
-                <ActivityIndicator color={colors.text.inverse} size="small" />
-                <Text style={styles.uploadButtonText}>Yükleniyor...</Text>
-              </>
-            ) : (
-              <>
-                <Text style={styles.uploadButtonText}>📤 Fotoğraf Seç</Text>
-              </>
-            )}
-          </TouchableOpacity>
-          <Text style={styles.uploadHint}>
-            Max 5MB • JPEG, PNG
-          </Text>
-        </View>
-      )}
-
-      {/* Son Değişiklik - Sadece status'tan gelen latest request gösteriliyor */}
-      {photoRequestStatus && (
-        <View style={styles.section}>
-          <View style={styles.historyHeader}>
-            <Text style={styles.historyIcon}>📜</Text>
-            <Text style={styles.sectionTitle}>Son Değişiklik</Text>
-          </View>
-          <View style={styles.historyItem}>
-            <View style={styles.historyItemHeader}>
-              <View style={styles.historyItemContent}>
-                <View style={styles.historyItemStatus}>
-                  {photoRequestStatus.status === 'approved' && (
-                    <Text style={styles.statusIconSmall}>✓</Text>
-                  )}
-                  {photoRequestStatus.status === 'rejected' && (
-                    <Text style={styles.statusIconSmall}>✗</Text>
-                  )}
-                  {photoRequestStatus.status === 'pending' && (
-                    <Text style={styles.statusIconSmall}>⏳</Text>
-                  )}
-                  {photoRequestStatus.status === 'cancelled' && (
-                    <Text style={styles.statusIconSmall}>⊘</Text>
-                  )}
-                  <Text
-                    style={[
-                      styles.historyItemStatusText,
-                      photoRequestStatus.status === 'approved' && styles.statusApproved,
-                      photoRequestStatus.status === 'rejected' && styles.statusRejected,
-                      photoRequestStatus.status === 'pending' && styles.statusPending,
-                      photoRequestStatus.status === 'cancelled' && styles.statusCancelled,
-                    ]}
-                  >
-                    {getStatusLabel(photoRequestStatus.status)}
-                  </Text>
-                </View>
-                {photoRequestStatus.created_at && (
-                  <Text style={styles.historyItemDate}>
-                    {formatDateTime(photoRequestStatus.created_at)}
-                  </Text>
-                )}
-                {photoRequestStatus.reason && (
-                  <Text style={styles.historyItemReason}>{photoRequestStatus.reason}</Text>
-                )}
-              </View>
-              <View style={styles.historyRight}>
-                {photoRequestStatus.file_url && (
-                  <Image source={{ uri: photoRequestStatus.file_url }} style={styles.historyItemPhoto} />
-                )}
-                <TouchableOpacity
-                  style={styles.historyDetailButton}
-                  onPress={() => openDetails(photoRequestStatus)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.historyDetailButtonText}>Detay</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -895,13 +893,13 @@ export const PhotoManagementScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: lightColors.background.secondary,
   },
   scrollContainer: {
     flex: 1,
   },
   section: {
-    backgroundColor: colors.background.primary,
+    backgroundColor: lightColors.background.primary,
     margin: spacing.lg,
     padding: spacing.lg,
     borderRadius: borderRadius.lg,
@@ -919,7 +917,7 @@ const styles = StyleSheet.create({
   photoCompareLabel: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
+    color: lightColors.text.primary,
     marginBottom: spacing.sm,
   },
   photoContainerSmall: {
@@ -930,13 +928,13 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.border.light,
+    backgroundColor: lightColors.border.light,
   },
   photoPlaceholderSmall: {
     width: 140,
     height: 140,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.border.light,
+    backgroundColor: lightColors.border.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -946,12 +944,12 @@ const styles = StyleSheet.create({
   placeholderTextSmall: {
     marginTop: spacing.xs,
     fontSize: typography.fontSize.xs,
-    color: colors.text.tertiary,
+    color: lightColors.text.tertiary,
   },
   sectionTitle: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
+    color: lightColors.text.primary,
     marginBottom: spacing.lg,
   },
   photoContainer: {
@@ -962,20 +960,20 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.border.light,
+    backgroundColor: lightColors.border.light,
   },
   photoPlaceholder: {
     width: 200,
     height: 200,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.border.light,
+    backgroundColor: lightColors.border.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
   placeholderText: {
     marginTop: spacing.sm,
     fontSize: typography.fontSize.sm,
-    color: colors.text.tertiary,
+    color: lightColors.text.tertiary,
   },
   cameraIcon: {
     fontSize: 48,
@@ -990,9 +988,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   statusCard: {
-    backgroundColor: colors.warning[50],
+    backgroundColor: lightColors.warning[50],
     borderWidth: 1,
-    borderColor: colors.warning[200],
+    borderColor: lightColors.warning[200],
     borderRadius: borderRadius.md,
     padding: spacing.lg,
   },
@@ -1005,15 +1003,15 @@ const styles = StyleSheet.create({
   statusTitle: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.warning[800],
+    color: lightColors.warning[800],
   },
   statusText: {
     fontSize: typography.fontSize.sm,
-    color: colors.warning[800],
+    color: lightColors.warning[800],
     marginBottom: spacing.md,
   },
   reasonContainer: {
-    backgroundColor: colors.background.primary,
+    backgroundColor: lightColors.background.primary,
     padding: spacing.md,
     borderRadius: borderRadius.xs,
     marginBottom: spacing.md,
@@ -1021,29 +1019,29 @@ const styles = StyleSheet.create({
   reasonLabel: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.warning[800],
+    color: lightColors.warning[800],
     marginBottom: spacing.xs,
   },
   reasonText: {
     fontSize: typography.fontSize.sm,
-    color: colors.warning[800],
+    color: lightColors.warning[800],
   },
   cancelButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.error[500],
+    backgroundColor: lightColors.error[500],
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: borderRadius.md,
   },
   cancelButtonDisabled: {
-    backgroundColor: colors.neutral[400],
+    backgroundColor: lightColors.neutral[400],
     opacity: 0.6,
   },
   cancelButtonText: {
-    color: colors.text.inverse,
+    color: lightColors.text.inverse,
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
   },
@@ -1052,24 +1050,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
-    backgroundColor: colors.primary[600],
+    backgroundColor: lightColors.primary[600],
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.xl,
     borderRadius: borderRadius.md,
     marginBottom: spacing.sm,
   },
   uploadButtonDisabled: {
-    backgroundColor: colors.neutral[400],
+    backgroundColor: lightColors.neutral[400],
     opacity: 0.6,
   },
   uploadButtonText: {
-    color: colors.text.inverse,
+    color: lightColors.text.inverse,
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
   },
   uploadHint: {
     fontSize: typography.fontSize.xs,
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
     textAlign: 'center',
   },
   historyHeader: {
@@ -1080,7 +1078,7 @@ const styles = StyleSheet.create({
   },
   historyItem: {
     borderWidth: 1,
-    borderColor: colors.border.light,
+    borderColor: lightColors.border.light,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -1104,25 +1102,25 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.medium,
   },
   statusApproved: {
-    color: colors.success[600],
+    color: lightColors.success[600],
   },
   statusRejected: {
-    color: colors.error[500],
+    color: lightColors.error[500],
   },
   statusPending: {
-    color: colors.warning[500],
+    color: lightColors.warning[500],
   },
   statusCancelled: {
-    color: colors.neutral[500],
+    color: lightColors.neutral[500],
   },
   historyItemDate: {
     fontSize: typography.fontSize.xs,
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
     marginBottom: spacing.xs,
   },
   historyItemReason: {
     fontSize: typography.fontSize.xs,
-    color: colors.text.tertiary,
+    color: lightColors.text.tertiary,
     fontStyle: 'italic',
   },
   historyRight: {
@@ -1134,20 +1132,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.primary[50],
+    backgroundColor: lightColors.primary[50],
     borderWidth: 1,
-    borderColor: colors.primary[100],
+    borderColor: lightColors.primary[100],
   },
   historyDetailButtonText: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.primary[700],
+    color: lightColors.primary[700],
   },
   historyItemPhoto: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.border.light,
+    backgroundColor: lightColors.border.light,
   },
 
   modalOverlay: {
@@ -1156,7 +1154,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: colors.background.primary,
+    backgroundColor: lightColors.background.primary,
     borderTopLeftRadius: borderRadius.xl,
     borderTopRightRadius: borderRadius.xl,
     ...shadows.md,
@@ -1167,12 +1165,12 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border.light,
+    borderBottomColor: lightColors.border.light,
   },
   modalTitle: {
     fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
+    color: lightColors.text.primary,
   },
   modalBody: {
     flex: 1,
@@ -1183,8 +1181,8 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border.light,
-    backgroundColor: colors.background.primary,
+    borderTopColor: lightColors.border.light,
+    backgroundColor: lightColors.background.primary,
   },
   detailRow: {
     flexDirection: 'row',
@@ -1194,11 +1192,11 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
   },
   detailValue: {
     fontSize: typography.fontSize.sm,
-    color: colors.text.primary,
+    color: lightColors.text.primary,
     fontWeight: typography.fontWeight.medium,
     textAlign: 'right',
     flex: 1,
@@ -1214,41 +1212,41 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
   },
   badgeApproved: {
-    backgroundColor: colors.success[50],
-    borderColor: colors.success[200],
+    backgroundColor: lightColors.success[50],
+    borderColor: lightColors.success[200],
   },
   badgeRejected: {
-    backgroundColor: colors.error[50],
-    borderColor: colors.error[200],
+    backgroundColor: lightColors.error[50],
+    borderColor: lightColors.error[200],
   },
   badgePending: {
-    backgroundColor: colors.warning[50],
-    borderColor: colors.warning[200],
+    backgroundColor: lightColors.warning[50],
+    borderColor: lightColors.warning[200],
   },
   badgeCancelled: {
-    backgroundColor: colors.neutral[50],
-    borderColor: colors.neutral[200],
+    backgroundColor: lightColors.neutral[50],
+    borderColor: lightColors.neutral[200],
   },
   badgeDefault: {
-    backgroundColor: colors.neutral[50],
-    borderColor: colors.neutral[200],
+    backgroundColor: lightColors.neutral[50],
+    borderColor: lightColors.neutral[200],
   },
   detailNote: {
-    backgroundColor: colors.background.secondary,
+    backgroundColor: lightColors.background.secondary,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     borderWidth: 1,
-    borderColor: colors.border.light,
+    borderColor: lightColors.border.light,
   },
   detailNoteLabel: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
     marginBottom: spacing.xs,
   },
   detailNoteText: {
     fontSize: typography.fontSize.sm,
-    color: colors.text.primary,
+    color: lightColors.text.primary,
   },
   compareSection: {
     marginTop: spacing.sm,
@@ -1256,7 +1254,7 @@ const styles = StyleSheet.create({
   compareTitle: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.text.primary,
+    color: lightColors.text.primary,
     marginBottom: spacing.md,
   },
   compareRow: {
@@ -1268,7 +1266,7 @@ const styles = StyleSheet.create({
   },
   compareLabel: {
     fontSize: typography.fontSize.xs,
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
@@ -1277,9 +1275,9 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    backgroundColor: colors.background.secondary,
+    backgroundColor: lightColors.background.secondary,
     borderWidth: 1,
-    borderColor: colors.border.light,
+    borderColor: lightColors.border.light,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1289,10 +1287,10 @@ const styles = StyleSheet.create({
   },
   compareEmptyText: {
     fontSize: typography.fontSize.sm,
-    color: colors.text.tertiary,
+    color: lightColors.text.tertiary,
   },
   modalPrimaryButton: {
-    backgroundColor: colors.primary[600],
+    backgroundColor: lightColors.primary[600],
     borderRadius: borderRadius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
@@ -1300,7 +1298,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   modalPrimaryButtonText: {
-    color: colors.text.inverse,
+    color: lightColors.text.inverse,
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
   },
@@ -1312,7 +1310,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
   },
   errorContainer: {
     alignItems: 'center',
@@ -1322,17 +1320,17 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.fontSize.sm,
-    color: colors.error[600],
+    color: lightColors.error[600],
     textAlign: 'center',
   },
   retryButton: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.primary[600],
+    backgroundColor: lightColors.primary[600],
     borderRadius: borderRadius.md,
   },
   retryButtonText: {
-    color: colors.text.inverse,
+    color: lightColors.text.inverse,
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.semibold,
   },
@@ -1343,7 +1341,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: typography.fontSize.sm,
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
     textAlign: 'center',
   },
 });

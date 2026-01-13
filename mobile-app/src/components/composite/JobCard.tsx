@@ -25,6 +25,7 @@ import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { isWithinDays } from '@/utils/date';
+import { getFullImageUrl } from '@/utils/imageUrl';
 import type { JobListItem } from '@/types/job';
 
 /**
@@ -68,26 +69,12 @@ interface JobCardProps {
 export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
   /**
    * Hastane logosu URL'ini işle
-   * Base64, full URL veya path formatlarını kontrol eder
+   * getFullImageUrl utility'si tüm formatları handle eder:
+   * - Base64 string (data:image/...) → Direkt kullan
+   * - Full URL (http/https) → Direkt kullan
+   * - Path formatı (logo.png) → Full URL'e çevir
    */
-  const hospitalLogoUrl = (() => {
-    if (!job.hospital_logo) return null;
-    
-    // Base64 string ise direkt kullan
-    if (job.hospital_logo.startsWith('data:image/')) {
-      return job.hospital_logo;
-    }
-    
-    // Full URL ise direkt kullan
-    if (job.hospital_logo.startsWith('http://') || job.hospital_logo.startsWith('https://')) {
-      return job.hospital_logo;
-    }
-    
-    // Path formatındaki logolar (logo.png, logo22.png vb.) → null
-    // Çünkü bu dosyalar uploads klasöründe yok, 404 verecek
-    // Avatar component'i fallback (initials) gösterecek
-    return null;
-  })();
+  const hospitalLogoUrl = getFullImageUrl(job.hospital_logo);
 
   /**
    * Detay butonu için smooth animasyon değerleri

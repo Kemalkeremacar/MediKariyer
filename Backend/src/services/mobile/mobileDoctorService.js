@@ -68,11 +68,13 @@ const getDoctorProfile = async (userId) => {
     .leftJoin('specialties as s', 'dp.specialty_id', 's.id')
     .leftJoin('subspecialties as ss', 'dp.subspecialty_id', 'ss.id')
     .leftJoin('cities as c', 'dp.residence_city_id', 'c.id')
+    .leftJoin('cities as bp', 'dp.birth_place_id', 'bp.id')
     .select(
       'dp.*',
       's.name as specialty_name',
       'ss.name as subspecialty_name',
-      'c.name as residence_city_name'
+      'c.name as residence_city_name',
+      'bp.name as birth_place_name'
     )
     .where('dp.user_id', userId)
     .first();

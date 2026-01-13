@@ -46,7 +46,7 @@ import { colors, spacing } from '@/theme';
 import { useSpecialties } from '@/hooks/useLookup';
 import { useExperience } from '@/features/profile/hooks/useExperiences';
 import { toDateString, parseDateOnly } from '@/utils/date';
-import type { DoctorExperience, CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
+import type { CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type ExperienceFormModalRouteProp = RouteProp<ProfileStackParamList, 'ExperienceFormModal'>;
@@ -207,7 +207,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
             label="Pozisyon / Ünvan *"
             placeholder="Örn: Uzman Doktor"
             value={formData.role_title}
-            onChangeText={(text) => setFormData({ ...formData, role_title: text })}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, role_title: text }))}
             error={errors.role_title}
           />
 
@@ -215,7 +215,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
             label="Kurum Adı *"
             placeholder="Hastane veya kurum adı"
             value={formData.organization}
-            onChangeText={(text) => setFormData({ ...formData, organization: text })}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, organization: text }))}
             error={errors.organization}
           />
 
@@ -235,7 +235,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
                 options={specialtyOptions}
                 value={formData.specialty_id.toString()}
                 onChange={(value) =>
-                  setFormData({ ...formData, specialty_id: parseInt(value as string) })
+                  setFormData(prev => ({ ...prev, specialty_id: parseInt(value as string) }))
                 }
                 placeholder="Uzmanlık alanı seçiniz"
               />
@@ -252,7 +252,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
               label="Başlangıç Tarihi *"
               placeholder="Başlangıç tarihini seçin"
               value={formData.start_date}
-              onChange={(date) => setFormData({ ...formData, start_date: date })}
+              onChange={(date) => setFormData(prev => ({ ...prev, start_date: date }))}
               maximumDate={new Date()}
             />
             {errors.start_date && (
@@ -264,7 +264,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
 
           <TouchableOpacity
             style={styles.checkboxContainer}
-            onPress={() => setFormData({ ...formData, is_current: !formData.is_current })}
+            onPress={() => setFormData(prev => ({ ...prev, is_current: !prev.is_current }))}
           >
             <View style={[styles.checkbox, formData.is_current && styles.checkboxChecked]}>
               {formData.is_current && (
@@ -282,7 +282,7 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
                 label="Bitiş Tarihi"
                 placeholder="Bitiş tarihini seçin"
                 value={formData.end_date}
-                onChange={(date) => setFormData({ ...formData, end_date: date })}
+                onChange={(date) => setFormData(prev => ({ ...prev, end_date: date }))}
                 maximumDate={new Date()}
               />
               {errors.end_date && (

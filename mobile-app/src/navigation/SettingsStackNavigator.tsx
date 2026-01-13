@@ -26,6 +26,9 @@ export const SettingsStackNavigator = () => (
   <Stack.Navigator
     screenOptions={{
       headerShown: false,
+      animation: 'slide_from_right',
+      animationDuration: 200,
+      freezeOnBlur: true,
     }}
   >
     <Stack.Screen 
@@ -36,7 +39,10 @@ export const SettingsStackNavigator = () => (
       name="ChangePassword" 
       component={ChangePasswordScreen}
       options={{
-        presentation: 'modal',
+        // NOT: presentation: 'modal' kullanılmıyor - BottomSheet/Select bileşenlerini bozabilir
+        // Bunun yerine slide_from_bottom animasyonu kullanılıyor
+        animation: 'slide_from_bottom',
+        gestureEnabled: true,
       }}
     />
   </Stack.Navigator>

@@ -37,7 +37,7 @@ import { Select, SelectOption } from '@/components/ui/Select';
 import { colors, spacing } from '@/theme';
 import { useLanguages, useLanguageLevels } from '@/hooks/useLookup';
 import { useLanguage } from '@/features/profile/hooks/useLanguages';
-import type { DoctorLanguage, CreateLanguagePayload, UpdateLanguagePayload } from '@/types/profile';
+import type { CreateLanguagePayload, UpdateLanguagePayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type LanguageFormModalRouteProp = RouteProp<ProfileStackParamList, 'LanguageFormModal'>;
@@ -190,7 +190,7 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
                 options={languageOptions}
                 value={formData.language_id > 0 ? formData.language_id.toString() : undefined}
                 onChange={(value) => {
-                  setFormData({ ...formData, language_id: parseInt(value as string) });
+                  setFormData(prev => ({ ...prev, language_id: parseInt(value as string) }));
                 }}
                 placeholder="Dil seçiniz"
               />
@@ -218,7 +218,7 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
                 options={levelOptions}
                 value={formData.level_id > 0 ? formData.level_id.toString() : undefined}
                 onChange={(value) =>
-                  setFormData({ ...formData, level_id: parseInt(value as string) })
+                  setFormData(prev => ({ ...prev, level_id: parseInt(value as string) }))
                 }
                 placeholder="Seviye seçiniz"
               />

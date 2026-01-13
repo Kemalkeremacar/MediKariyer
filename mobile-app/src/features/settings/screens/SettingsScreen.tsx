@@ -1,18 +1,27 @@
 /**
  * @file SettingsScreen.tsx
- * @description Kurumsal tarzda ayarlar ekranı - Sadece uygulama ayarları
+ * @description Profesyonel ayarlar ekranı
+ * 
+ * Özellikler:
+ * - Şifre değiştirme
+ * - Uygulama paylaşma, değerlendirme, geri bildirim
+ * - Yasal sayfalar (gizlilik, kullanım koşulları)
+ * - Hesap işlemleri (çıkış, hesap kapatma)
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
  */
 
-import React, { useState } from 'react';
-import { useAlertHelpers } from '@/utils/alertHelpers';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
-  Switch,
   Animated,
   Pressable,
   ActivityIndicator,
+  Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
@@ -20,10 +29,16 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Screen } from '@/components/layout/Screen';
 import { GradientHeader } from '@/components/composite/GradientHeader';
-import { colors, spacing } from '@/theme';
+import { lightColors, spacing } from '@/theme';
 import { useLogout } from '@/features/auth/hooks/useLogout';
 import { useMutation } from '@tanstack/react-query';
 import { accountService } from '@/api/services/account.service';
+import { useAppActions } from '@/features/settings/hooks/useAppActions';
+import { useToast } from '@/providers/ToastProvider';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -36,8 +51,18 @@ interface SettingItemProps {
   badgeColor?: 'primary' | 'success' | 'warning' | 'error';
   rightElement?: React.ReactNode;
   iconBgColor?: string;
-  iconColor?: string;
+  disabled?: boolean;
+  destructive?: boolean;
 }
+
+interface SectionHeaderProps {
+  title: string;
+  icon?: React.ReactNode;
+}
+
+// ============================================================================
+// COMPONENTS
+// ============================================================================
 
 const SettingItem: React.FC<SettingItemProps> = ({
   icon,
@@ -50,20 +75,22 @@ const SettingItem: React.FC<SettingItemProps> = ({
   badgeColor = 'primary',
   rightElement,
   iconBgColor,
+  disabled = false,
+  destructive = false,
 }) => {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
-  const handlePressIn = () => {
-    if (onPress) {
+  const handlePressIn = useCallback(() => {
+    if (onPress && !disabled) {
       Animated.spring(scaleAnim, {
         toValue: 0.98,
         useNativeDriver: true,
       }).start();
     }
-  };
+  }, [onPress, disabled, scaleAnim]);
 
-  const handlePressOut = () => {
-    if (onPress) {
+  const handlePressOut = useCallback(() => {
+    if (onPress && !disabled) {
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 3,
@@ -71,20 +98,36 @@ const SettingItem: React.FC<SettingItemProps> = ({
         useNativeDriver: true,
       }).start();
     }
-  };
+  }, [onPress, disabled, scaleAnim]);
 
   return (
     <Pressable
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      disabled={!onPress}
+      disabled={!onPress || disabled}
+      style={({ pressed }) => [
+        pressed && onPress && !disabled && styles.settingItemPressed,
+      ]}
     >
       <Animated.View style={[styles.settingItem, { transform: [{ scale: scaleAnim }] }]}>
-        <View style={[styles.settingIconContainer, iconBgColor && { backgroundColor: iconBgColor }]}>{icon}</View>
+        <View style={[
+          styles.settingIconContainer, 
+          iconBgColor && { backgroundColor: iconBgColor },
+          disabled && styles.settingIconDisabled,
+        ]}>
+          {icon}
+        </View>
         <View style={styles.settingContent}>
           <View style={styles.settingTitleRow}>
-            <Typography variant="body" style={styles.settingTitle}>
+            <Typography 
+              variant="body" 
+              style={StyleSheet.flatten([
+                styles.settingTitle,
+                destructive && styles.settingTitleDestructive,
+                disabled && styles.settingTitleDisabled,
+              ])}
+            >
               {title}
             </Typography>
             {badge && (
@@ -94,7 +137,10 @@ const SettingItem: React.FC<SettingItemProps> = ({
             )}
           </View>
           {subtitle && (
-            <Typography variant="caption" style={styles.settingSubtitle}>
+            <Typography 
+              variant="caption" 
+              style={StyleSheet.flatten([styles.settingSubtitle, disabled && styles.settingSubtitleDisabled])}
+            >
               {subtitle}
             </Typography>
           )}
@@ -105,18 +151,14 @@ const SettingItem: React.FC<SettingItemProps> = ({
           )}
         </View>
         {rightElement || (
-          showChevron &&
-          onPress && <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+          showChevron && onPress && !disabled && (
+            <Ionicons name="chevron-forward" size={20} color={lightColors.neutral[400]} />
+          )
         )}
       </Animated.View>
     </Pressable>
   );
 };
-
-interface SectionHeaderProps {
-  title: string;
-  icon?: React.ReactNode;
-}
 
 const SectionHeader: React.FC<SectionHeaderProps> = ({ title, icon }) => (
   <View style={styles.sectionHeader}>
@@ -127,75 +169,104 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ title, icon }) => (
   </View>
 );
 
-export const SettingsScreen = ({ navigation }: any) => {
-  const logoutMutation = useLogout();
-  const alert = useAlertHelpers();
+const Divider = () => <View style={styles.divider} />;
 
-  // Hesap kapatma mutation
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export const SettingsScreen = ({ navigation }: any) => {
+  const { showToast } = useToast();
+  const logoutMutation = useLogout();
+  
+  const {
+    shareApp,
+    rateApp,
+    sendFeedback,
+    openHelpCenter,
+    openPrivacyPolicy,
+    openTermsOfService,
+    getAppInfo,
+  } = useAppActions();
+
+  const appInfo = useMemo(() => getAppInfo(), [getAppInfo]);
+
   const deactivateAccountMutation = useMutation({
     mutationFn: () => accountService.deactivateAccount(),
     onSuccess: () => {
-      // Toast kullan (modal değil - touch events engellenmez)
-      // Logout zaten navigation yapacak, modal açık kalmasın
-      // showToast kullanmak için useToast hook'u eklenmeli ama logout hemen yapılacak
-      // Bu durumda showAlert yerine direkt logout yapalım, toast gerekmez
-      // Backend zaten oturumları sonlandırdı, kullanıcıyı logout yap
       logoutMutation.mutate();
     },
     onError: () => {
-      alert.error('Hesap kapatılırken bir hata oluştu. Lütfen tekrar deneyin.');
+      showToast('Hesap kapatılırken bir hata oluştu', 'error');
     },
   });
 
-  // Bildirim ayarları
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(false);
-  const [applicationUpdates, setApplicationUpdates] = useState(true);
-  const [jobAlerts, setJobAlerts] = useState(true);
-  const [systemMessages, setSystemMessages] = useState(true);
-
-  const handleLogout = () => {
-    alert.confirmDestructive(
+  const handleLogout = useCallback(() => {
+    Alert.alert(
       'Çıkış Yap',
-      'Çıkış yapmak istediğinize emin misiniz?',
-      () => logoutMutation.mutate(),
-      undefined,
-      'Çıkış Yap'
+      'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Çıkış Yap',
+          style: 'destructive',
+          onPress: () => logoutMutation.mutate(),
+        },
+      ]
     );
-  };
+  }, [logoutMutation]);
 
-  const handleDeleteAccount = () => {
-    alert.confirmDestructive(
+  const handleDeactivateAccount = useCallback(() => {
+    Alert.alert(
       'Hesabı Kapat',
-      'Hesabınızı kapatmak istediğinizden emin misiniz? Bu işlem geri alınamaz.',
-      () => {
-        // İkinci onay
-        alert.confirmDestructive(
-          'Son Onay',
-          'Hesabınız pasifleştirilecek ve tüm oturumlarınız sonlandırılacaktır. Bu işlem geri alınamaz!',
-          () => {
-            deactivateAccountMutation.mutate();
+      'Hesabınızı kapatmak istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.',
+      [
+        { text: 'Vazgeç', style: 'cancel' },
+        {
+          text: 'Devam Et',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Son Onay',
+              'Hesabınız pasifleştirilecek ve tüm oturumlarınız sonlandırılacaktır.',
+              [
+                { text: 'Vazgeç', style: 'cancel' },
+                {
+                  text: 'Hesabı Kapat',
+                  style: 'destructive',
+                  onPress: () => deactivateAccountMutation.mutate(),
+                },
+              ]
+            );
           },
-          undefined,
-          'Hesabı Kapat'
-        );
-      },
-      undefined,
-      'Devam Et'
+        },
+      ]
     );
-  };
+  }, [deactivateAccountMutation]);
 
-  const renderContent = () => {
-    return (
+  const handleShowAppInfo = useCallback(() => {
+    Alert.alert(
+      'Uygulama Bilgisi',
+      `${appInfo.name}\n\nVersiyon: ${appInfo.version} (${appInfo.buildNumber})\nPlatform: ${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${appInfo.platformVersion}\n\n© 2024 MediKariyer\nTüm hakları saklıdır.`,
+      [{ text: 'Tamam' }]
+    );
+  }, [appInfo]);
+
+  const handleComingSoon = useCallback((feature: string) => {
+    showToast(`${feature} özelliği yakında eklenecek`, 'info');
+  }, [showToast]);
+
+  return (
+    <Screen scrollable={false}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        bounces={true}
       >
-        {/* Premium Gradient Header */}
         <GradientHeader
           title="Ayarlar"
-          subtitle="Tercihler ve ayarlar"
+          subtitle="Tercihler ve hesap ayarları"
           icon={<Ionicons name="settings-sharp" size={28} color="#FFFFFF" />}
           variant="primary"
           iconColorPreset="blue"
@@ -205,119 +276,15 @@ export const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <SectionHeader
             title="Güvenlik"
-            icon={<Ionicons name="shield-checkmark-outline" size={16} color={colors.primary[600]} />}
+            icon={<Ionicons name="shield-checkmark-outline" size={16} color={lightColors.primary[600]} />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="lock-closed" size={20} color={colors.primary[600]} />}
+              icon={<Ionicons name="lock-closed" size={20} color={lightColors.primary[600]} />}
               iconBgColor="#EEF2FF"
               title="Şifre Değiştir"
               subtitle="Hesap şifrenizi güncelleyin"
               onPress={() => navigation.navigate('ChangePassword')}
-            />
-          </Card>
-        </View>
-
-        {/* Bildirim Tercihleri */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Bildirim Tercihleri"
-            icon={<Ionicons name="notifications-outline" size={16} color="#6096B4" />}
-          />
-          <Card variant="outlined" style={styles.settingsCard}>
-            <SettingItem
-              icon={<Ionicons name="notifications" size={20} color="#6096B4" />}
-              iconBgColor="#E0F2FE"
-              title="Anlık Bildirimler"
-              subtitle="Tarayıcı ve uygulama bildirimleri"
-              showChevron={false}
-              rightElement={
-                <Switch
-                  value={pushNotifications}
-                  onValueChange={setPushNotifications}
-                  trackColor={{
-                    false: colors.neutral[300],
-                    true: '#6096B4',
-                  }}
-                  thumbColor={colors.background.primary}
-                />
-              }
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="mail" size={20} color="#6096B4" />}
-              iconBgColor="#E0F2FE"
-              title="E-posta Bildirimleri"
-              subtitle="Önemli güncellemeler e-posta ile"
-              showChevron={false}
-              rightElement={
-                <Switch
-                  value={emailNotifications}
-                  onValueChange={setEmailNotifications}
-                  trackColor={{
-                    false: colors.neutral[300],
-                    true: '#6096B4',
-                  }}
-                  thumbColor={colors.background.primary}
-                />
-              }
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="document-text" size={20} color="#6096B4" />}
-              iconBgColor="#E0F2FE"
-              title="Başvuru Güncellemeleri"
-              subtitle="Başvurularınızla ilgili bildirimler"
-              showChevron={false}
-              rightElement={
-                <Switch
-                  value={applicationUpdates}
-                  onValueChange={setApplicationUpdates}
-                  trackColor={{
-                    false: colors.neutral[300],
-                    true: '#6096B4',
-                  }}
-                  thumbColor={colors.background.primary}
-                />
-              }
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="briefcase" size={20} color="#6096B4" />}
-              iconBgColor="#E0F2FE"
-              title="İş İlanı Uyarıları"
-              subtitle="Yeni iş ilanları hakkında bildirim"
-              showChevron={false}
-              rightElement={
-                <Switch
-                  value={jobAlerts}
-                  onValueChange={setJobAlerts}
-                  trackColor={{
-                    false: colors.neutral[300],
-                    true: '#6096B4',
-                  }}
-                  thumbColor={colors.background.primary}
-                />
-              }
-            />
-            <View style={styles.divider} />
-            <SettingItem
-              icon={<Ionicons name="megaphone" size={20} color="#6096B4" />}
-              iconBgColor="#E0F2FE"
-              title="Sistem Mesajları"
-              subtitle="Önemli sistem duyuruları"
-              showChevron={false}
-              rightElement={
-                <Switch
-                  value={systemMessages}
-                  onValueChange={setSystemMessages}
-                  trackColor={{
-                    false: colors.neutral[300],
-                    true: '#6096B4',
-                  }}
-                  thumbColor={colors.background.primary}
-                />
-              }
             />
           </Card>
         </View>
@@ -337,11 +304,9 @@ export const SettingsScreen = ({ navigation }: any) => {
               value="Açık Tema"
               badge="Yakında"
               badgeColor="warning"
-              onPress={() =>
-                alert.info('Tema seçimi özelliği yakında eklenecek')
-              }
+              onPress={() => handleComingSoon('Tema seçimi')}
             />
-            <View style={styles.divider} />
+            <Divider />
             <SettingItem
               icon={<Ionicons name="language" size={20} color="#EC4899" />}
               iconBgColor="#FCE7F3"
@@ -350,18 +315,16 @@ export const SettingsScreen = ({ navigation }: any) => {
               value="Türkçe"
               badge="Yakında"
               badgeColor="warning"
-              onPress={() =>
-                alert.info('Dil seçimi özelliği yakında eklenecek')
-              }
+              onPress={() => handleComingSoon('Dil seçimi')}
             />
           </Card>
         </View>
 
-        {/* Hakkında ve Destek */}
+        {/* Destek ve Hakkında */}
         <View style={styles.section}>
           <SectionHeader
-            title="Hakkında ve Destek"
-            icon={<Ionicons name="information-circle-outline" size={16} color="#06B6D4" />}
+            title="Destek ve Hakkında"
+            icon={<Ionicons name="heart-outline" size={16} color="#06B6D4" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
@@ -369,39 +332,31 @@ export const SettingsScreen = ({ navigation }: any) => {
               iconBgColor="#CFFAFE"
               title="Yardım Merkezi"
               subtitle="SSS ve destek"
-              onPress={() =>
-                alert.info('Yardım merkezi yakında eklenecek')
-              }
+              onPress={openHelpCenter}
             />
-            <View style={styles.divider} />
+            <Divider />
             <SettingItem
               icon={<Ionicons name="chatbubble-ellipses" size={20} color="#06B6D4" />}
               iconBgColor="#CFFAFE"
               title="Geri Bildirim"
               subtitle="Önerilerinizi paylaşın"
-              onPress={() =>
-                alert.info('Geri bildirim özelliği yakında eklenecek')
-              }
+              onPress={sendFeedback}
             />
-            <View style={styles.divider} />
+            <Divider />
             <SettingItem
               icon={<Ionicons name="star" size={20} color="#F59E0B" />}
               iconBgColor="#FEF3C7"
               title="Uygulamayı Değerlendir"
-              subtitle="App Store'da puan verin"
-              onPress={() =>
-                alert.info('Değerlendirme özelliği yakında eklenecek')
-              }
+              subtitle={Platform.OS === 'ios' ? "App Store'da puan verin" : "Play Store'da puan verin"}
+              onPress={rateApp}
             />
-            <View style={styles.divider} />
+            <Divider />
             <SettingItem
               icon={<Ionicons name="share-social" size={20} color="#06B6D4" />}
               iconBgColor="#CFFAFE"
               title="Uygulamayı Paylaş"
               subtitle="Arkadaşlarınızla paylaşın"
-              onPress={() =>
-                alert.info('Paylaşım özelliği yakında eklenecek')
-              }
+              onPress={shareApp}
             />
           </Card>
         </View>
@@ -418,29 +373,23 @@ export const SettingsScreen = ({ navigation }: any) => {
               iconBgColor="#F1F5F9"
               title="Gizlilik Politikası"
               subtitle="Veri koruma ve gizlilik"
-              onPress={() =>
-                alert.info('Gizlilik politikası yakında eklenecek')
-              }
+              onPress={openPrivacyPolicy}
             />
-            <View style={styles.divider} />
+            <Divider />
             <SettingItem
               icon={<Ionicons name="document-text" size={20} color="#64748B" />}
               iconBgColor="#F1F5F9"
               title="Kullanım Koşulları"
               subtitle="Hizmet şartları"
-              onPress={() =>
-                alert.info('Kullanım koşulları yakında eklenecek')
-              }
+              onPress={openTermsOfService}
             />
-            <View style={styles.divider} />
+            <Divider />
             <SettingItem
               icon={<Ionicons name="information-circle" size={20} color="#64748B" />}
               iconBgColor="#F1F5F9"
               title="Uygulama Bilgisi"
-              value="Versiyon 1.0.0"
-              onPress={() =>
-                alert.info('Versiyon: 1.0.0\nGeliştirici: MediKariyer Ekibi\n\n© 2024 MediKariyer. Tüm hakları saklıdır.')
-              }
+              value={`Versiyon ${appInfo.version}`}
+              onPress={handleShowAppInfo}
             />
           </Card>
         </View>
@@ -449,27 +398,37 @@ export const SettingsScreen = ({ navigation }: any) => {
         <View style={styles.section}>
           <SectionHeader
             title="Hesap İşlemleri"
-            icon={<Ionicons name="warning-outline" size={16} color="#EF4444" />}
+            icon={<Ionicons name="person-outline" size={16} color="#EF4444" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="log-out" size={20} color="#EF4444" />}
+              icon={
+                logoutMutation.isPending 
+                  ? <ActivityIndicator size="small" color="#EF4444" />
+                  : <Ionicons name="log-out" size={20} color="#EF4444" />
+              }
               iconBgColor="#FEE2E2"
               title="Çıkış Yap"
               subtitle="Hesabınızdan çıkış yapın"
-              onPress={handleLogout}
+              onPress={logoutMutation.isPending ? undefined : handleLogout}
               showChevron={false}
+              destructive
+              disabled={logoutMutation.isPending}
             />
-            <View style={styles.divider} />
+            <Divider />
             <SettingItem
-              icon={deactivateAccountMutation.isPending 
-                ? <ActivityIndicator size="small" color="#EF4444" />
-                : <Ionicons name="trash" size={20} color="#EF4444" />}
+              icon={
+                deactivateAccountMutation.isPending 
+                  ? <ActivityIndicator size="small" color="#EF4444" />
+                  : <Ionicons name="trash" size={20} color="#EF4444" />
+              }
               iconBgColor="#FEE2E2"
               title="Hesabı Kapat"
               subtitle="Hesabınızı kalıcı olarak kapatın"
-              onPress={deactivateAccountMutation.isPending ? undefined : handleDeleteAccount}
+              onPress={deactivateAccountMutation.isPending ? undefined : handleDeactivateAccount}
               showChevron={false}
+              destructive
+              disabled={deactivateAccountMutation.isPending}
             />
           </Card>
         </View>
@@ -477,33 +436,29 @@ export const SettingsScreen = ({ navigation }: any) => {
         {/* Footer */}
         <View style={styles.footer}>
           <Typography variant="caption" style={styles.footerText}>
-            MediKariyer Doktor
+            {appInfo.name}
           </Typography>
-          <Typography variant="caption" style={styles.footerText}>
-            Versiyon 1.0.0 • © 2024
+          <Typography variant="caption" style={styles.footerVersion}>
+            Versiyon {appInfo.version} • © 2024
           </Typography>
         </View>
       </ScrollView>
-    );
-  };
-
-  return (
-    <Screen scrollable={false}>
-      {renderContent()}
     </Screen>
   );
 };
 
+// ============================================================================
+// STYLES
+// ============================================================================
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FE',
+    backgroundColor: '#F8FAFC',
   },
   content: {
     paddingBottom: spacing['4xl'],
   },
-
-  // Section
   section: {
     marginTop: spacing.xl,
     paddingHorizontal: spacing.lg,
@@ -519,50 +474,51 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.primary[50],
+    backgroundColor: lightColors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.primary[700],
+    color: lightColors.primary[700],
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-
-  // Settings Card
   settingsCard: {
     padding: 0,
-    borderRadius: 20,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    borderColor: 'rgba(0, 0, 0, 0.04)',
+    overflow: 'hidden',
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     gap: spacing.md,
     backgroundColor: 'transparent',
   },
+  settingItemPressed: {
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+  },
   settingIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary[50],
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: lightColors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  },
+  settingIconDisabled: {
+    opacity: 0.5,
   },
   settingContent: {
     flex: 1,
@@ -571,46 +527,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: 2,
   },
   settingTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: lightColors.text.primary,
+  },
+  settingTitleDestructive: {
+    color: '#EF4444',
+  },
+  settingTitleDisabled: {
+    opacity: 0.5,
   },
   settingSubtitle: {
-    fontSize: 12,
-    color: colors.text.secondary,
-    marginTop: 3,
-    lineHeight: 16,
+    fontSize: 13,
+    color: lightColors.text.secondary,
+    marginTop: 2,
+    lineHeight: 18,
+  },
+  settingSubtitleDisabled: {
+    opacity: 0.5,
   },
   settingValue: {
     fontSize: 13,
-    color: colors.primary[600],
-    marginTop: 3,
+    color: lightColors.primary[600],
+    marginTop: 2,
     fontWeight: '500',
   },
   divider: {
-    height: 1,
-    backgroundColor: colors.neutral[100],
-    marginLeft: spacing.lg + 48 + spacing.md,
-    opacity: 0.4,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: lightColors.neutral[200],
+    marginLeft: spacing.lg + 44 + spacing.md,
   },
-
-
-
-  // Footer
   footer: {
     paddingVertical: spacing['3xl'],
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
     marginTop: spacing.xl,
   },
   footerText: {
-    color: colors.text.tertiary,
+    color: lightColors.text.tertiary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  footerVersion: {
+    color: lightColors.text.tertiary,
     fontSize: 12,
-    textAlign: 'center',
-    fontWeight: '500',
     opacity: 0.7,
   },
 });

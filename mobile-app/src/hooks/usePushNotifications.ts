@@ -206,22 +206,27 @@ export const usePushNotifications = () => {
     return () => {
       if (notificationListener.current) {
         try {
-          Notifications.removeNotificationSubscription(
-            notificationListener.current
-          );
-        } catch (error) {
+          notificationListener.current.remove();
+        } catch {
           // Ignore cleanup errors
         }
+        notificationListener.current = null;
       }
       if (responseListener.current) {
         try {
-          Notifications.removeNotificationSubscription(responseListener.current);
-        } catch (error) {
+          responseListener.current.remove();
+        } catch {
           // Ignore cleanup errors
         }
+        responseListener.current = null;
       }
       if (appStateListener.current) {
-        appStateListener.current.remove();
+        try {
+          appStateListener.current.remove();
+        } catch {
+          // Ignore cleanup errors
+        }
+        appStateListener.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

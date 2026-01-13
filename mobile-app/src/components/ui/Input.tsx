@@ -82,6 +82,8 @@ export const Input: React.FC<InputProps> = memo(({
         <TextInput
           allowFontScaling={false}
           maxFontSizeMultiplier={1}
+          autoComplete="off"
+          importantForAutofill="no"
           style={[
             styles.input,
             variant === 'underline' && styles.inputUnderline,
@@ -115,7 +117,9 @@ export const Input: React.FC<InputProps> = memo(({
     prevProps.variant === nextProps.variant &&
     prevProps.placeholder === nextProps.placeholder &&
     prevProps.secureTextEntry === nextProps.secureTextEntry &&
-    prevProps.rightIcon === nextProps.rightIcon
+    prevProps.rightIcon === nextProps.rightIcon &&
+    prevProps.onChangeText === nextProps.onChangeText &&
+    prevProps.editable === nextProps.editable
   );
   return propsEqual; // true = re-render atla, false = re-render yap
 });

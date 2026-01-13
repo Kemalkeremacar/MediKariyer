@@ -43,10 +43,10 @@ export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => 
         : undefined,
     initialPageParam: 1,
     enabled,
-    staleTime: 0, // Her zaman fresh (dinamik proje - yeni ilanlar eklenebilir)
-    gcTime: 1000 * 30, // 30 saniye cache (loading sırasında boş görünmesin)
-    refetchOnMount: true, // Stale data varsa refetch yap (cache'deki veriyi göster, arka planda yenile)
-    refetchOnWindowFocus: true, // Ekran focus olduğunda yenile
+    staleTime: 1000 * 60, // 1 dakika stale time (ilanlar çok sık değişmez)
+    gcTime: 1000 * 60 * 5, // 5 dakika cache (daha uzun cache = daha az network)
+    refetchOnMount: true, // Stale data varsa refetch yap
+    refetchOnWindowFocus: false, // Focus'ta otomatik refetch yapma (mobilde gereksiz)
     refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };

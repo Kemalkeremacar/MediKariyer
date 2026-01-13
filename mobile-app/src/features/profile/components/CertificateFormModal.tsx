@@ -35,7 +35,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { colors, spacing } from '@/theme';
 import { useCertificate } from '@/features/profile/hooks/useCertificates';
-import type { DoctorCertificate, CreateCertificatePayload, UpdateCertificatePayload } from '@/types/profile';
+import type { CreateCertificatePayload, UpdateCertificatePayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type CertificateFormModalRouteProp = RouteProp<ProfileStackParamList, 'CertificateFormModal'>;
@@ -168,7 +168,7 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
             label="Sertifika Adı *"
             placeholder="Örn: ACLS, BLS"
             value={formData.certificate_name}
-            onChangeText={(text) => setFormData({ ...formData, certificate_name: text })}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, certificate_name: text }))}
             error={errors.certificate_name}
           />
 
@@ -176,7 +176,7 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
             label="Veren Kurum *"
             placeholder="Sertifikayı veren kurum"
             value={formData.institution}
-            onChangeText={(text) => setFormData({ ...formData, institution: text })}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, institution: text }))}
             error={errors.institution}
           />
 
@@ -184,7 +184,7 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
             label="Alınma Yılı"
             placeholder="Örn: 2020"
             value={formData.certificate_year}
-            onChangeText={(text) => setFormData({ ...formData, certificate_year: text })}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, certificate_year: text }))}
             error={errors.certificate_year}
             keyboardType="number-pad"
             maxLength={4}

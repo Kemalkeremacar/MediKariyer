@@ -48,6 +48,7 @@ import { useAuthStore } from '@/store/authStore';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { useToast } from '@/providers/ToastProvider';
 import { toDateString, parseDateOnly } from '@/utils/date';
+import { formatPhoneNumber, unformatPhoneNumber, isValidPhoneNumber } from '@/utils/phoneFormatter';
 
 // Title options (label'larda nokta var, value'larda yok - backend'e value gönderilir)
 const TITLE_OPTIONS: SelectOption[] = [
@@ -101,7 +102,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
         title: profile.title || '',
         specialty_id: profile.specialty_id || undefined,
         subspecialty_id: profile.subspecialty_id || undefined,
-        phone: profile.phone || '',
+        phone: formatPhoneNumber(profile.phone || ''),
         dob: parseDateOnly(profile.dob) || undefined,
         birth_place_id: profile.birth_place_id || undefined,
         residence_city_id: profile.residence_city_id || undefined,
@@ -151,8 +152,10 @@ export const ProfileEditScreen = ({ navigation }: any) => {
       newErrors.last_name = 'Soyad en az 2 karakter olmalıdır';
     }
 
-    if (formData.phone && !/^[0-9+\-\s()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Geçerli bir telefon numarası giriniz';
+    // Telefon validasyonu - boş değilse ve geçerli değilse hata göster
+    const phoneDigits = unformatPhoneNumber(formData.phone);
+    if (phoneDigits.length > 0 && !isValidPhoneNumber(formData.phone)) {
+      newErrors.phone = 'Geçerli bir telefon numarası giriniz (örn: 0532 123 45 67)';
     }
 
     // No required field checks - backend handles validation
@@ -169,13 +172,16 @@ export const ProfileEditScreen = ({ navigation }: any) => {
     }
 
     try {
+      // Telefon numarasını backend'e göndermeden önce formatı temizle
+      const cleanPhone = unformatPhoneNumber(formData.phone);
+      
       await updateMutation.mutateAsync({
         first_name: formData.first_name,
         last_name: formData.last_name,
         title: formData.title,
         specialty_id: formData.specialty_id!,
         subspecialty_id: formData.subspecialty_id || null,
-        phone: formData.phone || null,
+        phone: cleanPhone || null,
         dob: toDateString(formData.dob),
         birth_place_id: formData.birth_place_id || null,
         residence_city_id: formData.residence_city_id || null,
@@ -202,13 +208,17 @@ export const ProfileEditScreen = ({ navigation }: any) => {
     const profileDob = toDateString(profile.dob);
     const formDob = toDateString(formData.dob);
     
+    // Telefon karşılaştırması için her ikisini de unformat et
+    const profilePhone = unformatPhoneNumber(profile.phone || '');
+    const formPhone = unformatPhoneNumber(formData.phone);
+    
     return (
       formData.first_name !== (profile.first_name || '') ||
       formData.last_name !== (profile.last_name || '') ||
       formData.title !== (profile.title || '') ||
       formData.specialty_id !== profile.specialty_id ||
       formData.subspecialty_id !== profile.subspecialty_id ||
-      formData.phone !== (profile.phone || '') ||
+      formPhone !== profilePhone ||
       formData.birth_place_id !== profile.birth_place_id ||
       formData.residence_city_id !== profile.residence_city_id ||
       formDob !== profileDob
@@ -285,7 +295,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                 placeholder="Adınızı giriniz"
                 value={formData.first_name}
                 onChangeText={(text) =>
-                  setFormData({ ...formData, first_name: text })
+                  setFormData(prev => ({ ...prev, first_name: text }))
                 }
                 error={errors.first_name}
                 autoCapitalize="words"
@@ -296,7 +306,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                 placeholder="Soyadınızı giriniz"
                 value={formData.last_name}
                 onChangeText={(text) =>
-                  setFormData({ ...formData, last_name: text })
+                  setFormData(prev => ({ ...prev, last_name: text }))
                 }
                 error={errors.last_name}
                 autoCapitalize="words"
@@ -310,7 +320,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                   options={TITLE_OPTIONS}
                   value={formData.title}
                   onChange={(value) =>
-                    setFormData({ ...formData, title: value as string })
+                    setFormData(prev => ({ ...prev, title: value as string }))
                   }
                   placeholder="Ünvan seçiniz"
                 />
@@ -343,11 +353,11 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                   options={specialtyOptions}
                   value={formData.specialty_id}
                   onChange={(value) => {
-                    setFormData({
-                      ...formData,
+                    setFormData(prev => ({
+                      ...prev,
                       specialty_id: value as number,
                       subspecialty_id: undefined, // Reset subspecialty
-                    });
+                    }));
                   }}
                   placeholder="Branş seçiniz"
                   searchable
@@ -368,10 +378,10 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                     options={subspecialtyOptions}
                     value={formData.subspecialty_id}
                     onChange={(value) =>
-                      setFormData({
-                        ...formData,
+                      setFormData(prev => ({
+                        ...prev,
                         subspecialty_id: value as number,
-                      })
+                      }))
                     }
                     placeholder="Yan dal seçiniz (opsiyonel)"
                     searchable
@@ -403,13 +413,16 @@ export const ProfileEditScreen = ({ navigation }: any) => {
 
               <Input
                 label="Telefon"
-                placeholder="Telefon numaranızı giriniz"
+                placeholder="0532 123 45 67"
                 value={formData.phone}
-                onChangeText={(text) =>
-                  setFormData({ ...formData, phone: text })
-                }
+                onChangeText={(text) => {
+                  // Otomatik formatlama
+                  const formatted = formatPhoneNumber(text);
+                  setFormData(prev => ({ ...prev, phone: formatted }));
+                }}
                 error={errors.phone}
                 keyboardType="phone-pad"
+                maxLength={14} // "0532 123 45 67" = 14 karakter
               />
             </Card>
           </View>
@@ -434,10 +447,10 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                   options={cityOptions}
                   value={formData.residence_city_id}
                   onChange={(value) =>
-                    setFormData({
-                      ...formData,
+                    setFormData(prev => ({
+                      ...prev,
                       residence_city_id: value as number,
-                    })
+                    }))
                   }
                   placeholder="Şehir seçiniz"
                   searchable
@@ -452,10 +465,10 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                   options={birthPlaceOptions}
                   value={formData.birth_place_id}
                   onChange={(value) =>
-                    setFormData({
-                      ...formData,
+                    setFormData(prev => ({
+                      ...prev,
                       birth_place_id: value as number,
-                    })
+                    }))
                   }
                   placeholder="Doğum yeri seçiniz"
                   searchable
@@ -467,7 +480,7 @@ export const ProfileEditScreen = ({ navigation }: any) => {
                   label="Doğum Tarihi"
                   placeholder="Doğum tarihinizi seçin"
                   value={formData.dob}
-                  onChange={(date) => setFormData({ ...formData, dob: date })}
+                  onChange={(date) => setFormData(prev => ({ ...prev, dob: date }))}
                   maximumDate={new Date()}
                 />
               </View>

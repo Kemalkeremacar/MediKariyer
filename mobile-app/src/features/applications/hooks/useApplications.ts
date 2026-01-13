@@ -65,10 +65,10 @@ export const useApplications = (filters: ApplicationFilters = {}, enabled: boole
       return undefined;
     },
     enabled,
-    staleTime: 0,
-    gcTime: 1000 * 30,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 1000 * 60, // 1 dakika stale time (başvurular çok sık değişmez)
+    gcTime: 1000 * 60 * 5, // 5 dakika cache
+    refetchOnMount: true, // Stale data varsa refetch yap
+    refetchOnWindowFocus: false, // Focus'ta otomatik refetch yapma (push notification kullanılıyor)
+    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
   });
 };

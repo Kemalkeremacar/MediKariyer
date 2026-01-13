@@ -159,10 +159,38 @@ const getUnreadCount = async (userId) => {
   const result = await db('notifications')
     .where('user_id', userId)
     .whereNull('read_at')
+    .whereNull('deleted_at')
     .count({ count: '*' })
     .first();
 
   return parseInt(result.count) || 0;
+};
+
+/**
+ * Bildirim sayılarını getir (toplam ve okunmamış)
+ * @param {number} userId - Kullanıcı ID'si
+ * @returns {Promise<{totalCount: number, unreadCount: number}>} Bildirim sayıları
+ */
+const getNotificationCounts = async (userId) => {
+  // Toplam bildirim sayısı
+  const totalResult = await db('notifications')
+    .where('user_id', userId)
+    .whereNull('deleted_at')
+    .count({ count: '*' })
+    .first();
+
+  // Okunmamış bildirim sayısı
+  const unreadResult = await db('notifications')
+    .where('user_id', userId)
+    .whereNull('read_at')
+    .whereNull('deleted_at')
+    .count({ count: '*' })
+    .first();
+
+  return {
+    totalCount: parseInt(totalResult.count) || 0,
+    unreadCount: parseInt(unreadResult.count) || 0,
+  };
 };
 
 /**
@@ -243,6 +271,7 @@ module.exports = {
   markAsRead,
   registerDeviceToken,
   getUnreadCount,
+  getNotificationCounts,
   deleteNotification,
   deleteNotifications,
   markAllAsRead,

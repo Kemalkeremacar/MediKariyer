@@ -139,9 +139,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
    * Light/Dark arasında geçiş yap
    */
   const toggleTheme = useCallback(() => {
-    const newMode = isDark ? 'light' : 'dark';
+    // isDark değerini burada hesapla (closure'da güncel değeri almak için)
+    const currentIsDark = themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
+    const newMode = currentIsDark ? 'light' : 'dark';
     setThemeMode(newMode);
-  }, [isDark, setThemeMode]);
+  }, [themeMode, systemColorScheme, setThemeMode]);
 
   // ============================================================================
   // COMPUTED VALUES

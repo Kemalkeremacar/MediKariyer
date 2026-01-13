@@ -40,7 +40,7 @@ import { Select, SelectOption } from '@/components/ui/Select';
 import { colors, spacing } from '@/theme';
 import { useEducationTypes } from '@/hooks/useLookup';
 import { useEducation } from '@/features/profile/hooks/useEducations';
-import type { DoctorEducation, CreateEducationPayload, UpdateEducationPayload } from '@/types/profile';
+import type { CreateEducationPayload, UpdateEducationPayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type EducationFormModalRouteProp = RouteProp<ProfileStackParamList, 'EducationFormModal'>;
@@ -205,11 +205,11 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
                 onChange={(value) => {
                   const typeId = parseInt(value as string);
                   const selectedType = educationTypes.find((t) => t.id === typeId);
-                  setFormData({
-                    ...formData,
+                  setFormData(prev => ({
+                    ...prev,
                     education_type_id: typeId,
                     education_type: selectedType?.name || '',
-                  });
+                  }));
                 }}
                 placeholder="Eğitim türü seçiniz"
               />
@@ -226,7 +226,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
             placeholder="Üniversite veya kurum adı"
             value={formData.education_institution}
             onChangeText={(text) =>
-              setFormData({ ...formData, education_institution: text })
+              setFormData(prev => ({ ...prev, education_institution: text }))
             }
             error={errors.education_institution}
           />
@@ -235,7 +235,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
             label="Alan / Bölüm *"
             placeholder="Örn: Tıp, Kardiyoloji"
             value={formData.field}
-            onChangeText={(text) => setFormData({ ...formData, field: text })}
+            onChangeText={(text) => setFormData(prev => ({ ...prev, field: text }))}
             error={errors.field}
           />
 
@@ -244,7 +244,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
             placeholder="Örn: 2020"
             value={formData.graduation_year}
             onChangeText={(text) =>
-              setFormData({ ...formData, graduation_year: text })
+              setFormData(prev => ({ ...prev, graduation_year: text }))
             }
             error={errors.graduation_year}
             keyboardType="number-pad"

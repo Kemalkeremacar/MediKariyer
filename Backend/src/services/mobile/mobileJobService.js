@@ -196,6 +196,7 @@ const getJobDetail = async (userId, jobId) => {
         'j.hospital_id',
         'j.employment_type',
         'j.min_experience_years',
+        'j.created_at',
         'c.name as city_name',
         's.name as specialty_name',
         'ss.name as subspecialty_name',

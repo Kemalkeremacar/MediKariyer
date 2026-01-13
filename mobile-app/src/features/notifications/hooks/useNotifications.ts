@@ -14,7 +14,7 @@
  * @version 2.0.0
  */
 
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/api/services/notification.service';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
@@ -128,7 +128,17 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
   const notificationListenerRef = useRef<any>(null);
   
   // Foreground notification listener: Uygulama açıkken bildirim gelirse otomatik refresh
+  // NOT: Bu listener sadece bir kez oluşturulmalı, dependency array boş olmalı
   useEffect(() => {
+    // Önceki listener varsa temizle (double mount durumunda)
+    if (notificationListenerRef.current) {
+      try {
+        notificationListenerRef.current.remove();
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+    
     notificationListenerRef.current = pushNotificationService.addNotificationReceivedListener(
       (notification) => {
         devLog.log('[useNotifications] Foreground notification received:', notification);
@@ -153,15 +163,16 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
     return () => {
       if (notificationListenerRef.current) {
         try {
-          // Cleanup listener on unmount
-          const { removeNotificationSubscription } = require('expo-notifications');
-          removeNotificationSubscription(notificationListenerRef.current);
-        } catch (error) {
+          // Expo Notifications subscription'ları .remove() metodu ile temizlenir
+          notificationListenerRef.current.remove();
+        } catch {
           // Ignore cleanup errors
         }
+        notificationListenerRef.current = null;
       }
     };
-  }, [queryClient]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Boş dependency - listener sadece mount'ta oluşturulmalı
   
   const query = useInfiniteQuery({
     queryKey: queryKeys.notifications.list({ showUnreadOnly, limit }),
@@ -188,18 +199,18 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
     retryDelay: RETRY_DELAY,
   });
 
-  // Refetch fonksiyonunu override et: normal refetch kullan
-  // NOT: query dependency'sini kullanmıyoruz çünkü her render'da yeni referans olabilir
-  // Bu sonsuz döngüye neden olur. Bunun yerine query refetch fonksiyonunu direkt kullanıyoruz.
-  // query.refetch sadece bu hook'un kendi query'sini refetch eder, diğer query'leri etkilemez
-  const safeRefetch = React.useCallback(async () => {
-    // Direkt query refetch yap - sadece bu hook'un query'sini refetch eder
-    // Query key'e limit eklendi, artık DashboardScreen ve NotificationsScreen farklı query'ler
-    return query.refetch();
-  }, [query.refetch]); // Sadece refetch fonksiyonunu dependency olarak kullan
+  // Refetch fonksiyonunu stable tut - useCallback ile sarmalayarak sonsuz döngüyü önle
+  // NOT: query.refetch her render'da aynı referans olmalı (React Query garantisi)
+  // Ama güvenlik için useRef kullanıyoruz
+  const refetchRef = useRef(query.refetch);
+  refetchRef.current = query.refetch;
+  
+  const safeRefetch = useCallback(async () => {
+    return refetchRef.current();
+  }, []); // Boş dependency - fonksiyon referansı hiç değişmeyecek
 
   // Pages'leri birleştir ve duplicate'leri temizle (cache sorunlarını önlemek için)
-  const notifications = React.useMemo(() => {
+  const notifications = useMemo(() => {
     if (!query.data?.pages || query.data.pages.length === 0) {
       return [];
     }
@@ -254,37 +265,45 @@ export const useNotifications = (params: UseNotificationsParams = {}) => {
     updateBadgeCount();
   }, [unreadCount]);
 
+  // Backend'den gelen toplam bildirim sayısı (pagination.total)
+  const totalCount = useMemo(() => {
+    return query.data?.pages?.[0]?.pagination?.total ?? 0;
+  }, [query.data?.pages]);
+
   return {
     ...query,
     notifications,
     unreadCount,
+    totalCount, // Backend'den gelen toplam bildirim sayısı
     refetch: safeRefetch, // Override refetch: pages'i sıfırla ve yeniden fetch et
   };
 };
 
 /**
- * Okunmamış bildirim sayısı hook'u
- * NOT: Bu hook şu anda kullanılmıyor. DashboardScreen'de useNotifications'un unreadCount'u kullanılıyor.
- * Eğer sadece sayı gerekiyorsa ve liste gerekmeyen durumlarda bu hook kullanılabilir.
+ * Bildirim sayıları hook'u (toplam ve okunmamış)
+ * Tek API çağrısı ile hem totalCount hem unreadCount döndürür
  * 
- * @returns Okunmamış bildirim sayısı
+ * @returns Bildirim sayıları ve query durumu
  */
 export const useUnreadCount = () => {
   const query = useQuery({
     queryKey: queryKeys.notifications.unreadCount(),
     queryFn: async () => {
       const response = await notificationService.getUnreadCount();
-      return response.count;
+      return {
+        unreadCount: response.unreadCount ?? response.count ?? 0,
+        totalCount: response.totalCount ?? 0,
+      };
     },
-    staleTime: 1000 * 30, // 30 saniye stale time (bildirimler canlı olmalı ama çok sık değil)
-    gcTime: 1000 * 60 * 2, // 2 dakika cache
-    refetchOnMount: true, // Mount olduğunda stale ise refetch yap (her zaman değil, çok agresif olmasın)
-    refetchOnWindowFocus: false, // Focus'ta otomatik refetch yapma (manuel refresh kullanılacak)
+    staleTime: 1000 * 60, // 1 dakika stale time (push notification zaten anında günceller)
+    gcTime: 1000 * 60 * 5, // 5 dakika cache
+    refetchOnMount: true, // Mount olduğunda stale ise refetch yap
+    refetchOnWindowFocus: false, // Focus'ta otomatik refetch yapma (push notification kullanılıyor)
     refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
-    refetchInterval: 30000, // 30 saniyede bir otomatik refetch (okunmamış sayısı için polling)
   });
 
-  const unreadCount = query.data ?? 0;
+  const unreadCount = query.data?.unreadCount ?? 0;
+  const totalCount = query.data?.totalCount ?? 0;
 
   // Badge count'u unread count ile senkronize et (iOS/Android app icon badge)
   useEffect(() => {
@@ -303,6 +322,7 @@ export const useUnreadCount = () => {
 
   return {
     unreadCount,
+    totalCount,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
@@ -356,13 +376,16 @@ export const useMarkAsRead = () => {
       );
       
       // Unread count'u da güncelle
-      // useUnreadCount hook'u number döndürüyor, bu yüzden direkt number set ediyoruz
+      // useUnreadCount hook'u { unreadCount, totalCount } objesi döndürüyor
       queryClient.setQueriesData(
         { queryKey: queryKeys.notifications.unreadCount() },
         (old: any) => {
-          // useUnreadCount query data formatı: number (response.count)
-          const currentCount = typeof old === 'number' ? old : 0;
-          return Math.max(0, currentCount - 1);
+          if (!old) return old;
+          const currentUnread = old.unreadCount ?? 0;
+          return {
+            ...old,
+            unreadCount: Math.max(0, currentUnread - 1),
+          };
         }
       );
     },
@@ -436,10 +459,16 @@ export const useMarkAllAsRead = () => {
       );
       
       // Unread count'u 0 yap
-      // useUnreadCount hook'u number döndürüyor, bu yüzden direkt number set ediyoruz
+      // useUnreadCount hook'u { unreadCount, totalCount } objesi döndürüyor
       queryClient.setQueriesData(
         { queryKey: queryKeys.notifications.unreadCount() },
-        () => 0
+        (old: any) => {
+          if (!old) return { unreadCount: 0, totalCount: old?.totalCount ?? 0 };
+          return {
+            ...old,
+            unreadCount: 0,
+          };
+        }
       );
     },
     onSuccess: (data) => {
@@ -474,16 +503,68 @@ export const useDeleteNotification = () => {
   return useMutation({
     mutationFn: (notificationId: number) => 
       notificationService.deleteNotification(notificationId),
+    onMutate: async (notificationId) => {
+      // Optimistic update: UI'ı hemen güncelle
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.all });
+      
+      // Silinecek bildirimin okunmuş mu okunmamış mı olduğunu bul
+      let wasUnread = false;
+      
+      // Tüm notification query'lerini güncelle (bildirimi kaldır)
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.notifications.all, exact: false },
+        (old: any) => {
+          if (!old?.pages) return old;
+          
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              data: page.data?.filter((notification: any) => {
+                if (notification.id === notificationId) {
+                  // Silinen bildirimin okunmamış olup olmadığını kontrol et
+                  const isRead = notification.isRead ?? notification.is_read ?? false;
+                  if (!isRead) wasUnread = true;
+                  return false; // Bu bildirimi çıkar
+                }
+                return true;
+              }) || [],
+            })),
+          };
+        }
+      );
+      
+      // Sayıları güncelle
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.notifications.unreadCount() },
+        (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            totalCount: Math.max(0, (old.totalCount ?? 0) - 1),
+            unreadCount: wasUnread ? Math.max(0, (old.unreadCount ?? 0) - 1) : old.unreadCount,
+          };
+        }
+      );
+      
+      return { wasUnread };
+    },
     onSuccess: () => {
-      // Tüm notification list query'lerini invalidate et
+      // Başarılı olduğunda query'leri invalidate et (fresh data için)
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.notifications.all,
-        exact: false, // Tüm alt query'leri de invalidate et
+        exact: false,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
       showToast('Bildirim silindi', 'success');
     },
     onError: (error: Error) => {
+      // Hata durumunda optimistic update'i geri al
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.notifications.all,
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
       devLog.error('Failed to delete notification:', error);
       showToast('Bildirim silinemedi', 'error');
     },
@@ -501,16 +582,69 @@ export const useDeleteNotifications = () => {
   return useMutation({
     mutationFn: (notificationIds: number[]) => 
       notificationService.deleteNotifications(notificationIds),
+    onMutate: async (notificationIds) => {
+      // Optimistic update: UI'ı hemen güncelle
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.all });
+      
+      // Silinecek okunmamış bildirim sayısını hesapla
+      let unreadDeleteCount = 0;
+      const idsSet = new Set(notificationIds);
+      
+      // Tüm notification query'lerini güncelle (bildirimleri kaldır)
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.notifications.all, exact: false },
+        (old: any) => {
+          if (!old?.pages) return old;
+          
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              data: page.data?.filter((notification: any) => {
+                if (idsSet.has(notification.id)) {
+                  // Silinen bildirimin okunmamış olup olmadığını kontrol et
+                  const isRead = notification.isRead ?? notification.is_read ?? false;
+                  if (!isRead) unreadDeleteCount++;
+                  return false; // Bu bildirimi çıkar
+                }
+                return true;
+              }) || [],
+            })),
+          };
+        }
+      );
+      
+      // Sayıları güncelle
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.notifications.unreadCount() },
+        (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            totalCount: Math.max(0, (old.totalCount ?? 0) - notificationIds.length),
+            unreadCount: Math.max(0, (old.unreadCount ?? 0) - unreadDeleteCount),
+          };
+        }
+      );
+      
+      return { unreadDeleteCount };
+    },
     onSuccess: (data) => {
-      // Tüm notification list query'lerini invalidate et
+      // Başarılı olduğunda query'leri invalidate et (fresh data için)
       queryClient.invalidateQueries({ 
         queryKey: queryKeys.notifications.all,
-        exact: false, // Tüm alt query'leri de invalidate et
+        exact: false,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
       showToast(`${data.deleted_count} bildirim silindi`, 'success');
     },
     onError: (error: Error) => {
+      // Hata durumunda optimistic update'i geri al
+      queryClient.invalidateQueries({ 
+        queryKey: queryKeys.notifications.all,
+        exact: false,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
       devLog.error('Failed to delete notifications:', error);
       showToast('Bildirimler silinemedi', 'error');
     },
@@ -532,6 +666,13 @@ export const useClearReadNotifications = () => {
       // Optimistic update: UI'ı hemen güncelle
       await queryClient.cancelQueries({ queryKey: queryKeys.notifications.all });
       
+      // Önce mevcut okunmuş bildirim sayısını hesapla
+      const currentData = queryClient.getQueryData<any>(queryKeys.notifications.unreadCount());
+      const currentTotalCount = currentData?.totalCount ?? 0;
+      const currentUnreadCount = currentData?.unreadCount ?? 0;
+      // Okunmuş bildirim sayısı = toplam - okunmamış
+      const readCount = Math.max(0, currentTotalCount - currentUnreadCount);
+      
       // Tüm notification query'lerini güncelle (okunmuş bildirimleri kaldır)
       queryClient.setQueriesData(
         { queryKey: queryKeys.notifications.all, exact: false },
@@ -540,19 +681,33 @@ export const useClearReadNotifications = () => {
           
           return {
             ...old,
-            pages: old.pages.map((page: any) => ({
-              ...page,
-              data: page.data?.filter((notification: any) => {
-                // Sadece okunmuş bildirimleri filtrele (okunmamışları tut)
+            pages: old.pages.map((page: any) => {
+              const filteredData = page.data?.filter((notification: any) => {
                 const isRead = notification.isRead ?? notification.is_read ?? false;
                 return !isRead; // Okunmamışları tut, okunmuşları çıkar
-              }) || [],
-            })),
+              }) || [];
+              
+              return {
+                ...page,
+                data: filteredData,
+              };
+            }),
           };
         }
       );
 
-      // Unread count'u değiştirme (sadece okunmuşlar silindiği için sayı değişmez)
+      // totalCount'u güncelle (okunmuş bildirimler siliniyor)
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.notifications.unreadCount() },
+        (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            totalCount: Math.max(0, (old.totalCount ?? 0) - readCount),
+            // unreadCount değişmez çünkü sadece okunmuşlar siliniyor
+          };
+        }
+      );
     },
     onSuccess: (data) => {
       // Başarılı olduğunda query'leri invalidate et (fresh data için)

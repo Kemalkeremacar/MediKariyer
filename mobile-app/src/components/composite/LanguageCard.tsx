@@ -16,7 +16,7 @@ import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors } from '@/theme';
 
 /**
  * LanguageCard bileşeni için prop tipleri

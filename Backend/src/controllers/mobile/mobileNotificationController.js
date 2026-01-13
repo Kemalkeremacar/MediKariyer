@@ -86,8 +86,13 @@ const registerDeviceToken = catchAsync(async (req, res) => {
 // ============================================================================
 
 const getUnreadCount = catchAsync(async (req, res) => {
-  const count = await mobileNotificationService.getUnreadCount(req.user.id);
-  return sendSuccess(res, 'Okunmamış bildirim sayısı', { count });
+  // Hem toplam hem okunmamış sayısını döndür (tek API çağrısı ile)
+  const counts = await mobileNotificationService.getNotificationCounts(req.user.id);
+  return sendSuccess(res, 'Bildirim sayıları', { 
+    count: counts.unreadCount, // Geriye dönük uyumluluk için
+    unreadCount: counts.unreadCount,
+    totalCount: counts.totalCount
+  });
 });
 
 const deleteNotification = catchAsync(async (req, res) => {

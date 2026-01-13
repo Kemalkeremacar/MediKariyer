@@ -218,6 +218,12 @@ export const RootNavigator = () => {
       return;
     }
 
+    // Skip if this is the first render (initialRouteName will handle it)
+    if (previousRouteRef.current === null) {
+      previousRouteRef.current = initialRouteName;
+      return;
+    }
+
     // Skip if route hasn't changed
     if (previousRouteRef.current === initialRouteName) {
       return;
@@ -241,30 +247,12 @@ export const RootNavigator = () => {
         current: currentRouteName,
       });
 
-      // CRITICAL: Force immediate navigation reset
-      // Use multiple strategies to ensure navigation happens
-      const performReset = () => {
-        if (navigationRef.isReady()) {
-          navigationRef.reset({
-            index: 0,
-            routes: [{ name: initialRouteName }],
-          });
-          devLog.log('🧭 RootNavigator - Navigation reset completed');
-        }
-      };
-
-      // Strategy 1: Immediate reset
-      performReset();
-      
-      // Strategy 2: Backup reset after animation frame
-      requestAnimationFrame(() => {
-        performReset();
+      // Single navigation reset - no need for multiple strategies
+      navigationRef.reset({
+        index: 0,
+        routes: [{ name: initialRouteName }],
       });
-      
-      // Strategy 3: Final backup after small delay
-      setTimeout(() => {
-        performReset();
-      }, 50);
+      devLog.log('🧭 RootNavigator - Navigation reset completed');
     } else {
       devLog.log('🧭 RootNavigator - Already on target route, skipping reset');
     }

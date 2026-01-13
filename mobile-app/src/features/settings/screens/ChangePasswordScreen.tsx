@@ -38,7 +38,7 @@ import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { Progress } from '@/components/ui/Progress';
 import { Screen } from '@/components/layout/Screen';
-import { colors, spacing } from '@/theme';
+import { lightColors, spacing } from '@/theme';
 import { useChangePassword } from '@/features/settings/hooks/useChangePassword';
 import { useToast } from '@/providers/ToastProvider';
 
@@ -87,10 +87,10 @@ const getPasswordStrengthText = (password: string): string => {
  */
 const getPasswordStrengthColor = (password: string): string => {
   const strength = calculatePasswordStrength(password);
-  if (strength < 40) return colors.error[500];
-  if (strength < 70) return colors.warning[500];
-  if (strength < 90) return colors.primary[500];
-  return colors.success[500];
+  if (strength < 40) return lightColors.error[500];
+  if (strength < 70) return lightColors.warning[500];
+  if (strength < 90) return lightColors.primary[500];
+  return lightColors.success[500];
 };
 
 /**
@@ -130,10 +130,17 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
    */
   const handleSubmit = () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
+      showToast('Lütfen tüm alanları doldurun', 'error');
       return;
     }
 
     if (newPassword !== confirmPassword) {
+      showToast('Şifreler eşleşmiyor', 'error');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showToast('Yeni şifre en az 8 karakter olmalıdır', 'error');
       return;
     }
 
@@ -160,6 +167,13 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
           setTimeout(() => {
             navigation.goBack();
           }, 1000);
+        },
+        onError: (error: any) => {
+          // Backend'den gelen hata mesajını göster
+          const errorMessage = error?.response?.data?.message 
+            || error?.message 
+            || 'Şifre değiştirilirken bir hata oluştu';
+          showToast(errorMessage, 'error');
         },
       }
     );
@@ -190,7 +204,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerIcon}>
-            <Ionicons name="lock-closed" size={32} color={colors.primary[600]} />
+            <Ionicons name="lock-closed" size={32} color={lightColors.primary[600]} />
           </View>
           <Typography variant="h2" style={styles.headerTitle}>
             Şifre Değiştir
@@ -203,7 +217,7 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
         {/* Info Card */}
         <Card variant="outlined" padding="lg" style={styles.infoCard}>
           <View style={styles.infoHeader}>
-            <Ionicons name="checkmark-circle" size={20} color={colors.primary[600]} />
+            <Ionicons name="checkmark-circle" size={20} color={lightColors.primary[600]} />
             <Typography variant="h3" style={styles.infoTitle}>
               Güçlü Şifre Kriterleri
             </Typography>
@@ -245,9 +259,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onPress={() => setShowCurrentPassword(!showCurrentPassword)}
               >
                 {showCurrentPassword ? (
-                  <Ionicons name="eye-off" size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye-off" size={20} color={lightColors.text.secondary} />
                 ) : (
-                  <Ionicons name="eye" size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye" size={20} color={lightColors.text.secondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -272,9 +286,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onPress={() => setShowNewPassword(!showNewPassword)}
               >
                 {showNewPassword ? (
-                  <Ionicons name="eye-off" size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye-off" size={20} color={lightColors.text.secondary} />
                 ) : (
-                  <Ionicons name="eye" size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye" size={20} color={lightColors.text.secondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -314,9 +328,9 @@ export const ChangePasswordScreen = ({ navigation }: any) => {
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
-                  <Ionicons name="eye-off" size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye-off" size={20} color={lightColors.text.secondary} />
                 ) : (
-                  <Ionicons name="eye" size={20} color={colors.text.secondary} />
+                  <Ionicons name="eye" size={20} color={lightColors.text.secondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -362,7 +376,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: colors.primary[50],
+    backgroundColor: lightColors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.md,
@@ -370,18 +384,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.text.primary,
+    color: lightColors.text.primary,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
   headerSubtitle: {
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
     textAlign: 'center',
   },
   infoCard: {
     marginBottom: spacing.xl,
-    backgroundColor: colors.primary[50],
-    borderColor: colors.primary[200],
+    backgroundColor: lightColors.primary[50],
+    borderColor: lightColors.primary[200],
   },
   infoHeader: {
     flexDirection: 'row',
@@ -390,7 +404,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   infoTitle: {
-    color: colors.primary[700],
+    color: lightColors.primary[700],
     fontSize: 15,
     fontWeight: '600',
   },
@@ -398,7 +412,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   infoItem: {
-    color: colors.primary[700],
+    color: lightColors.primary[700],
     fontSize: 13,
     lineHeight: 20,
   },
@@ -411,7 +425,7 @@ const styles = StyleSheet.create({
   label: {
     marginBottom: spacing.sm,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: lightColors.text.primary,
   },
   passwordInputContainer: {
     position: 'relative',
@@ -426,7 +440,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   errorText: {
-    color: colors.error[600],
+    color: lightColors.error[600],
     marginTop: spacing.xs,
   },
   submitButton: {
@@ -442,7 +456,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   strengthLabel: {
-    color: colors.text.secondary,
+    color: lightColors.text.secondary,
     fontSize: 12,
   },
   strengthValue: {

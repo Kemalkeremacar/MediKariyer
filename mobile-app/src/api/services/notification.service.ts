@@ -103,10 +103,11 @@ export const notificationService = {
   },
 
   /**
-   * Okunmamış bildirim sayısını getirir
+   * Okunmamış bildirim sayısını getirir (toplam sayı ile birlikte)
+   * @returns {Promise<{ count: number, unreadCount: number, totalCount: number }>}
    */
-  async getUnreadCount(): Promise<{ count: number }> {
-    const response = await apiClient.get<ApiResponse<{ count: number }>>(
+  async getUnreadCount(): Promise<{ count: number; unreadCount: number; totalCount: number }> {
+    const response = await apiClient.get<ApiResponse<{ count: number; unreadCount: number; totalCount: number }>>(
       endpoints.notifications.unreadCount,
     );
     return response.data.data;
