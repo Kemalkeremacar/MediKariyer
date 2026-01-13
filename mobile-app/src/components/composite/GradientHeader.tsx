@@ -10,8 +10,9 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { View, StyleSheet, ViewStyle, StyleProp, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { spacing } from '@/theme';
 
@@ -56,6 +57,8 @@ export type IconColorPreset = keyof typeof ICON_PRESETS;
  * @property {string} [iconShadowColor] - İkon gölge rengi
  * @property {StyleProp<ViewStyle>} [style] - Ek stil özellikleri
  * @property {boolean} [showDots] - Alt başlık yanında nokta göster
+ * @property {() => void} [onBackPress] - Geri butonu tıklama fonksiyonu
+ * @property {boolean} [showBackButton] - Geri butonu göster (default: false)
  */
 export interface GradientHeaderProps {
   title: string;
@@ -69,6 +72,8 @@ export interface GradientHeaderProps {
   iconShadowColor?: string;
   style?: StyleProp<ViewStyle>;
   showDots?: boolean;
+  onBackPress?: () => void;
+  showBackButton?: boolean;
 }
 
 /**
@@ -107,6 +112,8 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
   iconShadowColor,
   style,
   showDots = true,
+  onBackPress,
+  showBackButton = false,
 }) => {
   // Renk çözümlemeleri - Özel renkler varsa onları kullan, yoksa preset'leri kullan
   const headerColors = gradientColors || HEADER_PRESETS[variant];
@@ -125,6 +132,17 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
         style,
       ]}
     >
+      {/* Back Button - Sol üst köşe */}
+      {showBackButton && onBackPress && (
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={onBackPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
+
       {/* Dekoratif Elementler - Arka planda daireler */}
       <View style={styles.headerDecoration}>
         <View style={styles.decorCircle1} />
@@ -185,6 +203,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 12,
+  },
+  backButton: {
+    position: 'absolute',
+    top: spacing.md,
+    left: spacing.md,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerDecoration: {
     position: 'absolute',

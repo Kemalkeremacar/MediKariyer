@@ -1,188 +1,200 @@
 /**
  * @file EducationCard.tsx
- * @description Eğitim kartı bileşeni
+ * @description Eğitim kartı bileşeni - Web ile uyumlu modern tasarım
  * 
- * Özellikler:
- * - Eğitim bilgileri (derece, kurum, alan, tarihler)
- * - Düzenleme ve silme butonları
- * - Devam ediyor durumu
- * - İkon ve chip'ler
- * - Tıklanabilir kart
- * - Modern tasarım
- * 
- * Kullanım:
- * ```tsx
- * <EducationCard
- *   degree="Tıp Fakültesi"
- *   institution="İstanbul Üniversitesi"
- *   startDate="2015"
- *   endDate="2021"
- *   onEdit={handleEdit}
- *   onDelete={handleDelete}
- * />
- * ```
+ * Web görünümü:
+ * - Eğitim tipi (küçük, bold, üstte)
+ * - Kurum adı (ana başlık)
+ * - Alan + Yıl badge (yan yana)
  * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2024
  */
 
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Chip } from '@/components/ui/Chip';
-import { colors, spacing } from '@/theme';
-import { formatExperiencePeriod } from '@/utils/date';
+import { colors, spacing, borderRadius } from '@/theme';
 
-/**
- * EducationCard bileşeni props interface'i
- */
 export interface EducationCardProps {
-  /** Derece/diploma */
+  /** Eğitim tipi (Uzmanlık, Tıp Fakültesi vb.) */
   degree: string;
   /** Kurum adı */
   institution: string;
-  /** Alan/bölüm (opsiyonel) */
+  /** Alan/bölüm */
   field?: string;
-  /** Başlangıç tarihi */
-  startDate: string;
-  /** Bitiş tarihi (opsiyonel) */
+  /** Başlangıç tarihi (kullanılmıyor) */
+  startDate?: string;
+  /** Mezuniyet yılı */
   endDate?: string;
-  /** Devam ediyor mu? */
+  /** Devam ediyor mu */
   current?: boolean;
-  /** Tıklama fonksiyonu */
   onPress?: () => void;
-  /** Düzenleme fonksiyonu */
   onEdit?: () => void;
-  /** Silme fonksiyonu */
   onDelete?: () => void;
 }
 
-/**
- * Eğitim Kartı Bileşeni
- * Profil eğitim bilgilerini gösterir
- */
+// Yeşil tema (web ile uyumlu)
+const THEME = {
+  cardBackground: '#FFFFFF',
+  border: '#A7F3D0', // green-200
+  iconBackground: '#D1FAE5', // green-100
+  iconColor: '#059669', // green-600
+  badgeBackground: '#D1FAE5', // green-100
+  badgeText: '#065F46', // green-800
+};
+
 export const EducationCard: React.FC<EducationCardProps> = ({
   degree,
   institution,
   field,
-  startDate,
   endDate,
-  current = false,
   onPress,
   onEdit,
   onDelete,
 }) => {
   const Container = onPress ? TouchableOpacity : View;
+  
+  // Yılı çıkar
+  const year = endDate?.replace('Mezuniyet: ', '').trim();
 
   return (
     <Container onPress={onPress} activeOpacity={0.7}>
-      <Card variant="outlined" padding="lg" style={styles.card}>
-        <View style={styles.header}>
+      <View style={styles.card}>
+        <View style={styles.row}>
+          {/* İkon */}
           <View style={styles.iconContainer}>
-            <Ionicons name="school" size={20} color={colors.primary[600]} />
+            <Ionicons name="school" size={20} color={THEME.iconColor} />
           </View>
+          
+          {/* İçerik */}
           <View style={styles.content}>
-            <Typography variant="h3" style={styles.degree}>
+            {/* Eğitim Tipi - küçük, bold */}
+            <Typography style={styles.degreeType}>
               {degree}
             </Typography>
-            <Typography variant="body" style={styles.institution}>
+            
+            {/* Kurum Adı - ana başlık */}
+            <Typography style={styles.institution}>
               {institution}
             </Typography>
-            {field && (
-              <Typography variant="caption" style={styles.field}>
-                {field}
-              </Typography>
-            )}
+            
+            {/* Alan ve Yıl - yan yana */}
+            <View style={styles.metaRow}>
+              {field && (
+                <Typography style={styles.field}>
+                  {field}
+                </Typography>
+              )}
+              {year && (
+                <View style={styles.yearBadge}>
+                  <Typography style={styles.yearText}>
+                    {year}
+                  </Typography>
+                </View>
+              )}
+            </View>
           </View>
-          <View style={styles.actions}>
-            {onEdit && (
-              <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-                <Ionicons name="pencil-outline" size={18} color={colors.primary[600]} />
-              </TouchableOpacity>
-            )}
-            {onDelete && (
-              <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-                <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
-              </TouchableOpacity>
-            )}
-          </View>
+          
+          {/* Aksiyonlar */}
+          {(onEdit || onDelete) && (
+            <View style={styles.actions}>
+              {onEdit && (
+                <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
+                  <Ionicons name="pencil-outline" size={16} color={colors.primary[600]} />
+                </TouchableOpacity>
+              )}
+              {onDelete && (
+                <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                  <Ionicons name="trash-outline" size={16} color={colors.error[600]} />
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
         </View>
-
-        <View style={styles.footer}>
-          <Chip
-            label={formatExperiencePeriod(startDate, endDate, current)}
-            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
-            variant="soft"
-            color="neutral"
-            size="sm"
-          />
-        </View>
-      </Card>
+      </View>
     </Container>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    gap: spacing.md,
+    backgroundColor: THEME.cardBackground,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: spacing.md,
     marginBottom: spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary[50],
+    borderRadius: 10,
+    backgroundColor: THEME.iconBackground,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.md,
   },
   content: {
     flex: 1,
-    gap: 4,
   },
-  degree: {
-    fontSize: 16,
-    fontWeight: '700',
+  degreeType: {
+    fontSize: 11,
+    fontWeight: '600',
     color: colors.text.primary,
+    marginBottom: 2,
   },
   institution: {
     fontSize: 14,
-    color: colors.text.secondary,
+    fontWeight: '600',
+    color: colors.text.primary,
+    marginBottom: 4,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   field: {
     fontSize: 12,
-    color: colors.primary[600],
+    color: colors.text.secondary,
   },
-  footer: {
-    marginTop: spacing.xs,
+  yearBadge: {
+    backgroundColor: THEME.badgeBackground,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  yearText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: THEME.badgeText,
   },
   actions: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
+    gap: 4,
+    marginLeft: spacing.sm,
   },
-  editButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
   deleteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.error[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
 });

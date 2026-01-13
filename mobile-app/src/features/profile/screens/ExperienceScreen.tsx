@@ -1,8 +1,8 @@
 /**
  * @file ExperienceScreen.tsx
- * @description Mesleki deneyim listesi ekranı - CRUD işlemleri
+ * @description Mesleki deneyim listesi ekranı - Web ile uyumlu modern tasarım
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * 
  * **ÖZELLİKLER:**
  * - Deneyim listesi görüntüleme (kurum, pozisyon, tarih aralığı)
@@ -11,6 +11,7 @@
  * - "Devam ediyor" durumu desteği
  * - Pull-to-refresh desteği
  * - Empty state gösterimi
+ * - Mor tema (web ile uyumlu)
  * 
  * **KULLANIM AKIŞI:**
  * 1. Deneyimler listelenir
@@ -25,7 +26,6 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
-import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { ExperienceCard } from '@/components/composite/ExperienceCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
@@ -36,6 +36,12 @@ import type { DoctorExperience } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type ExperienceScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Experience'>;
+
+// Mavi tema
+const THEME = {
+  background: '#EFF6FF', // blue-50
+  emptyIconColor: '#2563EB', // blue-600
+};
 
 export const ExperienceScreen = () => {
   const navigation = useNavigation<ExperienceScreenNavigationProp>();
@@ -61,19 +67,16 @@ export const ExperienceScreen = () => {
   };
 
   return (
-    <Screen scrollable={false}>
-      {/* Back Button */}
-      <View style={styles.backButton}>
-        <BackButton onPress={() => navigation.goBack()} />
-      </View>
-
-      {/* Modern Gradient Header */}
+    <Screen scrollable={false} style={styles.screen}>
+      {/* Modern Gradient Header with Back Button */}
       <GradientHeader
-        title="Mesleki Deneyimler"
+        title="İş Deneyimi"
         subtitle={`${experiences.length} iş deneyimi`}
         icon={<Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />}
         variant="profile"
         iconColorPreset="teal"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       {/* Experience List */}
@@ -86,8 +89,9 @@ export const ExperienceScreen = () => {
             company={item.organization || 'Kurum'}
             location={item.specialty_name || ''}
             startDate={formatYear(item.start_date)}
-            endDate={item.is_current ? 'Devam ediyor' : formatYear(item.end_date)}
+            endDate={item.is_current ? '' : formatYear(item.end_date)}
             current={item.is_current}
+            description={item.description || undefined}
             onEdit={() => handleEditExperience(item)}
             onDelete={() => handleDeleteExperience(item.id)}
           />
@@ -98,7 +102,9 @@ export const ExperienceScreen = () => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="briefcase" size={64} color={colors.neutral[300]} />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="briefcase" size={48} color={THEME.emptyIconColor} />
+            </View>
             <Typography variant="h3" style={styles.emptyTitle}>
               Henüz deneyim eklenmemiş
             </Typography>
@@ -120,11 +126,8 @@ export const ExperienceScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  backButton: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.background.primary,
+  screen: {
+    backgroundColor: THEME.background,
   },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -135,8 +138,16 @@ const styles = StyleSheet.create({
     padding: spacing['3xl'],
     alignItems: 'center',
   },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#DBEAFE', // blue-100
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
   emptyTitle: {
-    marginTop: spacing.lg,
     marginBottom: spacing.sm,
     textAlign: 'center',
     color: colors.text.primary,

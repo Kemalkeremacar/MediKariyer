@@ -402,35 +402,23 @@ const withdrawApplication = async (userId, applicationId, reason = null) => {
       throw new AppError('Başvuru bulunamadı', 404);
     }
 
-    // Zaten geri çekilmiş mi kontrol et (status_id = 5) - Web'deki mantık (Requirement 17.2)
+    // Zaten geri çekilmiş mi kontrol et (status_id = 5) - Web'deki mantık
     if (application.status_id === 5) {
       throw new AppError('Başvuru zaten geri çekilmiş', 400);
     }
 
-    // Sadece "Başvuruldu" (status_id = 1) durumundaki başvurular geri çekilebilir - Web'deki mantık (Requirements 17.1, 17.4)
+    // Sadece "Başvuruldu" (status_id = 1) durumundaki başvurular geri çekilebilir - Web'deki mantık
     if (application.status_id !== 1) {
       throw new AppError('Sadece "Başvuruldu" durumundaki başvurular geri çekilebilir', 400);
     }
 
-    // Prepare notes update (Requirements 3.2, 3.3, 3.4, 3.5)
-    let updatedNotes = application.notes || '';
-    
-    if (reason && reason.trim()) {
-      // Format reason and append (Requirement 3.4)
-      const reasonText = `Geri çekilme nedeni: ${reason.trim()}`;
-      // Preserve existing notes (Requirement 3.3)
-      updatedNotes = updatedNotes 
-        ? `${updatedNotes}\n\n${reasonText}` 
-        : reasonText;
-    }
-    // If no reason provided, notes remain unchanged (Requirement 3.5)
-
-    // Başvuruyu geri çek (status_id = 5: Geri Çekildi) - Web'deki mantık
+    // Başvuruyu geri çek (status_id = 5: Geri Çekildi) - Web'deki mantık ile birebir aynı
     await trx('applications')
       .where('id', applicationId)
       .update({
         status_id: 5, // Geri Çekildi
-        notes: updatedNotes || null
+        notes: reason ? `${application.notes || ''}\n\nGeri çekme sebebi: ${reason}`.trim() : application.notes,
+        updated_at: db.fn.now()
       });
   });
 

@@ -1,8 +1,8 @@
 /**
  * @file CertificatesScreen.tsx
- * @description Sertifika listesi ekranı - CRUD işlemleri
+ * @description Sertifika listesi ekranı - Web ile uyumlu modern tasarım
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * 
  * **ÖZELLİKLER:**
  * - Sertifika listesi görüntüleme
@@ -10,6 +10,7 @@
  * - Sertifika düzenleme ve silme
  * - Pull-to-refresh desteği
  * - Empty state gösterimi
+ * - Sarı tema (web ile uyumlu)
  * 
  * **KULLANIM AKIŞI:**
  * 1. Sertifikalar listelenir
@@ -24,7 +25,6 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
-import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { CertificateCard } from '@/components/composite/CertificateCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
@@ -34,6 +34,12 @@ import type { DoctorCertificate } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type CertificatesScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Certificates'>;
+
+// Sarı tema (web ile uyumlu)
+const THEME = {
+  background: '#FFFBEB', // yellow-50
+  emptyIconColor: '#D97706', // yellow-600
+};
 
 export const CertificatesScreen = () => {
   const navigation = useNavigation<CertificatesScreenNavigationProp>();
@@ -59,19 +65,16 @@ export const CertificatesScreen = () => {
   };
 
   return (
-    <Screen scrollable={false}>
-      {/* Back Button */}
-      <View style={styles.backButton}>
-        <BackButton onPress={() => navigation.goBack()} />
-      </View>
-
-      {/* Modern Gradient Header */}
+    <Screen scrollable={false} style={styles.screen}>
+      {/* Modern Gradient Header with Back Button */}
       <GradientHeader
-        title="Sertifikalar"
+        title="Sertifikalar ve Kurslar"
         subtitle={`${certificates.length} sertifika`}
         icon={<Ionicons name="ribbon" size={28} color="#FFFFFF" />}
         variant="profile"
         iconColorPreset="orange"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       {/* Certificates List */}
@@ -93,7 +96,9 @@ export const CertificatesScreen = () => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="ribbon" size={64} color={colors.neutral[300]} />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="ribbon" size={48} color={THEME.emptyIconColor} />
+            </View>
             <Typography variant="h3" style={styles.emptyTitle}>
               Henüz sertifika eklenmemiş
             </Typography>
@@ -115,11 +120,8 @@ export const CertificatesScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  backButton: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.background.primary,
+  screen: {
+    backgroundColor: THEME.background,
   },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -130,8 +132,16 @@ const styles = StyleSheet.create({
     padding: spacing['3xl'],
     alignItems: 'center',
   },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#FEF3C7', // yellow-100
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
   emptyTitle: {
-    marginTop: spacing.lg,
     marginBottom: spacing.sm,
     textAlign: 'center',
     color: colors.text.primary,

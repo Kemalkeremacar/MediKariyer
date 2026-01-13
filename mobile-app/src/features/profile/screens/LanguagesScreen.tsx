@@ -1,8 +1,8 @@
 /**
  * @file LanguagesScreen.tsx
- * @description Yabancı dil listesi ekranı - CRUD işlemleri
+ * @description Yabancı dil listesi ekranı - Web ile uyumlu modern tasarım
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * 
  * **ÖZELLİKLER:**
  * - Dil listesi görüntüleme (dil adı, seviye)
@@ -11,6 +11,7 @@
  * - Pull-to-refresh desteği
  * - Loading ve error state'leri
  * - Empty state gösterimi
+ * - Cyan tema (web ile uyumlu)
  * 
  * **KULLANIM AKIŞI:**
  * 1. Diller listelenir
@@ -25,7 +26,6 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
-import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { LanguageCard } from '@/components/composite/LanguageCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
@@ -35,6 +35,12 @@ import type { DoctorLanguage } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type LanguagesScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Languages'>;
+
+// Mor tema (deneyim ile değiştirildi)
+const THEME = {
+  background: '#FAF5FF', // purple-50
+  emptyIconColor: '#9333EA', // purple-600
+};
 
 export const LanguagesScreen = () => {
   const navigation = useNavigation<LanguagesScreenNavigationProp>();
@@ -60,32 +66,31 @@ export const LanguagesScreen = () => {
   };
 
   return (
-    <Screen scrollable={false}>
-      {/* Back Button */}
-      <View style={styles.backButton}>
-        <BackButton onPress={() => navigation.goBack()} />
-      </View>
-
-      {/* Modern Gradient Header */}
+    <Screen scrollable={false} style={styles.screen}>
+      {/* Modern Gradient Header with Back Button */}
       <GradientHeader
-        title="Yabancı Diller"
+        title="Dil Bilgileri"
         subtitle={`${languages.length} dil`}
         icon={<Ionicons name="language" size={28} color="#FFFFFF" />}
         variant="profile"
         iconColorPreset="purple"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       {/* Languages List */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary[600]} />
+          <ActivityIndicator size="large" color={THEME.emptyIconColor} />
           <Typography variant="body" style={styles.loadingText}>
             Diller yükleniyor...
           </Typography>
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={64} color={colors.error[500]} />
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="alert-circle" size={48} color={colors.error[500]} />
+          </View>
           <Typography variant="h3" style={styles.errorTitle}>
             Hata Oluştu
           </Typography>
@@ -120,16 +125,18 @@ export const LanguagesScreen = () => {
           }
           contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons name="language" size={64} color={colors.neutral[300]} />
-            <Typography variant="h3" style={styles.emptyTitle}>
-              Henüz dil eklenmemiş
-            </Typography>
-            <Typography variant="body" style={styles.emptyText}>
-              Yabancı dil bilgilerinizi ekleyerek profilinizi güçlendirin
-            </Typography>
-          </View>
-        }
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="language" size={48} color={THEME.emptyIconColor} />
+              </View>
+              <Typography variant="h3" style={styles.emptyTitle}>
+                Henüz dil eklenmemiş
+              </Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                Yabancı dil bilgilerinizi ekleyerek profilinizi güçlendirin
+              </Typography>
+            </View>
+          }
         />
       )}
 
@@ -144,11 +151,8 @@ export const LanguagesScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  backButton: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.background.primary,
+  screen: {
+    backgroundColor: THEME.background,
   },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -159,8 +163,16 @@ const styles = StyleSheet.create({
     padding: spacing['3xl'],
     alignItems: 'center',
   },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F3E8FF', // purple-100
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
   emptyTitle: {
-    marginTop: spacing.lg,
     marginBottom: spacing.sm,
     textAlign: 'center',
     color: colors.text.primary,
@@ -187,7 +199,6 @@ const styles = StyleSheet.create({
     padding: spacing['3xl'],
   },
   errorTitle: {
-    marginTop: spacing.lg,
     marginBottom: spacing.sm,
     textAlign: 'center',
     color: colors.text.primary,

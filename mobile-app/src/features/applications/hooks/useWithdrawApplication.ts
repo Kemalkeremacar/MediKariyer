@@ -26,11 +26,9 @@ import { queryKeys } from '@/api/queryKeys';
  * 
  * @interface WithdrawApplicationParams
  * @property {number} applicationId - Başvuru ID'si
- * @property {string} [reason] - Geri çekme nedeni (opsiyonel)
  */
 interface WithdrawApplicationParams {
   applicationId: number;
-  reason?: string;
 }
 
 /**
@@ -47,10 +45,7 @@ interface WithdrawApplicationParams {
  * ```tsx
  * const withdraw = useWithdrawApplication();
  * 
- * withdraw.mutate({
- *   applicationId: 123,
- *   reason: 'Başka bir iş buldum'
- * });
+ * withdraw.mutate({ applicationId: 123 });
  * ```
  * 
  * @returns Mutation hook
@@ -60,8 +55,8 @@ export const useWithdrawApplication = () => {
   const alert = useAlertHelpers();
 
   return useMutation({
-    mutationFn: ({ applicationId, reason }: WithdrawApplicationParams) =>
-      applicationService.withdraw(applicationId, reason),
+    mutationFn: ({ applicationId }: WithdrawApplicationParams) =>
+      applicationService.withdraw(applicationId),
 
     // Optimistic Update: UI'ı sunucu yanıtı beklemeden güncelle
     onMutate: async ({ applicationId }: WithdrawApplicationParams) => {

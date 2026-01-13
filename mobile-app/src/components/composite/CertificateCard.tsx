@@ -1,209 +1,184 @@
 /**
  * @file CertificateCard.tsx
- * @description Sertifika kartı bileşeni
+ * @description Sertifika kartı bileşeni - Web ile uyumlu modern tasarım
  * 
- * Özellikler:
- * - Sertifika bilgileri (ad, veren kurum, tarihler, kimlik)
- * - Düzenleme ve silme butonları
- * - Sertifika görüntüleme butonu
- * - İkon ve chip'ler
- * - Tıklanabilir kart
- * - Modern tasarım
- * 
- * Kullanım:
- * ```tsx
- * <CertificateCard
- *   name="CPR Sertifikası"
- *   issuer="Kızılay"
- *   issueDate="2023"
- *   onEdit={handleEdit}
- *   onDelete={handleDelete}
- * />
- * ```
+ * Web görünümü:
+ * - Sertifika adı (ana başlık, bold)
+ * - Kurum adı + Yıl badge (yan yana, alt satır)
  * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2024
  */
 
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Chip } from '@/components/ui/Chip';
-import { IconButton } from '@/components/ui/IconButton';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, borderRadius } from '@/theme';
 
-/**
- * CertificateCard bileşeni props interface'i
- */
 export interface CertificateCardProps {
   /** Sertifika adı */
   name: string;
   /** Veren kurum */
   issuer: string;
-  /** Verilme tarihi */
+  /** Verilme yılı */
   issueDate: string;
-  /** Bitiş tarihi (opsiyonel) */
+  /** Bitiş tarihi */
   expiryDate?: string;
-  /** Sertifika kimlik numarası (opsiyonel) */
+  /** Sertifika ID */
   credentialId?: string;
-  /** Sertifika URL'i (opsiyonel) */
+  /** Sertifika URL */
   credentialUrl?: string;
-  /** Tıklama fonksiyonu */
   onPress?: () => void;
-  /** Düzenleme fonksiyonu */
   onEdit?: () => void;
-  /** Sertifika görüntüleme fonksiyonu */
   onViewCredential?: () => void;
-  /** Silme fonksiyonu */
   onDelete?: () => void;
 }
 
-/**
- * Sertifika Kartı Bileşeni
- * Profil sertifikalarını gösterir
- */
+// Sarı tema (web ile uyumlu)
+const THEME = {
+  cardBackground: '#FFFFFF',
+  border: '#FDE68A', // yellow-200
+  iconBackground: '#FEF3C7', // yellow-100
+  iconColor: '#D97706', // yellow-600
+  badgeBackground: '#FEF3C7', // yellow-100
+  badgeText: '#92400E', // yellow-800
+};
+
 export const CertificateCard: React.FC<CertificateCardProps> = ({
   name,
   issuer,
   issueDate,
-  expiryDate,
-  credentialId,
-  credentialUrl,
   onPress,
   onEdit,
-  onViewCredential,
   onDelete,
 }) => {
   const Container = onPress ? TouchableOpacity : View;
 
   return (
     <Container onPress={onPress} activeOpacity={0.7}>
-      <Card variant="outlined" padding="lg" style={styles.card}>
-        <View style={styles.header}>
+      <View style={styles.card}>
+        <View style={styles.row}>
+          {/* İkon */}
           <View style={styles.iconContainer}>
-            <Ionicons name="ribbon" size={20} color={colors.warning[600]} />
+            <Ionicons name="ribbon" size={20} color={THEME.iconColor} />
           </View>
+          
+          {/* İçerik */}
           <View style={styles.content}>
-            <Typography variant="h3" style={styles.name}>
+            {/* Sertifika Adı - ana başlık */}
+            <Typography style={styles.name} numberOfLines={2}>
               {name}
             </Typography>
-            <Typography variant="body" style={styles.issuer}>
-              {issuer}
-            </Typography>
-            {credentialId && (
-              <Typography variant="caption" style={styles.credentialId}>
-                ID: {credentialId}
+            
+            {/* Kurum + Yıl - alt satır */}
+            <View style={styles.metaRow}>
+              <Typography style={styles.issuer} numberOfLines={1}>
+                {issuer}
               </Typography>
-            )}
+              {issueDate && (
+                <View style={styles.yearBadge}>
+                  <Typography style={styles.yearText}>
+                    {issueDate}
+                  </Typography>
+                </View>
+              )}
+            </View>
           </View>
-          <View style={styles.actions}>
-            {onEdit && (
-              <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-                <Ionicons name="pencil-outline" size={18} color={colors.primary[600]} />
-              </TouchableOpacity>
-            )}
-            {onDelete && (
-              <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-                <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
-              </TouchableOpacity>
-            )}
-            {(credentialUrl || onViewCredential) && !onDelete && (
-              <IconButton
-                icon={<Ionicons name="open" size={18} color={colors.primary[600]} />}
-                onPress={onViewCredential || (() => {})}
-                size="sm"
-                variant="ghost"
-              />
-            )}
-          </View>
-        </View>
-
-        <View style={styles.footer}>
-          <Chip
-            label={`Verildi: ${issueDate}`}
-            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
-            variant="soft"
-            color="neutral"
-            size="sm"
-          />
-          {expiryDate && (
-            <Chip
-              label={`Bitiş: ${expiryDate}`}
-              variant="soft"
-              color="warning"
-              size="sm"
-            />
+          
+          {/* Aksiyonlar */}
+          {(onEdit || onDelete) && (
+            <View style={styles.actions}>
+              {onEdit && (
+                <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
+                  <Ionicons name="pencil-outline" size={16} color={colors.primary[600]} />
+                </TouchableOpacity>
+              )}
+              {onDelete && (
+                <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                  <Ionicons name="trash-outline" size={16} color={colors.error[600]} />
+                </TouchableOpacity>
+              )}
+            </View>
           )}
         </View>
-      </Card>
+      </View>
     </Container>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    gap: spacing.md,
+    backgroundColor: THEME.cardBackground,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: spacing.md,
     marginBottom: spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.warning[50],
+    borderRadius: 10,
+    backgroundColor: THEME.iconBackground,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.md,
   },
   content: {
     flex: 1,
-    gap: 4,
   },
   name: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.text.primary,
+    marginBottom: 4,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   issuer: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.text.secondary,
+    flex: 1,
   },
-  credentialId: {
+  yearBadge: {
+    backgroundColor: THEME.badgeBackground,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  yearText: {
     fontSize: 11,
-    color: colors.text.tertiary,
-    fontFamily: 'monospace',
-  },
-  footer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
+    fontWeight: '500',
+    color: THEME.badgeText,
   },
   actions: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
+    gap: 4,
+    marginLeft: spacing.sm,
   },
-  editButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
   deleteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.error[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
 });

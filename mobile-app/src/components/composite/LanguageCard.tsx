@@ -1,31 +1,25 @@
 /**
  * @file LanguageCard.tsx
- * @description Yabancı dil bilgilerini gösteren kart bileşeni
+ * @description Yabancı dil kartı bileşeni - Web ile uyumlu modern tasarım
  * 
- * Bu bileşen kullanıcının yabancı dil bilgilerini görsel olarak sunar.
- * Dil adı, seviye badge'i ve CEFR seviye göstergesi içerir.
+ * Web Tasarım Referansı (ApplicationDetailPage.jsx):
+ * - Cyan tema (bg-cyan-50, border-cyan-200)
+ * - Sol tarafta ikon (cyan-100 arka plan, cyan-600 ikon)
+ * - Dil adı (ana başlık, koyu renk)
+ * - Seviye badge'i (cyan-100 arka plan, cyan-800 yazı)
  * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.1.0
  */
 
 import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Badge } from '@/components/ui/Badge';
-import { colors, spacing } from '@/theme';
+import { colors, spacing, borderRadius } from '@/theme';
 
 /**
  * LanguageCard bileşeni için prop tipleri
- * 
- * @interface LanguageCardProps
- * @property {string} language - Dil adı (örn: "İngilizce", "Almanca")
- * @property {string} level - Dil seviyesi (örn: "İleri", "Orta")
- * @property {Function} [onPress] - Kart tıklama callback'i
- * @property {Function} [onEdit] - Düzenleme butonu callback'i
- * @property {Function} [onDelete] - Silme butonu callback'i
  */
 export interface LanguageCardProps {
   language: string;
@@ -35,54 +29,24 @@ export interface LanguageCardProps {
   onDelete?: () => void;
 }
 
-/**
- * Dil seviyelerine göre badge renkleri
- * Başlangıç/Temel → neutral, Orta → primary, İleri/Ana Dil → success
- */
-const levelColors = {
-  'Başlangıç': 'neutral' as const,
-  'Temel': 'neutral' as const,
-  'Orta': 'primary' as const,
-  'Orta Üstü': 'primary' as const,
-  'İleri': 'success' as const,
-  'Ana Dil': 'success' as const,
+// Mor tema (deneyim ile değiştirildi)
+const THEME = {
+  cardBackground: '#FFFFFF',
+  border: '#E9D5FF', // purple-200
+  iconBackground: '#F3E8FF', // purple-100
+  iconColor: '#9333EA', // purple-600
+  badgeBackground: '#F3E8FF', // purple-100
+  badgeText: '#6B21A8', // purple-800
+  titleColor: '#111827', // gray-900
 };
 
 /**
- * Dil seviyelerinin CEFR karşılıkları
- * Avrupa Ortak Dil Referans Çerçevesi (A1-C2) etiketleri
- */
-const levelLabels = {
-  'Başlangıç': 'A1',
-  'Temel': 'A2',
-  'Orta': 'B1',
-  'Orta Üstü': 'B2',
-  'İleri': 'C1',
-  'Ana Dil': 'C2',
-};
-
-/**
- * Yabancı dil kartı bileşeni
+ * Yabancı Dil Kartı Bileşeni
+ * Web'deki DoctorProfilePopover dil kartı ile birebir uyumlu
  * 
- * **Özellikler:**
- * - Dil adı ve seviye gösterimi
- * - CEFR seviye etiketi (A1-C2)
- * - Seviyeye göre renkli badge
- * - Düzenleme ve silme butonları
- * - Tıklanabilir kart (onPress varsa)
- * 
- * **Kullanım:**
- * ```tsx
- * <LanguageCard
- *   language="İngilizce"
- *   level="İleri"
- *   onEdit={() => handleEdit(id)}
- *   onDelete={() => handleDelete(id)}
- * />
- * ```
- * 
- * @param props - LanguageCard prop'ları
- * @returns Yabancı dil kartı bileşeni
+ * Layout:
+ * [İkon] [Dil Adı]              [Edit] [Delete]
+ *        [Seviye Badge]
  */
 export const LanguageCard: React.FC<LanguageCardProps> = ({
   language,
@@ -91,36 +55,33 @@ export const LanguageCard: React.FC<LanguageCardProps> = ({
   onEdit,
   onDelete,
 }) => {
-  // onPress varsa TouchableOpacity, yoksa View kullan
   const Wrapper = onPress ? TouchableOpacity : View;
 
   return (
     <Wrapper onPress={onPress} activeOpacity={0.7}>
-      <Card variant="outlined" padding="md">
-        <View style={styles.container}>
-          {/* Dil ikonu */}
+      <View style={styles.card}>
+        <View style={styles.row}>
+          {/* Sol: İkon */}
           <View style={styles.iconContainer}>
-            <Ionicons name="language" size={20} color={colors.primary[600]} />
+            <Ionicons name="language" size={20} color={THEME.iconColor} />
           </View>
           
-          {/* Dil adı ve seviye bilgisi */}
+          {/* Orta: İçerik */}
           <View style={styles.content}>
-            <Typography variant="h3" style={styles.language}>
+            {/* Dil Adı - Ana başlık */}
+            <Typography style={styles.languageName}>
               {language}
             </Typography>
-            <View style={styles.levelContainer}>
-              {/* Seviye badge'i (renkli) */}
-              <Badge variant={levelColors[level as keyof typeof levelColors] || 'primary'} size="sm">
+            
+            {/* Seviye Badge */}
+            <View style={styles.levelBadge}>
+              <Typography style={styles.levelText}>
                 {level}
-              </Badge>
-              {/* CEFR seviye etiketi */}
-              <Typography variant="caption" style={styles.levelText}>
-                {levelLabels[level as keyof typeof levelLabels] || level}
               </Typography>
             </View>
           </View>
           
-          {/* Aksiyon butonları veya chevron ikonu */}
+          {/* Sağ: Aksiyon Butonları */}
           <View style={styles.actions}>
             {onEdit && (
               <TouchableOpacity onPress={onEdit} style={styles.editButton}>
@@ -132,58 +93,60 @@ export const LanguageCard: React.FC<LanguageCardProps> = ({
                 <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
               </TouchableOpacity>
             )}
-            {/* Sadece onPress varsa ve edit/delete yoksa chevron göster */}
-            {onPress && !onDelete && !onEdit && (
-              <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
-            )}
           </View>
         </View>
-      </Card>
+      </View>
     </Wrapper>
   );
 };
 
-/**
- * Stil tanımlamaları
- * Kompakt ve temiz kart tasarımı
- */
 const styles = StyleSheet.create({
-  // Ana container - Yatay düzen
-  container: {
+  card: {
+    backgroundColor: THEME.cardBackground,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: 16,
+    marginBottom: 12,
+  },
+  row: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+    alignItems: 'flex-start',
   },
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary[50],
+    borderRadius: 8,
+    backgroundColor: THEME.iconBackground,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: 12,
   },
   content: {
     flex: 1,
-    gap: spacing.xs,
   },
-  language: {
-    fontSize: 16,
+  languageName: {
+    fontSize: 14,
     fontWeight: '600',
-    color: colors.text.primary,
+    color: THEME.titleColor,
+    marginBottom: 4,
   },
-  levelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+  levelBadge: {
+    backgroundColor: THEME.badgeBackground,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
   },
   levelText: {
     fontSize: 12,
-    color: colors.text.secondary,
+    fontWeight: '500',
+    color: THEME.badgeText,
   },
   actions: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    alignItems: 'center',
+    gap: 8,
+    marginLeft: 8,
   },
   editButton: {
     width: 36,
@@ -192,7 +155,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
   deleteButton: {
     width: 36,
@@ -201,6 +163,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.error[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
 });

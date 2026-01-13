@@ -1,8 +1,8 @@
 /**
  * @file EducationScreen.tsx
- * @description Eğitim bilgileri listesi ekranı - CRUD işlemleri
+ * @description Eğitim bilgileri listesi ekranı - Web ile uyumlu modern tasarım
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  * 
  * **ÖZELLİKLER:**
  * - Eğitim listesi görüntüleme (üniversite, derece, mezuniyet yılı)
@@ -10,6 +10,7 @@
  * - Eğitim düzenleme ve silme
  * - Pull-to-refresh desteği
  * - Empty state gösterimi
+ * - Yeşil tema (web ile uyumlu)
  * 
  * **KULLANIM AKIŞI:**
  * 1. Eğitimler listelenir
@@ -24,7 +25,6 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen } from '@/components/layout/Screen';
 import { Typography } from '@/components/ui/Typography';
-import { BackButton } from '@/components/ui/BackButton';
 import { FAB } from '@/components/ui/FAB';
 import { EducationCard } from '@/components/composite/EducationCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
@@ -34,6 +34,12 @@ import type { DoctorEducation } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
 type EducationScreenNavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'Education'>;
+
+// Yeşil tema (web ile uyumlu)
+const THEME = {
+  background: '#ECFDF5', // green-50
+  emptyIconColor: '#059669', // green-600
+};
 
 export const EducationScreen = () => {
   const navigation = useNavigation<EducationScreenNavigationProp>();
@@ -59,19 +65,16 @@ export const EducationScreen = () => {
   };
 
   return (
-    <Screen scrollable={false}>
-      {/* Back Button */}
-      <View style={styles.backButton}>
-        <BackButton onPress={() => navigation.goBack()} />
-      </View>
-
-      {/* Modern Gradient Header */}
+    <Screen scrollable={false} style={styles.screen}>
+      {/* Modern Gradient Header with Back Button */}
       <GradientHeader
         title="Eğitim Bilgileri"
         subtitle={`${educations.length} eğitim kaydı`}
         icon={<Ionicons name="school-sharp" size={28} color="#FFFFFF" />}
         variant="profile"
         iconColorPreset="green"
+        showBackButton={true}
+        onBackPress={() => navigation.goBack()}
       />
 
       {/* Education List */}
@@ -84,7 +87,7 @@ export const EducationScreen = () => {
             institution={item.education_institution || 'Kurum'}
             field={item.field || ''}
             startDate=""
-            endDate={item.graduation_year ? `Mezuniyet: ${item.graduation_year}` : ''}
+            endDate={item.graduation_year ? `${item.graduation_year}` : ''}
             current={false}
             onEdit={() => handleEditEducation(item)}
             onDelete={() => handleDeleteEducation(item.id)}
@@ -96,7 +99,9 @@ export const EducationScreen = () => {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="school" size={64} color={colors.neutral[300]} />
+            <View style={styles.emptyIconContainer}>
+              <Ionicons name="school" size={48} color={THEME.emptyIconColor} />
+            </View>
             <Typography variant="h3" style={styles.emptyTitle}>
               Eğitim Bilgisi Yok
             </Typography>
@@ -118,11 +123,8 @@ export const EducationScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  backButton: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.background.primary,
+  screen: {
+    backgroundColor: THEME.background,
   },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -133,8 +135,16 @@ const styles = StyleSheet.create({
     padding: spacing['3xl'],
     alignItems: 'center',
   },
+  emptyIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#D1FAE5', // green-100
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
   emptyTitle: {
-    marginTop: spacing.lg,
     marginBottom: spacing.sm,
     textAlign: 'center',
     color: colors.text.primary,

@@ -85,13 +85,12 @@ export const applicationService = {
   /**
    * Başvuruyu geri çeker
    * @param {number} applicationId - Başvuru ID'si
-   * @param {string} [reason] - Geri çekme nedeni (opsiyonel)
    * @returns {Promise<void>}
    */
-  async withdraw(applicationId: number, reason?: string): Promise<void> {
+  async withdraw(applicationId: number): Promise<void> {
     await apiClient.patch<ApiResponse<null>>(
       endpoints.applications.withdraw(applicationId),
-      { reason: reason || '' },
+      {},
     );
   },
 };

@@ -1,81 +1,53 @@
 /**
  * @file ExperienceCard.tsx
- * @description İş deneyimi bilgilerini gösteren kart bileşeni
+ * @description İş deneyimi kartı bileşeni - Web ile uyumlu modern tasarım
  * 
- * Bu bileşen kullanıcının iş deneyimlerini görsel olarak sunar.
- * Pozisyon, şirket, lokasyon, tarih aralığı ve açıklama bilgilerini içerir.
+ * Web görünümü:
+ * - Kurum adı (büyük, bold) + Yıl aralığı badge (yan yana)
+ * - Uzmanlık alanı (alt satır, küçük)
+ * - Açıklama (varsa)
  * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
-import { Chip } from '@/components/ui/Chip';
-import { Divider } from '@/components/ui/Divider';
-import { colors, spacing } from '@/theme';
-import { formatExperiencePeriod } from '@/utils/date';
+import { colors, spacing, borderRadius } from '@/theme';
 
-/**
- * ExperienceCard bileşeni için prop tipleri
- * 
- * @interface ExperienceCardProps
- * @property {string} title - Pozisyon/ünvan adı (örn: "Uzman Doktor")
- * @property {string} company - Şirket/kurum adı
- * @property {string} [location] - Çalışma lokasyonu (opsiyonel)
- * @property {string} startDate - Başlangıç tarihi (ISO format)
- * @property {string} [endDate] - Bitiş tarihi (opsiyonel, hala çalışıyorsa boş)
- * @property {boolean} [current] - Hala bu pozisyonda çalışıyor mu?
- * @property {string} [description] - İş tanımı/açıklama (opsiyonel)
- * @property {Function} [onPress] - Kart tıklama callback'i
- * @property {Function} [onEdit] - Düzenleme butonu callback'i
- * @property {Function} [onDelete] - Silme butonu callback'i
- */
 export interface ExperienceCardProps {
+  /** Pozisyon/rol */
   title: string;
+  /** Kurum/hastane adı */
   company: string;
+  /** Uzmanlık alanı */
   location?: string;
+  /** Başlangıç yılı */
   startDate: string;
+  /** Bitiş yılı */
   endDate?: string;
+  /** Devam ediyor mu */
   current?: boolean;
+  /** Açıklama */
   description?: string;
   onPress?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-/**
- * İş deneyimi kartı bileşeni
- * 
- * **Özellikler:**
- * - Pozisyon ve şirket bilgisi gösterimi
- * - Çalışma süresi ve lokasyon chip'leri
- * - İş tanımı açıklaması (varsa)
- * - Düzenleme ve silme butonları
- * - Tıklanabilir kart (onPress varsa)
- * 
- * **Kullanım:**
- * ```tsx
- * <ExperienceCard
- *   title="Uzman Doktor"
- *   company="Acıbadem Hastanesi"
- *   location="İstanbul"
- *   startDate="2020-01-01"
- *   endDate="2023-12-31"
- *   description="Kardiyoloji bölümünde uzman doktor olarak görev yaptım"
- *   onEdit={() => handleEdit(id)}
- *   onDelete={() => handleDelete(id)}
- * />
- * ```
- * 
- * @param props - ExperienceCard prop'ları
- * @returns İş deneyimi kartı bileşeni
- */
+// Mavi tema
+const THEME = {
+  cardBackground: '#FFFFFF',
+  border: '#BFDBFE', // blue-200
+  iconBackground: '#DBEAFE', // blue-100
+  iconColor: '#2563EB', // blue-600
+  badgeBackground: '#DBEAFE', // blue-100
+  badgeText: '#1E40AF', // blue-800
+};
+
 export const ExperienceCard: React.FC<ExperienceCardProps> = ({
-  title,
   company,
   location,
   startDate,
@@ -86,147 +58,158 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({
   onEdit,
   onDelete,
 }) => {
-  // onPress varsa TouchableOpacity, yoksa View kullan
   const Container = onPress ? TouchableOpacity : View;
+
+  // Yıl aralığını oluştur (web formatı: "2007 - 2021")
+  const getYearRange = () => {
+    if (!startDate) return '';
+    if (current) return startDate;
+    if (endDate) return `${startDate} - ${endDate}`;
+    return startDate;
+  };
 
   return (
     <Container onPress={onPress} activeOpacity={0.7}>
-      <Card variant="outlined" padding="lg" style={styles.card}>
-        {/* Başlık Bölümü - İkon, Pozisyon, Şirket ve Aksiyon Butonları */}
-        <View style={styles.header}>
-          {/* İş ikonu */}
+      <View style={styles.card}>
+        <View style={styles.row}>
+          {/* İkon */}
           <View style={styles.iconContainer}>
-            <Ionicons name="briefcase" size={20} color={colors.secondary[600]} />
+            <Ionicons name="briefcase" size={20} color={THEME.iconColor} />
           </View>
           
-          {/* Pozisyon ve şirket bilgileri */}
+          {/* İçerik */}
           <View style={styles.content}>
-            <Typography variant="h3" style={styles.title}>
-              {title}
-            </Typography>
-            <Typography variant="body" style={styles.company}>
-              {company}
-            </Typography>
+            {/* Kurum Adı + Yıl Badge - üst satır */}
+            <View style={styles.titleRow}>
+              <Typography style={styles.company} numberOfLines={1}>
+                {company}
+              </Typography>
+              {getYearRange() && (
+                <View style={styles.yearBadge}>
+                  <Typography style={styles.yearText}>
+                    {getYearRange()}
+                  </Typography>
+                </View>
+              )}
+            </View>
+            
+            {/* Uzmanlık Alanı - alt satır */}
+            {location && (
+              <Typography style={styles.specialty}>
+                {location}
+              </Typography>
+            )}
+            
+            {/* Açıklama */}
+            {description && (
+              <Typography style={styles.description} numberOfLines={2}>
+                {description}
+              </Typography>
+            )}
           </View>
           
-          {/* Düzenleme ve silme butonları */}
-          <View style={styles.actions}>
-            {onEdit && (
-              <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-                <Ionicons name="pencil-outline" size={18} color={colors.primary[600]} />
-              </TouchableOpacity>
-            )}
-            {onDelete && (
-              <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
-                <Ionicons name="trash-outline" size={18} color={colors.error[600]} />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* İş Tanımı - Varsa göster */}
-        {description && (
-          <>
-            <Divider spacing="sm" />
-            <Typography variant="body" style={styles.description}>
-              {description}
-            </Typography>
-          </>
-        )}
-
-        {/* Alt Bilgiler - Tarih aralığı ve lokasyon chip'leri */}
-        <View style={styles.footer}>
-          {/* Çalışma süresi chip'i */}
-          <Chip
-            label={formatExperiencePeriod(startDate, endDate, current)}
-            icon={<Ionicons name="calendar" size={12} color={colors.neutral[600]} />}
-            variant="soft"
-            color="neutral"
-            size="sm"
-          />
-          {/* Lokasyon chip'i (varsa) */}
-          {location && (
-            <Chip
-              label={location}
-              icon={<Ionicons name="location" size={12} color={colors.neutral[600]} />}
-              variant="soft"
-              color="neutral"
-              size="sm"
-            />
+          {/* Aksiyonlar */}
+          {(onEdit || onDelete) && (
+            <View style={styles.actions}>
+              {onEdit && (
+                <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
+                  <Ionicons name="pencil-outline" size={16} color={colors.primary[600]} />
+                </TouchableOpacity>
+              )}
+              {onDelete && (
+                <TouchableOpacity onPress={onDelete} style={styles.deleteButton}>
+                  <Ionicons name="trash-outline" size={16} color={colors.error[600]} />
+                </TouchableOpacity>
+              )}
+            </View>
           )}
         </View>
-      </Card>
+      </View>
     </Container>
   );
 };
 
-/**
- * Stil tanımlamaları
- * Modern ve temiz görünüm için optimize edilmiş stiller
- */
 const styles = StyleSheet.create({
-  // Kart container
   card: {
-    marginBottom: spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    gap: spacing.md,
+    backgroundColor: THEME.cardBackground,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    padding: spacing.md,
     marginBottom: spacing.sm,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   iconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.secondary[50],
+    borderRadius: 10,
+    backgroundColor: THEME.iconBackground,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: spacing.md,
   },
   content: {
     flex: 1,
-    gap: 4,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text.primary,
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: 2,
   },
   company: {
-    fontSize: 14,
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text.primary,
+    textTransform: 'uppercase',
+    flex: 1,
+  },
+  yearBadge: {
+    backgroundColor: THEME.badgeBackground,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  yearText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: THEME.badgeText,
+  },
+  specialty: {
+    fontSize: 12,
     color: colors.text.secondary,
+    marginTop: 2,
   },
   description: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.text.secondary,
-    lineHeight: 20,
-    marginBottom: spacing.sm,
-  },
-  footer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    flexWrap: 'wrap',
+    marginTop: 6,
+    lineHeight: 16,
+    fontStyle: 'italic',
   },
   actions: {
     flexDirection: 'row',
-    gap: spacing.xs,
-    alignSelf: 'flex-start',
+    gap: 4,
+    marginLeft: spacing.sm,
   },
-  editButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  actionButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
   deleteButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: colors.error[50],
     alignItems: 'center',
     justifyContent: 'center',
-    // Modern: Border kaldırıldı
   },
 });
