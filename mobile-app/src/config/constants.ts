@@ -82,8 +82,6 @@ export const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token', // Access token anahtarı
   REFRESH_TOKEN: 'refresh_token', // Refresh token anahtarı
   USER_DATA: 'user_data', // Kullanıcı verisi anahtarı
-  THEME_MODE: 'theme_mode', // Tema modu anahtarı
-  LANGUAGE: 'language', // Dil anahtarı
   ONBOARDING_COMPLETED: 'onboarding_completed', // Onboarding tamamlandı mı?
 } as const;
 

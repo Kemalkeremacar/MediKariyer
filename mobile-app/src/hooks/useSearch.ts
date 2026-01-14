@@ -1,33 +1,20 @@
 /**
  * @file useSearch.ts
  * @description Arama Hook'u - Modern, kullanıcı dostu arama deneyimi
+ * @author MediKariyer Development Team
+ * @version 2.0.0
  * 
- * Özellikler:
+ * **Özellikler:**
  * - Yazarken sonuçlar kaybolmaz (client-side filtreleme)
- * - Backend'e sadece minimum karakter geçildiğinde istek atılır
+ * - Backend'e sadece minimum karakter geçildiğinde istek
  * - Debounce ile performans optimizasyonu
  * - React Native docs tarzında UX
  * 
- * Kullanım Stratejisi:
- * 1. clientQuery: Her zaman mevcut, liste filtreleme için kullanılır
- * 2. debouncedQuery: Backend isteği için kullanılır (minimum karakter geçildiyse)
+ * **Kullanım Stratejisi:**
+ * 1. clientQuery: Her zaman mevcut, liste filtreleme için
+ * 2. debouncedQuery: Backend isteği için (minimum karakter geçildiyse)
  * 3. shouldFetch: Backend isteği yapılmalı mı kontrolü
- * 
- * @example
- * const [searchQuery, setSearchQuery] = useState('');
- * const { debouncedQuery, clientQuery, shouldFetch } = useSearch(searchQuery);
- * 
- * // Backend isteği - sadece shouldFetch true ise
- * const query = useJobs({ keyword: shouldFetch ? debouncedQuery : undefined });
- * 
- * // Client-side filtreleme - her zaman çalışır
- * const filteredJobs = jobs.filter(job => 
- *   job.title.toLowerCase().includes(clientQuery.toLowerCase())
- * );
- * 
- * @author MediKariyer Development Team
- * @version 1.0.0
- * @since 2024
+ * 4. isSearching: Kullanıcıya loading göstergesi için
  */
 
 import { useMemo } from 'react';
@@ -132,12 +119,6 @@ export function useSearch(
     return debouncedQuery.length >= minLength;
   }, [debouncedQuery, minLength]);
 
-  // Backend'e gönderilecek sorgu (sadece minimum karakter geçildiyse)
-  const backendQuery = useMemo(() => {
-    if (!shouldFetch) return '';
-    return debouncedQuery;
-  }, [debouncedQuery, shouldFetch]);
-
   // Arama yapılıyor mu? (debounce sırasında veya minimum karakter altında yazılıyorsa)
   const isSearching = useMemo(() => {
     // Kullanıcı yazıyor ama henüz debounce tamamlanmadı
@@ -148,10 +129,10 @@ export function useSearch(
   }, [trimmedQuery, debouncedQuery, minLength]);
 
   return {
-    debouncedQuery: backendQuery,
-    clientQuery,
-    shouldFetch,
-    isSearching,
+    debouncedQuery, // Backend'e gönderilecek sorgu (shouldFetch ile birlikte kullanılmalı)
+    clientQuery, // Client-side filtreleme için her zaman mevcut
+    shouldFetch, // Backend isteği yapılmalı mı?
+    isSearching, // Arama yapılıyor mu?
   };
 }
 

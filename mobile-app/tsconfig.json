@@ -6,6 +6,11 @@
     "moduleResolution": "bundler",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "jsx": "react-native",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
     "paths": {
       "@/*": ["./src/*"],
       "~/*": ["./*"]

@@ -175,7 +175,12 @@ const Divider = () => <View style={styles.divider} />;
 // MAIN COMPONENT
 // ============================================================================
 
-export const SettingsScreen = ({ navigation }: any) => {
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { SettingsStackParamList } from '@/navigation/types';
+
+type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
+
+export const SettingsScreen = ({ navigation }: Props) => {
   const { showToast } = useToast();
   const logoutMutation = useLogout();
   
@@ -183,7 +188,6 @@ export const SettingsScreen = ({ navigation }: any) => {
     shareApp,
     rateApp,
     sendFeedback,
-    openHelpCenter,
     openPrivacyPolicy,
     openTermsOfService,
     getAppInfo,
@@ -252,9 +256,6 @@ export const SettingsScreen = ({ navigation }: any) => {
     );
   }, [appInfo]);
 
-  const handleComingSoon = useCallback((feature: string) => {
-    showToast(`${feature} özelliği yakında eklenecek`, 'info');
-  }, [showToast]);
 
   return (
     <Screen scrollable={false}>
@@ -289,37 +290,6 @@ export const SettingsScreen = ({ navigation }: any) => {
           </Card>
         </View>
 
-        {/* Görünüm ve Dil */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Görünüm ve Dil"
-            icon={<Ionicons name="color-palette-outline" size={16} color="#EC4899" />}
-          />
-          <Card variant="outlined" style={styles.settingsCard}>
-            <SettingItem
-              icon={<Ionicons name="contrast" size={20} color="#EC4899" />}
-              iconBgColor="#FCE7F3"
-              title="Tema"
-              subtitle="Açık, koyu veya sistem teması"
-              value="Açık Tema"
-              badge="Yakında"
-              badgeColor="warning"
-              onPress={() => handleComingSoon('Tema seçimi')}
-            />
-            <Divider />
-            <SettingItem
-              icon={<Ionicons name="language" size={20} color="#EC4899" />}
-              iconBgColor="#FCE7F3"
-              title="Dil"
-              subtitle="Uygulama dili"
-              value="Türkçe"
-              badge="Yakında"
-              badgeColor="warning"
-              onPress={() => handleComingSoon('Dil seçimi')}
-            />
-          </Card>
-        </View>
-
         {/* Destek ve Hakkında */}
         <View style={styles.section}>
           <SectionHeader
@@ -327,14 +297,6 @@ export const SettingsScreen = ({ navigation }: any) => {
             icon={<Ionicons name="heart-outline" size={16} color="#06B6D4" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
-            <SettingItem
-              icon={<Ionicons name="help-buoy" size={20} color="#06B6D4" />}
-              iconBgColor="#CFFAFE"
-              title="Yardım Merkezi"
-              subtitle="SSS ve destek"
-              onPress={openHelpCenter}
-            />
-            <Divider />
             <SettingItem
               icon={<Ionicons name="chatbubble-ellipses" size={20} color="#06B6D4" />}
               iconBgColor="#CFFAFE"

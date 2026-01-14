@@ -27,8 +27,9 @@ export interface JobListParams {
   city_id?: number;
   specialty_id?: number;
   subspecialty_id?: number;
+  hospital_id?: number;
   employment_type?: string;
-  work_type?: string;
+  min_experience_years?: number;
 }
 
 export interface ApplyJobPayload {

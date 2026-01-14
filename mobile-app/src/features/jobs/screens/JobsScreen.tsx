@@ -161,10 +161,11 @@ export const JobsScreen = () => {
         <SearchBar
           value={filter.searchQuery}
           onChangeText={filter.handleSearchChange}
-          placeholder="Hastane, şehir veya branş ara..."
+          placeholder="İlan başlığı veya hastane ara..."
           onClear={filter.handleSearchClear}
           style={styles.searchBar}
           isSearching={filter.isSearching}
+          minLength={2}
         />
         <View style={styles.filterButtonWrapper}>
           {filter.isSearching && (

@@ -19,10 +19,15 @@ import { queryKeys } from '@/api/queryKeys';
  * 
  * **Özellikler:**
  * - Infinite scroll pagination
- * - Filtreleme desteği (branş, şehir, çalışma tipi)
- * - Her zaman fresh data (staleTime: 0)
- * - 30 saniye cache
- * - Focus/reconnect'te otomatik yenileme
+ * - Filtreleme desteği (branş, şehir, çalışma tipi, arama)
+ * - Optimize edilmiş cache stratejisi
+ * - Akıllı refetch davranışı
+ * 
+ * **Cache Stratejisi:**
+ * - staleTime: 1 dakika (ilanlar sık değişmez)
+ * - gcTime: 5 dakika (daha uzun cache = daha az network)
+ * - refetchOnMount: true (stale data varsa yenile)
+ * - refetchOnWindowFocus: false (mobilde gereksiz)
  * 
  * @param params - Filtreleme parametreleri
  * @param enabled - Query'nin aktif olup olmadığı
@@ -43,10 +48,10 @@ export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => 
         : undefined,
     initialPageParam: 1,
     enabled,
-    staleTime: 1000 * 60, // 1 dakika stale time (ilanlar çok sık değişmez)
-    gcTime: 1000 * 60 * 5, // 5 dakika cache (daha uzun cache = daha az network)
-    refetchOnMount: true, // Stale data varsa refetch yap
-    refetchOnWindowFocus: false, // Focus'ta otomatik refetch yapma (mobilde gereksiz)
-    refetchOnReconnect: true, // Bağlantı yenilendiğinde yenile
+    staleTime: 1000 * 60, // 1 dakika
+    gcTime: 1000 * 60 * 5, // 5 dakika
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };

@@ -6,7 +6,7 @@
  * @since 2024
  * 
  * **Özellikler:**
- * - 4 ana tab: ProfileTab (Anasayfa), JobsTab (İlanlar), Applications (Başvurular), SettingsTab (Ayarlar)
+ * - 4 ana tab: ProfileTab (Anasayfa), JobsTab (İlanlar), ApplicationsTab (Başvurular), SettingsTab (Ayarlar)
  * - Animasyonlu ikonlar
  * - Haptic feedback
  * - Platform-specific styling
@@ -20,7 +20,7 @@ import * as Haptics from 'expo-haptics';
 import { JobsStackNavigator } from './JobsStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
-import { ApplicationsScreen } from '@/features/applications/screens/ApplicationsScreen';
+import { ApplicationsStackNavigator } from './ApplicationsStackNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
 import { devLog } from '@/utils/devLogger';
@@ -83,7 +83,7 @@ const Tab = createBottomTabNavigator<AppTabParamList>();
  * **Tab'lar:**
  * - ProfileTab: Anasayfa (Profil ana sayfa olarak)
  * - JobsTab: İlanlar (İş ilanları listesi)
- * - Applications: Başvurular (Başvurularım)
+ * - ApplicationsTab: Başvurular (Başvurularım)
  * - SettingsTab: Ayarlar (Hesap ayarları)
  */
 export const TabNavigator = () => {
@@ -216,8 +216,8 @@ export const TabNavigator = () => {
       
       {/* Applications - Başvurular */}
       <Tab.Screen
-        name="Applications"
-        component={ApplicationsScreen}
+        name="ApplicationsTab"
+        component={ApplicationsStackNavigator}
         options={{
           tabBarLabel: 'Başvurular',
           tabBarIcon: ({ focused }) => (

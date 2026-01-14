@@ -1,41 +1,28 @@
 /**
  * @file ThemeContext.tsx
- * @description Theme Context - tema değerleri ve dark mode desteği sağlar
+ * @description Theme Context - tema değerleri sağlar
  * @author MediKariyer Development Team
  * @version 1.0.0
  * @since 2024
  * 
  * **Özellikler:**
- * - Light/Dark/System tema modları
- * - AsyncStorage ile tema tercihini kalıcı saklama
+ * - Light theme desteği
  * - useTheme hook'u ile kolay erişim
  */
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
-import { useColorScheme } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { lightTheme, darkTheme, type Theme } from '../theme';
-import { STORAGE_KEYS } from '@/config/constants';
+import React, { createContext, useContext, useMemo } from 'react';
+import { lightTheme, type Theme } from '../theme';
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
-/** Tema modu seçenekleri */
-type ThemeMode = 'light' | 'dark' | 'system';
-
 /** Theme Context değer tipi */
 interface ThemeContextValue {
   /** Aktif tema objesi */
   theme: Theme;
-  /** Seçili tema modu */
-  themeMode: ThemeMode;
-  /** Dark mode aktif mi? */
+  /** Dark mode aktif mi? (her zaman false) */
   isDark: boolean;
-  /** Tema modunu değiştir */
-  setThemeMode: (mode: ThemeMode) => void;
-  /** Light/Dark arasında geçiş yap */
-  toggleTheme: () => void;
 }
 
 // ============================================================================
@@ -53,16 +40,14 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
  * ThemeProvider içinde kullanılmalıdır
  * 
  * @throws Error ThemeProvider dışında kullanılırsa hata fırlatır
- * @returns Theme değerleri ve fonksiyonları
+ * @returns Theme değerleri
  * 
  * @example
  * ```tsx
- * const { theme, isDark, toggleTheme } = useTheme();
+ * const { theme, isDark } = useTheme();
  * 
  * <View style={{ backgroundColor: theme.colors.background.primary }}>
- *   <Button onPress={toggleTheme}>
- *     {isDark ? 'Light Mode' : 'Dark Mode'}
- *   </Button>
+ *   <Text>Current theme: {isDark ? 'Dark' : 'Light'}</Text>
  * </View>
  * ```
  */
@@ -89,96 +74,19 @@ interface ThemeProviderProps {
  * @param props.children - Alt bileşenler
  */
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  const systemColorScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
-
-  // ============================================================================
-  // EFFECTS
-  // ============================================================================
-
-  /**
-   * Mount sırasında kaydedilmiş tema modunu yükle
-   */
-  useEffect(() => {
-    loadThemeMode();
-  }, []);
-
-  // ============================================================================
-  // FUNCTIONS
-  // ============================================================================
-
-  /**
-   * AsyncStorage'dan tema modunu yükle
-   */
-  const loadThemeMode = async () => {
-    try {
-      const savedMode = await AsyncStorage.getItem(STORAGE_KEYS.THEME_MODE);
-      if (savedMode && (savedMode === 'light' || savedMode === 'dark' || savedMode === 'system')) {
-        setThemeModeState(savedMode as ThemeMode);
-      }
-    } catch (error) {
-      console.error('Failed to load theme mode:', error);
-    }
-  };
-
-  /**
-   * Tema modunu değiştir ve AsyncStorage'a kaydet
-   * 
-   * @param mode - Yeni tema modu
-   */
-  const setThemeMode = useCallback(async (mode: ThemeMode) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
-      setThemeModeState(mode);
-    } catch (error) {
-      console.error('Failed to save theme mode:', error);
-    }
-  }, []);
-
-  /**
-   * Light/Dark arasında geçiş yap
-   */
-  const toggleTheme = useCallback(() => {
-    // isDark değerini burada hesapla (closure'da güncel değeri almak için)
-    const currentIsDark = themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark');
-    const newMode = currentIsDark ? 'light' : 'dark';
-    setThemeMode(newMode);
-  }, [themeMode, systemColorScheme, setThemeMode]);
-
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
   /**
-   * Dark mode aktif mi?
-   * System modundaysa sistem tercihine göre, değilse seçili moda göre
-   */
-  const isDark = useMemo(
-    () => themeMode === 'dark' || (themeMode === 'system' && systemColorScheme === 'dark'),
-    [themeMode, systemColorScheme]
-  );
-
-  /**
-   * Aktif tema objesi
-   * Dark mode'a göre light veya dark theme seç
-   */
-  const currentTheme = useMemo(
-    () => (isDark ? darkTheme : lightTheme),
-    [isDark]
-  );
-
-  /**
-   * Context değeri
+   * Context değeri - her zaman light theme döndürür
    */
   const value: ThemeContextValue = useMemo(
     () => ({
-      theme: currentTheme,
-      themeMode,
-      isDark,
-      setThemeMode,
-      toggleTheme,
+      theme: lightTheme,
+      isDark: false,
     }),
-    [currentTheme, themeMode, isDark, setThemeMode, toggleTheme]
+    []
   );
 
   // ============================================================================

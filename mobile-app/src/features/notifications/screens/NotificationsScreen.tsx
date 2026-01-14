@@ -148,7 +148,7 @@ export const NotificationsScreen = () => {
         case 'application_status':
         case 'application_update':
           // Başvuru bildirimi - Başvurular ekranına git
-          navigation.navigate('Applications');
+          navigation.navigate('ApplicationsTab', { screen: 'ApplicationsList' });
           break;
           
         case 'job':
@@ -159,7 +159,7 @@ export const NotificationsScreen = () => {
             navigation.navigate('JobsTab', {
               screen: 'JobDetail',
               params: { id: notificationData.job_id },
-            });
+            } as any);
           } else {
             // job_id yoksa ilanlar listesine git
             navigation.navigate('JobsTab', { screen: 'JobsList' });

@@ -93,17 +93,22 @@ const getPasswordStrengthColor = (password: string): string => {
   return lightColors.success[500];
 };
 
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { SettingsStackParamList } from '@/navigation/types';
+
+type Props = NativeStackScreenProps<SettingsStackParamList, 'ChangePassword'>;
+
 /**
  * ChangePasswordScreen Bileşeni
  * 
  * Kullanıcının şifresini güvenli bir şekilde değiştirmesini sağlar.
  * Şifre gücü göstergesi ve gerçek zamanlı validasyon içerir.
  * 
- * @param {Object} props - Component props
+ * @param {Props} props - Component props
  * @param {Object} props.navigation - React Navigation nesnesi
  * @returns {JSX.Element} Şifre değiştirme ekranı
  */
-export const ChangePasswordScreen = ({ navigation }: any) => {
+export const ChangePasswordScreen = ({ navigation }: Props) => {
   const { showToast } = useToast();
   
   // Form state'leri

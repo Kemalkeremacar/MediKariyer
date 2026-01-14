@@ -395,7 +395,7 @@ export const DashboardScreen = () => {
             <Typography variant="h3" style={styles.sectionTitle}>
               Son Başvurular
             </Typography>
-            <TouchableOpacity onPress={() => navigation.navigate('Applications')}>
+            <TouchableOpacity onPress={() => navigation.navigate('ApplicationsTab', { screen: 'ApplicationsList' })}>
               <Typography variant="caption" style={styles.seeAllText}>
                 Tümünü Gör
               </Typography>
@@ -416,7 +416,7 @@ export const DashboardScreen = () => {
               </Typography>
               <TouchableOpacity 
                 style={styles.emptyStateButton}
-                onPress={() => navigation.navigate('JobsTab', { screen: 'JobsList' })}
+                onPress={() => navigation.navigate('JobsTab', { screen: 'JobsList' } as any)}
               >
                 <Typography variant="caption" style={styles.emptyStateButtonText}>
                   İlanlara Göz At
@@ -429,7 +429,7 @@ export const DashboardScreen = () => {
                 <RecentApplicationItem
                   key={application.id}
                   application={application}
-                  onPress={() => navigation.navigate('Applications')}
+                  onPress={() => navigation.navigate('ApplicationsTab', { screen: 'ApplicationsList' })}
                 />
               ))}
             </View>
@@ -451,11 +451,11 @@ export const DashboardScreen = () => {
           } else if (screen === 'Languages') {
             navigation.navigate('Languages');
           } else if (screen === 'Applications') {
-            navigation.navigate('Applications');
+            navigation.navigate('ApplicationsTab', { screen: 'ApplicationsList' });
           } else if (screen === 'SettingsMain') {
-            navigation.navigate('SettingsTab', { screen: 'SettingsMain' });
+            navigation.navigate('SettingsTab', { screen: 'SettingsMain' } as any);
           } else if (screen === 'SavedJobs') {
-            navigation.navigate('JobsTab', { screen: 'JobsList' });
+            navigation.navigate('JobsTab', { screen: 'JobsList' } as any);
           } else if (screen === 'ProfileEdit') {
             navigation.navigate('ProfileEdit');
           } else if (screen === 'Notifications') {

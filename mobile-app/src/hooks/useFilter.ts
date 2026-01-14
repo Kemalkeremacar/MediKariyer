@@ -1,34 +1,24 @@
 /**
  * @file useFilter.ts
  * @description Filtreleme Hook'u - Liste ekranları için ortak filtreleme mantığı
+ * @author MediKariyer Development Team
+ * @version 2.0.0
  * 
- * Stabilizasyon: Faz 4
- * 
- * Kullanım Alanları:
+ * **Kullanım Alanları:**
  * - JobsScreen (iş ilanı filtreleme)
  * - ApplicationsScreen (başvuru filtreleme)
  * - Diğer liste ekranları
  * 
- * Özellikler:
- * - Search query state yönetimi
+ * **Özellikler:**
  * - Generic filter state yönetimi
- * - Debounced search (useSearch hook kullanıyor)
+ * - Debounced search (useSearch hook)
  * - Filter sheet visibility yönetimi
+ * - Aktif filtre sayısı hesaplama
  * - Reset ve remove filter fonksiyonları
- * - Active filter sayısı hesaplama
  * 
- * @example
- * const filter = useFilter<JobFilters>({}, { minLength: 2 });
- * 
- * <SearchBar
- *   value={filter.searchQuery}
- *   onChangeText={filter.handleSearchChange}
- *   onClear={filter.handleSearchClear}
- * />
- * 
- * @author MediKariyer Development Team
- * @version 1.0.0
- * @since 2024
+ * **Performans:**
+ * - useMemo ile optimize edilmiş hesaplamalar
+ * - useCallback ile stabil fonksiyon referansları
  */
 
 import { useState, useCallback, useMemo } from 'react';
@@ -163,7 +153,18 @@ export function useFilter<TFilters extends Record<string, any>>(
 
   // Hesaplanmış değerler
   const activeFilterCount = useMemo(() => {
-    return Object.values(filters).filter(Boolean).length;
+    let count = 0;
+    Object.entries(filters).forEach(([_key, value]) => {
+      if (value) {
+        // Dizi ise, içindeki eleman sayısını say
+        if (Array.isArray(value)) {
+          count += value.length;
+        } else {
+          count += 1;
+        }
+      }
+    });
+    return count;
   }, [filters]);
 
   const hasActiveFilters = useMemo(() => {

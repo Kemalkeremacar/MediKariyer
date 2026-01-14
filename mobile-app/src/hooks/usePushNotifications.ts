@@ -257,9 +257,9 @@ export const usePushNotifications = () => {
       if (data?.application_id) {
         // Applications tab'ına git (başvuru detayına gidebiliriz ama şimdilik liste yeterli)
         if (navigationRef.isReady()) {
-          navigationRef.navigate('Applications' as any);
+          navigationRef.navigate('ApplicationsTab' as any, { screen: 'ApplicationsList' });
         } else {
-          navigation.navigate('Applications');
+          navigation.navigate('ApplicationsTab', { screen: 'ApplicationsList' });
         }
         return;
       }
@@ -271,7 +271,7 @@ export const usePushNotifications = () => {
           navigationRef.navigate('JobsTab' as any, {
             screen: 'JobDetail',
             params: { id: Number(data.job_id) },
-          });
+          } as any);
         } else {
           navigation.navigate('JobsTab', {
             screen: 'JobDetail',

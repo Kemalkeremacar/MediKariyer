@@ -37,6 +37,7 @@ const logger = require('../../utils/logger');
 const jobTransformer = require('../../mobile/transformers/jobTransformer');
 const { getDoctorProfile } = require('./mobileDoctorService');
 const { normalizeCountResult, buildPaginationSQL, normalizeRawResult } = require('../../utils/queryHelper');
+const mobileJobSearchService = require('./mobileJobSearchService');
 
 const buildJobsBaseQuery = () => {
   return db('jobs as j')
@@ -50,6 +51,24 @@ const buildJobsBaseQuery = () => {
 };
 
 const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => {
+  // Eğer keyword varsa, gelişmiş arama servisini kullan
+  if (filters.keyword && filters.keyword.trim().length > 0) {
+    return await mobileJobSearchService.searchJobs(userId, {
+      keyword: filters.keyword,
+      filters: {
+        city_id: filters.city_id,
+        specialty_id: filters.specialty_id,
+        subspecialty_id: filters.subspecialty_id,
+        hospital_id: filters.hospital_id,
+        employment_type: filters.employment_type,
+        min_experience_years: filters.min_experience_years
+      },
+      page,
+      limit
+    });
+  }
+
+  // Keyword yoksa, standart listeleme yap
   const profile = await getDoctorProfile(userId);
   const currentPage = Math.max(Number(page) || 1, 1);
   const perPage = Math.min(Math.max(Number(limit) || 20, 1), 50);
@@ -89,20 +108,6 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
 
   if (filters.employment_type) {
     baseQuery.andWhere('j.employment_type', filters.employment_type);
-  }
-
-  if (filters.keyword) {
-    const searchTerm = filters.keyword.trim();
-    if (searchTerm) {
-      // Search optimizasyonu: LIKE '%term%' yerine prefix search (LIKE 'term%') kullanılıyor
-      // Bu sayede index kullanımı mümkün olur ve performans artar
-      // Requirements 7.1, 7.2, 7.3, 7.5: Search in title, hospital name, AND description
-      baseQuery.andWhere(function() {
-        this.where('j.title', 'like', `${searchTerm}%`)
-          .orWhere('hp.institution_name', 'like', `${searchTerm}%`)
-          .orWhere('j.description', 'like', `${searchTerm}%`);  // Add description search
-      });
-    }
   }
 
   const dataQuery = baseQuery

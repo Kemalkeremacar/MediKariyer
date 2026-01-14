@@ -1,58 +1,50 @@
 /**
  * @file ApplicationsScreen.tsx
- * @description Başvurular listesi ekranı - Tüm başvuruları listeler
+ * @description Başvurular listesi ekranı - Durum bazlı filtreleme
  * @author MediKariyer Development Team
- * @version 1.0.0 (Stabilizasyon Faz 4)
+ * @version 2.0.0
  * 
  * **ÖZELLİKLER:**
- * - Başvuru listesi (FlashList ile performanslı)
- * - Arama ve filtreleme (durum bazlı)
+ * - FlashList ile performanslı listeleme
+ * - Durum bazlı filtreleme (tek seçim)
  * - Pull-to-refresh
- * - Infinite scroll (pagination)
+ * - Infinite scroll pagination
  * - Empty state
- * - Başvuru detay modal
  * 
- * **OPTİMİZASYONLAR:**
- * - useFilter hook kullanılıyor (ortak filtreleme mantığı)
- * - FlatList performans optimizasyonları
- * - Loading ve empty state iyileştirmeleri
- * - Client-side filtreleme (yazarken anında)
- * - Backend filtreleme (debounced)
- * 
- * **KULLANIM AKIŞI:**
- * 1. Başvurular listelenir
- * 2. Arama/filtreleme yapılabilir
- * 3. Başvuruya tıklanınca detay modal açılır
- * 4. Modal'dan başvuru geri çekilebilir
+ * **NOT:** Web ile uyumlu - sadece durum filtresi var, arama yok
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { useFilter } from '@/hooks/useFilter';
 import {
   StyleSheet,
   RefreshControl,
   View,
-  ActivityIndicator,
   TouchableOpacity,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { colors, spacing } from '@/theme';
 import { Typography } from '@/components/ui/Typography';
 import { SkeletonCard } from '@/components/ui/Skeleton';
 import { Screen } from '@/components/layout/Screen';
-import { SearchBar } from '@/components/ui/SearchBar';
-import {
-  ApplicationFilterSheet,
-  ApplicationFilters,
-} from '@/components/composite/ApplicationFilterSheet';
 import { ApplicationCard } from '@/components/composite/ApplicationCard';
 import { GradientHeader } from '@/components/composite/GradientHeader';
-import { ApplicationDetailModal } from '../components/ApplicationDetailModal';
 import { useApplications } from '../hooks/useApplications';
 import { useApplicationStatuses } from '@/hooks/useLookup';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import type { ApplicationsStackParamList } from '@/navigation/types';
 
-// Status display mapping - fallback for when lookup is not loaded
+// Başvuru filtre değerleri
+interface ApplicationFilters {
+  status_id?: number;
+}
+
+// Status display mapping
 const STATUS_DISPLAY: Record<number, string> = {
   1: 'Başvuruldu',
   2: 'İnceleniyor',
@@ -62,21 +54,21 @@ const STATUS_DISPLAY: Record<number, string> = {
 };
 
 export const ApplicationsScreen = () => {
-  const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
+  const navigation = useNavigation<NativeStackNavigationProp<ApplicationsStackParamList>>();
   
   // Fetch application statuses for display names
   const { data: statuses = [] } = useApplicationStatuses();
   
-  // Filter hook - ortak filtreleme mantığı
-  const filter = useFilter<ApplicationFilters>({}, { minLength: 2 });
+  // Filter state - sadece durum filtresi
+  const [filters, setFilters] = useState<ApplicationFilters>({});
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
-  // Query filters - useMemo ile normalize et, gereksiz re-render'ları önle
+  // Query filters - sadece status_id
   const queryFilters = useMemo(() => ({
-    status_id: filter.filters.status_id || undefined,
-    keyword: filter.shouldFetch ? filter.debouncedQuery : undefined,
-  }), [filter.filters.status_id, filter.shouldFetch, filter.debouncedQuery]);
+    status_id: filters.status_id || undefined,
+  }), [filters.status_id]);
 
-  // Sadece debounced query değiştiğinde API çağrısı yap
+  // API çağrısı
   const query = useApplications(queryFilters);
 
   const totalCount = useMemo(() => {
@@ -84,49 +76,42 @@ export const ApplicationsScreen = () => {
   }, [query.data]);
 
   // Backend'den gelen tüm başvurular
-  const allApplications = useMemo(() => {
+  const applications = useMemo(() => {
     if (!query.data) return [];
     const pages = query.data.pages ?? [];
     return pages.flatMap((page) => page.data);
   }, [query.data]);
 
-  // Client-side filtreleme - Yazarken sonuçlar kaybolmaz, sadece filtrelenir
-  const applications = useMemo(() => {
-    // Backend'den veri yoksa boş döndür
-    if (allApplications.length === 0) return [];
-    
-    // Client-side arama sorgusu yoksa tüm sonuçları göster
-    if (!filter.clientQuery) return allApplications;
-    
-    // Client-side filtreleme yap (yazarken anında filtrele)
-    const lowerQuery = filter.clientQuery.toLowerCase();
-    return allApplications.filter((app) => {
-      const jobTitle = app.job_title?.toLowerCase() || '';
-      const hospital = app.hospital_name?.toLowerCase() || '';
-      
-      return jobTitle.includes(lowerQuery) || hospital.includes(lowerQuery);
-    });
-  }, [allApplications, filter.clientQuery]);
-
   const loadMore = useCallback(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {
       query.fetchNextPage();
     }
-  }, [query]);
+  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   const handleApplyFilters = useCallback((newFilters: ApplicationFilters) => {
-    filter.handleFilterChange(newFilters);
-  }, [filter]);
+    setFilters(newFilters);
+    setShowFilterModal(false);
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setFilters({});
+    setShowFilterModal(false);
+  }, []);
+
+  // Aktif filtre var mı?
+  const hasActiveFilters = useMemo(() => {
+    return !!filters.status_id;
+  }, [filters.status_id]);
 
   // Get status display name from lookup or fallback
-  const getStatusDisplayName = (statusId?: number): string => {
+  const getStatusDisplayName = useCallback((statusId?: number): string => {
     if (!statusId) return 'Tüm Başvurular';
     // Try to find from lookup data first
     const status = statuses.find(s => s.id === statusId);
     if (status) return status.name;
     // Fallback to hardcoded mapping
     return STATUS_DISPLAY[statusId] || `Durum ${statusId}`;
-  };
+  }, [statuses]);
 
   const renderListHeader = () => (
     <>
@@ -139,61 +124,36 @@ export const ApplicationsScreen = () => {
         iconColorPreset="blue"
       />
 
-      {/* Modern Search & Filter */}
-      <View style={styles.searchContainer}>
-        <SearchBar
-          value={filter.searchQuery}
-          onChangeText={filter.handleSearchChange}
-          placeholder="Hastane veya pozisyon ara..."
-          onClear={filter.handleSearchClear}
-          style={styles.searchBar}
-          isSearching={filter.isSearching}
-        />
-        <View style={styles.filterButtonWrapper}>
-          {filter.isSearching && (
-            <View style={styles.searchingIndicator}>
-              <ActivityIndicator size="small" color={colors.primary[600]} />
-            </View>
-          )}
-          <TouchableOpacity
-            onPress={() => filter.setShowFilterSheet(true)}
-            style={[
-              styles.filterButton,
-              filter.activeFilterCount > 0 && styles.filterButtonActive,
-            ]}
-            activeOpacity={0.7}
+      {/* Filter Button */}
+      <View style={styles.filterContainer}>
+        <TouchableOpacity
+          onPress={() => setShowFilterModal(true)}
+          style={[
+            styles.filterButton,
+            hasActiveFilters && styles.filterButtonActive,
+          ]}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="filter"
+            size={20}
+            color={hasActiveFilters ? colors.background.primary : colors.primary[600]}
+          />
+          <Typography 
+            variant="body" 
+            style={hasActiveFilters ? styles.filterButtonTextActive : styles.filterButtonText}
           >
-            <Ionicons
-              name="filter"
-              size={20}
-              color={filter.activeFilterCount > 0 ? colors.background.primary : colors.primary[600]}
-            />
-          </TouchableOpacity>
-          {filter.activeFilterCount > 0 && (
+            {hasActiveFilters ? getStatusDisplayName(filters.status_id) : 'Tüm Başvurular'}
+          </Typography>
+          {hasActiveFilters && (
             <View style={styles.filterBadge}>
               <Typography variant="caption" style={styles.filterBadgeText}>
-                {filter.activeFilterCount}
+                1
               </Typography>
             </View>
           )}
-        </View>
+        </TouchableOpacity>
       </View>
-
-      {/* Active Filter Chip */}
-      {filter.hasActiveFilters && (
-        <View style={styles.activeFiltersContainer}>
-          {filter.filters.status_id && (
-            <View style={styles.activeFilterChip}>
-              <Typography variant="body" style={styles.activeFilterText}>
-                {getStatusDisplayName(filter.filters.status_id)}
-              </Typography>
-              <TouchableOpacity onPress={() => filter.handleFilterChange({})}>
-                <Ionicons name="close-circle" size={18} color={colors.primary[600]} />
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      )}
     </>
   );
 
@@ -213,7 +173,7 @@ export const ApplicationsScreen = () => {
           renderItem={({ item }) => (
             <ApplicationCard
               application={item}
-              onPress={() => setSelectedApplicationId(item.id)}
+              onPress={() => navigation.navigate('ApplicationDetail', { applicationId: item.id })}
             />
           )}
           refreshControl={
@@ -250,17 +210,17 @@ export const ApplicationsScreen = () => {
                   <Ionicons name="document-text" size={64} color={colors.neutral[300]} />
                 </View>
                 <Typography variant="h3" style={styles.emptyTitle}>
-                  {(filter.hasActiveFilters) ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
+                  {hasActiveFilters ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
                 </Typography>
                 <Typography variant="body" style={styles.emptyText}>
-                  {(filter.hasActiveFilters)
-                    ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
+                  {hasActiveFilters
+                    ? 'Filtre kriterlerinizi değiştirerek tekrar deneyin'
                     : 'Yeni ilanlara başvurarak kariyer yolculuğuna başla'}
                 </Typography>
-                {(filter.hasActiveFilters) && (
+                {hasActiveFilters && (
                   <TouchableOpacity 
                     style={styles.emptyButton} 
-                    onPress={filter.resetFilters}
+                    onPress={handleResetFilters}
                   >
                     <Typography variant="body" style={styles.emptyButtonText}>
                       Filtreleri Temizle
@@ -274,19 +234,70 @@ export const ApplicationsScreen = () => {
         />
       )}
 
-      <ApplicationDetailModal
-        applicationId={selectedApplicationId}
-        visible={selectedApplicationId !== null}
-        onClose={() => setSelectedApplicationId(null)}
-      />
+      {/* Simple Status Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowFilterModal(false)} />
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Typography variant="h3" style={styles.modalTitle}>
+                Durum Filtresi
+              </Typography>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Ionicons name="close" size={24} color={colors.text.secondary} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalBody}>
+              {/* Tümü */}
+              <TouchableOpacity
+                style={[
+                  styles.statusOption,
+                  !filters.status_id && styles.statusOptionActive,
+                ]}
+                onPress={() => handleApplyFilters({})}
+              >
+                <Typography 
+                  variant="body" 
+                  style={!filters.status_id ? styles.statusTextActive : styles.statusText}
+                >
+                  Tüm Başvurular
+                </Typography>
+                {!filters.status_id && (
+                  <Ionicons name="checkmark-circle" size={24} color={colors.primary[600]} />
+                )}
+              </TouchableOpacity>
 
-      <ApplicationFilterSheet
-        visible={filter.showFilterSheet}
-        onClose={() => filter.setShowFilterSheet(false)}
-        filters={filter.filters}
-        onApply={handleApplyFilters}
-        onReset={filter.resetFilters}
-      />
+              {/* Durumlar */}
+              {statuses.map((status) => (
+                <TouchableOpacity
+                  key={status.id}
+                  style={[
+                    styles.statusOption,
+                    filters.status_id === status.id && styles.statusOptionActive,
+                  ]}
+                  onPress={() => handleApplyFilters({ status_id: status.id })}
+                >
+                  <Typography 
+                    variant="body" 
+                    style={filters.status_id === status.id ? styles.statusTextActive : styles.statusText}
+                  >
+                    {status.name}
+                  </Typography>
+                  {filters.status_id === status.id && (
+                    <Ionicons name="checkmark-circle" size={24} color={colors.primary[600]} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 
@@ -306,65 +317,37 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+  filterContainer: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     backgroundColor: colors.background.primary,
   },
-  searchBar: {
-    flex: 1,
-  },
-  filterButtonWrapper: {
-    position: 'relative',
+  filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-  },
-  searchingIndicator: {
-    marginRight: spacing.xs,
-  },
-  filterButton: {
-    width: 44,
-    height: 44,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     borderRadius: 12,
     backgroundColor: colors.primary[50],
-    alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.primary[100],
+    position: 'relative',
   },
   filterButtonActive: {
     backgroundColor: colors.primary[600],
     borderColor: colors.primary[600],
   },
-  activeFiltersContainer: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  activeFilterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.primary[50],
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.primary[100],
-    alignSelf: 'flex-start',
-  },
-  activeFilterText: {
-    color: colors.primary[700],
+  filterButtonText: {
+    color: colors.primary[600],
     fontWeight: '600',
     fontSize: 14,
+    flex: 1,
+  },
+  filterButtonTextActive: {
+    color: colors.background.primary,
   },
   filterBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
     backgroundColor: colors.error[600],
     borderRadius: 10,
     minWidth: 20,
@@ -372,8 +355,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
-    borderWidth: 2,
-    borderColor: colors.background.primary,
   },
   filterBadgeText: {
     color: colors.background.primary,
@@ -423,6 +404,64 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: colors.background.primary,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: colors.background.primary,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[100],
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text.primary,
+  },
+  modalBody: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  statusOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: 12,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.background.secondary,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  statusOptionActive: {
+    backgroundColor: colors.primary[50],
+    borderColor: colors.primary[600],
+  },
+  statusText: {
+    fontSize: 16,
+    color: colors.text.primary,
+    fontWeight: '500',
+  },
+  statusTextActive: {
+    fontSize: 16,
+    color: colors.primary[700],
     fontWeight: '600',
   },
 });

@@ -66,16 +66,49 @@ const getStoreUrl = (): string => {
 
 /**
  * Uygulama versiyonunu alır
+ * Öncelik sırası: nativeApplicationVersion > expoConfig.version > manifest2 > fallback
  */
 const getAppVersion = (): string => {
-  return Application.nativeApplicationVersion || Constants.expoConfig?.version || '1.0.0';
+  // Production build'de native versiyon
+  if (Application.nativeApplicationVersion) {
+    return Application.nativeApplicationVersion;
+  }
+  
+  // Development/Expo Go'da expoConfig
+  if (Constants.expoConfig?.version) {
+    return Constants.expoConfig.version;
+  }
+  
+  // Manifest2 fallback
+  if (Constants.manifest2?.extra?.expoClient?.version) {
+    return Constants.manifest2.extra.expoClient.version;
+  }
+  
+  // Son fallback
+  return '1.0.0';
 };
 
 /**
  * Build numarasını alır
+ * Öncelik sırası: nativeBuildVersion > expoConfig.ios.buildNumber/android.versionCode > fallback
  */
 const getBuildNumber = (): string => {
-  return Application.nativeBuildVersion || '1';
+  // Production build'de native build number
+  if (Application.nativeBuildVersion) {
+    return Application.nativeBuildVersion;
+  }
+  
+  // Development/Expo Go'da platform-specific build number
+  if (Platform.OS === 'ios' && Constants.expoConfig?.ios?.buildNumber) {
+    return Constants.expoConfig.ios.buildNumber;
+  }
+  
+  if (Platform.OS === 'android' && Constants.expoConfig?.android?.versionCode) {
+    return String(Constants.expoConfig.android.versionCode);
+  }
+  
+  // Son fallback
+  return '1';
 };
 
 // ============================================================================

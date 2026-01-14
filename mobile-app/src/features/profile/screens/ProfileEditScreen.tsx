@@ -59,7 +59,12 @@ const TITLE_OPTIONS: SelectOption[] = [
   { label: 'Prof. Dr.', value: 'Prof.Dr' },
 ];
 
-export const ProfileEditScreen = ({ navigation }: any) => {
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ProfileStackParamList } from '@/navigation/types';
+
+type Props = NativeStackScreenProps<ProfileStackParamList, 'ProfileEdit'>;
+
+export const ProfileEditScreen = ({ navigation }: Props) => {
   const user = useAuthStore((state) => state.user);
   const { data: profile, isLoading, error, refetch } = useProfileCore();
   const updateMutation = useUpdatePersonalInfo();

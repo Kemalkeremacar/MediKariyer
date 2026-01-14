@@ -425,26 +425,46 @@ const paginationQuerySchema = Joi.object({
 /**
  * Mobile Jobs Query Schema
  * @description Jobs listesi için query parametreleri validasyonu
+ * Gelişmiş arama ve filtreleme desteği
  */
 const mobileJobsQuerySchema = paginationQuerySchema.keys({
-  specialty_id: Joi.number().integer().positive().optional().messages({
-    'number.base': 'Specialty ID sayı olmalıdır',
-    'number.integer': 'Specialty ID tam sayı olmalıdır',
-    'number.positive': 'Specialty ID pozitif bir sayı olmalıdır'
-  }),
-  city_id: Joi.number().integer().positive().optional().messages({
-    'number.base': 'City ID sayı olmalıdır',
-    'number.integer': 'City ID tam sayı olmalıdır',
-    'number.positive': 'City ID pozitif bir sayı olmalıdır'
-  }),
-  employment_type: Joi.string().max(100).optional().messages({
-    'string.max': 'Employment type en fazla 100 karakter olabilir'
-  }),
+  // Arama parametreleri
   keyword: Joi.string().max(100).trim().allow('').optional().messages({
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
   }),
   search: Joi.string().max(100).trim().allow('').optional().messages({
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
+  }),
+  
+  // Filtre parametreleri
+  specialty_id: Joi.number().integer().positive().optional().messages({
+    'number.base': 'Branş ID sayı olmalıdır',
+    'number.integer': 'Branş ID tam sayı olmalıdır',
+    'number.positive': 'Branş ID pozitif bir sayı olmalıdır'
+  }),
+  subspecialty_id: Joi.number().integer().positive().optional().messages({
+    'number.base': 'Alt branş ID sayı olmalıdır',
+    'number.integer': 'Alt branş ID tam sayı olmalıdır',
+    'number.positive': 'Alt branş ID pozitif bir sayı olmalıdır'
+  }),
+  city_id: Joi.number().integer().positive().optional().messages({
+    'number.base': 'Şehir ID sayı olmalıdır',
+    'number.integer': 'Şehir ID tam sayı olmalıdır',
+    'number.positive': 'Şehir ID pozitif bir sayı olmalıdır'
+  }),
+  hospital_id: Joi.number().integer().positive().optional().messages({
+    'number.base': 'Hastane ID sayı olmalıdır',
+    'number.integer': 'Hastane ID tam sayı olmalıdır',
+    'number.positive': 'Hastane ID pozitif bir sayı olmalıdır'
+  }),
+  employment_type: Joi.string().max(100).optional().messages({
+    'string.max': 'Çalışma türü en fazla 100 karakter olabilir'
+  }),
+  min_experience_years: Joi.number().integer().min(0).max(50).optional().messages({
+    'number.base': 'Minimum deneyim yılı sayı olmalıdır',
+    'number.integer': 'Minimum deneyim yılı tam sayı olmalıdır',
+    'number.min': 'Minimum deneyim yılı 0\'dan küçük olamaz',
+    'number.max': 'Minimum deneyim yılı 50\'den büyük olamaz'
   })
 });
 

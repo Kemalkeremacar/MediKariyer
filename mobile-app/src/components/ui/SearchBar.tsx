@@ -1,64 +1,30 @@
 /**
  * @file SearchBar.tsx
- * @description Arama çubuğu bileşeni
- * 
- * Özellikler:
- * - Arama ikonu
- * - Temizleme butonu
- * - Yükleme göstergesi
- * - Focus durumu gösterimi
- * - Otomatik focus desteği
- * - Performans optimizasyonu (memo)
- * - Modern tasarım (yuvarlatılmış köşeler, gölge)
- * 
- * Kullanım:
- * ```tsx
- * <SearchBar
- *   value={searchQuery}
- *   onChangeText={setSearchQuery}
- *   placeholder="İş ara..."
- *   isSearching={isLoading}
- * />
- * ```
- * 
+ * @description Profesyonel arama çubuğu bileşeni
  * @author MediKariyer Development Team
- * @version 1.0.0
- * @since 2024
+ * @version 2.0.0
  */
 
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { View, TextInput, StyleSheet, TouchableOpacity, ViewStyle, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { colors, spacing } from '@/theme';
+import { Typography } from './Typography';
 
-/**
- * SearchBar bileşeni props interface'i
- */
 export interface SearchBarProps {
-  /** Arama metni */
   value: string;
-  /** Metin değiştiğinde çağrılır */
   onChangeText: (text: string) => void;
-  /** Placeholder metni */
   placeholder?: string;
-  /** Temizleme fonksiyonu */
   onClear?: () => void;
-  /** Focus olduğunda çağrılır */
   onFocus?: () => void;
-  /** Blur olduğunda çağrılır */
   onBlur?: () => void;
-  /** Otomatik focus */
   autoFocus?: boolean;
-  /** Ek stil */
   style?: ViewStyle;
-  /** Arama yapılıyor mu? (loading indicator için) */
   isSearching?: boolean;
+  minLength?: number;
 }
 
-/**
- * Arama Çubuğu Bileşeni
- * Performans optimizasyonu ile memo edilmiş
- */
 export const SearchBar: React.FC<SearchBarProps> = React.memo(({
   value,
   onChangeText,
@@ -69,71 +35,141 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
   autoFocus = false,
   style,
   isSearching = false,
+  minLength = 2,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const inputRef = useRef<TextInput>(null);
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+  
+  const showMinWarning = value.length > 0 && value.length < minLength;
 
-  const handleClear = React.useCallback(() => {
+  useEffect(() => {
+    if (isSearching) {
+      const animation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      animation.start();
+      return () => animation.stop();
+    } else {
+      pulseAnim.setValue(0);
+    }
+  }, [isSearching, pulseAnim]);
+
+  const handleClear = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onChangeText('');
     onClear?.();
+    inputRef.current?.focus();
   }, [onChangeText, onClear]);
 
-  const handleFocus = React.useCallback(() => {
+  const handleFocus = useCallback(() => {
     setIsFocused(true);
     onFocus?.();
   }, [onFocus]);
 
-  const handleBlur = React.useCallback(() => {
+  const handleBlur = useCallback(() => {
     setIsFocused(false);
     onBlur?.();
   }, [onBlur]);
 
-  const handleChangeText = React.useCallback((text: string) => {
-    onChangeText(text);
-  }, [onChangeText]);
-
   return (
-    <View style={[styles.container, isFocused && styles.containerFocused, style]}>
-      <Ionicons 
-        name="search" 
-        size={20} 
-        color={isFocused ? colors.primary[600] : colors.neutral[400]} 
-        style={styles.searchIcon} 
-      />
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={handleChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.text.tertiary}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        autoFocus={autoFocus}
-        returnKeyType="search"
-        autoCapitalize="none"
-        autoCorrect={false}
-        clearButtonMode="never"
-        textContentType="none"
-        keyboardType="default"
-      />
-      <View style={styles.rightIcons}>
-        {isSearching && (
-          <View style={styles.loadingContainer}>
-            <View style={styles.loadingDot} />
-          </View>
-        )}
-        {value.length > 0 && (
-          <TouchableOpacity 
-            onPress={handleClear} 
-            style={styles.clearButton}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="close-circle" size={20} color={colors.neutral[400]} />
-          </TouchableOpacity>
-        )}
+    <View style={style}>
+      <View style={[styles.container, isFocused && styles.containerFocused]}>
+        <Ionicons 
+          name="search" 
+          size={20} 
+          color={isFocused ? colors.primary[600] : colors.neutral[400]} 
+          style={styles.searchIcon} 
+        />
+        <TextInput
+          ref={inputRef}
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={colors.text.tertiary}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          autoFocus={autoFocus}
+          returnKeyType="search"
+          autoCapitalize="none"
+          autoCorrect={false}
+          clearButtonMode="never"
+          textContentType="none"
+          keyboardType="default"
+          accessible={true}
+          accessibilityLabel="Arama çubuğu"
+          accessibilityHint="İş ilanlarını aramak için metin girin"
+          accessibilityRole="search"
+        />
+        <View style={styles.rightIcons}>
+          {isSearching ? (
+            <Animated.View 
+              style={[
+                styles.loadingContainer,
+                {
+                  opacity: pulseAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 1],
+                  }),
+                  transform: [{
+                    scale: pulseAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1.2],
+                    }),
+                  }],
+                },
+              ]}
+            >
+              <View style={styles.loadingDot} />
+            </Animated.View>
+          ) : value.length > 0 ? (
+            <TouchableOpacity 
+              onPress={handleClear} 
+              style={styles.clearButton}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessible={true}
+              accessibilityLabel="Aramayı temizle"
+              accessibilityRole="button"
+            >
+              <Ionicons name="close-circle" size={20} color={colors.neutral[400]} />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </View>
+      {showMinWarning && (
+        <View style={styles.warningContainer}>
+          <Ionicons name="information-circle" size={14} color={colors.warning[600]} />
+          <Typography variant="caption" style={styles.warningText}>
+            En az {minLength} karakter girin
+          </Typography>
+        </View>
+      )}
     </View>
   );
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.value === nextProps.value &&
+    prevProps.placeholder === nextProps.placeholder &&
+    prevProps.autoFocus === nextProps.autoFocus &&
+    prevProps.isSearching === nextProps.isSearching &&
+    prevProps.minLength === nextProps.minLength &&
+    prevProps.style === nextProps.style
+  );
 });
+
+SearchBar.displayName = 'SearchBar';
 
 const styles = StyleSheet.create({
   container: {
@@ -189,5 +225,16 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: spacing.xs,
+  },
+  warningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.sm,
+  },
+  warningText: {
+    color: colors.warning[700],
+    fontSize: 12,
   },
 });

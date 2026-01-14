@@ -112,6 +112,21 @@ export type ProfileStackParamList = {
 };
 
 // ============================================================================
+// APPLICATIONS STACK - Başvurular akışı
+// ============================================================================
+
+/**
+ * Applications Stack - Başvurular listesi ve detay
+ * ApplicationsTab içinde nested
+ */
+export type ApplicationsStackParamList = {
+  /** Başvurular listesi */
+  ApplicationsList: undefined;
+  /** Başvuru detay sayfası */
+  ApplicationDetail: { applicationId: number };
+};
+
+// ============================================================================
 // SETTINGS STACK - Ayarlar akışı
 // ============================================================================
 
@@ -138,8 +153,8 @@ export type AppTabParamList = {
   ProfileTab: NavigatorScreenParams<ProfileStackParamList>;
   /** İş ilanları tab'ı */
   JobsTab: NavigatorScreenParams<JobsStackParamList>;
-  /** Başvurular ekranı */
-  Applications: undefined;
+  /** Başvurular tab'ı */
+  ApplicationsTab: NavigatorScreenParams<ApplicationsStackParamList>;
   /** Ayarlar tab'ı */
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
 };
