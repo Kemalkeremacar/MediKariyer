@@ -68,11 +68,15 @@ export const JobsScreen = () => {
   // Query params - useMemo ile normalize et, gereksiz re-render'ları önle
   const queryParams = useMemo(() => ({
     keyword: filter.shouldFetch ? filter.debouncedQuery : undefined,
-    specialty_id: filter.filters.specialtyId,
-    city_id: filter.filters.cityId,
+    specialty_id: filter.filters.specialtyIds && filter.filters.specialtyIds.length > 0 
+      ? filter.filters.specialtyIds.join(',') 
+      : undefined,
+    city_id: filter.filters.cityIds && filter.filters.cityIds.length > 0 
+      ? filter.filters.cityIds.join(',') 
+      : undefined,
     employment_type: filter.filters.employmentType,
     limit: PAGINATION.JOBS_PAGE_SIZE,
-  }), [filter.shouldFetch, filter.debouncedQuery, filter.filters.specialtyId, filter.filters.cityId, filter.filters.employmentType]);
+  }), [filter.shouldFetch, filter.debouncedQuery, filter.filters.specialtyIds, filter.filters.cityIds, filter.filters.employmentType]);
 
   // Query with filters - useJobs hook'u kullanılıyor
   const {
@@ -203,23 +207,23 @@ export const JobsScreen = () => {
       {/* Active Filters with Modern Chips */}
       {filter.hasActiveFilters && (
         <View style={styles.activeFiltersContainer}>
-          {filter.filters.specialtyId && (
+          {filter.filters.specialtyIds && filter.filters.specialtyIds.length > 0 && (
             <Chip
-              label="Branş Filtresi"
+              label={`Branş (${filter.filters.specialtyIds.length})`}
               variant="soft"
               color="primary"
               size="sm"
-              onDelete={() => filter.handleRemoveFilter('specialtyId')}
+              onDelete={() => filter.handleRemoveFilter('specialtyIds')}
             />
           )}
-          {filter.filters.cityId && (
+          {filter.filters.cityIds && filter.filters.cityIds.length > 0 && (
             <Chip
-              label="Şehir"
+              label={`Şehir (${filter.filters.cityIds.length})`}
               icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
               variant="soft"
               color="primary"
               size="sm"
-              onDelete={() => filter.handleRemoveFilter('cityId')}
+              onDelete={() => filter.handleRemoveFilter('cityIds')}
             />
           )}
           {filter.filters.employmentType && (

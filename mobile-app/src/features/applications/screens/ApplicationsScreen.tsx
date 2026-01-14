@@ -14,7 +14,7 @@
  * **NOT:** Web ile uyumlu - sadece durum filtresi var, arama yok
  */
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   RefreshControl,
@@ -24,6 +24,8 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { colors, spacing } from '@/theme';
@@ -53,6 +55,8 @@ const STATUS_DISPLAY: Record<number, string> = {
   5: 'Geri Çekildi',
 };
 
+const SCREEN_HEIGHT = Dimensions.get('window').height;
+
 export const ApplicationsScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<ApplicationsStackParamList>>();
   
@@ -62,6 +66,49 @@ export const ApplicationsScreen = () => {
   // Filter state - sadece durum filtresi
   const [filters, setFilters] = useState<ApplicationFilters>({});
   const [showFilterModal, setShowFilterModal] = useState(false);
+
+  // Animasyon değerleri
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const sheetTranslateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+
+  // Açılış animasyonu
+  useEffect(() => {
+    if (showFilterModal) {
+      // Değerleri sıfırla ve animasyonu başlat
+      overlayOpacity.setValue(0);
+      sheetTranslateY.setValue(SCREEN_HEIGHT);
+      
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(sheetTranslateY, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showFilterModal, overlayOpacity, sheetTranslateY]);
+
+  const closeModal = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetTranslateY, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowFilterModal(false);
+    });
+  }, [overlayOpacity, sheetTranslateY]);
 
   // Query filters - sadece status_id
   const queryFilters = useMemo(() => ({
@@ -90,13 +137,39 @@ export const ApplicationsScreen = () => {
 
   const handleApplyFilters = useCallback((newFilters: ApplicationFilters) => {
     setFilters(newFilters);
-    setShowFilterModal(false);
-  }, []);
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetTranslateY, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowFilterModal(false);
+    });
+  }, [overlayOpacity, sheetTranslateY]);
 
   const handleResetFilters = useCallback(() => {
     setFilters({});
-    setShowFilterModal(false);
-  }, []);
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetTranslateY, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setShowFilterModal(false);
+    });
+  }, [overlayOpacity, sheetTranslateY]);
 
   // Aktif filtre var mı?
   const hasActiveFilters = useMemo(() => {
@@ -237,18 +310,20 @@ export const ApplicationsScreen = () => {
       {/* Simple Status Filter Modal */}
       <Modal
         visible={showFilterModal}
-        animationType="slide"
+        animationType="none"
         transparent
-        onRequestClose={() => setShowFilterModal(false)}
+        onRequestClose={closeModal}
       >
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowFilterModal(false)} />
-          <View style={styles.modalContent}>
+        <View style={styles.modalContainer}>
+          <Animated.View style={[styles.modalBackdrop, { opacity: overlayOpacity }]}>
+            <Pressable style={StyleSheet.absoluteFill} onPress={closeModal} />
+          </Animated.View>
+          <Animated.View style={[styles.modalContent, { transform: [{ translateY: sheetTranslateY }] }]}>
             <View style={styles.modalHeader}>
               <Typography variant="h3" style={styles.modalTitle}>
                 Durum Filtresi
               </Typography>
-              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+              <TouchableOpacity onPress={closeModal}>
                 <Ionicons name="close" size={24} color={colors.text.secondary} />
               </TouchableOpacity>
             </View>
@@ -295,7 +370,7 @@ export const ApplicationsScreen = () => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
     </View>
@@ -406,7 +481,7 @@ const styles = StyleSheet.create({
     color: colors.background.primary,
     fontWeight: '600',
   },
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
   },

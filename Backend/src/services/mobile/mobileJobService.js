@@ -75,18 +75,24 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
 
   const baseQuery = buildJobsBaseQuery();
 
-  // ID bazlı filtreler (web ile uyumlu)
-  if (filters.city_id) {
-    const cityId = typeof filters.city_id === 'number' ? filters.city_id : parseInt(filters.city_id);
-    if (!isNaN(cityId)) {
-      baseQuery.andWhere('j.city_id', cityId);
+  // ID bazlı filtreler (web ile uyumlu + çoklu seçim desteği)
+  if (filters.city_id && String(filters.city_id).trim() !== '') {
+    // Çoklu seçim desteği: "1,2,3" formatı veya tek değer
+    const cityIds = String(filters.city_id).split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    if (cityIds.length === 1) {
+      baseQuery.andWhere('j.city_id', cityIds[0]);
+    } else if (cityIds.length > 1) {
+      baseQuery.whereIn('j.city_id', cityIds);
     }
   }
 
-  if (filters.specialty_id) {
-    const specId = typeof filters.specialty_id === 'number' ? filters.specialty_id : parseInt(filters.specialty_id);
-    if (!isNaN(specId)) {
-      baseQuery.andWhere('j.specialty_id', specId);
+  if (filters.specialty_id && String(filters.specialty_id).trim() !== '') {
+    // Çoklu seçim desteği: "1,2,3" formatı veya tek değer
+    const specIds = String(filters.specialty_id).split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    if (specIds.length === 1) {
+      baseQuery.andWhere('j.specialty_id', specIds[0]);
+    } else if (specIds.length > 1) {
+      baseQuery.whereIn('j.specialty_id', specIds);
     }
   }
 

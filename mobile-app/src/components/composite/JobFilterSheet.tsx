@@ -12,7 +12,7 @@
  * - Modern UI/UX
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -22,6 +22,8 @@ import {
   Dimensions,
   Pressable,
   ActivityIndicator,
+  TextStyle,
+  Animated,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useQuery } from '@tanstack/react-query';
@@ -36,8 +38,8 @@ import { Ionicons } from '@expo/vector-icons';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export interface JobFilters {
-  specialtyId?: number;
-  cityId?: number;
+  specialtyIds?: number[];  // Çoklu seçim için array
+  cityIds?: number[];  // Çoklu seçim için array
   employmentType?: string;
 }
 
@@ -65,6 +67,10 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
 }) => {
   const [draftFilters, setDraftFilters] = useState<JobFilters>(filters);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  
+  // Animasyon değerleri
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const sheetTranslateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
   const { data: specialties = [], isLoading: isLoadingSpecialties } = useQuery({
     queryKey: queryKeys.lookup.specialties(),
@@ -80,58 +86,145 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
     gcTime: 1000 * 60 * 60,
   });
 
+  // Açılış animasyonu
   useEffect(() => {
     if (visible) {
       setDraftFilters(filters);
+      // Değerleri sıfırla ve animasyonu başlat
+      overlayOpacity.setValue(0);
+      sheetTranslateY.setValue(SCREEN_HEIGHT);
+      
+      Animated.parallel([
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(sheetTranslateY, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
-  }, [visible, filters]);
+  }, [visible, filters, overlayOpacity, sheetTranslateY]);
 
   const handleApply = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     onApply(draftFilters);
-    onClose();
-  }, [draftFilters, onApply, onClose]);
+    // Animasyonlu kapanış
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetTranslateY, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  }, [draftFilters, onApply, onClose, overlayOpacity, sheetTranslateY]);
 
   const handleReset = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setDraftFilters({});
     onReset();
-    onClose();
-  }, [onReset, onClose]);
+    // Animasyonlu kapanış
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetTranslateY, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  }, [onReset, onClose, overlayOpacity, sheetTranslateY]);
 
   const toggleSection = useCallback((section: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setExpandedSection((prev) => (prev === section ? null : section));
   }, []);
 
-  const selectedSpecialtyName = useMemo(() => {
-    if (!draftFilters.specialtyId) return null;
-    return specialties.find((s) => s.id === draftFilters.specialtyId)?.name;
-  }, [draftFilters.specialtyId, specialties]);
+  const selectedSpecialtyNames = useMemo(() => {
+    if (!draftFilters.specialtyIds || draftFilters.specialtyIds.length === 0) return null;
+    const names = specialties
+      .filter((s) => draftFilters.specialtyIds?.includes(s.id))
+      .map((s) => s.name);
+    return names.length > 0 ? names.join(', ') : null;
+  }, [draftFilters.specialtyIds, specialties]);
 
-  const selectedCityName = useMemo(() => {
-    if (!draftFilters.cityId) return null;
-    return cities.find((c) => c.id === draftFilters.cityId)?.name;
-  }, [draftFilters.cityId, cities]);
+  const selectedCityNames = useMemo(() => {
+    if (!draftFilters.cityIds || draftFilters.cityIds.length === 0) return null;
+    const names = cities
+      .filter((c) => draftFilters.cityIds?.includes(c.id))
+      .map((c) => c.name);
+    return names.length > 0 ? names.join(', ') : null;
+  }, [draftFilters.cityIds, cities]);
 
   const activeFilterCount = useMemo(() => {
-    return [draftFilters.specialtyId, draftFilters.cityId, draftFilters.employmentType].filter(
-      Boolean
-    ).length;
+    let count = 0;
+    if (draftFilters.specialtyIds && draftFilters.specialtyIds.length > 0) {
+      count += draftFilters.specialtyIds.length;
+    }
+    if (draftFilters.cityIds && draftFilters.cityIds.length > 0) {
+      count += draftFilters.cityIds.length;
+    }
+    if (draftFilters.employmentType) {
+      count += 1;
+    }
+    return count;
   }, [draftFilters]);
+
+  const handleClose = useCallback(() => {
+    // Kapanış animasyonu
+    Animated.parallel([
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(sheetTranslateY, {
+        toValue: SCREEN_HEIGHT,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onClose();
+    });
+  }, [overlayOpacity, sheetTranslateY, onClose]);
 
   if (!visible) return null;
 
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="none"
       transparent
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+      <View style={styles.container}>
+        <Animated.View 
+          style={[styles.overlay, { opacity: overlayOpacity }]}
+        >
+          <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+        </Animated.View>
+        <Animated.View 
+          style={[
+            styles.sheet, 
+            { transform: [{ translateY: sheetTranslateY }] }
+          ]}
+        >
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerLeft}>
@@ -149,7 +242,7 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                 )}
               </View>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
@@ -164,12 +257,12 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
             <FilterSection
               title="Branş"
               icon={<Ionicons name="briefcase" size={20} color={colors.primary[600]} />}
-              selectedValue={selectedSpecialtyName}
+              selectedValue={selectedSpecialtyNames}
               expanded={expandedSection === 'specialty'}
               onToggle={() => toggleSection('specialty')}
               onClear={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setDraftFilters((prev) => ({ ...prev, specialtyId: undefined }));
+                setDraftFilters((prev) => ({ ...prev, specialtyIds: undefined }));
               }}
             >
               {isLoadingSpecialties ? (
@@ -189,35 +282,41 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                   nestedScrollEnabled
                   showsVerticalScrollIndicator={true}
                 >
-                  {specialties.map((specialty) => (
-                    <TouchableOpacity
-                      key={specialty.id}
-                      style={[
-                        styles.optionItem,
-                        draftFilters.specialtyId === specialty.id && styles.optionItemSelected,
-                      ]}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setDraftFilters((prev) => ({
-                          ...prev,
-                          specialtyId: prev.specialtyId === specialty.id ? undefined : specialty.id,
-                        }));
-                      }}
-                    >
-                      <Typography
-                        variant="body"
+                  {specialties.map((specialty) => {
+                    const isSelected = draftFilters.specialtyIds?.includes(specialty.id) ?? false;
+                    return (
+                      <TouchableOpacity
+                        key={specialty.id}
                         style={[
-                          styles.optionText,
-                          draftFilters.specialtyId === specialty.id && styles.optionTextSelected,
+                          styles.optionItem,
+                          isSelected ? styles.optionItemSelected : undefined,
                         ]}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setDraftFilters((prev) => {
+                            const currentIds = prev.specialtyIds || [];
+                            const newIds = isSelected
+                              ? currentIds.filter((id) => id !== specialty.id)
+                              : [...currentIds, specialty.id];
+                            return {
+                              ...prev,
+                              specialtyIds: newIds.length > 0 ? newIds : undefined,
+                            };
+                          });
+                        }}
                       >
-                        {specialty.name}
-                      </Typography>
-                      {draftFilters.specialtyId === specialty.id && (
-                        <Ionicons name="checkmark-circle" size={20} color={colors.primary[600]} />
-                      )}
-                    </TouchableOpacity>
-                  ))}
+                        <Typography
+                          variant="body"
+                          style={StyleSheet.flatten(isSelected ? [styles.optionText, styles.optionTextSelected] : [styles.optionText]) as TextStyle}
+                        >
+                          {specialty.name}
+                        </Typography>
+                        {isSelected && (
+                          <Ionicons name="checkmark-circle" size={20} color={colors.primary[600]} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </ScrollView>
               )}
             </FilterSection>
@@ -228,12 +327,12 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
             <FilterSection
               title="Şehir"
               icon={<Ionicons name="location" size={20} color={colors.primary[600]} />}
-              selectedValue={selectedCityName}
+              selectedValue={selectedCityNames}
               expanded={expandedSection === 'city'}
               onToggle={() => toggleSection('city')}
               onClear={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setDraftFilters((prev) => ({ ...prev, cityId: undefined }));
+                setDraftFilters((prev) => ({ ...prev, cityIds: undefined }));
               }}
             >
               {isLoadingCities ? (
@@ -253,35 +352,41 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
                   nestedScrollEnabled
                   showsVerticalScrollIndicator={true}
                 >
-                  {cities.map((city) => (
-                    <TouchableOpacity
-                      key={city.id}
-                      style={[
-                        styles.optionItem,
-                        draftFilters.cityId === city.id && styles.optionItemSelected,
-                      ]}
-                      onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        setDraftFilters((prev) => ({
-                          ...prev,
-                          cityId: prev.cityId === city.id ? undefined : city.id,
-                        }));
-                      }}
-                    >
-                      <Typography
-                        variant="body"
+                  {cities.map((city) => {
+                    const isSelected = draftFilters.cityIds?.includes(city.id) ?? false;
+                    return (
+                      <TouchableOpacity
+                        key={city.id}
                         style={[
-                          styles.optionText,
-                          draftFilters.cityId === city.id && styles.optionTextSelected,
+                          styles.optionItem,
+                          isSelected ? styles.optionItemSelected : undefined,
                         ]}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setDraftFilters((prev) => {
+                            const currentIds = prev.cityIds || [];
+                            const newIds = isSelected
+                              ? currentIds.filter((id) => id !== city.id)
+                              : [...currentIds, city.id];
+                            return {
+                              ...prev,
+                              cityIds: newIds.length > 0 ? newIds : undefined,
+                            };
+                          });
+                        }}
                       >
-                        {city.name}
-                      </Typography>
-                      {draftFilters.cityId === city.id && (
-                        <Ionicons name="checkmark-circle" size={20} color={colors.primary[600]} />
-                      )}
-                    </TouchableOpacity>
-                  ))}
+                        <Typography
+                          variant="body"
+                          style={StyleSheet.flatten(isSelected ? [styles.optionText, styles.optionTextSelected] : [styles.optionText]) as TextStyle}
+                        >
+                          {city.name}
+                        </Typography>
+                        {isSelected && (
+                          <Ionicons name="checkmark-circle" size={20} color={colors.primary[600]} />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </ScrollView>
               )}
             </FilterSection>
@@ -301,38 +406,38 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
               }}
             >
               <View style={styles.chipContainer}>
-                {WORK_TYPES.map((type) => (
-                  <TouchableOpacity
-                    key={type.value}
-                    style={[
-                      styles.chip,
-                      draftFilters.employmentType === type.value && styles.chipSelected,
-                    ]}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setDraftFilters((prev) => ({
-                        ...prev,
-                        employmentType: prev.employmentType === type.value ? undefined : type.value,
-                      }));
-                    }}
-                  >
-                    <Ionicons
-                      name={type.icon}
-                      size={16}
-                      color={draftFilters.employmentType === type.value ? colors.primary[600] : colors.text.secondary}
-                      style={styles.chipIcon}
-                    />
-                    <Typography
-                      variant="body"
+                {WORK_TYPES.map((type) => {
+                  const isSelected = draftFilters.employmentType === type.value;
+                  return (
+                    <TouchableOpacity
+                      key={type.value}
                       style={[
-                        styles.chipText,
-                        draftFilters.employmentType === type.value && styles.chipTextSelected,
+                        styles.chip,
+                        isSelected ? styles.chipSelected : undefined,
                       ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setDraftFilters((prev) => ({
+                          ...prev,
+                          employmentType: prev.employmentType === type.value ? undefined : type.value,
+                        }));
+                      }}
                     >
-                      {type.label}
-                    </Typography>
-                  </TouchableOpacity>
-                ))}
+                      <Ionicons
+                        name={type.icon}
+                        size={16}
+                        color={isSelected ? colors.primary[600] : colors.text.secondary}
+                        style={styles.chipIcon}
+                      />
+                      <Typography
+                        variant="body"
+                        style={StyleSheet.flatten(isSelected ? [styles.chipText, styles.chipTextSelected] : [styles.chipText]) as TextStyle}
+                      >
+                        {type.label}
+                      </Typography>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </FilterSection>
           </ScrollView>
@@ -353,8 +458,8 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
               style={styles.footerButton}
             />
           </View>
-        </Pressable>
-      </Pressable>
+        </Animated.View>
+      </View>
     </Modal>
   );
 };
@@ -419,16 +524,20 @@ const FilterSection: React.FC<FilterSectionProps> = ({
 );
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   sheet: {
     backgroundColor: colors.background.primary,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.9,
+    minHeight: SCREEN_HEIGHT * 0.75,
+    maxHeight: SCREEN_HEIGHT * 0.92,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -473,6 +582,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    minHeight: SCREEN_HEIGHT * 0.5,
   },
   contentContainer: {
     paddingHorizontal: spacing.lg,

@@ -97,19 +97,23 @@ const applySearchConditions = (baseQuery, keyword) => {
  * @returns {Object} Query with filter conditions
  */
 const applyFilterConditions = (baseQuery, filters = {}) => {
-  // Şehir filtresi
-  if (filters.city_id) {
-    const cityId = parseInt(filters.city_id);
-    if (!isNaN(cityId)) {
-      baseQuery.andWhere('j.city_id', cityId);
+  // Şehir filtresi (çoklu seçim desteği)
+  if (filters.city_id && String(filters.city_id).trim() !== '') {
+    const cityIds = String(filters.city_id).split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    if (cityIds.length === 1) {
+      baseQuery.andWhere('j.city_id', cityIds[0]);
+    } else if (cityIds.length > 1) {
+      baseQuery.whereIn('j.city_id', cityIds);
     }
   }
 
-  // Branş filtresi
-  if (filters.specialty_id) {
-    const specId = parseInt(filters.specialty_id);
-    if (!isNaN(specId)) {
-      baseQuery.andWhere('j.specialty_id', specId);
+  // Branş filtresi (çoklu seçim desteği)
+  if (filters.specialty_id && String(filters.specialty_id).trim() !== '') {
+    const specIds = String(filters.specialty_id).split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    if (specIds.length === 1) {
+      baseQuery.andWhere('j.specialty_id', specIds[0]);
+    } else if (specIds.length > 1) {
+      baseQuery.whereIn('j.specialty_id', specIds);
     }
   }
 

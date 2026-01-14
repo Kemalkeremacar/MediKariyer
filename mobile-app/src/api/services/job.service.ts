@@ -24,8 +24,8 @@ export interface JobListParams {
   limit?: number;
   keyword?: string;
   search?: string;
-  city_id?: number;
-  specialty_id?: number;
+  city_id?: number | string;  // Çoklu seçim için "1,2,3" formatı desteklenir
+  specialty_id?: number | string;  // Çoklu seçim için "1,2,3" formatı desteklenir
   subspecialty_id?: number;
   hospital_id?: number;
   employment_type?: string;

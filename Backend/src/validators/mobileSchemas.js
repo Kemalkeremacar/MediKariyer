@@ -426,6 +426,7 @@ const paginationQuerySchema = Joi.object({
  * Mobile Jobs Query Schema
  * @description Jobs listesi için query parametreleri validasyonu
  * Gelişmiş arama ve filtreleme desteği
+ * Çoklu seçim desteği: specialty_id ve city_id "1,2,3" formatında string olabilir
  */
 const mobileJobsQuerySchema = paginationQuerySchema.keys({
   // Arama parametreleri
@@ -436,21 +437,23 @@ const mobileJobsQuerySchema = paginationQuerySchema.keys({
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
   }),
   
-  // Filtre parametreleri
-  specialty_id: Joi.number().integer().positive().optional().messages({
-    'number.base': 'Branş ID sayı olmalıdır',
-    'number.integer': 'Branş ID tam sayı olmalıdır',
-    'number.positive': 'Branş ID pozitif bir sayı olmalıdır'
+  // Filtre parametreleri - Çoklu seçim desteği (tek sayı veya "1,2,3" formatı)
+  specialty_id: Joi.alternatives().try(
+    Joi.number().integer().positive(),
+    Joi.string().pattern(/^(\d+)(,\d+)*$/)
+  ).optional().messages({
+    'alternatives.match': 'Branş ID sayı veya virgülle ayrılmış sayılar olmalıdır (örn: 1 veya 1,2,3)'
   }),
   subspecialty_id: Joi.number().integer().positive().optional().messages({
     'number.base': 'Alt branş ID sayı olmalıdır',
     'number.integer': 'Alt branş ID tam sayı olmalıdır',
     'number.positive': 'Alt branş ID pozitif bir sayı olmalıdır'
   }),
-  city_id: Joi.number().integer().positive().optional().messages({
-    'number.base': 'Şehir ID sayı olmalıdır',
-    'number.integer': 'Şehir ID tam sayı olmalıdır',
-    'number.positive': 'Şehir ID pozitif bir sayı olmalıdır'
+  city_id: Joi.alternatives().try(
+    Joi.number().integer().positive(),
+    Joi.string().pattern(/^(\d+)(,\d+)*$/)
+  ).optional().messages({
+    'alternatives.match': 'Şehir ID sayı veya virgülle ayrılmış sayılar olmalıdır (örn: 1 veya 1,2,3)'
   }),
   hospital_id: Joi.number().integer().positive().optional().messages({
     'number.base': 'Hastane ID sayı olmalıdır',
