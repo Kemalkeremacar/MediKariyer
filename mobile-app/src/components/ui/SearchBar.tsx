@@ -40,8 +40,6 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const pulseAnim = useRef(new Animated.Value(0)).current;
-  
-  const showMinWarning = value.length > 0 && value.length < minLength;
 
   useEffect(() => {
     if (isSearching) {

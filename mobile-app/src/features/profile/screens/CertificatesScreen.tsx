@@ -66,48 +66,52 @@ export const CertificatesScreen = () => {
 
   return (
     <Screen scrollable={false} style={styles.screen}>
-      {/* Modern Gradient Header with Back Button */}
-      <GradientHeader
-        title="Sertifikalar ve Kurslar"
-        subtitle={`${certificates.length} sertifika`}
-        icon={<Ionicons name="ribbon" size={28} color="#FFFFFF" />}
-        variant="profile"
-        iconColorPreset="orange"
-        showBackButton={true}
-        onBackPress={() => navigation.goBack()}
-      />
+      {/* Header - Sabit (FlatList dışında, unmount olmaz) */}
+      <View style={styles.headerSection}>
+        <GradientHeader
+          title="Sertifikalar ve Kurslar"
+          subtitle="Sertifikalarınızı yönetin"
+          icon={<Ionicons name="ribbon" size={28} color="#FFFFFF" />}
+          variant="profile"
+          iconColorPreset="orange"
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+        />
+      </View>
 
-      {/* Certificates List */}
-      <FlatList
-        data={certificates}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <CertificateCard
-            name={item.certificate_name || 'Sertifika'}
-            issuer={item.institution || 'Kurum'}
-            issueDate={item.certificate_year?.toString() || ''}
-            onEdit={() => handleEditCertificate(item)}
-            onDelete={() => handleDeleteCertificate(item.id)}
-          />
-        )}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="ribbon" size={48} color={THEME.emptyIconColor} />
+      {/* Liste - flex:1 container içinde (KRİTİK!) */}
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={certificates}
+          keyExtractor={(item) => `certificate-${item.id}`}
+          renderItem={({ item }) => (
+            <CertificateCard
+              name={item.certificate_name || 'Sertifika'}
+              issuer={item.institution || 'Kurum'}
+              issueDate={item.certificate_year?.toString() || ''}
+              onEdit={() => handleEditCertificate(item)}
+              onDelete={() => handleDeleteCertificate(item.id)}
+            />
+          )}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="ribbon" size={48} color={THEME.emptyIconColor} />
+              </View>
+              <Typography variant="h3" style={styles.emptyTitle}>
+                Henüz sertifika eklenmemiş
+              </Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                Sertifikalarınızı ekleyerek profilinizi güçlendirin
+              </Typography>
             </View>
-            <Typography variant="h3" style={styles.emptyTitle}>
-              Henüz sertifika eklenmemiş
-            </Typography>
-            <Typography variant="body" style={styles.emptyText}>
-              Sertifikalarınızı ekleyerek profilinizi güçlendirin
-            </Typography>
-          </View>
-        }
-      />
+          }
+        />
+      </View>
 
       {/* FAB */}
       <FAB
@@ -121,6 +125,9 @@ export const CertificatesScreen = () => {
 
 const styles = StyleSheet.create({
   screen: {
+    backgroundColor: THEME.background,
+  },
+  headerSection: {
     backgroundColor: THEME.background,
   },
   listContent: {

@@ -25,7 +25,9 @@ import {
   View,
   ActivityIndicator,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors, spacing } from '@/theme';
@@ -100,15 +102,33 @@ export const ApplicationDetailScreen = () => {
   if (!applicationId) {
     return (
       <Screen scrollable={false}>
-        <GradientHeader
-          title="Başvuru Detayı"
-          subtitle="Hata"
-          icon={<Ionicons name="document-text" size={28} color="#FFFFFF" />}
-          variant="primary"
-          iconColorPreset="blue"
-          showBackButton={true}
-          onBackPress={() => navigation.goBack()}
-        />
+        {/* Header - Gradient */}
+        <LinearGradient
+          colors={['#1E40AF', '#3B82F6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientHeader}
+        >
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="chevron-back" size={22} color="#ffffff" />
+            </TouchableOpacity>
+            
+            <View style={styles.headerTitleContainer}>
+              <Typography variant="h3" style={styles.headerTitle} numberOfLines={1}>
+                Başvuru Detayı
+              </Typography>
+              <Typography variant="caption" style={styles.headerSubtitle} numberOfLines={1}>
+                Hata
+              </Typography>
+            </View>
+          </View>
+        </LinearGradient>
+
         <View style={styles.errorContainer}>
           <View style={styles.errorIcon}>
             <Ionicons name="alert-circle" size={48} color={colors.error[600]} />
@@ -130,17 +150,60 @@ export const ApplicationDetailScreen = () => {
     );
   }
 
+  // Status badge renkleri (ApplicationCard ile uyumlu)
+  const getStatusStyle = (statusId?: number) => {
+    switch (statusId) {
+      case 1: // Başvuruldu
+        return { icon: 'time' as const, color: '#F59E0B' };
+      case 2: // İnceleniyor
+        return { icon: 'eye' as const, color: '#3B82F6' };
+      case 3: // Kabul Edildi
+        return { icon: 'checkmark-circle' as const, color: '#10B981' };
+      case 4: // Reddedildi
+        return { icon: 'close-circle' as const, color: '#EF4444' };
+      case 5: // Geri Çekildi
+        return { icon: 'arrow-undo' as const, color: '#6B7280' };
+      default:
+        return { icon: 'help-circle' as const, color: '#9CA3AF' };
+    }
+  };
+
+  const statusStyle = getStatusStyle(data?.status_id);
+
   return (
     <Screen scrollable={false}>
-      <GradientHeader
-        title="Başvuru Detayı"
-        subtitle={data?.job_title || 'Başvuru bilgileri'}
-        icon={<Ionicons name="document-text" size={28} color="#FFFFFF" />}
-        variant="primary"
-        iconColorPreset="blue"
-        showBackButton={true}
-        onBackPress={() => navigation.goBack()}
-      />
+      {/* Header - Gradient (Sabit) */}
+      <LinearGradient
+        colors={['#1E40AF', '#3B82F6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientHeader}
+      >
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={22} color="#ffffff" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerTitleContainer}>
+            <Typography variant="h3" style={styles.headerTitle} numberOfLines={1}>
+              {data?.job_title || 'Başvuru Detayı'}
+            </Typography>
+            <Typography variant="caption" style={styles.headerSubtitle} numberOfLines={1}>
+              {data?.hospital_name || 'Yükleniyor...'}
+            </Typography>
+          </View>
+
+          {data?.status_id && (
+            <View style={styles.statusDot}>
+              <Ionicons name={statusStyle.icon} size={20} color={statusStyle.color} />
+            </View>
+          )}
+        </View>
+      </LinearGradient>
 
       {isLoading && (
         <View style={styles.loader}>
@@ -259,9 +322,14 @@ export const ApplicationDetailScreen = () => {
             <View style={styles.jobInfoGrid}>
               {data.job_title && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    İlan Başlığı
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#EEF2FF' }]}>
+                      <Ionicons name="briefcase" size={16} color="#6366F1" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      İlan Başlığı
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {data.job_title}
                   </Typography>
@@ -269,9 +337,14 @@ export const ApplicationDetailScreen = () => {
               )}
               {data.hospital_name && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Hastane
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#F0FDFA' }]}>
+                      <Ionicons name="business" size={16} color="#14B8A6" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Hastane
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {data.hospital_name}
                   </Typography>
@@ -279,9 +352,14 @@ export const ApplicationDetailScreen = () => {
               )}
               {data.specialty_name && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Uzmanlık Alanı
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#EEF2FF' }]}>
+                      <Ionicons name="medical" size={16} color="#6366F1" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Uzmanlık Alanı
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {data.specialty_name}
                   </Typography>
@@ -289,9 +367,14 @@ export const ApplicationDetailScreen = () => {
               )}
               {data.subspecialty_name && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Yan Dal
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#F0FDFA' }]}>
+                      <Ionicons name="git-branch" size={16} color="#14B8A6" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Yan Dal
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {data.subspecialty_name}
                   </Typography>
@@ -299,9 +382,14 @@ export const ApplicationDetailScreen = () => {
               )}
               {data.employment_type && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Çalışma Türü
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#FEF3C7' }]}>
+                      <Ionicons name="time" size={16} color="#F59E0B" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Çalışma Türü
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {data.employment_type}
                   </Typography>
@@ -310,9 +398,14 @@ export const ApplicationDetailScreen = () => {
               {data.min_experience_years !== null &&
                 data.min_experience_years !== undefined && (
                   <View style={styles.jobInfoItem}>
-                    <Typography variant="caption" style={styles.jobInfoLabel}>
-                      Min. Deneyim
-                    </Typography>
+                    <View style={styles.jobInfoIconRow}>
+                      <View style={[styles.jobInfoIcon, { backgroundColor: '#DBEAFE' }]}>
+                        <Ionicons name="star" size={16} color="#3B82F6" />
+                      </View>
+                      <Typography variant="caption" style={styles.jobInfoLabel}>
+                        Min. Deneyim
+                      </Typography>
+                    </View>
                     <Typography variant="body" style={styles.jobInfoValue}>
                       {data.min_experience_years} yıl
                     </Typography>
@@ -320,9 +413,14 @@ export const ApplicationDetailScreen = () => {
                 )}
               {data.city_name && (
                 <View style={[styles.jobInfoItem, styles.jobInfoItemLast]}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Şehir
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#FEE2E2' }]}>
+                      <Ionicons name="location" size={16} color="#EF4444" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Şehir
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {data.city_name}
                   </Typography>
@@ -410,6 +508,47 @@ export const ApplicationDetailScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  // Gradient Header Styles (JobDetailScreen ile aynı)
+  gradientHeader: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  backButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleContainer: {
+    flex: 1,
+    gap: 2,
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 17,
+  },
+  headerSubtitle: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 13,
+  },
+  statusDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   scrollView: {
     flex: 1,
   },
@@ -494,11 +633,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   jobInfoGrid: {
-    gap: spacing.lg,
+    gap: spacing.md,
     marginTop: spacing.md,
   },
   jobInfoItem: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.light,
@@ -507,11 +646,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     paddingBottom: 0,
   },
+  jobInfoIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  jobInfoIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   jobInfoLabel: {
     color: colors.text.secondary,
     fontSize: 12,
     fontWeight: '500',
-    marginBottom: spacing.xs,
   },
   jobInfoValue: {
     color: colors.text.primary,

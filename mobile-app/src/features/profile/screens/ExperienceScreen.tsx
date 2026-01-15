@@ -68,52 +68,56 @@ export const ExperienceScreen = () => {
 
   return (
     <Screen scrollable={false} style={styles.screen}>
-      {/* Modern Gradient Header with Back Button */}
-      <GradientHeader
-        title="İş Deneyimi"
-        subtitle={`${experiences.length} iş deneyimi`}
-        icon={<Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />}
-        variant="profile"
-        iconColorPreset="teal"
-        showBackButton={true}
-        onBackPress={() => navigation.goBack()}
-      />
+      {/* Header - Sabit (FlatList dışında, unmount olmaz) */}
+      <View style={styles.headerSection}>
+        <GradientHeader
+          title="İş Deneyimi"
+          subtitle="İş deneyimlerinizi yönetin"
+          icon={<Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />}
+          variant="profile"
+          iconColorPreset="teal"
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+        />
+      </View>
 
-      {/* Experience List */}
-      <FlatList
-        data={experiences}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ExperienceCard
-            title={item.role_title || 'Pozisyon'}
-            company={item.organization || 'Kurum'}
-            location={item.specialty_name || ''}
-            startDate={formatYear(item.start_date)}
-            endDate={item.is_current ? '' : formatYear(item.end_date)}
-            current={item.is_current}
-            description={item.description || undefined}
-            onEdit={() => handleEditExperience(item)}
-            onDelete={() => handleDeleteExperience(item.id)}
-          />
-        )}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="briefcase" size={48} color={THEME.emptyIconColor} />
+      {/* Liste - flex:1 container içinde (KRİTİK!) */}
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={experiences}
+          keyExtractor={(item) => `experience-${item.id}`}
+          renderItem={({ item }) => (
+            <ExperienceCard
+              title={item.role_title || 'Pozisyon'}
+              company={item.organization || 'Kurum'}
+              location={item.specialty_name || ''}
+              startDate={formatYear(item.start_date)}
+              endDate={item.is_current ? '' : formatYear(item.end_date)}
+              current={item.is_current}
+              description={item.description || undefined}
+              onEdit={() => handleEditExperience(item)}
+              onDelete={() => handleDeleteExperience(item.id)}
+            />
+          )}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="briefcase" size={48} color={THEME.emptyIconColor} />
+              </View>
+              <Typography variant="h3" style={styles.emptyTitle}>
+                Henüz deneyim eklenmemiş
+              </Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                İş deneyimlerinizi ekleyerek profilinizi güçlendirin
+              </Typography>
             </View>
-            <Typography variant="h3" style={styles.emptyTitle}>
-              Henüz deneyim eklenmemiş
-            </Typography>
-            <Typography variant="body" style={styles.emptyText}>
-              İş deneyimlerinizi ekleyerek profilinizi güçlendirin
-            </Typography>
-          </View>
-        }
-      />
+          }
+        />
+      </View>
 
       {/* FAB */}
       <FAB
@@ -127,6 +131,9 @@ export const ExperienceScreen = () => {
 
 const styles = StyleSheet.create({
   screen: {
+    backgroundColor: THEME.background,
+  },
+  headerSection: {
     backgroundColor: THEME.background,
   },
   listContent: {

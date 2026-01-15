@@ -259,19 +259,22 @@ export const SettingsScreen = ({ navigation }: Props) => {
 
   return (
     <Screen scrollable={false}>
+      {/* Header - Sabit (ScrollView dışında) */}
+      <GradientHeader
+        title="Ayarlar"
+        subtitle="Tercihler ve hesap ayarları"
+        icon={<Ionicons name="settings-sharp" size={28} color="#FFFFFF" />}
+        variant="primary"
+        iconColorPreset="blue"
+      />
+
+      {/* Content - ScrollView */}
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
-        <GradientHeader
-          title="Ayarlar"
-          subtitle="Tercihler ve hesap ayarları"
-          icon={<Ionicons name="settings-sharp" size={28} color="#FFFFFF" />}
-          variant="primary"
-          iconColorPreset="blue"
-        />
 
         {/* Güvenlik */}
         <View style={styles.section}>

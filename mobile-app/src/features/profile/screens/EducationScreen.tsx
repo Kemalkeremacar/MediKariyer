@@ -66,51 +66,55 @@ export const EducationScreen = () => {
 
   return (
     <Screen scrollable={false} style={styles.screen}>
-      {/* Modern Gradient Header with Back Button */}
-      <GradientHeader
-        title="Eğitim Bilgileri"
-        subtitle={`${educations.length} eğitim kaydı`}
-        icon={<Ionicons name="school-sharp" size={28} color="#FFFFFF" />}
-        variant="profile"
-        iconColorPreset="green"
-        showBackButton={true}
-        onBackPress={() => navigation.goBack()}
-      />
+      {/* Header - Sabit (FlatList dışında, unmount olmaz) */}
+      <View style={styles.headerSection}>
+        <GradientHeader
+          title="Eğitim Bilgileri"
+          subtitle="Eğitim bilgilerinizi yönetin"
+          icon={<Ionicons name="school-sharp" size={28} color="#FFFFFF" />}
+          variant="profile"
+          iconColorPreset="green"
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+        />
+      </View>
 
-      {/* Education List */}
-      <FlatList
-        data={educations}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <EducationCard
-            degree={item.education_type_name || item.education_type || 'Eğitim'}
-            institution={item.education_institution || 'Kurum'}
-            field={item.field || ''}
-            startDate=""
-            endDate={item.graduation_year ? `${item.graduation_year}` : ''}
-            current={false}
-            onEdit={() => handleEditEducation(item)}
-            onDelete={() => handleDeleteEducation(item.id)}
-          />
-        )}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-        }
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="school" size={48} color={THEME.emptyIconColor} />
+      {/* Liste - flex:1 container içinde (KRİTİK!) */}
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={educations}
+          keyExtractor={(item) => `education-${item.id}`}
+          renderItem={({ item }) => (
+            <EducationCard
+              degree={item.education_type_name || item.education_type || 'Eğitim'}
+              institution={item.education_institution || 'Kurum'}
+              field={item.field || ''}
+              startDate=""
+              endDate={item.graduation_year ? `${item.graduation_year}` : ''}
+              current={false}
+              onEdit={() => handleEditEducation(item)}
+              onDelete={() => handleDeleteEducation(item.id)}
+            />
+          )}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          }
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconContainer}>
+                <Ionicons name="school" size={48} color={THEME.emptyIconColor} />
+              </View>
+              <Typography variant="h3" style={styles.emptyTitle}>
+                Eğitim Bilgisi Yok
+              </Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                Eğitim bilgilerinizi ekleyerek profilinizi tamamlayın
+              </Typography>
             </View>
-            <Typography variant="h3" style={styles.emptyTitle}>
-              Eğitim Bilgisi Yok
-            </Typography>
-            <Typography variant="body" style={styles.emptyText}>
-              Eğitim bilgilerinizi ekleyerek profilinizi tamamlayın
-            </Typography>
-          </View>
-        }
-      />
+          }
+        />
+      </View>
 
       {/* FAB for adding education */}
       <FAB
@@ -124,6 +128,9 @@ export const EducationScreen = () => {
 
 const styles = StyleSheet.create({
   screen: {
+    backgroundColor: THEME.background,
+  },
+  headerSection: {
     backgroundColor: THEME.background,
   },
   listContent: {

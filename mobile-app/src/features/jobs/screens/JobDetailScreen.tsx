@@ -61,12 +61,12 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
 
   // Kelime sayısını hesapla
   const getWordCount = (text: string) => {
+    if (!text || text.trim().length === 0) return 0;
     return text.trim().split(/\s+/).filter(word => word.length > 0).length;
   };
 
   const MAX_WORDS = 200;
   const wordCount = getWordCount(coverLetter);
-  const maxLength = 1200; // 200 kelime için güvenli limit (ortalama 6 karakter/kelime)
 
   const {
     data: job,
@@ -144,44 +144,45 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
 
   return (
     <Screen scrollable={false} contentContainerStyle={styles.container}>
+      {/* Header - Sabit (ScrollView dışında) */}
+      <LinearGradient
+        colors={['#1E40AF', '#3B82F6']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientHeader}
+      >
+        {/* Back + Title Row */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={22} color="#ffffff" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerTitleContainer}>
+            <Typography variant="h3" style={styles.headerJobTitle} numberOfLines={1}>
+              {job.title ?? 'İş İlanı'}
+            </Typography>
+            <Typography variant="caption" style={styles.headerHospital} numberOfLines={1}>
+              {job.hospital_name ?? 'Kurum'}
+            </Typography>
+          </View>
+
+          {job.is_applied && (
+            <View style={styles.appliedDot}>
+              <Ionicons name="checkmark-circle" size={20} color="#34D399" />
+            </View>
+          )}
+        </View>
+      </LinearGradient>
+
       {/* Scrollable İçerik */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Compact Header */}
-        <LinearGradient
-          colors={['#1E40AF', '#3B82F6']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.gradientHeader}
-        >
-          {/* Back + Title Row */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="chevron-back" size={22} color="#ffffff" />
-            </TouchableOpacity>
-            
-            <View style={styles.headerTitleContainer}>
-              <Typography variant="h3" style={styles.headerJobTitle} numberOfLines={1}>
-                {job.title ?? 'İş İlanı'}
-              </Typography>
-              <Typography variant="caption" style={styles.headerHospital} numberOfLines={1}>
-                {job.hospital_name ?? 'Kurum'}
-              </Typography>
-            </View>
-
-            {job.is_applied && (
-              <View style={styles.appliedDot}>
-                <Ionicons name="checkmark-circle" size={20} color="#34D399" />
-              </View>
-            )}
-          </View>
-        </LinearGradient>
 
         {/* İlan Bilgileri - Web'deki sıralamaya göre ilk */}
         {(job.specialty || job.subspecialty_name || job.work_type || job.min_experience_years || job.city_name) && (
@@ -197,9 +198,14 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             <View style={styles.jobInfoGrid}>
               {job.specialty && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Uzmanlık Alanı
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#EEF2FF' }]}>
+                      <Ionicons name="medical" size={16} color="#6366F1" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Uzmanlık Alanı
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {job.specialty}
                   </Typography>
@@ -207,9 +213,14 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.subspecialty_name && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Yan Dal
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#F0FDFA' }]}>
+                      <Ionicons name="git-branch" size={16} color="#14B8A6" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Yan Dal
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {job.subspecialty_name}
                   </Typography>
@@ -217,9 +228,14 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.work_type && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Çalışma Türü
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#FEF3C7' }]}>
+                      <Ionicons name="time" size={16} color="#F59E0B" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Çalışma Türü
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {job.work_type}
                   </Typography>
@@ -227,9 +243,14 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.min_experience_years !== null && job.min_experience_years !== undefined && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Min. Deneyim
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#DBEAFE' }]}>
+                      <Ionicons name="star" size={16} color="#3B82F6" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Min. Deneyim
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {job.min_experience_years} yıl
                   </Typography>
@@ -237,9 +258,14 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.city_name && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    Şehir
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#FEE2E2' }]}>
+                      <Ionicons name="location" size={16} color="#EF4444" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      Şehir
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {job.city_name}
                   </Typography>
@@ -247,9 +273,14 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
               )}
               {job.created_at && (
                 <View style={styles.jobInfoItem}>
-                  <Typography variant="caption" style={styles.jobInfoLabel}>
-                    İlan Tarihi
-                  </Typography>
+                  <View style={styles.jobInfoIconRow}>
+                    <View style={[styles.jobInfoIcon, { backgroundColor: '#F3F4F6' }]}>
+                      <Ionicons name="calendar" size={16} color="#6B7280" />
+                    </View>
+                    <Typography variant="caption" style={styles.jobInfoLabel}>
+                      İlan Tarihi
+                    </Typography>
+                  </View>
                   <Typography variant="body" style={styles.jobInfoValue}>
                     {formatDate(job.created_at)}
                   </Typography>
@@ -420,23 +451,18 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
             </Typography>
             <Input
               multiline
-              numberOfLines={6}
+              numberOfLines={10}
               placeholder="Kendinizi tanıtın ve neden bu pozisyon için uygun olduğunuzu açıklayın..."
               value={coverLetter}
-              onChangeText={(text) => {
-                const words = getWordCount(text);
-                if (words <= MAX_WORDS || text.length <= coverLetter.length) {
-                  setCoverLetter(text);
-                }
-              }}
-              containerStyle={styles.modalCoverLetterInput}
-              maxLength={maxLength}
+              onChangeText={setCoverLetter}
+              style={styles.modalCoverLetterInput}
+              textAlignVertical="top"
             />
             <Typography 
               variant="caption" 
               style={wordCount > MAX_WORDS ? styles.characterCountError : styles.characterCount}
             >
-              {wordCount}/{MAX_WORDS} kelime
+              {wordCount}/{MAX_WORDS} kelime {wordCount > MAX_WORDS && '⚠️'}
             </Typography>
           </View>
 
@@ -485,8 +511,8 @@ const styles = StyleSheet.create({
   gradientHeader: {
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
-    borderRadius: 16,
-    marginBottom: spacing.md,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
   },
   headerRow: {
     flexDirection: 'row',
@@ -761,8 +787,9 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   modalCoverLetterInput: {
-    minHeight: 100,
-    maxHeight: 120,
+    minHeight: 160,
+    height: 160,
+    textAlignVertical: 'top',
   },
   characterCount: {
     textAlign: 'right',
@@ -773,6 +800,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     color: colors.error[600],
     marginTop: spacing.xs,
+    fontWeight: '600',
   },
   modalInfoBox: {
     flexDirection: 'row',
@@ -890,20 +918,31 @@ const styles = StyleSheet.create({
   },
   // İlan Bilgileri stilleri - Modern ve temiz
   jobInfoGrid: {
-    gap: spacing.lg,
+    gap: spacing.md,
     marginTop: spacing.md,
   },
   jobInfoItem: {
-    gap: spacing.xs,
+    gap: spacing.sm,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.border.light,
+  },
+  jobInfoIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  jobInfoIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   jobInfoLabel: {
     color: colors.text.secondary,
     fontSize: 12,
     fontWeight: '500',
-    marginBottom: spacing.xs,
   },
   jobInfoValue: {
     color: colors.text.primary,

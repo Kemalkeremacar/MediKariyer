@@ -67,18 +67,20 @@ export const LanguagesScreen = () => {
 
   return (
     <Screen scrollable={false} style={styles.screen}>
-      {/* Modern Gradient Header with Back Button */}
-      <GradientHeader
-        title="Dil Bilgileri"
-        subtitle={`${languages.length} dil`}
-        icon={<Ionicons name="language" size={28} color="#FFFFFF" />}
-        variant="profile"
-        iconColorPreset="purple"
-        showBackButton={true}
-        onBackPress={() => navigation.goBack()}
-      />
+      {/* Header - Sabit (FlatList dışında, unmount olmaz) */}
+      <View style={styles.headerSection}>
+        <GradientHeader
+          title="Dil Bilgileri"
+          subtitle="Yabancı dil bilgilerinizi yönetin"
+          icon={<Ionicons name="language" size={28} color="#FFFFFF" />}
+          variant="profile"
+          iconColorPreset="purple"
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+        />
+      </View>
 
-      {/* Languages List */}
+      {/* Liste - flex:1 container içinde (KRİTİK!) */}
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={THEME.emptyIconColor} />
@@ -104,40 +106,42 @@ export const LanguagesScreen = () => {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
-          data={languages}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => {
-            if (!item.language || !item.level) {
-              return null;
+        <View style={{ flex: 1 }}>
+          <FlatList
+            data={languages}
+            keyExtractor={(item) => `language-${item.id}`}
+            renderItem={({ item }) => {
+              if (!item.language || !item.level) {
+                return null;
+              }
+              return (
+                <LanguageCard
+                  language={item.language}
+                  level={item.level}
+                  onEdit={() => handleEditLanguage(item)}
+                  onDelete={() => handleDeleteLanguage(item.id)}
+                />
+              );
+            }}
+            refreshControl={
+              <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
             }
-            return (
-              <LanguageCard
-                language={item.language}
-                level={item.level}
-                onEdit={() => handleEditLanguage(item)}
-                onDelete={() => handleDeleteLanguage(item.id)}
-              />
-            );
-          }}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
-          }
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
-                <Ionicons name="language" size={48} color={THEME.emptyIconColor} />
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconContainer}>
+                  <Ionicons name="language" size={48} color={THEME.emptyIconColor} />
+                </View>
+                <Typography variant="h3" style={styles.emptyTitle}>
+                  Henüz dil eklenmemiş
+                </Typography>
+                <Typography variant="body" style={styles.emptyText}>
+                  Yabancı dil bilgilerinizi ekleyerek profilinizi güçlendirin
+                </Typography>
               </View>
-              <Typography variant="h3" style={styles.emptyTitle}>
-                Henüz dil eklenmemiş
-              </Typography>
-              <Typography variant="body" style={styles.emptyText}>
-                Yabancı dil bilgilerinizi ekleyerek profilinizi güçlendirin
-              </Typography>
-            </View>
-          }
-        />
+            }
+          />
+        </View>
       )}
 
       {/* FAB */}
@@ -152,6 +156,9 @@ export const LanguagesScreen = () => {
 
 const styles = StyleSheet.create({
   screen: {
+    backgroundColor: THEME.background,
+  },
+  headerSection: {
     backgroundColor: THEME.background,
   },
   listContent: {

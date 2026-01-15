@@ -342,164 +342,174 @@ export const NotificationsScreen = () => {
       error={isError ? new Error('Bildirimler yüklenemedi') : null}
       onRetry={refetch}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.primary[600]} />
-          </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Typography variant="h2" style={styles.headerTitle}>
-              {selectionMode ? `${selectedIds.size} seçildi` : 'Bildirimler'}
-            </Typography>
-            <Typography variant="caption" style={styles.headerSubtitle}>
-              {selectionMode 
-                ? 'Toplu işlem modu' 
-                : unreadCount > 0 ? `${unreadCount} okunmamış` : 'Tüm bildirimler okundu'}
-            </Typography>
+      {/* Header + Tabs + Actions - Sabit (FlatList dışında, scroll etmez) */}
+      <View style={styles.headerSection}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color={colors.primary[600]} />
+            </TouchableOpacity>
+            <View style={styles.headerText}>
+              <Typography variant="h2" style={styles.headerTitle}>
+                {selectionMode ? `${selectedIds.size} seçildi` : 'Bildirimler'}
+              </Typography>
+              <Typography variant="caption" style={styles.headerSubtitle}>
+                {selectionMode 
+                  ? 'Toplu işlem modu' 
+                  : unreadCount > 0 ? `${unreadCount} okunmamış` : 'Tüm bildirimler okundu'}
+              </Typography>
+            </View>
           </View>
-        </View>
-        <View style={styles.headerActions}>
-          {!selectionMode && unreadCount > 0 && (
+          <View style={styles.headerActions}>
+            {!selectionMode && unreadCount > 0 && (
+              <IconButton
+                icon={<Ionicons name="checkmark-done" size={20} color={colors.primary[600]} />}
+                onPress={handleMarkAllRead}
+                size="md"
+                variant="ghost"
+              />
+            )}
             <IconButton
-              icon={<Ionicons name="checkmark-done" size={20} color={colors.primary[600]} />}
-              onPress={handleMarkAllRead}
+              icon={selectionMode ? <Ionicons name="checkbox" size={20} color={colors.primary[600]} /> : <Ionicons name="square-outline" size={20} color={colors.primary[600]} />}
+              onPress={toggleSelectionMode}
               size="md"
               variant="ghost"
             />
-          )}
-          <IconButton
-            icon={selectionMode ? <Ionicons name="checkbox" size={20} color={colors.primary[600]} /> : <Ionicons name="square-outline" size={20} color={colors.primary[600]} />}
-            onPress={toggleSelectionMode}
-            size="md"
-            variant="ghost"
-          />
-        </View>
-      </View>
-
-      {/* Selection Actions */}
-      {selectionMode && (
-        <View style={styles.selectionActions}>
-          <TouchableOpacity 
-            style={styles.selectAllButton}
-            onPress={toggleSelectAll}
-            disabled={isLoadingAll}
-          >
-            <Typography variant="body" style={styles.selectAllText}>
-              {isLoadingAll 
-                ? 'Yükleniyor...' 
-                : selectedIds.size === filteredNotifications.length && !hasNextPage
-                  ? 'Tümünü Kaldır' 
-                  : `Tümünü Seç (${totalCount})`}
-            </Typography>
-          </TouchableOpacity>
-          <View style={styles.actionButtons}>
-            <Button
-              label="Okundu İşaretle"
-              onPress={handleMarkSelectedAsRead}
-              variant="outline"
-              size="sm"
-              disabled={selectedIds.size === 0 || isLoadingAll}
-            />
-            <IconButton
-              icon={<Ionicons name="trash" size={18} color={selectedIds.size > 0 && !deleteNotificationsMutation.isPending ? colors.error[600] : colors.neutral[400]} />}
-              onPress={handleDeleteSelected}
-              size="sm"
-              variant="ghost"
-              disabled={selectedIds.size === 0 || deleteNotificationsMutation.isPending}
-            />
           </View>
         </View>
-      )}
 
-      {/* Tabs */}
-      {!selectionMode && (
-        <Tabs
-          tabs={[
-            { key: 'all', label: 'Tümü', badge: totalCount },
-            { key: 'unread', label: 'Okunmamış', badge: unreadCount },
-          ]}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          variant="default"
-        />
-      )}
-
-      {/* Notifications List */}
-      <FlatList
-        data={filteredNotifications}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.notificationRow}>
-            {selectionMode && (
-              <View style={styles.checkboxContainer}>
-                <Checkbox
-                  checked={selectedIds.has(item.id)}
-                  onPress={() => toggleSelectNotification(item.id)}
-                  size="sm"
-                />
-              </View>
-            )}
-            <View style={{ flex: 1 }}>
-              <NotificationCard
-                id={item.id}
-                type={(item.type as 'application' | 'job' | 'system' | 'message') || 'system'}
-                title={item.title}
-                message={item.body}
-                timestamp={item.createdAt || item.created_at || new Date().toISOString()}
-                read={item.isRead ?? item.is_read ?? false}
-                onPress={() => selectionMode ? toggleSelectNotification(item.id) : handleNotificationPress(item)}
+        {/* Selection Actions */}
+        {selectionMode && (
+          <View style={styles.selectionActions}>
+            <TouchableOpacity 
+              style={styles.selectAllButton}
+              onPress={toggleSelectAll}
+              disabled={isLoadingAll}
+            >
+              <Typography variant="body" style={styles.selectAllText}>
+                {isLoadingAll 
+                  ? 'Yükleniyor...' 
+                  : selectedIds.size === filteredNotifications.length && !hasNextPage
+                    ? 'Tümünü Kaldır' 
+                    : `Tümünü Seç (${totalCount})`}
+              </Typography>
+            </TouchableOpacity>
+            <View style={styles.actionButtons}>
+              <Button
+                label="Okundu İşaretle"
+                onPress={handleMarkSelectedAsRead}
+                variant="outline"
+                size="sm"
+                disabled={selectedIds.size === 0 || isLoadingAll}
+              />
+              <IconButton
+                icon={<Ionicons name="trash" size={18} color={selectedIds.size > 0 && !deleteNotificationsMutation.isPending ? colors.error[600] : colors.neutral[400]} />}
+                onPress={handleDeleteSelected}
+                size="sm"
+                variant="ghost"
+                disabled={selectedIds.size === 0 || deleteNotificationsMutation.isPending}
               />
             </View>
           </View>
         )}
-        contentContainerStyle={styles.listContent}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching && !isFetchingNextPage}
-            onRefresh={refetch}
-            tintColor={colors.primary[600]}
+
+        {/* Tabs - SABİT (scroll etmez) */}
+        {!selectionMode && (
+          <Tabs
+            tabs={[
+              { key: 'all', label: 'Tümü', badge: totalCount },
+              { key: 'unread', label: 'Okunmamış', badge: unreadCount },
+            ]}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            variant="default"
           />
-        }
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <View style={styles.loadingMore}>
-              <Typography variant="caption" style={styles.loadingText}>
-                Yükleniyor...
-              </Typography>
+        )}
+      </View>
+
+      {/* Liste - flex:1 container içinde (KRİTİK!) - Sadece liste scroll eder */}
+      <View style={{ flex: 1 }}>
+        <FlatList
+          data={filteredNotifications}
+          keyExtractor={(item) => `notification-${item.id}`}
+          renderItem={({ item }) => (
+            <View style={styles.notificationRow}>
+              {selectionMode && (
+                <View style={styles.checkboxContainer}>
+                  <Checkbox
+                    checked={selectedIds.has(item.id)}
+                    onPress={() => toggleSelectNotification(item.id)}
+                    size="sm"
+                  />
+                </View>
+              )}
+              <View style={{ flex: 1 }}>
+                <NotificationCard
+                  id={item.id}
+                  type={(item.type as 'application' | 'job' | 'system' | 'message') || 'system'}
+                  title={item.title}
+                  message={item.body}
+                  timestamp={item.createdAt || item.created_at || new Date().toISOString()}
+                  read={item.isRead ?? item.is_read ?? false}
+                  onPress={() => selectionMode ? toggleSelectNotification(item.id) : handleNotificationPress(item)}
+                />
+              </View>
             </View>
-          ) : null
-        }
-        ListEmptyComponent={
-          !isLoading ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="notifications" size={64} color={colors.neutral[300]} />
-              <Typography variant="h3" style={styles.emptyTitle}>
-                Bildirim Yok
-              </Typography>
-              <Typography variant="body" style={styles.emptyText}>
-                Henüz hiç bildiriminiz bulunmuyor
-              </Typography>
-            </View>
-          ) : null
-        }
-      />
+          )}
+          contentContainerStyle={styles.listContent}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching && !isFetchingNextPage}
+              onRefresh={refetch}
+              tintColor={colors.primary[600]}
+            />
+          }
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.loadingMore}>
+                <Typography variant="caption" style={styles.loadingText}>
+                  Yükleniyor...
+                </Typography>
+              </View>
+            ) : null
+          }
+          ListEmptyComponent={
+            !isLoading ? (
+              <View style={styles.emptyState}>
+                <Ionicons name="notifications" size={64} color={colors.neutral[300]} />
+                <Typography variant="h3" style={styles.emptyTitle}>
+                  Bildirim Yok
+                </Typography>
+                <Typography variant="body" style={styles.emptyText}>
+                  Henüz hiç bildiriminiz bulunmuyor
+                </Typography>
+              </View>
+            ) : null
+          }
+        />
+      </View>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
+  headerSection: {
+    backgroundColor: colors.background.primary,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     backgroundColor: colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral[100],
@@ -507,13 +517,13 @@ const styles = StyleSheet.create({
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: spacing.sm,
     flex: 1,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: colors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
@@ -527,14 +537,14 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.text.primary,
     marginBottom: 2,
   },
   headerSubtitle: {
     color: colors.text.secondary,
-    fontSize: 13,
+    fontSize: 12,
   },
   listContent: {
     paddingHorizontal: spacing.lg,

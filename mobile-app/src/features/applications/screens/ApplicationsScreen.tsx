@@ -46,7 +46,45 @@ interface ApplicationFilters {
   status_id?: number;
 }
 
-// Status display mapping
+// Status display mapping with colors and icons (ApplicationCard ile uyumlu)
+const STATUS_CONFIG: Record<number, { 
+  name: string; 
+  icon: string; 
+  color: string; 
+  bgColor: string;
+}> = {
+  1: { 
+    name: 'Başvuruldu', 
+    icon: 'time', 
+    color: colors.warning[700], // ApplicationCard ile aynı
+    bgColor: colors.warning[100], // ApplicationCard ile aynı
+  },
+  2: { 
+    name: 'İnceleniyor', 
+    icon: 'eye', 
+    color: colors.primary[700], // ApplicationCard ile aynı
+    bgColor: colors.primary[100], // ApplicationCard ile aynı
+  },
+  3: { 
+    name: 'Kabul Edildi', 
+    icon: 'checkmark-circle', 
+    color: colors.success[700], // ApplicationCard ile aynı
+    bgColor: colors.success[100], // ApplicationCard ile aynı
+  },
+  4: { 
+    name: 'Reddedildi', 
+    icon: 'close-circle', 
+    color: colors.error[700], // ApplicationCard ile aynı
+    bgColor: colors.error[100], // ApplicationCard ile aynı
+  },
+  5: { 
+    name: 'Geri Çekildi', 
+    icon: 'arrow-undo', 
+    color: colors.neutral[600], // ApplicationCard ile aynı
+    bgColor: colors.neutral[200], // ApplicationCard ile aynı
+  },
+};
+
 const STATUS_DISPLAY: Record<number, string> = {
   1: 'Başvuruldu',
   2: 'İnceleniyor',
@@ -186,52 +224,51 @@ export const ApplicationsScreen = () => {
     return STATUS_DISPLAY[statusId] || `Durum ${statusId}`;
   }, [statuses]);
 
-  const renderListHeader = () => (
-    <>
-      {/* Premium Gradient Header */}
-      <GradientHeader
-        title="Başvurularım"
-        subtitle={`${totalCount} başvuru`}
-        icon={<Ionicons name="document-text-sharp" size={28} color="#FFFFFF" />}
-        variant="primary"
-        iconColorPreset="blue"
-      />
-
-      {/* Filter Button */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          onPress={() => setShowFilterModal(true)}
-          style={[
-            styles.filterButton,
-            hasActiveFilters && styles.filterButtonActive,
-          ]}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="filter"
-            size={20}
-            color={hasActiveFilters ? colors.background.primary : colors.primary[600]}
-          />
-          <Typography 
-            variant="body" 
-            style={hasActiveFilters ? styles.filterButtonTextActive : styles.filterButtonText}
-          >
-            {hasActiveFilters ? getStatusDisplayName(filters.status_id) : 'Tüm Başvurular'}
-          </Typography>
-          {hasActiveFilters && (
-            <View style={styles.filterBadge}>
-              <Typography variant="caption" style={styles.filterBadgeText}>
-                1
-              </Typography>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-    </>
-  );
-
   const renderContent = () => (
     <View style={styles.container}>
+      {/* Header - Sabit (FlashList dışında, unmount olmaz) */}
+      <View style={styles.headerSection}>
+        <GradientHeader
+          title="Başvurularım"
+          subtitle="Başvuru durumlarınızı takip edin"
+          icon={<Ionicons name="document-text-sharp" size={28} color="#FFFFFF" />}
+          variant="primary"
+          iconColorPreset="blue"
+        />
+
+        {/* Filter Button */}
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            onPress={() => setShowFilterModal(true)}
+            style={[
+              styles.filterButton,
+              hasActiveFilters && styles.filterButtonActive,
+            ]}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="filter"
+              size={20}
+              color={hasActiveFilters ? colors.background.primary : colors.primary[600]}
+            />
+            <Typography 
+              variant="body" 
+              style={hasActiveFilters ? styles.filterButtonTextActive : styles.filterButtonText}
+            >
+              {hasActiveFilters ? getStatusDisplayName(filters.status_id) : 'Tüm Başvurular'}
+            </Typography>
+            {hasActiveFilters && (
+              <View style={styles.filterBadge}>
+                <Typography variant="caption" style={styles.filterBadgeText}>
+                  1
+                </Typography>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Liste - flex:1 container içinde (KRİTİK!) */}
       {query.isLoading ? (
         <View style={styles.skeletonContainer}>
           {[1, 2, 3, 4, 5].map((i) => (
@@ -239,72 +276,74 @@ export const ApplicationsScreen = () => {
           ))}
         </View>
       ) : (
-        <FlashList
-          ListHeaderComponent={renderListHeader}
-          data={applications}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <ApplicationCard
-              application={item}
-              onPress={() => navigation.navigate('ApplicationDetail', { applicationId: item.id })}
-            />
-          )}
-          refreshControl={
-            <RefreshControl
-              refreshing={query.isRefetching}
-              onRefresh={() => query.refetch()}
-              tintColor={colors.primary[600]}
-            />
-          }
-          onEndReached={loadMore}
-          onEndReachedThreshold={0.5}
-          showsVerticalScrollIndicator={false}
-          removeClippedSubviews={true}
-          ListFooterComponent={
-            query.isFetchingNextPage ? (
-              <View style={styles.listFooter}>
-                <ActivityIndicator size="small" color={colors.primary[600]} />
-                <Typography variant="caption" style={styles.footerText}>
-                  Daha fazla başvuru yükleniyor...
-                </Typography>
-              </View>
-            ) : applications.length > 0 && !query.hasNextPage ? (
-              <View style={styles.listFooter}>
-                <Typography variant="caption" style={styles.footerText}>
-                  Tüm başvurular yüklendi ({applications.length}/{totalCount})
-                </Typography>
-              </View>
-            ) : null
-          }
-          ListEmptyComponent={
-            !query.isLoading && !query.isError ? (
-              <View style={styles.emptyState}>
-                <View style={styles.emptyIcon}>
-                  <Ionicons name="document-text" size={64} color={colors.neutral[300]} />
+        <View style={{ flex: 1 }}>
+          <FlashList
+            data={applications}
+            keyExtractor={(item) => `application-${item.id}`}
+            renderItem={({ item }) => (
+              <ApplicationCard
+                application={item}
+                onPress={() => navigation.navigate('ApplicationDetail', { applicationId: item.id })}
+              />
+            )}
+            refreshControl={
+              <RefreshControl
+                refreshing={query.isRefetching}
+                onRefresh={() => query.refetch()}
+                tintColor={colors.primary[600]}
+              />
+            }
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.5}
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            ListFooterComponent={
+              query.isFetchingNextPage ? (
+                <View style={styles.listFooter}>
+                  <ActivityIndicator size="small" color={colors.primary[600]} />
+                  <Typography variant="caption" style={styles.footerText}>
+                    Daha fazla başvuru yükleniyor...
+                  </Typography>
                 </View>
-                <Typography variant="h3" style={styles.emptyTitle}>
-                  {hasActiveFilters ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
-                </Typography>
-                <Typography variant="body" style={styles.emptyText}>
-                  {hasActiveFilters
-                    ? 'Filtre kriterlerinizi değiştirerek tekrar deneyin'
-                    : 'Yeni ilanlara başvurarak kariyer yolculuğuna başla'}
-                </Typography>
-                {hasActiveFilters && (
-                  <TouchableOpacity 
-                    style={styles.emptyButton} 
-                    onPress={handleResetFilters}
-                  >
-                    <Typography variant="body" style={styles.emptyButtonText}>
-                      Filtreleri Temizle
-                    </Typography>
-                  </TouchableOpacity>
-                )}
-              </View>
-            ) : null
-          }
-          contentContainerStyle={styles.listContent}
-        />
+              ) : applications.length > 0 && !query.hasNextPage ? (
+                <View style={styles.listFooter}>
+                  <Typography variant="caption" style={styles.footerText}>
+                    Tüm başvurular yüklendi ({applications.length}/{totalCount})
+                  </Typography>
+                </View>
+              ) : null
+            }
+            ListEmptyComponent={
+              !query.isLoading && !query.isError ? (
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyIcon}>
+                    <Ionicons name="document-text" size={64} color={colors.neutral[300]} />
+                  </View>
+                  <Typography variant="h3" style={styles.emptyTitle}>
+                    {hasActiveFilters ? 'Başvuru Bulunamadı' : 'Henüz Başvuru Yok'}
+                  </Typography>
+                  <Typography variant="body" style={styles.emptyText}>
+                    {hasActiveFilters
+                      ? 'Filtre kriterlerinizi değiştirerek tekrar deneyin'
+                      : 'Yeni ilanlara başvurarak kariyer yolculuğuna başla'}
+                  </Typography>
+                  {hasActiveFilters && (
+                    <TouchableOpacity 
+                      style={styles.emptyButton} 
+                      onPress={handleResetFilters}
+                    >
+                      <Typography variant="body" style={styles.emptyButtonText}>
+                        Filtreleri Temizle
+                      </Typography>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ) : null
+            }
+            contentContainerStyle={styles.listContent}
+          />
+        </View>
       )}
 
       {/* Simple Status Filter Modal */}
@@ -337,6 +376,9 @@ export const ApplicationsScreen = () => {
                 ]}
                 onPress={() => handleApplyFilters({})}
               >
+                <View style={[styles.statusIconContainer, { backgroundColor: colors.primary[50] }]}>
+                  <Ionicons name="apps" size={20} color={colors.primary[600]} />
+                </View>
                 <Typography 
                   variant="body" 
                   style={!filters.status_id ? styles.statusTextActive : styles.statusText}
@@ -349,26 +391,34 @@ export const ApplicationsScreen = () => {
               </TouchableOpacity>
 
               {/* Durumlar */}
-              {statuses.map((status) => (
-                <TouchableOpacity
-                  key={status.id}
-                  style={[
-                    styles.statusOption,
-                    filters.status_id === status.id && styles.statusOptionActive,
-                  ]}
-                  onPress={() => handleApplyFilters({ status_id: status.id })}
-                >
-                  <Typography 
-                    variant="body" 
-                    style={filters.status_id === status.id ? styles.statusTextActive : styles.statusText}
+              {statuses.map((status) => {
+                const config = STATUS_CONFIG[status.id];
+                if (!config) return null;
+                
+                return (
+                  <TouchableOpacity
+                    key={status.id}
+                    style={[
+                      styles.statusOption,
+                      filters.status_id === status.id && styles.statusOptionActive,
+                    ]}
+                    onPress={() => handleApplyFilters({ status_id: status.id })}
                   >
-                    {status.name}
-                  </Typography>
-                  {filters.status_id === status.id && (
-                    <Ionicons name="checkmark-circle" size={24} color={colors.primary[600]} />
-                  )}
-                </TouchableOpacity>
-              ))}
+                    <View style={[styles.statusIconContainer, { backgroundColor: config.bgColor }]}>
+                      <Ionicons name={config.icon as any} size={20} color={config.color} />
+                    </View>
+                    <Typography 
+                      variant="body" 
+                      style={filters.status_id === status.id ? styles.statusTextActive : styles.statusText}
+                    >
+                      {config.name}
+                    </Typography>
+                    {filters.status_id === status.id && (
+                      <Ionicons name="checkmark-circle" size={24} color={colors.primary[600]} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </ScrollView>
           </Animated.View>
         </View>
@@ -391,6 +441,9 @@ export const ApplicationsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerSection: {
+    backgroundColor: colors.background.primary,
   },
   filterContainer: {
     paddingHorizontal: spacing.lg,
@@ -524,6 +577,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.secondary,
     borderWidth: 2,
     borderColor: 'transparent',
+    gap: spacing.md,
+  },
+  statusIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statusOptionActive: {
     backgroundColor: colors.primary[50],
@@ -533,6 +594,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.text.primary,
     fontWeight: '500',
+    flex: 1,
   },
   statusTextActive: {
     fontSize: 16,
