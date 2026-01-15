@@ -149,162 +149,8 @@ export const JobsScreen = () => {
     filter.handleFilterChange(newFilters);
   }, [filter]);
 
-  const renderListHeader = () => (
-    <>
-      {/* Premium Gradient Header */}
-      <GradientHeader
-        title="İş İlanları"
-        subtitle={`${totalCount} aktif ilan`}
-        icon={<Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />}
-        variant="primary"
-        iconColorPreset="blue"
-      />
-
-      {/* Modern Search & Filter */}
-      <View style={styles.searchContainer}>
-        <SearchBar
-          value={filter.searchQuery}
-          onChangeText={filter.handleSearchChange}
-          placeholder="İlan başlığı veya hastane ara..."
-          onClear={filter.handleSearchClear}
-          style={styles.searchBar}
-          isSearching={filter.isSearching}
-          minLength={2}
-        />
-        <View style={styles.filterButtonWrapper}>
-          {filter.isSearching && (
-            <View style={styles.searchingIndicator}>
-              <ActivityIndicator size="small" color={colors.primary[600]} />
-            </View>
-          )}
-          <IconButton
-            icon={
-              <Ionicons
-                name="filter"
-                size={20}
-                color={
-                  filter.activeFilterCount > 0
-                    ? colors.background.primary
-                    : colors.primary[600]
-                }
-              />
-            }
-            onPress={() => filter.setShowFilterSheet(true)}
-            size="md"
-            variant={filter.activeFilterCount > 0 ? 'filled' : 'ghost'}
-            color="primary"
-          />
-          {filter.activeFilterCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Typography variant="caption" style={styles.filterBadgeText}>
-                {filter.activeFilterCount}
-              </Typography>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* Active Filters with Modern Chips */}
-      {filter.hasActiveFilters && (
-        <View style={styles.activeFiltersContainer}>
-          {filter.filters.specialtyIds && filter.filters.specialtyIds.length > 0 && (
-            <Chip
-              label={`Branş (${filter.filters.specialtyIds.length})`}
-              variant="soft"
-              color="primary"
-              size="sm"
-              onDelete={() => filter.handleRemoveFilter('specialtyIds')}
-            />
-          )}
-          {filter.filters.cityIds && filter.filters.cityIds.length > 0 && (
-            <Chip
-              label={`Şehir (${filter.filters.cityIds.length})`}
-              icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
-              variant="soft"
-              color="primary"
-              size="sm"
-              onDelete={() => filter.handleRemoveFilter('cityIds')}
-            />
-          )}
-          {filter.filters.employmentType && (
-            <Chip
-              label={filter.filters.employmentType}
-              variant="soft"
-              color="primary"
-              size="sm"
-              onDelete={() => filter.handleRemoveFilter('employmentType')}
-            />
-          )}
-        </View>
-      )}
-    </>
-  );
-
-  const renderContent = () => {
-    if (!data) return null;
-
-    return (
-      <FlashList
-        data={jobs}
-        renderItem={renderJob}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={renderListHeader}
-        contentContainerStyle={styles.listContent}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={colors.primary[600]}
-          />
-        }
-        showsVerticalScrollIndicator={false}
-        removeClippedSubviews={true}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="briefcase-outline" size={64} color={colors.neutral[300]} />
-            </View>
-            <Typography variant="h3" style={styles.emptyTitle}>
-              İlan Bulunamadı
-            </Typography>
-            <Typography variant="body" style={styles.emptyText}>
-              {filter.hasActiveFilters
-                ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
-                : 'Henüz ilan bulunmuyor'}
-            </Typography>
-            {filter.hasActiveFilters && (
-              <TouchableOpacity
-                style={styles.emptyButton}
-                onPress={filter.resetFilters}
-              >
-                <Typography variant="body" style={styles.emptyButtonText}>
-                  Filtreleri Temizle
-                </Typography>
-              </TouchableOpacity>
-            )}
-          </View>
-        }
-        ListFooterComponent={
-          isFetchingNextPage ? (
-            <View style={styles.footer}>
-              <ActivityIndicator size="small" color={colors.primary[600]} />
-              <Typography variant="caption" style={styles.footerText}>
-                Daha fazla ilan yükleniyor...
-              </Typography>
-            </View>
-          ) : jobs.length > 0 && !hasNextPage ? (
-            <View style={styles.footer}>
-              <Typography variant="caption" style={styles.footerText}>
-                Tüm ilanlar yüklendi ({jobs.length}/{totalCount})
-              </Typography>
-            </View>
-          ) : null
-        }
-      />
-    );
-  };
+  // KeyExtractor - Future-proof
+  const keyExtractor = useCallback((item: JobListItem) => `job-${item.id}`, []);
 
   return (
     <Screen
@@ -313,31 +159,160 @@ export const JobsScreen = () => {
       error={isError ? new Error('İlanlar yüklenemedi') : null}
       onRetry={refetch}
     >
-      {isLoading ? (
-        <View style={styles.skeletonContainer}>
-          <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <View style={styles.headerIcon}>
-                <Ionicons name="briefcase" size={28} color={colors.primary[600]} />
+      {/* Header + SearchBar - Sabit (FlashList dışında, unmount olmaz) */}
+      <View style={styles.headerSection}>
+        <GradientHeader
+          title="İş İlanları"
+          subtitle="Kariyerinize uygun fırsatları keşfedin"
+          icon={<Ionicons name="briefcase-sharp" size={28} color="#FFFFFF" />}
+          variant="primary"
+          iconColorPreset="blue"
+        />
+
+        <View style={styles.searchContainer}>
+          <SearchBar
+            value={filter.searchQuery}
+            onChangeText={filter.handleSearchChange}
+            placeholder="İlan başlığı veya hastane ara..."
+            onClear={filter.handleSearchClear}
+            style={styles.searchBar}
+            isSearching={filter.isSearching}
+            minLength={2}
+          />
+          <View style={styles.filterButtonWrapper}>
+            {filter.isSearching && (
+              <View style={styles.searchingIndicator}>
+                <ActivityIndicator size="small" color={colors.primary[600]} />
               </View>
-              <View style={styles.headerText}>
-                <Typography variant="h2" style={styles.headerTitle}>
-                  İş İlanları
-                </Typography>
-                <Typography variant="caption" style={styles.headerSubtitle}>
-                  Yükleniyor...
+            )}
+            <IconButton
+              icon={
+                <Ionicons
+                  name="filter"
+                  size={20}
+                  color={
+                    filter.activeFilterCount > 0
+                      ? colors.background.primary
+                      : colors.primary[600]
+                  }
+                />
+              }
+              onPress={() => filter.setShowFilterSheet(true)}
+              size="md"
+              variant={filter.activeFilterCount > 0 ? 'filled' : 'ghost'}
+              color="primary"
+            />
+            {filter.activeFilterCount > 0 && (
+              <View style={styles.filterBadge}>
+                <Typography variant="caption" style={styles.filterBadgeText}>
+                  {filter.activeFilterCount}
                 </Typography>
               </View>
-            </View>
-          </View>
-          <View style={styles.skeletonList}>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <SkeletonCard key={i} />
-            ))}
+            )}
           </View>
         </View>
+
+        {filter.hasActiveFilters && (
+          <View style={styles.activeFiltersContainer}>
+            {filter.filters.specialtyIds && filter.filters.specialtyIds.length > 0 && (
+              <Chip
+                label={`Branş (${filter.filters.specialtyIds.length})`}
+                variant="soft"
+                color="primary"
+                size="sm"
+                onDelete={() => filter.handleRemoveFilter('specialtyIds')}
+              />
+            )}
+            {filter.filters.cityIds && filter.filters.cityIds.length > 0 && (
+              <Chip
+                label={`Şehir (${filter.filters.cityIds.length})`}
+                icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
+                variant="soft"
+                color="primary"
+                size="sm"
+                onDelete={() => filter.handleRemoveFilter('cityIds')}
+              />
+            )}
+            {filter.filters.employmentType && (
+              <Chip
+                label={filter.filters.employmentType}
+                variant="soft"
+                color="primary"
+                size="sm"
+                onDelete={() => filter.handleRemoveFilter('employmentType')}
+              />
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* Job List - Sadece liste */}
+      {isLoading ? (
+        <View style={styles.skeletonList}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </View>
       ) : (
-        renderContent()
+        <FlashList
+          data={jobs}
+          renderItem={renderJob}
+          keyExtractor={keyExtractor}
+          contentContainerStyle={styles.listContent}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              tintColor={colors.primary[600]}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="briefcase-outline" size={64} color={colors.neutral[300]} />
+              </View>
+              <Typography variant="h3" style={styles.emptyTitle}>
+                İlan Bulunamadı
+              </Typography>
+              <Typography variant="body" style={styles.emptyText}>
+                {filter.hasActiveFilters
+                  ? 'Arama kriterlerinizi değiştirerek tekrar deneyin'
+                  : 'Henüz ilan bulunmuyor'}
+              </Typography>
+              {filter.hasActiveFilters && (
+                <TouchableOpacity
+                  style={styles.emptyButton}
+                  onPress={filter.resetFilters}
+                >
+                  <Typography variant="body" style={styles.emptyButtonText}>
+                    Filtreleri Temizle
+                  </Typography>
+                </TouchableOpacity>
+              )}
+            </View>
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View style={styles.footer}>
+                <ActivityIndicator size="small" color={colors.primary[600]} />
+                <Typography variant="caption" style={styles.footerText}>
+                  Daha fazla ilan yükleniyor...
+                </Typography>
+              </View>
+            ) : jobs.length > 0 && !hasNextPage ? (
+              <View style={styles.footer}>
+                <Typography variant="caption" style={styles.footerText}>
+                  Tüm ilanlar yüklendi ({jobs.length}/{totalCount})
+                </Typography>
+              </View>
+            ) : null
+          }
+        />
       )}
 
       <JobFilterSheet
@@ -352,42 +327,8 @@ export const JobsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+  headerSection: {
     backgroundColor: colors.background.primary,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.neutral[100],
-  },
-  headerIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.primary[50],
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerText: {
-    flex: 1,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    flex: 1,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: colors.text.primary,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    color: colors.text.secondary,
-    fontSize: 13,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -434,11 +375,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     backgroundColor: colors.background.primary,
   },
-  skeletonContainer: {
-    flex: 1,
-    backgroundColor: colors.background.primary,
-  },
   skeletonList: {
+    flex: 1,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
     gap: spacing.md,

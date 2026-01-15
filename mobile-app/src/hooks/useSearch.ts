@@ -119,13 +119,11 @@ export function useSearch(
     return debouncedQuery.length >= minLength;
   }, [debouncedQuery, minLength]);
 
-  // Arama yapılıyor mu? (debounce sırasında veya minimum karakter altında yazılıyorsa)
+  // Arama yapılıyor mu? (sadece debounce sırasında)
+  // minLength altı durumlar UI warning ile gösterilir, loading gösterilmez
   const isSearching = useMemo(() => {
     // Kullanıcı yazıyor ama henüz debounce tamamlanmadı
-    if (trimmedQuery !== debouncedQuery) return true;
-    // Minimum karakter altında yazılıyor
-    if (trimmedQuery.length > 0 && trimmedQuery.length < minLength) return true;
-    return false;
+    return trimmedQuery !== debouncedQuery && trimmedQuery.length >= minLength;
   }, [trimmedQuery, debouncedQuery, minLength]);
 
   return {

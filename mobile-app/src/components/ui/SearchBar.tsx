@@ -165,7 +165,8 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
     prevProps.autoFocus === nextProps.autoFocus &&
     prevProps.isSearching === nextProps.isSearching &&
     prevProps.minLength === nextProps.minLength &&
-    prevProps.style === nextProps.style
+    prevProps.style === nextProps.style &&
+    prevProps.onChangeText === nextProps.onChangeText
   );
 });
 
