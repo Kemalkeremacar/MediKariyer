@@ -81,6 +81,8 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
     onBlur?.();
   }, [onBlur]);
 
+  const showMinWarning = value.length > 0 && value.length < minLength && isFocused;
+
   return (
     <View style={style}>
       <View style={[styles.container, isFocused && styles.containerFocused]}>
