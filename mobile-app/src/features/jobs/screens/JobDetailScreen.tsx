@@ -59,14 +59,9 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
 
-  // Kelime sayısını hesapla
-  const getWordCount = (text: string) => {
-    if (!text || text.trim().length === 0) return 0;
-    return text.trim().split(/\s+/).filter(word => word.length > 0).length;
-  };
-
-  const MAX_WORDS = 200;
-  const wordCount = getWordCount(coverLetter);
+  // Karakter sayısını hesapla
+  const MAX_CHARS = 1000;
+  const charCount = coverLetter.length;
 
   const {
     data: job,
@@ -112,6 +107,10 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
   };
 
   const handleApplicationSubmit = () => {
+    if (charCount > MAX_CHARS) {
+      showToast(`Ön yazı ${MAX_CHARS} karakteri geçemez`, 'error');
+      return;
+    }
     applyMutation.mutate();
   };
 
@@ -430,69 +429,76 @@ export const JobDetailScreen = ({ route, navigation }: Props) => {
           size="md"
           dismissable={true}
         >
-          <View style={styles.modalContent}>
-            {/* İlan Bilgisi */}
-            <View style={styles.modalJobInfo}>
-              <View style={styles.modalJobInfoRow}>
-                <Ionicons name="briefcase" size={18} color={colors.primary[600]} />
-                <Typography variant="body" style={styles.modalJobTitle} numberOfLines={1}>
-                  {job.title || 'İş İlanı'}
+          <ScrollView
+            contentContainerStyle={styles.modalScrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.modalContent}>
+              {/* İlan Bilgisi */}
+              <View style={styles.modalJobInfo}>
+                <View style={styles.modalJobInfoRow}>
+                  <Ionicons name="briefcase" size={18} color={colors.primary[600]} />
+                  <Typography variant="body" style={styles.modalJobTitle} numberOfLines={1}>
+                    {job.title || 'İş İlanı'}
+                  </Typography>
+                </View>
+                <Typography variant="caption" style={styles.modalHospitalName} numberOfLines={1}>
+                  {job.hospital_name || 'Kurum bilgisi yok'}
                 </Typography>
               </View>
-              <Typography variant="caption" style={styles.modalHospitalName} numberOfLines={1}>
-                {job.hospital_name || 'Kurum bilgisi yok'}
-              </Typography>
+
+              {/* Ön Yazı Input */}
+              <View style={styles.modalInputContainer}>
+                <Typography variant="body" style={styles.modalInputLabel}>
+                  Ön Yazı <Typography variant="caption" style={styles.optionalText}>(İsteğe bağlı)</Typography>
+                </Typography>
+                <Input
+                  multiline
+                  numberOfLines={8}
+                  placeholder="Kendinizi tanıtın ve neden bu pozisyon için uygun olduğunuzu açıklayın..."
+                  value={coverLetter}
+                  onChangeText={setCoverLetter}
+                  style={styles.modalCoverLetterInput}
+                  textAlignVertical="top"
+                  maxLength={1000}
+                />
+                <Typography 
+                  variant="caption" 
+                  style={charCount > MAX_CHARS ? styles.characterCountError : styles.characterCount}
+                >
+                  {charCount}/{MAX_CHARS} karakter {charCount > MAX_CHARS && '⚠️'}
+                </Typography>
+              </View>
+
+              {/* Bilgi Mesajı */}
+              <View style={styles.modalInfoBox}>
+                <Ionicons name="information-circle" size={16} color={colors.primary[600]} />
+                <Typography variant="caption" style={styles.modalInfoText}>
+                  Profil bilgileriniz ve CV'niz otomatik olarak gönderilecektir.
+                </Typography>
+              </View>
+
+              {/* Butonlar */}
+              <View style={styles.modalButtons}>
+                <Button
+                  label="İptal"
+                  variant="secondary"
+                  onPress={handleCloseApplicationModal}
+                  style={styles.modalCancelButton}
+                />
+                <Button
+                  label={applyMutation.isPending ? 'İşleniyor...' : 'Başvur'}
+                  variant="primary"
+                  onPress={handleApplicationSubmit}
+                  loading={applyMutation.isPending}
+                  disabled={applyMutation.isPending || charCount > MAX_CHARS}
+                  style={styles.modalSubmitButton}
+                />
+              </View>
             </View>
-
-          {/* Ön Yazı Input */}
-          <View style={styles.modalInputContainer}>
-            <Typography variant="body" style={styles.modalInputLabel}>
-              Ön Yazı <Typography variant="caption" style={styles.optionalText}>(İsteğe bağlı)</Typography>
-            </Typography>
-            <Input
-              multiline
-              numberOfLines={10}
-              placeholder="Kendinizi tanıtın ve neden bu pozisyon için uygun olduğunuzu açıklayın..."
-              value={coverLetter}
-              onChangeText={setCoverLetter}
-              style={styles.modalCoverLetterInput}
-              textAlignVertical="top"
-            />
-            <Typography 
-              variant="caption" 
-              style={wordCount > MAX_WORDS ? styles.characterCountError : styles.characterCount}
-            >
-              {wordCount}/{MAX_WORDS} kelime {wordCount > MAX_WORDS && '⚠️'}
-            </Typography>
-          </View>
-
-          {/* Bilgi Mesajı */}
-          <View style={styles.modalInfoBox}>
-            <Ionicons name="information-circle" size={16} color={colors.primary[600]} />
-            <Typography variant="caption" style={styles.modalInfoText}>
-              Profil bilgileriniz ve CV'niz otomatik olarak gönderilecektir.
-            </Typography>
-          </View>
-
-          {/* Butonlar */}
-          <View style={styles.modalButtons}>
-            <Button
-              label="İptal"
-              variant="secondary"
-              onPress={handleCloseApplicationModal}
-              style={styles.modalCancelButton}
-            />
-            <Button
-              label={applyMutation.isPending ? 'İşleniyor...' : 'Başvur'}
-              variant="primary"
-              onPress={handleApplicationSubmit}
-              loading={applyMutation.isPending}
-              disabled={applyMutation.isPending}
-              style={styles.modalSubmitButton}
-            />
-          </View>
-        </View>
-      </Modal>
+          </ScrollView>
+        </Modal>
       )}
     </Screen>
   );
@@ -753,6 +759,9 @@ const styles = StyleSheet.create({
   modalContent: {
     gap: spacing.md,
   },
+  modalScrollContent: {
+    flexGrow: 1,
+  },
   modalJobInfo: {
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
@@ -787,8 +796,8 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   modalCoverLetterInput: {
-    minHeight: 160,
-    height: 160,
+    minHeight: 120,
+    height: 120,
     textAlignVertical: 'top',
   },
   characterCount: {

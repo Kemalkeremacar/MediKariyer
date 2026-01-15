@@ -89,6 +89,7 @@ import { lightColors, shadows, spacing, borderRadius, typography } from '@/theme
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { formatDateTime } from '@/utils/date';
 import { BackButton } from '@/components/ui/BackButton';
+import { Typography } from '@/components/ui/Typography';
 import { useToast } from '@/providers/ToastProvider';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -597,7 +598,6 @@ export const PhotoManagementScreen = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <BackButton onPress={() => navigation.goBack()} />
       <ScrollView
         ref={scrollRef}
         style={styles.scrollContainer}
@@ -607,6 +607,14 @@ export const PhotoManagementScreen = () => {
           ) : undefined
         }
       >
+        {/* Header */}
+        <View style={styles.header}>
+          <BackButton onPress={() => navigation.goBack()} />
+          <Typography variant="h3" style={styles.headerTitle}>
+            Fotoğraf Yönetimi
+          </Typography>
+          <View style={styles.placeholder} />
+        </View>
 
       {/* Current Photo - Show side by side if pending request */}
       <View style={styles.section}>
@@ -897,6 +905,24 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    backgroundColor: lightColors.background.primary,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    color: lightColors.text.primary,
+  },
+  placeholder: {
+    width: 40,
   },
   section: {
     backgroundColor: lightColors.background.primary,

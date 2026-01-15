@@ -81,8 +81,6 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
     onBlur?.();
   }, [onBlur]);
 
-  const showMinWarning = value.length > 0 && value.length < minLength && isFocused;
-
   return (
     <View style={style}>
       <View style={[styles.container, isFocused && styles.containerFocused]}>
@@ -148,14 +146,6 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
           ) : null}
         </View>
       </View>
-      {showMinWarning && (
-        <View style={styles.warningContainer}>
-          <Ionicons name="information-circle" size={14} color={colors.warning[600]} />
-          <Typography variant="caption" style={styles.warningText}>
-            En az {minLength} karakter girin
-          </Typography>
-        </View>
-      )}
     </View>
   );
 }, (prevProps, nextProps) => {
@@ -226,16 +216,5 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: spacing.xs,
-  },
-  warningContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    marginTop: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  warningText: {
-    color: colors.warning[700],
-    fontSize: 12,
   },
 });
