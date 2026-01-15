@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{subject}}</title>
+  <style>
+    /* Reset */
+    body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    body { margin: 0; padding: 0; width: 100%; height: 100%; }
+    
+    /* Base styles */
+    .email-wrapper { width: 100%; background-color: #f4f7fa; padding: 40px 0; }
+    .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08); }
+    
+    /* Header */
+    .email-header { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); padding: 32px 40px; text-align: center; }
+    .logo-text { color: #ffffff; font-size: 28px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; letter-spacing: -0.5px; }
+    .logo-subtitle { color: rgba(255, 255, 255, 0.85); font-size: 14px; font-family: 'Segoe UI', Arial, sans-serif; margin: 8px 0 0 0; }
+    
+    /* Content */
+    .email-content { padding: 40px; font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; line-height: 1.7; }
+    .email-content h1 { font-size: 24px; font-weight: 600; color: #111827; margin: 0 0 24px 0; }
+    .email-content p { font-size: 16px; margin: 0 0 16px 0; color: #4b5563; }
+    
+    /* Button */
+    .button-wrapper { text-align: center; margin: 32px 0; }
+    .email-button { display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff !important; text-decoration: none; border-radius: 12px; font-size: 16px; font-weight: 600; font-family: 'Segoe UI', Arial, sans-serif; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); }
+    .email-button.green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4); }
+    
+    /* Info box */
+    .info-box { background-color: #f0f9ff; border-left: 4px solid #2563eb; padding: 16px 20px; margin: 24px 0; border-radius: 0 8px 8px 0; }
+    .info-box p { margin: 0; font-size: 14px; color: #1e40af; }
+    
+    /* Warning box */
+    .warning-box { background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 24px 0; border-radius: 0 8px 8px 0; }
+    .warning-box p { margin: 0; font-size: 14px; color: #92400e; }
+    
+    /* Footer */
+    .email-footer { background-color: #f9fafb; padding: 32px 40px; text-align: center; border-top: 1px solid #e5e7eb; }
+    .footer-text { font-size: 13px; color: #6b7280; font-family: 'Segoe UI', Arial, sans-serif; margin: 0 0 12px 0; }
+    .footer-links { margin: 16px 0 0 0; }
+    .footer-links a { color: #2563eb; text-decoration: none; font-size: 13px; margin: 0 12px; }
+    .footer-divider { color: #d1d5db; }
+    
+    /* Responsive */
+    @media only screen and (max-width: 620px) {
+      .email-container { margin: 0 16px; }
+      .email-header, .email-content, .email-footer { padding: 24px; }
+      .email-content h1 { font-size: 20px; }
+      .email-button { padding: 14px 32px; font-size: 15px; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; width: 100%; background-color: #f4f7fa;">
+  <!-- Outer wrapper table for centering -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f4f7fa;">
+    <tr>
+      <td align="center" style="padding: 40px 16px;">
+        <!--[if mso]>
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" align="center">
+        <tr><td>
+        <![endif]-->
+        <!-- Main container -->
+        <table role="presentation" class="email-container" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);">
+          <!-- Header -->
+          <tr>
+            <td class="email-header" align="center" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); background-color: #2563eb; padding: 32px 40px; text-align: center;">
+              <h1 class="logo-text" style="color: #ffffff; font-size: 28px; font-weight: 700; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; letter-spacing: -0.5px;">MediKariyer</h1>
+              <p class="logo-subtitle" style="color: rgba(255, 255, 255, 0.85); font-size: 14px; font-family: 'Segoe UI', Arial, sans-serif; margin: 8px 0 0 0;">Sağlık Sektörünün Kariyer Platformu</p>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td class="email-content" style="padding: 40px; font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; line-height: 1.7;">
+              {{content}}
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td class="email-footer" align="center" style="background-color: #f9fafb; padding: 32px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p class="footer-text" style="font-size: 13px; color: #6b7280; font-family: 'Segoe UI', Arial, sans-serif; margin: 0 0 12px 0;">Bu e-posta MediKariyer tarafından gönderilmiştir.</p>
+              <p class="footer-text" style="font-size: 13px; color: #6b7280; font-family: 'Segoe UI', Arial, sans-serif; margin: 0 0 12px 0;">© {{year}} MediKariyer. Tüm hakları saklıdır.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 16px auto 0 auto;">
+                <tr>
+                  <td style="padding: 0 12px;"><a href="{{websiteUrl}}" style="color: #2563eb; text-decoration: none; font-size: 13px; font-family: 'Segoe UI', Arial, sans-serif;">Web Sitesi</a></td>
+                  <td style="color: #d1d5db;">|</td>
+                  <td style="padding: 0 12px;"><a href="{{websiteUrl}}/privacy" style="color: #2563eb; text-decoration: none; font-size: 13px; font-family: 'Segoe UI', Arial, sans-serif;">Gizlilik Politikası</a></td>
+                  <td style="color: #d1d5db;">|</td>
+                  <td style="padding: 0 12px;"><a href="{{websiteUrl}}/contact" style="color: #2563eb; text-decoration: none; font-size: 13px; font-family: 'Segoe UI', Arial, sans-serif;">İletişim</a></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]>
+        </td></tr>
+        </table>
+        <![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

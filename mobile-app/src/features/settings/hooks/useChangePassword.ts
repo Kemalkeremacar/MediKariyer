@@ -10,12 +10,16 @@
  * - showAlert modal açıyor ve navigation.goBack() ile çakışıyor
  * - Modal açık kalırsa touch events engelleniyor
  * 
+ * **GÜVENLİK:** Şifre değiştirildiğinde diğer tüm oturumlar sonlandırılır.
+ * Mevcut oturum korunur (refresh token backend'e gönderilir).
+ * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import { useMutation } from '@tanstack/react-query';
 import { authService } from '@/api/services/authService';
+import { tokenManager } from '@/utils/tokenManager';
 
 /**
  * Şifre değiştirme payload tipi
@@ -49,8 +53,11 @@ interface ChangePasswordPayload {
  */
 export const useChangePassword = () => {
   return useMutation({
-    mutationFn: (payload: ChangePasswordPayload) =>
-      authService.changePassword(payload),
+    mutationFn: async (payload: ChangePasswordPayload) => {
+      // Mevcut oturumu korumak için refresh token'ı al
+      const refreshToken = await tokenManager.getRefreshToken();
+      return authService.changePassword(payload, refreshToken || undefined);
+    },
     onSuccess: () => {
       // Alert/Toast gösterimi çağıran component'e bırakıldı
       // (ChangePasswordScreen showToast kullanıyor)

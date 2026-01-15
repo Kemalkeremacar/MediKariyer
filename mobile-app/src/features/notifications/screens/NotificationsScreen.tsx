@@ -39,7 +39,7 @@
  * - Pull-to-refresh ile manuel yenileme
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -213,15 +213,61 @@ export const NotificationsScreen = () => {
     setSelectedIds(new Set());
   }, []);
 
-  const toggleSelectAll = useCallback(() => {
-    setSelectedIds((prev) => {
-      if (prev.size === filteredNotifications.length) {
-        return new Set();
-      } else {
-        return new Set(filteredNotifications.map((n) => n.id));
+  // Tümünü Seç için loading state
+  const [isLoadingAll, setIsLoadingAll] = useState(false);
+  const [pendingSelectAll, setPendingSelectAll] = useState(false);
+
+  // Tüm sayfalar yüklendikten sonra seçimi yap
+  useEffect(() => {
+    if (pendingSelectAll && !isLoadingAll && !hasNextPage) {
+      setSelectedIds(new Set(filteredNotifications.map((n) => n.id)));
+      setPendingSelectAll(false);
+    }
+  }, [pendingSelectAll, isLoadingAll, hasNextPage, filteredNotifications]);
+
+  // Tüm sayfaları yükle ve seç
+  const toggleSelectAll = useCallback(async () => {
+    // Eğer tümü seçiliyse, seçimi kaldır
+    if (selectedIds.size === filteredNotifications.length && !hasNextPage) {
+      setSelectedIds(new Set());
+      return;
+    }
+
+    // Henüz yüklenmemiş sayfalar varsa
+    if (hasNextPage) {
+      setIsLoadingAll(true);
+      setPendingSelectAll(true);
+      
+      try {
+        // Tüm sayfaları yükle - pagination.has_next kontrolü ile
+        let hasMore = true;
+        let safetyCounter = 0;
+        const maxIterations = 20; // Güvenlik için maksimum 20 sayfa
+        
+        while (hasMore && safetyCounter < maxIterations) {
+          const result = await fetchNextPage();
+          safetyCounter++;
+          
+          // Son sayfanın pagination bilgisini kontrol et
+          const pages = result.data?.pages;
+          if (pages && pages.length > 0) {
+            const lastPage = pages[pages.length - 1];
+            hasMore = lastPage?.pagination?.has_next === true;
+          } else {
+            hasMore = false;
+          }
+        }
+      } catch (error) {
+        devLog.error('Failed to load all pages:', error);
+        setPendingSelectAll(false);
+      } finally {
+        setIsLoadingAll(false);
       }
-    });
-  }, [filteredNotifications]);
+    } else {
+      // Tüm sayfalar zaten yüklü, direkt seç
+      setSelectedIds(new Set(filteredNotifications.map((n) => n.id)));
+    }
+  }, [filteredNotifications, selectedIds.size, hasNextPage, fetchNextPage]);
 
   const toggleSelectNotification = useCallback((id: number) => {
     setSelectedIds((prev) => {
@@ -240,15 +286,22 @@ export const NotificationsScreen = () => {
     if (selectedNotifications.length === 0) return;
     
     try {
-      await Promise.all(
-        selectedNotifications.map((id) => markAsRead(id))
-      );
+      // Eğer "Tümü" tab'ındayız ve tüm bildirimler seçiliyse, markAllAsRead kullan (tek API çağrısı)
+      // Not: "Okunmamış" tab'ında bu optimizasyon yapılmaz çünkü sadece okunmamışlar listeleniyor
+      if (activeTab === 'all' && selectedIds.size === totalCount && !hasNextPage) {
+        await markAllAsRead();
+      } else {
+        // Sadece seçili bildirimleri işaretle
+        await Promise.all(
+          selectedNotifications.map((id) => markAsRead(id))
+        );
+      }
       setSelectedIds(new Set());
       setSelectionMode(false);
     } catch (error) {
       devLog.error('Failed to mark selected as read:', error);
     }
-  }, [selectedIds, markAsRead]);
+  }, [selectedIds, markAsRead, markAllAsRead, activeTab, totalCount, hasNextPage]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -333,9 +386,14 @@ export const NotificationsScreen = () => {
           <TouchableOpacity 
             style={styles.selectAllButton}
             onPress={toggleSelectAll}
+            disabled={isLoadingAll}
           >
             <Typography variant="body" style={styles.selectAllText}>
-              {selectedIds.size === filteredNotifications.length ? 'Tümünü Kaldır' : 'Tümünü Seç'}
+              {isLoadingAll 
+                ? 'Yükleniyor...' 
+                : selectedIds.size === filteredNotifications.length && !hasNextPage
+                  ? 'Tümünü Kaldır' 
+                  : `Tümünü Seç (${totalCount})`}
             </Typography>
           </TouchableOpacity>
           <View style={styles.actionButtons}>
@@ -344,7 +402,7 @@ export const NotificationsScreen = () => {
               onPress={handleMarkSelectedAsRead}
               variant="outline"
               size="sm"
-              disabled={selectedIds.size === 0}
+              disabled={selectedIds.size === 0 || isLoadingAll}
             />
             <IconButton
               icon={<Ionicons name="trash" size={18} color={selectedIds.size > 0 && !deleteNotificationsMutation.isPending ? colors.error[600] : colors.neutral[400]} />}

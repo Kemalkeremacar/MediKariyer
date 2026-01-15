@@ -864,6 +864,8 @@ const registerDoctor = async (registrationData) => {
         hasPasswordHash: !!createdUser.password_hash
       });
 
+      // NOT: Hoşgeldin e-postası admin onayından sonra gönderilir (adminService.updateUserApproval)
+
       return { user: userWithBooleanFlags, profile: createdProfile };  // Boolean değerlere çevrilmiş user objesi
     } catch (error) {
       // Transaction'ı rollback et
@@ -1000,6 +1002,8 @@ const registerHospital = async (registrationData) => {
         // Bildirim hatası kayıt işlemini engellemez
       }
     });
+
+    // NOT: Hoşgeldin e-postası admin onayından sonra gönderilir (adminService.updateUserApproval)
 
     return { user: createdUser, profile: createdProfile };
   } catch (error) {

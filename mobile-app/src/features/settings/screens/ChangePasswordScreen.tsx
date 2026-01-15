@@ -47,21 +47,31 @@ import { useToast } from '@/providers/ToastProvider';
  * 
  * **PUANLAMA SİSTEMİ:**
  * - 8+ karakter: +25 puan
- * - 12+ karakter: +25 puan (ek)
- * - Büyük ve küçük harf: +25 puan
- * - Rakam içeriyor: +15 puan
- * - Özel karakter: +10 puan
+ * - 12+ karakter: +10 puan (ek)
+ * - Küçük harf: +15 puan (zorunlu)
+ * - Büyük harf: +15 puan (zorunlu)
+ * - Rakam içeriyor: +15 puan (zorunlu)
+ * - Özel karakter (@$!%*?&): +15 puan (zorunlu)
  * 
  * @param {string} password - Kontrol edilecek şifre
  * @returns {number} Şifre gücü (0-100)
  */
 const calculatePasswordStrength = (password: string): number => {
   let strength = 0;
-  if (password.length >= 8) strength += 25;
-  if (password.length >= 12) strength += 25;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+  // Minimum 6 karakter (zorunlu)
+  if (password.length >= 6) strength += 20;
+  // 8+ karakter bonus
+  if (password.length >= 8) strength += 10;
+  // 12+ karakter bonus
+  if (password.length >= 12) strength += 10;
+  // Küçük harf (zorunlu)
+  if (/[a-z]/.test(password)) strength += 15;
+  // Büyük harf (zorunlu)
+  if (/[A-Z]/.test(password)) strength += 15;
+  // Rakam (zorunlu)
   if (/\d/.test(password)) strength += 15;
-  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 10;
+  // Özel karakter (zorunlu - @$!%*?&)
+  if (/[@$!%*?&]/.test(password)) strength += 15;
   return Math.min(strength, 100);
 };
 
@@ -73,9 +83,9 @@ const calculatePasswordStrength = (password: string): number => {
  */
 const getPasswordStrengthText = (password: string): string => {
   const strength = calculatePasswordStrength(password);
-  if (strength < 40) return 'Zayıf';
-  if (strength < 70) return 'Orta';
-  if (strength < 90) return 'Güçlü';
+  if (strength < 50) return 'Zayıf';
+  if (strength < 75) return 'Orta';
+  if (strength < 95) return 'Güçlü';
   return 'Çok Güçlü';
 };
 
@@ -87,9 +97,9 @@ const getPasswordStrengthText = (password: string): string => {
  */
 const getPasswordStrengthColor = (password: string): string => {
   const strength = calculatePasswordStrength(password);
-  if (strength < 40) return lightColors.error[500];
-  if (strength < 70) return lightColors.warning[500];
-  if (strength < 90) return lightColors.primary[500];
+  if (strength < 50) return lightColors.error[500];
+  if (strength < 75) return lightColors.warning[500];
+  if (strength < 95) return lightColors.primary[500];
   return lightColors.success[500];
 };
 

@@ -24,9 +24,9 @@ import { queryKeys } from '@/api/queryKeys';
  * - Akıllı refetch davranışı
  * 
  * **Cache Stratejisi:**
- * - staleTime: 1 dakika (ilanlar sık değişmez)
- * - gcTime: 5 dakika (daha uzun cache = daha az network)
- * - refetchOnMount: true (stale data varsa yenile)
+ * - staleTime: 5 dakika (ilanlar sık değişmez, gereksiz istek önleme)
+ * - gcTime: 10 dakika (daha uzun cache = daha az network)
+ * - refetchOnMount: true (stale data varsa yenile, fresh ise cache'den)
  * - refetchOnWindowFocus: false (mobilde gereksiz)
  * 
  * @param params - Filtreleme parametreleri
@@ -48,9 +48,9 @@ export const useJobs = (params: JobListParams = {}, enabled: boolean = true) => 
         : undefined,
     initialPageParam: 1,
     enabled,
-    staleTime: 1000 * 60, // 1 dakika
-    gcTime: 1000 * 60 * 5, // 5 dakika
-    refetchOnMount: true,
+    staleTime: 1000 * 60 * 5, // 5 dakika - global config ile uyumlu, gereksiz istek önleme
+    gcTime: 1000 * 60 * 10, // 10 dakika
+    refetchOnMount: true, // Stale ise refetch, fresh ise cache'den
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });

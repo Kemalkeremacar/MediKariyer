@@ -231,7 +231,7 @@ export const resetPasswordSchema = z.object({
  * 
  * Field'lar:
  * - email: E-posta adresi
- * - password: Şifre (min 3, max 128 karakter)
+ * - password: Şifre (min 6, max 128 karakter, özel karakter zorunlu)
  * - first_name, last_name: İsim bilgileri
  * - title: Ünvan (Dr., Uz. Dr., Prof. Dr. vb.)
  * - specialty_id: Ana dal/branş (zorunlu)
@@ -240,7 +240,7 @@ export const resetPasswordSchema = z.object({
  */
 export const registerDoctorSchema = z.object({
   email: emailSchema,
-  password: z.string().min(3, 'Şifre en az 3 karakter olmalıdır').max(128, 'Şifre en fazla 128 karakter olabilir'),
+  password: passwordSchema, // Güçlü şifre kuralları (min 6, özel karakter zorunlu)
   first_name: nameSchema,
   last_name: nameSchema,
   title: z.enum(['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'], {
@@ -262,7 +262,7 @@ export const registerDoctorSchema = z.object({
  * 
  * Field'lar:
  * - email: E-posta adresi
- * - password: Şifre (min 3, max 128 karakter)
+ * - password: Şifre (min 6, max 128 karakter, özel karakter zorunlu)
  * - institution_name: Kurum adı (min 2, max 255 karakter)
  * - city_id: Şehir seçimi (zorunlu)
  * - phone: Telefon numarası
@@ -270,7 +270,7 @@ export const registerDoctorSchema = z.object({
  */
 export const registerHospitalSchema = z.object({
   email: emailSchema,
-  password: z.string().min(3, 'Şifre en az 3 karakter olmalıdır').max(128, 'Şifre en fazla 128 karakter olabilir'),
+  password: passwordSchema, // Güçlü şifre kuralları (min 6, özel karakter zorunlu)
   institution_name: z.string().min(2, 'Kurum adı en az 2 karakter olmalıdır').max(255, 'Kurum adı en fazla 255 karakter olabilir'),
   city_id: z.number().int().positive('Şehir seçimi zorunludur'),
   phone: z.string().min(3, 'Telefon numarası zorunludur'),

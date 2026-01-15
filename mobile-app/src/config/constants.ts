@@ -53,7 +53,7 @@ export const ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'application/msword'];
 // ============================================================================
 // VALİDASYON
 // ============================================================================
-export const MIN_PASSWORD_LENGTH = 8; // Minimum şifre uzunluğu
+export const MIN_PASSWORD_LENGTH = 6; // Minimum şifre uzunluğu (Backend ile uyumlu)
 export const MAX_PASSWORD_LENGTH = 128; // Maksimum şifre uzunluğu
 export const MIN_NAME_LENGTH = 2; // Minimum isim uzunluğu
 export const MAX_NAME_LENGTH = 50; // Maksimum isim uzunluğu

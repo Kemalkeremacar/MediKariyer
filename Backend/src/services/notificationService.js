@@ -1307,7 +1307,9 @@ module.exports = {
   
   // Role-based bildirim gönderme
   sendDoctorNotification,
+  sendDoctorJobStatusNotification,
   sendHospitalNotification,
+  sendHospitalWithdrawalNotification,
   sendAdminNotification,
   sendAdminBulkNotification,
   sendAdminSystemNotification,

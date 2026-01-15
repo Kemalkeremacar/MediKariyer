@@ -24,6 +24,11 @@ import {
 // ============================================================================
 
 /**
+ * Spam domain listesi (geçici e-posta servisleri)
+ */
+const SPAM_DOMAINS = ['tempmail.com', '10minutemail.com', 'guerrillamail.com'];
+
+/**
  * E-posta formatını doğrula
  * 
  * @param email - Doğrulanacak e-posta
@@ -38,6 +43,66 @@ export const isValidEmail = (email: string): boolean => {
   return emailRegex.test(email.trim());
 };
 
+/**
+ * E-posta spam domain kontrolü
+ * 
+ * @param email - Kontrol edilecek e-posta
+ * @returns Spam domain mi?
+ */
+export const isSpamDomain = (email: string): boolean => {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+  
+  const domain = email.toLowerCase().split('@')[1];
+  return SPAM_DOMAINS.includes(domain);
+};
+
+/**
+ * E-posta validasyonu (tam kontrol)
+ * 
+ * @param email - Doğrulanacak e-posta
+ * @returns Validasyon sonucu ve mesaj
+ * 
+ * **Kontroller:**
+ * - Format kontrolü
+ * - Ardışık nokta kontrolü
+ * - Başlangıç/bitiş nokta kontrolü
+ * - Spam domain kontrolü
+ */
+export const validateEmail = (
+  email: string
+): { isValid: boolean; message?: string } => {
+  if (!email || typeof email !== 'string') {
+    return { isValid: false, message: 'E-posta adresi gereklidir' };
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+
+  // Format kontrolü
+  if (!isValidEmail(trimmedEmail)) {
+    return { isValid: false, message: 'Geçerli bir e-posta adresi giriniz' };
+  }
+
+  // Ardışık nokta kontrolü
+  if (trimmedEmail.includes('..')) {
+    return { isValid: false, message: 'E-posta adresi ardışık nokta içeremez' };
+  }
+
+  // Başlangıç/bitiş nokta kontrolü
+  const localPart = trimmedEmail.split('@')[0];
+  if (localPart.startsWith('.') || localPart.endsWith('.')) {
+    return { isValid: false, message: 'E-posta adresi nokta ile başlayamaz veya bitemez' };
+  }
+
+  // Spam domain kontrolü
+  if (isSpamDomain(trimmedEmail)) {
+    return { isValid: false, message: 'Geçici e-posta servisleri kullanılamaz' };
+  }
+
+  return { isValid: true };
+};
+
 // ============================================================================
 // PASSWORD VALIDATION
 // ============================================================================
@@ -49,11 +114,12 @@ export const isValidEmail = (email: string): boolean => {
  * @returns Validasyon sonucu ve mesaj
  * 
  * **Gereksinimler:**
- * - Minimum uzunluk: MIN_PASSWORD_LENGTH
- * - Maksimum uzunluk: MAX_PASSWORD_LENGTH
+ * - Minimum uzunluk: MIN_PASSWORD_LENGTH (6)
+ * - Maksimum uzunluk: MAX_PASSWORD_LENGTH (128)
  * - En az bir büyük harf
  * - En az bir küçük harf
  * - En az bir rakam
+ * - En az bir özel karakter (@$!%*?&)
  */
 export const validatePassword = (
   password: string
@@ -97,6 +163,14 @@ export const validatePassword = (
     return {
       isValid: false,
       message: 'Şifre en az bir rakam içermelidir',
+    };
+  }
+
+  // En az bir özel karakter kontrolü
+  if (!/[@$!%*?&]/.test(password)) {
+    return {
+      isValid: false,
+      message: 'Şifre en az bir özel karakter içermelidir (@$!%*?&)',
     };
   }
 
@@ -153,14 +227,17 @@ export const validateName = (
 // ============================================================================
 
 /**
- * Telefon numarası doğrula (Türk telefon formatı)
+ * Telefon numarası doğrula (Türk cep telefonu formatı)
  * 
  * @param phone - Doğrulanacak telefon numarası
  * @returns Telefon geçerli mi?
  * 
  * **Desteklenen Formatlar:**
- * - +90XXXXXXXXXX
- * - 0XXXXXXXXXX
+ * - +905XXXXXXXXX
+ * - 05XXXXXXXXX
+ * - 5XXXXXXXXX
+ * 
+ * **Not:** Sadece cep telefonu numaraları kabul edilir (5 ile başlayan)
  */
 export const isValidPhone = (phone: string): boolean => {
   if (!phone || typeof phone !== 'string') {
@@ -170,8 +247,9 @@ export const isValidPhone = (phone: string): boolean => {
   // Boşluk, tire ve parantezleri kaldır
   const cleanPhone = phone.replace(/[\s\-()]/g, '');
 
-  // Türk telefon numarası formatı: +90XXXXXXXXXX veya 0XXXXXXXXXX
-  const phoneRegex = /^(\+90|0)?[1-9]\d{9}$/;
+  // Türk cep telefonu formatı: +905XXXXXXXXX veya 05XXXXXXXXX veya 5XXXXXXXXX
+  // Backend ile uyumlu: sadece 5 ile başlayan cep numaraları
+  const phoneRegex = /^(\+90|0)?[5][0-9]{9}$/;
   return phoneRegex.test(cleanPhone);
 };
 
@@ -399,16 +477,36 @@ export const sanitizeString = (value: string): string => {
 
 /**
  * E-posta validasyon şeması (Zod)
+ * Backend ile uyumlu: spam domain kontrolü dahil
  */
-export const emailSchema = z.string().email('Geçerli bir e-posta girin');
+export const emailSchema = z
+  .string()
+  .email('Geçerli bir e-posta girin')
+  .max(255, 'E-posta adresi en fazla 255 karakter olabilir')
+  .transform((val) => val.toLowerCase().trim())
+  .refine((val) => !val.includes('..'), 'E-posta adresi ardışık nokta içeremez')
+  .refine((val) => {
+    const localPart = val.split('@')[0];
+    return !localPart.startsWith('.') && !localPart.endsWith('.');
+  }, 'E-posta adresi nokta ile başlayamaz veya bitemez')
+  .refine((val) => {
+    const spamDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com'];
+    const domain = val.split('@')[1];
+    return !spamDomains.includes(domain);
+  }, 'Geçici e-posta servisleri kullanılamaz');
 
 /**
  * Şifre validasyon şeması (Zod)
+ * Backend ile uyumlu: min 6, max 128, büyük/küçük harf, rakam, özel karakter
  */
 export const passwordSchema = z
   .string()
   .min(MIN_PASSWORD_LENGTH, `Şifre en az ${MIN_PASSWORD_LENGTH} karakter olmalı`)
-  .max(MAX_PASSWORD_LENGTH, `Şifre en fazla ${MAX_PASSWORD_LENGTH} karakter olabilir`);
+  .max(MAX_PASSWORD_LENGTH, `Şifre en fazla ${MAX_PASSWORD_LENGTH} karakter olabilir`)
+  .refine((val) => /[A-Z]/.test(val), 'Şifre en az bir büyük harf içermelidir')
+  .refine((val) => /[a-z]/.test(val), 'Şifre en az bir küçük harf içermelidir')
+  .refine((val) => /\d/.test(val), 'Şifre en az bir rakam içermelidir')
+  .refine((val) => /[@$!%*?&]/.test(val), 'Şifre en az bir özel karakter içermelidir (@$!%*?&)');
 
 /**
  * İsim validasyon şeması (Zod)
@@ -436,7 +534,7 @@ export const registrationValidationSchema = z
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: passwordSchema,
-    title: z.enum(['Dr', 'Uz.Dr', 'Dr.Öğr.Üyesi', 'Doç.Dr', 'Prof.Dr'], {
+    title: z.enum(['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'], {
       message: 'Lütfen ünvan seçin',
     }),
     specialty_id: z.string().min(1, 'Lütfen branş seçin'),

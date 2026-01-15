@@ -46,37 +46,66 @@ const Joi = require('joi');
 // ==================== BASE SCHEMAS (Reuse from authSchemas if needed) ====================
 
 /**
- * Email Schema (minimal - mobile için)
+ * Email Schema (güçlendirilmiş - Backend web ile uyumlu)
+ * 
+ * Validasyon Kuralları:
+ * - Email format kontrolü
+ * - Maksimum 255 karakter
+ * - Küçük harfe çevirme ve trim
+ * - Ardışık nokta kontrolü
+ * - Başlangıç/bitiş nokta kontrolü
+ * - Spam domain engelleme (tempmail vb.)
  */
 const emailSchema = Joi.string()
   .email({ tlds: { allow: false } })
   .max(255)
   .lowercase()
   .trim()
+  .custom((value, helpers) => {
+    // Ardışık nokta kontrolü
+    if (value.includes('..')) {
+      return helpers.error('string.noDoubleDots');
+    }
+    // Başlangıç/bitiş nokta kontrolü
+    if (value.startsWith('.') || value.endsWith('.')) {
+      return helpers.error('string.noLeadingTrailingDots');
+    }
+    // Spam domain kontrolü
+    const spamDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com'];
+    const domain = value.split('@')[1];
+    if (spamDomains.includes(domain)) {
+      return helpers.error('string.spamDomain');
+    }
+    return value;
+  })
   .required()
   .messages({
     'string.email': 'Geçerli bir e-posta adresi giriniz',
     'string.max': 'E-posta adresi en fazla 255 karakter olabilir',
+    'string.noDoubleDots': 'E-posta adresi ardışık nokta içeremez',
+    'string.noLeadingTrailingDots': 'E-posta adresi nokta ile başlayamaz veya bitemez',
+    'string.spamDomain': 'Geçici e-posta servisleri kullanılamaz',
     'any.required': 'E-posta adresi zorunludur'
   });
 
 /**
  * Password Schema (enhanced - production ready)
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5
- * - Minimum 8 characters
+ * - Minimum 6 characters (Backend web ile uyumlu)
  * - At least one lowercase letter
  * - At least one uppercase letter
  * - At least one digit
+ * - At least one special character (@$!%*?&)
  */
 const passwordSchema = Joi.string()
-  .min(8)
+  .min(6)
   .max(128)
-  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
   .required()
   .messages({
-    'string.min': 'Şifre en az 8 karakter olmalıdır',
+    'string.min': 'Şifre en az 6 karakter olmalıdır',
     'string.max': 'Şifre en fazla 128 karakter olabilir',
-    'string.pattern.base': 'Şifre en az bir küçük harf, bir büyük harf ve bir rakam içermelidir',
+    'string.pattern.base': 'Şifre en az bir küçük harf, bir büyük harf, bir rakam ve bir özel karakter (@$!%*?&) içermelidir',
     'any.required': 'Şifre zorunludur'
   });
 
@@ -89,18 +118,18 @@ const passwordSchema = Joi.string()
 const mobileRegisterDoctorSchema = Joi.object({
   email: emailSchema,
   password: passwordSchema,
-  first_name: Joi.string().min(2).max(100).trim().required().messages({
+  first_name: Joi.string().min(2).max(50).trim().required().messages({
     'string.min': 'Ad en az 2 karakter olmalıdır',
-    'string.max': 'Ad en fazla 100 karakter olabilir',
+    'string.max': 'Ad en fazla 50 karakter olabilir',
     'any.required': 'Ad zorunludur'
   }),
-  last_name: Joi.string().min(2).max(100).trim().required().messages({
+  last_name: Joi.string().min(2).max(50).trim().required().messages({
     'string.min': 'Soyad en az 2 karakter olmalıdır',
-    'string.max': 'Soyad en fazla 100 karakter olabilir',
+    'string.max': 'Soyad en fazla 50 karakter olabilir',
     'any.required': 'Soyad zorunludur'
   }),
-  title: Joi.string().valid('Dr', 'Uz.Dr', 'Dr.Öğr.Üyesi', 'Doç.Dr', 'Prof.Dr').required().messages({
-    'any.only': 'Ünvan Dr, Uz.Dr, Dr.Öğr.Üyesi, Doç.Dr veya Prof.Dr olmalıdır',
+  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').required().messages({
+    'any.only': 'Ünvan Dr., Uz. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır',
     'any.required': 'Ünvan zorunludur'
   }),
   specialty_id: Joi.number().integer().positive().required().messages({
@@ -187,16 +216,16 @@ const mobileResetPasswordSchema = Joi.object({
  * @description Mobile profil güncelleme endpoint için validasyon
  */
 const mobileUpdatePersonalInfoSchema = Joi.object({
-  first_name: Joi.string().min(2).max(100).trim().optional().messages({
+  first_name: Joi.string().min(2).max(50).trim().optional().messages({
     'string.min': 'Ad en az 2 karakter olmalıdır',
-    'string.max': 'Ad en fazla 100 karakter olabilir'
+    'string.max': 'Ad en fazla 50 karakter olabilir'
   }),
-  last_name: Joi.string().min(2).max(100).trim().optional().messages({
+  last_name: Joi.string().min(2).max(50).trim().optional().messages({
     'string.min': 'Soyad en az 2 karakter olmalıdır',
-    'string.max': 'Soyad en fazla 100 karakter olabilir'
+    'string.max': 'Soyad en fazla 50 karakter olabilir'
   }),
-  title: Joi.string().valid('Dr', 'Uz.Dr', 'Dr.Öğr.Üyesi', 'Doç.Dr', 'Prof.Dr').optional().messages({
-    'any.only': 'Ünvan Dr, Uz.Dr, Dr.Öğr.Üyesi, Doç.Dr veya Prof.Dr olmalıdır'
+  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').optional().messages({
+    'any.only': 'Ünvan Dr., Uz. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır'
   }),
   specialty_id: Joi.number().integer().positive().optional().messages({
     'number.base': 'Branş ID sayı olmalıdır',
@@ -208,9 +237,8 @@ const mobileUpdatePersonalInfoSchema = Joi.object({
     'number.integer': 'Yan dal ID tam sayı olmalıdır',
     'number.positive': 'Yan dal ID pozitif bir sayı olmalıdır'
   }),
-  phone: Joi.string().pattern(/^[0-9+\-\s()]+$/).max(20).allow(null, '').optional().messages({
-    'string.pattern.base': 'Geçerli bir telefon numarası giriniz',
-    'string.max': 'Telefon numarası en fazla 20 karakter olabilir'
+  phone: Joi.string().pattern(/^(\+90|0)?[5][0-9]{9}$/).allow(null, '').optional().messages({
+    'string.pattern.base': 'Geçerli bir cep telefonu numarası giriniz (örn: 05551234567)'
   }),
   dob: Joi.alternatives().try(
     Joi.date().max('now'),

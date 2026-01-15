@@ -64,8 +64,9 @@ const getMe = catchAsync(async (req, res) => {
 });
 
 const changePassword = catchAsync(async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-  await mobileAuthService.changePassword(req.user.id, { currentPassword, newPassword });
+  const { currentPassword, newPassword, refreshToken } = req.body;
+  // Mevcut oturumu korumak için refresh token'ı gönder (opsiyonel)
+  await mobileAuthService.changePassword(req.user.id, { currentPassword, newPassword }, refreshToken || null);
   return sendSuccess(res, 'Şifre başarıyla değiştirildi');
 });
 

@@ -232,6 +232,7 @@ export const useResetPassword = () => {
 
 export const useChangePassword = () => {
   const { showSuccess, showError } = useUiStore();
+  const getRefreshToken = useAuthStore.getState().getRefreshToken;
 
   return useMutation({
     mutationFn: async ({ currentPassword, newPassword, confirmPassword }) => {
@@ -241,10 +242,14 @@ export const useChangePassword = () => {
         throw new Error(errorMessage);
       }
 
+      // Mevcut oturumu korumak için refresh token'ı gönder
+      const refreshToken = getRefreshToken();
+
       const response = await apiRequest.post(ENDPOINTS.AUTH.CHANGE_PASSWORD, {
         currentPassword,
         newPassword,
-        confirmPassword
+        confirmPassword,
+        refreshToken // GÜVENLİK: Mevcut oturum korunur, diğer oturumlar sonlandırılır
       });
 
       const result = response.data;

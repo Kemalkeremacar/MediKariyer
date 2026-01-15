@@ -46,7 +46,7 @@ const queryClient = new QueryClient({
       retry: MAX_RETRY_ATTEMPTS, // 2 yeniden deneme
       refetchOnWindowFocus: false, // Pencere focus olduğunda yeniden getirme
       refetchOnReconnect: true, // İnternet bağlantısı geri geldiğinde yeniden getir
-      refetchOnMount: true, // Component mount olduğunda yeniden getir
+      refetchOnMount: true, // Component mount olduğunda yeniden getir (stale ise)
     },
     mutations: {
       retry: false, // Mutation'lar için yeniden deneme yok

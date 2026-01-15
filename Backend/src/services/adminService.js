@@ -813,6 +813,7 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
 /**
  * Kullanıcı onay durumunu günceller
  * Onay/red durumuna göre bildirim gönderir
+ * Onaylandığında hoşgeldin e-postası gönderir
  * 
  * @param {number} userId - Kullanıcı ID'si
  * @param {boolean} approved - Onay durumu
@@ -836,6 +837,65 @@ const updateUserApproval = async (userId, approved, rejectionReason = null) => {
     is_approved: approved,
     updated_at: db.fn.now()
   });
+
+  // Durum değiştiyse bildirim ve email gönder
+  if (approved !== oldApprovalStatus) {
+    // Kullanıcı bilgilerini al (email ve profil için)
+    let userName = user.email;
+    let userType = user.role;
+
+    // Doktor ise profil bilgilerini al
+    if (user.role === 'doctor') {
+      const doctorProfile = await db('doctor_profiles').where('user_id', userId).first();
+      if (doctorProfile) {
+        userName = `${doctorProfile.first_name} ${doctorProfile.last_name}`;
+      }
+    }
+    // Hastane ise profil bilgilerini al
+    else if (user.role === 'hospital') {
+      const hospitalProfile = await db('hospital_profiles').where('user_id', userId).first();
+      if (hospitalProfile) {
+        userName = hospitalProfile.institution_name;
+      }
+    }
+
+    // In-app bildirim gönder (kullanıcı giriş yaptığında görecek)
+    try {
+      const action = approved ? 'approved' : 'approval_removed';
+      await notificationService.sendUserStatusNotification(userId, action, rejectionReason);
+      logger.info(`User ${action} notification sent`, { userId, role: user.role });
+    } catch (notificationError) {
+      logger.warn('User approval notification failed (non-critical):', {
+        userId,
+        error: notificationError.message
+      });
+    }
+
+    // Onaylandıysa hoşgeldin e-postası gönder
+    if (approved) {
+      try {
+        const emailService = require('../utils/emailService');
+        await emailService.sendWelcomeEmail({
+          to: user.email,
+          name: userName,
+          userType: userType
+        });
+
+        logger.info('Welcome email sent after approval', {
+          userId,
+          email: user.email,
+          role: user.role
+        });
+      } catch (emailError) {
+        // Email hatası onay işlemini engellemez
+        logger.warn('Welcome email failed after approval (non-critical):', {
+          userId,
+          email: user.email,
+          error: emailError.message
+        });
+      }
+    }
+  }
 
   return true;
 };

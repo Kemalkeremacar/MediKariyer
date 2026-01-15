@@ -242,15 +242,7 @@ const refreshTokenSchema = Joi.object({
  */
 const registerDoctorSchema = Joi.object({
   email: emailSchema,
-  password: Joi.string()
-    .min(3) // Test için minimum 3 karakter
-    .max(128)
-    .required()
-    .messages({
-      'string.min': 'Şifre en az 3 karakter olmalıdır',
-      'string.max': 'Şifre en fazla 128 karakter olabilir',
-      'any.required': 'Şifre zorunludur'
-    }),
+  password: passwordSchema, // Güçlü şifre kuralları (min 6, özel karakter zorunlu)
   first_name: Joi.string()
     .min(2)
     .max(50)
@@ -332,15 +324,7 @@ const registerDoctorSchema = Joi.object({
  */
 const registerHospitalSchema = Joi.object({
   email: emailSchema,
-  password: Joi.string()
-    .min(3) // Test için minimum 3 karakter
-    .max(128)
-    .required()
-    .messages({
-      'string.min': 'Şifre en az 3 karakter olmalıdır',
-      'string.max': 'Şifre en fazla 128 karakter olabilir',
-      'any.required': 'Şifre zorunludur'
-    }),
+  password: passwordSchema, // Güçlü şifre kuralları (min 6, özel karakter zorunlu)
   institution_name: Joi.string()
     .min(2)
     .max(255)

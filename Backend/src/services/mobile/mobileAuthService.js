@@ -368,7 +368,7 @@ const getMe = async (userId) => {
   };
 };
 
-const changePassword = async (userId, { currentPassword, newPassword }) => {
+const changePassword = async (userId, { currentPassword, newPassword }, currentRefreshToken = null) => {
   const db = require('../../config/dbConfig').db;
   const bcrypt = require('bcryptjs');
   const logger = require('../../utils/logger');
@@ -381,14 +381,57 @@ const changePassword = async (userId, { currentPassword, newPassword }) => {
   const isValid = await bcrypt.compare(currentPassword, user.password_hash);
   if (!isValid) throw new AppError('Mevcut şifre yanlış', 400);
 
-  // Yeni şifreyi hash'le ve güncelle
-  const hashedPassword = await bcrypt.hash(newPassword, 12);
-  await db('users').where('id', user.id).update({
-    password_hash: hashedPassword,
-    updated_at: db.fn.now()
-  });
+  // Transaction ile şifre güncelleme ve oturum sonlandırma
+  await db.transaction(async (trx) => {
+    // Yeni şifreyi hash'le ve güncelle
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    await trx('users').where('id', user.id).update({
+      password_hash: hashedPassword,
+      updated_at: trx.fn.now()
+    });
 
-  logger.info(`Password changed for user: ${user.email} (mobile)`);
+    // GÜVENLİK: Diğer tüm oturumları sonlandır (mevcut oturum hariç)
+    // Bu, hesap ele geçirilmişse saldırganın erişimini keser
+    const deleteQuery = trx('refresh_tokens').where('user_id', user.id);
+    
+    // Mevcut oturumu koru (eğer token varsa)
+    if (currentRefreshToken) {
+      // Token hash'ini bul ve onu hariç tut
+      const allTokens = await trx('refresh_tokens').where('user_id', user.id).select('id', 'token_hash');
+      
+      // Mevcut token'ı bul (bcrypt compare ile)
+      let currentTokenId = null;
+      for (const tokenRecord of allTokens) {
+        try {
+          const isMatch = await bcrypt.compare(currentRefreshToken, tokenRecord.token_hash);
+          if (isMatch) {
+            currentTokenId = tokenRecord.id;
+            break;
+          }
+        } catch (e) {
+          // Hash compare hatası, devam et
+        }
+      }
+      
+      if (currentTokenId) {
+        // Mevcut oturum hariç diğerlerini sil
+        const deletedCount = await trx('refresh_tokens')
+          .where('user_id', user.id)
+          .whereNot('id', currentTokenId)
+          .del();
+        
+        logger.info(`Password changed, ${deletedCount} other sessions terminated for user: ${user.email} (mobile)`);
+      } else {
+        // Token bulunamadı, tüm oturumları sil (güvenlik için)
+        const deletedCount = await trx('refresh_tokens').where('user_id', user.id).del();
+        logger.info(`Password changed, all ${deletedCount} sessions terminated for user: ${user.email} (mobile)`);
+      }
+    } else {
+      // Token gönderilmedi, tüm oturumları sil
+      const deletedCount = await trx('refresh_tokens').where('user_id', user.id).del();
+      logger.info(`Password changed, all ${deletedCount} sessions terminated for user: ${user.email} (mobile)`);
+    }
+  });
   
   return { success: true };
 };

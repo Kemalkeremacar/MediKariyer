@@ -156,17 +156,24 @@ export const authService = {
   /**
    * Authenticated kullanıcı için şifre değiştir
    * @param payload - Şifre değiştirme bilgileri (currentPassword, newPassword, confirmPassword)
+   * @param refreshToken - Mevcut oturumu korumak için refresh token (opsiyonel)
    * @returns void
    * @throws Mevcut şifre yanlışsa veya validasyon hatası
+   * 
+   * @note Şifre değiştirildiğinde diğer tüm oturumlar sonlandırılır.
+   * Mevcut oturumu korumak için refreshToken gönderilmelidir.
    */
   async changePassword(payload: {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
-  }): Promise<void> {
+  }, refreshToken?: string): Promise<void> {
     await apiClient.post<ApiResponse<null>>(
       endpoints.auth.changePassword,
-      payload,
+      {
+        ...payload,
+        refreshToken, // Mevcut oturumu korumak için
+      },
     );
   },
 
