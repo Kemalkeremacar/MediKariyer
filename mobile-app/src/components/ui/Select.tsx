@@ -101,7 +101,7 @@ export const Select: React.FC<SelectProps> = ({
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Snap noktaları: Ekran yüksekliğinin %50 ve %90'ı
+  // Snap noktaları: %50 ve %90
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
   const selectedOption = options.find((opt) => opt.value === value);
@@ -163,7 +163,9 @@ export const Select: React.FC<SelectProps> = ({
       <BottomSheetModal
         ref={bottomSheetModalRef}
         snapPoints={snapPoints}
+        enableDynamicSizing={false}
         enablePanDownToClose
+        stackBehavior="replace"
         backdropComponent={renderBackdrop}
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.handleIndicator}

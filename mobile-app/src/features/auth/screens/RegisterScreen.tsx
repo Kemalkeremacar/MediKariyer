@@ -78,11 +78,11 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const TITLES = [
-  { label: 'Dr.', value: 'Dr' },
-  { label: 'Uz. Dr.', value: 'Uz.Dr' },
-  { label: 'Dr. Öğr. Üyesi', value: 'Dr.Öğr.Üyesi' },
-  { label: 'Doç. Dr.', value: 'Doç.Dr' },
-  { label: 'Prof. Dr.', value: 'Prof.Dr' },
+  { label: 'Dr.', value: 'Dr.' },
+  { label: 'Uz. Dr.', value: 'Uz. Dr.' },
+  { label: 'Dr. Öğr. Üyesi', value: 'Dr. Öğr. Üyesi' },
+  { label: 'Doç. Dr.', value: 'Doç. Dr.' },
+  { label: 'Prof. Dr.', value: 'Prof. Dr.' },
 ] as const;
 
 
@@ -92,7 +92,7 @@ export const RegisterScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const alert = useAlertHelpers();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [selectedTitle, setSelectedTitle] = useState<typeof TITLES[number]['value']>('Dr');
+  const [selectedTitle, setSelectedTitle] = useState<typeof TITLES[number]['value']>('Dr.');
   const [selectedSpecialty, setSelectedSpecialty] = useState<number | undefined>();
   const [selectedSubspecialty, setSelectedSubspecialty] = useState<number | undefined>();
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>('');

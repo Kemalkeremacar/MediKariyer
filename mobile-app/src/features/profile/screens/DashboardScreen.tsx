@@ -39,7 +39,7 @@
  * - %0-49: "🚀 Profilini tamamlayarak başla"
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   ScrollView,
@@ -53,7 +53,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -87,8 +87,23 @@ export const DashboardScreen = () => {
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   
+  // ScrollView ref for scroll to top
+  const scrollViewRef = useRef<ScrollView>(null);
+  
   // Side menu state
   const [menuVisible, setMenuVisible] = useState(false);
+  
+  // Ekrana focus olduğunda scroll'u en üste sıfırla
+  useFocusEffect(
+    React.useCallback(() => {
+      // Küçük bir delay ile scroll'u sıfırla (animasyon tamamlansın diye)
+      const timer = setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }, [])
+  );
   
   // Core profil bilgileri (sadece ad, soyad, fotoğraf, unvan, uzmanlık)
   const { data: profile, refetch: refetchProfile, isRefetching: isRefetchingProfile } = useProfileCore();
@@ -188,6 +203,7 @@ export const DashboardScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPadding }]}
         refreshControl={

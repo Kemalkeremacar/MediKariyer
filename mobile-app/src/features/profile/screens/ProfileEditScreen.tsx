@@ -52,11 +52,11 @@ import { formatPhoneNumber, unformatPhoneNumber, isValidPhoneNumber } from '@/ut
 
 // Title options (label'larda nokta var, value'larda yok - backend'e value gönderilir)
 const TITLE_OPTIONS: SelectOption[] = [
-  { label: 'Dr.', value: 'Dr' },
-  { label: 'Uz. Dr.', value: 'Uz.Dr' },
-  { label: 'Dr. Öğr. Üyesi', value: 'Dr.Öğr.Üyesi' },
-  { label: 'Doç. Dr.', value: 'Doç.Dr' },
-  { label: 'Prof. Dr.', value: 'Prof.Dr' },
+  { label: 'Dr.', value: 'Dr.' },
+  { label: 'Uz. Dr.', value: 'Uz. Dr.' },
+  { label: 'Dr. Öğr. Üyesi', value: 'Dr. Öğr. Üyesi' },
+  { label: 'Doç. Dr.', value: 'Doç. Dr.' },
+  { label: 'Prof. Dr.', value: 'Prof. Dr.' },
 ];
 
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
