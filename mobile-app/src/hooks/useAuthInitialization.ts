@@ -42,14 +42,15 @@ export const useAuthInitialization = () => {
         setHydrating(true);
         
         // Sonsuz beklemeyi önlemek için timeout promise oluştur
+        let timeoutId: NodeJS.Timeout;
         const timeoutPromise = new Promise<void>((_, reject) => {
-          setTimeout(() => {
+          timeoutId = setTimeout(() => {
             reject(new Error('Auth başlatma zaman aşımı'));
           }, REQUEST_TIMEOUT_MS + 5000); // 5 saniye buffer ekle
         });
 
         // Başlatmayı timeout ile yarıştır
-        await Promise.race([
+        const result = await Promise.race([
           (async () => {
             // Token'ların var olup olmadığını ve geçerli JWT olup olmadığını kontrol et
             const isValid = await tokenManager.validateTokens();
@@ -127,6 +128,9 @@ export const useAuthInitialization = () => {
           })(),
           timeoutPromise,
         ]);
+        
+        // FIXED: Clear timeout if auth logic completes first (prevent memory leak)
+        clearTimeout(timeoutId!);
       } catch (error) {
         // Timeout veya diğer hataları yönet
         if (error instanceof Error && error.message === 'Auth başlatma zaman aşımı') {

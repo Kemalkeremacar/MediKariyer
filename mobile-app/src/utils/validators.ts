@@ -113,64 +113,62 @@ export const validateEmail = (
  * @param password - Doğrulanacak şifre
  * @returns Validasyon sonucu ve mesaj
  * 
- * **Gereksinimler:**
+ * **Gereksinimler (Backend ile uyumlu):**
  * - Minimum uzunluk: MIN_PASSWORD_LENGTH (6)
  * - Maksimum uzunluk: MAX_PASSWORD_LENGTH (128)
  * - En az bir büyük harf
  * - En az bir küçük harf
  * - En az bir rakam
  * - En az bir özel karakter (@$!%*?&)
+ * - Boşluk içeremez
+ * - Aynı karakterin 3 kez tekrarını içeremez
  */
 export const validatePassword = (
   password: string
-): { isValid: boolean; message?: string } => {
+): { isValid: boolean; message?: string; failedRules?: string[] } => {
   if (!password || typeof password !== 'string') {
     return { isValid: false, message: 'Şifre gereklidir' };
   }
 
+  const failedRules: string[] = [];
+
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return {
-      isValid: false,
-      message: `Şifre en az ${MIN_PASSWORD_LENGTH} karakter olmalıdır`,
-    };
+    failedRules.push(`En az ${MIN_PASSWORD_LENGTH} karakter`);
   }
 
   if (password.length > MAX_PASSWORD_LENGTH) {
-    return {
-      isValid: false,
-      message: `Şifre en fazla ${MAX_PASSWORD_LENGTH} karakter olmalıdır`,
-    };
+    failedRules.push(`En fazla ${MAX_PASSWORD_LENGTH} karakter`);
   }
 
-  // En az bir büyük harf kontrolü
+  if (password.includes(' ')) {
+    failedRules.push('Boşluk içeremez');
+  }
+
+  if (/(.)\1{2,}/.test(password)) {
+    failedRules.push('Aynı karakter 3 kez tekrarlanamaz');
+  }
+
   if (!/[A-Z]/.test(password)) {
-    return {
-      isValid: false,
-      message: 'Şifre en az bir büyük harf içermelidir',
-    };
+    failedRules.push('En az bir büyük harf');
   }
 
-  // En az bir küçük harf kontrolü
   if (!/[a-z]/.test(password)) {
-    return {
-      isValid: false,
-      message: 'Şifre en az bir küçük harf içermelidir',
-    };
+    failedRules.push('En az bir küçük harf');
   }
 
-  // En az bir rakam kontrolü
   if (!/\d/.test(password)) {
-    return {
-      isValid: false,
-      message: 'Şifre en az bir rakam içermelidir',
-    };
+    failedRules.push('En az bir rakam');
   }
 
-  // En az bir özel karakter kontrolü
   if (!/[@$!%*?&]/.test(password)) {
+    failedRules.push('En az bir özel karakter (@$!%*?&)');
+  }
+
+  if (failedRules.length > 0) {
     return {
       isValid: false,
-      message: 'Şifre en az bir özel karakter içermelidir (@$!%*?&)',
+      message: failedRules[0], // İlk hatayı göster
+      failedRules,
     };
   }
 
@@ -496,13 +494,40 @@ export const emailSchema = z
   }, 'Geçici e-posta servisleri kullanılamaz');
 
 /**
+ * Şifre kuralları - UI'da göstermek için
+ */
+export const PASSWORD_RULES = {
+  minLength: { check: (val: string) => val.length >= MIN_PASSWORD_LENGTH, message: `En az ${MIN_PASSWORD_LENGTH} karakter` },
+  maxLength: { check: (val: string) => val.length <= MAX_PASSWORD_LENGTH, message: `En fazla ${MAX_PASSWORD_LENGTH} karakter` },
+  uppercase: { check: (val: string) => /[A-Z]/.test(val), message: 'En az bir büyük harf (A-Z)' },
+  lowercase: { check: (val: string) => /[a-z]/.test(val), message: 'En az bir küçük harf (a-z)' },
+  number: { check: (val: string) => /\d/.test(val), message: 'En az bir rakam (0-9)' },
+  special: { check: (val: string) => /[@$!%*?&]/.test(val), message: 'En az bir özel karakter (@$!%*?&)' },
+  noSpaces: { check: (val: string) => !val.includes(' '), message: 'Boşluk içeremez' },
+  noRepeating: { check: (val: string) => !/(.)\1{2,}/.test(val), message: 'Aynı karakter 3 kez tekrarlanamaz' },
+} as const;
+
+/**
+ * Şifre validasyonu - hangi kuralların geçtiğini/kaldığını döndürür
+ */
+export const getPasswordValidationStatus = (password: string): { rule: string; passed: boolean; message: string }[] => {
+  return Object.entries(PASSWORD_RULES).map(([rule, { check, message }]) => ({
+    rule,
+    passed: check(password),
+    message,
+  }));
+};
+
+/**
  * Şifre validasyon şeması (Zod)
- * Backend ile uyumlu: min 6, max 128, büyük/küçük harf, rakam, özel karakter
+ * Backend ile tam uyumlu: min 6, max 128, büyük/küçük harf, rakam, özel karakter, boşluk yok, tekrar yok
  */
 export const passwordSchema = z
   .string()
   .min(MIN_PASSWORD_LENGTH, `Şifre en az ${MIN_PASSWORD_LENGTH} karakter olmalı`)
   .max(MAX_PASSWORD_LENGTH, `Şifre en fazla ${MAX_PASSWORD_LENGTH} karakter olabilir`)
+  .refine((val) => !val.includes(' '), 'Şifre boşluk içeremez')
+  .refine((val) => !/(.)\1{2,}/.test(val), 'Şifre aynı karakterin 3 kez tekrarını içeremez')
   .refine((val) => /[A-Z]/.test(val), 'Şifre en az bir büyük harf içermelidir')
   .refine((val) => /[a-z]/.test(val), 'Şifre en az bir küçük harf içermelidir')
   .refine((val) => /\d/.test(val), 'Şifre en az bir rakam içermelidir')

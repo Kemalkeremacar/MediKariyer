@@ -211,71 +211,65 @@ const attachInterceptors = (instance: AxiosInstance) => {
       // İstek yapmadan önce token'ın yenilenmesi gerekip gerekmediğini kontrol et
       const shouldRefresh = await tokenManager.shouldRefreshAccessToken();
       
-      // Start proactive refresh if needed (only one request will trigger this)
-      if (shouldRefresh && !isRefreshing) {
-        devLog.log('🔄 Token needs refresh, triggering proactive refresh...');
-        isRefreshing = true;
-        
-        // Start refresh in background (don't await here, let it run async)
-        (async () => {
+      // FIXED: Proactive refresh with proper await and race condition prevention
+      if (shouldRefresh) {
+        // If another request is already refreshing, wait for it
+        if (isRefreshing) {
+          devLog.log('⏳ Refresh already in progress by another request, waiting...');
+          await new Promise<void>((resolve, reject) => {
+            pendingQueue.push({ resolve, reject });
+          });
+          // After refresh completes, token will be fetched below
+        } else {
+          // This request will handle the refresh
+          devLog.log('🔄 Token needs refresh, triggering proactive refresh...');
+          isRefreshing = true;
+          
           try {
             const refreshToken = await tokenManager.getRefreshToken();
             if (!refreshToken) {
               devLog.warn('⚠️ No refresh token available, requests will proceed');
               processPendingQueue(null);
-              isRefreshing = false;
-              return;
+            } else {
+              const response = await axios.post<{
+                success: boolean;
+                data: {
+                  accessToken: string;
+                  refreshToken: string;
+                  user: unknown;
+                };
+              }>(
+                `${env.API_BASE_URL}${endpoints.auth.refreshToken}`,
+                { refreshToken },
+              );
+
+              // Validate response structure
+              if (!response.data?.data?.accessToken || !response.data?.data?.refreshToken) {
+                throw new Error('Invalid refresh token response structure');
+              }
+
+              const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
+              
+              // Validate tokens before saving
+              await tokenManager.saveTokens(accessToken, newRefreshToken);
+              useAuthStore.getState().markAuthenticated(user as any);
+              
+              devLog.log('✅ Proactive token refresh successful');
+              // Release all waiting requests - they will fetch the new token below
+              processPendingQueue(null);
             }
-
-            const response = await axios.post<{
-              success: boolean;
-              data: {
-                accessToken: string;
-                refreshToken: string;
-                user: unknown;
-              };
-            }>(
-              `${env.API_BASE_URL}${endpoints.auth.refreshToken}`,
-              { refreshToken },
-            );
-
-            // Validate response structure
-            if (!response.data?.data?.accessToken || !response.data?.data?.refreshToken) {
-              throw new Error('Invalid refresh token response structure');
-            }
-
-            const { accessToken, refreshToken: newRefreshToken, user } = response.data.data;
-            
-            // Validate tokens before saving
-            await tokenManager.saveTokens(accessToken, newRefreshToken);
-            useAuthStore.getState().markAuthenticated(user as any);
-            
-            devLog.log('✅ Proactive token refresh successful');
-            processPendingQueue(null);
           } catch (error) {
             devLog.warn('⚠️ Proactive token refresh failed, requests will proceed and retry on 401');
+            // Release waiting requests with error - they will try with old token and may get 401
             processPendingQueue(error);
           } finally {
             isRefreshing = false;
           }
-        })();
-      }
-      
-      // If refresh is needed or in progress, wait for it to complete
-      if (shouldRefresh || isRefreshing) {
-        if (isRefreshing) {
-          devLog.log('⏳ Refresh in progress, waiting...');
-        } else {
-          devLog.log('🔄 Token needs refresh, waiting for refresh to start...');
         }
-        
-        // Wait for refresh to complete
-        await new Promise<void>((resolve, reject) => {
-          pendingQueue.push({ resolve, reject });
-        });
       }
       
       // Get token and attach to request
+      // This will get the NEW token if refresh just completed
       const token = await tokenManager.getAccessToken();
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;

@@ -23,6 +23,7 @@ import type {
   NotificationsResponse,
   RegisterDeviceTokenPayload,
 } from '@/types/notification';
+import { validatePaginatedResponse, validateSingleItemResponse, validateApiResponse, validateResponseData } from '@/utils/apiValidator';
 
 export interface NotificationListParams {
   page?: number;
@@ -40,7 +41,9 @@ export const notificationService = {
       endpoints.deviceToken,
       payload,
     );
-    return response.data.data;
+    
+    // FIXED: Validate response structure
+    return validateSingleItemResponse<{ device_token_id: number }>(response.data, endpoints.deviceToken);
   },
 
   /**
@@ -80,6 +83,7 @@ export const notificationService = {
       pagination = responseData.pagination;
     }
     
+    // FIXED: Validate pagination structure
     if (!pagination) {
       throw new Error('Pagination bilgisi alınamadı');
     }
@@ -99,6 +103,11 @@ export const notificationService = {
     const response = await apiClient.post<ApiResponse<{ success: boolean }>>(
       endpoints.notifications.markAsRead(notificationId),
     );
+    
+    // FIXED: Validate response structure
+    validateApiResponse<{ success: boolean }>(response.data, endpoints.notifications.markAsRead(notificationId));
+    validateResponseData(response.data, endpoints.notifications.markAsRead(notificationId));
+    
     return response.data.data;
   },
 
@@ -110,7 +119,12 @@ export const notificationService = {
     const response = await apiClient.get<ApiResponse<{ count: number; unreadCount: number; totalCount: number }>>(
       endpoints.notifications.unreadCount,
     );
-    return response.data.data;
+    
+    // FIXED: Validate response structure
+    return validateSingleItemResponse<{ count: number; unreadCount: number; totalCount: number }>(
+      response.data, 
+      endpoints.notifications.unreadCount
+    );
   },
 
   /**
@@ -122,6 +136,11 @@ export const notificationService = {
     const response = await apiClient.delete<ApiResponse<{ success: boolean }>>(
       endpoints.notifications.delete(notificationId),
     );
+    
+    // FIXED: Validate response structure
+    validateApiResponse<{ success: boolean }>(response.data, endpoints.notifications.delete(notificationId));
+    validateResponseData(response.data, endpoints.notifications.delete(notificationId));
+    
     return response.data.data;
   },
 
@@ -135,7 +154,12 @@ export const notificationService = {
       endpoints.notifications.deleteMany,
       { notification_ids: notificationIds },
     );
-    return response.data.data;
+    
+    // FIXED: Validate response structure
+    return validateSingleItemResponse<{ success: boolean; deleted_count: number }>(
+      response.data,
+      endpoints.notifications.deleteMany
+    );
   },
 
   /**
@@ -146,7 +170,12 @@ export const notificationService = {
     const response = await apiClient.delete<ApiResponse<{ count: number }>>(
       endpoints.notifications.clearRead,
     );
-    return response.data.data;
+    
+    // FIXED: Validate response structure
+    return validateSingleItemResponse<{ count: number }>(
+      response.data,
+      endpoints.notifications.clearRead
+    );
   },
 };
 

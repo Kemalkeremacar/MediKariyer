@@ -61,14 +61,13 @@ import { useRegister } from '../hooks/useRegister';
 import { lookupService } from '@/api/services/lookup.service';
 import { uploadService } from '@/api/services/upload.service';
 import { handleApiError } from '@/utils/errorHandler';
+import { emailSchema, passwordSchema, getPasswordValidationStatus } from '@/utils/validators';
 
 const registerSchema = z.object({
   firstName: z.string().min(2, 'Ad en az 2 karakter olmalı'),
   lastName: z.string().min(2, 'Soyad en az 2 karakter olmalı'),
-  email: z.string().min(1, 'E-posta gerekli').email('Geçerli bir e-posta girin'),
-  password: z.string()
-    .min(8, 'Şifre en az 8 karakter olmalıdır')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Şifre en az bir küçük harf, bir büyük harf ve bir rakam içermelidir'),
+  email: emailSchema,
+  password: passwordSchema,
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Şifreler eşleşmiyor',
@@ -92,12 +91,16 @@ export const RegisterScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const alert = useAlertHelpers();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<typeof TITLES[number]['value']>('Dr.');
   const [selectedSpecialty, setSelectedSpecialty] = useState<number | undefined>();
   const [selectedSubspecialty, setSelectedSubspecialty] = useState<number | undefined>();
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>('');
   const [photoUri, setPhotoUri] = useState<string>('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [passwordValue, setPasswordValue] = useState<string>('');
+  const [confirmPasswordValue, setConfirmPasswordValue] = useState<string>('');
+  const [showPasswordRules, setShowPasswordRules] = useState(false);
   
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -253,6 +256,7 @@ export const RegisterScreen = () => {
   const registerMutation = useRegister({
     onSuccess: () => {
       setServerError(null);
+      setEmailError(null);
       // Navigate to pending approval screen - only shown after new doctor registration
       // User is NOT authenticated after registration (no tokens returned)
       // Use replace to prevent going back to register screen
@@ -264,12 +268,22 @@ export const RegisterScreen = () => {
         '/auth/register',
         (msg) => alert.error(msg)
       );
-      setServerError(errorMessage);
+      
+      // E-posta zaten kayıtlı hatası için özel kontrol
+      const lowerMessage = errorMessage.toLowerCase();
+      if (lowerMessage.includes('e-posta') && (lowerMessage.includes('kayıtlı') || lowerMessage.includes('kullanımda'))) {
+        setEmailError(errorMessage);
+        setServerError(null);
+      } else {
+        setServerError(errorMessage);
+        setEmailError(null);
+      }
     },
   });
 
   const onSubmit = (values: RegisterFormValues) => {
     setServerError(null);
+    setEmailError(null);
     
     // Validation
     if (!selectedSpecialty) {
@@ -493,7 +507,11 @@ export const RegisterScreen = () => {
                     keyboardType="email-address"
                     placeholder="ornek@medikariyer.com"
                     value={value}
-                    onChangeText={onChange}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      // E-posta değiştiğinde server hatasını temizle
+                      if (emailError) setEmailError(null);
+                    }}
                     variant="underline"
                   />
                 )}
@@ -501,6 +519,11 @@ export const RegisterScreen = () => {
               {errors.email && (
                 <Typography variant="caption" style={styles.errorText}>
                   {errors.email.message}
+                </Typography>
+              )}
+              {emailError && !errors.email && (
+                <Typography variant="caption" style={styles.errorText}>
+                  {emailError}
                 </Typography>
               )}
             </View>
@@ -514,15 +537,40 @@ export const RegisterScreen = () => {
                 name="password"
                 render={({ field: { onChange, value } }) => (
                   <Input
-                    placeholder="En az 8 karakter (büyük, küçük harf ve rakam)"
+                    placeholder="Güçlü bir şifre oluşturun"
                     secureTextEntry
                     value={value}
-                    onChangeText={onChange}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      setPasswordValue(text);
+                      setShowPasswordRules(text.length > 0);
+                    }}
+                    onFocus={() => setShowPasswordRules(true)}
                     variant="underline"
                   />
                 )}
               />
-              {errors.password && (
+              {/* Şifre Kuralları Göstergesi */}
+              {showPasswordRules && passwordValue.length > 0 && (
+                <View style={styles.passwordRulesContainer}>
+                  {getPasswordValidationStatus(passwordValue).map((rule) => (
+                    <View key={rule.rule} style={styles.passwordRuleRow}>
+                      <Ionicons 
+                        name={rule.passed ? 'checkmark-circle' : 'close-circle'} 
+                        size={14} 
+                        color={rule.passed ? theme.colors.success[600] : theme.colors.error[400]} 
+                      />
+                      <Typography 
+                        variant="caption" 
+                        style={rule.passed ? styles.passwordRulePassed : styles.passwordRuleFailed}
+                      >
+                        {rule.message}
+                      </Typography>
+                    </View>
+                  ))}
+                </View>
+              )}
+              {errors.password && !showPasswordRules && (
                 <Typography variant="caption" style={styles.errorText}>
                   {errors.password.message}
                 </Typography>
@@ -541,12 +589,31 @@ export const RegisterScreen = () => {
                     placeholder="Şifrenizi tekrar girin"
                     secureTextEntry
                     value={value}
-                    onChangeText={onChange}
+                    onChangeText={(text) => {
+                      onChange(text);
+                      setConfirmPasswordValue(text);
+                    }}
                     variant="underline"
                   />
                 )}
               />
-              {errors.confirmPassword && (
+              {/* Gerçek zamanlı şifre eşleşme kontrolü */}
+              {confirmPasswordValue.length > 0 && (
+                <View style={styles.passwordMatchContainer}>
+                  <Ionicons 
+                    name={passwordValue === confirmPasswordValue ? 'checkmark-circle' : 'close-circle'} 
+                    size={14} 
+                    color={passwordValue === confirmPasswordValue ? theme.colors.success[600] : theme.colors.error[400]} 
+                  />
+                  <Typography 
+                    variant="caption" 
+                    style={passwordValue === confirmPasswordValue ? styles.passwordMatchSuccess : styles.passwordMatchError}
+                  >
+                    {passwordValue === confirmPasswordValue ? 'Şifreler eşleşiyor' : 'Şifreler eşleşmiyor'}
+                  </Typography>
+                </View>
+              )}
+              {errors.confirmPassword && confirmPasswordValue.length === 0 && (
                 <Typography variant="caption" style={styles.errorText}>
                   {errors.confirmPassword.message}
                 </Typography>
@@ -602,6 +669,7 @@ export const RegisterScreen = () => {
               label={registerMutation.isPending ? "Kayıt Oluşturuluyor..." : "Hesap Oluştur"}
               onPress={handleSubmit(onSubmit)}
               loading={registerMutation.isPending}
+              disabled={registerMutation.isPending || isUploadingPhoto}
               fullWidth
               size="lg"
               gradientColors={(theme.colors.gradient as any).header || theme.colors.gradient.primary}
@@ -852,5 +920,45 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: theme.typography.fontWeight.bold,
     fontSize: theme.typography.fontSize.lg,
     letterSpacing: 0.3,
+  },
+  // Şifre kuralları stilleri
+  passwordRulesContainer: {
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.background.tertiary,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  passwordRuleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  passwordRulePassed: {
+    marginLeft: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.success[600],
+  },
+  passwordRuleFailed: {
+    marginLeft: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.text.tertiary,
+  },
+  // Şifre eşleşme stilleri
+  passwordMatchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  passwordMatchSuccess: {
+    marginLeft: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.success[600],
+  },
+  passwordMatchError: {
+    marginLeft: theme.spacing.xs,
+    fontSize: theme.typography.fontSize.xs,
+    color: theme.colors.error[400],
   },
 });

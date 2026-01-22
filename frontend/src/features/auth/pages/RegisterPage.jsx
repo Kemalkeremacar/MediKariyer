@@ -333,7 +333,7 @@ const RegisterPage = () => {
                   required
                 />
               </div>
-              <p className="text-xs text-blue-600 mt-1">En az 3 karakter</p>
+              <p className="text-xs text-blue-600 mt-1">En az 6 karakter, büyük/küçük harf, rakam ve özel karakter (@$!%*?&)</p>
             </div>
 
             {/* Confirm Password */}

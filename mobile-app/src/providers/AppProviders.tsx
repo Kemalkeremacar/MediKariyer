@@ -49,7 +49,20 @@ const queryClient = new QueryClient({
       refetchOnMount: true, // Component mount olduğunda yeniden getir (stale ise)
     },
     mutations: {
-      retry: false, // Mutation'lar için yeniden deneme yok
+      // FIXED: Enable retry for mutations to handle transient network errors
+      retry: (failureCount, error: any) => {
+        // Don't retry on validation errors (4xx except 408, 429)
+        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+          // Retry on timeout (408) and rate limit (429)
+          if (error?.response?.status === 408 || error?.response?.status === 429) {
+            return failureCount < 2;
+          }
+          return false;
+        }
+        // Retry on network errors and 5xx errors
+        return failureCount < 2;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Exponential backoff: 1s, 2s, 3s
     },
   },
 });

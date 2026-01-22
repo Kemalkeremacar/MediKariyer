@@ -22,6 +22,7 @@ import { tokenManager } from '@/utils/tokenManager';
 import { authService } from '@/api/services/authService';
 import { navigationRef } from '@/navigation/navigationRef';
 import { devLog } from '@/utils/devLogger';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * Çıkış yapma hook'u
@@ -77,6 +78,16 @@ export const useLogout = () => {
       // Clear tokens from secure storage
       devLog.log('🔴 useLogout - Clearing tokens...');
       await tokenManager.clearTokens();
+      
+      // FIXED: Clear persisted auth state from AsyncStorage
+      // This ensures no old user data remains after logout
+      devLog.log('🔴 useLogout - Clearing persisted auth state...');
+      try {
+        await AsyncStorage.removeItem('auth-storage');
+      } catch (error) {
+        devLog.warn('🔴 useLogout - Failed to clear AsyncStorage:', error);
+        // Don't throw - continue with logout
+      }
       
       // Clear all user-scoped query cache so no data from the previous user leaks
       devLog.log('🔴 useLogout - Clearing query cache...');

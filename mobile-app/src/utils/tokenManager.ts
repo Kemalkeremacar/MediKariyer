@@ -151,6 +151,18 @@ export const tokenManager = {
       throw new Error('Geçersiz JWT token\'ları');
     }
 
+    // FIXED: Check if tokens are already expired (defense layer)
+    // Note: Auto-refresh will handle this anyway, but better to catch early
+    const currentTime = Date.now() / 1000;
+    if (accessDecoded.exp && accessDecoded.exp < currentTime) {
+      devLog.warn('⚠️ Access token already expired, but saving anyway (will be auto-refreshed)');
+      // Don't throw - let auto-refresh handle it
+    }
+    if (refreshDecoded.exp && refreshDecoded.exp < currentTime) {
+      devLog.error('❌ Refresh token is expired, cannot save');
+      throw new Error('Refresh token süresi dolmuş');
+    }
+
     // Cihaz bağlama için cihaz parmak izi al
     const fingerprint = await deviceInfo.getDeviceFingerprint();
 

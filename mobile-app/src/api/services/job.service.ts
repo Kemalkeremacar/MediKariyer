@@ -18,6 +18,7 @@ import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
 import { ApiResponse, PaginationMeta } from '@/types/api';
 import { JobDetail, JobsResponse, JobListItem } from '@/types/job';
+import { validatePaginatedResponse, validateSingleItemResponse } from '@/utils/apiValidator';
 
 export interface JobListParams {
   page?: number;
@@ -49,17 +50,9 @@ export const jobService = {
     >(endpoints.jobs.list, {
       params,
     });
-    const responseData = response.data;
-    const pagination = responseData.pagination;
     
-    if (!pagination) {
-      throw new Error('Pagination bilgisi alınamadı');
-    }
-    
-    return {
-      data: responseData.data || [],
-      pagination,
-    };
+    // FIXED: Validate response structure to prevent silent failures
+    return validatePaginatedResponse<JobListItem>(response.data, endpoints.jobs.list);
   },
 
   /**
@@ -71,7 +64,9 @@ export const jobService = {
     const response = await apiClient.get<ApiResponse<JobDetail>>(
       endpoints.jobs.detail(id),
     );
-    return response.data.data;
+    
+    // FIXED: Validate response structure to prevent silent failures
+    return validateSingleItemResponse<JobDetail>(response.data, endpoints.jobs.detail(id));
   },
 
   /**

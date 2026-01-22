@@ -21,6 +21,7 @@ import {
   ApplicationDetail,
   ApplicationListItem,
 } from '@/types/application';
+import { validatePaginatedResponse, validateSingleItemResponse } from '@/utils/apiValidator';
 
 export interface ApplicationListParams {
   page?: number;
@@ -57,17 +58,9 @@ export const applicationService = {
     >(endpoints.applications.list, {
       params: queryParams,
     });
-    const responseData = response.data;
-    const pagination = responseData.pagination;
     
-    if (!pagination) {
-      throw new Error('Pagination bilgisi alınamadı');
-    }
-    
-    return {
-      data: responseData.data || [],
-      pagination,
-    };
+    // FIXED: Validate response structure to prevent silent failures
+    return validatePaginatedResponse<ApplicationListItem>(response.data, endpoints.applications.list);
   },
 
   /**
@@ -79,7 +72,9 @@ export const applicationService = {
     const response = await apiClient.get<ApiResponse<ApplicationDetail>>(
       endpoints.applications.detail(id),
     );
-    return response.data.data;
+    
+    // FIXED: Validate response structure to prevent silent failures
+    return validateSingleItemResponse<ApplicationDetail>(response.data, endpoints.applications.detail(id));
   },
 
   /**
