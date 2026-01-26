@@ -28,6 +28,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { tokenManager } from '@/utils/tokenManager';
 import { authService } from '@/api/services/authService';
+import { pushNotificationService } from '@/api/services/pushNotification.service';
 import { REQUEST_TIMEOUT_MS } from '@/config/constants';
 import { devLog } from '@/utils/devLogger';
 
@@ -82,6 +83,11 @@ export const useAuthInitialization = () => {
               // RootNavigator is_active ve is_approved kontrollerini yapacak
               markAuthenticated(user);
               devLog.log('✅ Kullanıcı verisi mobile API üzerinden başarıyla getirildi');
+              
+              // Push notification token'ını kaydet (arka planda, hata olsa bile devam et)
+              pushNotificationService.registerDeviceToken().catch((error) => {
+                devLog.warn('⚠️ Push notification token kaydedilemedi:', error);
+              });
             } catch (error: any) {
               // Senaryo A: 403 Forbidden - Kullanıcı onay bekliyor (beklenen durum)
               const is403Error = error?.response?.status === 403;

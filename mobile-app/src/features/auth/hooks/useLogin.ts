@@ -19,6 +19,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { tokenManager } from '@/utils/tokenManager';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
+import { pushNotificationService } from '@/api/services/pushNotification.service';
 import { navigationRef } from '@/navigation/navigationRef';
 import { devLog } from '@/utils/devLogger';
 import type { LoginPayload, AuthResponsePayload } from '@/types/auth';
@@ -119,6 +120,14 @@ export const useLogin = (callbacks?: UseLoginCallbacks) => {
        * tüm cache'i temizle
        */
       queryClient.clear();
+      
+      /**
+       * 4.5. Push notification token'ını kaydet
+       * Arka planda çalışır, hata olsa bile devam eder
+       */
+      pushNotificationService.registerDeviceToken().catch((error) => {
+        devLog.warn('⚠️ Push notification token kaydedilemedi:', error);
+      });
 
       /**
        * 5. Navigasyonu sıfırla

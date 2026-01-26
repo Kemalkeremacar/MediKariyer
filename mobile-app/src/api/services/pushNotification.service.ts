@@ -110,7 +110,8 @@ async function requestPermissions(): Promise<boolean> {
  * 
  * **Gereksinimler:**
  * - Fiziksel cihaz olmalı
- * - app.json'da projectId tanımlı olmalı
+ * - Native build: Firebase FCM gerekli (google-services.json)
+ * - EAS build: app.json'da projectId gerekli
  */
 async function getExpoPushToken(): Promise<string | null> {
   try {
@@ -120,18 +121,10 @@ async function getExpoPushToken(): Promise<string | null> {
       return null;
     }
 
-    // Project ID kontrolü (EAS Build için gerekli)
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    
-    if (!projectId) {
-      console.warn('Project ID not found in app config');
-      return null;
-    }
-
     // Token al
-    const token = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
+    // Native build (Firebase FCM) kullanıyoruz, projectId gerekmez
+    // Expo otomatik olarak Firebase'den token alır
+    const token = await Notifications.getExpoPushTokenAsync();
 
     return token.data;
   } catch (error) {

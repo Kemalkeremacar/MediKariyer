@@ -5,6 +5,8 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <!-- Push Notifications için gerekli (Android 13+) -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
