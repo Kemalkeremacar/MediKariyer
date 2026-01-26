@@ -295,6 +295,8 @@ export const ChangePasswordScreen = ({ navigation }: Props) => {
                 secureTextEntry={!showNewPassword}
                 autoCapitalize="none"
                 style={styles.passwordInput}
+                textContentType="newPassword"
+                passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
               />
               <TouchableOpacity
                 style={styles.eyeButton}
@@ -337,6 +339,8 @@ export const ChangePasswordScreen = ({ navigation }: Props) => {
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
                 style={styles.passwordInput}
+                textContentType="newPassword"
+                passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
               />
               <TouchableOpacity
                 style={styles.eyeButton}

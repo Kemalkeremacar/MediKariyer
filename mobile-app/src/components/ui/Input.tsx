@@ -27,7 +27,7 @@
  * @since 2024
  */
 
-import React, { useState, useMemo, ReactNode, memo } from 'react';
+import React, { useState, useMemo, ReactNode } from 'react';
 import {
   View,
   TextInput,
@@ -54,13 +54,14 @@ export interface InputProps extends TextInputProps {
   variant?: 'default' | 'underline';
   /** Sağ tarafta gösterilecek ikon */
   rightIcon?: ReactNode;
+  /** Input ref */
+  inputRef?: React.RefObject<TextInput>;
 }
 
 /**
  * Metin Girişi Bileşeni
- * Performans optimizasyonu ile memo edilmiş
  */
-export const Input: React.FC<InputProps> = memo(({
+export const Input: React.FC<InputProps> = ({
   label,
   error,
   helperText,
@@ -68,6 +69,7 @@ export const Input: React.FC<InputProps> = memo(({
   style,
   variant = 'default',
   rightIcon,
+  inputRef,
   ...props
 }) => {
   const { theme } = useTheme();
@@ -80,6 +82,7 @@ export const Input: React.FC<InputProps> = memo(({
       {label && <Text allowFontScaling={false} maxFontSizeMultiplier={1} style={styles.label}>{label}</Text>}
       <View style={styles.inputWrapper}>
         <TextInput
+          ref={inputRef}
           allowFontScaling={false}
           maxFontSizeMultiplier={1}
           autoComplete="off"
@@ -107,22 +110,7 @@ export const Input: React.FC<InputProps> = memo(({
       {helperText && !error && <Text allowFontScaling={false} maxFontSizeMultiplier={1} style={styles.helperText}>{helperText}</Text>}
     </View>
   );
-}, (prevProps, nextProps) => {
-  // Props eşitse true döndür (re-render atla), farklıysa false (re-render yap)
-  // Sadece önemli props değişirse re-render yap
-  const propsEqual = (
-    prevProps.value === nextProps.value &&
-    prevProps.error === nextProps.error &&
-    prevProps.label === nextProps.label &&
-    prevProps.variant === nextProps.variant &&
-    prevProps.placeholder === nextProps.placeholder &&
-    prevProps.secureTextEntry === nextProps.secureTextEntry &&
-    prevProps.rightIcon === nextProps.rightIcon &&
-    prevProps.onChangeText === nextProps.onChangeText &&
-    prevProps.editable === nextProps.editable
-  );
-  return propsEqual; // true = re-render atla, false = re-render yap
-});
+};
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {

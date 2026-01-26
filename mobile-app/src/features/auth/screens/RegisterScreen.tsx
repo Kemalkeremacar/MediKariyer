@@ -104,6 +104,18 @@ export const RegisterScreen = () => {
   
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  // Şifre validasyon durumunu memoize et - sadece passwordValue değişince hesapla
+  const passwordValidationStatus = useMemo(() => {
+    if (!passwordValue) return [];
+    return getPasswordValidationStatus(passwordValue);
+  }, [passwordValue]);
+
+  // Şifre eşleşme durumunu memoize et
+  const passwordsMatch = useMemo(() => {
+    if (!confirmPasswordValue) return false;
+    return passwordValue === confirmPasswordValue;
+  }, [passwordValue, confirmPasswordValue]);
+
   // Fetch specialties
   const { data: specialties = [], isLoading: specialtiesLoading } = useQuery({
     queryKey: queryKeys.lookup.specialties(),
@@ -537,7 +549,7 @@ export const RegisterScreen = () => {
                 name="password"
                 render={({ field: { onChange, value } }) => (
                   <Input
-                    placeholder="Güçlü bir şifre oluşturun"
+                    placeholder="Şifrenizi girin"
                     secureTextEntry
                     value={value}
                     onChangeText={(text) => {
@@ -547,13 +559,15 @@ export const RegisterScreen = () => {
                     }}
                     onFocus={() => setShowPasswordRules(true)}
                     variant="underline"
+                    textContentType="newPassword"
+                    passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
                   />
                 )}
               />
               {/* Şifre Kuralları Göstergesi */}
               {showPasswordRules && passwordValue.length > 0 && (
                 <View style={styles.passwordRulesContainer}>
-                  {getPasswordValidationStatus(passwordValue).map((rule) => (
+                  {passwordValidationStatus.map((rule) => (
                     <View key={rule.rule} style={styles.passwordRuleRow}>
                       <Ionicons 
                         name={rule.passed ? 'checkmark-circle' : 'close-circle'} 
@@ -594,6 +608,8 @@ export const RegisterScreen = () => {
                       setConfirmPasswordValue(text);
                     }}
                     variant="underline"
+                    textContentType="newPassword"
+                    passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
                   />
                 )}
               />
@@ -601,15 +617,15 @@ export const RegisterScreen = () => {
               {confirmPasswordValue.length > 0 && (
                 <View style={styles.passwordMatchContainer}>
                   <Ionicons 
-                    name={passwordValue === confirmPasswordValue ? 'checkmark-circle' : 'close-circle'} 
+                    name={passwordsMatch ? 'checkmark-circle' : 'close-circle'} 
                     size={14} 
-                    color={passwordValue === confirmPasswordValue ? theme.colors.success[600] : theme.colors.error[400]} 
+                    color={passwordsMatch ? theme.colors.success[600] : theme.colors.error[400]} 
                   />
                   <Typography 
                     variant="caption" 
-                    style={passwordValue === confirmPasswordValue ? styles.passwordMatchSuccess : styles.passwordMatchError}
+                    style={passwordsMatch ? styles.passwordMatchSuccess : styles.passwordMatchError}
                   >
-                    {passwordValue === confirmPasswordValue ? 'Şifreler eşleşiyor' : 'Şifreler eşleşmiyor'}
+                    {passwordsMatch ? 'Şifreler eşleşiyor' : 'Şifreler eşleşmiyor'}
                   </Typography>
                 </View>
               )}
@@ -681,7 +697,7 @@ export const RegisterScreen = () => {
               <Typography variant="bodySmall" style={styles.loginText}>
                 Zaten hesabın var mı?{' '}
               </Typography>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+              <TouchableOpacity onPress={() => navigation.replace('Login')}>
                 <Typography variant="bodySmall" style={styles.loginLink}>
                   Giriş Yap
                 </Typography>
@@ -929,36 +945,43 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.border.light,
+    flexShrink: 1,
   },
   passwordRuleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: theme.spacing.xs,
+    flexShrink: 1,
   },
   passwordRulePassed: {
     marginLeft: theme.spacing.xs,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.success[600],
+    flexShrink: 1,
   },
   passwordRuleFailed: {
     marginLeft: theme.spacing.xs,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.text.tertiary,
+    flexShrink: 1,
   },
   // Şifre eşleşme stilleri
   passwordMatchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: theme.spacing.xs,
+    flexShrink: 1,
   },
   passwordMatchSuccess: {
     marginLeft: theme.spacing.xs,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.success[600],
+    flexShrink: 1,
   },
   passwordMatchError: {
     marginLeft: theme.spacing.xs,
     fontSize: theme.typography.fontSize.xs,
     color: theme.colors.error[400],
+    flexShrink: 1,
   },
 });

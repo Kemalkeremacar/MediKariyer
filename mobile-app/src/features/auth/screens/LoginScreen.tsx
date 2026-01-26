@@ -257,7 +257,7 @@ export const LoginScreen = () => {
               <Typography variant="bodySmall" style={styles.registerText}>
                 Hesabın yok mu?{' '}
               </Typography>
-              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <TouchableOpacity onPress={() => navigation.replace('Register')}>
                 <Typography variant="bodySmall" style={styles.registerLink}>
                   Kayıt Ol
                 </Typography>
