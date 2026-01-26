@@ -16,6 +16,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { AppState, AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
@@ -113,6 +114,13 @@ export const usePushNotifications = () => {
   useEffect(() => {
     // Only register if user is authenticated
     if (!isAuthenticated) {
+      return;
+    }
+
+    // Skip push notification registration in Expo Go
+    const isExpoGo = Constants.appOwnership === 'expo';
+    if (isExpoGo) {
+      devLog.warn('[usePushNotifications] Running in Expo Go - Push notifications disabled');
       return;
     }
 

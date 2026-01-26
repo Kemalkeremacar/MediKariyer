@@ -121,6 +121,13 @@ async function getExpoPushToken(): Promise<string | null> {
       return null;
     }
 
+    // Expo Go kontrolü - Expo Go'da push notification çalışmaz
+    const isExpoGo = Constants.appOwnership === 'expo';
+    if (isExpoGo) {
+      // Sessizce null dön, hata loglamaya gerek yok
+      return null;
+    }
+
     // Token al
     // Native build (Firebase FCM) kullanıyoruz, projectId gerekmez
     // Expo otomatik olarak Firebase'den token alır
@@ -128,9 +135,14 @@ async function getExpoPushToken(): Promise<string | null> {
 
     return token.data;
   } catch (error) {
-    errorLogger.logError(error as Error, {
-      context: 'getExpoPushToken',
-    });
+    // Expo Go'da hata bekleniyor, sessizce null dön
+    const isExpoGo = Constants.appOwnership === 'expo';
+    if (!isExpoGo) {
+      // Sadece production/development build'de hata logla
+      errorLogger.logError(error as Error, {
+        context: 'getExpoPushToken',
+      });
+    }
     return null;
   }
 }
@@ -146,6 +158,13 @@ async function getExpoPushToken(): Promise<string | null> {
  */
 async function registerDeviceToken(): Promise<void> {
   try {
+    // Expo Go kontrolü - Expo Go'da push notification çalışmaz
+    const isExpoGo = Constants.appOwnership === 'expo';
+    if (isExpoGo) {
+      // Sessizce çık, hata loglamaya gerek yok
+      return;
+    }
+
     // 1. İzin kontrolü
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
@@ -156,7 +175,7 @@ async function registerDeviceToken(): Promise<void> {
     // 2. Push token al
     const expoPushToken = await getExpoPushToken();
     if (!expoPushToken) {
-      console.warn('Failed to get Expo push token');
+      // Token alınamadı, sessizce çık
       return;
     }
 
@@ -181,9 +200,14 @@ async function registerDeviceToken(): Promise<void> {
       console.log('Device token registered successfully');
     }
   } catch (error) {
-    errorLogger.logError(error as Error, {
-      context: 'registerDeviceToken',
-    });
+    // Expo Go'da hata bekleniyor, sessizce yoksay
+    const isExpoGo = Constants.appOwnership === 'expo';
+    if (!isExpoGo) {
+      // Sadece production/development build'de hata logla
+      errorLogger.logError(error as Error, {
+        context: 'registerDeviceToken',
+      });
+    }
   }
 }
 
