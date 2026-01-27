@@ -107,7 +107,7 @@ export const AccountDisabledScreen = () => {
    * 4. E-posta açılamazsa manuel adres göster
    */
   const handleContact = () => {
-    const email = 'destek@medikariyer.com';
+    const email = 'info@medikariyer.com';
     const subject = 'Hesap Pasif Durumda - Yardım Talebi';
     const body = user?.email 
       ? `Merhaba,\n\nHesabım (${user.email}) pasif duruma alınmış. Lütfen hesabımın durumunu kontrol edip bilgilendirebilir misiniz?\n\nTeşekkürler.`

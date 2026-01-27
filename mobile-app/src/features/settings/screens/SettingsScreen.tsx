@@ -31,8 +31,6 @@ import { Screen } from '@/components/layout/Screen';
 import { GradientHeader } from '@/components/composite/GradientHeader';
 import { lightColors, spacing } from '@/theme';
 import { useLogout } from '@/features/auth/hooks/useLogout';
-import { useMutation } from '@tanstack/react-query';
-import { accountService } from '@/api/services/account.service';
 import { useAppActions } from '@/features/settings/hooks/useAppActions';
 import { useToast } from '@/providers/ToastProvider';
 
@@ -188,22 +186,10 @@ export const SettingsScreen = ({ navigation }: Props) => {
     shareApp,
     rateApp,
     sendFeedback,
-    openPrivacyPolicy,
-    openTermsOfService,
     getAppInfo,
   } = useAppActions();
 
   const appInfo = useMemo(() => getAppInfo(), [getAppInfo]);
-
-  const deactivateAccountMutation = useMutation({
-    mutationFn: () => accountService.deactivateAccount(),
-    onSuccess: () => {
-      logoutMutation.mutate();
-    },
-    onError: () => {
-      showToast('Hesap kapatılırken bir hata oluştu', 'error');
-    },
-  });
 
   const handleLogout = useCallback(() => {
     Alert.alert(
@@ -219,34 +205,6 @@ export const SettingsScreen = ({ navigation }: Props) => {
       ]
     );
   }, [logoutMutation]);
-
-  const handleDeactivateAccount = useCallback(() => {
-    Alert.alert(
-      'Hesabı Kapat',
-      'Hesabınızı kapatmak istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.',
-      [
-        { text: 'Vazgeç', style: 'cancel' },
-        {
-          text: 'Devam Et',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Son Onay',
-              'Hesabınız pasifleştirilecek ve tüm oturumlarınız sonlandırılacaktır.',
-              [
-                { text: 'Vazgeç', style: 'cancel' },
-                {
-                  text: 'Hesabı Kapat',
-                  style: 'destructive',
-                  onPress: () => deactivateAccountMutation.mutate(),
-                },
-              ]
-            );
-          },
-        },
-      ]
-    );
-  }, [deactivateAccountMutation]);
 
   const handleShowAppInfo = useCallback(() => {
     Alert.alert(
@@ -276,6 +234,37 @@ export const SettingsScreen = ({ navigation }: Props) => {
         bounces={true}
       >
 
+        {/* Tercihler */}
+        <View style={styles.section}>
+          <SectionHeader
+            title="Tercihler"
+            icon={<Ionicons name="options-outline" size={16} color={lightColors.primary[600]} />}
+          />
+          <Card variant="outlined" style={styles.settingsCard}>
+            <SettingItem
+              icon={<Ionicons name="notifications" size={22} color={lightColors.primary[600]} />}
+              iconBgColor="#EEF2FF"
+              title="Bildirimler"
+              subtitle="Bildirim tercihlerinizi yönetin"
+              onPress={() => navigation.navigate('NotificationSettings')}
+            />
+            <Divider />
+            <SettingItem
+              icon={<Ionicons name="language" size={22} color={lightColors.primary[600]} />}
+              iconBgColor="#EEF2FF"
+              title="Dil"
+              subtitle="Türkçe"
+              onPress={() => {
+                Alert.alert(
+                  'Dil Seçimi',
+                  'Şu anda sadece Türkçe dil desteği mevcuttur. Yakında İngilizce dil desteği eklenecektir.',
+                  [{ text: 'Tamam' }]
+                );
+              }}
+            />
+          </Card>
+        </View>
+
         {/* Güvenlik */}
         <View style={styles.section}>
           <SectionHeader
@@ -284,11 +273,21 @@ export const SettingsScreen = ({ navigation }: Props) => {
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="lock-closed" size={20} color={lightColors.primary[600]} />}
+              icon={<Ionicons name="lock-closed" size={22} color={lightColors.primary[600]} />}
               iconBgColor="#EEF2FF"
               title="Şifre Değiştir"
               subtitle="Hesap şifrenizi güncelleyin"
               onPress={() => navigation.navigate('ChangePassword')}
+            />
+            <Divider />
+            <SettingItem
+              icon={<Ionicons name="trash" size={22} color="#DC2626" />}
+              iconBgColor="#FEE2E2"
+              title="Hesabı Sil"
+              subtitle="Hesabınızı kalıcı olarak silin"
+              onPress={() => navigation.navigate('DeleteAccount')}
+              showChevron={true}
+              destructive
             />
           </Card>
         </View>
@@ -301,7 +300,15 @@ export const SettingsScreen = ({ navigation }: Props) => {
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="chatbubble-ellipses" size={20} color="#06B6D4" />}
+              icon={<Ionicons name="help-circle" size={22} color="#06B6D4" />}
+              iconBgColor="#CFFAFE"
+              title="Yardım Merkezi"
+              subtitle="SSS ve kullanım kılavuzu"
+              onPress={() => navigation.navigate('HelpCenter')}
+            />
+            <Divider />
+            <SettingItem
+              icon={<Ionicons name="chatbubble-ellipses" size={22} color="#06B6D4" />}
               iconBgColor="#CFFAFE"
               title="Geri Bildirim"
               subtitle="Önerilerinizi paylaşın"
@@ -309,7 +316,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
             />
             <Divider />
             <SettingItem
-              icon={<Ionicons name="star" size={20} color="#F59E0B" />}
+              icon={<Ionicons name="star" size={22} color="#F59E0B" />}
               iconBgColor="#FEF3C7"
               title="Uygulamayı Değerlendir"
               subtitle={Platform.OS === 'ios' ? "App Store'da puan verin" : "Play Store'da puan verin"}
@@ -317,7 +324,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
             />
             <Divider />
             <SettingItem
-              icon={<Ionicons name="share-social" size={20} color="#06B6D4" />}
+              icon={<Ionicons name="share-social" size={22} color="#06B6D4" />}
               iconBgColor="#CFFAFE"
               title="Uygulamayı Paylaş"
               subtitle="Arkadaşlarınızla paylaşın"
@@ -334,23 +341,23 @@ export const SettingsScreen = ({ navigation }: Props) => {
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="shield-checkmark" size={20} color="#64748B" />}
+              icon={<Ionicons name="shield-checkmark" size={22} color="#64748B" />}
               iconBgColor="#F1F5F9"
               title="Gizlilik Politikası"
               subtitle="Veri koruma ve gizlilik"
-              onPress={openPrivacyPolicy}
+              onPress={() => navigation.navigate('PrivacyPolicy')}
             />
             <Divider />
             <SettingItem
-              icon={<Ionicons name="document-text" size={20} color="#64748B" />}
+              icon={<Ionicons name="document-text" size={22} color="#64748B" />}
               iconBgColor="#F1F5F9"
               title="Kullanım Koşulları"
               subtitle="Hizmet şartları"
-              onPress={openTermsOfService}
+              onPress={() => navigation.navigate('TermsOfService')}
             />
             <Divider />
             <SettingItem
-              icon={<Ionicons name="information-circle" size={20} color="#64748B" />}
+              icon={<Ionicons name="information-circle" size={22} color="#64748B" />}
               iconBgColor="#F1F5F9"
               title="Uygulama Bilgisi"
               value={`Versiyon ${appInfo.version}`}
@@ -370,7 +377,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
               icon={
                 logoutMutation.isPending 
                   ? <ActivityIndicator size="small" color="#EF4444" />
-                  : <Ionicons name="log-out" size={20} color="#EF4444" />
+                  : <Ionicons name="log-out" size={22} color="#EF4444" />
               }
               iconBgColor="#FEE2E2"
               title="Çıkış Yap"
@@ -379,21 +386,6 @@ export const SettingsScreen = ({ navigation }: Props) => {
               showChevron={false}
               destructive
               disabled={logoutMutation.isPending}
-            />
-            <Divider />
-            <SettingItem
-              icon={
-                deactivateAccountMutation.isPending 
-                  ? <ActivityIndicator size="small" color="#EF4444" />
-                  : <Ionicons name="trash" size={20} color="#EF4444" />
-              }
-              iconBgColor="#FEE2E2"
-              title="Hesabı Kapat"
-              subtitle="Hesabınızı kalıcı olarak kapatın"
-              onPress={deactivateAccountMutation.isPending ? undefined : handleDeactivateAccount}
-              showChevron={false}
-              destructive
-              disabled={deactivateAccountMutation.isPending}
             />
           </Card>
         </View>
@@ -475,9 +467,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.02)',
   },
   settingIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 14,
     backgroundColor: lightColors.primary[50],
     alignItems: 'center',
     justifyContent: 'center',
@@ -522,7 +514,7 @@ const styles = StyleSheet.create({
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: lightColors.neutral[200],
-    marginLeft: spacing.lg + 44 + spacing.md,
+    marginLeft: spacing.lg + 48 + spacing.md,
   },
   footer: {
     paddingVertical: spacing['3xl'],

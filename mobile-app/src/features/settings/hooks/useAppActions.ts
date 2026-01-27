@@ -37,15 +37,10 @@ const APP_CONFIG = {
   appName: 'MediKariyer Doktor',
   
   // Destek e-postası
-  supportEmail: 'destek@medikariyer.com',
+  supportEmail: 'info@medikariyer.com',
   
-  // Web linkleri
-  urls: {
-    privacyPolicy: 'https://medikariyer.com/gizlilik-politikasi',
-    termsOfService: 'https://medikariyer.com/kullanim-kosullari',
-    helpCenter: 'https://medikariyer.com/yardim',
-    website: 'https://medikariyer.com',
-  },
+  // Web site
+  website: 'https://medikariyer.com',
 };
 
 // ============================================================================
@@ -296,30 +291,6 @@ Platform: ${platformInfo}
   }, [showToast]);
 
   /**
-   * Yardım merkezini aç
-   */
-  const openHelpCenter = useCallback(
-    () => openUrl(APP_CONFIG.urls.helpCenter, 'Yardım merkezi açılamadı'),
-    [openUrl]
-  );
-
-  /**
-   * Gizlilik politikasını aç
-   */
-  const openPrivacyPolicy = useCallback(
-    () => openUrl(APP_CONFIG.urls.privacyPolicy, 'Sayfa açılamadı'),
-    [openUrl]
-  );
-
-  /**
-   * Kullanım koşullarını aç
-   */
-  const openTermsOfService = useCallback(
-    () => openUrl(APP_CONFIG.urls.termsOfService, 'Sayfa açılamadı'),
-    [openUrl]
-  );
-
-  /**
    * Uygulama bilgilerini al
    */
   const getAppInfo = useCallback(() => ({
@@ -335,9 +306,6 @@ Platform: ${platformInfo}
     shareApp,
     rateApp,
     sendFeedback,
-    openHelpCenter,
-    openPrivacyPolicy,
-    openTermsOfService,
     
     // Utils
     getAppInfo,

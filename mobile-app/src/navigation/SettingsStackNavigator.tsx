@@ -8,12 +8,20 @@
  * **Ekranlar:**
  * - SettingsMain: Ana ayarlar ekranı
  * - ChangePassword: Şifre değiştirme ekranı
+ * - NotificationSettings: Bildirim ayarları ekranı
+ * - DeleteAccount: Hesap silme ekranı (App Store/Play Store gereksinimi)
+ * - HelpCenter: Yardım merkezi ve SSS ekranı
  */
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SettingsScreen } from '@/features/settings/screens/SettingsScreen';
 import { ChangePasswordScreen } from '@/features/settings/screens/ChangePasswordScreen';
+import { NotificationSettingsScreen } from '@/features/settings/screens/NotificationSettingsScreen';
+import { DeleteAccountScreen } from '@/features/settings/screens/DeleteAccountScreen';
+import { HelpCenterScreen } from '@/features/settings/screens/HelpCenterScreen';
+import { PrivacyPolicyScreen } from '@/features/settings/screens/PrivacyPolicyScreen';
+import { TermsOfServiceScreen } from '@/features/settings/screens/TermsOfServiceScreen';
 import type { SettingsStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<SettingsStackParamList>();
@@ -39,8 +47,46 @@ export const SettingsStackNavigator = () => (
       name="ChangePassword" 
       component={ChangePasswordScreen}
       options={{
-        // NOT: presentation: 'modal' kullanılmıyor - BottomSheet/Select bileşenlerini bozabilir
-        // Bunun yerine slide_from_bottom animasyonu kullanılıyor
+        animation: 'slide_from_bottom',
+        gestureEnabled: true,
+      }}
+    />
+    <Stack.Screen 
+      name="NotificationSettings" 
+      component={NotificationSettingsScreen}
+      options={{
+        animation: 'slide_from_bottom',
+        gestureEnabled: true,
+      }}
+    />
+    <Stack.Screen 
+      name="DeleteAccount" 
+      component={DeleteAccountScreen}
+      options={{
+        animation: 'slide_from_bottom',
+        gestureEnabled: true,
+      }}
+    />
+    <Stack.Screen 
+      name="HelpCenter" 
+      component={HelpCenterScreen}
+      options={{
+        animation: 'slide_from_bottom',
+        gestureEnabled: true,
+      }}
+    />
+    <Stack.Screen 
+      name="PrivacyPolicy" 
+      component={PrivacyPolicyScreen}
+      options={{
+        animation: 'slide_from_bottom',
+        gestureEnabled: true,
+      }}
+    />
+    <Stack.Screen 
+      name="TermsOfService" 
+      component={TermsOfServiceScreen}
+      options={{
         animation: 'slide_from_bottom',
         gestureEnabled: true,
       }}

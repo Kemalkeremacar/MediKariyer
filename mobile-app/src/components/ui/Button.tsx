@@ -26,6 +26,7 @@
 
 import React, { useMemo } from 'react';
 import {
+  View,
   Text,
   ActivityIndicator,
   StyleSheet,
@@ -49,7 +50,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  */
 export interface ButtonProps {
   /** Buton varyantı */
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient' | 'destructive';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'gradient' | 'destructive' | 'danger';
   /** Buton boyutu */
   size?: 'sm' | 'md' | 'lg';
   /** Yükleme durumu */
@@ -74,6 +75,8 @@ export interface ButtonProps {
   accessibilityLabel?: string;
   /** Erişilebilirlik ipucu (ekran okuyucular için) */
   accessibilityHint?: string;
+  /** İkon (label'ın solunda gösterilir) */
+  icon?: React.ReactNode;
 }
 
 /**
@@ -94,9 +97,13 @@ export const Button: React.FC<ButtonProps> = ({
   gradientColors,
   accessibilityLabel,
   accessibilityHint,
+  icon,
 }) => {
   const { theme } = useTheme();
   const isDisabled = disabled || loading;
+
+  // danger variant'ı destructive'e çevir (alias)
+  const effectiveVariant = variant === 'danger' ? 'destructive' : variant;
 
   const styles = useMemo(() => createStyles(theme), [theme]);
   
@@ -128,16 +135,16 @@ export const Button: React.FC<ButtonProps> = ({
     if (gradientColors) {
       return gradientColors;
     }
-    if (variant === 'gradient') {
+    if (effectiveVariant === 'gradient') {
       return ['#6096B4', '#93BFCF']; // Mavi gradient (web ile eşleşir)
     }
-    if (variant === 'primary') {
+    if (effectiveVariant === 'primary') {
       return ['#60A5FA', '#3B82F6']; // Modern açık mavi gradient
     }
-    if (variant === 'secondary') {
+    if (effectiveVariant === 'secondary') {
       return ['#38BDF8', '#0EA5E9']; // Gök mavisi gradient
     }
-    if (variant === 'destructive') {
+    if (effectiveVariant === 'destructive') {
       return ['#EF4444', '#DC2626']; // Kırmızı gradient
     }
     return ['transparent', 'transparent'];
@@ -148,32 +155,35 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           color={
-            variant === 'outline' || variant === 'ghost'
+            effectiveVariant === 'outline' || effectiveVariant === 'ghost'
               ? theme.colors.primary[600]
-              : variant === 'destructive'
+              : effectiveVariant === 'destructive'
               ? theme.colors.text.inverse
               : theme.colors.text.inverse
           }
         />
       ) : (
-        <Text
-          allowFontScaling={false}
-          maxFontSizeMultiplier={1}
-          style={[
-            styles.text,
-            styles[`text_${variant}`] || styles.text_primary,
-            styles[`textSize_${size}`],
-            isDisabled && styles.textDisabled,
-            textStyle,
-          ]}
-        >
-          {content}
-        </Text>
+        <>
+          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          <Text
+            allowFontScaling={false}
+            maxFontSizeMultiplier={1}
+            style={[
+              styles.text,
+              styles[`text_${effectiveVariant}`] || styles.text_primary,
+              styles[`textSize_${size}`],
+              isDisabled && styles.textDisabled,
+              textStyle,
+            ]}
+          >
+            {content}
+          </Text>
+        </>
       )}
     </>
   );
 
-  if (variant === 'primary' || variant === 'secondary' || variant === 'gradient' || variant === 'destructive') {
+  if (effectiveVariant === 'primary' || effectiveVariant === 'secondary' || effectiveVariant === 'gradient' || effectiveVariant === 'destructive') {
     return (
       <AnimatedPressable
         style={[
@@ -212,7 +222,7 @@ export const Button: React.FC<ButtonProps> = ({
     <AnimatedPressable
       style={[
         styles.base,
-        styles[variant],
+        styles[effectiveVariant],
         styles[`size_${size}`],
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
@@ -346,5 +356,8 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   textSize_lg: {
     fontSize: theme.typography.fontSize.lg, // 18px
+  },
+  iconContainer: {
+    marginRight: theme.spacing?.sm || 8,
   },
 });
