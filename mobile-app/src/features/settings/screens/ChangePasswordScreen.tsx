@@ -41,6 +41,7 @@ import { Screen } from '@/components/layout/Screen';
 import { lightColors, spacing } from '@/theme';
 import { useChangePassword } from '@/features/settings/hooks/useChangePassword';
 import { useToast } from '@/providers/ToastProvider';
+import { changePasswordSchema } from '@/utils/validators';
 
 /**
  * Şifre gücünü hesaplayan fonksiyon
@@ -138,24 +139,21 @@ export const ChangePasswordScreen = ({ navigation }: Props) => {
    * Form submit handler'ı
    * 
    * **AKIŞ:**
-   * 1. Form validasyonu
-   * 2. Şifre eşleşme kontrolü
-   * 3. Backend'e istek gönder
-   * 4. Başarılı ise toast göster ve geri dön
+   * 1. Form validasyonu (Zod schema ile)
+   * 2. Backend'e istek gönder
+   * 3. Başarılı ise toast göster ve geri dön
    */
   const handleSubmit = () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      showToast('Lütfen tüm alanları doldurun', 'error');
-      return;
-    }
+    // Zod schema ile validasyon
+    const validationResult = changePasswordSchema.safeParse({
+      currentPassword,
+      newPassword,
+      confirmPassword,
+    });
 
-    if (newPassword !== confirmPassword) {
-      showToast('Şifreler eşleşmiyor', 'error');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      showToast('Yeni şifre en az 8 karakter olmalıdır', 'error');
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      showToast(firstError.message, 'error');
       return;
     }
 

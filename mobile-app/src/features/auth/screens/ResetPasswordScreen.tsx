@@ -38,13 +38,12 @@ import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useResetPassword } from '../hooks/useResetPassword';
+import { passwordSchema } from '@/utils/validators';
 
 const resetPasswordSchema = z
   .object({
-    password: z.string()
-      .min(8, 'Şifre en az 8 karakter olmalıdır')
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Şifre en az bir küçük harf, bir büyük harf ve bir rakam içermelidir'),
-    confirmPassword: z.string().min(8, 'Şifre tekrarı gerekli'),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Şifre tekrarı gerekli'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Şifreler eşleşmiyor',

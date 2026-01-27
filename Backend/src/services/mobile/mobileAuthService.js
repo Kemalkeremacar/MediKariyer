@@ -465,13 +465,18 @@ const forgotPassword = async (email, req) => {
 const resetPassword = async (token, newPassword) => {
   const db = require('../../config/dbConfig').db;
   const bcrypt = require('bcryptjs');
+  const crypto = require('crypto');
   const logger = require('../../utils/logger');
+  const { AppError } = require('../../utils/errorHandler');
+
+  // Hash token to match database (same as web)
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
   // Use transaction for atomicity (Requirement 12.3)
   return await db.transaction(async (trx) => {
     // Validate token (Requirement 10.2)
     const resetToken = await trx('password_reset_tokens')
-      .where('token', token)
+      .where('token_hash', tokenHash)
       .where('expires_at', '>', new Date())
       .whereNull('used_at')
       .first();
