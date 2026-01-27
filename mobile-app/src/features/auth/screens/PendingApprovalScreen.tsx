@@ -33,6 +33,7 @@ import { useLogout } from '../hooks/useLogout';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
 import { navigationRef } from '@/navigation/navigationRef';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { AuthStackParamList } from '@/navigation/types';
 
 /**
@@ -55,6 +56,7 @@ export const PendingApprovalScreen = () => {
   // Navigation ve hooks
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const logoutMutation = useLogout();
+  const { t } = useTranslation();
   
   // Auth store state'leri
   const authStatus = useAuthStore((state) => state.authStatus);
@@ -330,13 +332,11 @@ export const PendingApprovalScreen = () => {
 
         <View style={styles.content}>
           <Typography variant="h1" style={styles.title}>
-            {isAfterRegistration ? 'Kayıt Başarılı! 🎉' : 'Admin Onayı Bekleniyor ⏳'}
+            {isAfterRegistration ? t('auth.pendingApproval.title') + ' 🎉' : t('auth.pendingApproval.title') + ' ⏳'}
           </Typography>
 
           <Typography variant="body" style={styles.subtitle}>
-            {isAfterRegistration 
-              ? 'Hesabınız başarıyla oluşturuldu'
-              : 'Hesabınız henüz admin tarafından onaylanmadı'}
+            {t('auth.pendingApproval.description')}
           </Typography>
 
           <View style={styles.infoCard}>
@@ -401,7 +401,7 @@ export const PendingApprovalScreen = () => {
             loading={logoutMutation.isPending}
             style={styles.loginButton}
           >
-            Giriş Ekranına Dön
+            {t('auth.pendingApproval.logout')}
           </Button>
         </View>
       </ScrollView>

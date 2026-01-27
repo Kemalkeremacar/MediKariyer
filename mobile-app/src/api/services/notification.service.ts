@@ -23,7 +23,7 @@ import type {
   NotificationsResponse,
   RegisterDeviceTokenPayload,
 } from '@/types/notification';
-import { validatePaginatedResponse, validateSingleItemResponse, validateApiResponse, validateResponseData } from '@/utils/apiValidator';
+import { validateSingleItemResponse, validateApiResponse, validateResponseData } from '@/utils/apiValidator';
 
 export interface NotificationListParams {
   page?: number;

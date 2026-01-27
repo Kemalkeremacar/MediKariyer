@@ -19,6 +19,7 @@ import { Typography } from '@/components/ui/Typography';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/api/services/authService';
 import { devLog } from '@/utils/devLogger';
+import { useTranslation } from '@/hooks/useTranslation';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '@/navigation/types';
 
@@ -36,40 +37,41 @@ interface SlideData {
   icon: keyof typeof Ionicons.glyphMap;
 }
 
-const slides: SlideData[] = [
-  {
-    key: 'welcome',
-    title: 'MediKariyer',
-    subtitle: 'Hoş Geldiniz',
-    text: 'Türkiye\'nin en büyük hekimlere özel kariyer platformu. Binlerce doktor burada kariyerini şekillendiriyor.',
-    image: require('../../../../assets/onboarding/welcome.png'),
-    gradientColors: ['#0EA5E9', '#0284C7', '#0369A1'],
-    icon: 'medical',
-  },
-  {
-    key: 'profile',
-    title: 'Profesyonel Profil',
-    subtitle: 'Öne Çıkın',
-    text: 'Uzmanlık alanınız, deneyimleriniz ve sertifikalarınızla dikkat çekin. Hastaneler sizi bulsun.',
-    image: require('../../../../assets/onboarding/profile.png'),
-    gradientColors: ['#8B5CF6', '#7C3AED', '#6D28D9'],
-    icon: 'person-circle',
-  },
-  {
-    key: 'jobs',
-    title: 'Tek Tıkla Başvuru',
-    subtitle: 'Hızlı & Kolay',
-    text: 'Size özel iş fırsatlarını keşfedin. Tek tıkla başvurun, kariyer yolculuğunuza hız katın.',
-    image: require('../../../../assets/onboarding/jobs.png'),
-    gradientColors: ['#10B981', '#059669', '#047857'],
-    icon: 'briefcase',
-  },
-];
-
 export const OnboardingScreen: React.FC<Props> = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const { t } = useTranslation();
+
+  const slides: SlideData[] = [
+    {
+      key: 'welcome',
+      title: 'MediKariyer',
+      subtitle: t('onboarding.welcome.title'),
+      text: t('onboarding.welcome.description'),
+      image: require('../../../../assets/onboarding/welcome.png'),
+      gradientColors: ['#0EA5E9', '#0284C7', '#0369A1'],
+      icon: 'medical',
+    },
+    {
+      key: 'profile',
+      title: t('onboarding.profile.title'),
+      subtitle: t('onboarding.profile.title'),
+      text: t('onboarding.profile.description'),
+      image: require('../../../../assets/onboarding/profile.png'),
+      gradientColors: ['#8B5CF6', '#7C3AED', '#6D28D9'],
+      icon: 'person-circle',
+    },
+    {
+      key: 'jobs',
+      title: t('onboarding.jobs.title'),
+      subtitle: t('onboarding.jobs.title'),
+      text: t('onboarding.jobs.description'),
+      image: require('../../../../assets/onboarding/jobs.png'),
+      gradientColors: ['#10B981', '#059669', '#047857'],
+      icon: 'briefcase',
+    },
+  ];
 
   const currentSlide = slides[currentIndex];
 
@@ -175,12 +177,12 @@ export const OnboardingScreen: React.FC<Props> = () => {
             >
               {loading ? (
                 <Typography style={StyleSheet.flatten([styles.buttonText, { color: currentSlide.gradientColors[0] }])}>
-                  Yükleniyor...
+                  {t('common.loading')}
                 </Typography>
               ) : (
                 <>
                   <Typography style={StyleSheet.flatten([styles.buttonText, { color: currentSlide.gradientColors[0] }])}>
-                    {currentIndex === slides.length - 1 ? 'Hadi Başlayalım' : 'Devam Et'}
+                    {currentIndex === slides.length - 1 ? t('onboarding.getStarted') : t('onboarding.next')}
                   </Typography>
                   <Ionicons 
                     name={currentIndex === slides.length - 1 ? 'checkmark-circle' : 'arrow-forward-circle'} 

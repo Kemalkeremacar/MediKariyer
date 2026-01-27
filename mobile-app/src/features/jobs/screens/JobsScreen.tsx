@@ -177,7 +177,6 @@ export const JobsScreen = () => {
             onClear={filter.handleSearchClear}
             style={styles.searchBar}
             isSearching={filter.isSearching}
-            minLength={2}
           />
           <View style={styles.filterButtonWrapper}>
             {filter.isSearching && (

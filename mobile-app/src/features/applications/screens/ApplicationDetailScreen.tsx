@@ -36,7 +36,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Screen } from '@/components/layout/Screen';
-import { GradientHeader } from '@/components/composite/GradientHeader';
+// GradientHeader import removed - using LinearGradient directly
 import { useApplicationDetail } from '../hooks/useApplicationDetail';
 import { useWithdrawApplication } from '../hooks/useWithdrawApplication';
 import { Ionicons } from '@expo/vector-icons';
@@ -168,7 +168,7 @@ export const ApplicationDetailScreen = () => {
     }
   };
 
-  const statusStyle = getStatusStyle(data?.status_id);
+  const statusStyle = getStatusStyle(data?.status_id ?? undefined);
 
   return (
     <Screen scrollable={false}>

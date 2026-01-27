@@ -51,7 +51,7 @@ export const useAuthInitialization = () => {
         });
 
         // Başlatmayı timeout ile yarıştır
-        const result = await Promise.race([
+        await Promise.race([
           (async () => {
             // Token'ların var olup olmadığını ve geçerli JWT olup olmadığını kontrol et
             const isValid = await tokenManager.validateTokens();

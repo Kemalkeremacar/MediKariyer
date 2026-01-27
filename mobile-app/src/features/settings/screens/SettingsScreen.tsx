@@ -178,7 +178,7 @@ const Divider = () => <View style={styles.divider} />;
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '@/navigation/types';
 
-type Props = NativeStackScreenProps<SettingsStackParamList, 'Settings'>;
+type Props = NativeStackScreenProps<SettingsStackParamList, 'SettingsMain'>;
 
 export const SettingsScreen = ({ navigation }: Props) => {
   const { showToast } = useToast();

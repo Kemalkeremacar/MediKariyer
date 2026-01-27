@@ -1,31 +1,5 @@
-# 📋 Play Store Yükleme Kontrol Listesi
-
-## ✅ Teknik Gereksinimler
-
-### Build Dosyaları
-- [x] AAB dosyası oluşturuldu (`app-release.aab`)
-- [x] Keystore ile imzalandı (`my-upload-key.keystore`)
-- [x] versionCode: 1
-- [x] versionName: 1.0.0
-- [x] Package name: `com.medikariyer.mobile`
-
-### Permissions
-- [x] INTERNET
-- [x] POST_NOTIFICATIONS (Android 13+)
-- [x] READ_EXTERNAL_STORAGE
-- [x] WRITE_EXTERNAL_STORAGE
-- [x] CAMERA
-- [x] VIBRATE
-
-### Firebase
-- [x] google-services.json eklendi
-- [x] Firebase Cloud Messaging API aktif
-
----
-
-## 📱 Play Store Console Gereksinimleri
-
 ### 1. Uygulama Detayları
+
 - [ ] **Uygulama Adı:** MediKariyer
 - [ ] **Kısa Açıklama:** (80 karakter max)
   ```

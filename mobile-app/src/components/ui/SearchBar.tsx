@@ -10,7 +10,7 @@ import { View, TextInput, StyleSheet, TouchableOpacity, ViewStyle, Animated } fr
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing } from '@/theme';
-import { Typography } from './Typography';
+// Typography import removed - not used in this component
 
 export interface SearchBarProps {
   value: string;
@@ -22,7 +22,7 @@ export interface SearchBarProps {
   autoFocus?: boolean;
   style?: ViewStyle;
   isSearching?: boolean;
-  minLength?: number;
+  // minLength removed - not used in component logic
 }
 
 export const SearchBar: React.FC<SearchBarProps> = React.memo(({
@@ -35,7 +35,6 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
   autoFocus = false,
   style,
   isSearching = false,
-  minLength = 2,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -154,7 +153,7 @@ export const SearchBar: React.FC<SearchBarProps> = React.memo(({
     prevProps.placeholder === nextProps.placeholder &&
     prevProps.autoFocus === nextProps.autoFocus &&
     prevProps.isSearching === nextProps.isSearching &&
-    prevProps.minLength === nextProps.minLength &&
+    // minLength removed - not used in component
     prevProps.style === nextProps.style &&
     prevProps.onChangeText === nextProps.onChangeText
   );

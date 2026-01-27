@@ -1,0 +1,100 @@
+{
+  "auth": {
+    "login": {
+      "title": "Giriş Yap",
+      "email": "E-posta",
+      "password": "Şifre",
+      "forgotPassword": "Şifremi Unuttum",
+      "loginButton": "Giriş Yap",
+      "noAccount": "Hesabınız yok mu?",
+      "register": "Kayıt Ol",
+      "emailPlaceholder": "ornek@email.com",
+      "passwordPlaceholder": "Şifrenizi girin"
+    },
+    "register": {
+      "title": "Kayıt Ol",
+      "firstName": "Ad",
+      "lastName": "Soyad",
+      "email": "E-posta",
+      "phone": "Telefon",
+      "password": "Şifre",
+      "confirmPassword": "Şifre Tekrar",
+      "registerButton": "Kayıt Ol",
+      "haveAccount": "Zaten hesabınız var mı?",
+      "login": "Giriş Yap",
+      "firstNamePlaceholder": "Adınız",
+      "lastNamePlaceholder": "Soyadınız",
+      "phonePlaceholder": "5XX XXX XX XX"
+    },
+    "forgotPassword": {
+      "title": "Şifremi Unuttum",
+      "description": "E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.",
+      "email": "E-posta",
+      "sendButton": "Gönder",
+      "backToLogin": "Giriş sayfasına dön"
+    },
+    "pendingApproval": {
+      "title": "Admin Onayı Bekleniyor",
+      "description": "Hesabınız admin onayını bekliyor. Onaylandığında e-posta ile bilgilendirileceksiniz.",
+      "logout": "Giriş Ekranına Dön"
+    },
+    "accountDisabled": {
+      "title": "Hesap Pasif",
+      "description": "Hesabınız sistem yöneticisi tarafından pasif duruma alınmıştır.",
+      "logout": "Çıkış Yap ve Başka Hesapla Giriş Yap"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "MediKariyer'e Hoş Geldiniz",
+      "description": "Türkiye'nin en büyük hekimlere özel kariyer platformu. Binlerce doktor burada kariyerini şekillendiriyor."
+    },
+    "jobs": {
+      "title": "Tek Tıkla Başvuru",
+      "description": "Size özel iş fırsatlarını keşfedin. Tek tıkla başvurun, kariyer yolculuğunuza hız katın."
+    },
+    "profile": {
+      "title": "Profesyonel Profil",
+      "description": "Uzmanlık alanınız, deneyimleriniz ve sertifikalarınızla dikkat çekin. Hastaneler sizi bulsun."
+    },
+    "skip": "Atla",
+    "next": "Devam Et",
+    "getStarted": "Hadi Başlayalım"
+  },
+  "errors": {
+    "generic": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "network": "İnternet bağlantınızı kontrol edin.",
+    "timeout": "İstek zaman aşımına uğradı.",
+    "notFound": "Aradığınız içerik bulunamadı.",
+    "unauthorized": "Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.",
+    "forbidden": "Bu işlem için yetkiniz yok.",
+    "validation": "Lütfen tüm alanları doğru doldurun.",
+    "serverError": "Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.",
+    "invalidCredentials": "E-posta veya şifre hatalı.",
+    "emailRequired": "E-posta adresi gerekli.",
+    "passwordRequired": "Şifre gerekli.",
+    "passwordTooShort": "Şifre en az 6 karakter olmalıdır.",
+    "passwordsNotMatch": "Şifreler eşleşmiyor.",
+    "invalidEmail": "Geçerli bir e-posta adresi girin.",
+    "phoneRequired": "Telefon numarası gerekli.",
+    "invalidPhone": "Geçerli bir telefon numarası girin.",
+    "firstNameRequired": "Ad gerekli.",
+    "lastNameRequired": "Soyad gerekli."
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "retry": "Tekrar Dene",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "confirm": "Onayla",
+    "close": "Kapat",
+    "back": "Geri",
+    "next": "İleri",
+    "done": "Tamam",
+    "yes": "Evet",
+    "no": "Hayır",
+    "ok": "Tamam"
+  }
+}

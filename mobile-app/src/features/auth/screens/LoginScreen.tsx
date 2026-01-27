@@ -37,17 +37,7 @@ import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
 import { getUserFriendlyErrorMessage, isAuthError, isNetworkError } from '@/utils/errorHandler';
-
-/**
- * Form validasyon şeması
- * Zod ile e-posta ve şifre validasyonu
- */
-const loginSchema = z.object({
-  email: z.string().email('Geçerli bir e-posta girin'),
-  password: z.string().min(1, 'Şifre gerekli'),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Giriş yapma ekranı bileşeni
@@ -55,11 +45,23 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export const LoginScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
+  const { t } = useTranslation();
   
   // Server hata mesajı için state
   const [serverError, setServerError] = useState<string | null>(null);
   
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  /**
+   * Form validasyon şeması - i18n ile
+   */
+  const loginSchema = useMemo(() => z.object({
+    email: z.string().min(1, t('errors.emailRequired')).email(t('errors.invalidEmail')),
+    password: z.string().min(1, t('errors.passwordRequired')),
+  }), [t]);
+
+  // Form değerleri tipi
+  type LoginFormValues = z.infer<typeof loginSchema>;
 
   /**
    * NOT: Mount'ta otomatik PendingApproval yönlendirmesi yapmıyoruz.
@@ -114,9 +116,9 @@ export const LoginScreen = () => {
 
       // Merkezi error util'leri ile hata sınıflandırma
       if (isAuthError(error)) {
-        message = '❌ E-posta veya şifre hatalı';
+        message = t('errors.invalidCredentials');
       } else if (isNetworkError(error)) {
-        message = '🌐 İnternet bağlantınızı kontrol edin';
+        message = t('errors.network');
       } else {
         // Kullanıcı dostu mesajı al (logging olmadan)
         message = getUserFriendlyErrorMessage(error);
@@ -171,14 +173,14 @@ export const LoginScreen = () => {
           <View style={styles.content}>
 
           <Typography variant="body" style={styles.subtitle}>
-            Hesabına giriş yap ve kariyer fırsatlarını keşfet
+            {t('auth.login.title')}
           </Typography>
 
           {/* Form */}
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Typography variant="bodySmall" style={styles.label}>
-                E-posta
+                {t('auth.login.email')}
               </Typography>
               <Controller
                 control={control}
@@ -187,7 +189,7 @@ export const LoginScreen = () => {
                   <Input
                     autoCapitalize="none"
                     keyboardType="email-address"
-                    placeholder="ornek@medikariyer.com"
+                    placeholder={t('auth.login.emailPlaceholder')}
                     value={value}
                     onChangeText={onChange}
                     variant="underline"
@@ -203,14 +205,14 @@ export const LoginScreen = () => {
 
             <View style={styles.inputContainer}>
               <Typography variant="bodySmall" style={styles.label}>
-                Şifre
+                {t('auth.login.password')}
               </Typography>
               <Controller
                 control={control}
                 name="password"
                 render={({ field: { onChange, value } }) => (
                   <Input
-                    placeholder="••••••••"
+                    placeholder={t('auth.login.passwordPlaceholder')}
                     secureTextEntry
                     value={value}
                     onChangeText={onChange}
@@ -237,13 +239,13 @@ export const LoginScreen = () => {
               style={styles.forgotButton}
             >
               <Typography variant="bodySmall" style={styles.forgotText}>
-                Şifreni mi unuttun?
+                {t('auth.login.forgotPassword')}
               </Typography>
             </Button>
 
             <Button
               variant="gradient"
-              label={loginMutation.isPending ? "Giriş Yapılıyor..." : "Giriş Yap"}
+              label={loginMutation.isPending ? t('common.loading') : t('auth.login.loginButton')}
               onPress={handleSubmit(onSubmit)}
               loading={loginMutation.isPending}
               fullWidth
@@ -255,11 +257,11 @@ export const LoginScreen = () => {
             {/* Register Link */}
             <View style={styles.registerSection}>
               <Typography variant="bodySmall" style={styles.registerText}>
-                Hesabın yok mu?{' '}
+                {t('auth.login.noAccount')}{' '}
               </Typography>
               <TouchableOpacity onPress={() => navigation.replace('Register')}>
                 <Typography variant="bodySmall" style={styles.registerLink}>
-                  Kayıt Ol
+                  {t('auth.login.register')}
                 </Typography>
               </TouchableOpacity>
             </View>

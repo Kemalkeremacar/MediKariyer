@@ -23,6 +23,7 @@ import { Typography } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useLogout } from '../hooks/useLogout';
 import { tokenManager } from '@/utils/tokenManager';
+import { useTranslation } from '@/hooks/useTranslation';
 
 /**
  * Hesap pasif durumda ekranı
@@ -37,6 +38,7 @@ export const AccountDisabledScreen = () => {
   const user = useAuthStore((state) => state.user);
   const markUnauthenticated = useAuthStore((state) => state.markUnauthenticated);
   const logoutMutation = useLogout();
+  const { t } = useTranslation();
 
   /**
    * Çıkış yapma işlemi
@@ -142,14 +144,14 @@ export const AccountDisabledScreen = () => {
             </Typography>
           </View>
           <Typography variant="h1" style={styles.headerTitle}>
-            Hesap Pasif
+            {t('auth.accountDisabled.title')}
           </Typography>
         </LinearGradient>
 
         {/* Content */}
         <View style={styles.content}>
           <Typography variant="body" style={styles.message}>
-            Hesabınız sistem yöneticisi tarafından pasif duruma alınmıştır.
+            {t('auth.accountDisabled.description')}
           </Typography>
 
           <View style={styles.warningBox}>
@@ -191,7 +193,7 @@ export const AccountDisabledScreen = () => {
           />
 
           <Button
-            label="Çıkış Yap ve Başka Hesapla Giriş Yap"
+            label={t('auth.accountDisabled.logout')}
             variant="outline"
             onPress={handleLogout}
             fullWidth

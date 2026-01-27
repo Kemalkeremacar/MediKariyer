@@ -12,9 +12,9 @@
  * @since 2024
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Linking } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
@@ -24,6 +24,7 @@ import { errorLogger } from '@/utils/errorLogger';
 import { queryKeys } from '@/api/queryKeys';
 import { navigationRef } from '@/navigation/navigationRef';
 import { devLog } from '@/utils/devLogger';
+import { useAlert } from '@/providers/AlertProvider';
 import type { RootNavigationParamList } from '@/navigation/types';
 
 /**
@@ -106,10 +107,12 @@ export const usePushNotifications = () => {
   const navigation = useNavigation<NavigationProp<RootNavigationParamList>>();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
+  const { showAlert } = useAlert();
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
   const appStateListener = useRef<any>(null);
   const lastNotificationResponse = useRef<any>(null);
+  const [permissionDenialShown, setPermissionDenialShown] = useState(false);
 
   useEffect(() => {
     // Only register if user is authenticated
@@ -124,12 +127,44 @@ export const usePushNotifications = () => {
       return;
     }
 
-    // Register device token
-    pushNotificationService.registerDeviceToken().catch((error) => {
-      errorLogger.logError(error, {
-        context: 'usePushNotifications - registerDeviceToken',
-      });
-    });
+    // Register device token with permission check
+    const registerWithPermissionCheck = async () => {
+      try {
+        // Check if permission is granted
+        const hasPermission = await pushNotificationService.requestPermissions();
+        
+        if (!hasPermission && !permissionDenialShown) {
+          // Permission denied - show info alert (only once)
+          setPermissionDenialShown(true);
+          
+          showAlert({
+            type: 'info',
+            title: 'Bildirim İzni',
+            message: 'Bildirim izni verilmedi. İş ilanları ve başvuru güncellemeleri hakkında bildirim alamayacaksınız.\n\nİzni daha sonra ayarlardan açabilirsiniz.',
+            confirmText: 'Ayarlara Git',
+            cancelText: 'Tamam',
+            onConfirm: () => {
+              // Open app settings
+              Linking.openSettings().catch(() => {
+                devLog.warn('[usePushNotifications] Failed to open settings');
+              });
+            },
+          });
+          
+          devLog.log('[usePushNotifications] Permission denied - user notified');
+          return;
+        }
+        
+        // Permission granted - register token
+        await pushNotificationService.registerDeviceToken();
+      } catch (error) {
+        errorLogger.logError(error as Error, {
+          context: 'usePushNotifications - registerDeviceToken',
+        });
+      }
+    };
+    
+    registerWithPermissionCheck();
 
     // Listen for notifications received while app is in foreground
     notificationListener.current =
@@ -238,7 +273,7 @@ export const usePushNotifications = () => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, queryClient]);
+  }, [isAuthenticated, queryClient, showAlert, permissionDenialShown]);
 
   /**
    * Handle notification tapped - navigate to relevant screen (Deep Linking)

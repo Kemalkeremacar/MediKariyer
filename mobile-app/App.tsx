@@ -50,6 +50,8 @@ import { StyleSheet, Text, TextInput } from 'react-native';
 import { errorLogger } from '@/utils/errorLogger';
 import { env } from '@/config/env';
 import { useAuthStore } from '@/store/authStore';
+// i18n konfigürasyonu - uygulama başlangıcında yüklenir
+import '@/config/i18n';
 
 // Splash screen'i asset yükleme tamamlanana kadar otomatik gizlenmesini engelle
 SplashScreen.preventAutoHideAsync();

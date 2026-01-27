@@ -43,7 +43,34 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: CACHE_STALE_TIME, // 5 dakika - veriler bu süre boyunca fresh kabul edilir
       gcTime: CACHE_TIME, // 10 dakika - memory'den temizlenmeden önce bekle (v5'te cacheTime yerine gcTime)
-      retry: MAX_RETRY_ATTEMPTS, // 2 yeniden deneme
+      // Akıllı retry stratejisi - network error'larda retry yap, validation error'larda yapma
+      retry: (failureCount, error: any) => {
+        // Network error (no response) - retry yap
+        if (!error?.response) {
+          return failureCount < MAX_RETRY_ATTEMPTS;
+        }
+        
+        const status = error?.response?.status;
+        
+        // 5xx (server errors) - retry yap
+        if (status >= 500) {
+          return failureCount < MAX_RETRY_ATTEMPTS;
+        }
+        
+        // 408 (timeout) ve 429 (rate limit) - retry yap
+        if (status === 408 || status === 429) {
+          return failureCount < MAX_RETRY_ATTEMPTS;
+        }
+        
+        // 4xx (client errors) - retry yapma (validation, auth errors)
+        if (status >= 400 && status < 500) {
+          return false;
+        }
+        
+        // Diğer durumlar - retry yap
+        return failureCount < MAX_RETRY_ATTEMPTS;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000), // Exponential backoff: 1s, 2s, 3s
       refetchOnWindowFocus: false, // Pencere focus olduğunda yeniden getirme
       refetchOnReconnect: true, // İnternet bağlantısı geri geldiğinde yeniden getir
       refetchOnMount: true, // Component mount olduğunda yeniden getir (stale ise)
@@ -51,10 +78,17 @@ const queryClient = new QueryClient({
     mutations: {
       // FIXED: Enable retry for mutations to handle transient network errors
       retry: (failureCount, error: any) => {
+        // Network error (no response) - retry yap
+        if (!error?.response) {
+          return failureCount < 2;
+        }
+        
+        const status = error?.response?.status;
+        
         // Don't retry on validation errors (4xx except 408, 429)
-        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+        if (status >= 400 && status < 500) {
           // Retry on timeout (408) and rate limit (429)
-          if (error?.response?.status === 408 || error?.response?.status === 429) {
+          if (status === 408 || status === 429) {
             return failureCount < 2;
           }
           return false;

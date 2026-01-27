@@ -1,0 +1,100 @@
+{
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot Password",
+      "loginButton": "Login",
+      "noAccount": "Don't have an account?",
+      "register": "Register",
+      "emailPlaceholder": "example@email.com",
+      "passwordPlaceholder": "Enter your password"
+    },
+    "register": {
+      "title": "Register",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "registerButton": "Register",
+      "haveAccount": "Already have an account?",
+      "login": "Login",
+      "firstNamePlaceholder": "Your first name",
+      "lastNamePlaceholder": "Your last name",
+      "phonePlaceholder": "5XX XXX XX XX"
+    },
+    "forgotPassword": {
+      "title": "Forgot Password",
+      "description": "Enter your email address and we'll send you a password reset link.",
+      "email": "Email",
+      "sendButton": "Send",
+      "backToLogin": "Back to login"
+    },
+    "pendingApproval": {
+      "title": "Pending Admin Approval",
+      "description": "Your account is pending admin approval. You will be notified via email once approved.",
+      "logout": "Back to Login"
+    },
+    "accountDisabled": {
+      "title": "Account Disabled",
+      "description": "Your account has been disabled by the system administrator.",
+      "logout": "Logout and Login with Another Account"
+    }
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to MediKariyer",
+      "description": "Turkey's largest career platform for physicians. Thousands of doctors are shaping their careers here."
+    },
+    "jobs": {
+      "title": "One-Click Application",
+      "description": "Discover job opportunities tailored for you. Apply with one click and accelerate your career journey."
+    },
+    "profile": {
+      "title": "Professional Profile",
+      "description": "Stand out with your expertise, experience, and certifications. Let hospitals find you."
+    },
+    "skip": "Skip",
+    "next": "Continue",
+    "getStarted": "Let's Get Started"
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "network": "Please check your internet connection.",
+    "timeout": "Request timed out.",
+    "notFound": "The content you're looking for was not found.",
+    "unauthorized": "Your session has expired. Please login again.",
+    "forbidden": "You don't have permission for this action.",
+    "validation": "Please fill in all fields correctly.",
+    "serverError": "Server error occurred. Please try again later.",
+    "invalidCredentials": "Invalid email or password.",
+    "emailRequired": "Email address is required.",
+    "passwordRequired": "Password is required.",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "passwordsNotMatch": "Passwords do not match.",
+    "invalidEmail": "Please enter a valid email address.",
+    "phoneRequired": "Phone number is required.",
+    "invalidPhone": "Please enter a valid phone number.",
+    "firstNameRequired": "First name is required.",
+    "lastNameRequired": "Last name is required."
+  },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK"
+  }
+}
