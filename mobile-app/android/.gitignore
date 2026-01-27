@@ -14,8 +14,3 @@ local.properties
 
 # Bundle artifacts
 *.jsbundle
-
-# Keystore files - ASLA COMMIT ETME!
-*.keystore
-*.jks
-keystore-info.txt
