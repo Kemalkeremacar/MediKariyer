@@ -209,7 +209,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
   const handleShowAppInfo = useCallback(() => {
     Alert.alert(
       'Uygulama Bilgisi',
-      `${appInfo.name}\n\nVersiyon: ${appInfo.version} (${appInfo.buildNumber})\nPlatform: ${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${appInfo.platformVersion}\n\n© 2024 MediKariyer\nTüm hakları saklıdır.`,
+      `${appInfo.name}\n\nVersiyon: ${appInfo.version} (${appInfo.buildNumber})\nPlatform: ${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${appInfo.platformVersion}\n\n© 2026 MediKariyer\nTüm hakları saklıdır.`,
       [{ text: 'Tamam' }]
     );
   }, [appInfo]);
@@ -396,7 +396,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
             {appInfo.name}
           </Typography>
           <Typography variant="caption" style={styles.footerVersion}>
-            Versiyon {appInfo.version} • © 2024
+            Versiyon {appInfo.version} • © 2026
           </Typography>
         </View>
       </ScrollView>

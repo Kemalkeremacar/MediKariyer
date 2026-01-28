@@ -16,7 +16,8 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.medikariyer.mobile"
+      "bundleIdentifier": "com.medikariyer.mobile",
+      "buildNumber": "1"
     },
     "android": {
       "package": "com.medikariyer.mobile",

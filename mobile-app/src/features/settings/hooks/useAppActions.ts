@@ -61,17 +61,17 @@ const getStoreUrl = (): string => {
 
 /**
  * Uygulama versiyonunu alır
- * Öncelik sırası: nativeApplicationVersion > expoConfig.version > manifest2 > fallback
+ * Öncelik sırası: expoConfig.version > nativeApplicationVersion > manifest2 > fallback
  */
 const getAppVersion = (): string => {
+  // Önce expoConfig'den al (app.json'daki version)
+  if (Constants.expoConfig?.version) {
+    return Constants.expoConfig.version;
+  }
+  
   // Production build'de native versiyon
   if (Application.nativeApplicationVersion) {
     return Application.nativeApplicationVersion;
-  }
-  
-  // Development/Expo Go'da expoConfig
-  if (Constants.expoConfig?.version) {
-    return Constants.expoConfig.version;
   }
   
   // Manifest2 fallback
@@ -85,21 +85,21 @@ const getAppVersion = (): string => {
 
 /**
  * Build numarasını alır
- * Öncelik sırası: nativeBuildVersion > expoConfig.ios.buildNumber/android.versionCode > fallback
+ * Öncelik sırası: expoConfig.ios.buildNumber/android.versionCode > nativeBuildVersion > fallback
  */
 const getBuildNumber = (): string => {
-  // Production build'de native build number
-  if (Application.nativeBuildVersion) {
-    return Application.nativeBuildVersion;
-  }
-  
-  // Development/Expo Go'da platform-specific build number
+  // Önce expoConfig'den al (app.json'daki buildNumber/versionCode)
   if (Platform.OS === 'ios' && Constants.expoConfig?.ios?.buildNumber) {
     return Constants.expoConfig.ios.buildNumber;
   }
   
   if (Platform.OS === 'android' && Constants.expoConfig?.android?.versionCode) {
     return String(Constants.expoConfig.android.versionCode);
+  }
+  
+  // Production build'de native build number
+  if (Application.nativeBuildVersion) {
+    return Application.nativeBuildVersion;
   }
   
   // Son fallback

@@ -26,10 +26,11 @@
  */
 
 import React, { useState } from 'react';
-import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Platform, Modal, Keyboard } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
+import { Button } from './Button';
 import { colors, spacing } from '@/theme';
 import { formatDate as formatDateUtil } from '@/utils/date';
 
@@ -70,6 +71,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   error,
 }) => {
   const [show, setShow] = useState(false);
+  const [tempDate, setTempDate] = useState<Date>(value || new Date());
 
   /**
    * Tarihi görüntüleme formatına çevirir
@@ -83,24 +85,34 @@ export const DatePicker: React.FC<DatePickerProps> = ({
    */
   const handlePress = () => {
     if (!disabled) {
+      Keyboard.dismiss();
+      setTempDate(value || new Date());
       setShow(true);
     }
   };
 
   /**
-   * Tarih değişikliğini yönetir
+   * Tarih değişikliğini yönetir (geçici olarak)
    */
   const handleChange = (_event: unknown, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShow(false);
-    }
-    
     if (selectedDate) {
-      onChange(selectedDate);
-      if (Platform.OS === 'ios') {
-        setShow(false);
-      }
+      setTempDate(selectedDate);
     }
+  };
+
+  /**
+   * Tarih seçimini onaylar
+   */
+  const handleConfirm = () => {
+    onChange(tempDate);
+    setShow(false);
+  };
+
+  /**
+   * Tarih seçimini iptal eder
+   */
+  const handleCancel = () => {
+    setShow(false);
   };
 
   return (
@@ -133,16 +145,55 @@ export const DatePicker: React.FC<DatePickerProps> = ({
         </Typography>
       )}
       
-      {show && (
-        <DateTimePicker
-          value={value || new Date()}
-          mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleChange}
-          minimumDate={minimumDate}
-          maximumDate={maximumDate}
-        />
-      )}
+      <Modal
+        visible={show}
+        transparent
+        animationType="slide"
+        onRequestClose={handleCancel}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay} 
+          activeOpacity={1} 
+          onPress={handleCancel}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Typography variant="h3" style={styles.modalTitle}>
+                {label || 'Tarih Seçin'}
+              </Typography>
+            </View>
+            
+            <View style={styles.pickerContainer}>
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleChange}
+                minimumDate={minimumDate}
+                maximumDate={maximumDate}
+                style={styles.picker}
+              />
+            </View>
+            
+            <View style={styles.modalActions}>
+              <Button
+                variant="outline"
+                onPress={handleCancel}
+                style={styles.actionButton}
+              >
+                İptal
+              </Button>
+              <Button
+                variant="primary"
+                onPress={handleConfirm}
+                style={styles.actionButton}
+              >
+                Onayla
+              </Button>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -187,5 +238,50 @@ const styles = StyleSheet.create({
   error: {
     color: colors.error[600],
     fontSize: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.background.primary,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.neutral[100],
+  },
+  modalTitle: {
+    textAlign: 'center',
+    color: colors.text.primary,
+  },
+  pickerContainer: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  picker: {
+    width: '100%',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+  },
+  actionButton: {
+    flex: 1,
   },
 });

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://medikariyer.net/sitemap.xml
+
+# Disallow admin pages
+Disallow: /admin/
+Disallow: /api/

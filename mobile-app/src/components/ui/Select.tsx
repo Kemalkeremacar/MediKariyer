@@ -47,6 +47,7 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Keyboard,
 } from 'react-native';
 import {
   BottomSheetModal,
@@ -116,6 +117,7 @@ export const Select: React.FC<SelectProps> = ({
 
   const handleOpen = useCallback(() => {
     if (!disabled) {
+      Keyboard.dismiss();
       bottomSheetModalRef.current?.present();
     }
   }, [disabled]);

@@ -24,6 +24,7 @@ import {
   ActivityIndicator,
   TextStyle,
   Animated,
+  Keyboard,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useQuery } from '@tanstack/react-query';
@@ -89,6 +90,7 @@ export const JobFilterSheet: React.FC<JobFilterSheetProps> = ({
   // Açılış animasyonu
   useEffect(() => {
     if (visible) {
+      Keyboard.dismiss();
       setDraftFilters(filters);
       // Değerleri sıfırla ve animasyonu başlat
       overlayOpacity.setValue(0);
