@@ -52,7 +52,7 @@ import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
 import NavbarNotificationBell from './NavbarNotificationBell';
 import useAuthStore from '../../store/authStore';
-import logoImage from '../../assets/logo.jpg';
+import logoImage from '../../assets/logo.png';
 
 /**
  * ============================================================================

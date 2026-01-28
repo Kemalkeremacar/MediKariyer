@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
-import logoImage from '../../assets/logo.jpg';
+import logoImage from '../../assets/logo.png';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
