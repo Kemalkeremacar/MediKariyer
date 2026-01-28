@@ -30,7 +30,9 @@ const CORS_OPTIONS = {
       'http://192.168.1.134:8081',
       // Tüm 192.168.1.x IP'lerine izin ver (local network için)
       /^http:\/\/192\.168\.1\.\d{1,3}(:\d+)?$/,
-      'https://mk.monassist.com' // Production Frontend Domain
+      'https://mk.monassist.com', // Production Frontend Domain
+      'https://medikariyer.net', // Production Frontend Domain (yeni)
+      'https://www.medikariyer.net' // Production Frontend Domain (www ile)
     ];
     
     // Kaynağı olmayan isteklere (mobil uygulamalar, Postman gibi araçlar) izin ver.
