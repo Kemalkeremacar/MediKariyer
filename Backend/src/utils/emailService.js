@@ -51,13 +51,13 @@ const createTransporter = () => {
   }
 
   const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT;
+  const port = Number(process.env.SMTP_PORT);
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
-  const secure = process.env.SMTP_SECURE === 'true' || Number(port) === 465;
-  const ignoreTLS = process.env.SMTP_IGNORE_TLS !== undefined 
-    ? process.env.SMTP_IGNORE_TLS === 'true'
-    : true;
+  
+  // Port 465 = implicit TLS (secure: true)
+  // Port 587 = STARTTLS (secure: false)
+  const secure = port === 465;
 
   if (!host || !port) {
     logger.warn('SMTP bilgileri tanımlanmadı. E-posta gönderimi simüle edilecek.');
@@ -65,19 +65,62 @@ const createTransporter = () => {
     return transporter;
   }
 
-  transporter = nodemailer.createTransport({
+  if (!user || !pass) {
+    logger.error('SMTP authentication bilgileri eksik!');
+    transporter = null;
+    return transporter;
+  }
+
+  const config = {
     host,
-    port: Number(port),
-    secure,
-    auth: user && pass ? { user, pass } : undefined,
+    port,
+    secure, // Port 587 için false olacak
+    auth: { user, pass },
+    
+    // Port 587 için STARTTLS zorunlu
+    requireTLS: port === 587,
+    
+    // TLS ayarları
     tls: {
-      rejectUnauthorized: !ignoreTLS,
-      servername: host
+      // Production'da true olmalı, development'ta false olabilir
+      rejectUnauthorized: process.env.NODE_ENV === 'production',
+      // Sertifika hostname kontrolü
+      servername: host,
+      // Minimum TLS versiyonu
+      minVersion: 'TLSv1.2'
     },
-    // Connection pool for better performance
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100
+    
+    // Connection timeout ayarları
+    connectionTimeout: 10000, // 10 saniye
+    greetingTimeout: 5000,    // 5 saniye
+    socketTimeout: 15000,     // 15 saniye
+    
+    // Pool yerine her seferinde yeni connection (daha güvenilir)
+    pool: false,
+    
+    // Debug modu (development'ta)
+    debug: process.env.NODE_ENV === 'development',
+    logger: process.env.NODE_ENV === 'development'
+  };
+
+  logger.info('SMTP transporter oluşturuluyor', {
+    host,
+    port,
+    secure,
+    requireTLS: config.requireTLS,
+    user,
+    env: process.env.NODE_ENV
+  });
+
+  transporter = nodemailer.createTransport(config);
+
+  // Connection test (opsiyonel ama önerilen)
+  transporter.verify((error, success) => {
+    if (error) {
+      logger.error('SMTP connection test başarısız', { error: error.message });
+    } else {
+      logger.info('SMTP sunucuya bağlantı başarılı');
+    }
   });
 
   return transporter;
@@ -178,6 +221,44 @@ const buildEmailHtml = (contentTemplate, data) => {
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
+ * Hatanın retry edilebilir olup olmadığını kontrol eder
+ */
+const isRetryableError = (error) => {
+  const retryableCodes = [
+    'ETIMEDOUT',    // Connection timeout
+    'ECONNRESET',   // Connection reset
+    'ENOTFOUND',    // DNS geçici hatası
+    'ECONNREFUSED', // Sunucu geçici kapalı
+    'ESOCKET',      // Socket hatası
+    'ETIMEOUT'      // Timeout
+  ];
+  
+  const nonRetryableCodes = [
+    'EAUTH',        // Authentication hatası - retry gereksiz
+    'EENVELOPE',    // Email format hatası
+    'EMESSAGE'      // Message format hatası
+  ];
+  
+  // Kesinlikle retry yapılmaması gereken hatalar
+  if (nonRetryableCodes.includes(error.code)) {
+    return false;
+  }
+  
+  // Retry edilebilir hatalar
+  if (retryableCodes.includes(error.code)) {
+    return true;
+  }
+  
+  // 4xx hatalar (geçici) retry edilebilir, 5xx (kalıcı) edilemez
+  if (error.responseCode) {
+    return error.responseCode >= 400 && error.responseCode < 500;
+  }
+  
+  // Bilinmeyen hatalar için retry yap
+  return true;
+};
+
+/**
  * Retry ile email gönderir
  */
 const sendMailWithRetry = async ({ to, subject, text, html }) => {
@@ -194,22 +275,54 @@ const sendMailWithRetry = async ({ to, subject, text, html }) => {
   
   for (let attempt = 1; attempt <= EMAIL_CONFIG.maxRetries; attempt++) {
     try {
-      await mailTransporter.sendMail({ from, to, subject, text, html });
+      const info = await mailTransporter.sendMail({ from, to, subject, text, html });
       
       if (attempt > 1) {
-        logger.info(`E-posta gönderildi (${attempt}. denemede)`, { to, subject });
+        logger.info(`E-posta gönderildi (${attempt}. denemede)`, { 
+          to, 
+          subject,
+          messageId: info.messageId,
+          response: info.response
+        });
+      } else {
+        logger.info('E-posta gönderildi', {
+          to,
+          subject,
+          messageId: info.messageId
+        });
       }
       
-      return { simulated: false, success: true, attempts: attempt };
+      return { simulated: false, success: true, attempts: attempt, messageId: info.messageId };
     } catch (error) {
       lastError = error;
+      
+      // Hata detaylarını logla
+      logger.error('E-posta gönderim hatası', {
+        to,
+        subject,
+        attempt,
+        errorCode: error.code,
+        errorMessage: error.message,
+        responseCode: error.responseCode,
+        command: error.command
+      });
+      
+      // Retry edilebilir mi kontrol et
+      if (!isRetryableError(error)) {
+        logger.error('Hata retry edilemez, vazgeçiliyor', {
+          errorCode: error.code,
+          errorMessage: error.message
+        });
+        throw error;
+      }
       
       if (attempt < EMAIL_CONFIG.maxRetries) {
         const delay = EMAIL_CONFIG.retryDelayMs * Math.pow(EMAIL_CONFIG.retryMultiplier, attempt - 1);
         logger.warn(`E-posta gönderimi başarısız (${attempt}/${EMAIL_CONFIG.maxRetries}), ${delay}ms sonra tekrar denenecek`, {
           to,
           subject,
-          error: error.message
+          error: error.message,
+          errorCode: error.code
         });
         await sleep(delay);
       }
@@ -220,7 +333,9 @@ const sendMailWithRetry = async ({ to, subject, text, html }) => {
   logger.error(`E-posta gönderilemedi (${EMAIL_CONFIG.maxRetries} deneme sonrası)`, {
     to,
     subject,
-    error: lastError?.message
+    errorCode: lastError?.code,
+    errorMessage: lastError?.message,
+    responseCode: lastError?.responseCode
   });
   
   throw lastError;
