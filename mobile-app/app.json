@@ -17,7 +17,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.medikariyer.mobile",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Profil fotoğrafınızı güncellemek için galeri erişimine ihtiyacımız var.",
+        "NSCameraUsageDescription": "Profil fotoğrafınızı çekmek için kamera erişimine ihtiyacımız var."
+      }
     },
     "android": {
       "package": "com.medikariyer.mobile",
@@ -50,6 +54,13 @@
           "icon": "./assets/icon.png",
           "color": "#ffffff",
           "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Profil fotoğrafınızı güncellemek için galeri erişimine ihtiyacımız var.",
+          "cameraPermission": "Profil fotoğrafınızı çekmek için kamera erişimine ihtiyacımız var."
         }
       ]
     ]
