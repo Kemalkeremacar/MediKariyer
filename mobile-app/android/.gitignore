@@ -14,3 +14,7 @@ local.properties
 
 # Bundle artifacts
 *.jsbundle
+
+# SECURITY: Ignore gradle.properties if it contains sensitive data
+# Uncomment this line if you store real credentials in gradle.properties
+# gradle.properties

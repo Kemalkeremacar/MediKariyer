@@ -69,7 +69,13 @@ expo.edgeToEdgeEnabled=false
 # ============================================================================
 # CRITICAL: Keep these values SECRET! Do NOT commit to version control!
 # For CI/CD, use environment variables or secure secret management.
+#
+# INSTRUCTIONS:
+# 1. Copy this file to gradle.properties (without .example)
+# 2. Replace the values below with your actual keystore credentials
+# 3. Make sure gradle.properties is in .gitignore
+#
 MEDIKARIYER_RELEASE_STORE_FILE=my-upload-key.keystore
-MEDIKARIYER_RELEASE_STORE_PASSWORD=medikariyer2024
-MEDIKARIYER_RELEASE_KEY_ALIAS=my-key-alias
-MEDIKARIYER_RELEASE_KEY_PASSWORD=medikariyer2024
+MEDIKARIYER_RELEASE_STORE_PASSWORD=YOUR_STORE_PASSWORD_HERE
+MEDIKARIYER_RELEASE_KEY_ALIAS=YOUR_KEY_ALIAS_HERE
+MEDIKARIYER_RELEASE_KEY_PASSWORD=YOUR_KEY_PASSWORD_HERE
