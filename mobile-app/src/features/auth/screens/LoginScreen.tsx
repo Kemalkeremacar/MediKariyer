@@ -157,7 +157,7 @@ export const LoginScreen = () => {
             {/* Logo */}
             <View style={styles.logoContainer}>
               <Image 
-                source={require('../../../../assets/logo.jpg')}
+                source={require('../../../../assets/logo.png')}
                 style={styles.logo}
                 resizeMode="contain"
               />

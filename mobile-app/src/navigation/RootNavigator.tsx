@@ -268,7 +268,7 @@ export const RootNavigator = () => {
         <View style={styles.loadingContent}>
           <View style={styles.logoContainer}>
             <Image 
-              source={require('../../assets/logo.jpg')}
+              source={require('../../assets/logo.png')}
               style={styles.logo}
               resizeMode="contain"
             />
