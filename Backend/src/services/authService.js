@@ -1204,12 +1204,23 @@ const requestPasswordReset = async ({ email, ipAddress, userAgent, source = 'web
     }
   }).catch(() => {});
 
-  await emailService.sendPasswordResetEmail({
-    to: user.email,
-    token,
-    expiresAt,
-    source // 'web' veya 'mobile'
-  });
+  // Email gönderimi başarısız olsa bile kullanıcıya hata döndürme (güvenlik için)
+  // Token database'e kaydedildi, email gönderimi başarısız olsa bile işlem başarılı sayılır
+  try {
+    await emailService.sendPasswordResetEmail({
+      to: user.email,
+      token,
+      expiresAt,
+      source // 'web' veya 'mobile'
+    });
+  } catch (emailError) {
+    logger.error('Password reset email could not be sent, but token was created', {
+      userId: user.id,
+      email: user.email,
+      error: emailError.message
+    });
+    // Email gönderilemese bile başarılı dön (güvenlik + kullanıcı deneyimi)
+  }
 
   return { success: true };
 };

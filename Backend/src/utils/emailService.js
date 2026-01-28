@@ -142,21 +142,30 @@ const renderTemplate = (template, data) => {
  * Base template ile content template'i birleştirir
  */
 const buildEmailHtml = (contentTemplate, data) => {
-  const baseTemplate = loadTemplate('base');
-  const contentHtml = renderTemplate(loadTemplate(contentTemplate), data);
+  try {
+    const baseTemplate = loadTemplate('base');
+    const contentHtml = renderTemplate(loadTemplate(contentTemplate), data);
 
-  if (!baseTemplate) {
-    // Base template yoksa sadece content döndür
-    return contentHtml;
+    if (!baseTemplate) {
+      // Base template yoksa sadece content döndür
+      return contentHtml || '';
+    }
+
+    const fullData = {
+      ...EMAIL_CONFIG.defaults,
+      ...data,
+      content: contentHtml
+    };
+
+    return renderTemplate(baseTemplate, fullData);
+  } catch (error) {
+    logger.error('Email template rendering failed', { 
+      contentTemplate, 
+      error: error.message 
+    });
+    // Template hatası durumunda basit bir HTML döndür
+    return `<html><body><p>${data.subject || 'Email'}</p></body></html>`;
   }
-
-  const fullData = {
-    ...EMAIL_CONFIG.defaults,
-    ...data,
-    content: contentHtml
-  };
-
-  return renderTemplate(baseTemplate, fullData);
 };
 
 // ============================================================================
