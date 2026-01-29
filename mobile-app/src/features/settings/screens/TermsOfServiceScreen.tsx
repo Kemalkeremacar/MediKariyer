@@ -344,10 +344,10 @@ export const TermsOfServiceScreen = (_props: Props) => {
             Kullanım koşulları hakkında sorularınız için:
           </Typography>
           <Typography variant="caption" style={styles.infoText}>
-            📧 info@medikariyer.com
+            📧 info@medikariyer.net
           </Typography>
           <Typography variant="caption" style={styles.infoText}>
-            🌐 www.medikariyer.com
+            🌐 www.medikariyer.net
           </Typography>
         </Card>
       </ScrollView>

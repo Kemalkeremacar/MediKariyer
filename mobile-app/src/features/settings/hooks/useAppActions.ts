@@ -37,10 +37,10 @@ const APP_CONFIG = {
   appName: 'MediKariyer Doktor',
   
   // Destek e-postası
-  supportEmail: 'info@medikariyer.com',
+  supportEmail: 'info@medikariyer.net',
   
   // Web site
-  website: 'https://medikariyer.com',
+  website: 'https://medikariyer.net',
 };
 
 // ============================================================================
@@ -52,11 +52,35 @@ const APP_CONFIG = {
  */
 const getStoreUrl = (): string => {
   if (Platform.OS === 'ios') {
-    return APP_CONFIG.appStoreId 
-      ? `https://apps.apple.com/app/id${APP_CONFIG.appStoreId}`
-      : APP_CONFIG.urls.website;
+    // iOS: App Store ID varsa App Store linki, yoksa website
+    if (APP_CONFIG.appStoreId) {
+      return `https://apps.apple.com/app/id${APP_CONFIG.appStoreId}`;
+    }
+    // App Store'da henüz yayınlanmamışsa website'e yönlendir
+    return APP_CONFIG.website;
   }
+  
+  // Android: Play Store linki
   return `https://play.google.com/store/apps/details?id=${APP_CONFIG.androidPackage}`;
+};
+
+/**
+ * Paylaşım mesajını oluşturur
+ */
+const getShareMessage = (): string => {
+  // Şu anda uygulama store'larda olmadığı için website'i paylaş
+  // Store'a yüklendikten sonra getStoreUrl() kullanılacak
+  const url = APP_CONFIG.website;
+  
+  return `🏥 ${APP_CONFIG.appName}
+
+Sağlık sektöründe kariyer fırsatları için ideal platform!
+
+✅ Binlerce iş ilanı
+✅ Kolay başvuru süreci
+✅ Profesyonel profil oluşturma
+
+Daha fazla bilgi: ${url}`;
 };
 
 /**
@@ -124,33 +148,39 @@ export const useAppActions = () => {
    * Uygulamayı paylaş
    * 
    * Native Share API kullanır - tüm platformlarda çalışır.
+   * 
+   * NOT: Uygulama store'larda yayınlandıktan sonra APP_CONFIG.appStoreId
+   * ve androidPackage güncellenecek, o zaman store linklerini paylaşacak.
    */
   const shareApp = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);
-      const storeUrl = getStoreUrl();
       
-      const shareContent = {
-        message: Platform.select({
-          ios: `${APP_CONFIG.appName} uygulamasını keşfedin! Sağlık sektöründe kariyer fırsatları için:`,
-          android: `${APP_CONFIG.appName} uygulamasını keşfedin! Sağlık sektöründe kariyer fırsatları için: ${storeUrl}`,
-          default: `${APP_CONFIG.appName} - ${storeUrl}`,
-        }),
+      // Paylaşım mesajını al
+      const message = getShareMessage();
+      
+      const shareContent: any = {
+        message,
         title: APP_CONFIG.appName,
-        url: Platform.OS === 'ios' ? storeUrl : undefined,
       };
+      
+      // iOS için URL ayrı parametre olarak da ekle
+      if (Platform.OS === 'ios') {
+        shareContent.url = APP_CONFIG.website;
+      }
       
       const result = await Share.share(shareContent);
 
       if (result.action === Share.sharedAction) {
+        showToast('Teşekkürler! 🎉', 'success');
         return true;
       }
+      
+      // Kullanıcı paylaşımı iptal etti
       return false;
     } catch (error) {
-      // Kullanıcı paylaşımı iptal ettiyse hata gösterme
-      if ((error as Error).message !== 'User did not share') {
-        showToast('Paylaşım yapılamadı', 'error');
-      }
+      console.error('Share error:', error);
+      showToast('Paylaşım yapılamadı', 'error');
       return false;
     } finally {
       setIsLoading(false);
@@ -160,15 +190,40 @@ export const useAppActions = () => {
   /**
    * Uygulamayı değerlendir
    * 
-   * Önce in-app review dener (iOS 10.3+, Android 5.0+),
-   * başarısız olursa store'a yönlendirir.
+   * Şu anda uygulama store'larda olmadığı için website'e yönlendirir.
+   * Store'a yüklendikten sonra in-app review ve store linklerini kullanacak.
    * 
-   * NOT: In-app review, Apple/Google tarafından rate-limit'e tabidir.
-   * Çok sık çağrılırsa gösterilmeyebilir.
+   * TODO: Uygulama yayınlandıktan sonra:
+   * 1. APP_CONFIG.appStoreId'yi güncelle (iOS)
+   * 2. In-app review'ı aktif et
+   * 3. Store linklerini kullan
    */
   const rateApp = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);
+      
+      // Şu anda store'da olmadığı için bilgilendirme göster
+      Alert.alert(
+        'Uygulamayı Değerlendir',
+        'Uygulamamız yakında App Store ve Play Store\'da yayınlanacak. O zamana kadar web sitemizi ziyaret edebilir ve geri bildirimlerinizi paylaşabilirsiniz.',
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Web Sitesine Git',
+            onPress: async () => {
+              const canOpen = await Linking.canOpenURL(APP_CONFIG.website);
+              if (canOpen) {
+                await Linking.openURL(APP_CONFIG.website);
+                showToast('Teşekkürler! 🌟', 'success');
+              }
+            },
+          },
+        ]
+      );
+      
+      return true;
+      
+      /* Store'a yüklendikten sonra bu kod aktif edilecek:
       
       // In-app review mümkün mü kontrol et
       const isAvailable = await StoreReview.isAvailableAsync();
@@ -176,37 +231,29 @@ export const useAppActions = () => {
       if (isAvailable) {
         // In-app review göster
         await StoreReview.requestReview();
-        // NOT: requestReview başarılı olsa bile kullanıcının
-        // gerçekten değerlendirme yapıp yapmadığını bilemeyiz
+        showToast('Teşekkürler! 🌟', 'success');
         return true;
       }
       
       // In-app review mümkün değilse store'a yönlendir
       const storeUrl = getStoreUrl();
-      
-      // URL açılabilir mi kontrol et
       const canOpen = await Linking.canOpenURL(storeUrl);
       
       if (canOpen) {
         await Linking.openURL(storeUrl);
+        showToast('Teşekkürler! 🌟', 'success');
         return true;
       }
       
-      // Hiçbiri çalışmazsa bilgi ver
-      Alert.alert(
-        'Değerlendirme',
-        `Uygulamamızı değerlendirmek için ${Platform.OS === 'ios' ? 'App Store' : 'Play Store'}'u ziyaret edebilirsiniz.`,
-        [{ text: 'Tamam' }]
-      );
       return false;
+      */
     } catch (error) {
-      // Sessizce başarısız ol - kullanıcı deneyimini bozmamak için
       console.warn('Rate app error:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [showToast]);
 
   /**
    * Geri bildirim gönder

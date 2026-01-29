@@ -139,8 +139,6 @@ export type SettingsStackParamList = {
   SettingsMain: undefined;
   /** Şifre değiştirme ekranı */
   ChangePassword: undefined;
-  /** Bildirim ayarları ekranı */
-  NotificationSettings: undefined;
   /** Hesap silme ekranı */
   DeleteAccount: undefined;
   /** Yardım merkezi ekranı */

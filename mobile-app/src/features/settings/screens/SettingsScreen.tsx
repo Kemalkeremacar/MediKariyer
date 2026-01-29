@@ -234,68 +234,43 @@ export const SettingsScreen = ({ navigation }: Props) => {
         bounces={true}
       >
 
-        {/* Tercihler */}
+        {/* Yasal ve Bilgi */}
         <View style={styles.section}>
           <SectionHeader
-            title="Tercihler"
-            icon={<Ionicons name="options-outline" size={16} color={lightColors.primary[600]} />}
+            title="Yasal ve Bilgi"
+            icon={<Ionicons name="document-text-outline" size={16} color="#64748B" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="notifications" size={22} color={lightColors.primary[600]} />}
-              iconBgColor="#EEF2FF"
-              title="Bildirimler"
-              subtitle="Bildirim tercihlerinizi yönetin"
-              onPress={() => navigation.navigate('NotificationSettings')}
+              icon={<Ionicons name="shield-checkmark" size={22} color="#64748B" />}
+              iconBgColor="#F1F5F9"
+              title="Gizlilik Politikası"
+              subtitle="Veri koruma ve gizlilik"
+              onPress={() => navigation.navigate('PrivacyPolicy')}
             />
             <Divider />
             <SettingItem
-              icon={<Ionicons name="language" size={22} color={lightColors.primary[600]} />}
-              iconBgColor="#EEF2FF"
-              title="Dil"
-              subtitle="Türkçe"
-              onPress={() => {
-                Alert.alert(
-                  'Dil Seçimi',
-                  'Şu anda sadece Türkçe dil desteği mevcuttur. Yakında İngilizce dil desteği eklenecektir.',
-                  [{ text: 'Tamam' }]
-                );
-              }}
+              icon={<Ionicons name="document-text" size={22} color="#64748B" />}
+              iconBgColor="#F1F5F9"
+              title="Kullanım Koşulları"
+              subtitle="Hizmet şartları"
+              onPress={() => navigation.navigate('TermsOfService')}
+            />
+            <Divider />
+            <SettingItem
+              icon={<Ionicons name="information-circle" size={22} color="#64748B" />}
+              iconBgColor="#F1F5F9"
+              title="Uygulama Bilgisi"
+              value={`Versiyon ${appInfo.version}`}
+              onPress={handleShowAppInfo}
             />
           </Card>
         </View>
 
-        {/* Güvenlik */}
+        {/* Destek ve Geri Bildirim */}
         <View style={styles.section}>
           <SectionHeader
-            title="Güvenlik"
-            icon={<Ionicons name="shield-checkmark-outline" size={16} color={lightColors.primary[600]} />}
-          />
-          <Card variant="outlined" style={styles.settingsCard}>
-            <SettingItem
-              icon={<Ionicons name="lock-closed" size={22} color={lightColors.primary[600]} />}
-              iconBgColor="#EEF2FF"
-              title="Şifre Değiştir"
-              subtitle="Hesap şifrenizi güncelleyin"
-              onPress={() => navigation.navigate('ChangePassword')}
-            />
-            <Divider />
-            <SettingItem
-              icon={<Ionicons name="trash" size={22} color="#DC2626" />}
-              iconBgColor="#FEE2E2"
-              title="Hesabı Sil"
-              subtitle="Hesabınızı kalıcı olarak silin"
-              onPress={() => navigation.navigate('DeleteAccount')}
-              showChevron={true}
-              destructive
-            />
-          </Card>
-        </View>
-
-        {/* Destek ve Hakkında */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Destek ve Hakkında"
+            title="Destek ve Geri Bildirim"
             icon={<Ionicons name="heart-outline" size={16} color="#06B6D4" />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
@@ -333,61 +308,53 @@ export const SettingsScreen = ({ navigation }: Props) => {
           </Card>
         </View>
 
-        {/* Yasal */}
+        {/* Hesap ve Güvenlik */}
         <View style={styles.section}>
           <SectionHeader
-            title="Yasal"
-            icon={<Ionicons name="document-text-outline" size={16} color="#64748B" />}
+            title="Hesap ve Güvenlik"
+            icon={<Ionicons name="shield-checkmark-outline" size={16} color={lightColors.primary[600]} />}
           />
           <Card variant="outlined" style={styles.settingsCard}>
             <SettingItem
-              icon={<Ionicons name="shield-checkmark" size={22} color="#64748B" />}
-              iconBgColor="#F1F5F9"
-              title="Gizlilik Politikası"
-              subtitle="Veri koruma ve gizlilik"
-              onPress={() => navigation.navigate('PrivacyPolicy')}
+              icon={<Ionicons name="lock-closed" size={22} color={lightColors.primary[600]} />}
+              iconBgColor="#EEF2FF"
+              title="Şifre Değiştir"
+              subtitle="Hesap şifrenizi güncelleyin"
+              onPress={() => navigation.navigate('ChangePassword')}
             />
             <Divider />
             <SettingItem
-              icon={<Ionicons name="document-text" size={22} color="#64748B" />}
-              iconBgColor="#F1F5F9"
-              title="Kullanım Koşulları"
-              subtitle="Hizmet şartları"
-              onPress={() => navigation.navigate('TermsOfService')}
-            />
-            <Divider />
-            <SettingItem
-              icon={<Ionicons name="information-circle" size={22} color="#64748B" />}
-              iconBgColor="#F1F5F9"
-              title="Uygulama Bilgisi"
-              value={`Versiyon ${appInfo.version}`}
-              onPress={handleShowAppInfo}
+              icon={<Ionicons name="trash" size={22} color="#DC2626" />}
+              iconBgColor="#FEE2E2"
+              title="Hesabı Sil"
+              subtitle="Hesabınızı kalıcı olarak silin"
+              onPress={() => navigation.navigate('DeleteAccount')}
+              showChevron={true}
+              destructive
             />
           </Card>
         </View>
 
-        {/* Hesap İşlemleri */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Hesap İşlemleri"
-            icon={<Ionicons name="person-outline" size={16} color="#EF4444" />}
-          />
-          <Card variant="outlined" style={styles.settingsCard}>
-            <SettingItem
-              icon={
-                logoutMutation.isPending 
-                  ? <ActivityIndicator size="small" color="#EF4444" />
-                  : <Ionicons name="log-out" size={22} color="#EF4444" />
-              }
-              iconBgColor="#FEE2E2"
-              title="Çıkış Yap"
-              subtitle="Hesabınızdan çıkış yapın"
-              onPress={logoutMutation.isPending ? undefined : handleLogout}
-              showChevron={false}
-              destructive
-              disabled={logoutMutation.isPending}
-            />
-          </Card>
+        {/* Çıkış Yap Butonu */}
+        <View style={styles.logoutSection}>
+          <Pressable
+            onPress={logoutMutation.isPending ? undefined : handleLogout}
+            disabled={logoutMutation.isPending}
+            style={({ pressed }) => [
+              styles.logoutButton,
+              pressed && styles.logoutButtonPressed,
+              logoutMutation.isPending && styles.logoutButtonDisabled,
+            ]}
+          >
+            {logoutMutation.isPending ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Ionicons name="log-out-outline" size={24} color="#FFFFFF" />
+            )}
+            <Typography variant="body" style={styles.logoutButtonText}>
+              {logoutMutation.isPending ? 'Çıkış Yapılıyor...' : 'Çıkış Yap'}
+            </Typography>
+          </Pressable>
         </View>
 
         {/* Footer */}
@@ -515,6 +482,40 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     backgroundColor: lightColors.neutral[200],
     marginLeft: spacing.lg + 48 + spacing.md,
+  },
+  logoutSection: {
+    marginTop: spacing['2xl'],
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EF4444',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    borderRadius: 16,
+    gap: spacing.md,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  logoutButtonPressed: {
+    backgroundColor: '#DC2626',
+    transform: [{ scale: 0.98 }],
+  },
+  logoutButtonDisabled: {
+    backgroundColor: '#FCA5A5',
+    opacity: 0.7,
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   footer: {
     paddingVertical: spacing['3xl'],
