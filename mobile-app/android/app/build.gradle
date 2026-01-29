@@ -104,28 +104,15 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
-        release {
-            // SECURITY: Credentials moved to gradle.properties
-            // Never commit gradle.properties with real credentials to version control!
-            if (project.hasProperty('MEDIKARIYER_RELEASE_STORE_FILE')) {
-                storeFile file(MEDIKARIYER_RELEASE_STORE_FILE)
-                storePassword MEDIKARIYER_RELEASE_STORE_PASSWORD
-                keyAlias MEDIKARIYER_RELEASE_KEY_ALIAS
-                keyPassword MEDIKARIYER_RELEASE_KEY_PASSWORD
-            } else {
-                // Fallback for local development without credentials
-                // This will fail on release build, which is intentional
-                throw new GradleException("Release signing config not found! Please configure gradle.properties with signing credentials.")
-            }
-        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Production keystore kullanılıyor
-            signingConfig signingConfigs.release
+            // Caution! In production, you need to generate your own keystore file.
+            // see https://reactnative.dev/docs/signed-apk-android.
+            signingConfig signingConfigs.debug
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
