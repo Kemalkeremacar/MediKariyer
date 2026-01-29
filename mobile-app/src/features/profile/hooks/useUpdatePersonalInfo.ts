@@ -11,11 +11,9 @@
  * Sadece ['profile', 'core'] cache'ini invalidate eder.
  * Diğer domain'ler (eğitim, deneyim, vb.) etkilenmez.
  * 
- * **ÖNEMLİ NOT:**
- * showAlert kullanılmıyor çünkü:
- * - ProfileEditScreen zaten showToast kullanıyor
- * - showAlert modal açar ve navigation.goBack() ile çakışır
- * - Modal açık kalırsa touch events engellenir
+ * **TOAST MESAJI:**
+ * Başarılı güncelleme sonrası otomatik toast mesajı gösterir.
+ * Hata durumunda da toast ile bildirim yapılır.
  * 
  * **KULLANIM ÖRNEĞİ:**
  * ```typescript
@@ -33,6 +31,8 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileCoreService } from '@/api/services/profile/profile.core.service';
+import { useAlertHelpers } from '@/utils/alertHelpers';
+import { handleApiError } from '@/utils/errorHandler';
 import type { UpdatePersonalInfoPayload } from '@/types/profile';
 
 /**
@@ -49,13 +49,15 @@ import type { UpdatePersonalInfoPayload } from '@/types/profile';
  * **CACHE YÖNETİMİ:**
  * Başarılı güncelleme sonrası sadece ['profile', 'core'] invalidate edilir.
  * 
- * **HATA YÖNETİMİ:**
- * Hata durumunda error re-throw edilir, çağıran component handle eder.
+ * **TOAST MESAJI:**
+ * Başarılı: "Temel bilgiler güncellendi"
+ * Hata: API'den gelen hata mesajı
  * 
  * @returns {UseMutationResult} React Query mutation sonucu
  */
 export const useUpdatePersonalInfo = () => {
   const queryClient = useQueryClient();
+  const alert = useAlertHelpers();
 
   return useMutation({
     mutationFn: (payload: UpdatePersonalInfoPayload) =>
@@ -68,17 +70,16 @@ export const useUpdatePersonalInfo = () => {
       queryClient.invalidateQueries({ queryKey: ['profile', 'core'] });
       
       /**
-       * Alert/Toast gösterimi çağıran component'e bırakıldı
-       * ProfileEditScreen showToast kullanıyor
+       * Toast mesajı göster (dil bilgisi gibi)
        */
+      alert.success('Temel bilgiler güncellendi');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       /**
-       * Hata yönetimi çağıran component'e bırakıldı
-       * ProfileEditScreen handleSave'de try-catch ile yakalıyor
-       * Error re-throw edilerek caller'a iletiliyor
+       * Hata durumunda toast mesajı göster
        */
-      throw error;
+      const message = handleApiError(error, '/doctor/profile');
+      alert.error(message);
     },
   });
 };

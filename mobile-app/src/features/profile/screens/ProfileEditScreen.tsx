@@ -192,17 +192,14 @@ export const ProfileEditScreen = ({ navigation }: Props) => {
         residence_city_id: formData.residence_city_id || null,
       });
       
-      // Show success toast and navigate back
-      // Using setTimeout to ensure mutation is fully completed before navigation
-      showToast('Profil başarıyla güncellendi', 'success');
-      
+      // Toast mesajı artık hook tarafından gösteriliyor
       // Small delay to ensure toast is shown and any modals are closed
       setTimeout(() => {
         navigation.goBack();
       }, 300);
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.message || 'Profil güncellenirken bir hata oluştu';
-      showToast(errorMessage, 'error');
+      // Hata mesajı da hook tarafından gösteriliyor
+      // Sadece navigation'ı engelle
     }
   };
 
