@@ -9,6 +9,13 @@
     "newArchEnabled": true,
     "jsEngine": "hermes",
     "description": "Sağlık sektöründe çalışan doktorlar için iş bulma ve kariyer geliştirme platformu",
+    "extra": {
+      "EXPO_PUBLIC_API_BASE_URL": "https://mkapi.monassist.com/api/mobile",
+      "EXPO_PUBLIC_PRIMARY_API_BASE_URL": "https://mkapi.monassist.com/api",
+      "EXPO_PUBLIC_APP_ENV": "development",
+      "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "true",
+      "EXPO_PUBLIC_SENTRY_DSN": "https://f80ca1e962d79bc709cb953067d3f82d@o4510787353116672.ingest.de.sentry.io/4510787359998032"
+    },
     "splash": {
       "image": "./assets/icon.png",
       "resizeMode": "contain",
