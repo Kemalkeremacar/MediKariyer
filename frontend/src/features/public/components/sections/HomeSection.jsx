@@ -39,7 +39,7 @@ const HomeSection = () => {
 
   return (
     <>
-      {/* Hero Section - Monassist Style */}
+      {/* Hero Section - Modern Style */}
       <section className="relative min-h-screen flex items-start justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-32 pb-8">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
@@ -48,9 +48,9 @@ const HomeSection = () => {
 
         {/* Content Container */}
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Left Side - Text Content */}
-            <div className="text-left space-y-6">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+            {/* Left Side - Text Content (Desktop: left, Mobile: top) */}
+            <div className="text-left space-y-6 order-2 lg:order-1">
               {/* Main Heading */}
               <div className="space-y-5">
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
@@ -98,9 +98,9 @@ const HomeSection = () => {
               </div>
             </div>
 
-            {/* Right Side - Animated Illustration */}
-            <div className="relative flex items-center justify-center lg:justify-end mt-8 lg:mt-0">
-              <div className="relative w-full max-w-md lg:max-w-2xl">
+            {/* Right Side - Animated Illustration (Desktop: right, Mobile: top - bigger) */}
+            <div className="relative flex items-center justify-center lg:justify-end w-full order-1 lg:order-2 -mt-8 lg:mt-0">
+              <div className="relative w-full max-w-2xl lg:max-w-2xl">
                 {/* Decorative Background Elements */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/30 rounded-full blur-3xl"></div>
                 
