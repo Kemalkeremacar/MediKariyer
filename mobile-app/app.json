@@ -4,7 +4,7 @@
     "slug": "medikariyer",
     "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "jsEngine": "hermes",
@@ -17,7 +17,7 @@
       "EXPO_PUBLIC_SENTRY_DSN": "https://f80ca1e962d79bc709cb953067d3f82d@o4510787353116672.ingest.de.sentry.io/4510787359998032"
     },
     "splash": {
-      "image": "./assets/icon.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -34,7 +34,7 @@
       "package": "com.medikariyer.mobile",
       "versionCode": 2,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -49,7 +49,7 @@
       "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo.png"
     },
     "scheme": "medikariyer",
     "plugins": [
@@ -58,7 +58,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png",
+          "icon": "./assets/notification-icon.png",
           "color": "#ffffff",
           "sounds": []
         }
