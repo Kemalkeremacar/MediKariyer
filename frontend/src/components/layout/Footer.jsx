@@ -17,8 +17,8 @@ const Footer = () => {
     kurumsal: [
       { text: 'Hakkımızda', to: ROUTE_CONFIG.PUBLIC.ABOUT },
       { text: 'İletişim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
-      { text: 'Gizlilik Politikası', to: '#' },
-      { text: 'Kullanım Şartları', to: '#' },
+      { text: 'Gizlilik Politikası', to: ROUTE_CONFIG.PUBLIC.PRIVACY_POLICY },
+      { text: 'Kullanım Koşulları', to: ROUTE_CONFIG.PUBLIC.TERMS_OF_SERVICE },
     ],
     hizmetler: [
       { text: 'Doktorlar İçin', to: ROUTE_CONFIG.PUBLIC.REGISTER },
@@ -27,10 +27,10 @@ const Footer = () => {
       { text: 'Kariyer Fırsatları', to: '#' },
     ],
     destek: [
-      { text: 'SSS', to: '#' },
-      { text: 'Yardım Merkezi', to: '#' },
+      { text: 'Yardım Merkezi', to: ROUTE_CONFIG.PUBLIC.HELP_CENTER },
+      { text: 'SSS', to: ROUTE_CONFIG.PUBLIC.HELP_CENTER },
       { text: 'İletişim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
-      { text: 'Geri Bildirim', to: '#' },
+      { text: 'Geri Bildirim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
     ],
   };
 
@@ -171,16 +171,16 @@ const Footer = () => {
 
             {/* Additional Links */}
             <div className="flex items-center gap-4 text-sm">
-              <Link to="#" className="text-gray-400 hover:text-white transition-colors">
+              <Link to={ROUTE_CONFIG.PUBLIC.PRIVACY_POLICY} className="text-gray-400 hover:text-white transition-colors">
                 Gizlilik
               </Link>
               <span className="text-gray-600">•</span>
-              <Link to="#" className="text-gray-400 hover:text-white transition-colors">
-                Çerezler
+              <Link to={ROUTE_CONFIG.PUBLIC.TERMS_OF_SERVICE} className="text-gray-400 hover:text-white transition-colors">
+                Şartlar
               </Link>
               <span className="text-gray-600">•</span>
-              <Link to="#" className="text-gray-400 hover:text-white transition-colors">
-                Şartlar
+              <Link to={ROUTE_CONFIG.PUBLIC.HELP_CENTER} className="text-gray-400 hover:text-white transition-colors">
+                Yardım
               </Link>
             </div>
           </div>

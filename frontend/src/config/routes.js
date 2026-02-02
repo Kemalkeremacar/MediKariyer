@@ -49,6 +49,9 @@ export const ROUTE_CONFIG = {
     PENDING_APPROVAL: '/pending-approval',
     FORGOT_PASSWORD: '/forgot-password',
     RESET_PASSWORD: '/reset-password',
+    PRIVACY_POLICY: '/privacy-policy',
+    TERMS_OF_SERVICE: '/terms-of-service',
+    HELP_CENTER: '/help-center',
   },
   
   // ============================================================================

@@ -119,6 +119,9 @@ import ApprovalGuard from '@/middleware/ApprovalGuard';
  */
 import LandingPage from '../features/public/pages/LandingPage';
 import NotFound from '@/features/public/pages/NotFound';
+import PrivacyPolicyPage from '@/features/public/pages/PrivacyPolicyPage';
+import TermsOfServicePage from '@/features/public/pages/TermsOfServicePage';
+import HelpCenterPage from '@/features/public/pages/HelpCenterPage';
 
 
 /**
@@ -265,6 +268,24 @@ const AppRoutes = () => {
           
           {/* Ana sayfa - Index route (/ path'inde gösterilir) - Tek sayfa scroll yapısı */}
           <Route index element={<LandingPage />} />
+
+          {/* 
+            ====================================================================
+            PUBLIC INFO PAGES - Bilgilendirme sayfaları
+            ====================================================================
+            
+            Bu sayfalar herkese açık bilgilendirme sayfalarıdır
+            Guard kullanılmaz, tüm kullanıcılar erişebilir
+          */}
+          
+          {/* Gizlilik Politikası - /privacy-policy */}
+          <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
+          
+          {/* Kullanım Koşulları - /terms-of-service */}
+          <Route path="terms-of-service" element={<TermsOfServicePage />} />
+          
+          {/* Yardım Merkezi - /help-center */}
+          <Route path="help-center" element={<HelpCenterPage />} />
 
           {/* 
             ====================================================================
