@@ -349,10 +349,11 @@ const Header = () => {
                   className="w-full h-full object-cover rounded-xl"
                 />
               </div>
-              {/* Logo Text - 4 Parametre Planına Göre */}
-              <span className="text-2xl sm:text-3xl font-black lowercase text-blue-700 tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                {APP_CONFIG.APP_NAME.toLowerCase()}
-              </span>
+              {/* Logo Text - Tam Logo Stili */}
+              <div className="text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+                <span className="font-bold text-[#2563a8]">Medikariyer</span>
+                <span className="font-normal text-[#5ba3d0]">.net</span>
+              </div>
             </button>
           </div>
 

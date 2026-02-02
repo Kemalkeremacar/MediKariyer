@@ -6,7 +6,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiArrowRight, FiPlay, FiCheckCircle, FiUsers, FiShield, FiTrendingUp, FiHeart } from 'react-icons/fi';
 import { ROUTE_CONFIG } from '@config/routes.js';
-import heroGif from '@/assets/giphy.gif';
+import MedicalIllustration from '@/components/ui/MedicalIllustration';
 
 const HomeSection = () => {
   const navigate = useNavigate();
@@ -39,90 +39,75 @@ const HomeSection = () => {
 
   return (
     <>
-      {/* Full-Screen Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background GIF */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={heroGif}
-            alt="MediKariyer Hero"
-            className="w-full h-full object-cover"
-            style={{
-              imageRendering: 'crisp-edges',
-              WebkitBackfaceVisibility: 'hidden',
-              backfaceVisibility: 'hidden',
-              transform: 'translateZ(0) scale(1.001)',
-              willChange: 'transform',
-              filter: 'contrast(1.15) saturate(1.25) brightness(1.1)'
-            }}
-          />
-          {/* Gradient Overlay - Daha hafif */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 via-blue-800/60 to-cyan-900/55"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
-          
-          {/* Animated Pattern Overlay */}
-          <div className="absolute inset-0 opacity-10" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }}></div>
-        </div>
+      {/* Hero Section - Monassist Style */}
+      <section className="relative min-h-screen flex items-start justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-32 pb-8">
+        {/* Subtle Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+        }}></div>
 
         {/* Content Container */}
-        <div className="container mx-auto px-4 py-16 md:py-20 relative z-10">
-          <div className="max-w-5xl mx-auto text-center">
-            {/* Main Heading */}
-            <div className="mb-8 space-y-4">
-              <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black text-white leading-[1.05] tracking-tight drop-shadow-2xl">
-                MediKariyer
-              </h1>
-              <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white/95 leading-tight drop-shadow-lg">
-                Türkiye'nin En Büyük
-              </p>
-              <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent drop-shadow-lg pb-2 leading-relaxed">
-                Hekimlere Özel Kariyer Platformu
-              </p>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+            {/* Left Side - Text Content */}
+            <div className="text-left space-y-6">
+              {/* Main Heading */}
+              <div className="space-y-5">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+                  <span className="font-bold text-[#2563a8]">Medikariyer</span>
+                  <span className="font-normal text-[#5ba3d0]">.net</span>
+                </h1>
+                <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed font-normal">
+                  Hekimlere Özel Kariyer Platformu
+                </p>
+                <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-xl font-normal">
+                  Binlerce sağlık profesyoneli ve kurumu MediKariyer'i tercih ediyor. 
+                  Kariyerinize uygun fırsatları keşfedin, başvurunuzu yapın.
+                </p>
+              </div>
+
+              {/* CTA Button */}
+              <div className="pt-3">
+                <button
+                  onClick={handleRegisterClick}
+                  className="bg-blue-600 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group"
+                >
+                  BAŞLAYALIM
+                  <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
+                </button>
+              </div>
+
+              {/* Stats - Minimal */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-4">
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">2,500+</div>
+                  <div className="text-sm text-gray-600 mt-1">Aktif Doktor</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">150+</div>
+                  <div className="text-sm text-gray-600 mt-1">Sağlık Kurumu</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">5,000+</div>
+                  <div className="text-sm text-gray-600 mt-1">Başarılı Eşleşme</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">98%</div>
+                  <div className="text-sm text-gray-600 mt-1">Memnuniyet</div>
+                </div>
+              </div>
             </div>
 
-            {/* Subtitle */}
-            <p className="text-lg sm:text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-md">
-              Binlerce sağlık profesyoneli ve kurumu MediKariyer'i tercih ediyor. 
-              Kariyerinize uygun fırsatları keşfedin, başvurunuzu yapın.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <button
-                onClick={handleRegisterClick}
-                className="bg-white text-blue-900 px-10 py-5 rounded-2xl text-lg sm:text-xl font-bold hover:bg-blue-50 transition-all duration-300 shadow-2xl hover:shadow-white/25 hover:scale-105 inline-flex items-center justify-center group"
-              >
-                Ücretsiz Kayıt Ol
-                <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
-              </button>
-              <button
-                onClick={handleAboutClick}
-                className="bg-white/10 backdrop-blur-md border-2 border-white/30 text-white px-10 py-5 rounded-2xl text-lg sm:text-xl font-bold hover:bg-white/20 transition-all duration-300 inline-flex items-center justify-center group"
-              >
-                <FiPlay className="mr-3 group-hover:scale-110 transition-transform text-xl" />
-                Nasıl Çalışır?
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">2,500+</div>
-                <div className="text-white/90 text-sm md:text-base">Aktif Doktor</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">150+</div>
-                <div className="text-white/90 text-sm md:text-base">Sağlık Kurumu</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">5,000+</div>
-                <div className="text-white/90 text-sm md:text-base">Başarılı Eşleşme</div>
-              </div>
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">98%</div>
-                <div className="text-white/90 text-sm md:text-base">Memnuniyet</div>
+            {/* Right Side - Animated Illustration */}
+            <div className="relative flex items-center justify-center lg:justify-end mt-8 lg:mt-0">
+              <div className="relative w-full max-w-md lg:max-w-2xl">
+                {/* Decorative Background Elements */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/30 rounded-full blur-3xl"></div>
+                
+                {/* Animated SVG Illustration */}
+                <div className="relative z-10">
+                  <MedicalIllustration />
+                </div>
               </div>
             </div>
           </div>
