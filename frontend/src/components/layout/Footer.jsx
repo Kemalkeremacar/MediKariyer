@@ -15,22 +15,19 @@ const Footer = () => {
 
   const footerLinks = {
     kurumsal: [
-      { text: 'Hakkımızda', to: ROUTE_CONFIG.PUBLIC.ABOUT },
-      { text: 'İletişim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
+      { text: 'Hakkımızda', to: '/#about' },
+      { text: 'İletişim', to: '/#contact' },
       { text: 'Gizlilik Politikası', to: ROUTE_CONFIG.PUBLIC.PRIVACY_POLICY },
       { text: 'Kullanım Koşulları', to: ROUTE_CONFIG.PUBLIC.TERMS_OF_SERVICE },
     ],
     hizmetler: [
       { text: 'Doktorlar İçin', to: ROUTE_CONFIG.PUBLIC.REGISTER },
       { text: 'Hastaneler İçin', to: ROUTE_CONFIG.PUBLIC.REGISTER },
-      { text: 'İş İlanları', to: '#' },
-      { text: 'Kariyer Fırsatları', to: '#' },
+      { text: 'Yardım Merkezi', to: ROUTE_CONFIG.PUBLIC.HELP_CENTER },
     ],
     destek: [
       { text: 'Yardım Merkezi', to: ROUTE_CONFIG.PUBLIC.HELP_CENTER },
-      { text: 'SSS', to: ROUTE_CONFIG.PUBLIC.HELP_CENTER },
-      { text: 'İletişim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
-      { text: 'Geri Bildirim', to: ROUTE_CONFIG.PUBLIC.CONTACT },
+      { text: 'İletişim', to: '/#contact' },
     ],
   };
 
@@ -43,7 +40,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-gray-900 to-gray-950 text-gray-300">
+    <footer className="bg-[#2c3e50] text-gray-300">
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12 lg:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
@@ -90,8 +87,8 @@ const Footer = () => {
 
           {/* Kurumsal Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4 text-lg">Kurumsal</h3>
-            <ul className="space-y-2">
+            <h3 className="text-white font-semibold mb-4 text-base border-b-2 border-blue-500 pb-2 inline-block">Kurumsal</h3>
+            <ul className="space-y-2 mt-4">
               {footerLinks.kurumsal.map((link, index) => (
                 <li key={index}>
                   <Link
@@ -107,8 +104,8 @@ const Footer = () => {
 
           {/* Hizmetler Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4 text-lg">Hizmetler</h3>
-            <ul className="space-y-2">
+            <h3 className="text-white font-semibold mb-4 text-base border-b-2 border-blue-500 pb-2 inline-block">Hizmetler</h3>
+            <ul className="space-y-2 mt-4">
               {footerLinks.hizmetler.map((link, index) => (
                 <li key={index}>
                   <Link
@@ -124,8 +121,8 @@ const Footer = () => {
 
           {/* Destek Links */}
           <div>
-            <h3 className="text-white font-semibold mb-4 text-lg">Destek</h3>
-            <ul className="space-y-2">
+            <h3 className="text-white font-semibold mb-4 text-base border-b-2 border-blue-500 pb-2 inline-block">Destek</h3>
+            <ul className="space-y-2 mt-4">
               {footerLinks.destek.map((link, index) => (
                 <li key={index}>
                   <Link
@@ -142,16 +139,21 @@ const Footer = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div className="border-t border-gray-800">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="border-t border-gray-700 bg-[#1a252f]">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            {/* Test Notice */}
+            <div className="text-xs sm:text-sm text-gray-400 order-2 md:order-1">
+              "TEST YAYINIDIR" "İŞKUR istihdam ofisi başvuru süreci devam etmektedir."
+            </div>
+
             {/* Copyright */}
-            <div className="text-sm text-gray-400">
-              © {currentYear} <span className="lowercase font-semibold" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>{APP_CONFIG.APP_NAME.toLowerCase()}</span>. Tüm hakları saklıdır.
+            <div className="text-xs sm:text-sm text-gray-400 order-1 md:order-2">
+              Copyright © {currentYear} by <span className="lowercase font-semibold">{APP_CONFIG.APP_NAME.toLowerCase()}</span>.
             </div>
 
             {/* Social Links */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 order-3">
               {socialLinks.map((social, index) => {
                 const Icon = social.icon;
                 return (
@@ -161,27 +163,12 @@ const Footer = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className="group w-9 h-9 rounded-lg bg-gray-800 hover:bg-blue-600 flex items-center justify-center transition-all duration-300 hover:scale-110"
+                    className="w-8 h-8 rounded-full bg-gray-700 hover:bg-blue-600 flex items-center justify-center transition-all duration-300"
                   >
-                    <Icon className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors" />
+                    <Icon className="w-4 h-4 text-gray-300 group-hover:text-white transition-colors" />
                   </a>
                 );
               })}
-            </div>
-
-            {/* Additional Links */}
-            <div className="flex items-center gap-4 text-sm">
-              <Link to={ROUTE_CONFIG.PUBLIC.PRIVACY_POLICY} className="text-gray-400 hover:text-white transition-colors">
-                Gizlilik
-              </Link>
-              <span className="text-gray-600">•</span>
-              <Link to={ROUTE_CONFIG.PUBLIC.TERMS_OF_SERVICE} className="text-gray-400 hover:text-white transition-colors">
-                Şartlar
-              </Link>
-              <span className="text-gray-600">•</span>
-              <Link to={ROUTE_CONFIG.PUBLIC.HELP_CENTER} className="text-gray-400 hover:text-white transition-colors">
-                Yardım
-              </Link>
             </div>
           </div>
         </div>

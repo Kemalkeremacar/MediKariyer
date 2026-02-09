@@ -9,51 +9,51 @@ import { HelpCircle, ChevronDown, ChevronUp, Mail, MessageCircle, Info, User, Br
 const FAQ_DATA = [
   {
     id: '1',
-    question: 'Nasıl iş başvurusu yapabilirim?',
-    answer: 'İş İlanları sayfasından ilgilendiğiniz ilanı seçin ve "Başvur" butonuna tıklayın. Profilinizin eksiksiz olduğundan emin olun.',
-    category: 'jobs',
+    question: 'MediKariyer nedir ve nasıl çalışır?',
+    answer: 'MediKariyer, yalnızca hekimlere özel kapalı devre bir kariyer platformudur. Yapay zeka destekli eşleşme teknolojisi ile uzmanlık alanınıza, deneyiminize ve tercihlerinize uygun iş fırsatlarını size önerir.',
+    category: 'general',
   },
   {
     id: '2',
+    question: 'Platforma kimler erişebilir?',
+    answer: 'Platforma yalnızca doğrulanmış sağlık kurumları ve lisanslı hekimler erişebilir. Bu kapalı sistem yapısı, profesyonel gizliliğinizi korur ve güvenli bir kariyer ortamı sağlar.',
+    category: 'general',
+  },
+  {
+    id: '3',
+    question: 'Nasıl iş başvurusu yapabilirim?',
+    answer: 'İş İlanları sayfasından ilgilendiğiniz ilanı seçin ve "Başvur" butonuna tıklayın. Profilinizin eksiksiz olduğundan emin olun. Yapay zeka sistemi size en uygun ilanları önerecektir.',
+    category: 'jobs',
+  },
+  {
+    id: '4',
     question: 'Başvurularımı nasıl takip edebilirim?',
     answer: 'Başvurular sayfasından tüm başvurularınızı ve durumlarını görebilirsiniz. Durum değişikliklerinde e-posta bildirimi alırsınız.',
     category: 'applications',
   },
   {
-    id: '3',
+    id: '5',
     question: 'Profilimi nasıl güncellerim?',
-    answer: 'Profil sayfasından "Profili Düzenle" butonuna tıklayarak kişisel bilgilerinizi, eğitim ve deneyimlerinizi güncelleyebilirsiniz.',
+    answer: 'Profil sayfasından "Profili Düzenle" butonuna tıklayarak kişisel bilgilerinizi, eğitim ve deneyimlerinizi güncelleyebilirsiniz. Güncel profil, daha iyi eşleşme sağlar.',
     category: 'account',
   },
   {
-    id: '4',
+    id: '6',
     question: 'Şifremi unuttum, ne yapmalıyım?',
     answer: 'Giriş ekranında "Şifremi Unuttum" linkine tıklayın. E-posta adresinize şifre sıfırlama linki gönderilecektir.',
     category: 'account',
   },
   {
-    id: '5',
-    question: 'Bildirimler nasıl çalışır?',
-    answer: 'Yeni iş ilanları, başvuru güncellemeleri ve mesajlar için e-posta bildirimi alırsınız. Ayarlar sayfasından tercihlerinizi değiştirebilirsiniz.',
+    id: '7',
+    question: 'Verilerim güvende mi?',
+    answer: 'Evet, kişisel verileriniz ve profesyonel bilgileriniz yüksek güvenlik standartları ile korunur. Kapalı sistem yapımız sayesinde verileriniz yalnızca doğrulanmış kullanıcılarla paylaşılır.',
     category: 'general',
   },
   {
-    id: '6',
-    question: 'Hesabımı nasıl kapatırım?',
-    answer: 'Ayarlar sayfasından hesabınızı pasifleştirebilir veya kalıcı olarak silebilirsiniz. Silme işlemi geri alınamaz.',
-    category: 'account',
-  },
-  {
-    id: '7',
-    question: 'Hangi branşlar için iş ilanı var?',
-    answer: 'Tüm tıp branşları için iş ilanları bulunmaktadır. Filtreleme yaparak branşınıza uygun ilanları görebilirsiniz.',
-    category: 'jobs',
-  },
-  {
     id: '8',
-    question: 'Başvurumu geri çekebilir miyim?',
-    answer: 'Evet, başvuru detay sayfasından "Başvuruyu Geri Çek" butonuna tıklayarak başvurunuzu iptal edebilirsiniz.',
-    category: 'applications',
+    question: 'Bilimsel etkinlikler hakkında nasıl bilgi alabilirim?',
+    answer: 'Platform üzerinden kongre duyuruları, bilimsel toplantılar ve mesleki gelişim etkinlikleri hakkında bildirimler alırsınız.',
+    category: 'general',
   },
   {
     id: '9',
@@ -63,9 +63,9 @@ const FAQ_DATA = [
   },
   {
     id: '10',
-    question: 'CV\'mi nasıl yüklerim?',
-    answer: 'Profil sayfasından CV bölümüne giderek PDF formatında CV\'nizi yükleyebilirsiniz. Maksimum dosya boyutu 5MB\'dir.',
-    category: 'general',
+    question: 'Hangi branşlar için iş ilanı var?',
+    answer: 'Tüm tıp branşları için iş ilanları bulunmaktadır. Filtreleme yaparak branşınıza uygun ilanları görebilirsiniz.',
+    category: 'jobs',
   },
 ];
 
@@ -174,7 +174,7 @@ const HelpCenterPage = () => {
           </p>
           <button
             onClick={handleContactSupport}
-            className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-200"
+            className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-200 w-full sm:w-auto justify-center"
           >
             <MessageCircle className="w-5 h-5" />
             <span>Destek Ekibiyle İletişime Geç</span>

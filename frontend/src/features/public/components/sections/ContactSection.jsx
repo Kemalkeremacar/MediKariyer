@@ -67,8 +67,7 @@ const ContactSection = () => {
               İletişime Geçin
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
-              Projeleriniz için profesyonel destek, danışmanlık ve çözüm önerilerimiz hakkında 
-              detaylı bilgi almak için bizimle iletişime geçin.
+              Size en uygun kariyer fırsatlarını keşfetmek, platform hakkında bilgi almak ve hekimlere özel ayrıcalıklardan yararlanmak için MediKariyer ekibiyle iletişime geçin.
             </p>
           </div>
         </div>
@@ -204,7 +203,7 @@ const ContactSection = () => {
                 <button
                   type="submit"
                   disabled={sendMessage.isPending}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {sendMessage.isPending ? (
                     <>
@@ -213,7 +212,7 @@ const ContactSection = () => {
                     </>
                   ) : (
                     <>
-                      <FiSend className="mr-2 text-xl" />
+                      <FiSend className="mr-2 text-lg sm:text-xl" />
                       Mesajı Gönder
                     </>
                   )}

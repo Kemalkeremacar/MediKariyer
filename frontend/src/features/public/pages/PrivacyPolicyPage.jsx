@@ -27,7 +27,9 @@ const PrivacyPolicyPage = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
           <p className="text-gray-700 leading-relaxed">
             MediKariyer olarak, kişisel verilerinizin güvenliği bizim için son derece önemlidir. 
-            Bu gizlilik politikası, web platformumuzu kullanırken toplanan, işlenen ve saklanan 
+            Yalnızca hekimlere odaklanan kapalı devre sistemimizde, doğrulanmış sağlık kurumları ve 
+            lisanslı hekimlerin kişisel verileri en yüksek güvenlik standartları ile korunur. 
+            Bu gizlilik politikası, platformumuzu kullanırken toplanan, işlenen ve saklanan 
             kişisel verileriniz hakkında sizi bilgilendirmek amacıyla hazırlanmıştır.
           </p>
         </div>
@@ -127,7 +129,11 @@ const PrivacyPolicyPage = () => {
           <ul className="space-y-2 text-gray-600">
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span>İş ilanlarını size özel olarak önerme</span>
+              <span>Yapay zeka destekli eşleşme ile size özel iş fırsatları önerme</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600 mt-1">•</span>
+              <span>Uzmanlık alanı, deneyim ve lokasyon tercihlerinize göre akıllı eşleştirme</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
@@ -135,7 +141,7 @@ const PrivacyPolicyPage = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span>Hesap güvenliğinizi sağlama</span>
+              <span>Hesap güvenliğinizi sağlama ve kapalı sistem erişim kontrolü</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
@@ -143,7 +149,7 @@ const PrivacyPolicyPage = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span>Size bildirim ve güncellemeler gönderme</span>
+              <span>Bilimsel etkinlikler ve kariyer gelişimi bildirimleri gönderme</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
@@ -202,7 +208,7 @@ const PrivacyPolicyPage = () => {
           <ul className="space-y-2 text-gray-600 mb-4">
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span>İş başvurusu yaptığınız sağlık kuruluşları ile</span>
+              <span>İş başvurusu yaptığınız doğrulanmış sağlık kuruluşları ile</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
@@ -214,7 +220,7 @@ const PrivacyPolicyPage = () => {
             </li>
           </ul>
           <p className="text-sm text-blue-700 italic">
-            Not: Verileriniz hiçbir zaman pazarlama amaçlı üçüncü taraflara satılmaz.
+            Not: Kapalı sistem yapımız sayesinde verileriniz yalnızca doğrulanmış kullanıcılarla paylaşılır ve hiçbir zaman pazarlama amaçlı üçüncü taraflara satılmaz.
           </p>
         </div>
 

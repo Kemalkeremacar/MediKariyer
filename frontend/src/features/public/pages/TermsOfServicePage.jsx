@@ -27,7 +27,9 @@ const TermsOfServicePage = () => {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
           <p className="text-gray-700 leading-relaxed">
             MediKariyer platformunu kullanarak aşağıdaki kullanım koşullarını kabul 
-            etmiş sayılırsınız. Lütfen platformu kullanmadan önce bu koşulları dikkatlice okuyunuz.
+            etmiş sayılırsınız. Platformumuz yalnızca hekimlere özel, kapalı devre bir sistem olup, 
+            doğrulanmış sağlık kurumları ve lisanslı hekimler tarafından kullanılabilir. 
+            Lütfen platformu kullanmadan önce bu koşulları dikkatlice okuyunuz.
           </p>
         </div>
 
@@ -40,10 +42,14 @@ const TermsOfServicePage = () => {
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-6">
           <p className="text-gray-700 mb-4">
-            MediKariyer, sağlık sektöründe çalışan doktorlar ile sağlık kuruluşlarını bir araya 
-            getiren bir kariyer platformudur. Platform aşağıdaki hizmetleri sunar:
+            MediKariyer, yalnızca hekimler için tasarlanmış kapalı devre bir kariyer platformudur. 
+            Platform aşağıdaki hizmetleri sunar:
           </p>
           <ul className="space-y-2 text-gray-600">
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600 mt-1">•</span>
+              <span>Yapay zeka destekli akıllı iş eşleştirme</span>
+            </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
               <span>İş ilanlarını görüntüleme ve arama</span>
@@ -58,11 +64,15 @@ const TermsOfServicePage = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span>Bildirim ve güncellemeler alma</span>
+              <span>Bilimsel etkinlikler ve kongre duyuruları</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
-              <span>Sağlık kuruluşları ile iletişim kurma</span>
+              <span>Kariyer gelişimi ve mesleki bilgi paylaşımları</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-blue-600 mt-1">•</span>
+              <span>Doğrulanmış sağlık kuruluşları ile güvenli iletişim</span>
             </li>
           </ul>
         </div>
@@ -126,8 +136,9 @@ const TermsOfServicePage = () => {
                   Hesap Oluşturma
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
-                  Platformu kullanmak için geçerli bir hesap oluşturmanız gerekmektedir. 
-                  Kayıt sırasında verdiğiniz bilgilerin doğru ve eksiksiz olması zorunludur.
+                  Platformu kullanmak için geçerli bir hekim hesabı oluşturmanız gerekmektedir. 
+                  Kayıt sırasında verdiğiniz bilgilerin doğru ve eksiksiz olması zorunludur. 
+                  Hesabınız doğrulama sürecinden geçecektir.
                 </p>
               </div>
             </div>

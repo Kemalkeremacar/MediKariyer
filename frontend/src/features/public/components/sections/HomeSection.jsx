@@ -49,8 +49,8 @@ const HomeSection = () => {
         {/* Content Container */}
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-            {/* Left Side - Text Content (Desktop: left, Mobile: top) */}
-            <div className="text-left space-y-6 order-2 lg:order-1">
+            {/* Desktop: Left Side - All Content */}
+            <div className="hidden lg:block text-left space-y-6 order-1 w-full">
               {/* Main Heading */}
               <div className="space-y-5">
                 <h1 className="text-5xl sm:text-6xl lg:text-7xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
@@ -61,8 +61,10 @@ const HomeSection = () => {
                   Hekimlere Özel Kariyer Platformu
                 </p>
                 <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-xl font-normal">
-                  Binlerce sağlık profesyoneli ve kurumu MediKariyer'i tercih ediyor. 
-                  Kariyerinize uygun fırsatları keşfedin, başvurunuzu yapın.
+                  Medikariyer.net; yalnızca hekimlere odaklanan, iş fırsatlarını, kariyer gelişimini ve bilimsel etkinlikleri tek platformda bir araya getiren yeni nesil dijital kariyer ekosistemidir.
+                </p>
+                <p className="text-base sm:text-lg text-gray-500 leading-relaxed max-w-xl font-normal">
+                  Binlerce hekim ve sağlık kurumu MediKariyer'i tercih ediyor. Kariyerinize uygun fırsatları keşfedin, güvenle başvurun ve profesyonel yolculuğunuzu bir üst seviyeye taşıyın.
                 </p>
               </div>
 
@@ -70,7 +72,7 @@ const HomeSection = () => {
               <div className="pt-3">
                 <button
                   onClick={handleRegisterClick}
-                  className="bg-blue-600 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group"
+                  className="bg-blue-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group"
                 >
                   BAŞLAYALIM
                   <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
@@ -81,7 +83,7 @@ const HomeSection = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-4">
                 <div>
                   <div className="text-3xl font-bold text-blue-600">2,500+</div>
-                  <div className="text-sm text-gray-600 mt-1">Aktif Doktor</div>
+                  <div className="text-sm text-gray-600 mt-1">Aktif Hekim</div>
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-blue-600">150+</div>
@@ -98,15 +100,70 @@ const HomeSection = () => {
               </div>
             </div>
 
-            {/* Right Side - Animated Illustration (Desktop: right, Mobile: top - bigger) */}
-            <div className="relative flex items-center justify-center lg:justify-end w-full order-1 lg:order-2 -mt-8 lg:mt-0">
-              <div className="relative w-full max-w-2xl lg:max-w-2xl">
+            {/* Mobile: Main Heading First */}
+            <div className="lg:hidden text-center space-y-4 order-1 w-full">
+              <h1 className="text-5xl sm:text-6xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+                <span className="font-bold text-[#2563a8]">Medikariyer</span>
+                <span className="font-normal text-[#5ba3d0]">.net</span>
+              </h1>
+              <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed font-normal">
+                Hekimlere Özel Kariyer Platformu
+              </p>
+            </div>
+
+            {/* GIF - Desktop: Right Side, Mobile: Second */}
+            <div className="relative flex items-center justify-center lg:justify-end w-full order-2">
+              <div className="relative w-full max-w-md lg:max-w-2xl">
                 {/* Decorative Background Elements */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/30 rounded-full blur-3xl"></div>
                 
                 {/* Animated SVG Illustration */}
                 <div className="relative z-10">
                   <MedicalIllustration />
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: Rest of Content After GIF */}
+            <div className="lg:hidden text-center space-y-6 order-3 w-full">
+              {/* Description texts */}
+              <div className="space-y-4">
+                <p className="text-base sm:text-lg text-gray-500 leading-relaxed font-normal px-4">
+                  Medikariyer.net; yalnızca hekimlere odaklanan, iş fırsatlarını, kariyer gelişimini ve bilimsel etkinlikleri tek platformda bir araya getiren yeni nesil dijital kariyer ekosistemidir.
+                </p>
+                <p className="text-sm sm:text-base text-gray-500 leading-relaxed font-normal px-4">
+                  Binlerce hekim ve sağlık kurumu MediKariyer'i tercih ediyor. Kariyerinize uygun fırsatları keşfedin, güvenle başvurun ve profesyonel yolculuğunuzu bir üst seviyeye taşıyın.
+                </p>
+              </div>
+
+              {/* CTA Button */}
+              <div className="pt-3 flex justify-center px-4">
+                <button
+                  onClick={handleRegisterClick}
+                  className="bg-blue-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto max-w-xs"
+                >
+                  BAŞLAYALIM
+                  <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
+                </button>
+              </div>
+
+              {/* Stats - Minimal */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 pt-4 px-4">
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">2,500+</div>
+                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Aktif Hekim</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">150+</div>
+                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Sağlık Kurumu</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">5,000+</div>
+                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Başarılı Eşleşme</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">98%</div>
+                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Memnuniyet</div>
                 </div>
               </div>
             </div>
@@ -129,30 +186,28 @@ const HomeSection = () => {
               Neden MediKariyer?
             </h2>
             <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
-              Sağlık sektöründe kariyerinizi ileriye taşıyacak modern çözümler ve güvenilir hizmetler
+              Sağlık sektöründe kariyerinizi ileriye taşıyacak modern çözümler, güvenli altyapı ve akıllı eşleşme teknolojileri.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
             <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
-                <FiUsers className="w-10 h-10 text-white" />
+                <FiShield className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Geniş İş Ağı</h3>
+              <h3 className="text-2xl font-bold text-blue-900 mb-4">Hekimlere Özel Kapalı Sistem</h3>
               <p className="text-gray-600 leading-relaxed text-base">
-                Türkiye'nin dört bir yanından binlerce sağlık kurumu ve doktor ile bağlantı kurun. 
-                Kariyerinize uygun fırsatları keşfedin.
+                MediKariyer, halka açık ilan sitelerinden farklı olarak yalnızca doğrulanmış sağlık kurumları ve lisanslı hekimlerin erişebildiği güvenli bir platformdur. Böylece profesyonel gizlilik korunur ve güvenli bir kariyer ortamı sağlanır.
               </p>
             </div>
 
             <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
               <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
-                <FiShield className="w-10 h-10 text-white" />
+                <FiUsers className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Güvenli Platform</h3>
+              <h3 className="text-2xl font-bold text-blue-900 mb-4">Geniş ve Güvenilir İş Ağı</h3>
               <p className="text-gray-600 leading-relaxed text-base">
-                Kişisel bilgileriniz ve profesyonel verileriniz en yüksek güvenlik standartları 
-                ile korunur. Güvenle başvuru yapın.
+                Türkiye'nin dört bir yanından sağlık kurumları ve hekimlerle bağlantı kurun. Uzmanlık alanınıza ve kariyer hedeflerinize uygun fırsatlara hızlıca ulaşın.
               </p>
             </div>
 
@@ -160,10 +215,19 @@ const HomeSection = () => {
               <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
                 <FiTrendingUp className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Kariyer Gelişimi</h3>
+              <h3 className="text-2xl font-bold text-blue-900 mb-4">Kariyer Gelişimi ve Bilimsel Ekosistem</h3>
               <p className="text-gray-600 leading-relaxed text-base">
-                Profesyonel gelişiminizi destekleyen araçlar ve kaynaklar ile kariyerinizi 
-                bir üst seviyeye taşıyın.
+                İş ilanlarının ötesinde; mesleki bilgi paylaşımları, bilimsel toplantılar, kongre duyuruları ve sektörel gelişmelerle kariyerinizi sürekli destekleyin.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
+                <FiShield className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-blue-900 mb-4">Güvenli ve Gizlilik Odaklı</h3>
+              <p className="text-gray-600 leading-relaxed text-base">
+                Kişisel verileriniz ve profesyonel bilgileriniz yüksek güvenlik standartları ile korunur. Güvenle başvurun ve kariyerinizi kontrol altında tutun.
               </p>
             </div>
           </div>
@@ -209,21 +273,21 @@ const HomeSection = () => {
             </h2>
             
             <p className="text-xl sm:text-2xl text-gray-600 mb-12 leading-relaxed max-w-2xl mx-auto">
-              Binlerce sağlık profesyoneli ve kurumu MediKariyer'i tercih ediyor. 
-              Siz de bu büyük ailenin bir parçası olun.
+              Binlerce sağlık profesyoneli ve kurum MediKariyer'i tercih ediyor. 
+              Siz de hekimlere özel bu güçlü dijital kariyer ağının bir parçası olun.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <button
                 onClick={handleRegisterClick}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-12 py-5 rounded-2xl text-xl font-bold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 inline-flex items-center justify-center group"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto"
               >
                 Ücretsiz Kayıt Ol
                 <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
               </button>
               <button
                 onClick={handleContactClick}
-                className="bg-white border-2 border-gray-200 text-gray-700 px-12 py-5 rounded-2xl text-xl font-bold hover:border-blue-600 hover:text-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center justify-center group"
+                className="bg-white border-2 border-gray-200 text-gray-700 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold hover:border-blue-600 hover:text-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center justify-center group w-full sm:w-auto"
               >
                 <FiHeart className="mr-3 group-hover:scale-110 transition-transform text-xl" />
                 İletişime Geç
