@@ -192,6 +192,8 @@ const attachInterceptors = (instance: AxiosInstance) => {
     async (config: InternalAxiosRequestConfig) => {
       const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
       devLog.log('📤 API İsteği:', config.method?.toUpperCase(), fullUrl);
+      devLog.log('📤 Request timeout:', config.timeout, 'ms');
+      devLog.log('📤 Request headers:', JSON.stringify(config.headers, null, 2));
       
       // Public endpoint'ler için token yenileme mantığını atla
       if (isPublicEndpoint(config.url)) {
@@ -305,6 +307,18 @@ const attachInterceptors = (instance: AxiosInstance) => {
       const status = error.response?.status;
       const requestUrl = error.config?.url || '';
       
+      // Network error için detaylı log
+      if (!error.response) {
+        devLog.error('❌ Network Error Details:', {
+          code: error.code,
+          message: error.message,
+          url: requestUrl,
+          baseURL: error.config?.baseURL,
+          timeout: error.config?.timeout,
+          method: error.config?.method,
+        });
+      }
+      
       // 403 hatası için özel kontrol - onay bekleyen kullanıcılar için sessiz
       const isPendingApproval403 = status === 403 && (
         requestUrl.includes('/auth/me') ||
@@ -321,19 +335,28 @@ const attachInterceptors = (instance: AxiosInstance) => {
       
       // Network error handling (no response from server)
       if (!error.response) {
-        let errorMessage = 'Sunucuya bağlanılamıyor. Backend sunucusunun çalıştığından emin olun.';
+        let errorMessage = 'Sunucuya bağlanılamıyor. İnternet bağlantınızı kontrol edin.';
         
-        if (error.code === 'ECONNABORTED') {
-          errorMessage = 'İstek zaman aşımına uğradı (30 saniye). Backend sunucusu çalışıyor mu?';
+        if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+          errorMessage = 'İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.';
         } else if (error.code === 'ECONNREFUSED') {
-          errorMessage = 'Sunucuya bağlanılamadı. Backend sunucusu çalışmıyor olabilir.';
+          errorMessage = 'Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.';
         } else if (error.code === 'ETIMEDOUT') {
-          errorMessage = 'Bağlantı zaman aşımına uğradı. VPN bağlantınızı kontrol edin.';
+          errorMessage = 'Bağlantı zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.';
+        } else if (error.code === 'ERR_NETWORK') {
+          errorMessage = 'Ağ hatası. İnternet bağlantınızı kontrol edin.';
         } else if (!error.request) {
           errorMessage = 'İstek gönderilemedi. Lütfen tekrar deneyin.';
         }
         
+        devLog.error('❌ Network Error:', {
+          code: error.code,
+          message: error.message,
+          url: requestUrl,
+        });
+        
         const networkError = new Error(errorMessage);
+        networkError.name = 'NetworkError';
         networkError.name = 'NetworkError';
         
         errorLogger.logNetworkError(networkError, error.config?.url);

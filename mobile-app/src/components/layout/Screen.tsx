@@ -116,22 +116,30 @@ export const Screen: React.FC<ScreenProps> = ({
   const { isOffline } = useNetworkStatus();
   
   /**
+   * Tema bazlı stiller
+   * Memoize edilmiş, tema değiştiğinde yeniden hesaplanır
+   */
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  
+  /**
    * Container bileşeni seçimi
    * safeArea true ise SafeAreaView, değilse View kullan
    */
   const Container = safeArea ? SafeAreaView : View;
   
   /**
+   * Container için style - SafeAreaView için backgroundColor ekle
+   */
+  const containerStyle = [
+    styles.container,
+    style,
+  ];
+  
+  /**
    * İçerik wrapper bileşeni seçimi
    * scrollable true ise ScrollView, değilse View kullan
    */
   const ContentWrapper = scrollable ? ScrollView : View;
-  
-  /**
-   * Tema bazlı stiller
-   * Memoize edilmiş, tema değiştiğinde yeniden hesaplanır
-   */
-  const styles = useMemo(() => createStyles(theme), [theme]);
 
   /**
    * İçerik render fonksiyonu
@@ -171,7 +179,7 @@ export const Screen: React.FC<ScreenProps> = ({
 
   return (
     <Container 
-      style={[styles.container, style]}
+      style={containerStyle}
       {...(safeArea && Container === SafeAreaView ? { edges: safeAreaEdges } : {})}
     >
       {/* Offline Banner - İnternet bağlantısı kesildiğinde göster */}
@@ -211,18 +219,20 @@ export const Screen: React.FC<ScreenProps> = ({
  * @returns StyleSheet objesi
  */
 const createStyles = (theme: Theme) => StyleSheet.create({
-  // Ana container - Tam ekran
+  // Ana container - Tam ekran, tablet için merkeze hizalı
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background.primary,
+    backgroundColor: theme.colors.background.secondary,
   },
-  // İçerik wrapper
+  // İçerik wrapper - Tablet için tam genişlik
   content: {
     flex: 1,
+    width: '100%',
   },
-  // Scroll content container - Flex grow ile minimum yükseklik
+  // Scroll content container - Tam genişlik
   scrollContent: {
     flexGrow: 1,
+    width: '100%',
   },
   // Merkezi hizalanmış container (loading/error için)
   centerContainer: {

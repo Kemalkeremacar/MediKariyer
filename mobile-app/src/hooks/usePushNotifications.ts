@@ -115,15 +115,15 @@ export const usePushNotifications = () => {
   const [permissionDenialShown, setPermissionDenialShown] = useState(false);
 
   useEffect(() => {
-    // Only register if user is authenticated
-    if (!isAuthenticated) {
-      return;
-    }
-
     // Skip push notification registration in Expo Go
     const isExpoGo = Constants.appOwnership === 'expo';
     if (isExpoGo) {
       devLog.warn('[usePushNotifications] Running in Expo Go - Push notifications disabled');
+      return;
+    }
+
+    // Only register if user is authenticated
+    if (!isAuthenticated) {
       return;
     }
 
@@ -148,6 +148,10 @@ export const usePushNotifications = () => {
               Linking.openSettings().catch(() => {
                 devLog.warn('[usePushNotifications] Failed to open settings');
               });
+            },
+            onCancel: () => {
+              // Just close the alert
+              devLog.log('[usePushNotifications] Alert dismissed');
             },
           });
           

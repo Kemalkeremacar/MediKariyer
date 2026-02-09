@@ -41,10 +41,10 @@ npm start
 cd mobile-app/android
 
 # APK için (test)
-$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew assembleRelease
+.\gradlew assembleRelease
 
 # AAB için (store)
-$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; .\gradlew bundleRelease
+ .\gradlew bundleRelease
 ```
 
 **Build süresi:** 10-15 dakika

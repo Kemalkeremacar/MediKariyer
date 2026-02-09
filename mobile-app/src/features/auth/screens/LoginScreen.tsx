@@ -22,7 +22,7 @@
  */
 
 import { useState, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, Platform, ScrollView, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Controller, useForm } from 'react-hook-form';
@@ -38,6 +38,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
 import { getUserFriendlyErrorMessage, isAuthError, isNetworkError } from '@/utils/errorHandler';
 import { useTranslation } from '@/hooks/useTranslation';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IS_TABLET = SCREEN_WIDTH >= 768;
 
 /**
  * Giriş yapma ekranı bileşeni
@@ -137,7 +140,7 @@ export const LoginScreen = () => {
   };
 
   return (
-    <Screen scrollable={false} safeArea={true} safeAreaEdges={['top']}>
+    <Screen scrollable={false} safeArea={true} safeAreaEdges={['top']} style={styles.screenContainer}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -274,23 +277,30 @@ export const LoginScreen = () => {
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
+  screenContainer: {
+    backgroundColor: theme.colors.background.primary,
+  },
   keyboardView: {
     flex: 1,
+    width: '100%',
+    alignSelf: 'center',
   },
   scrollContent: {
     flexGrow: 1,
+    width: '100%',
   },
   header: {
-    paddingTop: theme.spacing['5xl'],
-    paddingBottom: theme.spacing['4xl'],
+    paddingTop: IS_TABLET ? theme.spacing['4xl'] : theme.spacing['5xl'],
+    paddingBottom: IS_TABLET ? theme.spacing['3xl'] : theme.spacing['4xl'],
     paddingHorizontal: theme.spacing['2xl'],
     alignItems: 'center',
     borderBottomLeftRadius: theme.borderRadius.header,
     borderBottomRightRadius: theme.borderRadius.header,
+    width: '100%',
   },
   logoContainer: {
-    width: 80,
-    height: 80,
+    width: IS_TABLET ? 100 : 80,
+    height: IS_TABLET ? 100 : 80,
     backgroundColor: theme.colors.background.secondary,
     borderRadius: theme.borderRadius['3xl'],
     alignItems: 'center',
@@ -304,12 +314,12 @@ const createStyles = (theme: any) => StyleSheet.create({
     overflow: 'hidden',
   },
   logo: {
-    width: 70,
-    height: 70,
+    width: IS_TABLET ? 90 : 70,
+    height: IS_TABLET ? 90 : 70,
   },
   brandName: {
     color: theme.colors.text.inverse,
-    fontSize: 32,
+    fontSize: IS_TABLET ? 40 : 32,
     fontWeight: theme.typography.fontWeight.bold,
     textAlign: 'center',
     letterSpacing: 1,
@@ -317,23 +327,26 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing['2xl'],
-    paddingTop: theme.spacing['4xl'],
+    paddingHorizontal: IS_TABLET ? theme.spacing['4xl'] : theme.spacing['2xl'],
+    paddingTop: IS_TABLET ? theme.spacing['5xl'] : theme.spacing['4xl'],
+    width: '100%',
   },
   subtitle: {
     textAlign: 'center',
     color: theme.colors.text.secondary,
-    marginBottom: theme.spacing['4xl'],
+    marginBottom: IS_TABLET ? theme.spacing['5xl'] : theme.spacing['4xl'],
+    fontSize: IS_TABLET ? 18 : 15,
   },
   form: {
     flex: 1,
   },
   inputContainer: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: IS_TABLET ? theme.spacing['2xl'] : theme.spacing.xl,
   },
   label: {
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.sm,
+    fontSize: IS_TABLET ? 16 : 14,
   },
   errorText: {
     color: theme.colors.error[600],
@@ -343,16 +356,19 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.error[600],
     textAlign: 'center',
     marginBottom: theme.spacing.lg,
+    fontSize: IS_TABLET ? 16 : 14,
   },
   forgotButton: {
     alignSelf: 'flex-end',
-    marginBottom: theme.spacing['3xl'],
+    marginBottom: IS_TABLET ? theme.spacing['4xl'] : theme.spacing['3xl'],
   },
   forgotText: {
     color: theme.colors.primary[600],
+    fontSize: IS_TABLET ? 16 : 14,
   },
   loginButton: {
     marginBottom: theme.spacing['2xl'],
+    height: IS_TABLET ? 56 : 48,
   },
   registerSection: {
     flexDirection: 'row',
@@ -362,9 +378,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   registerText: {
     color: theme.colors.text.secondary,
+    fontSize: IS_TABLET ? 16 : 14,
   },
   registerLink: {
     color: theme.colors.primary[600],
     fontWeight: theme.typography.fontWeight.semibold,
+    fontSize: IS_TABLET ? 16 : 14,
   },
 });

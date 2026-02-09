@@ -3,7 +3,7 @@
     "name": "MediKariyer",
     "slug": "medikariyer",
     "version": "1.0.1",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -58,7 +58,6 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
           "color": "#ffffff",
           "sounds": []
         }

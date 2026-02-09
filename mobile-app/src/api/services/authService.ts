@@ -19,6 +19,7 @@
 
 import apiClient from '@/api/client';
 import { endpoints } from '@/api/endpoints';
+import { env } from '@/config/env';
 import { ApiResponse } from '@/types/api';
 import { devLog } from '@/utils/devLogger';
 import type {
@@ -82,6 +83,8 @@ export const authService = {
   async login(payload: LoginPayload): Promise<AuthResponsePayload> {
     try {
       devLog.log('🔐 Login denemesi:', { email: payload.email, endpoint: endpoints.auth.login });
+      devLog.log('🔐 Full URL:', `${env.API_BASE_URL}${endpoints.auth.login}`);
+      
       const response = await apiClient.post<ApiResponse<any>>(
         endpoints.auth.login,
         payload,
@@ -94,7 +97,9 @@ export const authService = {
       return normalizeAuthResponse(response.data.data);
     } catch (error: any) {
       devLog.error('❌ Login hatası:', {
+        name: error?.name,
         message: error?.message,
+        code: error?.code,
         response: error?.response?.data,
         status: error?.response?.status,
         url: error?.config?.url,
