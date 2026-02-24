@@ -14,7 +14,10 @@
       "EXPO_PUBLIC_PRIMARY_API_BASE_URL": "https://mkapi.monassist.com/api",
       "EXPO_PUBLIC_APP_ENV": "production",
       "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "true",
-      "EXPO_PUBLIC_SENTRY_DSN": "https://f80ca1e962d79bc709cb953067d3f82d@o4510787353116672.ingest.de.sentry.io/4510787359998032"
+      "EXPO_PUBLIC_SENTRY_DSN": "https://f80ca1e962d79bc709cb953067d3f82d@o4510787353116672.ingest.de.sentry.io/4510787359998032",
+      "eas": {
+        "projectId": "53bcb7fe-0588-4374-93e6-0bf24a59c003"
+      }
     },
     "splash": {
       "image": "./assets/logo.png",
@@ -38,11 +41,12 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "INTERNET",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "CAMERA",
-        "VIBRATE"
+        "android.permission.INTERNET",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
       ],
       "softwareKeyboardLayoutMode": "pan"
     },
