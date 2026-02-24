@@ -75,6 +75,9 @@
  * @since 2024
  */
 
+// Import useAuthStore for getAuthStatus function
+import useAuthStore from '@/store/authStore';
+
 /**
  * ============================================================================
  * CONSTANTS - Sabitler
@@ -294,7 +297,6 @@ export const isTokenValid = (token) => {
    * Token varlık kontrolü
    */
   if (!token) {
-    console.log('isTokenValid: No token provided');
     return false;
   }
   
@@ -317,25 +319,6 @@ export const isTokenValid = (token) => {
     const isValid = payload.exp > currentTime;
     
     /**
-     * Debug log (development'ta detaylı bilgi)
-     * 
-     * Token durumu hakkında detaylı bilgi loglar
-     */
-    console.log('isTokenValid:', { 
-      expTime: payload.exp, 
-      currentTime, 
-      isValid,
-      timeUntilExpiry: payload.exp - currentTime,
-      expDate: new Date(payload.exp * 1000).toISOString(),
-      currentDate: new Date().toISOString(),
-      tokenPreview: token.substring(0, 50) + '...',
-      /**
-       * Token'ın ne kadar süre kaldığını dakika cinsinden göster
-       */
-      minutesUntilExpiry: Math.floor((payload.exp - currentTime) / 60)
-    });
-    
-    /**
      * Token'ın süresi dolmuş mu kontrol et
      * 
      * exp > currentTime ise token geçerlidir
@@ -348,7 +331,6 @@ export const isTokenValid = (token) => {
      * Token formatı hatalıysa veya decode başarısızsa
      * false döndürülür (güvenlik için)
      */
-    console.error('isTokenValid - Token validation error:', error);
     return false;
   }
 };
@@ -397,7 +379,6 @@ export const getTokenExpiryTime = (token) => {
     /**
      * Hata durumunda 0 döndür
      */
-    console.error('Token expiry calculation error:', error);
     return 0;
   }
 };
@@ -407,6 +388,8 @@ export const getTokenExpiryTime = (token) => {
  * 
  * Tüm auth verilerinin durumunu kontrol eder ve
  * comprehensive bir durum objesi döndürür
+ * 
+ * NOT: Bu fonksiyon Zustand store'dan veri alır (localStorage'dan değil)
  * 
  * @returns {Object} Auth durumu bilgileri
  * @returns {boolean} isAuthenticated - Access token var ve geçerli mi
@@ -423,11 +406,12 @@ export const getTokenExpiryTime = (token) => {
  */
 export const getAuthStatus = () => {
   /**
-   * Tüm auth verilerini al
+   * Zustand store'dan auth verilerini al
    */
-  const accessToken = getAccessToken();
-  const refreshToken = getRefreshToken();
-  const userData = getUserData();
+  const store = useAuthStore.getState();
+  const accessToken = store.token;
+  const refreshToken = store.refreshToken;
+  const userData = store.user;
   
   /**
    * Auth durumu objesi
@@ -440,14 +424,14 @@ export const getAuthStatus = () => {
      * 
      * Access token var ve geçerli ise true
      */
-    isAuthenticated: !!accessToken && isTokenValid(accessToken),
+    isAuthenticated: !!accessToken && !store.isTokenExpired(),
     
     /**
      * Refresh token durumu
      * 
-     * Refresh token var ve geçerli ise true
+     * Refresh token var ise true
      */
-    hasRefreshToken: !!refreshToken && isTokenValid(refreshToken),
+    hasRefreshToken: !!refreshToken,
     
     /**
      * Kullanıcı bilgileri

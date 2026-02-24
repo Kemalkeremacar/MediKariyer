@@ -349,7 +349,7 @@ const useAuthStore = create(
            * API isteği başarısız olursa (network error, 401, vb.)
            * Hata logla ve oturumu temizle
            */
-          console.error('fetchUser error:', error);
+          logger.error('fetchUser error:', error);
           
           /**
            * Hata durumunda oturumu temizle
@@ -1006,7 +1006,6 @@ const useAuthStore = create(
            * 
            * Token formatı hatalıysa expire olmuş sayılır
            */
-          console.error('AuthStore - Token expiry check error:', error);
           return true;
         }
       },
@@ -1062,7 +1061,6 @@ const useAuthStore = create(
            * 
            * Token formatı hatalıysa refresh gerekmez
            */
-          console.error('AuthStore - Token refresh check error:', error);
           return false;
         }
       },

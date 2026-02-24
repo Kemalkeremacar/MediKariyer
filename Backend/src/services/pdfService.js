@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const logger = require('../utils/logger');
 
 class PDFService {
   constructor() {
@@ -27,24 +28,24 @@ class PDFService {
    */
   async generateJobPostingPDF(jobData) {
     try {
-      console.log('Starting PDF generation for job:', jobData.jobId);
+      logger.info('Starting PDF generation for job', { jobId: jobData.jobId });
       const browser = await this.initBrowser();
       const page = await browser.newPage();
 
       // Logo URL'sini kısalt (sadece ilk 100 karakter)
       if (jobData.hospitalLogo && jobData.hospitalLogo.length > 100) {
-        console.log('Hospital logo URL length:', jobData.hospitalLogo.length, 'chars (truncated in log)');
+        logger.info('Hospital logo URL length', { length: jobData.hospitalLogo.length });
       }
 
       const html = this.generateJobPostingHTML(jobData);
-      console.log('HTML generated, length:', html.length);
+      logger.info('HTML generated', { length: html.length });
       
       // Base64 görseller için load event'ini bekle
       await page.setContent(html, { 
         waitUntil: 'load',
         timeout: 30000 
       });
-      console.log('HTML content set in page');
+      logger.info('HTML content set in page');
       
       // Görsellerin render olması için bekleme
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -60,12 +61,12 @@ class PDFService {
         }
       });
 
-      console.log('PDF generated, size:', pdf.length, 'bytes');
+      logger.info('PDF generated', { size: pdf.length });
       await page.close();
       
       return pdf;
     } catch (error) {
-      console.error('PDF generation error:', error);
+      logger.error('PDF generation error', { error: error.message, stack: error.stack });
       throw error;
     }
   }
@@ -75,24 +76,24 @@ class PDFService {
    */
   async generateApplicationPDF(applicationData) {
     try {
-      console.log('Starting PDF generation for application:', applicationData.applicationId);
+      logger.info('Starting PDF generation for application', { applicationId: applicationData.applicationId });
       const browser = await this.initBrowser();
       const page = await browser.newPage();
 
       // Profil fotoğrafı URL'sini kısalt (sadece ilk 100 karakter)
       if (applicationData.doctor?.profilePhoto && applicationData.doctor.profilePhoto.length > 100) {
-        console.log('Profile photo URL length:', applicationData.doctor.profilePhoto.length, 'chars (truncated in log)');
+        logger.info('Profile photo URL length', { length: applicationData.doctor.profilePhoto.length });
       }
 
       const html = this.generateApplicationHTML(applicationData);
-      console.log('HTML generated, length:', html.length);
+      logger.info('HTML generated', { length: html.length });
       
       // Base64 görseller için load event'ini bekle
       await page.setContent(html, { 
         waitUntil: 'load',
         timeout: 30000 
       });
-      console.log('HTML content set in page');
+      logger.info('HTML content set in page');
       
       // Görsellerin render olması için bekleme
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -108,14 +109,27 @@ class PDFService {
         }
       });
 
-      console.log('PDF generated, size:', pdf.length, 'bytes');
+      logger.info('PDF generated', { size: pdf.length });
       await page.close();
       
       return pdf;
     } catch (error) {
-      console.error('PDF generation error:', error);
+      logger.error('PDF generation error', { error: error.message, stack: error.stack });
       throw error;
     }
+  }
+
+  /**
+   * Escape HTML special characters
+   */
+  escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   /**
@@ -351,7 +365,7 @@ class PDFService {
       <table class="info-table">
         <tr>
           <td>İlan Başlığı</td>
-          <td><strong>${jobTitle}</strong></td>
+          <td><strong>${this.escapeHtml(jobTitle)}</strong></td>
         </tr>
         <tr>
           <td>İlan Tarihi</td>
@@ -359,19 +373,19 @@ class PDFService {
         </tr>
         <tr>
           <td>Uzmanlık</td>
-          <td><strong>${specialty}</strong></td>
+          <td><strong>${this.escapeHtml(specialty)}</strong></td>
         </tr>
         <tr>
           <td>Yan Dal Uzmanlığı</td>
-          <td>${subSpecialty || '-'}</td>
+          <td>${this.escapeHtml(subSpecialty) || '-'}</td>
         </tr>
         <tr>
           <td>Çalışma Türü</td>
-          <td>${workType}</td>
+          <td>${this.escapeHtml(workType)}</td>
         </tr>
         <tr>
           <td>Şehir</td>
-          <td>${region}</td>
+          <td>${this.escapeHtml(region)}</td>
         </tr>
         ${minExperience !== null && minExperience !== undefined ? `
         <tr>
@@ -386,7 +400,7 @@ class PDFService {
     <div class="section">
       <h2 class="section-title">İlan Açıklaması</h2>
       <div class="detail-box">
-        <p>${description}</p>
+        <p>${this.escapeHtml(description)}</p>
       </div>
     </div>
     ` : ''}
@@ -398,21 +412,21 @@ class PDFService {
       ${requirements ? `
       <div class="detail-box">
         <h4>Aranan Nitelikler</h4>
-        <p>${requirements}</p>
+        <p>${this.escapeHtml(requirements)}</p>
       </div>
       ` : ''}
       
       ${workingHours ? `
       <div class="detail-box">
         <h4>Çalışma Saatleri</h4>
-        <p>${workingHours}</p>
+        <p>${this.escapeHtml(workingHours)}</p>
       </div>
       ` : ''}
       
       ${benefits ? `
       <div class="detail-box">
         <h4>Sağlanan İmkanlar</h4>
-        <p>${benefits}</p>
+        <p>${this.escapeHtml(benefits)}</p>
       </div>
       ` : ''}
     </div>
@@ -707,27 +721,27 @@ class PDFService {
       <table class="info-table">
         <tr>
           <td>Ad Soyad</td>
-          <td><strong>${doctor.fullName}</strong></td>
+          <td><strong>${this.escapeHtml(doctor.fullName)}</strong></td>
         </tr>
         <tr>
           <td>Uzmanlık</td>
-          <td><strong>${doctor.specialty}</strong></td>
+          <td><strong>${this.escapeHtml(doctor.specialty)}</strong></td>
         </tr>
         <tr>
           <td>Yan Dal Uzmanlığı</td>
-          <td>${doctor.subSpecialty || '-'}</td>
+          <td>${this.escapeHtml(doctor.subSpecialty) || '-'}</td>
         </tr>
         <tr>
           <td>E-posta</td>
-          <td>${doctor.email}</td>
+          <td>${this.escapeHtml(doctor.email)}</td>
         </tr>
         <tr>
           <td>Telefon</td>
-          <td>${doctor.phone}</td>
+          <td>${this.escapeHtml(doctor.phone)}</td>
         </tr>
         <tr>
           <td>Şehir</td>
-          <td>${doctor.city || '-'}</td>
+          <td>${this.escapeHtml(doctor.city) || '-'}</td>
         </tr>
         ${doctor.birthDate ? `
         <tr>
@@ -743,8 +757,8 @@ class PDFService {
       <h2 class="section-title">Eğitim Bilgileri</h2>
       ${doctor.education.map(edu => `
         <div class="detail-box">
-          <h4>${edu.education_institution || 'Belirtilmemiş'}</h4>
-          <p>${edu.education_type_name || ''} ${edu.field ? `- ${edu.field}` : ''}
+          <h4>${this.escapeHtml(edu.education_institution || 'Belirtilmemiş')}</h4>
+          <p>${this.escapeHtml(edu.education_type_name || '')} ${edu.field ? `- ${this.escapeHtml(edu.field)}` : ''}
 ${edu.graduation_year ? `Mezuniyet: ${edu.graduation_year}` : ''}</p>
         </div>
       `).join('')}
@@ -756,10 +770,10 @@ ${edu.graduation_year ? `Mezuniyet: ${edu.graduation_year}` : ''}</p>
       <h2 class="section-title">Deneyim Bilgileri</h2>
       ${doctor.experience.map(exp => `
         <div class="detail-box">
-          <h4>${exp.role_title || 'Belirtilmemiş'} - ${exp.organization || 'Belirtilmemiş'}</h4>
+          <h4>${this.escapeHtml(exp.role_title || 'Belirtilmemiş')} - ${this.escapeHtml(exp.organization || 'Belirtilmemiş')}</h4>
           <p>${exp.start_date ? new Date(exp.start_date).toLocaleDateString('tr-TR') : ''} - ${exp.end_date ? new Date(exp.end_date).toLocaleDateString('tr-TR') : 'Devam Ediyor'}
-${exp.specialty_name ? `Uzmanlık: ${exp.specialty_name}${exp.subspecialty_name ? ` / ${exp.subspecialty_name}` : ''}` : ''}
-${exp.description ? `\n${exp.description}` : ''}</p>
+${exp.specialty_name ? `Uzmanlık: ${this.escapeHtml(exp.specialty_name)}${exp.subspecialty_name ? ` / ${this.escapeHtml(exp.subspecialty_name)}` : ''}` : ''}
+${exp.description ? `\n${this.escapeHtml(exp.description)}` : ''}</p>
         </div>
       `).join('')}
     </div>
@@ -770,8 +784,8 @@ ${exp.description ? `\n${exp.description}` : ''}</p>
       <h2 class="section-title">Sertifikalar</h2>
       ${doctor.certificates.map(cert => `
         <div class="detail-box">
-          <h4>${cert.certificate_name || 'Belirtilmemiş'}</h4>
-          <p>${cert.institution || ''} ${cert.certificate_year ? `| ${cert.certificate_year}` : ''}</p>
+          <h4>${this.escapeHtml(cert.certificate_name || 'Belirtilmemiş')}</h4>
+          <p>${this.escapeHtml(cert.institution || '')} ${cert.certificate_year ? `| ${cert.certificate_year}` : ''}</p>
         </div>
       `).join('')}
     </div>
@@ -782,8 +796,8 @@ ${exp.description ? `\n${exp.description}` : ''}</p>
       <h2 class="section-title">Dil Bilgileri</h2>
       ${doctor.languages.map(lang => `
         <div class="detail-box">
-          <h4>${lang.language_name || 'Belirtilmemiş'}</h4>
-          <p>Seviye: ${lang.level_name || 'Belirtilmemiş'}</p>
+          <h4>${this.escapeHtml(lang.language_name || 'Belirtilmemiş')}</h4>
+          <p>Seviye: ${this.escapeHtml(lang.level_name || 'Belirtilmemiş')}</p>
         </div>
       `).join('')}
     </div>
@@ -802,11 +816,11 @@ ${exp.description ? `\n${exp.description}` : ''}</p>
         </tr>
         <tr>
           <td>İlan Başlığı</td>
-          <td><strong>${jobTitle}</strong></td>
+          <td><strong>${this.escapeHtml(jobTitle)}</strong></td>
         </tr>
         <tr>
           <td>Çalışma Türü</td>
-          <td>${employmentType || '-'}</td>
+          <td>${this.escapeHtml(employmentType) || '-'}</td>
         </tr>
         <tr>
           <td>Başvuru Tarihi</td>
@@ -814,7 +828,7 @@ ${exp.description ? `\n${exp.description}` : ''}</p>
         </tr>
         <tr>
           <td>Durum</td>
-          <td><strong>${status}</strong></td>
+          <td><strong>${this.escapeHtml(status)}</strong></td>
         </tr>
       </table>
     </div>
@@ -823,7 +837,7 @@ ${exp.description ? `\n${exp.description}` : ''}</p>
     <div class="section">
       <h2 class="section-title">Doktor Notu</h2>
       <div class="detail-box">
-        <p>${doctorNote}</p>
+        <p>${this.escapeHtml(doctorNote)}</p>
       </div>
     </div>
     ` : ''}
@@ -832,7 +846,7 @@ ${exp.description ? `\n${exp.description}` : ''}</p>
     <div class="section">
       <h2 class="section-title">İlan Açıklaması</h2>
       <div class="detail-box">
-        <p>${jobDescription}</p>
+        <p>${this.escapeHtml(jobDescription)}</p>
       </div>
     </div>
     ` : ''}

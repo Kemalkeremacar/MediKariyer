@@ -179,6 +179,7 @@ class LogService {
    * @param {Object} filters - Filtre parametreleri
    * @param {string} [filters.level] - Log seviyesi
    * @param {string} [filters.category] - Log kategorisi
+   * @param {string} [filters.platform] - Platform (web, mobile-ios, mobile-android)
    * @param {number} [filters.userId] - Kullanıcı ID
    * @param {string} [filters.requestId] - Request correlation ID
    * @param {Date} [filters.startDate] - Başlangıç tarihi
@@ -192,6 +193,7 @@ class LogService {
       const {
         level,
         category,
+        platform,
         userId,
         requestId,
         startDate,
@@ -211,6 +213,7 @@ class LogService {
       // Filters
       if (level) query = query.where('al.level', level);
       if (category) query = query.where('al.category', category);
+      if (platform) query = query.where('al.platform', platform);
       if (userId) query = query.where('al.user_id', userId);
       if (requestId) query = query.where('al.request_id', requestId);
       if (startDate) query = query.where('al.timestamp', '>=', startDate);

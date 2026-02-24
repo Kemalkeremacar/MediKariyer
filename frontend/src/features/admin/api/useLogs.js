@@ -140,6 +140,7 @@ export const useApplicationLogs = (filters = {}, enabled = true) => {
   const stableFilters = useMemo(() => ({
     level: filters.level || '',
     category: filters.category || '',
+    platform: filters.platform || '',
     startDate: filters.startDate || '',
     endDate: filters.endDate || '',
     page: filters.page || 1,
@@ -147,6 +148,7 @@ export const useApplicationLogs = (filters = {}, enabled = true) => {
   }), [
     filters.level,
     filters.category,
+    filters.platform,
     filters.startDate,
     filters.endDate,
     filters.page,

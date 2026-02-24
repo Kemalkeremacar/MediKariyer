@@ -30,8 +30,12 @@
 // DIŞ BAĞIMLILIKLAR
 // ============================================================================
 
+const db = require('../../config/dbConfig').db;
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const authService = require('../authService');
 const doctorService = require('../doctorService');
+const logger = require('../../utils/logger');
 const { AppError } = require('../../utils/errorHandler');
 const { 
   generateAccessToken, 
@@ -102,10 +106,6 @@ const registerDoctor = async (registrationData, req) => {
  * @description Validates credentials without blocking unapproved users (for mobile waiting screen)
  */
 const validateMobileCredentials = async (email, password) => {
-  const db = require('../../config/dbConfig').db;
-  const bcrypt = require('bcryptjs');
-  const logger = require('../../utils/logger');
-
   // Email'i normalize et (trim ve lowercase)
   const normalizedEmail = email ? email.trim().toLowerCase() : '';
 
@@ -179,6 +179,25 @@ const login = async ({ email, password }, req) => {
 
   await createRefreshTokenRecord(user.id, tokens.refreshToken, req?.get?.('User-Agent') || 'mobile-app', req?.ip || null);
 
+  // Update last_login for mobile users
+  await db('users')
+    .where('id', user.id)
+    .update({ 
+      last_login: db.fn.now(), 
+      updated_at: db.fn.now() 
+    });
+
+  // Log mobile login
+  const logger = require('../../utils/logger');
+  logger.info('Mobile user login successful', {
+    userId: user.id,
+    email: user.email,
+    platform: req?.get?.('User-Agent')?.toLowerCase().includes('ios') ? 'mobile-ios' : 'mobile-android',
+    category: 'mobile-auth',
+    ipAddress: req?.ip,
+    userAgent: req?.get?.('User-Agent')
+  });
+
   const profile = await doctorService.getProfile(user.id);
 
   return {
@@ -203,8 +222,6 @@ const login = async ({ email, password }, req) => {
  * @description Validates refresh token without blocking unapproved users (for mobile waiting screen)
  */
 const validateMobileRefreshToken = async (refreshToken) => {
-  const db = require('../../config/dbConfig').db;
-  
   // Token kaydını doğrula
   const tokenRecord = await verifyRefreshTokenRecord(refreshToken);
   if (!tokenRecord) {
@@ -236,8 +253,6 @@ const validateMobileRefreshToken = async (refreshToken) => {
 };
 
 const refresh = async (refreshToken) => {
-  const db = require('../../config/dbConfig').db;
-  
   // Mobile-specific refresh token validation (allows pending users)
   const { user, tokenRecord } = await validateMobileRefreshToken(refreshToken);
   
@@ -321,8 +336,6 @@ const logout = async (refreshToken) => {
 };
 
 const getMe = async (userId) => {
-  const db = require('../../config/dbConfig').db;
-  
   // CRITICAL: is_active, is_approved ve is_onboarding_seen değerleri users tablosunda, doctor_profiles'da değil!
   // Önce users tablosundan bu değerleri al
   const user = await db('users').where('id', userId).select('is_active', 'is_approved', 'is_onboarding_seen', 'email').first();
@@ -369,10 +382,6 @@ const getMe = async (userId) => {
 };
 
 const changePassword = async (userId, { currentPassword, newPassword }, currentRefreshToken = null) => {
-  const db = require('../../config/dbConfig').db;
-  const bcrypt = require('bcryptjs');
-  const logger = require('../../utils/logger');
-
   // Kullanıcıyı veritabanından getir
   const user = await db('users').where('id', userId).first();
   if (!user) throw new AppError('Kullanıcı bulunamadı', 404);
@@ -463,12 +472,6 @@ const forgotPassword = async (email, req) => {
  * @returns {Promise<object>} Success response
  */
 const resetPassword = async (token, newPassword) => {
-  const db = require('../../config/dbConfig').db;
-  const bcrypt = require('bcryptjs');
-  const crypto = require('crypto');
-  const logger = require('../../utils/logger');
-  const { AppError } = require('../../utils/errorHandler');
-
   // Hash token to match database (same as web)
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -514,9 +517,6 @@ const resetPassword = async (token, newPassword) => {
  * @returns {Promise<object>} Success response with session count
  */
 const logoutAll = async (userId) => {
-  const db = require('../../config/dbConfig').db;
-  const logger = require('../../utils/logger');
-
   // Use transaction for atomicity (Requirement 11.3)
   const deletedCount = await db.transaction(async (trx) => {
     // Delete all refresh tokens for user (Requirement 11.2)
@@ -542,9 +542,6 @@ const logoutAll = async (userId) => {
  * @returns {Promise<object>} Success response
  */
 const markOnboardingCompleted = async (userId) => {
-  const db = require('../../config/dbConfig').db;
-  const logger = require('../../utils/logger');
-
   // Update is_onboarding_seen to true (1)
   await db('users')
     .where('id', userId)

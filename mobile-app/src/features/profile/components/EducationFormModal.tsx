@@ -19,7 +19,7 @@
  * 
  * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -40,6 +40,7 @@ import { Select, SelectOption } from '@/components/ui/Select';
 import { colors, spacing } from '@/theme';
 import { useEducationTypes } from '@/hooks/useLookup';
 import { useEducation } from '@/features/profile/hooks/useEducations';
+import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import type { CreateEducationPayload, UpdateEducationPayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
@@ -162,9 +163,15 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     navigation.goBack();
-  };
+  }, [navigation]);
+
+  // Android back button handler - Education ekranına dön
+  useAndroidBackHandler(useCallback(() => {
+    handleClose();
+    return true; // Event'i consume et
+  }, [handleClose]));
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

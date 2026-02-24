@@ -39,7 +39,7 @@
  * - %0-49: "🚀 Profilini tamamlayarak başla"
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -75,6 +75,8 @@ import { certificateService } from '@/api/services/profile/certificate.service';
 import { languageService } from '@/api/services/profile/language.service';
 import { colors, spacing } from '@/theme';
 import { formatFullName } from '@/utils/formatTitle';
+import { useNotificationSoftAsk } from '@/hooks/useNotificationSoftAsk';
+import { NotificationPermissionModal } from '@/components/modals/NotificationPermissionModal';
 import type { ProfileStackParamList, AppTabParamList } from '@/navigation/types';
 
 type DashboardScreenNavigationProp = CompositeNavigationProp<
@@ -93,6 +95,14 @@ export const DashboardScreen = () => {
   // Side menu state
   const [menuVisible, setMenuVisible] = useState(false);
   
+  // Notification soft ask
+  const {
+    showSoftAsk,
+    triggerSoftAsk,
+    handleAccept,
+    handleDecline,
+  } = useNotificationSoftAsk();
+  
   // Ekrana focus olduğunda scroll'u en üste sıfırla
   useFocusEffect(
     React.useCallback(() => {
@@ -104,6 +114,15 @@ export const DashboardScreen = () => {
       return () => clearTimeout(timer);
     }, [])
   );
+  
+  // Soft ask'ı gecikmeli göster (kullanıcı uygulamayı keşfetsin)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      triggerSoftAsk();
+    }, 5000); // 5 saniye sonra
+    
+    return () => clearTimeout(timer);
+  }, [triggerSoftAsk]);
   
   // Core profil bilgileri (sadece ad, soyad, fotoğraf, unvan, uzmanlık)
   const { data: profile, refetch: refetchProfile, isRefetching: isRefetchingProfile } = useProfileCore();
@@ -478,6 +497,13 @@ export const DashboardScreen = () => {
             navigation.navigate('Notifications');
           }
         }}
+      />
+
+      {/* Notification Permission Modal (Soft Ask) */}
+      <NotificationPermissionModal
+        visible={showSoftAsk}
+        onAccept={handleAccept}
+        onDecline={handleDecline}
       />
     </SafeAreaView>
   );

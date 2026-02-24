@@ -23,7 +23,7 @@
  * 
  * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -45,6 +45,7 @@ import { DatePicker } from '@/components/ui/DatePicker';
 import { colors, spacing } from '@/theme';
 import { useSpecialties } from '@/hooks/useLookup';
 import { useExperience } from '@/features/profile/hooks/useExperiences';
+import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import { toDateString, parseDateOnly } from '@/utils/date';
 import type { CreateExperiencePayload, UpdateExperiencePayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
@@ -172,9 +173,15 @@ export const ExperienceFormModal: React.FC<ExperienceFormModalProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     navigation.goBack();
-  };
+  }, [navigation]);
+
+  // Android back button handler
+  useAndroidBackHandler(useCallback(() => {
+    handleClose();
+    return true;
+  }, [handleClose]));
 
   /**
    * ExperienceFormScreen - Experience form as navigation screen

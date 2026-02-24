@@ -19,7 +19,7 @@
  * ═══════════════════════════════════════════════════════
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -44,6 +44,7 @@ import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
 import { useProfileCore } from '../hooks/useProfileCore';
 import { useUpdatePersonalInfo } from '../hooks/useUpdatePersonalInfo';
+import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import { useAuthStore } from '@/store/authStore';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { useToast } from '@/providers/ToastProvider';
@@ -511,6 +512,14 @@ export const ProfileEditScreen = ({ navigation }: Props) => {
       </KeyboardAvoidingView>
     );
   };
+
+  // Android back button handler - ProfileMain'e dön
+  const handleBack = useCallback(() => {
+    navigation.goBack();
+    return true;
+  }, [navigation]);
+
+  useAndroidBackHandler(handleBack);
 
   return (
     <Screen

@@ -1,7 +1,15 @@
 const pdfService = require('../services/pdfService');
 const { db } = require('../config/dbConfig');
+const logger = require('../utils/logger');
 
 class PDFController {
+  /**
+   * Test PDF generation
+   */
+  async generateTestPDF(testData) {
+    return await pdfService.generateJobPostingPDF(testData);
+  }
+
   /**
    * Generate Job Posting PDF
    * GET /api/pdf/job/:jobId
@@ -68,14 +76,8 @@ class PDFController {
       };
 
       // Generate PDF
-      // Logo URL'sini loglamadan önce kısalt
-      const logData = { ...pdfData };
-      if (logData.hospitalLogo && logData.hospitalLogo.length > 100) {
-        logData.hospitalLogo = `[Base64 Image: ${logData.hospitalLogo.length} chars]`;
-      }
-      console.log('PDF Data:', JSON.stringify(logData, null, 2));
       const pdfBuffer = await pdfService.generateJobPostingPDF(pdfData);
-      console.log('PDF Buffer length:', pdfBuffer.length);
+      logger.info('PDF Buffer generated', { length: pdfBuffer.length });
 
       // Set response headers
       res.setHeader('Content-Type', 'application/pdf');
@@ -87,7 +89,7 @@ class PDFController {
       res.end(pdfBuffer, 'binary');
 
     } catch (error) {
-      console.error('Job PDF generation error:', error);
+      logger.error('Job PDF generation error', { error: error.message, stack: error.stack });
       res.status(500).json({
         success: false,
         message: 'PDF oluşturulurken bir hata oluştu',
@@ -239,7 +241,7 @@ class PDFController {
       res.end(pdfBuffer, 'binary');
 
     } catch (error) {
-      console.error('Application PDF generation error:', error);
+      logger.error('Application PDF generation error', { error: error.message, stack: error.stack });
       res.status(500).json({
         success: false,
         message: 'PDF oluşturulurken bir hata oluştu',
@@ -321,7 +323,7 @@ class PDFController {
       res.end(pdfBuffer, 'binary');
 
     } catch (error) {
-      console.error('Job PDF preview error:', error);
+      logger.error('Job PDF preview error', { error: error.message, stack: error.stack });
       res.status(500).json({
         success: false,
         message: 'PDF önizlemesi oluşturulurken bir hata oluştu',

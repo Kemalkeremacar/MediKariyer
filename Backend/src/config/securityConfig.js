@@ -28,8 +28,6 @@ const CORS_OPTIONS = {
       'http://192.168.1.134:5000', // Network IP - Frontend (güncel Wi-Fi IP)
       'http://192.168.1.134:3100',  // Network IP - Backend (güncel Wi-Fi IP)
       'http://192.168.1.134:8081',
-      // Tüm 192.168.1.x IP'lerine izin ver (local network için)
-      /^http:\/\/192\.168\.1\.\d{1,3}(:\d+)?$/,
       'https://mk.monassist.com', // Production Frontend Domain
       'https://medikariyer.net', // Production Frontend Domain (yeni)
       'https://www.medikariyer.net' // Production Frontend Domain (www ile)
@@ -43,25 +41,42 @@ const CORS_OPTIONS = {
     
     // VPN IP range kontrolü (10.8.0.0/24) - OpenVPN için
     // VPN IP'lerinden gelen isteklere otomatik izin ver
-    const vpnIpPattern = /^http:\/\/10\.8\.0\.\d{1,3}(:\d+)?$/;
+    const vpnIpPattern = /^https?:\/\/10\.8\.0\.\d{1,3}(:\d+)?$/;
     if (vpnIpPattern.test(origin)) {
       return callback(null, true);
     }
     
     // Local network IP range kontrolü (192.168.1.0/24) - Wi-Fi network için
     // Local network IP'lerinden gelen isteklere otomatik izin ver
-    const localNetworkPattern = /^http:\/\/192\.168\.1\.\d{1,3}(:\d+)?$/;
+    const localNetworkPattern = /^https?:\/\/192\.168\.1\.\d{1,3}(:\d+)?$/;
     if (localNetworkPattern.test(origin)) {
       return callback(null, true);
     }
     
     // Gelen isteğin kaynağı izin verilenler listesinde varsa, isteğe izin ver.
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      // Listede yoksa, CORS hatası fırlat.
-      callback(new Error('Bu kaynağa CORS politikası tarafından izin verilmiyor.'));
+      return callback(null, true);
     }
+    
+    // Regex pattern kontrolü (array içindeki regex'ler için)
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      return callback(null, true);
+    }
+    
+    // Listede yoksa, CORS hatası fırlat.
+    // Production'da logger kullan (console.error yerine)
+    if (process.env.NODE_ENV === 'production') {
+      // Logger import edilmediği için sadece callback ile hata döndür
+      // CORS hataları zaten HTTP loglarında görünür
+    }
+    callback(new Error('Bu kaynağa CORS politikası tarafından izin verilmiyor.'));
   },
   credentials: true, // Frontend'in cookie gibi kimlik bilgilerini API'ye göndermesine izin ver.
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // İzin verilen HTTP metodları.
@@ -74,7 +89,9 @@ const CORS_OPTIONS = {
     'x-client-version',
     'X-Client-Version'
   ], // İzin verilen HTTP başlıkları.
-  exposedHeaders: ['X-Total-Count', 'X-Total-Pages'] // Frontend'in erişebileceği özel başlıklar (örn: sayfalama bilgisi).
+  exposedHeaders: ['X-Total-Count', 'X-Total-Pages'], // Frontend'in erişebileceği özel başlıklar (örn: sayfalama bilgisi).
+  preflightContinue: false, // Preflight request'leri otomatik handle et
+  optionsSuccessStatus: 204 // Eski tarayıcılar için OPTIONS response status
 };
 
 // 2. Helmet (Güvenlik Başlıkları) Yapılandırması

@@ -73,6 +73,7 @@ class DatabaseTransport extends Transport {
       request_id: info.requestId || info.request_id || null,
       ip_address: info.ipAddress || info.ip_address || null,
       user_agent: info.userAgent || info.user_agent || null,
+      platform: info.platform || this.detectPlatform(info.userAgent || info.user_agent) || null, // Platform detection
       url: info.url || null,
       method: info.method || null,
       status_code: info.statusCode || info.status_code || null,
@@ -101,7 +102,7 @@ class DatabaseTransport extends Transport {
         'level', 'message', 'timestamp', 'category', 
         'userId', 'user_id', 'requestId', 'request_id',
         'ipAddress', 'ip_address', 'userAgent', 'user_agent',
-        'url', 'method', 'statusCode', 'status_code',
+        'platform', 'url', 'method', 'statusCode', 'status_code',
         'duration', 'duration_ms', 'stack', 'stackTrace'
       ];
       
@@ -120,6 +121,35 @@ class DatabaseTransport extends Transport {
       // Metadata serialization error - silent failure
       return null;
     }
+  }
+  
+  /**
+   * Detect platform from user agent
+   * @param {string} userAgent - User agent string
+   * @returns {string|null} - Platform name (web, mobile-ios, mobile-android) or null
+   */
+  detectPlatform(userAgent) {
+    if (!userAgent) return null;
+    
+    const ua = userAgent.toLowerCase();
+    
+    // Mobile app detection (Expo/React Native)
+    if (ua.includes('expo') || ua.includes('react native')) {
+      if (ua.includes('ios') || ua.includes('iphone') || ua.includes('ipad')) {
+        return 'mobile-ios';
+      }
+      if (ua.includes('android')) {
+        return 'mobile-android';
+      }
+      return 'mobile';
+    }
+    
+    // Web browser detection
+    if (ua.includes('mozilla') || ua.includes('chrome') || ua.includes('safari') || ua.includes('firefox')) {
+      return 'web';
+    }
+    
+    return null;
   }
   
   /**

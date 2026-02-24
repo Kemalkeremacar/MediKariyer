@@ -12,7 +12,7 @@
  * @version 2.0.0
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -22,8 +22,12 @@ import {
   ActivityIndicator,
   Platform,
   Alert,
+  Linking,
+  AppState,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { Typography } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -191,6 +195,106 @@ export const SettingsScreen = ({ navigation }: Props) => {
 
   const appInfo = useMemo(() => getAppInfo(), [getAppInfo]);
 
+  // Notification permission status
+  const [notificationStatus, setNotificationStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
+
+  // Check notification status on mount
+  useEffect(() => {
+    const checkNotificationStatus = async () => {
+      const { status } = await Notifications.getPermissionsAsync();
+      setNotificationStatus(status);
+    };
+    checkNotificationStatus();
+  }, []);
+
+  // Listen for app state changes (when user returns from settings)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App came to foreground, refresh notification status
+        const { status } = await Notifications.getPermissionsAsync();
+        setNotificationStatus(status);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  const handleEnableNotifications = useCallback(async () => {
+    try {
+      // Expo Go kontrolü
+      const isExpoGo = Constants.appOwnership === 'expo';
+      
+      if (isExpoGo) {
+        Alert.alert(
+          'Expo Go Sınırlaması',
+          'Push notification özellikleri Expo Go\'da çalışmaz. Bu özelliği test etmek için development build oluşturmanız gerekiyor.\n\nDaha fazla bilgi: expo.dev/dev-client',
+          [{ text: 'Tamam' }]
+        );
+        return;
+      }
+
+      const { status: currentStatus } = await Notifications.getPermissionsAsync();
+
+      if (currentStatus === 'granted') {
+        // Already granted - offer to go to settings to disable
+        Alert.alert(
+          'Bildirim Ayarları',
+          'Bildirimleri kapatmak için cihaz ayarlarına gitmeniz gerekiyor.',
+          [
+            { text: 'Tamam', style: 'cancel' },
+            {
+              text: 'Ayarlara Git',
+              onPress: () => {
+                Linking.openSettings().catch(() => {
+                  showToast('Ayarlar açılamadı', 'error');
+                });
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      if (currentStatus === 'denied') {
+        // Previously denied - must go to settings
+        Alert.alert(
+          'Bildirim İzni',
+          'Bildirimleri açmak için cihaz ayarlarına gitmeniz gerekiyor.',
+          [
+            { text: 'Vazgeç', style: 'cancel' },
+            {
+              text: 'Ayarlara Git',
+              onPress: () => {
+                Linking.openSettings().catch(() => {
+                  showToast('Ayarlar açılamadı', 'error');
+                });
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      // Undetermined - can request permission
+      const { status: newStatus } = await Notifications.requestPermissionsAsync();
+      setNotificationStatus(newStatus);
+
+      if (newStatus === 'granted') {
+        showToast('Bildirimler açıldı', 'success');
+        // Register token
+        const pushNotificationService = await import('@/api/services/pushNotification.service').then(m => m.pushNotificationService);
+        await pushNotificationService.registerDeviceToken();
+      } else {
+        showToast('Bildirim izni verilmedi', 'info');
+      }
+    } catch (error) {
+      showToast('Bir hata oluştu', 'error');
+    }
+  }, [showToast]);
+
   const handleLogout = useCallback(() => {
     Alert.alert(
       'Çıkış Yap',
@@ -233,6 +337,29 @@ export const SettingsScreen = ({ navigation }: Props) => {
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
+
+        {/* Bildirimler */}
+        <View style={styles.section}>
+          <SectionHeader
+            title="Bildirimler"
+            icon={<Ionicons name="notifications-outline" size={16} color="#8B5CF6" />}
+          />
+          <Card variant="outlined" style={styles.settingsCard}>
+            <SettingItem
+              icon={<Ionicons name="notifications" size={22} color="#8B5CF6" />}
+              iconBgColor="#F3E8FF"
+              title="Bildirim Ayarları"
+              subtitle={
+                notificationStatus === 'granted'
+                  ? 'Açık - Bildirimler alıyorsunuz'
+                  : 'Kapalı - Bildirimleri açın'
+              }
+              badge={notificationStatus === 'granted' ? undefined : 'Kapalı'}
+              badgeColor="warning"
+              onPress={handleEnableNotifications}
+            />
+          </Card>
+        </View>
 
         {/* Yasal ve Bilgi */}
         <View style={styles.section}>

@@ -78,26 +78,6 @@ const HomeSection = () => {
                   <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
                 </button>
               </div>
-
-              {/* Stats - Minimal */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-4">
-                <div>
-                  <div className="text-3xl font-bold text-blue-600">2,500+</div>
-                  <div className="text-sm text-gray-600 mt-1">Aktif Hekim</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-blue-600">150+</div>
-                  <div className="text-sm text-gray-600 mt-1">Sağlık Kurumu</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-blue-600">5,000+</div>
-                  <div className="text-sm text-gray-600 mt-1">Başarılı Eşleşme</div>
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-blue-600">98%</div>
-                  <div className="text-sm text-gray-600 mt-1">Memnuniyet</div>
-                </div>
-              </div>
             </div>
 
             {/* Mobile: Main Heading First */}
@@ -145,26 +125,6 @@ const HomeSection = () => {
                   BAŞLAYALIM
                   <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
                 </button>
-              </div>
-
-              {/* Stats - Minimal */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 pt-4 px-4">
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">2,500+</div>
-                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Aktif Hekim</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">150+</div>
-                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Sağlık Kurumu</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">5,000+</div>
-                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Başarılı Eşleşme</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl font-bold text-blue-600">98%</div>
-                  <div className="text-xs sm:text-sm text-gray-600 mt-1">Memnuniyet</div>
-                </div>
               </div>
             </div>
           </div>

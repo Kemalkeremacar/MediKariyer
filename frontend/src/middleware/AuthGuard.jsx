@@ -66,7 +66,6 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '@/store/authStore';
-import { getAccessToken, isTokenValid } from '@/utils/tokenUtils';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 /**
@@ -120,9 +119,9 @@ const AuthGuard = ({ children }) => {
    * 
    * Teknik Detaylar:
    * - Sadece isAuthenticated === true olduğunda çalışır
-   * - getAccessToken() ile token alınır
-   * - isTokenValid() ile token geçerliliği kontrol edilir
-   * - Geçersiz token varsa clearAuthState() çağrılır
+   * - useAuthStore'dan token alınır (Zustand store)
+   * - authStore.isTokenExpired() ile token geçerliliği kontrol edilir
+   * - Geçersiz token varsa clearAuthState() çağrılır ve kullanıcı logout edilir
    */
   useEffect(() => {
     // Token geçerliliğini kontrol et - sadece isAuthenticated değiştiğinde
@@ -130,9 +129,12 @@ const AuthGuard = ({ children }) => {
       // Sadece authenticated ise kontrol et
       if (!isAuthenticated) return;
       
-      const token = getAccessToken();
+      // Zustand store'dan token kontrolü
+      const token = useAuthStore.getState().token;
+      const isExpired = useAuthStore.getState().isTokenExpired();
       
-      if (token && !isTokenValid(token)) {
+      // Token varsa ve süresi dolmuşsa state'i temizle
+      if (token && isExpired) {
         // Token geçersizse state'i temizle ve anasayfaya yönlendir
         clearAuthState();
       }

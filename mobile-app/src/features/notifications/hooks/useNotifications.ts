@@ -14,7 +14,7 @@
  * @version 2.0.0
  */
 
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { notificationService } from '@/api/services/notification.service';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
@@ -27,81 +27,6 @@ import { endpoints } from '@/api/endpoints';
 import { ApiResponse } from '@/types/api';
 
 const RETRY_DELAY = (attempt: number) => Math.min(1000 * 2 ** attempt, 8000);
-
-/**
- * In-App State Update Handler
- * Backend'den gelen bildirimdeki action ve entity_id'ye göre ilgili query'leri invalidate eder
- * 
- * @param data - Bildirim data objesi (action, entity_id, entity_type içerir)
- * @param queryClient - React Query client
- */
-const handleInAppStateUpdate = (
-  data: import('@/types/notification').NotificationData | null | undefined,
-  queryClient: ReturnType<typeof useQueryClient>
-) => {
-  if (!data) {
-    devLog.log('[handleInAppStateUpdate] No data found in notification');
-    return;
-  }
-  
-  const { action, entity_id, entity_type } = data;
-  
-  if (!action) {
-    devLog.log('[handleInAppStateUpdate] No action found in notification data');
-    return;
-  }
-  
-  devLog.log(`[handleInAppStateUpdate] Action: ${action}, Entity ID: ${entity_id}, Entity Type: ${entity_type}`);
-  
-  switch (action) {
-    case 'application_created':
-    case 'application_status_changed':
-    case 'application_withdrawn':
-      // Başvuru ile ilgili bildirimler
-      queryClient.invalidateQueries({ 
-        queryKey: queryKeys.applications.all,
-        exact: false,
-      });
-      
-      // Eğer entity_id varsa, spesifik başvuru detayını da invalidate et
-      if (entity_id) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.applications.detail(Number(entity_id)),
-        });
-      }
-      
-      // Dashboard'daki özet sayıları da güncelle
-      queryClient.invalidateQueries({ 
-        queryKey: queryKeys.dashboard.all,
-      });
-      break;
-      
-    // NOT: profile_updated action'ı kaldırıldı - Profil güncelleme bildirimleri gönderilmiyor
-    // case 'profile_updated':
-    //   queryClient.invalidateQueries({ queryKey: queryKeys.profile.all, exact: false });
-    //   break;
-      
-    case 'job_status_changed':
-      // İş ilanı durumu değişikliği
-      queryClient.invalidateQueries({ 
-        queryKey: queryKeys.jobs.all,
-        exact: false,
-      });
-      
-      // Eğer entity_id varsa, spesifik iş ilanı detayını da invalidate et
-      if (entity_id) {
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.jobs.detail(Number(entity_id)),
-        });
-      }
-      break;
-      
-    default:
-      devLog.log(`[handleInAppStateUpdate] Unknown action: ${action}`);
-      // Bilinmeyen action için sadece bildirim listesini güncelle
-      break;
-  }
-};
 
 // ============================================================================
 // TYPES
@@ -120,59 +45,14 @@ export interface UseNotificationsParams {
  * Bildirim listesi hook'u (infinite scroll destekli)
  * @param params - Filtreleme parametreleri
  * @returns Bildirim listesi, pagination ve query durumu
+ * 
+ * NOT: Foreground notification listener usePushNotifications'ta yönetiliyor.
+ * Bu hook sadece bildirim listesini çeker, listener eklemiyor.
  */
 export const useNotifications = (params: UseNotificationsParams = {}) => {
   const { showUnreadOnly = false, limit = 20 } = params;
 
   const queryClient = useQueryClient();
-  const notificationListenerRef = useRef<any>(null);
-  
-  // Foreground notification listener: Uygulama açıkken bildirim gelirse otomatik refresh
-  // NOT: Bu listener sadece bir kez oluşturulmalı, dependency array boş olmalı
-  useEffect(() => {
-    // Önceki listener varsa temizle (double mount durumunda)
-    if (notificationListenerRef.current) {
-      try {
-        notificationListenerRef.current.remove();
-      } catch {
-        // Ignore cleanup errors
-      }
-    }
-    
-    notificationListenerRef.current = pushNotificationService.addNotificationReceivedListener(
-      (notification) => {
-        devLog.log('[useNotifications] Foreground notification received:', notification);
-        const data = (notification.request?.content?.data || {}) as import('@/types/notification').NotificationData;
-        
-        // In-App State Update: Backend'den gelen action ve entity_id'ye göre ilgili query'leri invalidate et
-        handleInAppStateUpdate(data, queryClient);
-        
-        // Bildirim listesini de güncelle
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.notifications.all,
-          exact: false,
-          refetchType: 'active', // Sadece aktif query'leri refetch et
-        });
-        queryClient.invalidateQueries({ 
-          queryKey: queryKeys.notifications.unreadCount(),
-          refetchType: 'active',
-        });
-      }
-    );
-
-    return () => {
-      if (notificationListenerRef.current) {
-        try {
-          // Expo Notifications subscription'ları .remove() metodu ile temizlenir
-          notificationListenerRef.current.remove();
-        } catch {
-          // Ignore cleanup errors
-        }
-        notificationListenerRef.current = null;
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Boş dependency - listener sadece mount'ta oluşturulmalı
   
   const query = useInfiniteQuery({
     queryKey: queryKeys.notifications.list({ showUnreadOnly, limit }),

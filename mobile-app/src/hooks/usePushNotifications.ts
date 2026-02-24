@@ -2,19 +2,25 @@
  * @file usePushNotifications.ts
  * @description React hook for push notifications
  * 
+ * ✅ APP STORE COMPLIANCE (Guideline 4.5.4):
+ * - Does NOT automatically request notification permissions
+ * - Only checks existing permission status
+ * - Users must manually enable notifications in Settings
+ * - App functions fully without push notifications
+ * 
  * Usage:
  * - Call in App.tsx to initialize push notifications
- * - Automatically registers device token on mount
+ * - Automatically registers device token if permission already granted
  * - Handles notification received and tapped events
  * 
  * @author MediKariyer Development Team
- * @version 1.0.0
+ * @version 2.0.0 (App Store Compliance Update)
  * @since 2024
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { AppState, AppStateStatus, Linking } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { pushNotificationService } from '@/api/services/pushNotification.service';
@@ -24,7 +30,6 @@ import { errorLogger } from '@/utils/errorLogger';
 import { queryKeys } from '@/api/queryKeys';
 import { navigationRef } from '@/navigation/navigationRef';
 import { devLog } from '@/utils/devLogger';
-import { useAlert } from '@/providers/AlertProvider';
 import type { RootNavigationParamList } from '@/navigation/types';
 
 /**
@@ -107,12 +112,10 @@ export const usePushNotifications = () => {
   const navigation = useNavigation<NavigationProp<RootNavigationParamList>>();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  const { showAlert } = useAlert();
   const notificationListener = useRef<any>(null);
   const responseListener = useRef<any>(null);
   const appStateListener = useRef<any>(null);
   const lastNotificationResponse = useRef<any>(null);
-  const [permissionDenialShown, setPermissionDenialShown] = useState(false);
 
   useEffect(() => {
     // Skip push notification registration in Expo Go
@@ -127,48 +130,108 @@ export const usePushNotifications = () => {
       return;
     }
 
-    // Register device token with permission check
-    const registerWithPermissionCheck = async () => {
+    /**
+     * Handle notification tapped - navigate to relevant screen (Deep Linking)
+     * 
+     * Notification data structure from backend:
+     * - notificationId: Bildirim ID'si
+     * - type: Bildirim tipi (application, job, system, message, etc.)
+     * - application_id: Başvuru ID'si (varsa)
+     * - job_id: İş ilanı ID'si (varsa)
+     * - job_title: İş ilanı başlığı (varsa)
+     * - hospital_name: Hastane adı (varsa)
+     * - status: Durum bilgisi (varsa)
+     */
+    const handleNotificationTapped = (response: any) => {
       try {
-        // Check if permission is granted
-        const hasPermission = await pushNotificationService.requestPermissions();
+        const data = response.notification.request.content.data;
+        const notificationId = data?.notificationId || data?.notification_id;
+
+        // Deep linking: Bildirim tipine göre ilgili sayfaya yönlendir
         
-        if (!hasPermission && !permissionDenialShown) {
-          // Permission denied - show info alert (only once)
-          setPermissionDenialShown(true);
-          
-          showAlert({
-            type: 'info',
-            title: 'Bildirim İzni',
-            message: 'Bildirim izni verilmedi. İş ilanları ve başvuru güncellemeleri hakkında bildirim alamayacaksınız.\n\nİzni daha sonra ayarlardan açabilirsiniz.',
-            confirmText: 'Ayarlara Git',
-            cancelText: 'Tamam',
-            onConfirm: () => {
-              // Open app settings
-              Linking.openSettings().catch(() => {
-                devLog.warn('[usePushNotifications] Failed to open settings');
-              });
-            },
-            onCancel: () => {
-              // Just close the alert
-              devLog.log('[usePushNotifications] Alert dismissed');
-            },
-          });
-          
-          devLog.log('[usePushNotifications] Permission denied - user notified');
+        // 1. Başvuru durumu bildirimleri (application_id varsa)
+        if (data?.application_id) {
+          // Applications tab'ına git (başvuru detayına gidebiliriz ama şimdilik liste yeterli)
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('ApplicationsTab' as any, { screen: 'ApplicationsList' });
+          } else {
+            navigation.navigate('ApplicationsTab', { screen: 'ApplicationsList' });
+          }
           return;
         }
-        
-        // Permission granted - register token
-        await pushNotificationService.registerDeviceToken();
+
+        // 2. İş ilanı bildirimleri (job_id varsa)
+        if (data?.job_id) {
+          // İş ilanı detay sayfasına git
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('JobsTab' as any, {
+              screen: 'JobDetail',
+              params: { id: Number(data.job_id) },
+            } as any);
+          } else {
+            navigation.navigate('JobsTab', {
+              screen: 'JobDetail',
+              params: { id: Number(data.job_id) },
+            });
+          }
+          return;
+        }
+
+        // 3. Bildirim detay sayfası (notificationId varsa ve tip bildirim ise)
+        if (notificationId && (data?.type === 'system' || data?.type === 'message' || data?.type === 'info')) {
+          // Bildirimler sayfasına git (gelecekte notification detail sayfası eklenebilir)
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('ProfileTab' as any, {
+              screen: 'Notifications',
+            });
+          } else {
+            navigation.navigate('ProfileTab', {
+              screen: 'Notifications',
+            });
+          }
+          return;
+        }
+
+        // 4. Varsayılan: Bildirimde anlamlı data yoksa hiçbir yere gitme
+        // Kullanıcı zaten bildirimi gördü, zorla yönlendirme yapma
+        devLog.log('[usePushNotifications] No actionable data in notification, staying on current screen');
+        return;
       } catch (error) {
         errorLogger.logError(error as Error, {
-          context: 'usePushNotifications - registerDeviceToken',
+          context: 'handleNotificationTapped',
+          extra: { response },
+        });
+        // Hata durumunda kullanıcıyı mevcut ekranda bırak
+        // Zorla yönlendirme yapma
+        devLog.warn('[usePushNotifications] Error handling notification tap, staying on current screen');
+      }
+    };
+
+    // ✅ APP STORE FIX: Check existing permission WITHOUT requesting
+    // Users must manually enable notifications in Settings
+    const checkExistingPermission = async () => {
+      try {
+        // Check current permission status (does NOT request permission)
+        const { status } = await Notifications.getPermissionsAsync();
+        
+        if (status === 'granted') {
+          // Permission already granted - register token
+          devLog.log('[usePushNotifications] Permission already granted - registering token');
+          await pushNotificationService.registerDeviceToken();
+        } else {
+          // Permission not granted - do nothing
+          // User can enable notifications manually in Settings
+          devLog.log('[usePushNotifications] Permission not granted - skipping token registration');
+          devLog.log('[usePushNotifications] Users can enable notifications in Settings > Notifications');
+        }
+      } catch (error) {
+        errorLogger.logError(error as Error, {
+          context: 'usePushNotifications - checkExistingPermission',
         });
       }
     };
     
-    registerWithPermissionCheck();
+    checkExistingPermission();
 
     // Listen for notifications received while app is in foreground
     notificationListener.current =
@@ -196,20 +259,20 @@ export const usePushNotifications = () => {
       pushNotificationService.addNotificationResponseReceivedListener(
         (response) => {
           devLog.log('[usePushNotifications] Notification tapped:', response);
-          lastNotificationResponse.current = response;
           
-          // In-App State Update: Bildirime tıklandığında da state'i güncelle
-          const data = (response.notification?.request?.content?.data || {}) as import('@/types/notification').NotificationData;
-          handleInAppStateUpdate(data, queryClient);
+          // NOT: State update'i burada YAPMA - notificationListener zaten yapıyor
+          // Sadece navigation handle et
           
           // Uygulama durumuna göre işlem yap
           const appState = AppState.currentState;
           if (appState === 'active') {
             // Uygulama açıkken tıklandı - hemen navigate et
             handleNotificationTapped(response);
+            lastNotificationResponse.current = null; // İşlendi, temizle
           } else {
-            // Uygulama kapalı/arka plandayken tıklandı - appState değiştiğinde handle edilecek
-            // AppState listener'da handle edilecek
+            // Uygulama kapalı/arka plandayken tıklandı
+            // AppState listener'da handle edilecek, sadece kaydet
+            lastNotificationResponse.current = response;
           }
         }
       );
@@ -228,17 +291,25 @@ export const usePushNotifications = () => {
     });
 
     // Uygulama açıldığında bekleyen bildirimleri kontrol et (cold start)
-    // Expo Notifications API'si uygulama kapalıyken tıklanan bildirimleri otomatik olarak
-    // getLastNotificationResponseAsync() ile alabiliriz
+    // NOT: responseListener zaten çalışıyor, bu sadece fallback
+    // responseListener tetiklenirse lastNotificationResponse.current dolar
+    // Bu fonksiyon sadece responseListener çalışmazsa devreye girer
     const checkLastNotification = async () => {
       try {
         const lastNotification = await Notifications.getLastNotificationResponseAsync();
         if (lastNotification) {
           devLog.log('[usePushNotifications] Last notification on app start:', lastNotification);
-          // Uygulama açıldığında son bildirimi handle et
-          setTimeout(() => {
-            handleNotificationTapped(lastNotification);
-          }, 1000); // Navigation hazır olması için bekle
+          
+          // responseListener zaten tetiklendiyse, lastNotificationResponse.current dolu olur
+          // O zaman burada handle etmeye gerek yok, AppState listener halledecek
+          // Sadece responseListener tetiklenmediyse (fallback) burada handle et
+          if (!lastNotificationResponse.current) {
+            // responseListener tetiklenmedi, direkt handle et
+            setTimeout(() => {
+              handleNotificationTapped(lastNotification);
+            }, 1000); // Navigation hazır olması için bekle
+          }
+          // Eğer lastNotificationResponse.current doluysa, AppState listener halledecek
         }
       } catch (error) {
         // Hata durumunda sessizce ignore et
@@ -247,7 +318,10 @@ export const usePushNotifications = () => {
     };
 
     // Uygulama açıldığında kontrol et
-    checkLastNotification();
+    // responseListener'ın tetiklenmesi için küçük bir delay
+    setTimeout(() => {
+      checkLastNotification();
+    }, 200);
 
     // Cleanup listeners on unmount
     return () => {
@@ -277,104 +351,7 @@ export const usePushNotifications = () => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, queryClient, showAlert, permissionDenialShown]);
-
-  /**
-   * Handle notification tapped - navigate to relevant screen (Deep Linking)
-   * 
-   * Notification data structure from backend:
-   * - notificationId: Bildirim ID'si
-   * - type: Bildirim tipi (application, job, system, message, etc.)
-   * - application_id: Başvuru ID'si (varsa)
-   * - job_id: İş ilanı ID'si (varsa)
-   * - job_title: İş ilanı başlığı (varsa)
-   * - hospital_name: Hastane adı (varsa)
-   * - status: Durum bilgisi (varsa)
-   */
-  const handleNotificationTapped = (
-    response: any
-  ) => {
-    try {
-      const data = response.notification.request.content.data;
-      const notificationId = data?.notificationId || data?.notification_id;
-
-      // Deep linking: Bildirim tipine göre ilgili sayfaya yönlendir
-      
-      // 1. Başvuru durumu bildirimleri (application_id varsa)
-      if (data?.application_id) {
-        // Applications tab'ına git (başvuru detayına gidebiliriz ama şimdilik liste yeterli)
-        if (navigationRef.isReady()) {
-          navigationRef.navigate('ApplicationsTab' as any, { screen: 'ApplicationsList' });
-        } else {
-          navigation.navigate('ApplicationsTab', { screen: 'ApplicationsList' });
-        }
-        return;
-      }
-
-      // 2. İş ilanı bildirimleri (job_id varsa)
-      if (data?.job_id) {
-        // İş ilanı detay sayfasına git
-        if (navigationRef.isReady()) {
-          navigationRef.navigate('JobsTab' as any, {
-            screen: 'JobDetail',
-            params: { id: Number(data.job_id) },
-          } as any);
-        } else {
-          navigation.navigate('JobsTab', {
-            screen: 'JobDetail',
-            params: { id: Number(data.job_id) },
-          });
-        }
-        return;
-      }
-
-      // 3. Bildirim detay sayfası (notificationId varsa ve tip bildirim ise)
-      if (notificationId && (data?.type === 'system' || data?.type === 'message' || data?.type === 'info')) {
-        // Bildirimler sayfasına git (gelecekte notification detail sayfası eklenebilir)
-        if (navigationRef.isReady()) {
-          navigationRef.navigate('ProfileTab' as any, {
-            screen: 'Notifications',
-          });
-        } else {
-          navigation.navigate('ProfileTab', {
-            screen: 'Notifications',
-          });
-        }
-        return;
-      }
-
-      // 4. Varsayılan: Bildirimler sayfasına git
-      if (navigationRef.isReady()) {
-        navigationRef.navigate('ProfileTab' as any, {
-          screen: 'Notifications',
-        });
-      } else {
-        navigation.navigate('ProfileTab', {
-          screen: 'Notifications',
-        });
-      }
-    } catch (error) {
-      errorLogger.logError(error as Error, {
-        context: 'handleNotificationTapped',
-        extra: { response },
-      });
-      // Hata durumunda bildirimler sayfasına git
-      try {
-        if (navigationRef.isReady()) {
-          navigationRef.navigate('ProfileTab' as any, {
-            screen: 'Notifications',
-          });
-        } else {
-          navigation.navigate('ProfileTab', {
-            screen: 'Notifications',
-          });
-        }
-      } catch (navError) {
-        // Navigation hatası - sessizce ignore et
-        devLog.warn('[usePushNotifications] Navigation failed after notification tap:', navError);
-      }
-    }
-  };
+  }, [isAuthenticated, queryClient, navigation]);
 
   return {
     requestPermissions: pushNotificationService.requestPermissions,

@@ -444,6 +444,17 @@ const loginUnified = async (email, password, req = null) => {
   // validateCredentials zaten onay kontrolü yapıyor, tekrar yapmaya gerek yok
   const loginInfo = await updateLastLogin(user.id);
   
+  // Log web login
+  logger.info('Web user login successful', {
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    platform: 'web',
+    category: 'web-auth',
+    ipAddress: req?.ip,
+    userAgent: req?.get('user-agent')
+  });
+  
   // Profil bilgilerini de getir (role parametresi ekli)
   const profile = await getUserProfile(user.id, user.role);
   

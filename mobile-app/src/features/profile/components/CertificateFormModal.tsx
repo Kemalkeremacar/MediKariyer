@@ -17,7 +17,7 @@
  * 
  * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -35,6 +35,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { colors, spacing } from '@/theme';
 import { useCertificate } from '@/features/profile/hooks/useCertificates';
+import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import type { CreateCertificatePayload, UpdateCertificatePayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
@@ -133,9 +134,15 @@ export const CertificateFormModal: React.FC<CertificateFormModalProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     navigation.goBack();
-  };
+  }, [navigation]);
+
+  // Android back button handler
+  useAndroidBackHandler(useCallback(() => {
+    handleClose();
+    return true;
+  }, [handleClose]));
 
   /**
    * CertificateFormScreen - Certificate form as navigation screen

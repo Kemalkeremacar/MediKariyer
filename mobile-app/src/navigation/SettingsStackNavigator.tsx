@@ -6,9 +6,8 @@
  * @since 2024
  * 
  * **Ekranlar:**
- * - SettingsMain: Ana ayarlar ekranı
+ * - SettingsMain: Ana ayarlar ekranı (bildirim ayarları dahil)
  * - ChangePassword: Şifre değiştirme ekranı
- * - NotificationSettings: Bildirim ayarları ekranı
  * - DeleteAccount: Hesap silme ekranı (App Store/Play Store gereksinimi)
  * - HelpCenter: Yardım merkezi ve SSS ekranı
  */

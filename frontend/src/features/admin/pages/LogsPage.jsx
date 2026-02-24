@@ -30,6 +30,7 @@ const LogsPage = () => {
   const [applicationFilters, setApplicationFilters] = useState({
     level: '',
     category: '',
+    platform: '',
     startDate: '',
     endDate: '',
     page: 1,
@@ -108,7 +109,7 @@ const LogsPage = () => {
   };
 
   const clearFilters = () => {
-    setApplicationFilters({ level: '', category: '', startDate: '', endDate: '', page: 1, limit: 20 });
+    setApplicationFilters({ level: '', category: '', platform: '', startDate: '', endDate: '', page: 1, limit: 20 });
     setAuditFilters({ action: '', resourceType: '', startDate: '', endDate: '', page: 1, limit: 20 });
     setSecurityFilters({ eventType: '', severity: '', startDate: '', endDate: '', page: 1, limit: 20 });
     setSearchQuery('');
@@ -347,7 +348,7 @@ const LogsPage = () => {
 
         {/* Application Log Filters */}
         {activeTab === 'application' && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-black mb-1">Log Seviyesi</label>
               <select
@@ -377,6 +378,20 @@ const LogsPage = () => {
                 <option value="database">Database</option>
                 <option value="security">Security</option>
                 <option value="business">Business</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-black mb-1">Platform</label>
+              <select
+                value={applicationFilters.platform}
+                onChange={(e) => handleFilterChange('platform', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+              >
+                <option value="">Tümü</option>
+                <option value="web">Web</option>
+                <option value="mobile-ios">Mobile iOS</option>
+                <option value="mobile-android">Mobile Android</option>
               </select>
             </div>
             

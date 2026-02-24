@@ -18,12 +18,15 @@
  * @since 2024
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LoginScreen } from '@/features/auth/screens/LoginScreen';
 import { RegisterScreen } from '@/features/auth/screens/RegisterScreen';
 import { PendingApprovalScreen } from '@/features/auth/screens/PendingApprovalScreen';
 import { OnboardingScreen } from '@/features/auth/screens/OnboardingScreen';
+import { WelcomeScreen, hasSeenWelcomeScreen } from '@/features/auth/screens/WelcomeScreen';
 import { ForgotPasswordScreen } from '@/features/auth/screens/ForgotPasswordScreen';
 import { ResetPasswordScreen } from '@/features/auth/screens/ResetPasswordScreen';
 import { useAuthStore } from '@/store/authStore';
@@ -61,6 +64,27 @@ const hasUserSeenOnboarding = (user: any): boolean => {
 export const AuthNavigator = () => {
   const authStatus = useAuthStore((state) => state.authStatus);
   const user = useAuthStore((state) => state.user);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState<boolean | null>(null);
+  const navigationRef = useRef<NativeStackNavigationProp<AuthStackParamList> | null>(null);
+
+  // Welcome screen kontrolü (AsyncStorage)
+  // authStatus değişince (logout olunca) tekrar kontrol et
+  useEffect(() => {
+    const checkWelcomeScreen = async () => {
+      const seen = await hasSeenWelcomeScreen();
+      setHasSeenWelcome(seen);
+    };
+    checkWelcomeScreen();
+  }, [authStatus]);
+
+  // hasSeenWelcome true olduğunda Login'e navigate et
+  useEffect(() => {
+    if (hasSeenWelcome === true && navigationRef.current) {
+      setTimeout(() => {
+        navigationRef.current?.navigate('Login');
+      }, 100);
+    }
+  }, [hasSeenWelcome]);
 
   // Auth stack içinde hangi ekranın gösterileceğini belirle
   const initialRouteName = useMemo((): keyof AuthStackParamList => {
@@ -70,7 +94,20 @@ export const AuthNavigator = () => {
       userId: user?.id,
       isApproved: user?.is_approved,
       isOnboardingSeen: user?.is_onboarding_seen,
+      hasSeenWelcome,
     });
+
+    // Welcome screen kontrolü henüz tamamlanmadıysa Welcome göster (loading gibi)
+    if (hasSeenWelcome === null) {
+      devLog.log('🔐 AuthNavigator - Welcome kontrolü bekleniyor, Welcome gösteriliyor...');
+      return 'Welcome';
+    }
+
+    // Welcome screen görülmemişse önce onu göster
+    if (!hasSeenWelcome) {
+      devLog.log('🔐 AuthNavigator - Welcome döndürülüyor (ilk açılış)');
+      return 'Welcome';
+    }
 
     // Authenticated değilse Login göster
     if (authStatus !== 'authenticated' || !user) {
@@ -98,7 +135,19 @@ export const AuthNavigator = () => {
     // Bu duruma gelmemeli (RootNavigator App'e yönlendirmeli)
     devLog.log('🔐 AuthNavigator - Login döndürülüyor (fallback)');
     return 'Login';
-  }, [authStatus, user?.id, user?.is_approved, user?.is_onboarding_seen, user?.role]);
+  }, [authStatus, user?.id, user?.is_approved, user?.is_onboarding_seen, user?.role, hasSeenWelcome]);
+
+  // Welcome screen tamamlandığında callback
+  const handleWelcomeComplete = async () => {
+    try {
+      const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+      await AsyncStorage.setItem('@medikariyer_welcome_seen', 'true');
+      setHasSeenWelcome(true);
+    } catch (error) {
+      console.error('[AuthNavigator] AsyncStorage error:', error);
+      setHasSeenWelcome(true);
+    }
+  };
 
   // NOT: Navigation reset burada yapılmıyor çünkü:
   // 1. useLogin hook zaten login sonrası doğru ekrana yönlendiriyor
@@ -112,6 +161,13 @@ export const AuthNavigator = () => {
         headerShown: false, // Header'ları gizle (custom header kullanılıyor)
       }}
     >
+      <Stack.Screen name="Welcome">
+        {({ navigation }) => {
+          // Navigation ref'i sakla
+          navigationRef.current = navigation as any;
+          return <WelcomeScreen onComplete={handleWelcomeComplete} />;
+        }}
+      </Stack.Screen>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
       <Stack.Screen name="PendingApproval" component={PendingApprovalScreen} />

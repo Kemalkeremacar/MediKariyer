@@ -48,10 +48,18 @@ const generateRefreshToken = (payload, options = {}) => {
 /**
  * Access Token doğrular
  * @param {string} token - Doğrulanacak token
- * @returns {object} Decoded token payload
+ * @returns {object|null} Decoded token payload veya null
  */
 const verifyAccessToken = (token) => {
-  return jwt.verify(token, JWT_SECRET);
+  try {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (error) {
+    logger.warn('Access token verification failed:', error.message, {
+      name: error.name,
+      expiredAt: error.expiredAt
+    });
+    return null;
+  }
 };
 
 /**

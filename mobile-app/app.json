@@ -2,7 +2,7 @@
   "expo": {
     "name": "MediKariyer",
     "slug": "medikariyer",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "default",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
@@ -12,7 +12,7 @@
     "extra": {
       "EXPO_PUBLIC_API_BASE_URL": "https://mkapi.monassist.com/api/mobile",
       "EXPO_PUBLIC_PRIMARY_API_BASE_URL": "https://mkapi.monassist.com/api",
-      "EXPO_PUBLIC_APP_ENV": "development",
+      "EXPO_PUBLIC_APP_ENV": "production",
       "EXPO_PUBLIC_ENABLE_PUSH_NOTIFICATIONS": "true",
       "EXPO_PUBLIC_SENTRY_DSN": "https://f80ca1e962d79bc709cb953067d3f82d@o4510787353116672.ingest.de.sentry.io/4510787359998032"
     },
@@ -32,7 +32,7 @@
     },
     "android": {
       "package": "com.medikariyer.mobile",
-      "versionCode": 4,
+      "versionCode": 8,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
@@ -44,8 +44,6 @@
         "CAMERA",
         "VIBRATE"
       ],
-      "edgeToEdgeEnabled": false,
-      "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "pan"
     },
     "web": {

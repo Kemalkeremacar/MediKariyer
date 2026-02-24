@@ -92,6 +92,7 @@ const authenticateToken = async (req, res, next) => {
 
     // Bazı eski token'larda payload 'id' ya da 'sub' alanında olabilir
     const userId = decoded.userId ?? decoded.id ?? decoded.sub;
+    
     if (!userId) {
       throw new AppError('Geçersiz token payload', 401);
     }

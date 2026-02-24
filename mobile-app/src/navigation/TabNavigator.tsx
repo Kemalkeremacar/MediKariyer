@@ -172,8 +172,19 @@ export const TabNavigator = () => {
               // Eğer ProfileTab'ın içinde başka ekranlar varsa, ana ekrana dön
               if (profileTabRoute?.state && profileTabRoute.state.index !== undefined && profileTabRoute.state.index > 0) {
                 e.preventDefault();
-                // ProfileMain'e navigate et - bu stack'i sıfırlar
-                navigation.navigate('ProfileTab', { screen: 'ProfileMain' });
+                // CRITICAL: Stack'i tamamen sıfırla - navigate değil reset kullan
+                navigation.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'ProfileTab',
+                      state: {
+                        routes: [{ name: 'ProfileMain' }],
+                        index: 0,
+                      },
+                    },
+                  ],
+                });
               }
               // Eğer zaten ProfileMain'deyse veya başka tab'taysa, default davranışa izin ver
             } catch (error) {

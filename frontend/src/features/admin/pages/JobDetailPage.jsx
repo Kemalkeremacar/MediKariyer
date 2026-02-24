@@ -28,6 +28,7 @@ import { useJobById, useDeleteJob, useUpdateJobStatus, useApproveJob, useRequest
 import { useQueryClient } from '@tanstack/react-query';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
+import useAuthStore from '@/store/authStore';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { resolveRevisionNote as resolveRevisionNoteUtil } from '@/utils/jobUtils';
@@ -383,18 +384,29 @@ const AdminJobDetailPage = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/pdf/job/${job.id}`, {
+      // Zustand store'dan token al (localStorage'dan değil)
+      const token = useAuthStore.getState().token;
+      
+      // Token kontrolü - yoksa kullanıcıyı bilgilendir
+      if (!token) {
+        showToast.error('Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+        return;
+      }
+      
+      // Backend PDF endpoint'ine istek at
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3100/api'}/pdf/job/${job.id}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}` // Token'ı Bearer formatında gönder
         }
       });
 
+      // Response kontrolü
       if (!response.ok) {
         throw new Error('PDF oluşturulamadı');
       }
 
+      // PDF blob'unu al ve indir
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -402,6 +414,8 @@ const AdminJobDetailPage = () => {
       a.download = `ilan-${job.id}.pdf`;
       document.body.appendChild(a);
       a.click();
+      
+      // Temizlik
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 

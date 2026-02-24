@@ -17,7 +17,7 @@
  * 
  * **NOT:** Root-level BottomSheetModalProvider kullanır (App.tsx)
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -37,6 +37,7 @@ import { Select, SelectOption } from '@/components/ui/Select';
 import { colors, spacing } from '@/theme';
 import { useLanguages, useLanguageLevels } from '@/hooks/useLookup';
 import { useLanguage } from '@/features/profile/hooks/useLanguages';
+import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
 import type { CreateLanguagePayload, UpdateLanguagePayload } from '@/types/profile';
 import type { ProfileStackParamList } from '@/navigation/types';
 
@@ -143,9 +144,15 @@ export const LanguageFormModal: React.FC<LanguageFormModalProps> = ({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     navigation.goBack();
-  };
+  }, [navigation]);
+
+  // Android back button handler
+  useAndroidBackHandler(useCallback(() => {
+    handleClose();
+    return true;
+  }, [handleClose]));
 
   /**
    * LanguageFormScreen - Language form as navigation screen
