@@ -83,6 +83,21 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
     }));
   }, [educationTypes]);
 
+  // "DİĞER" eğitim türü seçildiğinde manuel input göster (Web ile tutarlılık)
+  const selectedEducationType = useMemo(() => {
+    return educationTypes.find((t) => t.id === formData.education_type_id);
+  }, [educationTypes, formData.education_type_id]);
+
+  const isOtherEducationType = useMemo(() => {
+    if (!selectedEducationType) return false;
+    return (
+      selectedEducationType.id === 4 ||
+      selectedEducationType.name === 'Diğer' ||
+      selectedEducationType.name === 'DİĞER' ||
+      selectedEducationType.name.toLowerCase() === 'diğer'
+    );
+  }, [selectedEducationType]);
+
   useEffect(() => {
     if (education) {
       setFormData({
@@ -108,7 +123,12 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.education_type_id || formData.education_type_id === 0) {
-      newErrors.education_type = 'Eğitim türü zorunludur';
+      newErrors.education_type_id = 'Eğitim türü zorunludur';
+    }
+
+    // "DİĞER" seçildiğinde manuel eğitim türü zorunlu (Web ile tutarlılık)
+    if (isOtherEducationType && !formData.education_type.trim()) {
+      newErrors.education_type = 'Özel eğitim türü zorunludur';
     }
 
     if (!formData.education_institution.trim()) {
@@ -132,11 +152,10 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const selectedType = educationTypes.find((t) => t.id === formData.education_type_id);
-
+    // "DİĞER" seçildiğinde manuel girilen değeri kullan, değilse lookup'tan gelen adı kullan (Web ile tutarlılık)
     const payload: CreateEducationPayload = {
       education_type_id: formData.education_type_id,
-      education_type: selectedType?.name || formData.education_type,
+      education_type: isOtherEducationType ? formData.education_type : (selectedEducationType?.name || ''),
       education_institution: formData.education_institution,
       field: formData.field || '',
       graduation_year: formData.graduation_year ? parseInt(formData.graduation_year) : new Date().getFullYear(),
@@ -221,12 +240,25 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
                 placeholder="Eğitim türü seçiniz"
               />
             )}
-            {errors.education_type && (
+            {errors.education_type_id && (
               <Typography variant="caption" style={styles.errorText}>
-                {errors.education_type}
+                {errors.education_type_id}
               </Typography>
             )}
           </View>
+
+          {/* "DİĞER" seçildiğinde manuel eğitim türü girişi (Web ile tutarlılık) */}
+          {isOtherEducationType && (
+            <Input
+              label="Özel Eğitim Türü *"
+              placeholder="Örn: Yüksek Lisans, Doktora"
+              value={formData.education_type}
+              onChangeText={(text) =>
+                setFormData(prev => ({ ...prev, education_type: text }))
+              }
+              error={errors.education_type}
+            />
+          )}
 
           <Input
             label="Kurum Adı *"

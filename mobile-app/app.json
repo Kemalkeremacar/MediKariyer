@@ -48,7 +48,8 @@
         "android.permission.VIBRATE",
         "android.permission.RECORD_AUDIO"
       ],
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "enableEdgeToEdge": true
     },
     "web": {
       "favicon": "./assets/logo.png"
@@ -69,6 +70,16 @@
         {
           "photosPermission": "Profil fotoğrafınızı güncellemek için galeri erişimine ihtiyacımız var.",
           "cameraPermission": "Profil fotoğrafınızı çekmek için kamera erişimine ihtiyacımız var."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
         }
       ]
     ]
