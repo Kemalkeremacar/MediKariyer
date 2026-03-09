@@ -40,7 +40,7 @@ const HomeSection = () => {
   return (
     <>
       {/* Hero Section - Modern Style */}
-      <section className="relative min-h-screen flex items-start justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-32 pb-8">
+<section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-16 pb-8">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -132,13 +132,13 @@ const HomeSection = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 relative bg-gradient-to-b from-white via-blue-50/30 to-white">
+      <section className="py-8 relative bg-gradient-to-b from-white via-blue-50/30 to-white">
         <div className="absolute inset-0 opacity-5" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }}></div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16 max-w-3xl mx-auto">
+          <div className="text-center mb-8 max-w-3xl mx-auto">
             <span className="inline-block px-4 py-2 mb-4 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full">
               Özelliklerimiz
             </span>
@@ -195,7 +195,7 @@ const HomeSection = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden bg-gray-50">
+      <section className="py-8 relative overflow-hidden bg-gray-50">
         {/* Diagonal Lines Pattern */}
         <div className="absolute inset-0 opacity-[0.15]" style={{
           backgroundImage: `repeating-linear-gradient(
@@ -232,12 +232,12 @@ const HomeSection = () => {
               </span>
             </h2>
             
-            <p className="text-xl sm:text-2xl text-gray-600 mb-12 leading-relaxed max-w-2xl mx-auto">
+            <p className="text-xl sm:text-2xl text-gray-600 mb-8 leading-relaxed max-w-2xl mx-auto">
               Binlerce sağlık profesyoneli ve kurum MediKariyer'i tercih ediyor. 
               Siz de hekimlere özel bu güçlü dijital kariyer ağının bir parçası olun.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <button
                 onClick={handleRegisterClick}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto"

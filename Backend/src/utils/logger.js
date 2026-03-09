@@ -105,19 +105,27 @@ const enableDbLogging = process.env.ENABLE_DB_LOGGING !== undefined
   : process.env.NODE_ENV === 'production';
 
 if (enableDbLogging) {
-  // DB_LOG_LEVEL: 'error' | 'warn' | 'info' | 'http' | 'debug'
-  // 'info' seviyesi: info, warn, error loglarını database'e yazar
-  // 'http' seviyesi: http, info, warn, error loglarını database'e yazar
-  const dbLogLevel = process.env.DB_LOG_LEVEL || 'info';
-  
-  transports.push(
-    new DatabaseTransport({
-      level: dbLogLevel, // info seviyesi ile tüm önemli loglar yazılır
-      category: 'application',
-      batchSize: 10,
-      flushInterval: 5000
-    })
-  );
+  try {
+    // DB_LOG_LEVEL: 'error' | 'warn' | 'info' | 'http' | 'debug'
+    // 'info' seviyesi: info, warn, error loglarını database'e yazar
+    // 'http' seviyesi: http, info, warn, error loglarını database'e yazar
+    const dbLogLevel = process.env.DB_LOG_LEVEL || 'info';
+    
+    transports.push(
+      new DatabaseTransport({
+        level: dbLogLevel, // info seviyesi ile tüm önemli loglar yazılır
+        category: 'application',
+        batchSize: 5, // Daha küçük batch
+        flushInterval: 2000 // 2 saniye
+      })
+    );
+    
+    console.log('✅ Database logging aktif - Level:', dbLogLevel, '| Batch: 5 | Interval: 2s');
+  } catch (error) {
+    console.error('❌ Database transport başlatılamadı:', error.message);
+  }
+} else {
+  console.log('⚠️ Database logging devre dışı - ENABLE_DB_LOGGING:', process.env.ENABLE_DB_LOGGING);
 }
 
 // Logger oluştur
@@ -128,12 +136,6 @@ const logger = winston.createLogger({
   transports,
   exitOnError: false
 });
-
-// Database logging aktifse bilgi ver
-if (enableDbLogging) {
-  const dbLogLevel = process.env.DB_LOG_LEVEL || 'info';
-  logger.info('✅ Database logging aktif', { level: dbLogLevel });
-}
 
 // HTTP request logging için stream
 logger.stream = {

@@ -50,6 +50,7 @@ import { StyleSheet, Text, TextInput } from 'react-native';
 import { errorLogger } from '@/utils/errorLogger';
 import { env } from '@/config/env';
 import { useAuthStore } from '@/store/authStore';
+import { CustomSplashScreen } from '@/components/splash/CustomSplashScreen';
 // i18n konfigürasyonu - uygulama başlangıcında yüklenir
 import '@/config/i18n';
 
@@ -85,7 +86,6 @@ const AppContent = () => {
           await SplashScreen.hideAsync();
         } catch (error) {
           console.warn('Splash screen gizlenemedi:', error);
-          // Hata olsa bile devam et
         }
       };
       hideSplash();
@@ -105,9 +105,8 @@ const AppContent = () => {
       
       // Şifre sıfırlama deep link'ini yönet: medikariyer://reset-password?token=...
       if (path === 'reset-password' && queryParams?.token) {
-        // Önce Auth stack'e, sonra ResetPassword ekranına yönlendir
-        // @ts-expect-error - İç içe navigation tip sorunu, ancak runtime'da çalışır
-        navigationRef.navigate('Auth', {
+        // Type-safe navigation - nested navigation için any kullanımı kabul edilebilir
+        (navigationRef as any).navigate('Auth', {
           screen: 'ResetPassword',
           params: { token: queryParams.token as string },
         });
@@ -146,6 +145,9 @@ const AppContent = () => {
       
       <AuthInitializer />
       <RootNavigator />
+      
+      {/* Custom Splash Screen - Sadece 1 kere gösterilir */}
+      <CustomSplashScreen />
     </>
   );
 };
@@ -164,7 +166,6 @@ export default function App() {
   }, []);
 
   // Yedek: Maksimum bekleme süresinden (5 saniye) sonra splash screen'i gizle
-  // Bu, bir şeyler ters giderse splash screen'in sonsuza kadar kalmamasını sağlar
   useEffect(() => {
     const timeout = setTimeout(async () => {
       try {

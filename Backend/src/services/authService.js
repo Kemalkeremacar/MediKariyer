@@ -219,28 +219,8 @@ const createHospitalProfile = async (userId, { institution_name, city_id, addres
 // ==================== END PROFILE CREATION FUNCTIONS ====================
 
 // ==================== REFRESH TOKEN FUNCTIONS ====================
-
-/**
- * Refresh token'ı veritabanında arar (DEPRECATED - jwtUtils.verifyRefreshTokenRecord kullanın)
- * @deprecated Bu fonksiyon bcrypt compare yapmadığı için kullanılmamalı
- * @description Verilen token hash'ini refresh_tokens tablosunda arar ve geçerliliğini kontrol eder
- * @param {string} token - Aranacak token hash'i
- * @returns {Promise<object|null>} Token kaydı bulunursa obje, bulunamazsa null
- * 
- * @example
- * const tokenRecord = await findRefreshToken('hashed_token_string');
- * if (tokenRecord) {
- *   // Token geçerli
- * }
- */
-const findRefreshToken = async (token) => {
-  // ⚠️ BU FONKSİYON YANLIŞ! BCRYPT COMPARE YAPMIYOR!
-  // jwtUtils.verifyRefreshTokenRecord kullanın
-  return db('refresh_tokens')
-    .where('token_hash', token)
-    .where('expires_at', '>', db.fn.now())
-    .first();
-};
+// NOT: findRefreshToken fonksiyonu deprecated olduğu için kaldırıldı
+// Bunun yerine jwtUtils.verifyRefreshTokenRecord kullanın
 // ==================== END REFRESH TOKEN FUNCTIONS ====================
 
 
@@ -1314,7 +1294,7 @@ module.exports = {
   registerHospital,
   
   // Refresh Token Functions
-  findRefreshToken,
+  // findRefreshToken kaldırıldı - jwtUtils.verifyRefreshTokenRecord kullanın
   refreshToken,
   
   // Credentials & Login Functions

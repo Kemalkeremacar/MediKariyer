@@ -218,7 +218,6 @@ export const PhotoManagementScreen = () => {
           await refetchStatus();
         } catch (error) {
           // Yeniden getirme başarısız olursa, en azından önceki durumu context'ten geri yükle
-          console.error('Failed to refetch status after cancel error:', error);
         }
         return;
       }
@@ -241,7 +240,6 @@ export const PhotoManagementScreen = () => {
           showToast('Fotoğraf değişiklik talebi iptal edildi', 'success');
         } else if (newStatus.data.status === 'pending') {
           // Durum hala bekliyor - bir şeyler yanlış gitti
-          console.warn('Cancel request: Status still pending after cancellation', newStatus.data);
           showToast('Talep iptal edilemedi. Lütfen tekrar deneyin.', 'error');
           // İyimser güncellemeyi geri al
           queryClient.setQueryData(queryKeys.photo.status(), newStatus.data);
@@ -293,7 +291,6 @@ export const PhotoManagementScreen = () => {
         errorMessage = error.message;
       }
       
-      console.error('Cancel photo request error:', error);
       showToast(errorMessage, 'error');
     },
   });
@@ -479,7 +476,6 @@ export const PhotoManagementScreen = () => {
         // Mutasyonu başlat (onSuccess/onError içinde setIsUploading'i yönetecek)
         requestPhotoChangeMutation.mutate(dataUrl);
       } catch (error) {
-        console.error('Photo processing failed', error);
         setIsUploading(false);
         
         // Kullanıcı dostu hata mesajı göster

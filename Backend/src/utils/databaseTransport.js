@@ -79,7 +79,8 @@ class DatabaseTransport extends Transport {
       status_code: info.statusCode || info.status_code || null,
       duration_ms: info.duration || info.duration_ms || null,
       metadata: this.serializeMetadata(info),
-      stack_trace: info.stack || info.stackTrace || null
+      stack_trace: info.stack || info.stackTrace || null,
+      created_at: new Date() // MSSQL için created_at zorunlu!
     });
     
     // Batch size'a ulaştıysa flush et
@@ -180,7 +181,11 @@ class DatabaseTransport extends Transport {
       // Batch insert
       const db = this.getDb();
       await db('dbo.application_logs').insert(logsToInsert);
+      
+      console.log(`✅ [DatabaseTransport] ${logsToInsert.length} log kaydedildi`);
     } catch (error) {
+      console.error('❌ [DatabaseTransport] Database error:', error.message);
+      
       // Database error durumunda silent failure
       // Critical error ise logları geri queue'ya koy (maksimum 100 log)
       if (this.logQueue.length < 100) {

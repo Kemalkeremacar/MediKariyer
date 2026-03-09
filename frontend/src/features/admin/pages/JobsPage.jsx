@@ -329,24 +329,24 @@ const AdminJobsPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <Briefcase className="h-8 w-8 mr-3 text-indigo-600" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <Briefcase className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-indigo-600" />
                 İş İlanları Yönetimi
               </h1>
-              <p className="text-gray-600 mt-2">Tüm hastanelerin iş ilanlarını görüntüleyin ve yönetin</p>
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">Tüm hastanelerin iş ilanlarını görüntüleyin ve yönetin</p>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-4 mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
+        <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
           {/* Search Inputs */}
-          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mb-3 sm:mb-4 grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
             <div className="relative">
               <input
                 ref={titleSearchRef}
@@ -363,7 +363,7 @@ const AdminJobsPage = () => {
                     return false;
                   }
                 }}
-                className="admin-form-input w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-text"
+                className="admin-form-input w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 cursor-text text-sm"
                 autoComplete="off"
               />
             </div>
@@ -390,7 +390,7 @@ const AdminJobsPage = () => {
           </div>
 
           {/* Filter Dropdowns */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Specialty Filter */}
             <select
               value={filters.specialty_id}
@@ -454,16 +454,16 @@ const AdminJobsPage = () => {
 
         {/* Jobs List */}
         {jobs.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {jobs.map((job) => (
               <div
                 key={job.id}
-                className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300"
+                className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 hover:shadow-xl transition-all duration-300"
               >
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-start lg:items-center">
                   {/* İlan Başlığı ve Durum - 4 kolon */}
                   <div className="lg:col-span-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{job.title}</h3>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2 line-clamp-2">{job.title}</h3>
                     <div className="flex items-center gap-2 flex-wrap">
                       <StatusBadge status={job.status} statusId={job.status_id} />
                       <span className="text-xs text-gray-500">
@@ -475,7 +475,7 @@ const AdminJobsPage = () => {
                   {/* Hastane - 2 kolon */}
                   <div className="lg:col-span-2">
                     <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Briefcase className="w-4 h-4 text-purple-600" />
+                      <Briefcase className="w-4 h-4 text-purple-600 flex-shrink-0" />
                       <span className="truncate">{job.institution_name || 'Belirtilmemiş'}</span>
                     </div>
                   </div>
@@ -483,7 +483,7 @@ const AdminJobsPage = () => {
                   {/* Uzmanlık - 2 kolon */}
                   <div className="lg:col-span-2">
                     <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <Target className="w-4 h-4 text-blue-600" />
+                      <Target className="w-4 h-4 text-blue-600 flex-shrink-0" />
                       <span className="truncate">{job.specialty || 'Belirtilmemiş'}</span>
                     </div>
                   </div>
@@ -491,23 +491,23 @@ const AdminJobsPage = () => {
                   {/* Şehir - 2 kolon */}
                   <div className="lg:col-span-2">
                     <div className="flex items-center gap-2 text-gray-600 text-sm">
-                      <MapPin className="w-4 h-4 text-green-600" />
-                      <span>{job.city || 'Belirtilmemiş'}</span>
+                      <MapPin className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="truncate">{job.city || 'Belirtilmemiş'}</span>
                     </div>
                   </div>
 
                   {/* Tarih ve Buton - 2 kolon */}
-                  <div className="lg:col-span-2 flex items-center justify-between gap-3">
+                  <div className="lg:col-span-2 flex flex-col sm:flex-row lg:items-center justify-between gap-2 sm:gap-3">
                     <div className="flex items-center gap-2 text-gray-500 text-xs">
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-4 h-4 flex-shrink-0" />
                       <span>{new Date(job.created_at).toLocaleDateString('tr-TR')}</span>
                     </div>
                     <button
                       onClick={() => navigate(`/admin/jobs/${job.id}`)}
-                      className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center gap-2"
+                      className="bg-blue-500 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 flex-shrink-0"
                     >
                       <Eye className="w-4 h-4" />
-                      Detay
+                      <span className="hidden sm:inline">Detay</span>
                     </button>
                   </div>
                 </div>
@@ -515,59 +515,89 @@ const AdminJobsPage = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-white rounded-xl shadow-lg border border-gray-200">
-            <Briefcase className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">İş İlanı Bulunamadı</h3>
-            <p className="text-gray-500">Henüz hiç iş ilanı oluşturulmamış.</p>
+          <div className="text-center py-12 sm:py-16 bg-white rounded-xl shadow-lg border border-gray-200">
+            <Briefcase className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">İş İlanı Bulunamadı</h3>
+            <p className="text-gray-500 text-sm sm:text-base">Henüz hiç iş ilanı oluşturulmamış.</p>
           </div>
         )}
 
         {/* Pagination */}
         {pagination.total_pages > 1 && (
-          <div className="bg-slate-800/90 px-4 py-3 flex items-center justify-between border-t border-slate-600/30 sm:px-6 mt-6">
-            <div className="flex-1 flex justify-between sm:hidden">
-              <button
-                onClick={() => handlePageChange(pagination.current_page - 1)}
-                disabled={pagination.current_page <= 1}
-                className="relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
-              >
-                Önceki
-              </button>
-              <button
-                onClick={() => handlePageChange(pagination.current_page + 1)}
-                disabled={pagination.current_page >= pagination.total_pages}
-                className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
-              >
-                Sonraki
-              </button>
-            </div>
-            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Toplam <span className="font-medium">{pagination.total}</span> ilandan{' '}
-                  <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
-                  <span className="font-medium">
-                    {Math.min(pagination.current_page * pagination.per_page, pagination.total)}
-                  </span>{' '}
-                  arası gösteriliyor
-                </p>
+          <div className="mt-4 sm:mt-6">
+            {/* Mobile Pagination */}
+            <div className="lg:hidden">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => handlePageChange(pagination.current_page - 1)}
+                    disabled={pagination.current_page <= 1}
+                    className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Önceki
+                  </button>
+                  <span className="text-sm text-gray-700">
+                    Sayfa {pagination.current_page} / {pagination.total_pages}
+                  </span>
+                  <button
+                    onClick={() => handlePageChange(pagination.current_page + 1)}
+                    disabled={pagination.current_page >= pagination.total_pages}
+                    className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Sonraki
+                  </button>
+                </div>
               </div>
-              <div>
-                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                  {Array.from({ length: pagination.total_pages }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => handlePageChange(page)}
-                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                        page === pagination.current_page
-                          ? 'z-10 bg-indigo-500 border-indigo-400 text-white'
-                          : 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                </nav>
+            </div>
+            
+            {/* Desktop Pagination */}
+            <div className="hidden lg:block">
+              <div className="bg-slate-800/90 px-4 py-3 flex items-center justify-between border-t border-slate-600/30 sm:px-6">
+                <div className="flex-1 flex justify-between sm:hidden">
+                  <button
+                    onClick={() => handlePageChange(pagination.current_page - 1)}
+                    disabled={pagination.current_page <= 1}
+                    className="relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+                  >
+                    Önceki
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(pagination.current_page + 1)}
+                    disabled={pagination.current_page >= pagination.total_pages}
+                    className="ml-3 relative inline-flex items-center px-4 py-2 border border-slate-500 text-sm font-medium rounded-md text-slate-200 bg-slate-700 hover:bg-slate-600 disabled:opacity-50"
+                  >
+                    Sonraki
+                  </button>
+                </div>
+                <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Toplam <span className="font-medium">{pagination.total}</span> ilandan{' '}
+                      <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
+                      <span className="font-medium">
+                        {Math.min(pagination.current_page * pagination.per_page, pagination.total)}
+                      </span>{' '}
+                      arası gösteriliyor
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                      {Array.from({ length: pagination.total_pages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            page === pagination.current_page
+                              ? 'z-10 bg-indigo-500 border-indigo-400 text-white'
+                              : 'bg-slate-700 border-slate-500 text-slate-200 hover:bg-slate-600'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </nav>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

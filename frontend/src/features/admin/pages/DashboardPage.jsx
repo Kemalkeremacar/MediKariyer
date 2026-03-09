@@ -134,19 +134,19 @@ const DashboardPage = () => {
 
     return (
       <div 
-        className={`admin-card p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${onClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+        className={`admin-card p-4 sm:p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${onClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
         onClick={onClick}
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <p className="text-3xl font-bold text-gray-900">{value || 0}</p>
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-600 mb-1 truncate">{title}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900">{value || 0}</p>
             {subtitle && (
-              <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+              <p className="text-xs text-gray-500 mt-1 truncate">{subtitle}</p>
             )}
           </div>
-          <div className={`p-3 rounded-xl border-2 ${colorClasses[color] || colorClasses.blue}`}>
-            <Icon className="h-6 w-6" />
+          <div className={`p-2 sm:p-3 rounded-xl border-2 flex-shrink-0 ml-3 ${colorClasses[color] || colorClasses.blue}`}>
+            <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
           </div>
         </div>
         
@@ -158,48 +158,48 @@ const DashboardPage = () => {
   const PendingActionButton = ({ title, icon: Icon, bgColor, iconColor, borderColor, hoverBgColor, href, count = 0 }) => (
     <button
       onClick={() => navigate(href)}
-      className={`w-full ${bgColor} ${borderColor} ${hoverBgColor} border-2 rounded-lg p-4 flex items-center justify-between transition-all duration-200 hover:shadow-md group`}
+      className={`w-full ${bgColor} ${borderColor} ${hoverBgColor} border-2 rounded-lg p-3 sm:p-4 flex items-center justify-between transition-all duration-200 hover:shadow-md group`}
     >
-      <div className="flex items-center space-x-3 flex-1">
-        <div className={`p-2 rounded-lg bg-white shadow-sm group-hover:scale-110 transition-transform`}>
-          <Icon className={`h-5 w-5 ${iconColor}`} />
+      <div className="flex items-center space-x-3 flex-1 min-w-0">
+        <div className={`p-2 rounded-lg bg-white shadow-sm group-hover:scale-110 transition-transform flex-shrink-0`}>
+          <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${iconColor}`} />
         </div>
-        <div className="flex-1">
-          <span className="font-medium text-gray-900 text-left block">{title}</span>
+        <div className="flex-1 min-w-0">
+          <span className="font-medium text-gray-900 text-left block text-sm sm:text-base truncate">{title}</span>
           {count > 0 && (
-            <span className={`text-sm font-semibold ${iconColor} mt-1 block`}>
+            <span className={`text-xs sm:text-sm font-semibold ${iconColor} mt-1 block`}>
               {count} bekleyen
             </span>
           )}
         </div>
       </div>
-      <ArrowRight className={`h-5 w-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all flex-shrink-0 ml-2`} />
+      <ArrowRight className={`h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all flex-shrink-0 ml-2`} />
     </button>
   );
 
   return (
     <div className="min-h-screen">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-                  <Activity className="h-10 w-10 mr-4 text-indigo-600" />
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                  <Activity className="h-8 w-8 sm:h-10 sm:w-10 mr-3 sm:mr-4 text-indigo-600" />
                   Admin Dashboard
                 </h1>
-                <p className="text-gray-600 mt-2 text-lg">
+                <p className="text-gray-600 mt-2 text-base sm:text-lg">
                   Sistem yönetimi ve analitik veriler
                 </p>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                <div className="text-sm text-gray-500 order-2 sm:order-1">
                   Son güncelleme: {lastRefresh.toLocaleTimeString('tr-TR')}
                 </div>
                 <button
                   onClick={handleRefresh}
                   disabled={refreshing}
-                  className="admin-btn admin-btn-outline flex items-center space-x-2"
+                  className="admin-btn admin-btn-outline flex items-center justify-center space-x-2 order-1 sm:order-2"
                 >
                   <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                   <span>{refreshing ? 'Yenileniyor...' : 'Yenile'}</span>
@@ -210,21 +210,21 @@ const DashboardPage = () => {
 
           {/* Dashboard Stats */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="admin-card p-6 animate-pulse">
+                <div key={i} className="admin-card p-4 sm:p-6 animate-pulse">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-8 bg-gray-200 rounded"></div>
+                      <div className="h-6 sm:h-8 bg-gray-200 rounded"></div>
                     </div>
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg"></div>
                   </div>
                 </div>
               ))}
             </div>
           ) : dashboardData ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
               <StatCard
                 title="Doktorlar"
                 value={dashboardData.data?.overview?.totalDoctors}
@@ -263,11 +263,11 @@ const DashboardPage = () => {
               />
             </div>
           ) : error ? (
-            <div className="admin-card p-6 mb-8">
+            <div className="admin-card p-4 sm:p-6 mb-6 sm:mb-8">
               <div className="text-center">
-                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">API Hatası</h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 mb-4 text-sm sm:text-base">
                   Dashboard verileri yüklenirken hata oluştu: {error.message}
                 </p>
                 <button 
@@ -279,11 +279,11 @@ const DashboardPage = () => {
               </div>
             </div>
           ) : (
-            <div className="admin-card p-6 mb-8">
+            <div className="admin-card p-4 sm:p-6 mb-6 sm:mb-8">
               <div className="text-center">
-                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <AlertCircle className="h-10 w-10 sm:h-12 sm:w-12 text-red-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Veri Yok</h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 mb-4 text-sm sm:text-base">
                   Dashboard verileri henüz yüklenmedi.
                 </p>
                 <button 
@@ -298,12 +298,12 @@ const DashboardPage = () => {
 
 
           {/* Onay Bekleyenler - Hızlı Erişim Butonları */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
-              <Clock className="h-6 w-6 mr-2 text-yellow-600" />
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Clock className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-yellow-600" />
               Onay Bekleyenler
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               {pendingApprovalActions.map((action, index) => (
                 <PendingActionButton
                   key={index}

@@ -119,8 +119,8 @@ const authenticateToken = async (req, res, next) => {
       ? false  // NULL ise varsayılan 0 (onaysız) - SQL DEFAULT ((0))
       : (user.is_approved === 1 || user.is_approved === true || user.is_approved === '1' || user.is_approved === 'true');
     
-    // Admin için is_active kontrolü yapılmaz, diğer kullanıcılar için yapılır
-    if (user.role !== 'admin' && !isActive) {
+    // Tüm kullanıcılar (admin dahil) için is_active kontrolü yapılır
+    if (!isActive) {
       throw new AppError('Hesabınız pasif durumda. Lütfen yöneticinizle iletişime geçin.', 403);
     }
 

@@ -108,8 +108,24 @@ const config = {
     }
   },
   pool: environment === 'production' 
-    ? { min: 5, max: 20 }
-    : { min: 2, max: 10 }
+    ? { 
+        min: 10, 
+        max: 100, // Production için artırıldı: 50 -> 100
+        acquireTimeoutMillis: 60000, 
+        idleTimeoutMillis: 600000,
+        createTimeoutMillis: 30000,
+        destroyTimeoutMillis: 5000,
+        reapIntervalMillis: 1000,
+        createRetryIntervalMillis: 200
+      }
+    : { 
+        min: 3, 
+        max: 20, // Development için artırıldı: 15 -> 20
+        acquireTimeoutMillis: 30000, 
+        idleTimeoutMillis: 300000,
+        createTimeoutMillis: 30000,
+        destroyTimeoutMillis: 5000
+      }
 };
 
 // Knex.js veritabanı bağlantı nesnesini oluştur.

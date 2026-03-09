@@ -560,7 +560,7 @@ export const RegisterScreen = () => {
                     onFocus={() => setShowPasswordRules(true)}
                     variant="underline"
                     textContentType="newPassword"
-                    passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
+                    passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special;"
                   />
                 )}
               />
@@ -609,7 +609,7 @@ export const RegisterScreen = () => {
                     }}
                     variant="underline"
                     textContentType="newPassword"
-                    passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
+                    passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special;"
                   />
                 )}
               />

@@ -188,7 +188,7 @@ export const ResetPasswordScreen = () => {
                         onChangeText={onChange}
                         variant="underline"
                         textContentType="newPassword"
-                        passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
+                        passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special;"
                         rightIcon={
                           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                             <Ionicons
@@ -225,7 +225,7 @@ export const ResetPasswordScreen = () => {
                         onChangeText={onChange}
                         variant="underline"
                         textContentType="newPassword"
-                        passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
+                        passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special;"
                         rightIcon={
                           <Ionicons
                             name={showConfirmPassword ? 'eye-off' : 'eye'}

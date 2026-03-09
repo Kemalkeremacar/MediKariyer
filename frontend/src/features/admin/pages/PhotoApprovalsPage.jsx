@@ -163,16 +163,16 @@ const PhotoApprovalsPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <ImageIcon className="h-8 w-8 mr-3 text-indigo-600" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-indigo-600" />
                 Fotoğraf Onayları
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">
                 Doktorların profil fotoğrafı değişiklik taleplerini yönetin
               </p>
             </div>
@@ -181,13 +181,13 @@ const PhotoApprovalsPage = () => {
         </div>
 
         {/* Status Filter */}
-        <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-4 mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
-          <div className="flex gap-2">
+        <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
+          <div className="flex flex-wrap gap-2">
             {['pending', 'approved', 'rejected'].map((status) => (
               <button
                 key={status}
                 onClick={() => setSelectedStatus(status)}
-                className={`admin-btn transition-all duration-300 ${
+                className={`admin-btn transition-all duration-300 text-sm ${
                   selectedStatus === status
                     ? 'admin-btn-primary'
                     : 'admin-btn-outline'
@@ -207,12 +207,12 @@ const PhotoApprovalsPage = () => {
         {/* Requests List */}
         <div className="admin-card">
           {photoRequests.length === 0 ? (
-            <div className="text-center py-12">
-              <ImageIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-600 mb-2">
+            <div className="text-center py-8 sm:py-12">
+              <ImageIcon className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-2">
                 {selectedStatus === 'pending' ? 'Bekleyen talep yok' : 'Talep bulunamadı'}
               </h3>
-              <p className="text-gray-500">
+              <p className="text-gray-500 text-sm sm:text-base">
                 {selectedStatus === 'pending' 
                   ? 'Şu anda onay bekleyen fotoğraf talebi bulunmuyor.'
                   : 'Bu durumda fotoğraf talebi bulunmuyor.'
@@ -248,7 +248,7 @@ const PhotoApprovalsPage = () => {
 
                       {/* New Photo */}
                       <div className="flex-shrink-0">
-                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-gray-100">
                           <img
                             src={request.file_url}
                             alt="Yeni fotoğraf"
@@ -260,26 +260,26 @@ const PhotoApprovalsPage = () => {
 
                       {/* Request Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-semibold text-gray-900 text-lg">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                               {request.title} {request.first_name} {request.last_name}
                             </h3>
-                            <p className="text-gray-600 text-sm">{request.email}</p>
+                            <p className="text-gray-600 text-sm truncate">{request.email}</p>
                             
-                            <div className="flex items-center gap-4 mt-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
                               <div className="flex items-center gap-1 text-gray-500 text-sm">
-                                <Calendar className="w-4 h-4" />
+                                <Calendar className="w-4 h-4 flex-shrink-0" />
                                 {new Date(request.created_at).toLocaleDateString('tr-TR')}
                               </div>
                               
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(request.status)}`}>
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(request.status)} w-fit`}>
                                 {getStatusText(request.status)}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
                             {request.status === 'pending' && (
                               <>
                                 <button

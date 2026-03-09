@@ -40,8 +40,6 @@ export type RootStackParamList = {
  * Auth Stack - Giriş ve kayıt ekranları
  */
 export type AuthStackParamList = {
-  /** Karşılama ekranı (ilk açılış) */
-  Welcome: undefined;
   /** Giriş ekranı */
   Login: undefined;
   /** Kayıt ekranı */

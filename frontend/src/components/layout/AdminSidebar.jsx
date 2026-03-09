@@ -70,7 +70,12 @@ import {
 } from 'react-icons/fi';
 import { Building2 } from 'lucide-react';
 
-const AdminSidebar = () => {
+/**
+ * ============================================================================
+ * ADMIN SIDEBAR COMPONENT - Mobile Responsive
+ * ============================================================================
+ */
+const AdminSidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
 
@@ -156,39 +161,78 @@ const AdminSidebar = () => {
     }
   ];
 
+  // Mobil menü kapanma handler'ı
+  const handleMenuItemClick = () => {
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl flex-shrink-0 flex flex-col h-full" style={{ minWidth: '256px', maxWidth: '256px' }}>
-      {/* Navigation Menu */}
-      <nav className="py-6 px-4 space-y-2 flex-1">
-        {menuItems.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              replace={false}
-              className={`group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 transform hover:scale-[1.01] active:scale-[0.99] ${
-                item.current
-                  ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-md shadow-blue-500/10'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50 hover:shadow-sm'
-              }`}
-            >
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 transition-all duration-150 ${
-                item.current 
-                  ? `bg-gradient-to-r ${item.color} shadow-md` 
-                  : 'bg-slate-700/50 group-hover:bg-slate-600/50'
-              }`}>
-                <Icon className={`w-4 h-4 ${item.current ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-              </div>
-              <span className="flex-1">{item.name}</span>
-              {item.current && (
-                <FiChevronRight className="w-4 h-4 text-blue-400" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+    <>
+      {/* Mobile Overlay - Sadece mobilde görünür */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50 lg:z-auto
+        w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900
+        border-r border-slate-700/50 shadow-2xl
+        flex-shrink-0 flex flex-col h-full
+        transform transition-transform duration-300 ease-in-out lg:transform-none
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `} style={{ minWidth: '256px', maxWidth: '256px' }}>
+
+        {/* Mobile Close Button - Sadece mobilde görünür */}
+        <div className="lg:hidden flex justify-end p-4">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="py-6 px-4 space-y-2 flex-1">
+          {menuItems.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                replace={false}
+                onClick={handleMenuItemClick}
+                className={`group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 transform hover:scale-[1.01] active:scale-[0.99] ${
+                  item.current
+                    ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-md shadow-blue-500/10'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/50 hover:shadow-sm'
+                }`}
+              >
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 transition-all duration-150 ${
+                  item.current
+                    ? `bg-gradient-to-r ${item.color} shadow-md`
+                    : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+                }`}>
+                  <Icon className={`w-4 h-4 ${item.current ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+                </div>
+                <span className="flex-1">{item.name}</span>
+                {item.current && (
+                  <FiChevronRight className="w-4 h-4 text-blue-400" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </>
   );
 };
 

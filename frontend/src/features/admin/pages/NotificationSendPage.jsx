@@ -297,32 +297,32 @@ const NotificationSendPage = () => {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="mb-4 sm:mb-6 bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
+          <div className="flex items-center gap-3 sm:gap-4 mb-4">
             <button
               onClick={() => navigate(ROUTE_CONFIG.ADMIN.NOTIFICATIONS)}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center">
-              <Send className="w-6 h-6 text-indigo-600" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <Send className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Bildirim Gönder</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Bildirim Gönder</h1>
               <p className="text-gray-600 text-sm mt-1">Kullanıcılara toplu bildirim gönderin</p>
             </div>
           </div>
         </div>
         
         {/* Üst Bölüm - Hedef Seçimi */}
-        <div className="mb-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Hızlı Rol Seçimi */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Hızlı Seçim</h2>
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Hızlı Seçim</h2>
               
               <div className="space-y-3">
                 {['doctor', 'hospital'].map((role) => {
@@ -339,7 +339,7 @@ const NotificationSendPage = () => {
                     <div
                       key={role}
                       onClick={() => handleRoleToggle(role)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      className={`w-full flex items-center justify-between px-3 sm:px-4 py-3 rounded-lg border-2 cursor-pointer transition-all ${
                         isSelected
                           ? 'border-indigo-500 bg-indigo-50'
                           : 'border-gray-200 hover:border-gray-300'

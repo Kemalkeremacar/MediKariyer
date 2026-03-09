@@ -43,6 +43,10 @@ const {
   stopJobExpirationCron
 } = require('./src/utils/jobExpirationCron');
 
+const {
+  startLogCleanupCron
+} = require('./src/utils/logCleanupCron');
+
 // ============================
 // 🚀 EXPRESS APP
 // ============================
@@ -69,6 +73,9 @@ const startServer = async () => {
 
     // Scheduler – 30 günlük ilan süresi kontrolü
     startJobExpirationCron();
+
+    // Scheduler – Eski logları otomatik temizleme (her gün 02:00)
+    startLogCleanupCron();
 
     // Sunucuyu başlat - Tüm network interface'lerinde dinle (0.0.0.0)
     // Bu sayede VPN, local network ve localhost üzerinden erişilebilir

@@ -3,7 +3,7 @@
  * Backend: getUserById (/admin/users/:id)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -16,19 +16,11 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Edit,
-  Save,
-  X,
-  Shield,
   Clock,
-  Activity,
   FileText,
   Eye,
   UserCheck,
   UserX,
-  MoreVertical,
-  Download,
-  History,
   GraduationCap,
   Mail,
   Briefcase,
@@ -162,30 +154,30 @@ const DoctorApplicationsTab = ({ userId }) => {
         {applications.map((application) => (
           <div
             key={application.id}
-            className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:border-indigo-300"
+            className="bg-white border border-gray-200 rounded-xl p-4 lg:p-6 hover:shadow-lg transition-all duration-300 hover:border-indigo-300"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
               {/* Sol Taraf - İlan Bilgileri */}
               <div className="flex-1">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-lg">
-                    <Briefcase className="w-6 h-6 text-indigo-600" />
+                <div className="flex items-start gap-3 lg:gap-4">
+                  <div className="p-2 lg:p-3 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-lg flex-shrink-0">
+                    <Briefcase className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-gray-900 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-base lg:text-lg font-bold text-gray-900 mb-2 break-words">
                       {application.job_title || 'İlan Başlığı Belirtilmemiş'}
                     </h4>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 gap-3 lg:gap-4 mb-4">
                       {/* Hastane Bilgisi */}
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <Building className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium">{application.institution_name || 'Hastane Adı Belirtilmemiş'}</span>
+                      <div className="flex items-start gap-2 text-gray-700">
+                        <Building className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm font-medium break-words">{application.institution_name || 'Hastane Adı Belirtilmemiş'}</span>
                       </div>
 
                       {/* Başvuru Tarihi */}
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                      <div className="flex items-start gap-2 text-gray-700">
+                        <Calendar className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
                         <span className="text-sm">
                           {application.applied_at
                             ? new Date(application.applied_at).toLocaleDateString('tr-TR', {
@@ -199,15 +191,15 @@ const DoctorApplicationsTab = ({ userId }) => {
 
                       {/* Uzmanlık */}
                       {application.job_specialty && (
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Briefcase className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm">{application.job_specialty}</span>
+                        <div className="flex items-start gap-2 text-gray-700">
+                          <Briefcase className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm break-words">{application.job_specialty}</span>
                         </div>
                       )}
 
                       {/* İlan Durumu */}
                       {application.job_status_id && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-start gap-2">
                           {getJobStatusBadge(application.job_status_id, application.job_status)}
                         </div>
                       )}
@@ -222,22 +214,24 @@ const DoctorApplicationsTab = ({ userId }) => {
               </div>
 
               {/* Sağ Taraf - Aksiyon Butonları */}
-              <div className="flex items-center gap-3 ml-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-3 lg:ml-4">
                 <button
                   onClick={() => navigate(`/admin/applications/${application.id}`)}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium shadow-md"
+                  className="flex items-center justify-center gap-2 px-3 lg:px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors font-medium shadow-md text-sm"
                 >
                   <Eye className="w-4 h-4" />
-                  Detayları Gör
+                  <span className="hidden sm:inline">Detayları Gör</span>
+                  <span className="sm:hidden">Detay</span>
                 </button>
                 {application.job_id && (
                   <button
                     onClick={() => navigate(`/admin/jobs/${application.job_id}`)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                    className="flex items-center justify-center gap-2 px-3 lg:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
                     title="İlan detaylarına git"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    İlana Git
+                    <span className="hidden sm:inline">İlana Git</span>
+                    <span className="sm:hidden">İlan</span>
                   </button>
                 )}
               </div>
@@ -248,21 +242,21 @@ const DoctorApplicationsTab = ({ userId }) => {
 
       {/* Sayfalama */}
       {pagination.total_pages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-6 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 border-t border-gray-200">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Önceki
           </button>
-          <span className="px-4 py-2 text-gray-700 font-medium">
+          <span className="px-4 py-2 text-gray-700 font-medium text-center">
             Sayfa {page} / {pagination.total_pages}
           </span>
           <button
             onClick={() => setPage(p => Math.min(pagination.total_pages, p + 1))}
             disabled={page >= pagination.total_pages}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Sonraki
           </button>
@@ -358,24 +352,25 @@ const UserDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-        <div className="p-6">
+        <div className="p-4 lg:p-6">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6 lg:mb-8">
             <button
               onClick={() => navigate(backUrl)}
-              className="admin-btn admin-btn-outline flex items-center text-gray-600 hover:text-gray-900 mb-6"
+              className="admin-btn admin-btn-outline flex items-center text-gray-600 hover:text-gray-900 mb-4 lg:mb-6"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              {backLabel}
+              <span className="hidden sm:inline">{backLabel}</span>
+              <span className="sm:hidden">Geri</span>
             </button>
             
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 lg:p-6">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 lg:space-x-6">
                   {/* Profil Fotoğrafı - Doktorlar için gerçek fotoğraf, diğerleri için icon */}
                   {/* Doktor için profil fotoğrafı, Hastane için logo */}
                   {(user.data?.user?.role || user.role) === 'doctor' && (user.data?.user?.profile?.profile_photo || user.profile?.profile_photo) ? (
-                    <div className="h-32 w-32 rounded-full overflow-hidden bg-gray-200 border-4 border-indigo-100 shadow-xl flex-shrink-0">
+                    <div className="h-20 w-20 sm:h-24 sm:w-24 lg:h-32 lg:w-32 rounded-full overflow-hidden bg-gray-200 border-4 border-indigo-100 shadow-xl flex-shrink-0">
                       <img 
                         src={user.data?.user?.profile?.profile_photo || user.profile?.profile_photo} 
                         alt="Profil Fotoğrafı" 
@@ -384,7 +379,7 @@ const UserDetailPage = () => {
                       />
                     </div>
                   ) : (user.data?.user?.role || user.role) === 'hospital' && (user.data?.user?.profile?.logo || user.profile?.logo) ? (
-                    <div className="h-32 w-32 rounded-xl overflow-hidden bg-gray-200 border-4 border-green-100 shadow-xl flex-shrink-0">
+                    <div className="h-20 w-20 sm:h-24 sm:w-24 lg:h-32 lg:w-32 rounded-xl overflow-hidden bg-gray-200 border-4 border-green-100 shadow-xl flex-shrink-0">
                       <img 
                         src={user.data?.user?.profile?.logo || user.profile?.logo} 
                         alt="Hastane Logosu" 
@@ -393,56 +388,59 @@ const UserDetailPage = () => {
                       />
                     </div>
                   ) : (
-                    <div className={`h-32 w-32 ${(user.data?.user?.role || user.role) === 'hospital' ? 'rounded-xl' : 'rounded-full'} bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-xl`}>
+                    <div className={`h-20 w-20 sm:h-24 sm:w-24 lg:h-32 lg:w-32 ${(user.data?.user?.role || user.role) === 'hospital' ? 'rounded-xl' : 'rounded-full'} bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-xl`}>
                       {(user.data?.user?.role || user.role) === 'hospital' ? (
-                        <Building className="h-16 w-16 text-white" />
+                        <Building className="h-8 w-8 sm:h-12 sm:w-12 lg:h-16 lg:w-16 text-white" />
                       ) : (
-                        <User className="h-16 w-16 text-white" />
+                        <User className="h-8 w-8 sm:h-12 sm:w-12 lg:h-16 lg:w-16 text-white" />
                       )}
                     </div>
                   )}
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
                       {user.data?.user?.profile?.first_name && user.data?.user?.profile?.last_name 
                         ? `${user.data.user.profile.first_name} ${user.data.user.profile.last_name}`
                         : user.data?.user?.profile?.institution_name || user.data?.user?.profile?.name || 'Kullanıcı'}
                     </h1>
-                    <p className="text-gray-600">{user.data?.user?.email || user.email}</p>
-                    <div className="flex items-center space-x-3 mt-2">
+                    <p className="text-gray-600 text-sm sm:text-base break-all">{user.data?.user?.email || user.email}</p>
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
                       {getRoleBadge(user.data?.user?.role || user.role)}
                       {getStatusBadge(user.data?.user?.is_approved || user.is_approved, user.data?.user?.is_active || user.is_active)}
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   {!(user.data?.user?.is_approved || user.is_approved) ? (
                     <button
                       onClick={() => handleStatusChange('is_approved', true)}
                       disabled={updateUserApproval.isPending}
-                      className="admin-btn admin-btn-success flex items-center space-x-2"
+                      className="admin-btn admin-btn-success flex items-center justify-center space-x-2 text-sm"
                     >
                       <CheckCircle className="h-4 w-4" />
-                      <span>Onayla</span>
+                      <span className="hidden sm:inline">Onayla</span>
+                      <span className="sm:hidden">Onayla</span>
                     </button>
                   ) : (
                     <button
                       onClick={() => handleStatusChange('is_approved', false)}
                       disabled={updateUserApproval.isPending}
-                      className="admin-btn admin-btn-warning flex items-center space-x-2"
+                      className="admin-btn admin-btn-warning flex items-center justify-center space-x-2 text-sm"
                     >
                       <XCircle className="h-4 w-4" />
-                      <span>Onayı Kaldır</span>
+                      <span className="hidden sm:inline">Onayı Kaldır</span>
+                      <span className="sm:hidden">Onayı Kaldır</span>
                     </button>
                   )}
                   
                   <button
                     onClick={() => handleStatusChange('is_active', !(user.data?.user?.is_active || user.is_active))}
                     disabled={updateUserStatus.isPending}
-                    className={`admin-btn ${(user.data?.user?.is_active || user.is_active) ? 'admin-btn-danger' : 'admin-btn-success'} flex items-center space-x-2`}
+                    className={`admin-btn ${(user.data?.user?.is_active || user.is_active) ? 'admin-btn-danger' : 'admin-btn-success'} flex items-center justify-center space-x-2 text-sm`}
                   >
                     {(user.data?.user?.is_active || user.is_active) ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                    <span>{(user.data?.user?.is_active || user.is_active) ? 'Pasifleştir' : 'Aktifleştir'}</span>
+                    <span className="hidden sm:inline">{(user.data?.user?.is_active || user.is_active) ? 'Pasifleştir' : 'Aktifleştir'}</span>
+                    <span className="sm:hidden">{(user.data?.user?.is_active || user.is_active) ? 'Pasif' : 'Aktif'}</span>
                   </button>
                   
                 </div>
@@ -454,7 +452,7 @@ const UserDetailPage = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             {/* Tab Navigation */}
             <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6">
+              <nav className="flex space-x-4 lg:space-x-8 px-4 lg:px-6 overflow-x-auto">
                 {[
                   { id: 'overview', label: 'Genel Bakış', icon: Eye },
                   { id: 'profile', label: 'Profil', icon: User },
@@ -465,14 +463,14 @@ const UserDetailPage = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                      className={`py-3 lg:py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap ${
                         activeTab === tab.id
                           ? 'border-indigo-500 text-indigo-600'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                     >
                       <Icon className="h-4 w-4" />
-                      <span>{tab.label}</span>
+                      <span className="hidden sm:inline">{tab.label}</span>
                     </button>
                   );
                 })}
@@ -480,23 +478,23 @@ const UserDetailPage = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="p-4 lg:p-6">
               {activeTab === 'overview' && (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold text-gray-900">Temel Bilgiler</h3>
                       <div className="space-y-3">
-                        <div className="flex items-center">
-                          <Mail className="h-5 w-5 text-gray-400 mr-3" />
-                          <div>
+                        <div className="flex items-start gap-3">
+                          <Mail className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm text-gray-500">E-posta</p>
-                            <p className="font-medium text-gray-900">{user.data?.user?.email || user.email}</p>
+                            <p className="font-medium text-gray-900 break-all">{user.data?.user?.email || user.email}</p>
                           </div>
                         </div>
-                        <div className="flex items-center">
-                          <Calendar className="h-5 w-5 text-gray-400 mr-3" />
-                          <div>
+                        <div className="flex items-start gap-3">
+                          <Calendar className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm text-gray-500">Kayıt Tarihi</p>
                             <p className="font-medium text-gray-900">
                               {new Date(user.data?.user?.created_at || user.created_at).toLocaleDateString('tr-TR', {
@@ -548,7 +546,7 @@ const UserDetailPage = () => {
                       <User className="h-5 w-5 mr-2 text-indigo-600" />
                       Temel Bilgiler
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                       {(user.data?.user?.role || user.role) === 'doctor' && (
                         <>
                           {/* Ad Soyad - Her zaman göster */}

@@ -70,9 +70,7 @@ export const PendingApprovalScreen = () => {
   
   // Component mount/unmount tracking
   useEffect(() => {
-    console.log('📱 PendingApprovalScreen MOUNTED');
     return () => {
-      console.log('📱 PendingApprovalScreen UNMOUNTED');
       // Cleanup polling on unmount
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -118,7 +116,6 @@ export const PendingApprovalScreen = () => {
     const currentIsAdmin = user.role === 'admin';
     
     if (currentIsApproved || currentIsAdmin) {
-      console.log('✅ Kullanıcı zaten onaylı, kontrol atlanıyor (loop önleme)');
       return;
     }
 
@@ -138,7 +135,6 @@ export const PendingApprovalScreen = () => {
       if (isApproved || isAdmin) {
         // Kullanıcı onaylandı - store'u güncelle
         // RootNavigator otomatik olarak App stack'e yönlendirecek
-        console.log('✅ Kullanıcı onaylandı, store güncelleniyor');
         markAuthenticated(updatedUser);
         
         // Polling interval'i temizle (artık gerek yok)
@@ -149,14 +145,11 @@ export const PendingApprovalScreen = () => {
         
         // CRITICAL: Component'i hemen unmount etmek için navigation'ı force et
         // RootNavigator'ın state-based navigation'ını beklemek yerine manuel yönlendirme
-        console.log('🚀 Forcing navigation to trigger re-render...');
         
         // BACKUP: Manuel navigation reset (RootNavigator'a ek olarak)
         setTimeout(() => {
-          console.log('⏰ Backup navigation - checking if still on PendingApproval');
           const currentRoute = navigationRef.getCurrentRoute();
           if (currentRoute?.name === 'PendingApproval') {
-            console.log('🔄 Still on PendingApproval, forcing navigation to Auth');
             if (navigationRef.isReady()) {
               navigationRef.reset({
                 index: 0,
@@ -188,8 +181,7 @@ export const PendingApprovalScreen = () => {
         // Sessizce polling'e devam et (alert gösterme)
         setLastCheckTime(new Date());
       } else {
-        // Beklenmeyen hata - logla (ama kullanıcıya gösterme)
-        console.error('Onay durumu kontrolünde beklenmeyen hata:', error);
+        // Beklenmeyen hata - sessizce devam et
       }
       // Hata durumunda interval'i temizleme, polling'e devam et
     } finally {
@@ -219,11 +211,9 @@ export const PendingApprovalScreen = () => {
       
       // Eğer kullanıcı zaten onaylıysa polling başlatma
       if (currentIsApproved || currentIsAdmin) {
-        console.log('✅ Kullanıcı zaten onaylı, polling başlatılmıyor');
         return;
       }
       
-      console.log('🔄 Onay durumu polling başlatılıyor...');
       
       // İlk kontrol hemen yap
       checkApprovalStatus();
@@ -235,7 +225,6 @@ export const PendingApprovalScreen = () => {
       
       // Component unmount olduğunda temizlik yap
       return () => {
-        console.log('🧹 Polling temizleniyor...');
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -271,7 +260,6 @@ export const PendingApprovalScreen = () => {
       const currentIsAdmin = user.role === 'admin';
       
       if (currentIsApproved || currentIsAdmin) {
-        console.log('✅ Kullanıcı onaylı, logout yapılmıyor - RootNavigator yönlendirecek');
         return;
       }
     }

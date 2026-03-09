@@ -119,7 +119,7 @@ export const validateEmail = (
  * - En az bir büyük harf
  * - En az bir küçük harf
  * - En az bir rakam
- * - En az bir özel karakter (@$!%*?&)
+ * - En az bir özel karakter
  * - Boşluk içeremez
  * - Aynı karakterin 3 kez tekrarını içeremez
  */
@@ -160,8 +160,8 @@ export const validatePassword = (
     failedRules.push('En az bir rakam');
   }
 
-  if (!/[@$!%*?&]/.test(password)) {
-    failedRules.push('En az bir özel karakter (@$!%*?&)');
+  if (!/[^a-zA-Z\d\s]/.test(password)) {
+    failedRules.push('En az bir özel karakter');
   }
 
   if (failedRules.length > 0) {
@@ -502,7 +502,7 @@ export const PASSWORD_RULES = {
   uppercase: { check: (val: string) => /[A-Z]/.test(val), message: 'En az bir büyük harf (A-Z)' },
   lowercase: { check: (val: string) => /[a-z]/.test(val), message: 'En az bir küçük harf (a-z)' },
   number: { check: (val: string) => /\d/.test(val), message: 'En az bir rakam (0-9)' },
-  special: { check: (val: string) => /[@$!%*?&]/.test(val), message: 'En az bir özel karakter (@$!%*?&)' },
+  special: { check: (val: string) => /[^a-zA-Z\d\s]/.test(val), message: 'En az bir özel karakter' },
   noSpaces: { check: (val: string) => !val.includes(' '), message: 'Boşluk içeremez' },
   noRepeating: { check: (val: string) => !/(.)\1{2,}/.test(val), message: 'Aynı karakter 3 kez tekrarlanamaz' },
 } as const;
@@ -531,7 +531,7 @@ export const passwordSchema = z
   .refine((val) => /[A-Z]/.test(val), 'Şifre en az bir büyük harf içermelidir')
   .refine((val) => /[a-z]/.test(val), 'Şifre en az bir küçük harf içermelidir')
   .refine((val) => /\d/.test(val), 'Şifre en az bir rakam içermelidir')
-  .refine((val) => /[@$!%*?&]/.test(val), 'Şifre en az bir özel karakter içermelidir (@$!%*?&)');
+  .refine((val) => /[^a-zA-Z\d\s]/.test(val), 'Şifre en az bir özel karakter içermelidir');
 
 /**
  * İsim validasyon şeması (Zod)

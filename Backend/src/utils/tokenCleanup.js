@@ -132,24 +132,38 @@ const startTokenCleanupScheduler = () => {
   // Her gün saat 02:00'da süresi dolmuş token'ları temizle
   registerTask(
     cron.schedule('0 2 * * *', async () => {
-      logger.info('Starting scheduled token cleanup...');
-      await cleanupExpiredTokens();
+      try {
+        logger.info('Starting scheduled token cleanup...');
+        await cleanupExpiredTokens();
+        logger.info('Scheduled token cleanup completed successfully');
+      } catch (error) {
+        logger.error('Scheduled token cleanup failed:', error);
+      }
     })
   );
 
   // Her hafta pazar günü saat 03:00'da eski token'ları temizle
   registerTask(
     cron.schedule('0 3 * * 0', async () => {
-      logger.info('Starting scheduled old token cleanup...');
-      await cleanupOldTokens();
+      try {
+        logger.info('Starting scheduled old token cleanup...');
+        await cleanupOldTokens();
+        logger.info('Scheduled old token cleanup completed successfully');
+      } catch (error) {
+        logger.error('Scheduled old token cleanup failed:', error);
+      }
     })
   );
 
   // Her saat başı token istatistiklerini logla
   registerTask(
     cron.schedule('0 * * * *', async () => {
-      const stats = await getTokenStats();
-      logger.info('Token statistics:', stats);
+      try {
+        const stats = await getTokenStats();
+        logger.info('Token statistics:', stats);
+      } catch (error) {
+        logger.error('Token statistics logging failed:', error);
+      }
     })
   );
 

@@ -108,78 +108,43 @@ const validateProps = (props: CustomAlertProps): boolean => {
   
   // visible prop'unu doğrula
   if (typeof props.visible !== 'boolean') {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'visible': boolean bekleniyor, ${typeof props.visible} alındı. ` +
-      `Alert görünürlük durumu boolean değer olmalıdır.`
-    );
     isValid = false;
   }
   
   // type prop'unu doğrula
   if (!VALID_ALERT_TYPES.includes(props.type)) {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'type': '${props.type}' alındı. ` +
-      `Geçerli tipler: ${VALID_ALERT_TYPES.join(', ')}.`
-    );
     isValid = false;
   }
   
   // title prop'unu doğrula
   if (typeof props.title !== 'string') {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'title': string bekleniyor, ${typeof props.title} alındı. ` +
-      `Alert başlığı string olmalıdır.`
-    );
     isValid = false;
   } else if (props.title.trim() === '') {
-    console.warn(
-      `[CustomAlert] Uyarı: 'title' prop'u boş string. ` +
-      `Daha iyi kullanıcı deneyimi için anlamlı bir başlık sağlamayı düşünün.`
-    );
+    // Boş title uyarısı kaldırıldı
   }
   
   // message prop'unu doğrula
   if (typeof props.message !== 'string') {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'message': string bekleniyor, ${typeof props.message} alındı. ` +
-      `Alert mesajı string olmalıdır.`
-    );
     isValid = false;
   }
   
   // onConfirm prop'unu doğrula
   if (typeof props.onConfirm !== 'function') {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'onConfirm': function bekleniyor, ${typeof props.onConfirm} alındı. ` +
-      `onConfirm callback'i AlertProvider tarafından sağlanan bir fonksiyon olmalıdır.`
-    );
     isValid = false;
   }
   
   // onCancel prop'unu doğrula
   if (typeof props.onCancel !== 'function') {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'onCancel': function bekleniyor, ${typeof props.onCancel} alındı. ` +
-      `onCancel callback'i AlertProvider tarafından sağlanan bir fonksiyon olmalıdır.`
-    );
     isValid = false;
   }
   
   // Opsiyonel confirmText prop'unu doğrula
   if (props.confirmText !== undefined && typeof props.confirmText !== 'string') {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'confirmText': string veya undefined bekleniyor, ${typeof props.confirmText} alındı. ` +
-      `Onayla butonu metni string olmalıdır.`
-    );
     isValid = false;
   }
   
   // Opsiyonel cancelText prop'unu doğrula
   if (props.cancelText !== undefined && typeof props.cancelText !== 'string') {
-    console.error(
-      `[CustomAlert] Geçersiz prop 'cancelText': string veya undefined bekleniyor, ${typeof props.cancelText} alındı. ` +
-      `İptal butonu metni string olmalıdır.`
-    );
     isValid = false;
   }
   
@@ -201,9 +166,6 @@ const safeExecuteCallback = (
 ): void => {
   // Çağırmadan önce callback'in fonksiyon olduğunu doğrula (Gereksinim 9.4)
   if (typeof callback !== 'function') {
-    if (__DEV__) {
-      console.warn(`[CustomAlert] ${callbackName} fonksiyon değil, çalıştırma atlanıyor`);
-    }
     return;
   }
 
@@ -212,9 +174,6 @@ const safeExecuteCallback = (
     callback();
   } catch (error) {
     // Sadece geliştirme modunda hataları logla (Gereksinim 10.5)
-    if (__DEV__) {
-      console.error(`[CustomAlert] ${callbackName} çalıştırılırken hata:`, error);
-    }
     // Çökmeden devam et - alert yine de kapanacak
   }
 };

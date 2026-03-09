@@ -875,23 +875,34 @@ const updateUserApproval = async (userId, approved, rejectionReason = null) => {
     if (approved) {
       try {
         const emailService = require('../utils/emailService');
-        await emailService.sendWelcomeEmail({
+        const emailResult = await emailService.sendWelcomeEmail({
           to: user.email,
           name: userName,
           userType: userType
         });
 
-        logger.info('Welcome email sent after approval', {
-          userId,
-          email: user.email,
-          role: user.role
-        });
+        if (emailResult.success !== false) {
+          logger.info('Welcome email sent after approval', {
+            userId,
+            email: user.email,
+            role: user.role,
+            simulated: emailResult.simulated,
+            attempts: emailResult.attempts
+          });
+        } else {
+          logger.warn('Welcome email failed after approval (returned false)', {
+            userId,
+            email: user.email,
+            error: emailResult.error
+          });
+        }
       } catch (emailError) {
         // Email hatası onay işlemini engellemez
-        logger.warn('Welcome email failed after approval (non-critical):', {
+        logger.error('Welcome email exception after approval (non-critical):', {
           userId,
           email: user.email,
-          error: emailError.message
+          error: emailError.message,
+          stack: emailError.stack
         });
       }
     }

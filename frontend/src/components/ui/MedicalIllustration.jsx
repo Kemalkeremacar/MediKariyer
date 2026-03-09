@@ -16,20 +16,87 @@ const MedicalIllustration = () => {
         className="w-full h-auto"
         style={{ maxWidth: '100%' }}
       >
-        {/* Outer Dashed Border */}
-        <rect 
-          x="100" 
-          y="80" 
-          width="600" 
-          height="440" 
-          fill="none" 
-          stroke="#93c5fd" 
-          strokeWidth="3" 
-          strokeDasharray="12,8" 
-          rx="20" 
-          opacity="0.6"
-        />
-        {/* Definitions for gradients */}
+
+          {/* Arrow Markers */}
+          <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#3b82f6" />
+          </marker>
+          
+          <marker id="arrowCyan" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#06b6d4" />
+          </marker>
+          
+          <marker id="arrowDarkBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#2563a8" />
+          </marker>
+          
+          <marker id="arrowLightBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L9,3 z" fill="#5ba3d0" />
+          </marker>
+
+        {/* Connection Lines Between Components - With Arrows */}
+        <g className="animate-draw-line" opacity="0.5">
+          {/* Center to Top Left (Laptop) */}
+          <line x1="400" y1="300" x2="250" y2="200" stroke="#3b82f6" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowBlue)" />
+          
+          {/* Center to Top Right (Hospital) */}
+          <line x1="400" y1="300" x2="550" y2="200" stroke="#06b6d4" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowCyan)" />
+          
+          {/* Center to Bottom Left (Doctor) */}
+          <line x1="400" y1="300" x2="250" y2="420" stroke="#2563a8" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowDarkBlue)" />
+          
+          {/* Center to Bottom Right (Mobile) */}
+          <line x1="400" y1="300" x2="550" y2="420" stroke="#5ba3d0" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowLightBlue)" />
+        </g>
+
+        {/* Animated Data Flow Particles */}
+        <g>
+          {/* Path definitions for particles */}
+          <defs>
+            <path id="path1" d="M 400 300 L 250 200" />
+            <path id="path2" d="M 400 300 L 550 200" />
+            <path id="path3" d="M 400 300 L 250 420" />
+            <path id="path4" d="M 400 300 L 550 420" />
+          </defs>
+          
+          {/* Flowing particles on each line */}
+          <circle r="4" fill="#3b82f6" opacity="0.8" className="animate-flow-1">
+            <animateMotion dur="3s" repeatCount="indefinite">
+              <mpath href="#path1"/>
+            </animateMotion>
+          </circle>
+          
+          <circle r="3" fill="#06b6d4" opacity="0.8" className="animate-flow-2">
+            <animateMotion dur="3.5s" repeatCount="indefinite">
+              <mpath href="#path2"/>
+            </animateMotion>
+          </circle>
+          
+          <circle r="4" fill="#2563a8" opacity="0.8" className="animate-flow-3">
+            <animateMotion dur="2.8s" repeatCount="indefinite">
+              <mpath href="#path3"/>
+            </animateMotion>
+          </circle>
+          
+          <circle r="3" fill="#5ba3d0" opacity="0.8" className="animate-flow-4">
+            <animateMotion dur="3.2s" repeatCount="indefinite">
+              <mpath href="#path4"/>
+            </animateMotion>
+          </circle>
+          
+          {/* Additional smaller particles */}
+          <circle r="2" fill="#ffffff" opacity="0.9" className="animate-flow-1" style={{animationDelay: '1.5s'}}>
+            <animateMotion dur="3s" repeatCount="indefinite">
+              <mpath href="#path1"/>
+            </animateMotion>
+          </circle>
+          
+          <circle r="2" fill="#ffffff" opacity="0.9" className="animate-flow-2" style={{animationDelay: '1.8s'}}>
+            <animateMotion dur="3.5s" repeatCount="indefinite">
+              <mpath href="#path2"/>
+            </animateMotion>
+          </circle>
+        </g>
         <defs>
           {/* Blue Gradient */}
           <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -61,121 +128,109 @@ const MedicalIllustration = () => {
             <stop offset="100%" stopColor="#059669" />
           </linearGradient>
 
-          {/* Arrow Markers */}
-          <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-            <path d="M0,0 L0,6 L9,3 z" fill="#3b82f6" />
-          </marker>
-          
-          <marker id="arrowCyan" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-            <path d="M0,0 L0,6 L9,3 z" fill="#06b6d4" />
-          </marker>
-          
-          <marker id="arrowDarkBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-            <path d="M0,0 L0,6 L9,3 z" fill="#2563a8" />
-          </marker>
-          
-          <marker id="arrowLightBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-            <path d="M0,0 L0,6 L9,3 z" fill="#5ba3d0" />
-          </marker>
+
         </defs>
 
-        {/* Connection Lines Between Components - With Arrows */}
-        <g className="animate-draw-line" opacity="0.5">
-          {/* Center to Top Left (Laptop) */}
-          <line x1="400" y1="300" x2="250" y2="200" stroke="#3b82f6" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowBlue)" />
-          
-          {/* Center to Top Right (Documents) */}
-          <line x1="400" y1="300" x2="550" y2="200" stroke="#06b6d4" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowCyan)" />
-          
-          {/* Center to Bottom Left (User) */}
-          <line x1="400" y1="300" x2="250" y2="420" stroke="#2563a8" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowDarkBlue)" />
-          
-          {/* Center to Bottom Right (Server) */}
-          <line x1="400" y1="300" x2="550" y2="420" stroke="#5ba3d0" strokeWidth="3" strokeDasharray="8,8" markerEnd="url(#arrowLightBlue)" />
-        </g>
 
-        {/* Component 1: Laptop/Dashboard - Top Left */}
+
+        {/* Component 1: Modern Laptop/Dashboard - Top Left */}
         <g className="animate-slide-in-left">
+          {/* Laptop Shadow */}
+          <ellipse cx="250" cy="255" rx="75" ry="8" fill="#000000" opacity="0.1" />
+          
           {/* Laptop Base */}
-          <rect x="180" y="150" width="140" height="100" fill="url(#whiteGradient)" stroke="#2563a8" strokeWidth="4" rx="8" />
+          <rect x="175" y="240" width="150" height="15" fill="#e5e7eb" stroke="#9ca3af" strokeWidth="1" rx="8" />
+          <rect x="180" y="145" width="140" height="100" fill="#1f2937" stroke="#374151" strokeWidth="2" rx="8" />
+          
+          {/* Screen Bezel */}
+          <rect x="185" y="150" width="130" height="90" fill="#000000" rx="6" />
           
           {/* Screen */}
-          <rect x="190" y="160" width="120" height="80" fill="#dbeafe" rx="4" />
+          <rect x="190" y="155" width="120" height="80" fill="#1e40af" rx="4" />
           
-          {/* Header Bar */}
-          <rect x="190" y="160" width="120" height="12" fill="#2563a8" opacity="0.8" rx="4" />
-          <circle cx="198" cy="166" r="2" fill="#ffffff" />
-          <circle cx="205" cy="166" r="2" fill="#ffffff" />
-          <circle cx="212" cy="166" r="2" fill="#ffffff" />
+          {/* macOS Style Header Bar */}
+          <rect x="190" y="155" width="120" height="15" fill="#374151" rx="4" />
+          <circle cx="198" cy="162" r="2.5" fill="#ef4444" />
+          <circle cx="206" cy="162" r="2.5" fill="#f59e0b" />
+          <circle cx="214" cy="162" r="2.5" fill="#10b981" />
           
-          {/* Dashboard Cards */}
-          <rect x="200" y="180" width="25" height="22" fill="#2563a8" opacity="0.7" rx="3" />
-          <rect x="230" y="180" width="25" height="22" fill="#5ba3d0" opacity="0.7" rx="3" />
-          <rect x="260" y="180" width="35" height="22" fill="#06b6d4" opacity="0.7" rx="3" />
+          {/* Dashboard Content */}
+          <rect x="195" y="175" width="110" height="55" fill="#dbeafe" rx="3" />
           
-          {/* Mini Icons in Cards */}
-          <circle cx="212" cy="188" r="3" fill="#ffffff" opacity="0.8" />
-          <rect x="209" y="193" width="6" height="4" fill="#ffffff" opacity="0.6" rx="1" />
+          {/* Header */}
+          <text x="200" y="185" fontSize="6" fill="#1e40af" fontWeight="bold">MediKariyer Dashboard</text>
           
-          <path d="M 238 186 L 242 190 L 246 184" stroke="#ffffff" strokeWidth="1.5" fill="none" opacity="0.8" />
+          {/* Stats Cards */}
+          <rect x="200" y="190" width="30" height="25" fill="#ffffff" stroke="#e5e7eb" strokeWidth="1" rx="4" />
+          <rect x="235" y="190" width="30" height="25" fill="#ffffff" stroke="#e5e7eb" strokeWidth="1" rx="4" />
+          <rect x="270" y="190" width="30" height="25" fill="#ffffff" stroke="#e5e7eb" strokeWidth="1" rx="4" />
           
-          <rect x="268" y="186" width="8" height="2" fill="#ffffff" opacity="0.6" rx="0.5" />
-          <rect x="268" y="190" width="12" height="2" fill="#ffffff" opacity="0.6" rx="0.5" />
-          <rect x="268" y="194" width="10" height="2" fill="#ffffff" opacity="0.6" rx="0.5" />
+          {/* Card Icons and Numbers */}
+          <circle cx="215" cy="200" r="4" fill="#3b82f6" />
+          <text x="212" y="203" fontSize="4" fill="#ffffff" fontWeight="bold">👨‍⚕️</text>
+          <text x="205" y="212" fontSize="5" fill="#1e40af" fontWeight="bold" className="animate-pulse">2.5K</text>
+          
+          <circle cx="250" cy="200" r="4" fill="#10b981" />
+          <text x="247" y="203" fontSize="4" fill="#ffffff" fontWeight="bold">🏥</text>
+          <text x="243" y="212" fontSize="5" fill="#059669" fontWeight="bold" className="animate-pulse" style={{animationDelay: '0.5s'}}>150+</text>
+          
+          <circle cx="285" cy="200" r="4" fill="#f59e0b" />
+          <text x="282" y="203" fontSize="4" fill="#ffffff" fontWeight="bold">📊</text>
+          <text x="280" y="212" fontSize="5" fill="#d97706" fontWeight="bold" className="animate-pulse" style={{animationDelay: '1s'}}>98%</text>
           
           {/* Chart Area */}
-          <polyline points="200,215 212,210 224,208 236,205 248,207 260,202 272,204 284,200 296,203" stroke="#2563a8" strokeWidth="2" fill="none" opacity="0.7" />
-          
-          {/* Chart Points */}
-          <circle cx="224" cy="208" r="2.5" fill="#2563a8" />
-          <circle cx="248" cy="207" r="2.5" fill="#5ba3d0" />
-          <circle cx="272" cy="204" r="2.5" fill="#06b6d4" />
-          
-          {/* Bottom Stats */}
-          <text x="200" y="232" fontSize="8" fill="#2563a8" opacity="0.7" fontWeight="bold">2.5K</text>
-          <text x="240" y="232" fontSize="8" fill="#5ba3d0" opacity="0.7" fontWeight="bold">150+</text>
-          <text x="275" y="232" fontSize="8" fill="#06b6d4" opacity="0.7" fontWeight="bold">98%</text>
+          <rect x="200" y="220" width="100" height="8" fill="#f3f4f6" rx="2" />
+          <text x="202" y="226" fontSize="4" fill="#6b7280">Aylık İstatistikler</text>
         </g>
 
-        {/* Component 2: Hospital Building - Top Right */}
+        {/* Component 2: Modern Hospital Building - Top Right */}
         <g className="animate-slide-in-right">
-          {/* Card Background */}
-          <rect x="480" y="150" width="140" height="100" fill="url(#whiteGradient)" stroke="#06b6d4" strokeWidth="4" rx="8" />
+          {/* Building Shadow */}
+          <ellipse cx="550" cy="255" rx="75" ry="8" fill="#000000" opacity="0.1" />
           
-          {/* Title */}
-          <text x="490" y="167" fontSize="8" fill="#06b6d4" fontWeight="bold">Sağlık Kurumu</text>
+          {/* Card Background */}
+          <rect x="480" y="150" width="140" height="100" fill="#ffffff" stroke="#e5e7eb" strokeWidth="2" rx="12" />
           
           {/* Hospital Building */}
           <g>
-            {/* Main Building */}
-            <rect x="510" y="190" width="80" height="50" fill="#e0f2fe" stroke="#06b6d4" strokeWidth="2" rx="3" />
+            {/* Main Building Structure */}
+            <rect x="505" y="185" width="90" height="55" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="2" rx="4" />
             
-            {/* Roof */}
-            <path d="M 505 190 L 550 175 L 595 190 Z" fill="#06b6d4" opacity="0.8" />
+            {/* Building Entrance */}
+            <rect x="540" y="220" width="20" height="20" fill="#1e40af" rx="2" />
+            <rect x="545" y="225" width="10" height="15" fill="#3b82f6" rx="1" />
+            <circle cx="555" cy="232" r="1" fill="#ffffff" />
             
-            {/* Cross on Roof */}
-            <rect x="545" y="178" width="10" height="3" fill="#ffffff" rx="1" />
-            <rect x="548" y="175" width="4" height="9" fill="#ffffff" rx="1" />
+            {/* Hospital Cross Sign */}
+            <rect x="520" y="165" width="50" height="15" fill="#ef4444" rx="3" />
+            <rect x="540" y="170" width="10" height="3" fill="#ffffff" rx="0.5" />
+            <rect x="542" y="168" width="6" height="7" fill="#ffffff" rx="0.5" />
             
-            {/* Windows Row 1 */}
-            <rect x="518" y="198" width="12" height="10" fill="#5ba3d0" opacity="0.6" rx="1" />
-            <rect x="535" y="198" width="12" height="10" fill="#5ba3d0" opacity="0.6" rx="1" />
-            <rect x="552" y="198" width="12" height="10" fill="#5ba3d0" opacity="0.6" rx="1" />
-            <rect x="569" y="198" width="12" height="10" fill="#5ba3d0" opacity="0.6" rx="1" />
+            {/* Windows - First Floor */}
+            <rect x="515" y="195" width="12" height="15" fill="#dbeafe" stroke="#94a3b8" strokeWidth="1" rx="2" />
+            <rect x="532" y="195" width="12" height="15" fill="#dbeafe" stroke="#94a3b8" strokeWidth="1" rx="2" />
+            <rect x="556" y="195" width="12" height="15" fill="#fef3c7" stroke="#94a3b8" strokeWidth="1" rx="2" className="animate-blink" />
+            <rect x="573" y="195" width="12" height="15" fill="#dbeafe" stroke="#94a3b8" strokeWidth="1" rx="2" />
             
-            {/* Windows Row 2 */}
-            <rect x="518" y="212" width="12" height="10" fill="#5ba3d0" opacity="0.6" rx="1" />
-            <rect x="535" y="212" width="12" height="10" fill="#10b981" opacity="0.7" rx="1" />
-            <rect x="552" y="212" width="12" height="10" fill="#5ba3d0" opacity="0.6" rx="1" />
-            <rect x="569" y="212" width="12" height="10" fill="#5ba3d0" opacity="0.6" rx="1" />
+            {/* Window Frames */}
+            <line x1="521" y1="195" x2="521" y2="210" stroke="#94a3b8" strokeWidth="0.5" />
+            <line x1="515" y1="202" x2="527" y2="202" stroke="#94a3b8" strokeWidth="0.5" />
             
-            {/* Door */}
-            <rect x="540" y="226" width="20" height="14" fill="#2563a8" rx="2" />
-            <circle cx="556" cy="233" r="1.5" fill="#ffffff" />
+            <line x1="538" y1="195" x2="538" y2="210" stroke="#94a3b8" strokeWidth="0.5" />
+            <line x1="532" y1="202" x2="544" y2="202" stroke="#94a3b8" strokeWidth="0.5" />
             
-            {/* Ambulance Icon */}
-            <circle cx="520" cy="235" r="8" fill="#ef4444" opacity="0.9" />
-            <path d="M 517 235 L 520 232 L 523 235 M 520 232 L 520 238" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+            <line x1="562" y1="195" x2="562" y2="210" stroke="#94a3b8" strokeWidth="0.5" />
+            <line x1="556" y1="202" x2="568" y2="202" stroke="#94a3b8" strokeWidth="0.5" />
+            
+            <line x1="579" y1="195" x2="579" y2="210" stroke="#94a3b8" strokeWidth="0.5" />
+            <line x1="573" y1="202" x2="585" y2="202" stroke="#94a3b8" strokeWidth="0.5" />
+            
+            {/* Ambulance Parking */}
+            <rect x="510" y="245" width="25" height="8" fill="#ef4444" rx="2" />
+            <text x="515" y="250" fontSize="4" fill="#ffffff" fontWeight="bold">AMBULANS</text>
+            
+            {/* Hospital Sign */}
+            <text x="490" y="167" fontSize="7" fill="#1e40af" fontWeight="bold">HASTANE</text>
           </g>
         </g>
 
@@ -214,93 +269,96 @@ const MedicalIllustration = () => {
           <circle cx="440" cy="340" r="5" fill="#ffffff" opacity="0.8" className="animate-pulse-slow delay-300" />
         </g>
 
-        {/* Component 4: User Profile - Bottom Left */}
+        {/* Component 4: Doctor Profile Card - Bottom Left */}
         <g className="animate-slide-in-left delay-200">
+          {/* Card Shadow */}
+          <ellipse cx="250" cy="475" rx="75" ry="8" fill="#000000" opacity="0.1" />
+          
           {/* Card Background */}
-          <rect x="180" y="370" width="140" height="100" fill="url(#whiteGradient)" stroke="#2563a8" strokeWidth="4" rx="8" />
+          <rect x="180" y="370" width="140" height="100" fill="#ffffff" stroke="#e5e7eb" strokeWidth="2" rx="12" />
           
-          {/* Header */}
-          <text x="190" y="385" fontSize="8" fill="#2563a8" fontWeight="bold">Doktor Profili</text>
+          {/* Profile Header */}
+          <rect x="185" y="375" width="130" height="25" fill="#f8fafc" rx="8" />
+          <text x="190" y="385" fontSize="7" fill="#1e40af" fontWeight="bold">👨‍⚕️ Doktor Profili</text>
           
-          {/* User Avatar with Badge */}
-          <circle cx="220" cy="415" r="22" fill="url(#blueGradient)" />
-          <circle cx="220" cy="410" r="9" fill="#ffffff" />
-          <path d="M 208 425 Q 220 418 232 425" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+          {/* Profile Photo */}
+          <circle cx="210" cy="420" r="18" fill="#e5e7eb" stroke="#d1d5db" strokeWidth="2" />
+          <circle cx="210" cy="415" r="8" fill="#6b7280" />
+          <path d="M 195 430 Q 210 425 225 430" stroke="#6b7280" strokeWidth="3" strokeLinecap="round" fill="none" />
           
-          {/* Online Badge - Static */}
-          <circle cx="235" cy="400" r="6" fill="#10b981" />
+          {/* Online Status */}
+          <circle cx="225" cy="405" r="4" fill="#10b981" stroke="#ffffff" strokeWidth="2" />
           
-          {/* User Info */}
-          <text x="250" y="405" fontSize="9" fill="#2563a8" fontWeight="bold">Dr. Ahmet Y.</text>
-          <text x="250" y="415" fontSize="7" fill="#5ba3d0">Kardiyoloji</text>
-          <text x="250" y="423" fontSize="7" fill="#5ba3d0">İstanbul</text>
+          {/* Profile Info */}
+          <text x="235" y="410" fontSize="8" fill="#1f2937" fontWeight="bold">Dr. Ahmet Yılmaz</text>
+          <text x="235" y="420" fontSize="6" fill="#6b7280">Kardiyoloji Uzmanı</text>
+          <text x="235" y="428" fontSize="6" fill="#6b7280">📍 İstanbul Anadolu</text>
           
-          {/* Stats Bar */}
-          <rect x="190" y="440" width="110" height="20" fill="#f0f9ff" rx="3" />
+          {/* Experience Badge */}
+          <rect x="235" y="432" width="35" height="12" fill="#dbeafe" rx="6" />
+          <text x="240" y="440" fontSize="5" fill="#1e40af" fontWeight="bold">5 Yıl Deneyim</text>
           
-          <g>
-            <circle cx="200" cy="450" r="3" fill="#10b981" />
-            <text x="207" y="453" fontSize="7" fill="#2563a8">12 Başvuru</text>
-          </g>
-          
-          <g>
-            <circle cx="260" cy="450" r="3" fill="#3b82f6" />
-            <text x="267" y="453" fontSize="7" fill="#2563a8">5 Yıl</text>
-          </g>
+          {/* Stats */}
+          <rect x="185" y="450" width="130" height="15" fill="#f9fafb" rx="4" />
+          <text x="190" y="460" fontSize="6" fill="#374151">📋 12 Başvuru</text>
+          <text x="250" y="460" fontSize="6" fill="#374151">⭐ 4.8/5.0</text>
         </g>
 
-        {/* Component 5: Mobile Phone App - Bottom Right */}
+        {/* Component 5: Modern iPhone App - Bottom Right */}
         <g className="animate-slide-in-right delay-200">
+          {/* Phone Shadow */}
+          <ellipse cx="550" cy="475" rx="75" ry="8" fill="#000000" opacity="0.1" />
+          
           {/* Card Background */}
-          <rect x="480" y="370" width="140" height="100" fill="url(#whiteGradient)" stroke="#5ba3d0" strokeWidth="4" rx="8" />
+          <rect x="480" y="370" width="140" height="100" fill="#ffffff" stroke="#e5e7eb" strokeWidth="2" rx="12" />
           
           {/* Title */}
-          <text x="490" y="385" fontSize="8" fill="#5ba3d0" fontWeight="bold">Mobil Uygulama</text>
+          <text x="490" y="385" fontSize="7" fill="#1e40af" fontWeight="bold">📱 Mobil Uygulama</text>
           
-          {/* Phone Frame */}
-          <rect x="520" y="395" width="60" height="70" fill="#1e293b" stroke="#5ba3d0" strokeWidth="3" rx="8" />
+          {/* iPhone Frame */}
+          <rect x="520" y="395" width="60" height="70" fill="#1f2937" stroke="#374151" strokeWidth="2" rx="12" />
           
-          {/* Phone Screen */}
-          <rect x="525" y="402" width="50" height="56" fill="#dbeafe" rx="3" />
+          {/* Screen */}
+          <rect x="525" y="402" width="50" height="56" fill="#000000" rx="8" />
           
-          {/* Status Bar */}
-          <rect x="525" y="402" width="50" height="6" fill="#2563a8" opacity="0.9" rx="3" />
-          <text x="528" y="406" fontSize="4" fill="#ffffff" fontWeight="bold">9:41</text>
-          <circle cx="568" cy="404" r="1" fill="#10b981" />
-          <circle cx="571" cy="404" r="1" fill="#ffffff" />
+          {/* Dynamic Island */}
+          <rect x="540" y="404" width="20" height="4" fill="#1f2937" rx="2" />
+          
+          {/* Screen Content */}
+          <rect x="527" y="410" width="46" height="46" fill="#f8fafc" rx="6" />
           
           {/* App Header */}
-          <rect x="528" y="412" width="44" height="8" fill="#06b6d4" opacity="0.2" rx="2" />
-          <text x="530" y="417" fontSize="5" fill="#2563a8" fontWeight="bold">MediKariyer</text>
+          <rect x="529" y="412" width="42" height="8" fill="#1e40af" rx="2" />
+          <text x="531" y="417" fontSize="4" fill="#ffffff" fontWeight="bold">MediKariyer</text>
+          <circle cx="567" cy="416" r="2" fill="#ffffff" />
           
-          {/* Job Cards in App */}
-          <rect x="530" y="424" width="40" height="12" fill="#ffffff" stroke="#5ba3d0" strokeWidth="1" rx="2" />
-          <rect x="532" y="426" width="8" height="8" fill="#06b6d4" opacity="0.3" rx="1" />
-          <rect x="542" y="427" width="20" height="2" fill="#2563a8" opacity="0.6" rx="0.5" />
-          <rect x="542" y="430" width="15" height="2" fill="#5ba3d0" opacity="0.5" rx="0.5" />
-          <circle cx="567" cy="430" r="2" fill="#10b981" />
+          {/* Job Cards */}
+          <rect x="530" y="423" width="40" height="10" fill="#ffffff" stroke="#e5e7eb" strokeWidth="0.5" rx="2" />
+          <circle cx="535" cy="428" r="2" fill="#3b82f6" />
+          <rect x="540" y="425" width="20" height="1.5" fill="#1f2937" rx="0.5" />
+          <rect x="540" y="427.5" width="15" height="1.5" fill="#6b7280" rx="0.5" />
+          <rect x="565" y="426" width="4" height="4" fill="#10b981" rx="1" />
           
-          <rect x="530" y="438" width="40" height="12" fill="#ffffff" stroke="#5ba3d0" strokeWidth="1" rx="2" />
-          <rect x="532" y="440" width="8" height="8" fill="#3b82f6" opacity="0.3" rx="1" />
-          <rect x="542" y="441" width="20" height="2" fill="#2563a8" opacity="0.6" rx="0.5" />
-          <rect x="542" y="444" width="15" height="2" fill="#5ba3d0" opacity="0.5" rx="0.5" />
-          <circle cx="567" cy="444" r="2" fill="#f59e0b" />
+          <rect x="530" y="436" width="40" height="10" fill="#ffffff" stroke="#e5e7eb" strokeWidth="0.5" rx="2" />
+          <circle cx="535" cy="441" r="2" fill="#ef4444" />
+          <rect x="540" y="438" width="20" height="1.5" fill="#1f2937" rx="0.5" />
+          <rect x="540" y="440.5" width="15" height="1.5" fill="#6b7280" rx="0.5" />
+          <rect x="565" y="439" width="4" height="4" fill="#f59e0b" rx="1" />
           
-          {/* Bottom Navigation */}
-          <rect x="528" y="452" width="44" height="6" fill="#2563a8" opacity="0.1" rx="2" />
-          <circle cx="535" cy="455" r="1.5" fill="#2563a8" />
-          <circle cx="545" cy="455" r="1.5" fill="#5ba3d0" />
-          <circle cx="555" cy="455" r="1.5" fill="#5ba3d0" />
-          <circle cx="565" cy="455" r="1.5" fill="#5ba3d0" />
+          <rect x="530" y="449" width="40" height="6" fill="#f3f4f6" rx="2" />
+          <text x="532" y="453" fontSize="3" fill="#6b7280">Daha fazla ilan...</text>
+          
+          {/* Home Indicator */}
+          <rect x="545" y="460" width="10" height="2" fill="#6b7280" rx="1" />
           
           {/* Notification Badge */}
-          <circle cx="575" cy="398" r="8" fill="#ef4444" />
-          <text x="571" y="401" fontSize="7" fill="#ffffff" fontWeight="bold">3</text>
+          <circle cx="575" cy="398" r="6" fill="#ef4444" />
+          <text x="572" y="401" fontSize="5" fill="#ffffff" fontWeight="bold">3</text>
         </g>
       </svg>
 
       {/* CSS Animations */}
-      <style jsx>{`
+      <style jsx={true}>{`
         @keyframes pulse-slow {
           0%, 100% {
             transform: scale(1);

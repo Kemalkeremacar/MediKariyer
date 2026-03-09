@@ -14,6 +14,8 @@
  * - 9.5: Production build'lerinde logların kaldırılmasını sağlama
  */
 
+import { env } from '@/config/env';
+
 // ============================================================================
 // DEV LOGGER CLASS
 // ============================================================================
@@ -22,6 +24,7 @@ class DevLogger {
   private enabled: boolean;
 
   constructor() {
+    // Sadece __DEV__ kontrolü - production build'de zaten false olur
     this.enabled = __DEV__;
   }
 

@@ -38,7 +38,7 @@
  * @since 2024
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
@@ -54,6 +54,9 @@ const MainLayout = () => {
   const location = useLocation();
   const { user } = useAuthStore();
   
+  // Mobile sidebar state - sadece admin sayfalarında kullanılır
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  
   // Ana sayfa için özel layout
   const isHomePage = location.pathname === '/';
   
@@ -66,6 +69,11 @@ const MainLayout = () => {
   
   // Hastane sayfaları kontrolü
   const isHospitalPage = location.pathname.startsWith('/hospital');
+
+  // Route değiştiğinde mobil sidebar'ı kapat
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
   
   // Doktor sayfaları için özel layout (Footer olmadan)
   if (isDoctorPage) {
@@ -123,17 +131,21 @@ const MainLayout = () => {
     return (
       <div className="flex flex-col w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {/* Üst Navigasyon */}
-        <Header />
+        <Header 
+          showMobileMenuButton={true}
+          onMobileMenuClick={() => setIsMobileSidebarOpen(true)}
+        />
 
         {/* Ana içerik alanı - Sidebar + Content */}
         <div className="flex flex-1 min-h-screen">
-          {/* Admin Sidebar - Sabit */}
-          <div className="flex-shrink-0">
-            <AdminSidebar />
-          </div>
+          {/* Admin Sidebar - Responsive */}
+          <AdminSidebar 
+            isOpen={isMobileSidebarOpen}
+            onClose={() => setIsMobileSidebarOpen(false)}
+          />
           
-          {/* İçerik alanı */}
-          <main role="main" className="flex-1 min-h-screen" style={{
+          {/* İçerik alanı - Mobilde full width, desktop'ta sidebar'dan sonra */}
+          <main role="main" className="flex-1 min-h-screen lg:ml-0" style={{
             background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)'
           }}>
             <div className="relative z-10">

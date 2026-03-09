@@ -22,32 +22,38 @@ const CORS_OPTIONS = {
       'http://127.0.0.1:8081',
       'http://127.0.0.1:5000',
       'http://127.0.0.1:3000',
-      'http://192.168.1.198:5000', // Network IP - Frontend (eski)
-      'http://192.168.1.198:3100',  // Network IP - Backend (eski)
-      'http://192.168.1.198:8081',
-      'http://192.168.1.134:5000', // Network IP - Frontend (güncel Wi-Fi IP)
-      'http://192.168.1.134:3100',  // Network IP - Backend (güncel Wi-Fi IP)
-      'http://192.168.1.134:8081',
-      'https://mk.monassist.com', // Production Frontend Domain
       'https://medikariyer.net', // Production Frontend Domain (yeni)
       'https://www.medikariyer.net' // Production Frontend Domain (www ile)
     ];
+
+    // Production ortamında sadece production domain'lerine izin ver
+    if (process.env.NODE_ENV === 'production') {
+      const productionOrigins = [
+        'https://medikariyer.net',
+        'https://www.medikariyer.net'
+      ];
+      
+      // Kaynağı olmayan isteklere (mobil uygulamalar) izin ver
+      if (!origin) {
+        return callback(null, true);
+      }
+      
+      if (productionOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Production'da izin verilmeyen origin
+      callback(new Error('Bu kaynağa CORS politikası tarafından izin verilmiyor.'));
+      return;
+    }
     
+    // Development ortamında daha esnek kontrol
     // Kaynağı olmayan isteklere (mobil uygulamalar, Postman gibi araçlar) izin ver.
-    // Mobile app'ler origin header'ı göndermez, bu yüzden her zaman izin ver.
     if (!origin) {
       return callback(null, true);
     }
     
-    // VPN IP range kontrolü (10.8.0.0/24) - OpenVPN için
-    // VPN IP'lerinden gelen isteklere otomatik izin ver
-    const vpnIpPattern = /^https?:\/\/10\.8\.0\.\d{1,3}(:\d+)?$/;
-    if (vpnIpPattern.test(origin)) {
-      return callback(null, true);
-    }
-    
     // Local network IP range kontrolü (192.168.1.0/24) - Wi-Fi network için
-    // Local network IP'lerinden gelen isteklere otomatik izin ver
     const localNetworkPattern = /^https?:\/\/192\.168\.1\.\d{1,3}(:\d+)?$/;
     if (localNetworkPattern.test(origin)) {
       return callback(null, true);
@@ -58,24 +64,12 @@ const CORS_OPTIONS = {
       return callback(null, true);
     }
     
-    // Regex pattern kontrolü (array içindeki regex'ler için)
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
-      return false;
-    });
-    
-    if (isAllowed) {
-      return callback(null, true);
+    // Development'da bilinmeyen origin'leri logla
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`CORS: Bilinmeyen origin: ${origin}`);
     }
     
     // Listede yoksa, CORS hatası fırlat.
-    // Production'da logger kullan (console.error yerine)
-    if (process.env.NODE_ENV === 'production') {
-      // Logger import edilmediği için sadece callback ile hata döndür
-      // CORS hataları zaten HTTP loglarında görünür
-    }
     callback(new Error('Bu kaynağa CORS politikası tarafından izin verilmiyor.'));
   },
   credentials: true, // Frontend'in cookie gibi kimlik bilgilerini API'ye göndermesine izin ver.

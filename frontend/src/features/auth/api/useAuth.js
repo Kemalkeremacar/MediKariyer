@@ -120,6 +120,8 @@ export const useLogin = () => {
         const message = error.response.data.message;
         if (message.includes('Geçersiz email veya şifre')) {
           errorMessage = 'Geçersiz email veya şifre';
+        } else if (message === 'Validasyon hatası' || message.includes('Validasyon hatası')) {
+          errorMessage = 'E-posta veya şifre hatalı';
         } else {
           errorMessage = message;
         }
@@ -358,7 +360,7 @@ export const useRegisterDoctor = () => {
         const message = error.response.data.message;
         if (message.includes('zaten kayıtlı')) {
           errorMessage = 'Bu e-posta adresi zaten kullanımda';
-        } else if (message.includes('Validasyon hatası')) {
+        } else if (message === 'Validasyon hatası' || message.includes('Validasyon hatası')) {
           errorMessage = 'Girilen bilgilerde hata var';
         } else {
           errorMessage = message;
@@ -441,7 +443,7 @@ export const useRegisterHospital = () => {
         const message = error.response.data.message;
         if (message.includes('zaten kayıtlı')) {
           errorMessage = 'Bu e-posta adresi zaten kullanımda';
-        } else if (message.includes('Validasyon hatası')) {
+        } else if (message === 'Validasyon hatası' || message.includes('Validasyon hatası')) {
           errorMessage = 'Girilen bilgilerde hata var';
         } else {
           errorMessage = message;

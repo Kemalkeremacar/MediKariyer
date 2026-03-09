@@ -79,11 +79,37 @@ export const useLogout = () => {
       devLog.log('🔴 useLogout - Clearing tokens...');
       await tokenManager.clearTokens();
       
-      // FIXED: Clear persisted auth state from AsyncStorage
-      // This ensures no old user data remains after logout
-      devLog.log('🔴 useLogout - Clearing persisted auth state...');
+      // Clear persisted auth state from AsyncStorage but preserve hasSeenSplash
+      // This ensures no old user data remains after logout but splash screen won't show again
+      devLog.log('🔴 useLogout - Clearing persisted auth state (preserving hasSeenSplash)...');
       try {
+        // Get current auth storage to preserve hasSeenSplash
+        const currentAuthStorage = await AsyncStorage.getItem('auth-storage');
+        let hasSeenSplash = false;
+        let currentVersion = 0;
+        
+        if (currentAuthStorage) {
+          const parsed = JSON.parse(currentAuthStorage);
+          hasSeenSplash = parsed.state?.hasSeenSplash || false;
+          currentVersion = parsed.version || 0;
+        }
+        
+        // Clear auth storage
         await AsyncStorage.removeItem('auth-storage');
+        
+        // Restore hasSeenSplash flag with proper Zustand persist structure
+        if (hasSeenSplash) {
+          const newAuthStorage = {
+            state: {
+              user: null,
+              authStatus: 'unauthenticated',
+              hasSeenSplash: true,
+            },
+            version: currentVersion,
+          };
+          await AsyncStorage.setItem('auth-storage', JSON.stringify(newAuthStorage));
+          devLog.log('🔴 useLogout - hasSeenSplash flag preserved');
+        }
       } catch (error) {
         devLog.warn('🔴 useLogout - Failed to clear AsyncStorage:', error);
         // Don't throw - continue with logout

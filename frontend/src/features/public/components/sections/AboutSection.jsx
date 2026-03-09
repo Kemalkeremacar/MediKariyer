@@ -68,7 +68,7 @@ const AboutSection = () => {
       style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}
     >
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 py-20 lg:py-32">
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 py-8 lg:py-12">
         <div className="absolute inset-0">
           <div className="absolute top-[-14rem] right-[-8rem] h-[26rem] w-[26rem] rounded-full bg-blue-300/40 blur-3xl" />
           <div className="absolute bottom-[-10rem] left-[-10rem] h-[24rem] w-[24rem] rounded-full bg-cyan-300/30 blur-3xl" />
@@ -132,7 +132,7 @@ const AboutSection = () => {
       </section>
 
       {/* Mission & Vision */}
-      <section className="relative overflow-hidden bg-white py-20">
+      <section className="relative overflow-hidden bg-white py-8">
         <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(circle at top, rgba(59,130,246,0.18), transparent 60%)' }} />
         <div className="absolute inset-y-0 left-0 hidden w-1/3 bg-gradient-to-r from-blue-100 via-white to-transparent lg:block" />
         <div className="relative z-10 container mx-auto px-4">
@@ -151,7 +151,7 @@ const AboutSection = () => {
             </h2>
           </motion.div>
 
-          <div className="mt-16 grid gap-10 lg:grid-cols-2">
+          <div className="mt-12 grid gap-10 lg:grid-cols-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -238,7 +238,7 @@ const AboutSection = () => {
       </section>
 
       {/* CTA - Video Section */}
-      <section className="relative overflow-hidden min-h-screen flex items-start justify-center pt-32">
+      <section className="relative overflow-hidden min-h-[70vh] flex items-start justify-center pt-24">
         {/* Video Background */}
         <video
           autoPlay

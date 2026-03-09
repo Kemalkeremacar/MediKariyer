@@ -1,13 +1,32 @@
 /**
  * @file main.jsx
- * @description Uygulama giriş noktası - React DOM render işlemi
+ * @description Uygulama Giriş Noktası - React DOM Render ve Provider Setup
  * 
- * Modern ve temiz toast sistemi:
- * - Sonner kütüphanesi ile basit setup
- * - CSS ile tam kontrol (JavaScript ile pozisyon güncellemesi YOK)
+ * Bu dosya, MediKariyer React uygulamasının giriş noktasıdır. React DOM'u
+ * başlatır, tüm provider'ları yapılandırır ve uygulamayı DOM'a render eder.
+ * 
+ * Ana Özellikler:
+ * - React 18 createRoot API kullanımı
+ * - BrowserRouter ile client-side routing
+ * - React Query provider ile server state yönetimi
+ * - Sonner toast provider ile bildirim sistemi
+ * - React Query DevTools (development ortamında)
+ * 
+ * Provider Hiyerarşisi:
+ * 1. BrowserRouter - URL routing
+ * 2. QueryClientProvider - Server state management
+ * 3. Toaster - Global toast notifications
+ * 4. App - Ana uygulama bileşeni
+ * 
+ * Toast Sistemi:
+ * - Sonner kütüphanesi ile modern toast sistemi
+ * - CSS ile tam kontrol (JavaScript pozisyon güncellemesi YOK)
  * - position: fixed ile viewport'a sabitlenmiş
  * - Scroll'dan tamamen bağımsız
  * - Performanslı ve temiz kod
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
  */
 
 import React from 'react';

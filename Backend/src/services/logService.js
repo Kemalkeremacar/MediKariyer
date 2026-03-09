@@ -196,6 +196,7 @@ class LogService {
         platform,
         userId,
         requestId,
+        search,
         startDate,
         endDate,
         page = 1,
@@ -212,10 +213,17 @@ class LogService {
 
       // Filters
       if (level) query = query.where('al.level', level);
-      if (category) query = query.where('al.category', category);
+      if (category) query = query.where('al.category', 'like', `%${category}%`);
       if (platform) query = query.where('al.platform', platform);
       if (userId) query = query.where('al.user_id', userId);
       if (requestId) query = query.where('al.request_id', requestId);
+      if (search) {
+        query = query.where(function() {
+          this.where('al.message', 'like', `%${search}%`)
+              .orWhere('al.category', 'like', `%${search}%`)
+              .orWhere('al.level', 'like', `%${search}%`);
+        });
+      }
       if (startDate) query = query.where('al.timestamp', '>=', startDate);
       if (endDate) query = query.where('al.timestamp', '<=', endDate);
 
@@ -225,6 +233,13 @@ class LogService {
 
       // Data query with pagination
       const logs = await query.limit(limit).offset(offset);
+
+      logger.info('Application logs sorgulandı', { 
+        total: parseInt(total), 
+        page, 
+        limit,
+        filters 
+      });
 
       return {
         logs,
@@ -238,7 +253,8 @@ class LogService {
         error: error.message, 
         stack: error.stack,
         code: error.code,
-        sqlState: error.sqlState 
+        sqlState: error.sqlState,
+        filters 
       });
       throw error;
     }
@@ -265,6 +281,7 @@ class LogService {
         action,
         resourceType,
         resourceId,
+        search,
         startDate,
         endDate,
         page = 1,
@@ -281,8 +298,16 @@ class LogService {
       // Filters
       if (actorId) query = query.where('al.actor_id', actorId);
       if (action) query = query.where('al.action', 'like', `%${action}%`);
-      if (resourceType) query = query.where('al.resource_type', resourceType);
+      if (resourceType) query = query.where('al.resource_type', 'like', `%${resourceType}%`);
       if (resourceId) query = query.where('al.resource_id', resourceId);
+      if (search) {
+        query = query.where(function() {
+          this.where('al.action', 'like', `%${search}%`)
+              .orWhere('al.actor_name', 'like', `%${search}%`)
+              .orWhere('al.actor_email', 'like', `%${search}%`)
+              .orWhere('al.resource_type', 'like', `%${search}%`);
+        });
+      }
       if (startDate) query = query.where('al.timestamp', '>=', startDate);
       if (endDate) query = query.where('al.timestamp', '<=', endDate);
 
@@ -330,6 +355,7 @@ class LogService {
         eventType,
         severity,
         ipAddress,
+        search,
         startDate,
         endDate,
         page = 1,
@@ -346,7 +372,15 @@ class LogService {
       // Filters
       if (eventType) query = query.where('sl.event_type', eventType);
       if (severity) query = query.where('sl.severity', severity);
-      if (ipAddress) query = query.where('sl.ip_address', ipAddress);
+      if (ipAddress) query = query.where('sl.ip_address', 'like', `%${ipAddress}%`);
+      if (search) {
+        query = query.where(function() {
+          this.where('sl.message', 'like', `%${search}%`)
+              .orWhere('sl.event_type', 'like', `%${search}%`)
+              .orWhere('sl.email', 'like', `%${search}%`)
+              .orWhere('sl.ip_address', 'like', `%${search}%`);
+        });
+      }
       if (startDate) query = query.where('sl.timestamp', '>=', startDate);
       if (endDate) query = query.where('sl.timestamp', '<=', endDate);
 
@@ -564,15 +598,41 @@ class LogService {
 
   /**
    * Eski logları temizle
-   * Stored procedure çağrısı yapar
    * 
    * @param {number} [retentionDays=90] - Kaç günden eski loglar silinecek
-   * @returns {Promise<void>}
+   * @returns {Promise<Object>} - Silme sonucu
    */
   static async cleanupOldLogs(retentionDays = 90) {
     try {
-      await getDb().raw('EXEC dbo.sp_cleanup_old_logs @retention_days = ?', [retentionDays]);
-      logger.info('Eski loglar temizlendi', { retentionDays });
+      const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+      
+      // Her log tablosundan eski kayıtları sil
+      const deletedApp = await getDb()('dbo.application_logs')
+        .where('timestamp', '<', cutoffDate)
+        .delete();
+      
+      const deletedAudit = await getDb()('dbo.audit_logs')
+        .where('timestamp', '<', cutoffDate)
+        .delete();
+      
+      const deletedSecurity = await getDb()('dbo.security_logs')
+        .where('timestamp', '<', cutoffDate)
+        .delete();
+      
+      logger.info('Eski loglar temizlendi', { 
+        retentionDays,
+        cutoffDate: cutoffDate.toISOString(),
+        deletedApp,
+        deletedAudit,
+        deletedSecurity,
+        totalDeleted: deletedApp + deletedAudit + deletedSecurity
+      });
+      
+      return {
+        deletedApp,
+        deletedAudit,
+        deletedSecurity
+      };
     } catch (error) {
       logger.error('Log temizleme hatası', { error: error.message });
       throw error;

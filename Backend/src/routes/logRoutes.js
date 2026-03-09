@@ -133,6 +133,77 @@ router.get(
 );
 
 /**
+ * GET /api/logs/test/connection
+ * Log tablolarının varlığını ve bağlantısını test et
+ */
+router.get(
+  '/test/connection',
+  async (req, res) => {
+    try {
+      const { db } = require('../config/dbConfig');
+      const logger = require('../utils/logger');
+      
+      // Her tabloyu test et
+      const results = {
+        application_logs: { exists: false, count: 0, error: null },
+        audit_logs: { exists: false, count: 0, error: null },
+        security_logs: { exists: false, count: 0, error: null }
+      };
+      
+      // Application logs test
+      try {
+        const [appCount] = await db('dbo.application_logs').count('* as count');
+        results.application_logs.exists = true;
+        results.application_logs.count = parseInt(appCount.count);
+      } catch (error) {
+        results.application_logs.error = error.message;
+      }
+      
+      // Audit logs test
+      try {
+        const [auditCount] = await db('dbo.audit_logs').count('* as count');
+        results.audit_logs.exists = true;
+        results.audit_logs.count = parseInt(auditCount.count);
+      } catch (error) {
+        results.audit_logs.error = error.message;
+      }
+      
+      // Security logs test
+      try {
+        const [securityCount] = await db('dbo.security_logs').count('* as count');
+        results.security_logs.exists = true;
+        results.security_logs.count = parseInt(securityCount.count);
+      } catch (error) {
+        results.security_logs.error = error.message;
+      }
+      
+      // Test log kaydet
+      logger.info('🧪 Test log kaydı - Log sistemi test ediliyor', {
+        category: 'test',
+        userId: req.user?.id,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        url: req.originalUrl,
+        method: req.method
+      });
+      
+      res.json({
+        success: true,
+        message: 'Log tabloları test edildi ve test log kaydedildi',
+        data: results,
+        note: 'Test log kaydı oluşturuldu. 5-10 saniye sonra application_logs tablosunu kontrol edin.'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: 'Test başarısız',
+        error: error.message
+      });
+    }
+  }
+);
+
+/**
  * POST /api/logs/cleanup
  * Eski logları temizle
  * 

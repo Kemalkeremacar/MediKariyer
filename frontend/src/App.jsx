@@ -1,6 +1,28 @@
 /**
  * @file App.jsx
- * @description Ana uygulama bileşeni - Router ve provider yapılandırması
+ * @description Ana Uygulama Bileşeni - MediKariyer Frontend Root Component
+ * 
+ * Bu dosya, MediKariyer uygulamasının ana bileşenidir. Tüm provider'ları,
+ * routing yapısını, global middleware'leri ve temel uygulama mantığını içerir.
+ * 
+ * Ana Özellikler:
+ * - React Router yapılandırması
+ * - Error Boundary ile hata yönetimi
+ * - Suspense ile lazy loading
+ * - Global modal yönetimi
+ * - Authentication hooks
+ * - Notification stream
+ * - Session timeout yönetimi
+ * - Scroll to top functionality
+ * 
+ * Hooks:
+ * - useTokenRefresh: Otomatik token yenileme
+ * - useSessionTimeout: Session timeout kontrolü
+ * - useNotificationStream: Real-time bildirimler
+ * - useScrollToTop: Sayfa geçişlerinde scroll reset
+ * 
+ * @author MediKariyer Development Team
+ * @version 2.0.0
  */
 
 import React, { useEffect, Suspense } from 'react';

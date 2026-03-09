@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLogin } from '../hooks/useLogin';
-import { getUserFriendlyErrorMessage, isAuthError, isNetworkError } from '@/utils/errorHandler';
+import { getUserFriendlyErrorMessage, isAuthError, isNetworkError, isValidationError } from '@/utils/errorHandler';
 import { useTranslation } from '@/hooks/useTranslation';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -118,7 +118,8 @@ export const LoginScreen = () => {
       let message: string;
 
       // Merkezi error util'leri ile hata sınıflandırma
-      if (isAuthError(error)) {
+      if (isAuthError(error) || isValidationError(error)) {
+        // Auth hatası veya validasyon hatası - her ikisi de yanlış şifre/email anlamına gelir
         message = t('errors.invalidCredentials');
       } else if (isNetworkError(error)) {
         message = t('errors.network');

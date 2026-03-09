@@ -80,7 +80,6 @@ export const useLogin = (callbacks?: UseLoginCallbacks) => {
     },
     onSuccess: async (data) => {
       devLog.log('🔐 useLogin onSuccess - Starting auth setup...');
-      devLog.log('🔐 useLogin onSuccess - User data:', JSON.stringify(data.user, null, 2));
       
       /**
        * 1. Token'ları kaydet

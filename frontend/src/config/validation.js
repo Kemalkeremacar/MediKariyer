@@ -105,7 +105,7 @@ const passwordSchema = z
   .min(6, 'Şifre en az 6 karakter olmalıdır')
   .max(128, 'Şifre en fazla 128 karakter olabilir')
   .refine((val) => !val.includes(' '), 'Şifre boşluk içeremez')
-  .refine((val) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(val), 'Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir')
+  .refine((val) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s])/.test(val), 'Şifre en az 1 büyük harf, 1 küçük harf, 1 rakam ve 1 özel karakter içermelidir')
   .refine((val) => !/(.)\1{2,}/.test(val), 'Şifre aynı karakterin 3 kez tekrarını içeremez');
 
 /**

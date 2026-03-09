@@ -104,7 +104,7 @@ const emailSchema = Joi.string()
 const passwordSchema = Joi.string()
   .min(VALIDATION.MIN_PASSWORD_LENGTH)
   .max(VALIDATION.MAX_PASSWORD_LENGTH)
-  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
+  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s])/)
   .custom((value, helpers) => {
     // Ek güvenlik kontrolleri
     if (value.includes(' ')) {

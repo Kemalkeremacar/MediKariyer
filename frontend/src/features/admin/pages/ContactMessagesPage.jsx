@@ -122,16 +122,16 @@ const ContactMessagesPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                <MessageSquare className="h-8 w-8 mr-3 text-indigo-600" />
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <MessageSquare className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-indigo-600" />
                 İletişim Mesajları
               </h1>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 mt-2 text-sm sm:text-base">
                 İletişim formundan gelen mesajları görüntüleyin
               </p>
             </div>
@@ -141,24 +141,24 @@ const ContactMessagesPage = () => {
         {/* Messages List */}
         <div className="admin-card">
           <div className="admin-card-header">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
               Gelen Mesajlar {typeof pagination.total === 'number' ? `(${pagination.total})` : `(${messages.length})`}
             </h3>
           </div>
           
           <div className="admin-card-body">
             {messages.length === 0 ? (
-              <div className="text-center py-12">
-                <MessageSquare className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <h3 className="text-lg font-medium text-gray-600 mb-2">
+              <div className="text-center py-8 sm:py-12">
+                <MessageSquare className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-600 mb-2">
                   Henüz mesaj yok
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-sm sm:text-base">
                   İletişim formundan gönderilen mesajlar burada görünecek
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -166,18 +166,18 @@ const ContactMessagesPage = () => {
                     onClick={(e) => handleViewMessage(message, e)}
                   >
                     <div className="admin-card-body relative overflow-hidden">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-blue-100 rounded-lg">
-                              <User className="h-5 w-5 text-blue-600" />
+                            <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                              <User className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900 text-lg">
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-semibold text-gray-900 text-base sm:text-lg truncate">
                                 {message.name}
                               </h4>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <Mail className="h-3 w-3" />
+                                <Mail className="h-3 w-3 flex-shrink-0" />
                                 {message.email}
                               </div>
                             </div>

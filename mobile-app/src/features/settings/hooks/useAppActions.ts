@@ -179,7 +179,9 @@ export const useAppActions = () => {
       // Kullanıcı paylaşımı iptal etti
       return false;
     } catch (error) {
-      console.error('Share error:', error);
+      if (__DEV__) {
+        console.error('Share error:', error);
+      }
       showToast('Paylaşım yapılamadı', 'error');
       return false;
     } finally {
@@ -248,7 +250,9 @@ export const useAppActions = () => {
       return false;
       */
     } catch (error) {
-      console.warn('Rate app error:', error);
+      if (__DEV__) {
+        console.warn('Rate app error:', error);
+      }
       return false;
     } finally {
       setIsLoading(false);

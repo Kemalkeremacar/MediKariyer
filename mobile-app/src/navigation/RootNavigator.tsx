@@ -61,55 +61,27 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const isUserActive = (user: any): boolean => {
   // Kullanıcı yoksa Login'e gider, engelleme yapma!
   if (!user) {
-    devLog.log('🛑 DEBUG isUserActive: kullanıcı null/undefined, TRUE döndürülüyor (login\'e izin ver)');
     return true;
   }
   
-  // ÇOK DETAYLI DEBUG LOG'LAR
-  devLog.log('🛑 DEBUG isUserActive - TAM KULLANICI OBJESİ:', JSON.stringify(user, null, 2));
-  devLog.log('🛑 DEBUG isUserActive - is_active değeri:', user.is_active);
-  devLog.log('🛑 DEBUG isUserActive - is_active tipi:', typeof user.is_active);
-  devLog.log('🛑 DEBUG isUserActive - is_active === 0:', user.is_active === 0);
-  devLog.log('🛑 DEBUG isUserActive - is_active === false:', user.is_active === false);
-  devLog.log('🛑 DEBUG isUserActive - is_active === "0":', user.is_active === '0');
-  devLog.log('🛑 DEBUG isUserActive - is_active === null:', user.is_active === null);
-  devLog.log('🛑 DEBUG isUserActive - is_active === undefined:', user.is_active === undefined);
-  
   const active = user.is_active;
   
-  // ACİL ÖNLEM: Eğer undefined veya null ise, kullanıcıyı engelleme!
   // Varsayılan olarak AKTİF kabul et (Login olabilsin, engel olmasın)
   if (active === undefined || active === null) {
-    devLog.log('🛑 DEBUG isUserActive - is_active null/undefined, varsayılan TRUE (erişime izin ver)');
     return true; 
   }
   
   // Toleranslı Kontrol - Aktif değerler
-  if (active === true) {
-    devLog.log('🛑 DEBUG isUserActive - is_active true, TRUE döndürülüyor');
-    return true;
-  }
-  if (active === 1) {
-    devLog.log('🛑 DEBUG isUserActive - is_active 1, TRUE döndürülüyor');
-    return true;
-  }
-  if (active === '1') {
-    devLog.log('🛑 DEBUG isUserActive - is_active "1", TRUE döndürülüyor');
-    return true;
-  }
-  if (active === 'true') {
-    devLog.log('🛑 DEBUG isUserActive - is_active "true", TRUE döndürülüyor');
+  if (active === true || active === 1 || active === '1' || active === 'true') {
     return true;
   }
   
   // Sadece kesinlikle false veya 0 ise engelle
   if (active === false || active === 0 || active === '0') {
-    devLog.log('🛑 DEBUG isUserActive - is_active false/0/"0", FALSE döndürülüyor (erişimi engelle)');
     return false;
   }
 
   // Diğer her durumda (beklenmeyen değerler) AKTİF kabul et
-  devLog.log('🛑 DEBUG isUserActive - beklenmeyen değer, varsayılan TRUE (erişime izin ver)');
   return true;
 };
 

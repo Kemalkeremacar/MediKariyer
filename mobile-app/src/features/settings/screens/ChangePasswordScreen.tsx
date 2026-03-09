@@ -52,7 +52,7 @@ import { changePasswordSchema } from '@/utils/validators';
  * - Küçük harf: +15 puan (zorunlu)
  * - Büyük harf: +15 puan (zorunlu)
  * - Rakam içeriyor: +15 puan (zorunlu)
- * - Özel karakter (@$!%*?&): +15 puan (zorunlu)
+ * - Özel karakter: +15 puan (zorunlu)
  * 
  * @param {string} password - Kontrol edilecek şifre
  * @returns {number} Şifre gücü (0-100)
@@ -294,7 +294,7 @@ export const ChangePasswordScreen = ({ navigation }: Props) => {
                 autoCapitalize="none"
                 style={styles.passwordInput}
                 textContentType="newPassword"
-                passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
+                passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special;"
               />
               <TouchableOpacity
                 style={styles.eyeButton}
@@ -338,7 +338,7 @@ export const ChangePasswordScreen = ({ navigation }: Props) => {
                 autoCapitalize="none"
                 style={styles.passwordInput}
                 textContentType="newPassword"
-                passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special; allowed: special, [@$!%*?&];"
+                passwordRules="minlength: 6; required: lower; required: upper; required: digit; required: special;"
               />
               <TouchableOpacity
                 style={styles.eyeButton}

@@ -107,10 +107,19 @@ const extractErrorMessage = (error: AxiosError<BackendErrorResponse>): string =>
   }
 
   const data = response.data;
+  const requestUrl = error.config?.url || '';
 
   // Öncelik 1: Doğrudan message alanı
   if (typeof data.message === 'string' && data.message.trim()) {
-    return data.message.trim();
+    const message = data.message.trim();
+    
+    // Login/Register endpoint'lerinde "Validasyon hatası" mesajını özelleştir
+    if ((requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register')) && 
+        message === 'Validasyon hatası') {
+      return 'E-posta veya şifre hatalı';
+    }
+    
+    return message;
   }
 
   // Öncelik 2: Error alanı
@@ -142,6 +151,12 @@ const extractErrorMessage = (error: AxiosError<BackendErrorResponse>): string =>
 
   // Öncelik 4: HTTP durum koduna göre mesajlar
   const status = response.status;
+  
+  // Login/Register endpoint'lerinde 400 hatası için özel mesaj
+  if (status === 400 && (requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register'))) {
+    return 'E-posta veya şifre hatalı';
+  }
+  
   switch (status) {
     case 400:
       return 'Geçersiz istek. Lütfen girdiğiniz bilgileri kontrol edin.';

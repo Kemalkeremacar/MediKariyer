@@ -119,12 +119,47 @@ const createTransporter = () => {
   transporter = nodemailer.createTransport(config);
 
   // Connection test (opsiyonel ama önerilen)
-  transporter.verify((error, success) => {
-    if (error) {
-      logger.error('SMTP connection test başarısız', { error: error.message });
-    } else {
-      logger.info('SMTP sunucuya bağlantı başarılı');
+  // SMTP bağlantı hatası durumunda retry mekanizması ile test et
+  const testConnection = async (retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        await new Promise((resolve, reject) => {
+          transporter.verify((error, success) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(success);
+            }
+          });
+        });
+        
+        logger.info('SMTP sunucuya bağlantı başarılı');
+        return true;
+      } catch (error) {
+        logger.warn(`SMTP connection test başarısız (${i + 1}/${retries})`, { 
+          error: error.message,
+          attempt: i + 1
+        });
+        
+        if (i === retries - 1) {
+          logger.error('SMTP bağlantısı kurulamadı, simüle moda geçiliyor');
+          // Son denemede başarısız olursa transporter'ı null yap
+          transporter = null;
+          return false;
+        } else {
+          // Exponential backoff ile bekle
+          await new Promise(resolve => setTimeout(resolve, 2000 * Math.pow(2, i)));
+        }
+      }
     }
+    return false;
+  };
+
+  // Async olarak connection test et (blocking olmayan)
+  setImmediate(() => {
+    testConnection().catch(error => {
+      logger.error('SMTP connection test failed completely:', error);
+    });
   });
 
   return transporter;
@@ -457,19 +492,23 @@ const sendWelcomeEmail = async ({ to, name, userType }) => {
   ].filter(Boolean).join('\n');
 
   // HTML versiyonu (template ile)
-  const html = buildEmailHtml('welcome', {
+  const templateData = {
     name,
-    isDoctor,
-    isHospital,
+    isDoctor: isDoctor ? 'true' : '', // String olarak gönder
+    isHospital: isHospital ? 'true' : '', // String olarak gönder
     loginUrl,
     subject
-  });
+  };
+
+  const html = buildEmailHtml('welcome', templateData);
 
   try {
     const result = await sendMailWithRetry({ to, subject, text, html });
     logger.info('Hoşgeldin e-postası gönderildi', {
       to,
       userType,
+      isDoctor,
+      isHospital,
       simulated: result.simulated,
       attempts: result.attempts
     });
@@ -479,6 +518,8 @@ const sendWelcomeEmail = async ({ to, name, userType }) => {
     logger.error('Hoşgeldin e-postası gönderilemedi (kritik değil)', { 
       to, 
       userType,
+      isDoctor,
+      isHospital,
       error: error.message 
     });
     return { success: false, error: error.message };

@@ -701,53 +701,53 @@ const AdminJobDetailPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <Link
                 to="/admin/jobs"
-                className="flex items-center px-4 py-2 bg-gray-600 text-white border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+                className="flex items-center justify-center sm:justify-start px-4 py-2 bg-gray-600 text-white border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors w-full sm:w-auto"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Geri Dön
               </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                  <Briefcase className="h-8 w-8 mr-3 text-indigo-600" />
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 flex items-center">
+                  <Briefcase className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-indigo-600" />
                   İş İlanı Detayı
                 </h1>
-                <p className="text-gray-600 mt-1">İş ilanı bilgilerini görüntüleyin ve yönetin</p>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">İş ilanı bilgilerini görüntüleyin ve yönetin</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={handleExportJob}
-                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg"
+                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg flex-1 sm:flex-none"
                 title="İş ilanını indir"
               >
-                <Download className="w-4 h-4 mr-2" />
-                İndir
+                <Download className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">İndir</span>
               </button>
               <button
                 onClick={openDeleteModal}
-                className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg"
+                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md hover:shadow-lg flex-1 sm:flex-none"
                 disabled={deleteJobMutation.isPending}
                 title="İş ilanını kalıcı olarak siler (deleted_at set eder)"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Sil
+                <Trash2 className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Sil</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Job Content */}
-        <div className="bg-white rounded-xl shadow-lg p-8 space-y-8">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 space-y-6 sm:space-y-8">
           {/* Title and Status */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">{job.title}</h2>
               <div className="flex items-center gap-4 mb-4">
                 <StatusBadge status={job.status} statusId={job.status_id} />

@@ -16,7 +16,7 @@ const rateLimit = require('express-rate-limit');
  */
 const authLimiter = rateLimit({
   windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 dakika
-  max: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS) || 1000, // Test için 1000 deneme
+  max: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS) || 5, // Production: 5 deneme
   message: {
     error: 'Çok fazla giriş denemesi yaptınız. Lütfen 15 dakika sonra tekrar deneyin.',
     code: 'RATE_LIMIT_EXCEEDED'

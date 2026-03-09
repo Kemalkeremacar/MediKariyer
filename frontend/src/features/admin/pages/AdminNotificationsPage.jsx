@@ -24,10 +24,9 @@ import { toastMessages } from '@/config/toast';
 import { 
   Bell, CheckCircle, Filter, Trash2, 
   X, CheckCircle2, Trash, CheckCheck,
-  UserPlus, Building2, Briefcase, Camera, Mail, Users, Send
+  UserPlus, Building2, Briefcase, Camera, Mail, Send
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
-import { ROUTE_CONFIG } from '@config/routes.js';
 import apiRequest from '@/services/http/client';
 
 /**
@@ -88,12 +87,12 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
         isRead 
           ? 'border-gray-200 bg-white' 
           : 'border-blue-400 bg-blue-50'
-      } p-4 transition-all duration-200 hover:shadow-md cursor-pointer`}
+      } p-3 lg:p-4 transition-all duration-200 hover:shadow-md cursor-pointer`}
       onClick={handleClick}
     >
       {/* Selection Checkbox */}
       <div 
-        className="absolute top-3 right-3 z-10"
+        className="absolute top-2 lg:top-3 right-2 lg:right-3 z-10"
         onClick={(e) => {
           e.stopPropagation();
           onToggleSelect(notification.id);
@@ -108,24 +107,24 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
         </div>
       </div>
 
-      <div className="flex items-start gap-3 pr-8">
+      <div className="flex items-start gap-3 pr-6 lg:pr-8">
         {/* Icon */}
-        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+        <div className="flex-shrink-0 w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-gray-100 flex items-center justify-center">
           {getIcon(notification.type, notification.title)}
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3 mb-1">
-            <h4 className={`font-semibold text-base ${isRead ? 'text-gray-600' : 'text-gray-900'}`}>
+            <h4 className={`font-semibold text-sm lg:text-base break-words ${isRead ? 'text-gray-600' : 'text-gray-900'}`}>
               {notification.title}
             </h4>
             {!isRead && (
-              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500"></div>
+              <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-1"></div>
             )}
           </div>
           
-          <p className={`text-sm mb-2 ${isRead ? 'text-gray-500' : 'text-gray-700'}`}>
+          <p className={`text-xs lg:text-sm mb-2 break-words ${isRead ? 'text-gray-500' : 'text-gray-700'}`}>
             {message}
           </p>
 
@@ -137,8 +136,8 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Actions - Desktop only */}
+        <div className="hidden lg:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           {!isRead && (
             <button
               onClick={(e) => {
@@ -350,14 +349,14 @@ const AdminNotificationsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
         <div className="max-w-7xl mx-auto flex items-center justify-center min-h-screen">
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center shadow-sm">
-            <h2 className="text-gray-900 font-bold text-xl mb-4">Hata Oluştu</h2>
-            <p className="text-gray-600 mb-6">Bildirimler yüklenirken bir hata oluştu.</p>
+          <div className="bg-white rounded-lg border border-gray-200 p-6 lg:p-8 text-center shadow-sm max-w-md w-full">
+            <h2 className="text-gray-900 font-bold text-lg lg:text-xl mb-4">Hata Oluştu</h2>
+            <p className="text-gray-600 mb-6 text-sm lg:text-base">Bildirimler yüklenirken bir hata oluştu.</p>
             <button 
               onClick={() => window.location.reload()}
-              className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              className="bg-indigo-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors text-sm lg:text-base w-full sm:w-auto"
             >
               Tekrar Dene
             </button>
@@ -368,17 +367,17 @@ const AdminNotificationsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4 lg:p-6 shadow-sm">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <Bell className="w-6 h-6 text-indigo-600" />
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                <Bell className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-600" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Bildirimler</h1>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Bildirimler</h1>
                 {totalUnreadCount > 0 && (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 border border-red-200 mt-2">
                     {totalUnreadCount} okunmamış bildirim
@@ -387,22 +386,24 @@ const AdminNotificationsPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 lg:gap-3">
               <button
                 onClick={() => navigate('/admin/notifications/send')}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                className="inline-flex items-center justify-center gap-2 px-3 lg:px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm text-sm"
               >
                 <Send className="w-4 h-4" />
-                Bildirim Gönder
+                <span className="hidden sm:inline">Bildirim Gönder</span>
+                <span className="sm:hidden">Gönder</span>
               </button>
               {totalUnreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
                   disabled={markAllAsReadMutation.isLoading}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-3 lg:px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors disabled:opacity-50 text-sm"
                 >
                   <CheckCheck className="w-4 h-4" />
-                  <span>{markAllAsReadMutation.isLoading ? 'İşleniyor...' : 'Tümünü Okundu İşaretle'}</span>
+                  <span className="hidden sm:inline">{markAllAsReadMutation.isLoading ? 'İşleniyor...' : 'Tümünü Okundu İşaretle'}</span>
+                  <span className="sm:hidden">{markAllAsReadMutation.isLoading ? 'İşleniyor...' : 'Tümü Okundu'}</span>
                 </button>
               )}
             </div>
@@ -411,26 +412,28 @@ const AdminNotificationsPage = () => {
 
         {/* Bulk Actions Bar */}
         {showBulkActions && selectedNotifications.size > 0 && (
-          <div className="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4 flex items-center justify-between">
+          <div className="mb-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <span className="text-gray-900 font-medium">
                 {selectedNotifications.size} bildirim seçildi
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={handleBulkMarkAsRead}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors"
+                className="flex items-center justify-center gap-2 px-3 lg:px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-colors text-sm"
               >
                 <CheckCircle className="w-4 h-4" />
-                Okundu İşaretle
+                <span className="hidden sm:inline">Okundu İşaretle</span>
+                <span className="sm:hidden">Okundu</span>
               </button>
               <button
                 onClick={handleBulkDelete}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors"
+                className="flex items-center justify-center gap-2 px-3 lg:px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-colors text-sm"
               >
                 <Trash className="w-4 h-4" />
-                Sil
+                <span className="hidden sm:inline">Sil</span>
+                <span className="sm:hidden">Sil</span>
               </button>
               <button
                 onClick={() => {
@@ -446,12 +449,12 @@ const AdminNotificationsPage = () => {
         )}
 
         {/* Filters */}
-        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4 lg:p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-5 h-5 text-indigo-600" />
             <h3 className="text-lg font-semibold text-gray-900">Filtreler</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Durum</label>
               <select
@@ -468,7 +471,7 @@ const AdminNotificationsPage = () => {
                     return newFilters;
                   });
                 }}
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 lg:px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
               >
                 <option value="">Tüm Bildirimler</option>
                 <option value="false">Okunmamış</option>
@@ -492,7 +495,7 @@ const AdminNotificationsPage = () => {
                     return newFilters;
                   });
                 }}
-                className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-3 lg:px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
               >
                 <option value="">Tüm Türler</option>
                 <option value="info">Bilgi</option>
@@ -505,9 +508,10 @@ const AdminNotificationsPage = () => {
             <div className="flex items-end">
               <button
                 onClick={handleSelectAll}
-                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-900 font-medium transition-colors"
+                className="w-full px-3 lg:px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-900 font-medium transition-colors text-sm"
               >
-                {selectedNotifications.size === notifications.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}
+                <span className="hidden sm:inline">{selectedNotifications.size === notifications.length ? 'Seçimi Kaldır' : 'Tümünü Seç'}</span>
+                <span className="sm:hidden">{selectedNotifications.size === notifications.length ? 'Kaldır' : 'Tümü Seç'}</span>
               </button>
             </div>
           </div>
@@ -516,20 +520,20 @@ const AdminNotificationsPage = () => {
         {/* Notifications List */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           {isLoading ? (
-            <div className="p-8">
+            <div className="p-4 lg:p-8">
               <div className="space-y-4">
                 {Array.from({ length: 5 }, (_, i) => (
-                  <SkeletonLoader key={i} className="h-24 rounded-lg bg-gray-100" />
+                  <SkeletonLoader key={i} className="h-20 lg:h-24 rounded-lg bg-gray-100" />
                 ))}
               </div>
             </div>
           ) : notifications.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
-                <Bell className="w-12 h-12 text-gray-400" />
+            <div className="text-center py-12 lg:py-16 px-4">
+              <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+                <Bell className="w-10 h-10 lg:w-12 lg:h-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Bildirim bulunmuyor</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg lg:text-xl font-semibold text-gray-900 mb-2">Bildirim bulunmuyor</h3>
+              <p className="text-gray-600 text-sm lg:text-base">
                 {filters.isRead === false
                   ? 'Okunmamış bildiriminiz yok.'
                   : filters.isRead === true
@@ -539,7 +543,7 @@ const AdminNotificationsPage = () => {
             </div>
           ) : (
             <>
-              <div className="p-6 space-y-3">
+              <div className="p-4 lg:p-6 space-y-3">
                 {notifications.map((notification) => (
                   <NotificationCard
                     key={notification.id}
@@ -555,7 +559,7 @@ const AdminNotificationsPage = () => {
 
               {/* Pagination */}
               {pagination.total_pages > 1 && (
-                <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
+                <div className="bg-gray-50 px-4 lg:px-6 py-4 flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 gap-4">
                   <button
                     onClick={() =>
                       setFilters((prev) => ({
@@ -564,16 +568,16 @@ const AdminNotificationsPage = () => {
                       }))
                     }
                     disabled={filters.page === 1}
-                    className="px-4 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     Önceki
                   </button>
 
-                  <div className="text-sm text-gray-600">
-                    Sayfa {filters.page} / {pagination.total_pages}{' '}
-                    <span className="ml-2">
+                  <div className="text-sm text-gray-600 text-center">
+                    <div>Sayfa {filters.page} / {pagination.total_pages}</div>
+                    <div className="mt-1">
                       (Toplam {pagination.total || pagination.total_count || 0} bildirim)
-                    </span>
+                    </div>
                   </div>
 
                   <button
@@ -584,7 +588,7 @@ const AdminNotificationsPage = () => {
                       }))
                     }
                     disabled={filters.page === pagination.total_pages}
-                    className="px-4 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto px-4 py-2 rounded-lg bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                   >
                     Sonraki
                   </button>

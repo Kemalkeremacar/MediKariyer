@@ -23,7 +23,7 @@ import Constants from 'expo-constants';
 const getEnvVar = (key: string, defaultValue?: string): string => {
   // @ts-ignore - Expo runtime'da process.env.EXPO_PUBLIC_* değişkenleri mevcuttur
   const value = process.env[key] || Constants.expoConfig?.extra?.[key];
-  if (!value && !defaultValue) {
+  if (!value && !defaultValue && __DEV__) {
     console.warn(`Ortam değişkeni ${key} tanımlı değil, varsayılan değer kullanılıyor`);
   }
   return value || defaultValue || '';
@@ -44,5 +44,9 @@ export const env = {
   // Sentry DSN'inizi .env dosyasında EXPO_PUBLIC_SENTRY_DSN olarak ayarlayın
   SENTRY_DSN: getEnvVar('EXPO_PUBLIC_SENTRY_DSN', ''),
 } as const;
+
+// Production kontrolü için yardımcı
+export const isProduction = env.APP_ENV === 'production';
+export const isDevelopment = env.APP_ENV === 'development';
 
 export type Env = typeof env;

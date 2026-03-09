@@ -1109,7 +1109,7 @@ const getAllApplications = async (userId, params = {}) => {
         this.where('dp.first_name', 'like', `%${search}%`)
           .orWhere('dp.last_name', 'like', `%${search}%`)
           // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
-          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${search}%`)
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${search}%`]))
           // İş ilanı başlığı kontrolü
           .orWhere('j.title', 'like', `%${search}%`);
       });
@@ -1122,7 +1122,7 @@ const getAllApplications = async (userId, params = {}) => {
         this.where('dp.first_name', 'like', `%${doctor_search}%`)
           .orWhere('dp.last_name', 'like', `%${doctor_search}%`)
           // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
-          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${doctor_search}%`);
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${doctor_search}%`]));
       });
     }
 
@@ -1173,7 +1173,7 @@ const getAllApplications = async (userId, params = {}) => {
       totalQuery.where(function() {
         this.where('dp.first_name', 'like', `%${search}%`)
           .orWhere('dp.last_name', 'like', `%${search}%`)
-          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${search}%`)
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${search}%`]))
           .orWhere('j.title', 'like', `%${search}%`);
       });
     }
@@ -1183,7 +1183,7 @@ const getAllApplications = async (userId, params = {}) => {
       totalQuery.where(function() {
         this.where('dp.first_name', 'like', `%${doctor_search}%`)
           .orWhere('dp.last_name', 'like', `%${doctor_search}%`)
-          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '')"), 'like', `%${doctor_search}%`);
+          .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${doctor_search}%`]));
       });
     }
 

@@ -85,7 +85,6 @@ export const ForgotPasswordScreen = () => {
         setSuccessMessage(message);
         alert.success(message);
       } catch (error) {
-        console.error('Error in forgot password success callback:', error);
         setServerError('Bir hata oluştu. Lütfen tekrar deneyin.');
       }
     },

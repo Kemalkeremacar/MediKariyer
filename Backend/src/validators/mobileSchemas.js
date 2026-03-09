@@ -95,17 +95,17 @@ const emailSchema = Joi.string()
  * - At least one lowercase letter
  * - At least one uppercase letter
  * - At least one digit
- * - At least one special character (@$!%*?&)
+ * - At least one special character
  */
 const passwordSchema = Joi.string()
   .min(6)
   .max(128)
-  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/)
+  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d\s])/)
   .required()
   .messages({
     'string.min': 'Şifre en az 6 karakter olmalıdır',
     'string.max': 'Şifre en fazla 128 karakter olabilir',
-    'string.pattern.base': 'Şifre en az bir küçük harf, bir büyük harf, bir rakam ve bir özel karakter (@$!%*?&) içermelidir',
+    'string.pattern.base': 'Şifre en az bir küçük harf, bir büyük harf, bir rakam ve bir özel karakter içermelidir',
     'any.required': 'Şifre zorunludur'
   });
 

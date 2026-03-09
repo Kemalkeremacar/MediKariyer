@@ -48,7 +48,7 @@ const ContactSection = () => {
   return (
     <div className="w-full overflow-x-hidden bg-white" style={{ userSelect: 'text', WebkitUserSelect: 'text', MozUserSelect: 'text', msUserSelect: 'text' }}>
       {/* Header Section */}
-      <section className="relative py-20 lg:py-28 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50/30">
+      <section className="relative py-8 lg:py-12 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50/30">
         {/* Background Pattern */}
         <div className="absolute inset-0">
           <div className="absolute top-[-10rem] right-[-10rem] h-[24rem] w-[24rem] rounded-full bg-blue-300/30 blur-3xl" />
@@ -74,7 +74,7 @@ const ContactSection = () => {
       </section>
 
       {/* Contact Form and Info Section */}
-      <section className="py-20 sm:py-24 relative bg-white">
+      <section className="py-8 sm:py-12 relative bg-white">
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch max-w-7xl mx-auto">
             {/* Contact Info */}

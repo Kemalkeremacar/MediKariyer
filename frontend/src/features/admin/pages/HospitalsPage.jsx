@@ -297,15 +297,15 @@ const HospitalsPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="p-6">
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
+      <div className="p-4 sm:p-6">
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Building className="h-8 w-8 mr-3 text-green-600" />
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+              <Building className="h-6 w-6 sm:h-8 sm:w-8 mr-2 sm:mr-3 text-green-600" />
               Hastaneler
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-gray-600 mt-2 text-sm sm:text-base">
               {showPendingOnly 
                 ? 'Onay bekleyen hastaneleri görüntüleyin ve onaylayın'
                 : 'Tüm hastaneleri görüntüleyin, düzenleyin ve onaylayın'
@@ -316,12 +316,12 @@ const HospitalsPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-4 mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
+      <div className="bg-slate-800/90 backdrop-blur-md shadow-lg rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 border border-slate-600/30 hover:shadow-xl transition-all duration-300">
         {/* Onay Bekleyenler Toggle */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <button
             onClick={handleShowPendingOnly}
-            className={`admin-btn transition-all duration-300 ${
+            className={`admin-btn transition-all duration-300 w-full sm:w-auto text-sm ${
               showPendingOnly
                 ? 'admin-btn-warning'
                 : 'admin-btn-outline'
@@ -332,7 +332,7 @@ const HospitalsPage = () => {
         </div>
 
         {/* Search Input */}
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <div className="relative">
             <input
               ref={searchInputRef}
@@ -374,7 +374,7 @@ const HospitalsPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {/* City Filter */}
           <select
             value={filters.city_id}
@@ -414,8 +414,8 @@ const HospitalsPage = () => {
         </div>
       </div>
 
-      {/* Hospitals Table */}
-      <div className="admin-table">
+      {/* Hospitals Table - Desktop */}
+      <div className="hidden lg:block admin-table">
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
@@ -476,7 +476,84 @@ const HospitalsPage = () => {
           </table>
         </div>
 
-        {/* Pagination */}
+      {/* Hospitals Cards - Mobile */}
+      <div className="lg:hidden space-y-3 sm:space-y-4">
+        {users.map((user) => (
+          <div 
+            key={user.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-medium text-gray-900 truncate">
+                  {user.profile?.hospital_name || 'Hastane'}
+                </h3>
+                <p className="text-sm text-gray-500 truncate">{user.email}</p>
+              </div>
+              <button
+                onClick={() => navigate(`/admin/hospitals/${user.id}`)}
+                className="admin-btn admin-btn-sm admin-btn-primary ml-3 flex-shrink-0"
+              >
+                <Eye className="h-3 w-3 mr-1" />
+                Detay
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <span className="text-gray-500">Onay:</span>
+                <div className="mt-1">{getApprovalBadge(user.is_approved)}</div>
+              </div>
+              <div>
+                <span className="text-gray-500">Durum:</span>
+                <div className="mt-1">{getActivityBadge(user.is_active)}</div>
+              </div>
+              <div>
+                <span className="text-gray-500">Kayıt:</span>
+                <div className="mt-1 text-gray-900">
+                  {user.created_at ? new Date(user.created_at).toLocaleDateString('tr-TR') : '-'}
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-500">Son Giriş:</span>
+                <div className="mt-1 text-gray-900">
+                  {user.last_login ? new Date(user.last_login).toLocaleDateString('tr-TR') : 'Hiç giriş yapmamış'}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Mobile Pagination */}
+      <div className="lg:hidden mt-4">
+        {pagination.total_pages > 1 && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => handlePageChange(pagination.current_page - 1)}
+                disabled={pagination.current_page <= 1}
+                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Önceki
+              </button>
+              <span className="text-sm text-gray-700">
+                Sayfa {pagination.current_page} / {pagination.total_pages}
+              </span>
+              <button
+                onClick={() => handlePageChange(pagination.current_page + 1)}
+                disabled={pagination.current_page >= pagination.total_pages}
+                className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Sonraki
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+        {/* Desktop Pagination */}
+        <div className="hidden lg:block">
         {pagination.total_pages > 1 && (
           <div className="bg-slate-800/90 px-4 py-3 flex items-center justify-between border-t border-slate-600/30 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
@@ -526,6 +603,7 @@ const HospitalsPage = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
       </div>
     </div>

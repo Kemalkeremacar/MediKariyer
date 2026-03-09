@@ -27,19 +27,22 @@ interface AuthState {
   user: AuthUser | null; // Kullanıcı bilgileri
   authStatus: AuthStatus; // Auth durumu: 'idle' | 'authenticated' | 'unauthenticated'
   isHydrating: boolean; // Uygulama başlangıcında store yükleniyor mu?
+  hasSeenSplash: boolean; // Kullanıcı splash screen'i daha önce gördü mü?
   setUser: (user: AuthUser | null) => void; // Kullanıcı bilgilerini güncelle
   setAuthStatus: (status: AuthStatus) => void; // Auth durumunu güncelle
   markAuthenticated: (user: AuthUser) => void; // Kullanıcıyı authenticated olarak işaretle
   markUnauthenticated: () => void; // Kullanıcıyı unauthenticated olarak işaretle
   setHydrating: (value: boolean) => void; // Hydration durumunu güncelle
+  markSplashSeen: () => void; // Splash screen görüldü olarak işaretle
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       authStatus: 'idle',
       isHydrating: true,
+      hasSeenSplash: false,
 
       setUser: (user) =>
         set({
@@ -64,6 +67,8 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       setHydrating: (value) => set({ isHydrating: value }),
+
+      markSplashSeen: () => set({ hasSeenSplash: true }),
     }),
     {
       name: 'auth-storage',
@@ -71,14 +76,9 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         authStatus: state.authStatus,
+        hasSeenSplash: state.hasSeenSplash, // Bu kalıcı olarak saklanacak
       }),
-      // ÖNEMLİ: isHydrating'i burada false yapma!
-      // useAuthInitialization hook'unun hydration durumunu yönetmesine izin ver.
-      // Burada false yapmak, taze kullanıcı verisi alınmadan önce
-      // eski persist edilmiş kullanıcı verisinin routing için kullanılmasına neden olur.
       onRehydrateStorage: () => (state) => {
-        // useAuthInitialization tamamlanana kadar isHydrating'i true tut
-        // Bu, eski persist edilmiş veriye dayalı yanlış routing'i önler
         if (state) {
           state.setHydrating(true);
         }
