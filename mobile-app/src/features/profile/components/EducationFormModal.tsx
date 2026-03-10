@@ -85,6 +85,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
 
   // "DİĞER" eğitim türü seçildiğinde manuel input göster (Web ile tutarlılık)
   const selectedEducationType = useMemo(() => {
+    if (!educationTypes || educationTypes.length === 0) return null;
     return educationTypes.find((t) => t.id === formData.education_type_id);
   }, [educationTypes, formData.education_type_id]);
 
@@ -94,7 +95,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
       selectedEducationType.id === 4 ||
       selectedEducationType.name === 'Diğer' ||
       selectedEducationType.name === 'DİĞER' ||
-      selectedEducationType.name.toLowerCase() === 'diğer'
+      selectedEducationType.name?.toLowerCase() === 'diğer'
     );
   }, [selectedEducationType]);
 
@@ -227,7 +228,7 @@ export const EducationFormModal: React.FC<EducationFormModalProps> = ({
             ) : (
               <Select
                 options={educationTypeOptions}
-                value={formData.education_type_id.toString()}
+                value={formData.education_type_id > 0 ? formData.education_type_id.toString() : ''}
                 onChange={(value) => {
                   const typeId = parseInt(value as string);
                   const selectedType = educationTypes.find((t) => t.id === typeId);
