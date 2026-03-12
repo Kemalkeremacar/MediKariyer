@@ -370,7 +370,7 @@ const UserDetailPage = () => {
                   {/* Profil Fotoğrafı - Doktorlar için gerçek fotoğraf, diğerleri için icon */}
                   {/* Doktor için profil fotoğrafı, Hastane için logo */}
                   {(user.data?.user?.role || user.role) === 'doctor' && (user.data?.user?.profile?.profile_photo || user.profile?.profile_photo) ? (
-                    <div className="h-20 w-20 sm:h-24 sm:w-24 lg:h-32 lg:w-32 rounded-full overflow-hidden bg-gray-200 border-4 border-indigo-100 shadow-xl flex-shrink-0">
+                    <div className="h-20 w-20 sm:h-24 sm:w-24 lg:h-32 lg:w-32 rounded-full overflow-hidden bg-gray-200 border-2 border-gray-200 shadow-xl flex-shrink-0">
                       <img 
                         src={user.data?.user?.profile?.profile_photo || user.profile?.profile_photo} 
                         alt="Profil Fotoğrafı" 
@@ -379,11 +379,11 @@ const UserDetailPage = () => {
                       />
                     </div>
                   ) : (user.data?.user?.role || user.role) === 'hospital' && (user.data?.user?.profile?.logo || user.profile?.logo) ? (
-                    <div className="h-20 w-20 sm:h-24 sm:w-24 lg:h-32 lg:w-32 rounded-xl overflow-hidden bg-gray-200 border-4 border-green-100 shadow-xl flex-shrink-0">
+                    <div className="h-20 w-20 sm:h-24 sm:w-24 lg:h-32 lg:w-32 rounded-xl overflow-hidden bg-white border-2 border-gray-200 shadow-xl flex-shrink-0 p-2">
                       <img 
                         src={user.data?.user?.profile?.logo || user.profile?.logo} 
                         alt="Hastane Logosu" 
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain"
                         onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo'; }}
                       />
                     </div>
@@ -695,11 +695,11 @@ const UserDetailPage = () => {
                               <Building className="h-5 w-5 text-indigo-600 mt-0.5" />
                               <div>
                                 <p className="text-sm text-gray-600 mb-2">Logo / Fotoğraf</p>
-                                <div className="w-32 h-32 rounded-xl overflow-hidden bg-gray-100 border-2 border-indigo-200">
+                                <div className="w-32 h-32 rounded-xl overflow-hidden bg-white border-2 border-gray-200 p-2 flex items-center justify-center">
                                   <img 
                                     src={user.data?.user?.profile?.logo || user.profile?.logo} 
                                     alt="Hastane Logosu" 
-                                    className="w-full h-full object-cover"
+                                    className="max-w-full max-h-full object-contain"
                                     onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Logo'; }}
                                   />
                                 </div>

@@ -109,11 +109,12 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
       >
         {/* Başlık Bölümü - Logo, İş Başlığı, Hastane Adı */}
         <View style={styles.header}>
-          {/* Hastane logosu (Avatar ile fallback desteği) */}
+          {/* Hastane logosu (Avatar ile fallback desteği) - Logo için contain kullan */}
           <Avatar
             size="md"
             source={hospitalLogoUrl ?? undefined}
             initials={job.hospital_name?.substring(0, 2).toUpperCase() || '??'}
+            contentFit="contain" // Logo oranlarını koru
           />
           
           <View style={styles.headerContent}>

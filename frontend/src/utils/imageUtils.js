@@ -16,7 +16,7 @@
  * @param {number} options.maxWidth - Maximum width (default: 800) - OPTİMİZE: 1000'den 800'e düşürüldü
  * @param {number} options.maxHeight - Maximum height (default: 800) - OPTİMİZE: 1000'den 800'e düşürüldü
  * @param {number} options.quality - JPEG quality 0-1 (default: 0.7) - OPTİMİZE: 0.8'den 0.7'ye düşürüldü (daha küçük dosya)
- * @param {number} options.maxSizeMB - Maximum file size in MB (default: 1) - OPTİMİZE: 2MB'den 1MB'ye düşürüldü
+ * @param {number} options.maxSizeMB - Maximum file size in MB (default: 5) - Backend ile uyumlu
  * @returns {Promise<string>} Base64 string
  * 
  * @note Base64 fotoğraflar liste sayfalarında kullanılmamalı (çok büyük olur)
@@ -28,7 +28,7 @@ export const compressImage = (file, options = {}) => {
       maxWidth = 800,  // OPTİMİZE: 1000'den 800'e - profil için yeterli
       maxHeight = 800, // OPTİMİZE: 1000'den 800'e - profil için yeterli
       quality = 0.7,   // OPTİMİZE: 0.8'den 0.7'ye - daha küçük dosya
-      maxSizeMB = 1    // OPTİMİZE: 2MB'den 1MB'ye - base64 için yeterli
+      maxSizeMB = 5    // Backend ile uyumlu 5MB limit
     } = options;
 
     // File size kontrolü

@@ -95,9 +95,9 @@ export const APP_CONFIG = {
   /**
    * Dosya yükleme limitleri ve izin verilen dosya türleri
    */
-  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB - Backend ile uyumlu
   ALLOWED_FILE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-  MAX_IMAGE_SIZE: 2 * 1024 * 1024, // 2MB (resimler için)
+  MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB - Tüm resimler için standart
   
   // ==================== UI KONFIGÜRASYONU ====================
   /**

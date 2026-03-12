@@ -46,7 +46,7 @@ export const PAGINATION = {
 // ============================================================================
 // DOSYA YÜKLEME
 // ============================================================================
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB - maksimum dosya boyutu
+export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB - Backend ile uyumlu
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/jpg']; // İzin verilen resim tipleri
 export const ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'application/msword']; // İzin verilen döküman tipleri
 

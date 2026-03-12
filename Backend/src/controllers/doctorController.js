@@ -889,9 +889,9 @@ const requestPhotoChange = catchAsync(async (req, res) => {
     throw new AppError('Fotoğraf URL\'si gereklidir', 400);
   }
   
-  // Base64 data-url veya HTTP URL kontrolü + MIME/boyut doğrulama (10MB)
+  // Base64 data-url veya HTTP URL kontrolü + MIME/boyut doğrulama (5MB - tutarlılık)
   const ALLOWED_MIME = ['image/jpeg', 'image/jpg', 'image/png'];
-  const MAX_BYTES = 10 * 1024 * 1024; // 10MB
+  const MAX_BYTES = 5 * 1024 * 1024; // 5MB - Frontend ile uyumlu
 
   if (file_url.startsWith('data:image/')) {
     try {

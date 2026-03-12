@@ -242,7 +242,7 @@ export const toastMessages = {
   // FOTOĞRAF YÖNETİMİ MESAJLARI
   photoManagement: {
     fileFormatError: 'Lütfen JPG veya PNG formatında bir dosya seçiniz.',
-    fileSizeError: 'Dosya boyutu en fazla 10MB olabilir.',
+    fileSizeError: 'Dosya boyutu en fazla 5MB olabilir.',
     requestSuccess: 'Fotoğraf talebi gönderildi!',
     uploadError: 'Fotoğraf yüklenemedi.',
     cancelSuccess: 'Değişiklik talebiniz iptal edildi.',

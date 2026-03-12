@@ -347,7 +347,7 @@ const PhotoManagementPage = () => {
         maxWidth: 800,
         maxHeight: 800,
         quality: 0.85,
-        maxSizeMB: 2
+        maxSizeMB: 5  // Backend ile uyumlu 5MB
       });
       
       setSelectedFile(photoFile); // Orijinal file'ı sakla (backend'e gönderilecek)
@@ -372,7 +372,7 @@ const PhotoManagementPage = () => {
           maxWidth: 800,
           maxHeight: 800,
           quality: 0.85,
-          maxSizeMB: 2
+          maxSizeMB: 5  // Backend ile uyumlu 5MB
         });
       } catch (error) {
         showToast.error(error.message || 'Fotoğraf işlenirken bir hata oluştu');
@@ -511,7 +511,7 @@ const PhotoManagementPage = () => {
             <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-md">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-blue-600" /> Mevcut Fotoğraf</h3>
               <div className="flex flex-col items-center gap-3">
-                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-400/10 to-indigo-700/20 border-[4px] border-blue-500/30 shadow-xl flex items-center justify-center overflow-hidden">
+                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-blue-400/10 to-indigo-700/20 border-2 border-gray-200 shadow-xl flex items-center justify-center overflow-hidden">
                   {profile.profile_photo ? (
                     <img src={profile.profile_photo} alt="Mevcut Profil Fotoğrafı" className="w-full h-full object-cover" />
                   ) : (
@@ -526,7 +526,7 @@ const PhotoManagementPage = () => {
             <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-md">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2"><Upload className="w-4 h-4 text-emerald-600" /> Yeni Fotoğraf Seç / Yükle</h3>
               <div className="flex flex-col items-center">
-                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-green-400/10 to-emerald-700/20 border-[4px] border-green-500/30 shadow-xl flex items-center justify-center overflow-hidden mb-3">
+                <div className="w-36 h-36 rounded-full bg-gradient-to-br from-green-400/10 to-emerald-700/20 border-2 border-gray-200 shadow-xl flex items-center justify-center overflow-hidden mb-3">
                   {photoPreview ? (
                     <img src={photoPreview} alt="Yeni Fotoğraf Önizleme" className="w-full h-full object-cover" />
                   ) : (

@@ -131,11 +131,11 @@ const HospitalDashboard = () => {
                 {/* Logo - Sol Taraf */}
                 {profile?.logo && (
                   <div className="flex-shrink-0">
-                    <div className="w-32 h-32 rounded-xl overflow-hidden border-4 border-cyan-300/40 shadow-lg">
+                    <div className="w-32 h-32 rounded-xl overflow-hidden border-2 border-gray-200 shadow-lg bg-white p-2 flex items-center justify-center">
                       <img 
                         src={profile.logo} 
                         alt={institutionName}
-                        className="w-full h-full object-cover"
+                        className="max-w-full max-h-full object-contain"
                       />
                     </div>
                   </div>

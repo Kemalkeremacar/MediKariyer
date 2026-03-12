@@ -707,7 +707,7 @@ const PhotoManagementModal = ({
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4">
             {/* Mevcut Fotoğraf */}
             <div className="flex flex-col items-center gap-2">
-              <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-3 border-green-400 flex items-center justify-center shadow-xl">
+              <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-2 border-gray-200 flex items-center justify-center shadow-xl">
                 {photoPreview ? (
                   <img src={photoPreview} alt="Profil" className="w-full h-full object-cover" />
                 ) : (
@@ -732,7 +732,7 @@ const PhotoManagementModal = ({
                   <ArrowRight className="w-8 h-8 animate-pulse" />
                 </div>
                 <div className="flex flex-col items-center gap-2">
-                  <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-3 border-yellow-400 flex items-center justify-center shadow-xl">
+                  <div className="relative w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border-2 border-gray-200 flex items-center justify-center shadow-xl">
                     <img src={pendingRequest.file_url} alt="Bekleyen Fotoğraf" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-yellow-400/20 flex items-center justify-center">
                       <div className="w-10 h-10 bg-yellow-400 rounded-full animate-pulse"></div>

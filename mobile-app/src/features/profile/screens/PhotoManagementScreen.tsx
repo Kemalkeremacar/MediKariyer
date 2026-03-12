@@ -92,7 +92,7 @@ import { BackButton } from '@/components/ui/BackButton';
 import { Typography } from '@/components/ui/Typography';
 import { useToast } from '@/providers/ToastProvider';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+import { MAX_FILE_SIZE } from '@/config/constants';
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 
 const mimeToExt = (mime: string) => {

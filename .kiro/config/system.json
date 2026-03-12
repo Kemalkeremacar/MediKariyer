@@ -1,0 +1,55 @@
+{
+  "system": {
+    "name": "MediKariyer Documentation System",
+    "version": "1.0.0",
+    "description": "Comprehensive documentation system for MediKariyer healthcare platform"
+  },
+  "features": {
+    "architectureAnalysis": {
+      "enabled": true,
+      "autoScan": true,
+      "scanInterval": "24h",
+      "maxFileSize": "10MB"
+    },
+    "impactAnalysis": {
+      "enabled": true,
+      "realTimeAnalysis": true,
+      "riskThreshold": "medium"
+    },
+    "roleManagement": {
+      "enabled": true,
+      "dynamicPermissions": true,
+      "auditLog": true
+    },
+    "flowMapping": {
+      "enabled": true,
+      "autoGeneration": true,
+      "visualizations": true
+    },
+    "notifications": {
+      "enabled": true,
+      "realTime": true,
+      "email": true,
+      "inApp": true
+    }
+  },
+  "security": {
+    "jwtExpiration": "24h",
+    "refreshTokenExpiration": "7d",
+    "passwordMinLength": 8,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": "15m"
+  },
+  "performance": {
+    "cacheEnabled": true,
+    "cacheTTL": "1h",
+    "maxConcurrentAnalysis": 3,
+    "requestTimeout": "30s"
+  },
+  "logging": {
+    "level": "info",
+    "auditEnabled": true,
+    "retentionDays": 90,
+    "maxFileSize": "100MB"
+  }
+}

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # SQL Server Database
+  database:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: medikariyer-docs-db
+    environment:
+      - SA_PASSWORD=MediKariyer2024!
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - db_data:/var/opt/mssql
+    networks:
+      - medikariyer-docs-network
+    restart: unless-stopped
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medikariyer-docs-backend
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_SERVER=database
+      - DB_NAME=medikariyer_docs
+      - DB_USER=sa
+      - DB_PASSWORD=MediKariyer2024!
+      - DB_ENCRYPT=false
+      - DB_TRUST_CERT=true
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - FRONTEND_URL=http://localhost:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      - database
+    networks:
+      - medikariyer-docs-network
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  # Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: medikariyer-docs-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - medikariyer-docs-network
+    restart: unless-stopped
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: medikariyer-docs-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - medikariyer-docs-network
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  medikariyer-docs-network:
+    driver: bridge

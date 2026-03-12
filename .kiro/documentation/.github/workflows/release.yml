@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Install dependencies
+      run: |
+        cd .kiro/documentation/backend && npm ci
+        cd ../frontend && npm ci
+    
+    - name: Run tests
+      run: |
+        cd .kiro/documentation/backend && npm test
+        cd ../frontend && npm test
+    
+    - name: Build applications
+      run: |
+        cd .kiro/documentation/backend && npm run build
+        cd ../frontend && npm run build
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Generate changelog from git commits
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## Changes in this Release
+          ${{ steps.changelog.outputs.CHANGELOG }}
+          
+          ## Installation
+          
+          ### Backend
+          ```bash
+          cd .kiro/documentation/backend
+          npm install
+          npm run build
+          npm start
+          ```
+          
+          ### Frontend
+          ```bash
+          cd .kiro/documentation/frontend
+          npm install
+          npm run build
+          npm run preview
+          ```
+        draft: false
+        prerelease: false
+    
+    - name: Build Docker images
+      run: |
+        # Backend Docker image
+        docker build -t medikariyer-docs-backend:${{ github.ref_name }} .kiro/documentation/backend
+        
+        # Frontend Docker image  
+        docker build -t medikariyer-docs-frontend:${{ github.ref_name }} .kiro/documentation/frontend
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying version ${{ github.ref_name }} to production..."
+        # Production deployment scripts will be added here

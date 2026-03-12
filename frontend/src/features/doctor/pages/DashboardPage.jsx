@@ -84,7 +84,7 @@ const DoctorDashboard = () => {
                 {/* Profil Fotoğrafı - Sol Taraf */}
                 {profilePhoto && (
                   <div className="flex-shrink-0">
-                    <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-cyan-300/40 shadow-lg">
+                    <div className="h-32 w-32 overflow-hidden rounded-full border-2 border-gray-200 shadow-lg">
                       <img 
                         src={profilePhoto} 
                         alt={fullName}

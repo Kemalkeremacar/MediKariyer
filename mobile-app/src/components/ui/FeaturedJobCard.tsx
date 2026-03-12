@@ -61,6 +61,7 @@ export const FeaturedJobCard: React.FC<FeaturedJobCardProps> = ({ job, onPress }
           size="sm"
           source={hospitalLogoUrl ?? undefined}
           initials={job.hospital_name?.substring(0, 2).toUpperCase() || '??'}
+          contentFit="contain" // Logo oranlarını koru
         />
         <View style={styles.headerContent}>
           <Typography variant="body" style={styles.title} numberOfLines={1}>

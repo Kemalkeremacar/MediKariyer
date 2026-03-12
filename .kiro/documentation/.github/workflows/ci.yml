@@ -1,0 +1,131 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-backend:
+    runs-on: ubuntu-latest
+    
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          SA_PASSWORD: TestPassword123!
+          ACCEPT_EULA: Y
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P TestPassword123! -Q 'SELECT 1'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: .kiro/documentation/backend/package-lock.json
+    
+    - name: Install backend dependencies
+      working-directory: .kiro/documentation/backend
+      run: npm ci
+    
+    - name: Run backend linting
+      working-directory: .kiro/documentation/backend
+      run: npm run lint
+    
+    - name: Run backend type checking
+      working-directory: .kiro/documentation/backend
+      run: npx tsc --noEmit
+    
+    - name: Run backend tests
+      working-directory: .kiro/documentation/backend
+      run: npm test
+      env:
+        NODE_ENV: test
+        DB_SERVER: localhost
+        DB_NAME: medikariyer_docs_test
+        DB_USER: sa
+        DB_PASSWORD: TestPassword123!
+        JWT_SECRET: test-secret-key
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: .kiro/documentation/frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: .kiro/documentation/frontend
+      run: npm ci
+    
+    - name: Run frontend linting
+      working-directory: .kiro/documentation/frontend
+      run: npm run lint
+    
+    - name: Run frontend type checking
+      working-directory: .kiro/documentation/frontend
+      run: npm run type-check
+    
+    - name: Run frontend tests
+      working-directory: .kiro/documentation/frontend
+      run: npm test
+    
+    - name: Build frontend
+      working-directory: .kiro/documentation/frontend
+      run: npm run build
+
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Run security audit (backend)
+      working-directory: .kiro/documentation/backend
+      run: npm audit --audit-level moderate
+    
+    - name: Run security audit (frontend)
+      working-directory: .kiro/documentation/frontend
+      run: npm audit --audit-level moderate
+
+  deploy-staging:
+    needs: [test-backend, test-frontend, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Staging deployment scripts will be added here
+
+  deploy-production:
+    needs: [test-backend, test-frontend, security-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Production deployment scripts will be added here

@@ -331,7 +331,7 @@ const HospitalApplicationDetailPage = () => {
                       <img
                         src={doctorProfile.profile_photo}
                         alt={`${doctorProfile.first_name} ${doctorProfile.last_name}`}
-                        className="w-20 h-20 rounded-full object-cover border-2 border-white/20"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                       />
                     ) : (
                       <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xl">

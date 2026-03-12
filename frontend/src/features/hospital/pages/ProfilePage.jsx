@@ -67,9 +67,9 @@ const HospitalProfile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Dosya boyutu kontrolü (5MB)
+    // Dosya boyutu kontrolü (5MB - backend ile uyumlu)
     if (file.size > 5 * 1024 * 1024) {
-      showToast.error(toastMessages.validation.fileSizeError);
+      showToast.error(toastMessages.photo.fileSizeError);
       return;
     }
 
@@ -79,11 +79,55 @@ const HospitalProfile = () => {
       return;
     }
 
-    // Preview oluştur ve base64'e çevir
+    // Resmi sıkıştır ve optimize et
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      // Maksimum boyutları belirle (600x600 daha iyi kalite)
+      const maxSize = 600;
+      let { width, height } = img;
+      
+      // Oranları koru
+      if (width > height) {
+        if (width > maxSize) {
+          height = (height * maxSize) / width;
+          width = maxSize;
+        }
+      } else {
+        if (height > maxSize) {
+          width = (width * maxSize) / height;
+          height = maxSize;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Resmi çiz ve sıkıştır
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // JPEG formatında %85 kalite ile sıkıştır (daha iyi kalite)
+      const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      
+      setLogoPreview(compressedDataUrl);
+      setFormData(prev => ({ ...prev, logo: compressedDataUrl }));
+      
+      // Sıkıştırma sonucu bilgisi
+      const originalSize = (file.size / 1024).toFixed(1);
+      const compressedSize = (compressedDataUrl.length * 0.75 / 1024).toFixed(1); // Base64 overhead hesabı
+      console.log(`Logo sıkıştırıldı: ${originalSize}KB → ${compressedSize}KB`);
+    };
+    
+    img.onerror = () => {
+      showToast.error('Logo yüklenirken hata oluştu');
+    };
+    
+    // Resmi yükle
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setLogoPreview(reader.result);
-      setFormData(prev => ({ ...prev, logo: reader.result }));
+    reader.onload = (e) => {
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   };
@@ -146,6 +190,29 @@ const HospitalProfile = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCancel = () => {
+    // Form verilerini orijinal profil verilerine geri döndür
+    if (profileData?.data?.profile) {
+      const profile = profileData.data.profile;
+      setFormData({
+        institution_name: profile.institution_name || '',
+        city_id: profile.city_id || '',
+        address: profile.address || '',
+        phone: profile.phone || '',
+        email: profile.email || '',
+        website: profile.website || '',
+        about: profile.about || '',
+        logo: profile.logo || ''
+      });
+      if (profile.logo) {
+        setLogoPreview(profile.logo);
+      } else {
+        setLogoPreview(null);
+      }
+    }
+    setIsEditing(false);
   };
 
   const handleSubmit = async (e) => {
@@ -241,7 +308,7 @@ const HospitalProfile = () => {
                     ) : (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setIsEditing(false)}
+                          onClick={handleCancel}
                           className="bg-gray-500/20 text-gray-300 border border-gray-500/30 px-4 py-2 rounded-xl hover:bg-gray-500/30 transition-all duration-300 flex items-center gap-2"
                         >
                           <X className="w-4 h-4" />
@@ -250,7 +317,7 @@ const HospitalProfile = () => {
                         <button
                           onClick={handleSubmit}
                           disabled={updateProfileMutation.isPending}
-                          className="bg-green-500/20 text-green-300 border border-green-500/30 px-4 py-2 rounded-xl hover:bg-green-500/30 transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
+                          className="bg-green-500/20 text-green-300 border border-green-500/30 px-4 py-2 rounded-xl hover:bg-green-500/30 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Save className="w-4 h-4" />
                           {updateProfileMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
@@ -355,42 +422,56 @@ const HospitalProfile = () => {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           Logo
                         </label>
-                        <div className="flex flex-col sm:flex-row items-start gap-4">
-                          {/* Logo Önizleme */}
+                        <div className="flex flex-col sm:flex-row items-start gap-6">
+                          {/* Logo Önizleme - Daha büyük ve optimize edilmiş alan */}
                           <div className="relative">
-                            <div className="w-24 h-24 rounded-lg overflow-hidden bg-white/5 border-2 border-white/20 flex items-center justify-center">
+                            <div className="w-40 h-40 rounded-xl overflow-hidden bg-white border-2 border-gray-200 flex items-center justify-center shadow-sm">
                               {logoPreview ? (
-                                <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-2" />
+                                <img 
+                                  src={logoPreview} 
+                                  alt="Kurum Logosu" 
+                                  className="max-w-full max-h-full object-contain"
+                                  style={{ 
+                                    padding: '16px'
+                                  }}
+                                />
                               ) : (
-                                <Building className="w-12 h-12 text-gray-400" />
+                                <div className="text-center">
+                                  <Building className="w-20 h-20 text-gray-300 mx-auto mb-2" />
+                                  <p className="text-xs text-gray-400">Logo Yok</p>
+                                </div>
                               )}
                             </div>
                             {logoPreview && isEditing && (
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setLogoPreview(null);
-                                  setFormData({ ...formData, logo: '' });
+                                  // Orijinal logo'ya geri döndür
+                                  const originalLogo = profileData?.data?.profile?.logo || '';
+                                  setLogoPreview(originalLogo || null);
+                                  setFormData(prev => ({ ...prev, logo: originalLogo }));
                                 }}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-lg"
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
+                                title="Orijinal logo'ya geri döndür"
                               >
                                 <X className="w-4 h-4" />
                               </button>
                             )}
                           </div>
                           
-                          {/* Logo Yükleme Butonları */}
+                          {/* Logo Yükleme Butonları - Sadece düzenleme modunda */}
                           {isEditing && (
-                            <div className="flex-1 space-y-2">
-                              <div className="grid grid-cols-1 gap-2">
+                            <div className="flex-1 space-y-3">
+                              <div className="grid grid-cols-1 gap-3">
                                 {/* Dosya Yükle */}
                                 <label className="cursor-pointer">
-                                  <div className="border-2 border-dashed border-white/20 rounded-lg p-3 hover:border-blue-500 hover:bg-white/5 transition-all duration-300 text-center">
-                                    <Upload className="w-6 h-6 mx-auto mb-1 text-blue-400" />
-                                    <span className="text-xs text-gray-300">Dosya Yükle</span>
+                                  <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 text-center">
+                                    <Upload className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                                    <span className="text-sm font-medium text-blue-600">Logo Yükle</span>
+                                    <p className="text-xs text-gray-500 mt-1">PNG, JPG veya SVG formatında</p>
                                   </div>
                                   <input
                                     type="file"
@@ -400,9 +481,23 @@ const HospitalProfile = () => {
                                   />
                                 </label>
                               </div>
-                              <p className="text-xs text-gray-400">
-                                Logo yükleyin veya kamera ile çekin. Maksimum 5MB.
-                              </p>
+                            </div>
+                          )}
+
+                          {/* Logo Bilgisi - Sadece görüntüleme modunda */}
+                          {!isEditing && (
+                            <div className="flex-1">
+                              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                <h4 className="text-sm font-medium text-gray-700 mb-2">Kurum Logosu</h4>
+                                {logoPreview ? (
+                                  <p className="text-sm text-gray-600">Logo başarıyla yüklenmiş</p>
+                                ) : (
+                                  <p className="text-sm text-gray-500">Henüz logo yüklenmemiş</p>
+                                )}
+                                <p className="text-xs text-gray-400 mt-2">
+                                  Logo düzenlemek için "Düzenle" butonuna tıklayın
+                                </p>
+                              </div>
                             </div>
                           )}
                         </div>

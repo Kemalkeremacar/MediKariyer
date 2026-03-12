@@ -38,6 +38,8 @@ export interface AvatarProps {
   initials?: string;
   /** Doğrulanmış kullanıcı rozeti göster */
   verified?: boolean;
+  /** Resim görüntüleme modu - cover (profil fotoğrafı) veya contain (logo) */
+  contentFit?: 'cover' | 'contain';
   /** Ek stil */
   style?: ViewStyle;
 }
@@ -75,6 +77,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   size = 'md',
   initials,
   verified = false,
+  contentFit = 'cover', // Default: cover (profil fotoğrafları için)
   style,
 }) => {
   const avatarSize = sizeMap[size];
@@ -96,7 +99,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           <Image 
             source={imageSource as any}  // Expo Image hem string hem de { uri: string } kabul eder
             style={[styles.image, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}
-            contentFit="cover"
+            contentFit={contentFit} // Dinamik contentFit - cover (profil) veya contain (logo)
             cachePolicy={isBase64 ? "none" : "disk"}  // Base64 cache'e ihtiyaç duymaz
             transition={200}
             onError={() => {

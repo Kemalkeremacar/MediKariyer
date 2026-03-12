@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FiUser, FiHome, FiMail, FiLock, FiPhone, FiMapPin, FiArrowLeft, FiCheck, FiCamera, FiUpload, FiImage } from 'react-icons/fi';
+import { FiUser, FiHome, FiMail, FiLock, FiPhone, FiMapPin, FiArrowLeft, FiCheck, FiCamera, FiUpload, FiImage, FiX } from 'react-icons/fi';
 import { useRegisterDoctor, useRegisterHospital } from '../api/useAuth';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
@@ -49,6 +49,7 @@ const RegisterPage = () => {
     logo: '',
   });
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
   const [errorModal, setErrorModal] = useState({ show: false, message: '', description: '' });
   const [formErrors, setFormErrors] = useState({});
   
@@ -113,7 +114,7 @@ const RegisterPage = () => {
         maxWidth: 800,
         maxHeight: 800,
         quality: 0.85,
-        maxSizeMB: 2
+        maxSizeMB: 5  // Backend ile uyumlu 5MB
       });
       
       setPhotoPreview(compressedBase64);
@@ -128,29 +129,78 @@ const RegisterPage = () => {
     handlePhotoUpload(e);
   };
 
-  // Logo yükleme - OPTİMİZASYON: Compression ile
+  // Logo yükleme - ProfilePage'deki gelişmiş implementasyon
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Validation
-    const validation = validateImage(file, { maxSizeMB: 5 });
-    if (!validation.valid) {
-      showToast.error(validation.error || toastMessages.validation.fileFormatError);
+    // Dosya boyutu kontrolü (5MB - backend ile uyumlu)
+    if (file.size > 5 * 1024 * 1024) {
+      showToast.error(toastMessages.photo.fileSizeError);
+      return;
+    }
+
+    // Dosya tipi kontrolü
+    if (!file.type.startsWith('image/')) {
+      showToast.error(toastMessages.validation.fileFormatError);
       return;
     }
 
     try {
-      // OPTİMİZASYON: Image compression (max 1000x1000, quality 0.8, max 2MB)
-      const compressedBase64 = await compressImage(file, {
-        maxWidth: 1000,
-        maxHeight: 1000,
-        quality: 0.8,
-        maxSizeMB: 2
-      });
+      // Canvas ile resim sıkıştırma ve optimize etme
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
       
-      setFormData(prev => ({ ...prev, logo: compressedBase64 }));
-      showToast.success('Logo başarıyla yüklendi ve optimize edildi');
+      img.onload = () => {
+        // Maksimum boyutları belirle (600x600 daha iyi kalite)
+        const maxSize = 600;
+        let { width, height } = img;
+        
+        // Oranları koru
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height;
+            height = maxSize;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Resmi çiz ve sıkıştır
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // JPEG formatında %85 kalite ile sıkıştır
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        
+        setLogoPreview(compressedDataUrl);
+        setFormData(prev => ({ ...prev, logo: compressedDataUrl }));
+        
+        showToast.success('Logo başarıyla yüklendi ve optimize edildi');
+        
+        // Sıkıştırma sonucu bilgisi
+        const originalSize = (file.size / 1024).toFixed(1);
+        const compressedSize = (compressedDataUrl.length * 0.75 / 1024).toFixed(1);
+        console.log(`Logo sıkıştırıldı: ${originalSize}KB → ${compressedSize}KB`);
+      };
+      
+      img.onerror = () => {
+        showToast.error('Logo yüklenirken hata oluştu');
+      };
+      
+      // Resmi yükle
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      
     } catch (error) {
       showToast.error(error.message || 'Logo yüklenirken bir hata oluştu');
     }
@@ -176,6 +226,7 @@ const RegisterPage = () => {
       logo: '',
     });
     setPhotoPreview(null);
+    setLogoPreview(null);
   };
 
   const handleSubmit = (e) => {
@@ -477,7 +528,7 @@ const RegisterPage = () => {
                         <img 
                           src={photoPreview} 
                           alt="Profil önizleme" 
-                          className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-blue-200"
+                          className="w-32 h-32 rounded-full object-cover mx-auto border-2 border-gray-200"
                         />
                         <button
                           type="button"
@@ -585,22 +636,61 @@ const RegisterPage = () => {
                   <label className="modern-form-label">
                     Logo / Fotoğraf *
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiImage className="h-5 w-5 text-blue-600" />
+                  
+                  {/* Logo Önizleme ve Yükleme Alanı */}
+                  <div className="flex flex-col sm:flex-row items-start gap-6">
+                    {/* Logo Önizleme */}
+                    <div className="relative">
+                      <div className="w-32 h-32 rounded-xl overflow-hidden bg-white border-2 border-gray-200 flex items-center justify-center shadow-sm">
+                        {logoPreview ? (
+                          <img 
+                            src={logoPreview} 
+                            alt="Logo Önizleme" 
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        ) : (
+                          <div className="text-center">
+                            <FiImage className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                            <p className="text-xs text-gray-400">Logo Yok</p>
+                          </div>
+                        )}
+                      </div>
+                      {logoPreview && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLogoPreview(null);
+                            setFormData(prev => ({ ...prev, logo: '' }));
+                          }}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
+                          title="Logo'yu kaldır"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
-                    <input
-                      type="file"
-                      name="logo"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="modern-form-input pl-10 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                      required
-                    />
+                    
+                    {/* Logo Yükleme Butonu */}
+                    <div className="flex-1 space-y-3">
+                      <div className="relative">
+                        <label className="cursor-pointer">
+                          <div className="border-2 border-dashed border-blue-300 rounded-xl p-4 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 text-center">
+                            <FiUpload className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                            <span className="text-sm font-medium text-blue-600">Logo Yükle</span>
+                            <p className="text-xs text-gray-500 mt-1">PNG, JPG veya GIF formatında</p>
+                          </div>
+                          <input
+                            type="file"
+                            name="logo"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            required={!logoPreview}
+                          />
+                        </label>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    JPG, PNG veya GIF formatında logo yükleyiniz
-                  </p>
                 </div>
 
               </>
