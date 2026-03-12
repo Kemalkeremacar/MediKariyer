@@ -57,7 +57,13 @@ const listApplications = async (userId, { page = 1, limit = 20, status_id, keywo
 
   // Status filter using status_id (Requirements 1.1, 1.2, 1.5)
   if (status_id) {
-    baseQuery.andWhere('a.status_id', parseInt(status_id));
+    baseQuery.andWhere('a.status_id', parseInt(status_id))
+      .andWhere(function() {
+        // Sadece aktif ilanların başvurularını göster (durum filtresi seçildiğinde)
+        this.where('j.status_id', '!=', 4) // İlan aktif (pasif değil)
+          .whereNull('j.deleted_at') // İlan silinmemiş
+          .where('hospital_users.is_active', true); // Hastane aktif
+      });
   }
 
   // Keyword search filter (Requirements 6.1, 6.2, 6.3, 6.5)

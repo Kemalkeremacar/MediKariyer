@@ -42,24 +42,96 @@ export interface NotificationCardProps {
 /**
  * Bildirim tiplerine göre ikon eşleştirmesi
  * Her bildirim tipi için uygun Ionicons ikonu
+ * Başlık bazlı özel ikonlar da dahil
  */
-const iconMap = {
-  application: 'checkmark-circle' as const,
-  job: 'briefcase' as const,
-  system: 'alert-circle' as const,
-  message: 'notifications' as const,
+const getNotificationIcon = (type: string, title?: string): keyof typeof Ionicons.glyphMap => {
+  // Başlığa göre özel ikonlar - Başvuru durumları
+  if (title?.includes('kabul edildi') || title?.includes('Kabul Edildi')) {
+    return 'checkmark-circle';
+  }
+  if (title?.includes('uygun bulunmadı') || title?.includes('Reddedildi')) {
+    return 'close-circle';
+  }
+  if (title?.includes('incelemeye alındı') || title?.includes('İnceleniyor')) {
+    return 'eye';
+  }
+  
+  // İş ilanı bildirimleri
+  if (title?.includes('İlan Kapatıldı') || title?.includes('İlan Arşivlendi')) {
+    return 'warning';
+  }
+  if (title?.includes('İlan Aktifleştirildi')) {
+    return 'checkmark-circle';
+  }
+  
+  // Hastane bildirimleri
+  if (title?.includes('Yeni Başvuru')) {
+    return 'document-text';
+  }
+  if (title?.includes('Başvuru Geri Çekildi')) {
+    return 'return-up-back';
+  }
+  
+  // Sistem bildirimleri
+  if (title?.includes('Doktor Kaydı')) {
+    return 'person-add';
+  }
+  if (title?.includes('Hastane Kaydı')) {
+    return 'business';
+  }
+  if (title?.includes('İş İlanı')) {
+    return 'briefcase';
+  }
+  if (title?.includes('Fotoğraf')) {
+    return 'camera';
+  }
+  
+  // Tür'e göre genel ikonlar
+  const iconMap = {
+    application: 'document-text' as const,
+    job: 'briefcase' as const,
+    system: 'alert-circle' as const,
+    message: 'notifications' as const,
+  };
+  
+  return iconMap[type as keyof typeof iconMap] || 'notifications';
 };
 
 /**
  * Bildirim tiplerine göre renk eşleştirmesi
  * İkon ve arka plan renkleri için kullanılır
+ * Başlık bazlı özel renkler de dahil
  */
-const colorMap = {
-  application: 'success',
-  job: 'primary',
-  system: 'warning',
-  message: 'secondary',
-} as const;
+const getNotificationColor = (type: string, title?: string): keyof typeof colors => {
+  // Başlığa göre özel renkler - Başvuru durumları
+  if (title?.includes('kabul edildi') || title?.includes('Kabul Edildi')) {
+    return 'success';
+  }
+  if (title?.includes('uygun bulunmadı') || title?.includes('Reddedildi')) {
+    return 'error';
+  }
+  if (title?.includes('incelemeye alındı') || title?.includes('İnceleniyor')) {
+    return 'primary';
+  }
+  
+  // İş ilanı bildirimleri
+  if (title?.includes('İlan Kapatıldı') || title?.includes('İlan Arşivlendi')) {
+    return 'warning';
+  }
+  if (title?.includes('İlan Aktifleştirildi')) {
+    return 'success';
+  }
+  
+  // Tür'e göre genel renkler
+  const colorMap = {
+    application: 'primary',
+    job: 'secondary',
+    system: 'warning',
+    message: 'info',
+  } as const;
+  
+  return colorMap[type as keyof typeof colorMap] || 'primary';
+};
 
 /**
  * Bildirim kartı bileşeni
@@ -96,12 +168,11 @@ export const NotificationCard: React.FC<NotificationCardProps> = React.memo(({
   onPress,
 }) => {
   /**
-   * Güvenli tip kontrolü
-   * Geçersiz tip gelirse 'system' kullan
+   * Güvenli tip kontrolü ve ikon/renk belirleme
+   * Başlık bazlı özel ikonlar ve renkler
    */
-  const safeType = (type && iconMap[type]) ? type : 'system';
-  const iconName = iconMap[safeType];
-  const color = colorMap[safeType];
+  const iconName = getNotificationIcon(type, title);
+  const color = getNotificationColor(type, title);
   
   /**
    * Akıllı tarih formatlama

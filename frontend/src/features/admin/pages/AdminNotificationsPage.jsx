@@ -24,7 +24,8 @@ import { toastMessages } from '@/config/toast';
 import { 
   Bell, CheckCircle, Filter, Trash2, 
   X, CheckCircle2, Trash, CheckCheck,
-  UserPlus, Building2, Briefcase, Camera, Mail, Send
+  UserPlus, Building2, Briefcase, Camera, Mail, Send,
+  Eye, FileText, ArrowLeft, AlertTriangle, AlertCircle
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import apiRequest from '@/services/http/client';
@@ -35,19 +36,26 @@ import apiRequest from '@/services/http/client';
  */
 const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, isSelected, onToggleSelect }) => {
   const getIcon = (type, title) => {
-    // Başlığa göre özel ikonlar
+    // Başlığa göre özel ikonlar - Başvuru durumları
+    if (title?.includes('kabul edildi') || title?.includes('Kabul Edildi')) return <CheckCircle className="w-5 h-5 text-green-500" />;
+    if (title?.includes('uygun bulunmadı') || title?.includes('Reddedildi')) return <X className="w-5 h-5 text-red-500" />;
+    if (title?.includes('incelemeye alındı') || title?.includes('İnceleniyor')) return <Eye className="w-5 h-5 text-blue-500" />;
+    
+    // Sistem bildirimleri
     if (title?.includes('Doktor Kaydı')) return <UserPlus className="w-5 h-5 text-blue-500" />;
     if (title?.includes('Hastane Kaydı')) return <Building2 className="w-5 h-5 text-green-500" />;
     if (title?.includes('İş İlanı')) return <Briefcase className="w-5 h-5 text-purple-500" />;
     if (title?.includes('Fotoğraf')) return <Camera className="w-5 h-5 text-orange-500" />;
     if (title?.includes('İletişim')) return <Mail className="w-5 h-5 text-indigo-500" />;
+    if (title?.includes('Yeni Başvuru')) return <FileText className="w-5 h-5 text-blue-500" />;
+    if (title?.includes('Başvuru Geri Çekildi')) return <ArrowLeft className="w-5 h-5 text-yellow-500" />;
     
     // Tür'e göre genel ikonlar
     const icons = {
       info: <Bell className="w-5 h-5 text-blue-500" />,
       success: <CheckCircle className="w-5 h-5 text-green-500" />,
-      warning: <Trash2 className="w-5 h-5 text-yellow-500" />,
-      error: <X className="w-5 h-5 text-red-500" />,
+      warning: <AlertTriangle className="w-5 h-5 text-yellow-500" />,
+      error: <AlertCircle className="w-5 h-5 text-red-500" />,
     };
     return icons[type] || <Bell className="w-5 h-5 text-gray-500" />;
   };

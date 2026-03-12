@@ -660,21 +660,21 @@ const sendDoctorNotification = async (doctorUserId, status, applicationData) => 
   switch (status) {
     case 'accepted':
     case 3: // Status ID 3 = Kabul Edildi
-      notificationTitle = 'Başvurunuz Onaylandı';
-      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz onaylandı.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
+      notificationTitle = 'Başvurunuz kabul edildi';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz uygun bulundu.${applicationData.notes ? `\n**Not:** ${applicationData.notes}` : ''}`;
       notificationType = 'success';
       break;
     case 'rejected':
     case 4: // Status ID 4 = Reddedildi
-      notificationTitle = 'Başvurunuz Reddedildi';
-      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz reddedildi.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
+      notificationTitle = 'Başvurunuz uygun bulunmadı';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz uygun bulunmadı.${applicationData.notes ? `\n**Not:** ${applicationData.notes}` : ''}`;
       notificationType = 'error';
       break;
     case 'pending':
     case 1: // Status ID 1 = Beklemede
     case 2: // Status ID 2 = İnceleniyor
-      notificationTitle = 'Başvuru Durumu Güncellendi';
-      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz inceleme aşamasına alındı.${applicationData.notes ? ` Not: ${applicationData.notes}` : ''}`;
+      notificationTitle = 'Başvurunuz incelemeye alındı';
+      notificationBody = `${applicationData.hospital_name} hastanesindeki ${applicationData.job_title} pozisyonu için başvurunuz inceleme aşamasına alındı.${applicationData.notes ? `\n**Not:** ${applicationData.notes}` : ''}`;
       notificationType = 'info';
       break;
     case 'withdrawn':

@@ -294,7 +294,7 @@ export const ApplicationDetailScreen = () => {
                   variant={
                     data.status?.toLowerCase() === 'kabul edildi'
                       ? 'success'
-                      : data.status?.toLowerCase() === 'red edildi'
+                      : data.status?.toLowerCase() === 'reddedildi'
                       ? 'error'
                       : data.status?.toLowerCase() === 'inceleniyor'
                       ? 'warning'

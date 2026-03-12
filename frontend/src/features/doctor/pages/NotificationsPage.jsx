@@ -39,7 +39,27 @@ import { formatRelativeTime } from '@/utils/dateUtils';
  * Tek bir bildirimi render eder
  */
 const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, isSelected, onToggleSelect }) => {
-  const getIcon = (type) => {
+  const getIcon = (type, title) => {
+    // Başlığa göre özel ikonlar - Başvuru durumları
+    if (title?.includes('kabul edildi') || title?.includes('Kabul Edildi')) {
+      return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', border: 'border-green-200' };
+    }
+    if (title?.includes('uygun bulunmadı') || title?.includes('Reddedildi')) {
+      return { icon: XCircle, color: 'text-red-600', bg: 'bg-red-100', border: 'border-red-200' };
+    }
+    if (title?.includes('incelemeye alındı') || title?.includes('İnceleniyor')) {
+      return { icon: Eye, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-200' };
+    }
+    
+    // İş ilanı bildirimleri
+    if (title?.includes('İlan Kapatıldı') || title?.includes('İlan Arşivlendi')) {
+      return { icon: AlertTriangle, color: 'text-orange-600', bg: 'bg-orange-100', border: 'border-orange-200' };
+    }
+    if (title?.includes('İlan Aktifleştirildi')) {
+      return { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-100', border: 'border-green-200' };
+    }
+    
+    // Tür'e göre genel ikonlar
     const iconMap = {
       application_status: { icon: FileText, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-200' },
       interview_scheduled: { icon: Calendar, color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-200' },
@@ -99,7 +119,7 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete, onViewDetail, 
       <div className="flex items-start gap-4 pr-8">
         {/* Icon */}
         {(() => {
-          const iconConfig = getIcon(notification.type);
+          const iconConfig = getIcon(notification.type, notification.title);
           const IconComponent = iconConfig.icon;
           return (
             <div className={`flex-shrink-0 w-12 h-12 rounded-xl ${iconConfig.bg} border ${iconConfig.border} flex items-center justify-center shadow-sm`}>

@@ -189,7 +189,20 @@ const NavbarNotificationBell = () => {
                     ? notification.isRead 
                     : (notification.read_at !== null && notification.read_at !== undefined);
                   
-                  const getIcon = (type) => {
+                  const getIcon = (type, title) => {
+                    // Başlığa göre özel ikonlar
+                    if (title?.includes('kabul edildi') || title?.includes('Kabul Edildi')) return '✅';
+                    if (title?.includes('uygun bulunmadı') || title?.includes('Reddedildi')) return '❌';
+                    if (title?.includes('incelemeye alındı') || title?.includes('İnceleniyor')) return '👁️';
+                    if (title?.includes('Doktor Kaydı')) return '👨‍⚕️';
+                    if (title?.includes('Hastane Kaydı')) return '🏥';
+                    if (title?.includes('İş İlanı')) return '💼';
+                    if (title?.includes('Fotoğraf')) return '📷';
+                    if (title?.includes('İletişim')) return '📧';
+                    if (title?.includes('Yeni Başvuru')) return '📝';
+                    if (title?.includes('Başvuru Geri Çekildi')) return '↩️';
+                    
+                    // Tür'e göre genel ikonlar
                     const icons = {
                       info: '📋',
                       warning: '⚠️',
@@ -271,7 +284,7 @@ const NavbarNotificationBell = () => {
                     >
                       <div className="flex items-start gap-3">
                         <div className="text-lg flex-shrink-0 mt-0.5">
-                          {getIcon(notification.type)}
+                          {getIcon(notification.type, notification.title)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">

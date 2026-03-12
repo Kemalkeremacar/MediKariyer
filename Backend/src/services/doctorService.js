@@ -1429,15 +1429,18 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .where('a.doctor_profile_id', doctorProfileId)
     .whereNull('a.deleted_at'); // Soft delete: Silinmiş başvuruları gösterme
-    // NOT: j.deleted_at filtresi kaldırıldı - silinen iş ilanlarına ait başvurular gösterilecek ama "yayından kaldırılmış" olarak işaretlenecek
-    // NOT: hospital_users.is_active filtresi kaldırıldı - pasif hastane ilanları da gösterilecek ama pasif ilan gibi görünecek
-    // NOT: status_id = 3 filtresi kaldırıldı - pasif ilanları da gösteriyoruz
 
   // Status filtresi
   if (status) {
     const statusId = await resolveApplicationStatusId(status);
     if (statusId) {
-      query = query.where('a.status_id', statusId);
+      query = query.where('a.status_id', statusId)
+        .where(function() {
+          // Sadece aktif ilanların başvurularını göster (durum filtresi seçildiğinde)
+          this.where('j.status_id', '!=', 4) // İlan aktif (pasif değil)
+            .whereNull('j.deleted_at') // İlan silinmemiş
+            .where('hospital_users.is_active', true); // Hastane aktif
+        });
     }
   }
 
@@ -1454,14 +1457,17 @@ const getMyApplications = async (doctorProfileId, filters = {}) => {
     .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id')
     .where('a.doctor_profile_id', doctorProfileId)
     .whereNull('a.deleted_at'); // Soft delete: Silinmiş başvuruları sayma
-    // NOT: j.deleted_at filtresi kaldırıldı - silinen iş ilanlarına ait başvurular sayılacak
-    // NOT: hospital_users.is_active filtresi kaldırıldı - pasif hastane ilanları da sayılacak
-    // NOT: status_id = 3 filtresi kaldırıldı - pasif ilanları da sayıyoruz
 
   if (status) {
     const statusId = await resolveApplicationStatusId(status);
     if (statusId) {
-      countQuery = countQuery.where('a.status_id', statusId);
+      countQuery = countQuery.where('a.status_id', statusId)
+        .where(function() {
+          // Sadece aktif ilanların başvurularını say (durum filtresi seçildiğinde)
+          this.where('j.status_id', '!=', 4) // İlan aktif (pasif değil)
+            .whereNull('j.deleted_at') // İlan silinmemiş
+            .where('hospital_users.is_active', true); // Hastane aktif
+        });
     }
   }
 
