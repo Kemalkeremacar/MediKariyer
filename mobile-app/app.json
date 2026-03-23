@@ -2,7 +2,7 @@
   "expo": {
     "name": "MediKariyer",
     "slug": "medikariyer",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
@@ -35,7 +35,7 @@
     },
     "android": {
       "package": "com.medikariyer.mobile",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
