@@ -20,7 +20,8 @@
  */
 
 const lookupService = require('../services/lookupService');
-const { successResponse, errorResponse } = require('../utils/response');
+const { successResponse } = require('../utils/response');
+const { catchAsync } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
 /**
@@ -47,24 +48,16 @@ const logger = require('../utils/logger');
  *   "message": "Uzmanlık alanları başarıyla getirildi"
  * }
  */
-const getSpecialties = async (req, res) => {
-  try {
-    logger.info('Lookup specialties request received');
-    
-    const specialties = await lookupService.getSpecialties();
-    
-    res.status(200).json(successResponse(
-      specialties,
-      'Uzmanlık alanları başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting specialties:', error);
-    res.status(500).json(errorResponse(
-      'Uzmanlık alanları getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getSpecialties = catchAsync(async (req, res) => {
+  logger.info('Lookup specialties request received');
+  
+  const specialties = await lookupService.getSpecialties();
+  
+  res.status(200).json(successResponse(
+    specialties,
+    'Uzmanlık alanları başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm şehirleri getir
@@ -92,24 +85,16 @@ const getSpecialties = async (req, res) => {
  *   "message": "Şehirler başarıyla getirildi"
  * }
  */
-const getCities = async (req, res) => {
-  try {
-    logger.info('Lookup cities request received');
-    
-    const cities = await lookupService.getCities();
-    
-    res.status(200).json(successResponse(
-      cities,
-      'Şehirler başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting cities:', error);
-    res.status(500).json(errorResponse(
-      'Şehirler getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getCities = catchAsync(async (req, res) => {
+  logger.info('Lookup cities request received');
+  
+  const cities = await lookupService.getCities();
+  
+  res.status(200).json(successResponse(
+    cities,
+    'Şehirler başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm doktor eğitim türlerini getir
@@ -137,24 +122,16 @@ const getCities = async (req, res) => {
  *   "message": "Doktor eğitim türleri başarıyla getirildi"
  * }
  */
-const getDoctorEducationTypes = async (req, res) => {
-  try {
-    logger.info('Lookup doctor education types request received');
-    
-    const educationTypes = await lookupService.getDoctorEducationTypes();
-    
-    res.status(200).json(successResponse(
-      educationTypes,
-      'Doktor eğitim türleri başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting doctor education types:', error);
-    res.status(500).json(errorResponse(
-      'Doktor eğitim türleri getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getDoctorEducationTypes = catchAsync(async (req, res) => {
+  logger.info('Lookup doctor education types request received');
+  
+  const educationTypes = await lookupService.getDoctorEducationTypes();
+  
+  res.status(200).json(successResponse(
+    educationTypes,
+    'Doktor eğitim türleri başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm dil seviyelerini getir
@@ -180,24 +157,16 @@ const getDoctorEducationTypes = async (req, res) => {
  *   "message": "Dil seviyeleri başarıyla getirildi"
  * }
  */
-const getLanguageLevels = async (req, res) => {
-  try {
-    logger.info('Lookup language levels request received');
-    
-    const languageLevels = await lookupService.getLanguageLevels();
-    
-    res.status(200).json(successResponse(
-      languageLevels,
-      'Dil seviyeleri başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting language levels:', error);
-    res.status(500).json(errorResponse(
-      'Dil seviyeleri getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getLanguageLevels = catchAsync(async (req, res) => {
+  logger.info('Lookup language levels request received');
+  
+  const languageLevels = await lookupService.getLanguageLevels();
+  
+  res.status(200).json(successResponse(
+    languageLevels,
+    'Dil seviyeleri başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm dilleri getir
@@ -223,24 +192,16 @@ const getLanguageLevels = async (req, res) => {
  *   "message": "Diller başarıyla getirildi"
  * }
  */
-const getLanguages = async (req, res) => {
-  try {
-    logger.info('Lookup languages request received');
-    
-    const languages = await lookupService.getLanguages();
-    
-    res.status(200).json(successResponse(
-      languages,
-      'Diller başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting languages:', error);
-    res.status(500).json(errorResponse(
-      'Diller getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getLanguages = catchAsync(async (req, res) => {
+  logger.info('Lookup languages request received');
+  
+  const languages = await lookupService.getLanguages();
+  
+  res.status(200).json(successResponse(
+    languages,
+    'Diller başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm sertifika türlerini getir
@@ -266,24 +227,16 @@ const getLanguages = async (req, res) => {
  *   "message": "Sertifika türleri başarıyla getirildi"
  * }
  */
-const getCertificateTypes = async (req, res) => {
-  try {
-    logger.info('Lookup certificate types request received');
-    
-    const certificateTypes = await lookupService.getCertificateTypes();
-    
-    res.status(200).json(successResponse(
-      certificateTypes,
-      'Sertifika türleri başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting certificate types:', error);
-    res.status(500).json(errorResponse(
-      'Sertifika türleri getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getCertificateTypes = catchAsync(async (req, res) => {
+  logger.info('Lookup certificate types request received');
+  
+  const certificateTypes = await lookupService.getCertificateTypes();
+  
+  res.status(200).json(successResponse(
+    certificateTypes,
+    'Sertifika türleri başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm iş durumlarını getir
@@ -310,24 +263,16 @@ const getCertificateTypes = async (req, res) => {
  *   "message": "İş durumları başarıyla getirildi"
  * }
  */
-const getJobStatuses = async (req, res) => {
-  try {
-    logger.info('Lookup job statuses request received');
-    
-    const jobStatuses = await lookupService.getJobStatuses();
-    
-    res.status(200).json(successResponse(
-      jobStatuses,
-      'İş durumları başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting job statuses:', error);
-    res.status(500).json(errorResponse(
-      'İş durumları getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getJobStatuses = catchAsync(async (req, res) => {
+  logger.info('Lookup job statuses request received');
+  
+  const jobStatuses = await lookupService.getJobStatuses();
+  
+  res.status(200).json(successResponse(
+    jobStatuses,
+    'İş durumları başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm başvuru durumlarını getir
@@ -355,24 +300,16 @@ const getJobStatuses = async (req, res) => {
  *   "message": "Başvuru durumları başarıyla getirildi"
  * }
  */
-const getApplicationStatuses = async (req, res) => {
-  try {
-    logger.info('Lookup application statuses request received');
-    
-    const applicationStatuses = await lookupService.getApplicationStatuses();
-    
-    res.status(200).json(successResponse(
-      applicationStatuses,
-      'Başvuru durumları başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting application statuses:', error);
-    res.status(500).json(errorResponse(
-      'Başvuru durumları getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getApplicationStatuses = catchAsync(async (req, res) => {
+  logger.info('Lookup application statuses request received');
+  
+  const applicationStatuses = await lookupService.getApplicationStatuses();
+  
+  res.status(200).json(successResponse(
+    applicationStatuses,
+    'Başvuru durumları başarıyla getirildi'
+  ));
+});
 
 /**
  * Tüm yan dal alanlarını getir
@@ -382,25 +319,17 @@ const getApplicationStatuses = async (req, res) => {
  * @access Public
  * @returns {Object} JSON response
  */
-const getSubspecialties = async (req, res) => {
-  try {
-    const { specialtyId } = req.params;
-    logger.info('Lookup subspecialties request received', { specialtyId });
-    
-    const subspecialties = await lookupService.getSubspecialties(specialtyId ? parseInt(specialtyId) : null);
-    
-    res.status(200).json(successResponse(
-      subspecialties,
-      'Yan dal alanları başarıyla getirildi'
-    ));
-  } catch (error) {
-    logger.error('Error getting subspecialties:', error);
-    res.status(500).json(errorResponse(
-      'Yan dal alanları getirilirken hata oluştu',
-      error.message
-    ));
-  }
-};
+const getSubspecialties = catchAsync(async (req, res) => {
+  const { specialtyId } = req.params;
+  logger.info('Lookup subspecialties request received', { specialtyId });
+  
+  const subspecialties = await lookupService.getSubspecialties(specialtyId ? parseInt(specialtyId) : null);
+  
+  res.status(200).json(successResponse(
+    subspecialties,
+    'Yan dal alanları başarıyla getirildi'
+  ));
+});
 
 /**
  * Lookup Controller Module Exports

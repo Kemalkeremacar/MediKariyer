@@ -33,7 +33,7 @@ const validate = (schema, source = 'body') => {
       if (error) {
         const errorMessages = error.details.map(detail => ({
           field: detail.path.join('.'),
-          message: detail.message,
+          message: detail.message.replace(/"/g, ''), // Tırnak işaretlerini kaldır
           value: detail.context?.value
         }));
 
@@ -42,7 +42,12 @@ const validate = (schema, source = 'body') => {
         logger.warn(`Validation failed details - Source: ${source}, Fields: ${errorDetails}`);
         logger.debug(`Request ${source}:`, JSON.stringify(dataToValidate, null, 2));
         
-        throw new AppError('Validasyon hatası', 400, errorMessages);
+        // Kullanıcı dostu hata mesajı oluştur
+        const userFriendlyMessage = errorMessages.length === 1 
+          ? errorMessages[0].message 
+          : `${errorMessages.length} alanda hata var: ${errorMessages.map(e => e.message).join(', ')}`;
+        
+        throw new AppError(userFriendlyMessage, 400, errorMessages);
       }
 
             // Doğrulama başarılı olduğunda, `stripUnknown` ve `convert` seçenekleri sayesinde temizlenmiş ve dönüştürülmüş
@@ -150,7 +155,13 @@ const validateMultiple = (schemas) => {
 
       if (errors.length > 0) {
         logger.warn('Multiple validation failed:', errors);
-        throw new AppError('Validasyon hatası', 400, errors);
+        
+        // Kullanıcı dostu hata mesajı oluştur
+        const userFriendlyMessage = errors.length === 1 
+          ? errors[0].message.replace(/"/g, '') 
+          : `${errors.length} alanda hata var: ${errors.map(e => e.message.replace(/"/g, '')).join(', ')}`;
+        
+        throw new AppError(userFriendlyMessage, 400, errors);
       }
 
       next();

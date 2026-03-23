@@ -275,21 +275,21 @@ const mobileEducationSchema = Joi.object({
     'string.min': 'Eğitim türü en az 2 karakter olmalıdır',
     'string.max': 'Eğitim türü en fazla 100 karakter olabilir'
   }),
-  education_institution: Joi.string().min(2).max(200).required().messages({
+  education_institution: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Eğitim kurumu en az 2 karakter olmalıdır',
-    'string.max': 'Eğitim kurumu en fazla 200 karakter olabilir',
+    'string.max': 'Eğitim kurumu en fazla 255 karakter olabilir',
     'any.required': 'Eğitim kurumu zorunludur'
   }),
-  field: Joi.string().min(2).max(100).required().messages({
+  field: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Alan adı en az 2 karakter olmalıdır',
-    'string.max': 'Alan adı en fazla 100 karakter olabilir',
+    'string.max': 'Alan adı en fazla 255 karakter olabilir',
     'any.required': 'Alan adı zorunludur'
   }),
-  graduation_year: Joi.number().integer().min(1950).max(new Date().getFullYear() + 10).required().messages({
+  graduation_year: Joi.number().integer().min(1950).max(new Date().getFullYear() + 5).required().messages({
     'number.base': 'Mezuniyet yılı sayı olmalıdır',
     'number.integer': 'Mezuniyet yılı tam sayı olmalıdır',
     'number.min': 'Mezuniyet yılı 1950\'den küçük olamaz',
-    'number.max': `Mezuniyet yılı ${new Date().getFullYear() + 10}\'dan büyük olamaz`,
+    'number.max': `Mezuniyet yılı ${new Date().getFullYear() + 5}\'dan büyük olamaz`,
     'any.required': 'Mezuniyet yılı zorunludur'
   })
 });
@@ -299,14 +299,14 @@ const mobileEducationSchema = Joi.object({
  * @description Mobile experience CRUD endpoint için validasyon
  */
 const mobileExperienceSchema = Joi.object({
-  organization: Joi.string().min(2).max(200).required().messages({
+  organization: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Kurum adı en az 2 karakter olmalıdır',
-    'string.max': 'Kurum adı en fazla 200 karakter olabilir',
+    'string.max': 'Kurum adı en fazla 255 karakter olabilir',
     'any.required': 'Kurum adı zorunludur'
   }),
-  role_title: Joi.string().min(2).max(100).required().messages({
+  role_title: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Ünvan en az 2 karakter olmalıdır',
-    'string.max': 'Ünvan en fazla 100 karakter olabilir',
+    'string.max': 'Ünvan en fazla 255 karakter olabilir',
     'any.required': 'Ünvan zorunludur'
   }),
   specialty_id: Joi.number().integer().positive().required().messages({
@@ -340,21 +340,21 @@ const mobileExperienceSchema = Joi.object({
  * @description Mobile certificate CRUD endpoint için validasyon
  */
 const mobileCertificateSchema = Joi.object({
-  certificate_name: Joi.string().min(2).max(200).required().messages({
+  certificate_name: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Sertifika adı en az 2 karakter olmalıdır',
-    'string.max': 'Sertifika adı en fazla 200 karakter olabilir',
+    'string.max': 'Sertifika adı en fazla 255 karakter olabilir',
     'any.required': 'Sertifika adı zorunludur'
   }),
-  institution: Joi.string().min(2).max(200).required().messages({
+  institution: Joi.string().min(2).max(255).required().messages({
     'string.min': 'Kurum adı en az 2 karakter olmalıdır',
-    'string.max': 'Kurum adı en fazla 200 karakter olabilir',
+    'string.max': 'Kurum adı en fazla 255 karakter olabilir',
     'any.required': 'Kurum adı zorunludur'
   }),
-  certificate_year: Joi.number().integer().min(1950).max(new Date().getFullYear() + 10).required().messages({
+  certificate_year: Joi.number().integer().min(1950).max(new Date().getFullYear()).required().messages({
     'number.base': 'Sertifika yılı sayı olmalıdır',
     'number.integer': 'Sertifika yılı tam sayı olmalıdır',
     'number.min': 'Sertifika yılı 1950\'den küçük olamaz',
-    'number.max': `Sertifika yılı ${new Date().getFullYear() + 10}\'dan büyük olamaz`,
+    'number.max': `Sertifika yılı ${new Date().getFullYear()}\'dan büyük olamaz`,
     'any.required': 'Sertifika yılı zorunludur'
   })
 });
@@ -376,6 +376,30 @@ const mobileLanguageSchema = Joi.object({
     'number.positive': 'Dil seviyesi ID pozitif bir sayı olmalıdır',
     'any.required': 'Dil seviyesi zorunludur'
   })
+});
+
+/**
+ * Mobile Profile Update Notification Schema
+ * @description Profil güncelleme bildirimi için validasyon (Web ile uyumlu)
+ */
+const mobileProfileUpdateNotificationSchema = Joi.object({
+  updateType: Joi.string()
+    .valid('personal_info', 'education', 'experience', 'certificate', 'language')
+    .required()
+    .messages({
+      'any.only': 'Güncelleme türü geçerli değerlerden biri olmalıdır: personal_info, education, experience, certificate, language',
+      'any.required': 'Güncelleme türü zorunludur'
+    }),
+    
+  updateDescription: Joi.string()
+    .min(5)
+    .max(200)
+    .required()
+    .messages({
+      'string.min': 'Güncelleme açıklaması en az 5 karakter olmalıdır',
+      'string.max': 'Güncelleme açıklaması en fazla 200 karakter olabilir',
+      'any.required': 'Güncelleme açıklaması zorunludur'
+    })
 });
 
 // ==================== MOBILE APPLICATION SCHEMAS ====================
@@ -509,8 +533,8 @@ const mobileApplicationsQuerySchema = paginationQuerySchema.keys({
     'number.integer': 'Status ID tam sayı olmalıdır',
     'number.positive': 'Status ID pozitif bir sayı olmalıdır'
   }),
-  status: Joi.string().valid('pending', 'reviewing', 'approved', 'rejected', 'withdrawn', 'Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Reddedildi', 'Geri Çekildi').optional().messages({
-    'any.only': 'Status geçerli bir başvuru durumu olmalıdır'
+  status: Joi.string().valid('Başvuruldu', 'İnceleniyor', 'Kabul Edildi', 'Reddedildi', 'Geri Çekildi').optional().messages({
+    'any.only': 'Status geçerli bir başvuru durumu olmalıdır: Başvuruldu, İnceleniyor, Kabul Edildi, Reddedildi, Geri Çekildi'
   })
 });
 
@@ -608,6 +632,7 @@ module.exports = {
   
   // Doctor Profile
   mobileUpdatePersonalInfoSchema,
+  mobileProfileUpdateNotificationSchema,
   
   // Doctor CRUD
   mobileEducationSchema,

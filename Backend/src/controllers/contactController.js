@@ -104,29 +104,20 @@ const deleteContactMessage = catchAsync(async (req, res) => {
 // İLETİŞİM FORMU İŞLEMLERİ
 // ============================================================================
 
-const createContactMessage = async (req, res, next) => {
-  try {
-    const { name, email, subject, message } = req.body;
+const createContactMessage = catchAsync(async (req, res) => {
+  const { name, email, subject, message } = req.body;
 
-    const messageId = await contactService.createContactMessage({
-      name,
-      email,
-      subject,
-      message
-    });
+  const messageId = await contactService.createContactMessage({
+    name,
+    email,
+    subject,
+    message
+  });
 
-    logger.info(`İletişim mesajı oluşturuldu: ${email} - ID: ${messageId}`);
+  logger.info(`İletişim mesajı oluşturuldu: ${email} - ID: ${messageId}`);
 
-    return sendSuccess(res, {
-      message: 'Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.',
-      data: { id: messageId }
-    }, 201);
-
-  } catch (error) {
-    logger.error('İletişim mesajı oluşturma hatası:', error);
-    return sendError(res, error.message, error.statusCode || 500);
-  }
-};
+  return sendSuccess(res, 'Mesajınız başarıyla gönderildi. En kısa sürede size dönüş yapacağız.', { id: messageId }, 201);
+});
 
 
 // ============================================================================

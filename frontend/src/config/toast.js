@@ -254,24 +254,49 @@ export const toastMessages = {
  * Hata mesajı formatlama fonksiyonu
  * 
  * Backend'den gelen hata mesajlarını daha okunabilir hale getirir
+ * Validation hatalarını özel olarak handle eder
  * 
  * @param {Error|string} error - Hata objesi veya mesaj
  * @param {string} defaultMessage - Varsayılan mesaj
  * @returns {string} Formatlanmış hata mesajı
  */
 export const formatErrorMessage = (error, defaultMessage = 'Bir hata oluştu') => {
+  // String ise direkt döndür
   if (typeof error === 'string') {
     return error;
   }
 
-  if (error?.response?.data?.message) {
-    return error.response.data.message;
+  // Backend response varsa
+  if (error?.response?.data) {
+    const { message, details, error: errorCode } = error.response.data;
+    
+    // Validation hatası kontrolü - details array'i varsa
+    if (details && Array.isArray(details) && details.length > 0) {
+      // Backend'den gelen message zaten kullanıcı dostu olmalı
+      // Eğer "Validasyon hatası" gibi genel bir mesajsa, details'den ilk hatayı göster
+      if (message && !message.includes('Validasyon hatası') && !message.includes('validation')) {
+        return message;
+      }
+      
+      // İlk validation hatasını göster
+      const firstError = details[0];
+      if (firstError.message) {
+        return firstError.message.replace(/"/g, ''); // Tırnak işaretlerini kaldır
+      }
+    }
+    
+    // Normal hata mesajı
+    if (message) {
+      return message;
+    }
   }
 
+  // Error message varsa
   if (error?.message) {
     return error.message;
   }
 
+  // Varsayılan mesaj
   return defaultMessage;
 };
 

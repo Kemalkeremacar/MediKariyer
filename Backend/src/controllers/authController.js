@@ -88,80 +88,71 @@ const registerDoctor = catchAsync(async (req, res) => {
     hasProfilePhoto: !!profile_photo
   });
 
-  try {
-    // AuthService ile doktor kaydı yap
-    const result = await authService.registerDoctor({
-      email,
-      password,
-      first_name,
-      last_name,
-      title,
-      specialty_id,
-      subspecialty_id,
-      region,
-      profile_photo
-    });
+  // AuthService ile doktor kaydı yap
+  const result = await authService.registerDoctor({
+    email,
+    password,
+    first_name,
+    last_name,
+    title,
+    specialty_id,
+    subspecialty_id,
+    region,
+    profile_photo
+  });
 
-    logger.info(`New doctor registered successfully: ${email}`);
+  logger.info(`New doctor registered successfully: ${email}`);
 
-    // Audit log kaydet
-    await LogService.createAuditLog({
-      actorId: result.user.id,
-      actorRole: result.user.role,
-      actorName: `${result.profile.first_name} ${result.profile.last_name}`,
-      actorEmail: result.user.email,
-      action: 'user.register',
-      resourceType: 'doctor',
-      resourceId: result.profile.id,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      metadata: { 
-        email: result.user.email,
-        first_name: result.profile.first_name,
-        last_name: result.profile.last_name,
-        specialty_id
-      }
-    }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
-
-    // Security log kaydet
-    await LogService.createSecurityLog({
-      eventType: 'user_registered',
-      severity: 'low',
-      message: `Yeni doktor kaydı: ${result.profile.first_name} ${result.profile.last_name}`,
-      userId: result.user.id,
+  // Audit log kaydet
+  await LogService.createAuditLog({
+    actorId: result.user.id,
+    actorRole: result.user.role,
+    actorName: `${result.profile.first_name} ${result.profile.last_name}`,
+    actorEmail: result.user.email,
+    action: 'user.register',
+    resourceType: 'doctor',
+    resourceId: result.profile.id,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { 
       email: result.user.email,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      metadata: { role: 'doctor', specialty_id }
-    }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
+      first_name: result.profile.first_name,
+      last_name: result.profile.last_name,
+      specialty_id
+    }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
 
-    return sendCreated(res, 'Doktor kaydı başarılı, admin onayı bekleniyor.', {
-      user: { 
-        id: result.user.id, 
-        email: result.user.email, 
-        role: result.user.role, 
-        is_approved: result.user.is_approved 
-      },
-      profile: {
-        id: result.profile.id,
-        first_name: result.profile.first_name,
-        last_name: result.profile.last_name,
-        title: result.profile.title,
-        specialty_id: result.profile.specialty_id,
-        subspecialty_id: result.profile.subspecialty_id,
-        region: result.profile.region,
-        profile_photo: result.profile.profile_photo,
-        photo_status: result.profile.photo_status
-      }
-    }, 201);
-  } catch (error) {
-    logger.error(`Doctor registration failed for ${email}:`, {
-      message: error.message,
-      statusCode: error.statusCode,
-      stack: error.stack
-    });
-    throw error;
-  }
+  // Security log kaydet
+  await LogService.createSecurityLog({
+    eventType: 'user_registered',
+    severity: 'low',
+    message: `Yeni doktor kaydı: ${result.profile.first_name} ${result.profile.last_name}`,
+    userId: result.user.id,
+    email: result.user.email,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { role: 'doctor', specialty_id }
+  }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
+
+  return sendCreated(res, 'Doktor kaydı başarılı, admin onayı bekleniyor.', {
+    user: { 
+      id: result.user.id, 
+      email: result.user.email, 
+      role: result.user.role, 
+      is_approved: result.user.is_approved 
+    },
+    profile: {
+      id: result.profile.id,
+      first_name: result.profile.first_name,
+      last_name: result.profile.last_name,
+      title: result.profile.title,
+      specialty_id: result.profile.specialty_id,
+      subspecialty_id: result.profile.subspecialty_id,
+      region: result.profile.region,
+      profile_photo: result.profile.profile_photo,
+      photo_status: result.profile.photo_status
+    }
+  }, 201);
 });
 
 /**
@@ -204,72 +195,63 @@ const registerHospital = catchAsync(async (req, res) => {
     hasLogo: !!logo
   });
 
-  try {
-    // AuthService ile hastane kaydı yap
-    const result = await authService.registerHospital({
-      email,
-      password,
-      institution_name,
-      city_id,
-      phone,
-      address,
-      website,
-      about,
-      logo
-    });
+  // AuthService ile hastane kaydı yap
+  const result = await authService.registerHospital({
+    email,
+    password,
+    institution_name,
+    city_id,
+    phone,
+    address,
+    website,
+    about,
+    logo
+  });
 
-    logger.info(`New hospital registered successfully: ${email}`);
+  logger.info(`New hospital registered successfully: ${email}`);
 
-    // Audit log kaydet
-    await LogService.createAuditLog({
-      actorId: result.user.id,
-      actorRole: result.user.role,
-      actorName: result.profile.institution_name,
-      actorEmail: result.user.email,
-      action: 'user.register',
-      resourceType: 'hospital',
-      resourceId: result.profile.id,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      metadata: { 
-        email: result.user.email,
-        institution_name: result.profile.institution_name,
-        city_id
-      }
-    }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
-
-    // Security log kaydet
-    await LogService.createSecurityLog({
-      eventType: 'user_registered',
-      severity: 'low',
-      message: `Yeni hastane kaydı: ${result.profile.institution_name}`,
-      userId: result.user.id,
+  // Audit log kaydet
+  await LogService.createAuditLog({
+    actorId: result.user.id,
+    actorRole: result.user.role,
+    actorName: result.profile.institution_name,
+    actorEmail: result.user.email,
+    action: 'user.register',
+    resourceType: 'hospital',
+    resourceId: result.profile.id,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { 
       email: result.user.email,
-      ipAddress: req.ip,
-      userAgent: req.get('user-agent'),
-      metadata: { role: 'hospital', city_id }
-    }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
+      institution_name: result.profile.institution_name,
+      city_id
+    }
+  }).catch(err => logger.error('Audit log kayıt hatası', { error: err.message }));
 
-    return sendCreated(res, 'Hastane kaydı başarılı, admin onayı bekleniyor.', {
-      user: { 
-        id: result.user.id, 
-        email: result.user.email, 
-        role: result.user.role, 
-        is_approved: result.user.is_approved 
-      },
-      profile: {
-        id: result.profile.id,
-        institution_name: result.profile.institution_name
-      }
-    }, 201);
-  } catch (error) {
-    logger.error(`Hospital registration failed for ${email}:`, {
-      message: error.message,
-      statusCode: error.statusCode,
-      stack: error.stack
-    });
-    throw error;
-  }
+  // Security log kaydet
+  await LogService.createSecurityLog({
+    eventType: 'user_registered',
+    severity: 'low',
+    message: `Yeni hastane kaydı: ${result.profile.institution_name}`,
+    userId: result.user.id,
+    email: result.user.email,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    metadata: { role: 'hospital', city_id }
+  }).catch(err => logger.error('Security log kayıt hatası', { error: err.message }));
+
+  return sendCreated(res, 'Hastane kaydı başarılı, admin onayı bekleniyor.', {
+    user: { 
+      id: result.user.id, 
+      email: result.user.email, 
+      role: result.user.role, 
+      is_approved: result.user.is_approved 
+    },
+    profile: {
+      id: result.profile.id,
+      institution_name: result.profile.institution_name
+    }
+  }, 201);
 });
 
 // ==================== END REGISTRATION FUNCTIONS ====================

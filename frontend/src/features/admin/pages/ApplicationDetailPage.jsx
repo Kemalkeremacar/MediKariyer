@@ -731,12 +731,14 @@ const AdminApplicationDetailPage = () => {
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-orange-600" />
                   Admin Notu
+                  <span className="text-xs text-gray-500 ml-auto">{notes.length}/500</span>
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Değerlendirme notları ekleyin..."
                   rows={4}
+                  maxLength={500}
                   disabled={isWithdrawn}
                   className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 />

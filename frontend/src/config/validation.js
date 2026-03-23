@@ -558,18 +558,40 @@ export const jobSchema = z.object({
 });
 
 /**
- * Application Status Schema - Backend applicationStatusSchema ile tam uyumlu
+ * Application Status Schema - Backend adminSchemas.js applicationStatusUpdateSchema ile tam uyumlu
  * 
- * Başvuru durumu güncelleme formu validasyonu
+ * Admin tarafından başvuru durumu güncelleme formu validasyonu
+ * Durum ID ve sebep kontrolü içerir
+ * 
+ * Field'lar:
+ * - status_id: Başvuru durum ID (pozitif tam sayı, zorunlu)
+ * - reason: Sebep/açıklama (max 500 karakter, opsiyonel)
+ * 
+ * Not: Backend adminSchemas.js ile tam uyumlu
+ */
+export const applicationStatusUpdateSchema = z.object({
+  status_id: idSchema,
+  reason: z.string().max(500, 'Sebep en fazla 500 karakter olabilir').optional().nullable().or(z.literal(''))
+});
+
+/**
+ * Hospital Application Status Schema - Backend hospitalSchemas.js applicationStatusSchema ile tam uyumlu
+ * 
+ * Hastane tarafından başvuru durumu güncelleme formu validasyonu
  * Durum ID ve notlar kontrolü içerir
  * 
  * Field'lar:
- * - status: Başvuru durum ID (pozitif tam sayı)
+ * - status_id: Başvuru durum ID (pozitif tam sayı, zorunlu)
  * - notes: Notlar/açıklama (max 1000 karakter, opsiyonel)
+ * 
+ * Not: Backend hospitalSchemas.js applicationStatusSchema ile tam uyumlu
+ * Admin tarafından kullanılan applicationStatusUpdateSchema'dan farklıdır:
+ * - Admin: reason (max 500 karakter)
+ * - Hospital: notes (max 1000 karakter)
  */
-export const applicationStatusUpdateSchema = z.object({
-  status: idSchema,
-  notes: z.string().max(1000, 'Notlar en fazla 1000 karakter olabilir').optional()
+export const hospitalApplicationStatusSchema = z.object({
+  status_id: idSchema,
+  notes: z.string().max(1000, 'Notlar en fazla 1000 karakter olabilir').optional().nullable().or(z.literal(''))
 });
 
 // ============================================================================
@@ -917,6 +939,7 @@ export default {
   // Job schemas
   jobSchema,
   applicationStatusUpdateSchema,
+  hospitalApplicationStatusSchema,
   
   // Contact schemas
   contactSchema,

@@ -144,7 +144,10 @@ const getApplicationDetail = async (userId, applicationId) => {
     .leftJoin('specialties as s', 'j.specialty_id', 's.id')
     .leftJoin('subspecialties as ss', 'j.subspecialty_id', 'ss.id')
     .leftJoin('hospital_profiles as hp', 'j.hospital_id', 'hp.id')
+    .leftJoin('cities as hp_city', 'hp.city_id', 'hp_city.id') // Hastane şehri için
+    .leftJoin('users as hospital_users', 'hp.user_id', 'hospital_users.id') // Hastane aktiflik durumu için
     .leftJoin('application_statuses as ast', 'a.status_id', 'ast.id')
+    .leftJoin('job_statuses as js', 'j.status_id', 'js.id') // İş ilanı durumu için
     .where('a.id', applicationId)
     .where('a.doctor_profile_id', profile.id)
     .whereNull('a.deleted_at')
@@ -166,6 +169,7 @@ const getApplicationDetail = async (userId, applicationId) => {
       'j.city_id',
       'j.specialty_id',
       'j.subspecialty_id',
+      'j.deleted_at as job_deleted_at', // İş ilanı silinme tarihi (yayından kaldırılma kontrolü için)
       // Hospital fields
       'hp.institution_name as hospital_name',
       'hp.address as hospital_address',
@@ -173,12 +177,16 @@ const getApplicationDetail = async (userId, applicationId) => {
       'hp.email as hospital_email',
       'hp.website as hospital_website',
       'hp.about as hospital_about',
+      'hp.city_id as hospital_city_id',
+      'hp_city.name as hospital_city', // Hastane şehir adı (web ile uyumlu)
       // Lookup fields
       'c.name as city_name',
       's.name as specialty_name',
       'ss.name as subspecialty_name',
-      // Status field
-      'ast.name as status_label'
+      // Status fields
+      'ast.name as status_label',
+      'js.name as job_status', // İş ilanı durumu (Onaylandı, Pasif, vb.)
+      'hospital_users.is_active as hospital_is_active' // Hastane aktiflik durumu
     )
     .first();
 

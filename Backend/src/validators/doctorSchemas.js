@@ -387,12 +387,10 @@ const createApplicationSchema = Joi.object({
  */
 const withdrawApplicationSchema = Joi.object({
   reason: Joi.string()
-    .min(5)
     .max(500)
     .optional()
-    .allow('')
+    .allow('', null)
     .messages({
-      'string.min': 'Geri çekme sebebi en az 5 karakter olmalıdır',
       'string.max': 'Geri çekme sebebi en fazla 500 karakter olabilir'
     })
 });

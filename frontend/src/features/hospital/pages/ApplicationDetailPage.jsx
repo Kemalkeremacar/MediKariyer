@@ -491,12 +491,14 @@ const HospitalApplicationDetailPage = () => {
                 <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-orange-600" />
                   Hastane Notu
+                  <span className="text-xs text-gray-500 ml-auto">{notes.length}/1000</span>
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Değerlendirme notları ekleyin..."
                   rows={4}
+                  maxLength={1000}
                   disabled={isWithdrawn}
                   className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50"
                 />
