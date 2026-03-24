@@ -2,7 +2,7 @@
   "expo": {
     "name": "MediKariyer",
     "slug": "medikariyer",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "default",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
@@ -35,7 +35,7 @@
     },
     "android": {
       "package": "com.medikariyer.mobile",
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
@@ -76,7 +76,7 @@
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 35,
+            "compileSdkVersion": 36,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0"
           }
