@@ -86,7 +86,11 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
 
   return (
     <View>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity 
+        onPress={isJobUnavailable ? undefined : onPress} 
+        activeOpacity={isJobUnavailable ? 1 : 0.7}
+        disabled={isJobUnavailable}
+      >
         <Card variant="elevated" padding="lg" style={isJobUnavailable ? {...styles.card, ...styles.cardUnavailable} : styles.card}>
         {/* Başlık ve Durum Rozeti */}
         <View style={styles.header}>
@@ -113,7 +117,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
                 {statusLabel}
               </Typography>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} style={{ marginTop: 4 }} />
+            {!isJobUnavailable && (
+              <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} style={{ marginTop: 4 }} />
+            )}
           </View>
         </View>
 

@@ -422,6 +422,23 @@ const DoctorApplicationsPage = () => {
 
 // Application Card Component (Memoized)
 const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWithdrawing, getStatusText, getStatusColor }) => {
+  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif, hastane pasif veya silinmiş)
+  const jobStatusId = application.job_status_id;
+  const jobStatus = application.job_status || '';
+  const hospitalIsActive = application.hospital_is_active !== false && application.hospital_is_active !== 0 && application.hospital_is_active !== '0';
+  const isJobDeleted = application.is_job_deleted || Boolean(application.job_deleted_at); // Backend'den gelen is_job_deleted alanını kullan
+  const isJobPassive = 
+    jobStatusId === 4 ||
+    jobStatusId === '4' ||
+    jobStatus === 'Pasif' || 
+    jobStatus === 'Passive' ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'pasif') ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive')) ||
+    !hospitalIsActive || // Hastane pasifse ilan da pasif gibi görünsün
+    isJobDeleted; // İş ilanı silinmişse (yayından kaldırılmış) pasif gibi görünsün
+
   const handleView = (e) => {
     // Pasif ilanlar için detay sayfasına gitmeyi engelle
     if (isJobPassive) {
@@ -435,23 +452,6 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
   const handleWithdraw = () => {
     onWithdrawClick(application.id);
   };
-
-  // İlan durumunu kontrol et - Pasif ilan kontrolü (ilan pasif, hastane pasif veya silinmiş)
-  const jobStatusId = application.job_status_id;
-  const jobStatus = application.job_status || '';
-  const hospitalIsActive = application.hospital_is_active !== false && application.hospital_is_active !== 0 && application.hospital_is_active !== '0';
-  const jobDeletedAt = application.job_deleted_at; // İş ilanı silinme tarihi
-  const isJobPassive = 
-    jobStatusId === 4 ||
-    jobStatusId === '4' ||
-    jobStatus === 'Pasif' || 
-    jobStatus === 'Passive' ||
-    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'pasif') ||
-    (typeof jobStatus === 'string' && jobStatus.toLowerCase().trim() === 'passive') ||
-    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
-    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive')) ||
-    !hospitalIsActive || // Hastane pasifse ilan da pasif gibi görünsün
-    !!jobDeletedAt; // İş ilanı silinmişse (yayından kaldırılmış) pasif gibi görünsün
 
   // Pasif ilan için özel görünüm
   if (isJobPassive) {
@@ -469,7 +469,7 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-blue-400" />
-                    <span>{application.job_city || 'Şehir belirtilmemiş'}</span>
+                    <span>{application.city || application.city_name || 'Şehir belirtilmemiş'}</span>
                   </div>
                 </div>
               </div>
@@ -512,7 +512,7 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-blue-400" />
-                  <span>{application.job_city || 'Şehir belirtilmemiş'}</span>
+                  <span>{application.city || application.city_name || 'Şehir belirtilmemiş'}</span>
                 </div>
               </div>
             </div>

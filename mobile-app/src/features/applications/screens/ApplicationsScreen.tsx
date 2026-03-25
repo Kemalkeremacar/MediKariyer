@@ -280,12 +280,23 @@ export const ApplicationsScreen = () => {
           <FlashList
             data={applications}
             keyExtractor={(item) => `application-${item.id}`}
-            renderItem={({ item }) => (
-              <ApplicationCard
-                application={item}
-                onPress={() => navigation.navigate('ApplicationDetail', { applicationId: item.id })}
-              />
-            )}
+            renderItem={({ item }) => {
+              // İlan durumu kontrolleri (web ile uyumlu)
+              const isJobUnavailable = item.is_job_deleted || item.is_hospital_active === false;
+              
+              return (
+                <ApplicationCard
+                  application={item}
+                  onPress={() => {
+                    if (isJobUnavailable) {
+                      // Pasif ilanlar için detay sayfasına gitmeyi engelle
+                      return;
+                    }
+                    navigation.navigate('ApplicationDetail', { applicationId: item.id });
+                  }}
+                />
+              );
+            }}
             refreshControl={
               <RefreshControl
                 refreshing={query.isRefetching}

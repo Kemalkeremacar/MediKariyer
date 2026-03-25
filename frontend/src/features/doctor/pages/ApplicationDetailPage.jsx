@@ -36,7 +36,7 @@ const DoctorApplicationDetailPage = () => {
   const jobStatusId = application?.job_status_id;
   const jobStatus = application?.job_status || '';
   const hospitalIsActive = application?.hospital_is_active !== false && application?.hospital_is_active !== 0 && application?.hospital_is_active !== '0';
-  const jobDeletedAt = application?.job_deleted_at; // İş ilanı silinme tarihi
+  const isJobDeleted = application?.is_job_deleted || Boolean(application?.job_deleted_at); // Backend'den gelen is_job_deleted alanını kullan
   const isJobPassive = 
     jobStatusId === 4 ||
     jobStatusId === '4' ||
@@ -47,7 +47,7 @@ const DoctorApplicationDetailPage = () => {
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
     (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive')) ||
     !hospitalIsActive || // Hastane pasifse ilan da pasif gibi görünsün
-    !!jobDeletedAt; // İş ilanı silinmişse (yayından kaldırılmış) pasif gibi görünsün
+    isJobDeleted; // İş ilanı silinmişse (yayından kaldırılmış) pasif gibi görünsün
 
   // Status helper functions
   const getStatusText = (statusId) => {
@@ -237,7 +237,7 @@ const DoctorApplicationDetailPage = () => {
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
                   <div className="text-gray-600 text-sm mb-1">Şehir</div>
-                  <div className="text-gray-900 font-medium">{applicationDetail?.city || application?.job_city}</div>
+                  <div className="text-gray-900 font-medium">{applicationDetail?.city || applicationDetail?.city_name || application?.city || application?.city_name}</div>
                 </div>
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
                   <div className="text-gray-600 text-sm mb-1">Uzmanlık Alanı</div>
