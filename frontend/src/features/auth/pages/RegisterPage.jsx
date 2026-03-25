@@ -286,6 +286,7 @@ const RegisterPage = () => {
   const titleOptions = [
     { value: 'Dr.', label: 'Dr.' },
     { value: 'Uz. Dr.', label: 'Uz. Dr.' },
+    { value: 'Op. Dr.', label: 'Op. Dr.' },
     { value: 'Dr. Öğr. Üyesi', label: 'Dr. Öğr. Üyesi' },
     { value: 'Doç. Dr.', label: 'Doç. Dr.' },
     { value: 'Prof. Dr.', label: 'Prof. Dr.' },

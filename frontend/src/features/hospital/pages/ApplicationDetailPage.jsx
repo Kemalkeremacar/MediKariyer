@@ -219,7 +219,7 @@ const HospitalApplicationDetailPage = () => {
             <div>
               <h1 className="text-3xl font-bold text-white">Başvuru Detayları</h1>
               <p className="text-gray-300 mt-1">
-                {application.first_name} {application.last_name} - {application.job_title}
+                {(application.title || 'Dr.')} {application.first_name} {application.last_name} - {application.job_title}
               </p>
             </div>
           </div>
@@ -295,7 +295,7 @@ const HospitalApplicationDetailPage = () => {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Başvuru Detayları</h1>
               <p className="text-gray-700 mt-1">
-                {application.first_name} {application.last_name} - {application.job_title}
+                {(application.title || 'Dr.')} {application.first_name} {application.last_name} - {application.job_title}
               </p>
             </div>
           </div>

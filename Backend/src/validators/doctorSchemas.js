@@ -115,8 +115,8 @@ const doctorPersonalInfoSchema = Joi.object({
   phone: phoneSchema.optional().allow('', null).messages({
     'string.pattern.base': 'Geçerli bir telefon numarası giriniz'
   }),
-  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').optional().messages({
-    'any.only': 'Ünvan Dr., Uz. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır'
+  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Op. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').optional().messages({
+    'any.only': 'Ünvan Dr., Uz. Dr., Op. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır'
   }),
   profile_photo: Joi.string().max(5000000).optional().messages({
     'string.max': 'Profil fotoğrafı çok büyük (maksimum 5MB)'

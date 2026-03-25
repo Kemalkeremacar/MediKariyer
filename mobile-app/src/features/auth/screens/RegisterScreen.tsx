@@ -79,6 +79,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const TITLES = [
   { label: 'Dr.', value: 'Dr.' },
   { label: 'Uz. Dr.', value: 'Uz. Dr.' },
+  { label: 'Op. Dr.', value: 'Op. Dr.' },
   { label: 'Dr. Öğr. Üyesi', value: 'Dr. Öğr. Üyesi' },
   { label: 'Doç. Dr.', value: 'Doç. Dr.' },
   { label: 'Prof. Dr.', value: 'Prof. Dr.' },

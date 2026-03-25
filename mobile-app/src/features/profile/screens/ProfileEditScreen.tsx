@@ -55,6 +55,7 @@ import { formatPhoneNumber, unformatPhoneNumber, isValidPhoneNumber } from '@/ut
 const TITLE_OPTIONS: SelectOption[] = [
   { label: 'Dr.', value: 'Dr.' },
   { label: 'Uz. Dr.', value: 'Uz. Dr.' },
+  { label: 'Op. Dr.', value: 'Op. Dr.' },
   { label: 'Dr. Öğr. Üyesi', value: 'Dr. Öğr. Üyesi' },
   { label: 'Doç. Dr.', value: 'Doç. Dr.' },
   { label: 'Prof. Dr.', value: 'Prof. Dr.' },

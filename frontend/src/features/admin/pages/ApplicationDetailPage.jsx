@@ -273,7 +273,7 @@ const AdminApplicationDetailPage = () => {
               <div className="inline-flex flex-col items-center gap-2 bg-gray-100 rounded-xl px-6 py-4">
                 <span className="text-sm font-medium text-gray-700">Başvuru</span>
                 <span className="text-lg font-semibold text-gray-900">
-                  {application.first_name} {application.last_name} - {application.job_title}
+                  {(application.title || 'Dr.')} {application.first_name} {application.last_name} - {application.job_title}
                 </span>
               </div>
               
@@ -320,7 +320,7 @@ const AdminApplicationDetailPage = () => {
               </button>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
-                  {application.first_name} {application.last_name} - {application.job_title}
+                  {(application.title || 'Dr.')} {application.first_name} {application.last_name} - {application.job_title}
                 </h1>
               </div>
             </div>
@@ -835,7 +835,7 @@ const AdminApplicationDetailPage = () => {
                     Başvuruyu kalıcı olarak silmek üzeresiniz
                   </p>
                   <p className="text-sm text-gray-700 leading-relaxed">
-                    "{application.first_name} {application.last_name} - {application.job_title}" başvurusu tamamen silinecek ve bu işlem geri alınamaz.
+                    "{(application.title || 'Dr.')} {application.first_name} {application.last_name} - {application.job_title}" başvurusu tamamen silinecek ve bu işlem geri alınamaz.
                   </p>
                 </div>
               </div>

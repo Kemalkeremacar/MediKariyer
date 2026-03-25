@@ -377,7 +377,7 @@ const createApplication = async (userId, { job_id: jobId, cover_letter: coverLet
         user_id: jobWithHospital.hospital_user_id,
         type: 'info',
         title: 'Yeni Başvuru Aldınız',
-        body: `"${jobWithHospital.job_title}" pozisyonu için ${doctorProfile.first_name} ${doctorProfile.last_name} doktorundan yeni bir başvuru aldınız.`,
+        body: `"${jobWithHospital.job_title}" pozisyonu için ${doctorProfile.title || 'Dr.'} ${doctorProfile.first_name} ${doctorProfile.last_name} doktorundan yeni bir başvuru aldınız.`,
         data: {
           // In-App State Update için kritik alanlar
           action: 'application_created',
@@ -387,7 +387,7 @@ const createApplication = async (userId, { job_id: jobId, cover_letter: coverLet
           application_id: application.id,
           job_id: jobId,
           job_title: jobWithHospital.job_title,
-          doctor_name: `${doctorProfile.first_name} ${doctorProfile.last_name}`,
+          doctor_name: `${doctorProfile.title || 'Dr.'} ${doctorProfile.first_name} ${doctorProfile.last_name}`,
           doctor_profile_id: profile.id
         }
       });
@@ -468,7 +468,7 @@ const withdrawApplication = async (userId, applicationId, reason = null) => {
         application_id: applicationId,
         job_id: jobId?.job_id || null,
         job_title: applicationWithJob.job_title,
-        doctor_name: `${doctorProfile.first_name} ${doctorProfile.last_name}`,
+        doctor_name: `${doctorProfile.title || 'Dr.'} ${doctorProfile.first_name} ${doctorProfile.last_name}`,
         doctor_profile_id: applicationWithJob.doctor_profile_id,
         reason: reason || null  // Include reason in notification (Requirement 3.2)
       });

@@ -654,7 +654,7 @@ const sendJobStatusChangeNotification = async (jobId, newStatus, oldStatus) => {
       .join('users as u', 'dp.user_id', 'u.id')
       .where('a.job_id', jobId)
       .where('a.status_id', '!=', 5) // withdrawn değil
-      .select('u.id as user_id', 'dp.first_name', 'dp.last_name');
+      .select('u.id as user_id', 'dp.title', 'dp.first_name', 'dp.last_name');
 
     if (applications.length === 0) {
       logger.info(`No applications found for job ${jobId} status change notification`);
@@ -1108,6 +1108,7 @@ const getAllApplications = async (userId, params = {}) => {
         // İsim ve soyisim ayrı ayrı kontrol
         this.where('dp.first_name', 'like', `%${search}%`)
           .orWhere('dp.last_name', 'like', `%${search}%`)
+          .orWhere('dp.title', 'like', `%${search}%`)
           // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
           .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${search}%`]))
           // İş ilanı başlığı kontrolü
@@ -1121,6 +1122,7 @@ const getAllApplications = async (userId, params = {}) => {
         // İsim ve soyisim ayrı ayrı kontrol
         this.where('dp.first_name', 'like', `%${doctor_search}%`)
           .orWhere('dp.last_name', 'like', `%${doctor_search}%`)
+          .orWhere('dp.title', 'like', `%${doctor_search}%`)
           // İsim ve soyisim birleşik kontrol (tam isim araması için) - SQL Server uyumlu, NULL-safe
           .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${doctor_search}%`]));
       });
@@ -1173,6 +1175,7 @@ const getAllApplications = async (userId, params = {}) => {
       totalQuery.where(function() {
         this.where('dp.first_name', 'like', `%${search}%`)
           .orWhere('dp.last_name', 'like', `%${search}%`)
+          .orWhere('dp.title', 'like', `%${search}%`)
           .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${search}%`]))
           .orWhere('j.title', 'like', `%${search}%`);
       });
@@ -1183,6 +1186,7 @@ const getAllApplications = async (userId, params = {}) => {
       totalQuery.where(function() {
         this.where('dp.first_name', 'like', `%${doctor_search}%`)
           .orWhere('dp.last_name', 'like', `%${doctor_search}%`)
+          .orWhere('dp.title', 'like', `%${doctor_search}%`)
           .orWhere(db.raw("ISNULL(dp.first_name, '') + ' ' + ISNULL(dp.last_name, '') LIKE ?", [`%${doctor_search}%`]));
       });
     }

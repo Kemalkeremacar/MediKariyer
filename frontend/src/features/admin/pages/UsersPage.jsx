@@ -469,7 +469,7 @@ const UsersPage = () => {
                     <div>
                       <div className="text-sm font-medium text-gray-900">
                         {user.profile?.first_name && user.profile?.last_name 
-                          ? `${user.profile.first_name} ${user.profile.last_name}`
+                          ? `${user.profile.title || 'Dr.'} ${user.profile.first_name} ${user.profile.last_name}`
                           : 'Doktor'}
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
@@ -520,7 +520,7 @@ const UsersPage = () => {
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-medium text-gray-900 truncate">
                   {user.profile?.first_name && user.profile?.last_name 
-                    ? `${user.profile.first_name} ${user.profile.last_name}`
+                    ? `${user.profile.title || 'Dr.'} ${user.profile.first_name} ${user.profile.last_name}`
                     : 'Doktor'}
                 </h3>
                 <p className="text-sm text-gray-500 truncate">{user.email}</p>

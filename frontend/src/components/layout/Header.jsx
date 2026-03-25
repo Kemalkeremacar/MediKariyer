@@ -47,7 +47,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope } from 'lucide-react';
+import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope, Activity } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
 import NavbarNotificationBell from './NavbarNotificationBell';
@@ -177,6 +177,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
     { to: ROUTE_CONFIG.ADMIN.PHOTO_APPROVALS, text: 'Fotoğraf Onayları', icon: Camera },
     { to: ROUTE_CONFIG.ADMIN.NOTIFICATIONS, text: 'Bildirimler', icon: Bell },
     { to: ROUTE_CONFIG.ADMIN.CONTACT_MESSAGES, text: 'İletişim Mesajları', icon: Mail },
+    { to: ROUTE_CONFIG.ADMIN.LOGS, text: 'Sistem Logları', icon: Activity },
   ];
 
 
@@ -417,7 +418,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
                           className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 w-full text-left"
                         >
                           <LogOut size={18} />
-                          <span className="text-sm font-bold">Çıkış Yap</span>
+                          <span className="text-sm font-bold">Çıkış Yapın</span>
                         </button>
                       </div>
                     )}

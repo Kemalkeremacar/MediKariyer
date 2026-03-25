@@ -128,8 +128,8 @@ const mobileRegisterDoctorSchema = Joi.object({
     'string.max': 'Soyad en fazla 50 karakter olabilir',
     'any.required': 'Soyad zorunludur'
   }),
-  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').required().messages({
-    'any.only': 'Ünvan Dr., Uz. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır',
+  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Op. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').required().messages({
+    'any.only': 'Ünvan Dr., Uz. Dr., Op. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır',
     'any.required': 'Ünvan zorunludur'
   }),
   specialty_id: Joi.number().integer().positive().required().messages({
@@ -224,8 +224,8 @@ const mobileUpdatePersonalInfoSchema = Joi.object({
     'string.min': 'Soyad en az 2 karakter olmalıdır',
     'string.max': 'Soyad en fazla 50 karakter olabilir'
   }),
-  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').optional().messages({
-    'any.only': 'Ünvan Dr., Uz. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır'
+  title: Joi.string().valid('Dr.', 'Uz. Dr.', 'Op. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.').optional().messages({
+    'any.only': 'Ünvan Dr., Uz. Dr., Op. Dr., Dr. Öğr. Üyesi, Doç. Dr. veya Prof. Dr. olmalıdır'
   }),
   specialty_id: Joi.number().integer().positive().optional().messages({
     'number.base': 'Branş ID sayı olmalıdır',

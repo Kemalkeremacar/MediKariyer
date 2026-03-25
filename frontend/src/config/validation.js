@@ -243,7 +243,7 @@ export const registerDoctorSchema = z.object({
   password: passwordSchema, // Güçlü şifre kuralları (min 6, özel karakter zorunlu)
   first_name: nameSchema,
   last_name: nameSchema,
-  title: z.enum(['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'], {
+  title: z.enum(['Dr.', 'Uz. Dr.', 'Op. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'], {
     errorMap: () => ({ message: 'Geçerli bir ünvan seçiniz' })
   }),
   specialty_id: z.number().int().positive('Branş seçimi zorunludur'),
@@ -345,7 +345,7 @@ export const logoutSchema = z.object({});
 export const doctorPersonalInfoSchema = z.object({
   first_name: nameSchema,
   last_name: nameSchema,
-  title: z.enum(['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.']).optional(),
+  title: z.enum(['Dr.', 'Uz. Dr.', 'Op. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.']).optional(),
   specialty_id: z.number().int().positive('Uzmanlık seçimi zorunludur'),
   subspecialty_id: z.number().int().positive().optional().nullable(),
   profile_photo: z.string().optional(),

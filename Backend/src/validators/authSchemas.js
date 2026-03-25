@@ -262,10 +262,10 @@ const registerDoctorSchema = Joi.object({
       'any.required': 'Soyad zorunludur'
     }),
   title: Joi.string()
-    .valid('Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.')
+    .valid('Dr.', 'Uz. Dr.', 'Op. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.')
     .required()
     .messages({
-      'any.only': 'Ünvan geçerli değerlerden biri olmalıdır: Dr., Uz. Dr., Dr. Öğr. Üyesi, Doç. Dr., Prof. Dr.',
+      'any.only': 'Ünvan geçerli değerlerden biri olmalıdır: Dr., Uz. Dr., Op. Dr., Dr. Öğr. Üyesi, Doç. Dr., Prof. Dr.',
       'any.required': 'Ünvan zorunludur'
     }),
   specialty_id: Joi.number()

@@ -801,7 +801,7 @@ const registerDoctor = async (registrationData) => {
         await notificationService.sendAdminSystemNotification({
           type: 'info',
           title: 'Yeni Doktor Kaydı',
-          body: `${first_name} ${last_name} (${normalizedEmail}) adlı doktor sisteme kayıt oldu. Onay bekliyor.`,
+          body: `${title || 'Dr.'} ${first_name} ${last_name} (${normalizedEmail}) adlı doktor sisteme kayıt oldu. Onay bekliyor.`,
           data: {
             user_id: userId,
             role: 'doctor',

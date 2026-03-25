@@ -1352,7 +1352,7 @@ const createApplication = async (doctorProfileId, data) => {
         user_id: jobWithHospital.hospital_user_id,
         type: 'info',
         title: 'Yeni Başvuru Aldınız',
-        body: `"${jobWithHospital.job_title}" pozisyonu için ${doctorProfile.first_name} ${doctorProfile.last_name} doktorundan yeni bir başvuru aldınız.`,
+        body: `"${jobWithHospital.job_title}" pozisyonu için ${doctorProfile.title || 'Dr.'} ${doctorProfile.first_name} ${doctorProfile.last_name} doktorundan yeni bir başvuru aldınız.`,
         data: {
           // In-App State Update için kritik alanlar
           action: 'application_created',
@@ -1362,7 +1362,7 @@ const createApplication = async (doctorProfileId, data) => {
           application_id: finalApplication.id,
           job_id: jobId,
           job_title: jobWithHospital.job_title,
-          doctor_name: `${doctorProfile.first_name} ${doctorProfile.last_name}`,
+          doctor_name: `${doctorProfile.title || 'Dr.'} ${doctorProfile.first_name} ${doctorProfile.last_name}`,
           doctor_profile_id: doctorProfileId
         }
       });
@@ -1793,7 +1793,7 @@ const withdrawApplication = async (applicationId, doctorProfileId, reason = '') 
         application_id: applicationId,
         job_id: applicationWithJob.job_id,
         job_title: applicationWithJob.job_title,
-        doctor_name: `${doctorProfile.first_name} ${doctorProfile.last_name}`,
+        doctor_name: `${doctorProfile.title || 'Dr.'} ${doctorProfile.first_name} ${doctorProfile.last_name}`,
         doctor_profile_id: applicationWithJob.doctor_profile_id,
         reason: reason || null
       });
@@ -2373,12 +2373,12 @@ const requestProfilePhotoChange = async (userId, fileUrl) => {
     await notificationService.sendAdminSystemNotification({
       type: 'info',
       title: 'Yeni Fotoğraf Talebi',
-      body: `${profile.first_name} ${profile.last_name} adlı doktor profil fotoğrafı değişikliği için onay talebinde bulundu.`,
+      body: `${profile.title || 'Dr.'} ${profile.first_name} ${profile.last_name} adlı doktor profil fotoğrafı değişikliği için onay talebinde bulundu.`,
       data: {
         request_id: photoRequest.id,
         doctor_profile_id: profile.id,
         user_id: userId,
-        doctor_name: `${profile.first_name} ${profile.last_name}`,
+        doctor_name: `${profile.title || 'Dr.'} ${profile.first_name} ${profile.last_name}`,
         status: 'pending'
       }
     });

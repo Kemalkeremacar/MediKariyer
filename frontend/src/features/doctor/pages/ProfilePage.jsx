@@ -1075,6 +1075,7 @@ const PersonalInfoTab = ({ profile, onUpdate, isLoading, cities = [] }) => {
           >
             <option value="Dr.">Dr.</option>
             <option value="Uz. Dr.">Uz. Dr.</option>
+            <option value="Op. Dr.">Op. Dr.</option>
             <option value="Dr. Öğr. Üyesi">Dr. Öğr. Üyesi</option>
             <option value="Doç. Dr.">Doç. Dr.</option>
             <option value="Prof. Dr.">Prof. Dr.</option>

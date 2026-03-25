@@ -559,7 +559,7 @@ export const registrationValidationSchema = z
     email: emailSchema,
     password: passwordSchema,
     confirmPassword: passwordSchema,
-    title: z.enum(['Dr.', 'Uz. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'], {
+    title: z.enum(['Dr.', 'Uz. Dr.', 'Op. Dr.', 'Dr. Öğr. Üyesi', 'Doç. Dr.', 'Prof. Dr.'], {
       message: 'Lütfen ünvan seçin',
     }),
     specialty_id: z.string().min(1, 'Lütfen branş seçin'),
