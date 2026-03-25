@@ -90,6 +90,11 @@ const registerDeviceToken = async (userId, expoPushToken, deviceId, platform, ap
     throw new AppError('Geçersiz Expo Push Token formatı', 400);
   }
 
+  // Validate platform
+  if (!['ios', 'android'].includes(platform?.toLowerCase())) {
+    throw new AppError('Platform ios veya android olmalıdır', 400);
+  }
+
   // Transaction içinde upsert mantığını güvenli hale getir
   // Aynı cihaz için eşzamanlı token kayıtları çakışmasını önler
   return await db.transaction(async (trx) => {

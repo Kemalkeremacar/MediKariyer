@@ -199,7 +199,8 @@ export const usePushNotifications = () => {
       } catch (error) {
         errorLogger.logError(error as Error, {
           context: 'handleNotificationTapped',
-          extra: { response },
+          severity: 'warning', // Kritik değil
+          metadata: { response },
         });
         // Hata durumunda kullanıcıyı mevcut ekranda bırak
         // Zorla yönlendirme yapma
@@ -227,6 +228,7 @@ export const usePushNotifications = () => {
       } catch (error) {
         errorLogger.logError(error as Error, {
           context: 'usePushNotifications - checkExistingPermission',
+          severity: 'warning', // Kritik değil
         });
       }
     };

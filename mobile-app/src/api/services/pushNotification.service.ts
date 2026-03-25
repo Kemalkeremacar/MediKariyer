@@ -17,6 +17,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import NetInfo from '@react-native-community/netinfo';
 import { notificationService } from './notification.service';
 import { errorLogger } from '@/utils/errorLogger';
 
@@ -104,57 +105,90 @@ async function requestPermissions(): Promise<boolean> {
 // ============================================================================
 
 /**
- * Expo push token al
+ * Expo push token al (retry mekanizması ile)
  * 
+ * @param maxRetries - Maksimum deneme sayısı (varsayılan: 3)
  * @returns Expo push token veya null
  * 
  * **Gereksinimler:**
  * - Fiziksel cihaz olmalı
  * - Native build: Firebase FCM gerekli (google-services.json)
  * - EAS build: app.json'da projectId gerekli
+ * 
+ * **Retry Stratejisi:**
+ * - 1. deneme: Hemen
+ * - 2. deneme: 2 saniye sonra
+ * - 3. deneme: 4 saniye sonra
  */
-async function getExpoPushToken(): Promise<string | null> {
-  try {
-    // Fiziksel cihaz kontrolü
-    if (!Device.isDevice) {
-      console.warn('Must use physical device for push notifications');
-      return null;
-    }
-
-    // Expo Go kontrolü - Expo Go'da push notification çalışmaz
-    const isExpoGo = Constants.appOwnership === 'expo';
-    if (isExpoGo) {
-      // Sessizce null dön, hata loglamaya gerek yok
-      return null;
-    }
-
-    // Token al
-    // Native build (Firebase FCM) kullanıyoruz, projectId gerekmez
-    // Expo otomatik olarak Firebase'den token alır
-    const token = await Notifications.getExpoPushTokenAsync();
-
-    return token.data;
-  } catch (error) {
-    // Expo Go'da hata bekleniyor, sessizce null dön
-    const isExpoGo = Constants.appOwnership === 'expo';
-    if (!isExpoGo) {
-      // Sadece production/development build'de hata logla
-      errorLogger.logError(error as Error, {
-        context: 'getExpoPushToken',
-      });
-    }
+async function getExpoPushToken(maxRetries: number = 3): Promise<string | null> {
+  // Fiziksel cihaz kontrolü
+  if (!Device.isDevice) {
+    console.warn('Must use physical device for push notifications');
     return null;
   }
+
+  // Expo Go kontrolü - Expo Go'da push notification çalışmaz
+  const isExpoGo = Constants.appOwnership === 'expo';
+  if (isExpoGo) {
+    // Sessizce null dön, hata loglamaya gerek yok
+    return null;
+  }
+
+  // Retry mekanizması ile token alma
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Token al (15 saniye timeout ile)
+      const tokenPromise = Notifications.getExpoPushTokenAsync();
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Token fetch timeout')), 15000)
+      );
+
+      const token = await Promise.race([tokenPromise, timeoutPromise]);
+      return token.data;
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      if (isLastAttempt) {
+        // Son denemede hata logla (warning seviyesinde)
+        errorLogger.logError(error as Error, {
+          context: 'getExpoPushToken',
+          severity: 'warning', // Kritik değil, warning olarak işaretle
+          metadata: {
+            attempt,
+            maxRetries,
+            errorMessage,
+          },
+        });
+        return null;
+      }
+
+      // Bir sonraki deneme için bekle (exponential backoff)
+      const waitTime = 2000 * attempt;
+      if (__DEV__) {
+        console.log(`Token fetch failed (attempt ${attempt}/${maxRetries}), retrying in ${waitTime}ms...`);
+      }
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+  }
+
+  return null;
 }
 
 /**
- * Cihaz token'ını backend'e kaydet
+ * Cihaz token'ını backend'e kaydet (ağ kontrolü ve kullanıcı bildirimi ile)
  * 
  * **İşlem Adımları:**
- * 1. İzin iste
- * 2. Expo push token al
- * 3. Cihaz bilgilerini topla
- * 4. Backend'e kaydet
+ * 1. Ağ bağlantısını kontrol et
+ * 2. İzin iste
+ * 3. Expo push token al (retry ile)
+ * 4. Cihaz bilgilerini topla
+ * 5. Backend'e kaydet
+ * 
+ * **Hata Yönetimi:**
+ * - Ağ yoksa: Sessizce çık (kullanıcı bilgilendirilmez)
+ * - Token alınamazsa: Warning log + kullanıcıya bildir
+ * - Backend hatası: Warning log + kullanıcıya bildir
  */
 async function registerDeviceToken(): Promise<void> {
   try {
@@ -165,28 +199,47 @@ async function registerDeviceToken(): Promise<void> {
       return;
     }
 
-    // 1. İzin kontrolü
+    // 1. Ağ bağlantısını kontrol et
+    const networkState = await NetInfo.fetch();
+    if (!networkState.isConnected || networkState.isInternetReachable === false) {
+      // Ağ yoksa sessizce çık, kullanıcıyı rahatsız etme
+      if (__DEV__) {
+        console.log('No internet connection, skipping device token registration');
+      }
+      return;
+    }
+
+    // 2. İzin kontrolü
     const hasPermission = await requestPermissions();
     if (!hasPermission) {
       console.warn('No notification permission, skipping token registration');
       return;
     }
 
-    // 2. Push token al
+    // 3. Push token al (retry mekanizması ile)
     const expoPushToken = await getExpoPushToken();
     if (!expoPushToken) {
-      // Token alınamadı, sessizce çık
+      // Token alınamadı - kullanıcıya bildir ama uygulamayı crash ettirme
+      if (__DEV__) {
+        console.warn('Failed to get push token after retries');
+      }
+      // Production'da kullanıcıya bildir (opsiyonel - UX'e göre karar verin)
+      // Alert.alert(
+      //   'Bildirim Hatası',
+      //   'Bildirimler şu anda aktif edilemedi. Lütfen internet bağlantınızı kontrol edin ve uygulamayı yeniden başlatın.',
+      //   [{ text: 'Tamam' }]
+      // );
       return;
     }
 
-    // 3. Cihaz bilgilerini topla
+    // 4. Cihaz bilgilerini topla
     // Circular dependency'yi önlemek için dinamik import
     const { deviceInfo } = await import('@/utils/deviceInfo');
     const deviceId = await deviceInfo.getDeviceId();
     const platform = deviceInfo.getPlatform();
     const appVersion = deviceInfo.getAppVersion();
 
-    // 4. Backend'e kaydet (sadece mobil platformlar için)
+    // 5. Backend'e kaydet (sadece mobil platformlar için)
     if (platform === 'ios' || platform === 'android') {
       await notificationService.registerDeviceToken({
         expo_push_token: expoPushToken,
@@ -203,10 +256,22 @@ async function registerDeviceToken(): Promise<void> {
     // Expo Go'da hata bekleniyor, sessizce yoksay
     const isExpoGo = Constants.appOwnership === 'expo';
     if (!isExpoGo) {
-      // Sadece production/development build'de hata logla
+      // Warning seviyesinde logla (kritik değil)
       errorLogger.logError(error as Error, {
         context: 'registerDeviceToken',
+        severity: 'warning', // Kritik değil, warning olarak işaretle
       });
+
+      // Kullanıcıya bildir (opsiyonel - UX'e göre karar verin)
+      if (__DEV__) {
+        console.warn('Failed to register device token:', error);
+      }
+      // Production'da kullanıcıya bildir (opsiyonel)
+      // Alert.alert(
+      //   'Bildirim Hatası',
+      //   'Bildirimler şu anda aktif edilemedi. Daha sonra tekrar deneyin.',
+      //   [{ text: 'Tamam' }]
+      // );
     }
   }
 }

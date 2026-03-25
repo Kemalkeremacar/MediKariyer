@@ -92,12 +92,13 @@ const sendHttpPost = (url, messages) => {
     });
 
     req.on('error', (error) => {
-      logger.error('Expo Push API request error:', error);
+      logger.warn('Expo Push API request error (network issue):', error.message);
       reject(error);
     });
 
     req.on('timeout', () => {
       req.destroy();
+      logger.warn('Expo Push API request timeout');
       reject(new Error('Expo Push API request timeout'));
     });
 
@@ -236,7 +237,7 @@ const sendPushNotification = async (userId, title, body, data = {}) => {
       invalidTokensCount: invalidTokens.length
     };
   } catch (error) {
-    logger.error(`Error sending push notification to user ${userId}:`, error);
+    logger.warn(`Error sending push notification to user ${userId} (non-critical):`, error.message);
     return { success: false, message: 'Bildirim gönderilirken hata oluştu', error: error.message, sent: 0, failed: 1 };
   }
 };
@@ -300,7 +301,7 @@ const sendBulkPushNotification = async (userIds, title, body, data = {}) => {
       totalUsers: userIds.length
     };
   } catch (error) {
-    logger.error(`Error sending bulk push notification:`, error);
+    logger.warn(`Error sending bulk push notification (non-critical):`, error.message);
     return { success: false, message: 'Toplu bildirim gönderilirken hata oluştu', error: error.message, sent: 0, failed: userIds.length };
   }
 };

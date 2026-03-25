@@ -28,6 +28,10 @@ interface ErrorContext {
   action?: string;
   /** Kullanıcı ID */
   userId?: string;
+  /** Hata seviyesi (error, warning, info) */
+  severity?: 'error' | 'warning' | 'info';
+  /** Ek metadata */
+  metadata?: Record<string, any>;
   /** Diğer context bilgileri */
   [key: string]: any;
 }
@@ -127,27 +131,46 @@ class ErrorLogger {
    */
   logError(error: Error, context?: ErrorContext): void {
     const timestamp = new Date().toISOString();
+    const severity = context?.severity || 'error';
     const errorInfo = {
       timestamp,
       message: error.message,
       name: error.name,
       stack: error.stack,
+      severity,
       context,
     };
 
     if (this.isDevelopment) {
-      console.error('🔴 Error logged:', errorInfo);
+      const icon = severity === 'warning' ? '⚠️' : severity === 'info' ? 'ℹ️' : '🔴';
+      console.error(`${icon} ${severity.toUpperCase()} logged:`, errorInfo);
     }
 
     // Production'da Sentry'ye gönder
     if (!this.isDevelopment) {
       Sentry.withScope((scope) => {
+        // Severity'yi ayarla (Sentry'nin kendi severity seviyeleri: fatal, error, warning, info, debug)
+        scope.setLevel(severity as Sentry.SeverityLevel);
+        
         if (context) {
           scope.setExtras(context);
           if (context.component) scope.setTag('component', context.component);
           if (context.action) scope.setTag('action', context.action);
+          if (context.context) scope.setTag('context', context.context);
+          if (context.metadata) {
+            Object.entries(context.metadata).forEach(([key, value]) => {
+              scope.setExtra(key, value);
+            });
+          }
         }
-        Sentry.captureException(error);
+        
+        // Warning veya info ise message olarak gönder, error ise exception olarak
+        if (severity === 'warning' || severity === 'info') {
+          scope.setTag('error_type', severity);
+          Sentry.captureMessage(error.message, severity as Sentry.SeverityLevel);
+        } else {
+          Sentry.captureException(error);
+        }
       });
     }
   }
