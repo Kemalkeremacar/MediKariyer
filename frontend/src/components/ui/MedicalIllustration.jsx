@@ -5,10 +5,10 @@
 
 import React from 'react';
 import logoImage from '@/assets/logo.png';
-import mobileAppImage from '@/assets/Mobil Uygulama.png';
-import dashboardImage from '@/assets/DashboardLaptop.png';
-import hospitalImage from '@/assets/Hastane.png';
-import doctorImage from '@/assets/Doktor Profili.png';
+import mobileAppImage from '@/assets/Mobil Uygulama-compressed.webp';
+import dashboardImage from '@/assets/DashboardLaptop-compressed.webp';
+import hospitalImage from '@/assets/Hastane-compressed.webp';
+import doctorImage from '@/assets/Doktor Profili-compressed.webp';
 
 const MedicalIllustration = () => {
   return (
@@ -116,6 +116,7 @@ const MedicalIllustration = () => {
                 src={dashboardImage} 
                 alt="MediKariyer Dashboard" 
                 className="w-full h-full object-contain"
+                loading="lazy"
                 style={{
                   borderRadius: '12px',
                   WebkitTransform: 'translateZ(0)',
@@ -152,6 +153,7 @@ const MedicalIllustration = () => {
                 src={hospitalImage} 
                 alt="MediKariyer Hastane" 
                 className="w-full h-full object-contain"
+                loading="lazy"
                 style={{
                   borderRadius: '12px',
                   WebkitTransform: 'translateZ(0)',
@@ -227,6 +229,7 @@ const MedicalIllustration = () => {
                 src={doctorImage} 
                 alt="MediKariyer Doktor Profili" 
                 className="w-full h-full object-contain"
+                loading="lazy"
                 style={{
                   borderRadius: '12px',
                   WebkitTransform: 'translateZ(0)',
@@ -263,6 +266,7 @@ const MedicalIllustration = () => {
                 src={mobileAppImage} 
                 alt="MediKariyer Mobil Uygulama" 
                 className="w-full h-full object-contain"
+                loading="lazy"
                 style={{
                   borderRadius: '12px',
                   WebkitTransform: 'translateZ(0)',
