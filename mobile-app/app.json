@@ -30,7 +30,8 @@
       "buildNumber": "2",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Profil fotoğrafınızı güncellemek için galeri erişimine ihtiyacımız var.",
-        "NSCameraUsageDescription": "Profil fotoğrafınızı çekmek için kamera erişimine ihtiyacımız var."
+        "NSCameraUsageDescription": "Profil fotoğrafınızı çekmek için kamera erişimine ihtiyacımız var.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
