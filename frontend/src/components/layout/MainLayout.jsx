@@ -130,16 +130,19 @@ const MainLayout = () => {
   if (isAdminPage && isAdmin) {
     return (
       <div className="flex flex-col w-full min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        {/* Üst Navigasyon */}
+        {/* Üst Navigasyon - Mobilde hamburger butonu göster */}
         <Header 
-          showMobileMenuButton={false}
+          showMobileMenuButton={true}
           onMobileMenuClick={() => setIsMobileSidebarOpen(true)}
         />
 
         {/* Ana içerik alanı - Sidebar + Content */}
         <div className="flex flex-1 min-h-screen">
-          {/* Admin Sidebar - Sidebar kendisi hidden lg:flex ile mobilden gizleniyor */}
-          <AdminSidebar />
+          {/* Admin Sidebar - Desktop: sabit, Mobile: overlay */}
+          <AdminSidebar
+            isMobileOpen={isMobileSidebarOpen}
+            onMobileClose={() => setIsMobileSidebarOpen(false)}
+          />
           
           {/* İçerik alanı - Mobilde full width, desktop'ta sidebar'dan sonra */}
           <main role="main" className="flex-1 min-h-screen lg:ml-0" style={{

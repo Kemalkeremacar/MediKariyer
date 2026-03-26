@@ -41,6 +41,53 @@ async function getCongressList(filters = {}) {
 
   const offset = (page - 1) * limit;
 
+  // MSSQL BIT alanı için boolean → 1/0 dönüşümü
+  const isActiveValue = is_active ? 1 : 0;
+
+  // Güvenli sort_by: sadece izin verilen kolonlar, tablo prefix'i ile
+  const allowedSortColumns = {
+    start_date: 'c.start_date',
+    end_date: 'c.end_date',
+    title: 'c.title',
+    created_at: 'c.created_at'
+  };
+  const safeSortColumn = allowedSortColumns[sort_by] || 'c.start_date';
+  const safeSortOrder = sort_order === 'desc' ? 'desc' : 'asc';
+
+  // Filtreleri uygulayan yardımcı fonksiyon (DRY)
+  const applyFilters = (q) => {
+    q = q.where('c.is_active', isActiveValue);
+
+    if (search) {
+      q = q.where(function() {
+        this.where('c.title', 'like', `%${search}%`)
+          .orWhere('c.description', 'like', `%${search}%`)
+          .orWhere('c.location', 'like', `%${search}%`)
+          .orWhere('c.organizer', 'like', `%${search}%`);
+      });
+    }
+    if (specialty_id) {
+      q = q.where('c.specialty_id', specialty_id);
+    }
+    if (subspecialty_id) {
+      q = q.where('c.subspecialty_id', subspecialty_id);
+    }
+    if (country) {
+      q = q.where('c.country', 'like', `%${country}%`);
+    }
+    if (city) {
+      q = q.where('c.city', 'like', `%${city}%`);
+    }
+    if (start_date_from) {
+      q = q.where('c.start_date', '>=', start_date_from);
+    }
+    if (start_date_to) {
+      q = q.where('c.start_date', '<=', start_date_to);
+    }
+    return q;
+  };
+
+  // Ana sorgu
   let query = db('congresses as c')
     .leftJoin('specialties as s', 'c.specialty_id', 's.id')
     .leftJoin('subspecialties as ss', 'c.subspecialty_id', 'ss.id')
@@ -63,94 +110,31 @@ async function getCongressList(filters = {}) {
       'c.subspecialty_id',
       's.name as specialty_name',
       'ss.name as subspecialty_name'
-    )
-    .where('c.is_active', is_active);
+    );
+  query = applyFilters(query);
 
-  // Arama filtresi
-  if (search) {
-    query = query.where(function() {
-      this.where('c.title', 'like', `%${search}%`)
-        .orWhere('c.description', 'like', `%${search}%`)
-        .orWhere('c.location', 'like', `%${search}%`)
-        .orWhere('c.organizer', 'like', `%${search}%`);
-    });
-  }
+  // Toplam kayıt sayısı
+  let countQuery = db('congresses as c');
+  countQuery = applyFilters(countQuery);
 
-  // Uzmanlık ID filtresi
-  if (specialty_id) {
-    query = query.where('c.specialty_id', specialty_id);
-  }
-
-  // Yan dal ID filtresi
-  if (subspecialty_id) {
-    query = query.where('c.subspecialty_id', subspecialty_id);
-  }
-
-  // Ülke filtresi (kısmi eşleşme)
-  if (country) {
-    query = query.where('c.country', 'like', `%${country}%`);
-  }
-
-  // Şehir filtresi (kısmi eşleşme)
-  if (city) {
-    query = query.where('c.city', 'like', `%${city}%`);
-  }
-
-  // Tarih aralığı filtresi
-  if (start_date_from) {
-    query = query.where('c.start_date', '>=', start_date_from);
-  }
-  if (start_date_to) {
-    query = query.where('c.start_date', '<=', start_date_to);
-  }
-
-  // Toplam kayıt sayısı - Yeni bir query oluştur (clone yerine)
-  let countQuery = db('congresses as c').where('c.is_active', is_active);
-  
-  // Aynı filtreleri uygula
-  if (search) {
-    countQuery = countQuery.where(function() {
-      this.where('c.title', 'like', `%${search}%`)
-        .orWhere('c.description', 'like', `%${search}%`)
-        .orWhere('c.location', 'like', `%${search}%`)
-        .orWhere('c.organizer', 'like', `%${search}%`);
-    });
-  }
-  if (specialty_id) {
-    countQuery = countQuery.where('c.specialty_id', specialty_id);
-  }
-  if (subspecialty_id) {
-    countQuery = countQuery.where('c.subspecialty_id', subspecialty_id);
-  }
-  if (country) {
-    countQuery = countQuery.where('c.country', 'like', `%${country}%`);
-  }
-  if (city) {
-    countQuery = countQuery.where('c.city', 'like', `%${city}%`);
-  }
-  if (start_date_from) {
-    countQuery = countQuery.where('c.start_date', '>=', start_date_from);
-  }
-  if (start_date_to) {
-    countQuery = countQuery.where('c.start_date', '<=', start_date_to);
-  }
-  
-  const countResult = await countQuery.count('* as total');
-  const total = countResult[0].total;
+  const countResult = await countQuery.count({ total: '*' });
+  const total = Number(countResult[0]?.total ?? 0);
 
   // Sıralama ve sayfalama
   const congresses = await query
-    .orderBy(sort_by, sort_order)
+    .orderBy(safeSortColumn, safeSortOrder)
     .limit(limit)
     .offset(offset);
+
+  const parsedLimit = Number(limit) || PAGINATION.DEFAULT_LIMIT;
 
   return {
     data: congresses,
     pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total: parseInt(total),
-      totalPages: Math.ceil(total / limit)
+      page: Number(page) || 1,
+      limit: parsedLimit,
+      total,
+      totalPages: Math.ceil(total / parsedLimit) || 1
     }
   };
 }
@@ -182,12 +166,15 @@ async function createCongress(congressData, adminId) {
     subspecialty_id: congressData.subspecialty_id ?? null,
   });
 
-  const [congressId] = await db('congresses').insert({
+  // MSSQL: insert() rowCount döner, returning('id') ile gerçek ID'yi al
+  const [inserted] = await db('congresses').insert({
     ...congressData,
     created_by: adminId,
     created_at: new Date(),
     updated_at: new Date()
-  });
+  }).returning('id');
+
+  const congressId = typeof inserted === 'object' ? inserted.id : inserted;
 
   return await getCongressById(congressId);
 }
@@ -228,7 +215,7 @@ async function deleteCongress(congressId, adminId) {
   await db('congresses')
     .where({ id: congressId })
     .update({
-      is_active: false,
+      is_active: 0,
       deleted_by: adminId,
       deleted_at: new Date()
     });
@@ -256,7 +243,7 @@ async function getUpcomingCongresses(limit = 10) {
       's.name as specialty_name',
       'ss.name as subspecialty_name'
     )
-    .where('c.is_active', true)
+    .where('c.is_active', 1)
     .where('c.start_date', '>=', new Date())
     .orderBy('c.start_date', 'asc')
     .limit(limit);
@@ -280,7 +267,7 @@ async function getCongressesBySpecialty(specialty_id) {
       'c.specialty_id', 'c.subspecialty_id',
       's.name as specialty_name', 'ss.name as subspecialty_name'
     )
-    .where('c.is_active', true)
+    .where('c.is_active', 1)
     .where('c.specialty_id', specialty_id)
     .where('c.start_date', '>=', new Date())
     .orderBy('c.start_date', 'asc');

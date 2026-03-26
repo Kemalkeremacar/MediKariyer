@@ -74,139 +74,127 @@ import { Building2 } from 'lucide-react';
  * ============================================================================
  * ADMIN SIDEBAR COMPONENT - Mobile Responsive
  * ============================================================================
+ * 
+ * Desktop: Sabit sidebar (lg+ ekranlar)
+ * Mobile: Overlay sidebar (hamburger butonuyla açılır/kapanır)
  */
-const AdminSidebar = () => {
+
+/** Menü öğeleri konfigürasyonu */
+const MENU_ITEMS = [
+  { name: 'Dashboard', href: '/admin', icon: FiHome, color: 'from-blue-500 to-blue-600' },
+  { name: 'Doktorlar', href: '/admin/users', icon: FiUsers, color: 'from-green-500 to-green-600' },
+  { name: 'Hastaneler', href: '/admin/hospitals', icon: Building2, color: 'from-green-500 to-green-600' },
+  { name: 'İş İlanı Yönetimi', href: '/admin/jobs', icon: FiBriefcase, color: 'from-purple-500 to-purple-600' },
+  { name: 'Başvurular', href: '/admin/applications', icon: FiCheckCircle, color: 'from-emerald-500 to-emerald-600' },
+  { name: 'Fotoğraf Onayları', href: '/admin/photo-approvals', icon: FiCamera, color: 'from-purple-500 to-purple-600' },
+  { name: 'Bildirimler', href: '/admin/notifications', icon: FiBell, color: 'from-amber-500 to-amber-600' },
+  { name: 'İletişim Mesajları', href: '/admin/contact-messages', icon: FiMail, color: 'from-teal-500 to-teal-600' },
+  { name: 'Kongre Yönetimi', href: '/admin/congresses', icon: FiFileText, color: 'from-indigo-500 to-indigo-600' },
+  { name: 'Sistem Logları', href: '/admin/logs', icon: FiActivity, color: 'from-red-500 to-red-600' },
+];
+
+/** Ortak menü listesi render'ı */
+const SidebarNav = ({ items, currentPath, onItemClick }) => (
+  <nav className="py-6 px-4 space-y-2 flex-1 overflow-y-auto">
+    {items.map((item) => {
+      const Icon = item.icon;
+      const isCurrent = currentPath === item.href;
+      return (
+        <Link
+          key={item.name}
+          to={item.href}
+          replace={false}
+          onClick={onItemClick}
+          className={`group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 transform hover:scale-[1.01] active:scale-[0.99] ${
+            isCurrent
+              ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-md shadow-blue-500/10'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800/50 hover:shadow-sm'
+          }`}
+        >
+          <div className={`w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 transition-all duration-150 ${
+            isCurrent
+              ? `bg-gradient-to-r ${item.color} shadow-md`
+              : 'bg-slate-700/50 group-hover:bg-slate-600/50'
+          }`}>
+            <Icon className={`w-4 h-4 ${isCurrent ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
+          </div>
+          <span className="flex-1">{item.name}</span>
+          {isCurrent && (
+            <FiChevronRight className="w-4 h-4 text-blue-400" />
+          )}
+        </Link>
+      );
+    })}
+  </nav>
+);
+
+const AdminSidebar = ({ isMobileOpen = false, onMobileClose }) => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
 
-  /**
-   * Location değişikliklerini takip et
-   * Aktif sayfa değiştiğinde currentPath state'ini güncelle
-   */
   useEffect(() => {
     setCurrentPath(location.pathname);
   }, [location.pathname]);
 
-  // ============================================================================
-  // MENU CONFIGURATION - Menü yapılandırması
-  // ============================================================================
-
-  /**
-   * Menü öğeleri konfigürasyonu
-   * Her menü öğesi için: isim, route, aktif durumu, ikon ve renk tanımlanır
-   */
-  const menuItems = [
-    {
-      name: 'Dashboard',
-      href: '/admin',
-      current: currentPath === '/admin',
-      icon: FiHome,
-      color: 'from-blue-500 to-blue-600'
-    },
-    {
-      name: 'Doktorlar',
-      href: '/admin/users',
-      current: currentPath === '/admin/users',
-      icon: FiUsers,
-      color: 'from-green-500 to-green-600'
-    },
-    {
-      name: 'Hastaneler',
-      href: '/admin/hospitals',
-      current: currentPath === '/admin/hospitals',
-      icon: Building2,
-      color: 'from-green-500 to-green-600'
-    },
-    {
-      name: 'İş İlanı Yönetimi',
-      href: '/admin/jobs',
-      current: currentPath === '/admin/jobs',
-      icon: FiBriefcase,
-      color: 'from-purple-500 to-purple-600'
-    },
-    {
-      name: 'Başvurular',
-      href: '/admin/applications',
-      current: currentPath === '/admin/applications',
-      icon: FiCheckCircle,
-      color: 'from-emerald-500 to-emerald-600'
-    },
-    {
-      name: 'Fotoğraf Onayları',
-      href: '/admin/photo-approvals',
-      current: currentPath === '/admin/photo-approvals',
-      icon: FiCamera,
-      color: 'from-purple-500 to-purple-600'
-    },
-    {
-      name: 'Bildirimler',
-      href: '/admin/notifications',
-      current: currentPath === '/admin/notifications',
-      icon: FiBell,
-      color: 'from-amber-500 to-amber-600'
-    },
-    {
-      name: 'İletişim Mesajları',
-      href: '/admin/contact-messages',
-      current: currentPath === '/admin/contact-messages',
-      icon: FiMail,
-      color: 'from-teal-500 to-teal-600'
-    },
-    {
-      name: 'Kongre Yönetimi',
-      href: '/admin/congresses',
-      current: currentPath === '/admin/congresses',
-      icon: FiFileText,
-      color: 'from-indigo-500 to-indigo-600'
-    },
-    {
-      name: 'Sistem Logları',
-      href: '/admin/logs',
-      current: currentPath === '/admin/logs',
-      icon: FiActivity,
-      color: 'from-red-500 to-red-600'
+  // Route değiştiğinde mobil sidebar'ı kapat
+  useEffect(() => {
+    if (isMobileOpen && onMobileClose) {
+      onMobileClose();
     }
-  ];
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleMenuItemClick = () => {};
+  // Mobil sidebar açıkken body scroll'u engelle
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileOpen]);
 
   return (
-    <div
-      className="hidden lg:flex flex-col h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl flex-shrink-0"
-      style={{ minWidth: '256px', maxWidth: '256px' }}
-    >
-      {/* Navigation Menu */}
-      <nav className="py-6 px-4 space-y-2 flex-1">
-        {menuItems.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.name}
-              to={item.href}
-              replace={false}
-              onClick={handleMenuItemClick}
-              className={`group flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 transform hover:scale-[1.01] active:scale-[0.99] ${
-                item.current
-                  ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-white border border-blue-500/30 shadow-md shadow-blue-500/10'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/50 hover:shadow-sm'
-              }`}
-            >
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center mr-2.5 transition-all duration-150 ${
-                item.current
-                  ? `bg-gradient-to-r ${item.color} shadow-md`
-                  : 'bg-slate-700/50 group-hover:bg-slate-600/50'
-              }`}>
-                <Icon className={`w-4 h-4 ${item.current ? 'text-white' : 'text-slate-300 group-hover:text-white'}`} />
-              </div>
-              <span className="flex-1">{item.name}</span>
-              {item.current && (
-                <FiChevronRight className="w-4 h-4 text-blue-400" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-    </div>
+    <>
+      {/* ============================================================
+          DESKTOP SIDEBAR - Sadece lg+ (1024px+) ekranlarda görünür
+          ============================================================ */}
+      <div
+        className="hidden lg:flex flex-col h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl flex-shrink-0"
+        style={{ minWidth: '256px', maxWidth: '256px' }}
+      >
+        <SidebarNav items={MENU_ITEMS} currentPath={currentPath} onItemClick={() => {}} />
+      </div>
+
+      {/* ============================================================
+          MOBILE SIDEBAR OVERLAY - Sadece lg altı ekranlarda, açıkken görünür
+          ============================================================ */}
+      {isMobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-[9998] flex">
+          {/* Arka plan overlay */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onMobileClose}
+          />
+          {/* Sidebar paneli - soldan kayarak gelir */}
+          <div className="relative z-10 flex flex-col w-72 max-w-[85vw] bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl animate-slide-in-left">
+            {/* Kapatma butonu */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-slate-700/50">
+              <span className="text-white font-bold text-base">Admin Menü</span>
+              <button
+                onClick={onMobileClose}
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
+                aria-label="Menüyü kapat"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <SidebarNav items={MENU_ITEMS} currentPath={currentPath} onItemClick={onMobileClose} />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -10,6 +10,11 @@ const logger = require('../utils/logger');
  */
 async function getCongressList(req, res) {
   try {
+    // Joi validation sonrası is_active boolean gelir (convert: true sayesinde).
+    // Eğer query'de is_active hiç yoksa undefined gelir → default true.
+    const rawIsActive = req.query.is_active;
+    const isActive = rawIsActive === false || rawIsActive === 'false' ? false : true;
+
     const filters = {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
@@ -20,7 +25,7 @@ async function getCongressList(req, res) {
       city: req.query.city || '',
       start_date_from: req.query.start_date_from || null,
       start_date_to: req.query.start_date_to || null,
-      is_active: req.query.is_active === 'false' ? false : true, // Default true, sadece 'false' string'i gelirse false yap
+      is_active: isActive,
       sort_by: req.query.sort_by || 'start_date',
       sort_order: req.query.sort_order || 'asc'
     };
