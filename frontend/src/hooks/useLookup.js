@@ -808,8 +808,8 @@ export const useSubspecialties = (specialtyId = null) => {
   } = useQuery({
     queryKey: ['lookup', 'subspecialties', specialtyId],
     queryFn: async () => {
-      const url = specialtyId 
-        ? `${ENDPOINTS.LOOKUP.SUBSPECIALTIES}?specialtyId=${specialtyId}`
+      const url = specialtyId
+        ? ENDPOINTS.LOOKUP.SUBSPECIALTIES_BY_SPECIALTY.replace(':specialtyId', encodeURIComponent(specialtyId))
         : ENDPOINTS.LOOKUP.SUBSPECIALTIES;
       const response = await apiRequest.get(url);
       const data = response.data?.data || response.data || [];

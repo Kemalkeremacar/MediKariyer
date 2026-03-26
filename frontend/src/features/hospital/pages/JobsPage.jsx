@@ -255,7 +255,7 @@ const HospitalJobs = () => {
     return (
       <div className={hospitalPageWrapper}>
         <div className="max-w-7xl mx-auto space-y-8">
-          <SkeletonLoader className="h-12 w-80 bg-blue-100 rounded-2xl" />
+          <SkeletonLoader className="h-12 w-full max-w-xs bg-blue-100 rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <SkeletonLoader key={i} className="h-64 bg-blue-100 rounded-2xl" />
@@ -464,7 +464,7 @@ const HospitalJobs = () => {
           <div className="flex flex-col gap-6">
             {jobs.map((job, index) => (
               <StaggeredAnimation key={job.id} delay={index * 50}>
-                <div className="bg-white rounded-3xl border border-blue-100 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300 p-6 group flex flex-row items-stretch gap-6">
+                <div className="bg-white rounded-2xl md:rounded-3xl border border-blue-100 shadow-md hover:-translate-y-1 hover:shadow-lg transition-all duration-300 p-4 md:p-6 group flex flex-col md:flex-row md:items-stretch gap-4 md:gap-6">
                   {/* Left Section */}
                   <div className="flex-1 flex flex-col min-w-0">
                     <div className="flex items-start justify-between mb-4">
@@ -508,7 +508,7 @@ const HospitalJobs = () => {
                   </div>
 
                   {/* Right Section */}
-                  <div className="flex items-center gap-4 flex-shrink-0 border-l border-gray-100 pl-6">
+                  <div className="flex items-center gap-4 flex-shrink-0 border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6">
                     <div className="flex gap-2">
                       <Link
                         to={`/hospital/jobs/${job.id}`}

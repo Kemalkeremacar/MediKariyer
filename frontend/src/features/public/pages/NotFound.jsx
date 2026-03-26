@@ -11,7 +11,7 @@ const NotFound = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center">
         <div className="mb-8">
-          <h1 className="text-9xl font-bold text-gray-300">404</h1>
+          <h1 className="text-7xl sm:text-9xl font-bold text-gray-300">404</h1>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Sayfa Bulunamadı
           </h2>

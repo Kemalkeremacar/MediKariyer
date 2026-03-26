@@ -281,7 +281,7 @@ const MedicalIllustration = () => {
       </svg>
 
       {/* CSS Animations */}
-      <style jsx={true}>{`
+      <style>{`
         @keyframes pulse-slow {
           0%, 100% {
             transform: scale(1);

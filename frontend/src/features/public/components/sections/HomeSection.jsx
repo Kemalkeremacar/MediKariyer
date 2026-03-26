@@ -40,7 +40,7 @@ const HomeSection = () => {
   return (
     <>
       {/* Hero Section - Modern Style */}
-<section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-16 pb-8">
+<section className="relative min-h-[50vh] lg:min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-8 sm:pt-12 lg:pt-16 pb-6 sm:pb-8">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -48,7 +48,7 @@ const HomeSection = () => {
 
         {/* Content Container */}
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center max-w-7xl mx-auto">
             {/* Desktop: Left Side - All Content */}
             <div className="hidden lg:block text-left space-y-6 order-1 w-full">
               {/* Main Heading */}
@@ -81,19 +81,19 @@ const HomeSection = () => {
             </div>
 
             {/* Mobile: Main Heading First */}
-            <div className="lg:hidden text-center space-y-4 order-1 w-full">
-              <h1 className="text-5xl sm:text-6xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+            <div className="lg:hidden text-center space-y-3 order-1 w-full">
+              <h1 className="text-3xl sm:text-5xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
                 <span className="font-bold text-[#2563a8]">Medikariyer</span>
                 <span className="font-normal text-[#5ba3d0]">.net</span>
               </h1>
-              <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed font-normal">
+              <p className="text-lg sm:text-2xl text-gray-600 leading-relaxed font-normal">
                 Hekimlere Özel Kariyer Platformu
               </p>
             </div>
 
             {/* GIF - Desktop: Right Side, Mobile: Second */}
             <div className="relative flex items-center justify-center lg:justify-end w-full order-2">
-              <div className="relative w-full max-w-md lg:max-w-2xl">
+              <div className="relative w-full max-w-[280px] sm:max-w-md lg:max-w-2xl">
                 {/* Decorative Background Elements */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/30 rounded-full blur-3xl"></div>
                 
@@ -142,7 +142,7 @@ const HomeSection = () => {
             <span className="inline-block px-4 py-2 mb-4 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full">
               Özelliklerimiz
             </span>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-blue-900 mb-6">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-blue-900 mb-4 sm:mb-6">
               Neden MediKariyer?
             </h2>
             <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">
@@ -150,42 +150,42 @@ const HomeSection = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-            <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
-                <FiShield className="w-10 h-10 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
+            <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
+                <FiShield className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Hekimlere Özel Kapalı Sistem</h3>
+              <h3 className="text-lg sm:text-2xl font-bold text-blue-900 mb-3 sm:mb-4">Hekimlere Özel Kapalı Sistem</h3>
               <p className="text-gray-600 leading-relaxed text-base">
                 MediKariyer, halka açık ilan sitelerinden farklı olarak yalnızca doğrulanmış sağlık kurumları ve lisanslı hekimlerin erişebildiği güvenli bir platformdur. Böylece profesyonel gizlilik korunur ve güvenli bir kariyer ortamı sağlanır.
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
-                <FiUsers className="w-10 h-10 text-white" />
+            <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
+                <FiUsers className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Geniş ve Güvenilir İş Ağı</h3>
+              <h3 className="text-lg sm:text-2xl font-bold text-blue-900 mb-3 sm:mb-4">Geniş ve Güvenilir İş Ağı</h3>
               <p className="text-gray-600 leading-relaxed text-base">
                 Türkiye'nin dört bir yanından sağlık kurumları ve hekimlerle bağlantı kurun. Uzmanlık alanınıza ve kariyer hedeflerinize uygun fırsatlara hızlıca ulaşın.
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
-                <FiTrendingUp className="w-10 h-10 text-white" />
+            <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
+                <FiTrendingUp className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Kariyer Gelişimi ve Bilimsel Ekosistem</h3>
+              <h3 className="text-lg sm:text-2xl font-bold text-blue-900 mb-3 sm:mb-4">Kariyer Gelişimi ve Bilimsel Ekosistem</h3>
               <p className="text-gray-600 leading-relaxed text-base">
                 İş ilanlarının ötesinde; mesleki bilgi paylaşımları, bilimsel toplantılar, kongre duyuruları ve sektörel gelişmelerle kariyerinizi sürekli destekleyin.
               </p>
             </div>
 
-            <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
-                <FiShield className="w-10 h-10 text-white" />
+            <div className="bg-white rounded-3xl p-5 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-500 group border border-blue-100 hover:-translate-y-2">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-lg">
+                <FiShield className="w-7 h-7 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-blue-900 mb-4">Güvenli ve Gizlilik Odaklı</h3>
+              <h3 className="text-lg sm:text-2xl font-bold text-blue-900 mb-3 sm:mb-4">Güvenli ve Gizlilik Odaklı</h3>
               <p className="text-gray-600 leading-relaxed text-base">
                 Kişisel verileriniz ve profesyonel bilgileriniz yüksek güvenlik standartları ile korunur. Güvenle başvurun ve kariyerinizi kontrol altında tutun.
               </p>
@@ -225,7 +225,7 @@ const HomeSection = () => {
               Ücretsiz Üyelik
             </span>
             
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-blue-900 mb-6 leading-tight">
+            <h2 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-blue-900 mb-4 sm:mb-6 leading-tight">
               Kariyerinizi Bugün{' '}
               <span className="block bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mt-2 pb-2" style={{ lineHeight: '1.3' }}>
                 Başlatın

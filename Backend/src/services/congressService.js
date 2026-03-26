@@ -2,6 +2,23 @@
 
 const { db } = require('../config/dbConfig');
 const { PAGINATION } = require('../config/appConstants');
+const { AppError } = require('../utils/errorHandler');
+
+async function assertSubspecialtyMatchesSpecialty({ specialty_id, subspecialty_id }) {
+  if (!subspecialty_id) return;
+  if (!specialty_id) {
+    throw new AppError('Yan dal seçildiğinde uzmanlık alanı da seçilmelidir', 400);
+  }
+
+  const match = await db('subspecialties')
+    .select('id')
+    .where({ id: subspecialty_id, specialty_id })
+    .first();
+
+  if (!match) {
+    throw new AppError('Seçilen yan dal, seçilen uzmanlık alanına ait değil', 400);
+  }
+}
 
 /**
  * Kongre listesi getir (filtreleme ve sayfalama ile)
@@ -11,7 +28,8 @@ async function getCongressList(filters = {}) {
     page = 1,
     limit = PAGINATION.DEFAULT_LIMIT,
     search = '',
-    specialty = '',
+    specialty_id = null,
+    subspecialty_id = null,
     country = '',
     city = '',
     start_date_from = null,
@@ -23,85 +41,98 @@ async function getCongressList(filters = {}) {
 
   const offset = (page - 1) * limit;
 
-  let query = db('congresses')
+  let query = db('congresses as c')
+    .leftJoin('specialties as s', 'c.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'c.subspecialty_id', 'ss.id')
     .select(
-      'id',
-      'title',
-      'description',
-      'location',
-      'city',
-      'country',
-      'start_date',
-      'end_date',
-      'website_url',
-      'registration_url',
-      'organizer',
-      'specialty',
-      'is_active',
-      'created_at',
-      'updated_at'
+      'c.id',
+      'c.title',
+      'c.description',
+      'c.location',
+      'c.city',
+      'c.country',
+      'c.start_date',
+      'c.end_date',
+      'c.website_url',
+      'c.registration_url',
+      'c.organizer',
+      'c.is_active',
+      'c.created_at',
+      'c.updated_at',
+      'c.specialty_id',
+      'c.subspecialty_id',
+      's.name as specialty_name',
+      'ss.name as subspecialty_name'
     )
-    .where('is_active', is_active);
+    .where('c.is_active', is_active);
 
   // Arama filtresi
   if (search) {
     query = query.where(function() {
-      this.where('title', 'like', `%${search}%`)
-        .orWhere('description', 'like', `%${search}%`)
-        .orWhere('location', 'like', `%${search}%`)
-        .orWhere('organizer', 'like', `%${search}%`);
+      this.where('c.title', 'like', `%${search}%`)
+        .orWhere('c.description', 'like', `%${search}%`)
+        .orWhere('c.location', 'like', `%${search}%`)
+        .orWhere('c.organizer', 'like', `%${search}%`);
     });
   }
 
-  // Uzmanlık filtresi
-  if (specialty) {
-    query = query.where('specialty', specialty);
+  // Uzmanlık ID filtresi
+  if (specialty_id) {
+    query = query.where('c.specialty_id', specialty_id);
   }
 
-  // Ülke filtresi
+  // Yan dal ID filtresi
+  if (subspecialty_id) {
+    query = query.where('c.subspecialty_id', subspecialty_id);
+  }
+
+  // Ülke filtresi (kısmi eşleşme)
   if (country) {
-    query = query.where('country', country);
+    query = query.where('c.country', 'like', `%${country}%`);
   }
 
-  // Şehir filtresi
+  // Şehir filtresi (kısmi eşleşme)
   if (city) {
-    query = query.where('city', city);
+    query = query.where('c.city', 'like', `%${city}%`);
   }
 
   // Tarih aralığı filtresi
   if (start_date_from) {
-    query = query.where('start_date', '>=', start_date_from);
+    query = query.where('c.start_date', '>=', start_date_from);
   }
   if (start_date_to) {
-    query = query.where('start_date', '<=', start_date_to);
+    query = query.where('c.start_date', '<=', start_date_to);
   }
 
   // Toplam kayıt sayısı - Yeni bir query oluştur (clone yerine)
-  let countQuery = db('congresses').where('is_active', is_active);
+  let countQuery = db('congresses as c').where('c.is_active', is_active);
   
   // Aynı filtreleri uygula
   if (search) {
     countQuery = countQuery.where(function() {
-      this.where('title', 'like', `%${search}%`)
-        .orWhere('description', 'like', `%${search}%`)
-        .orWhere('location', 'like', `%${search}%`)
-        .orWhere('organizer', 'like', `%${search}%`);
+      this.where('c.title', 'like', `%${search}%`)
+        .orWhere('c.description', 'like', `%${search}%`)
+        .orWhere('c.location', 'like', `%${search}%`)
+        .orWhere('c.organizer', 'like', `%${search}%`);
     });
   }
-  if (specialty) {
-    countQuery = countQuery.where('specialty', specialty);
+  if (specialty_id) {
+    countQuery = countQuery.where('c.specialty_id', specialty_id);
+  }
+  if (subspecialty_id) {
+    countQuery = countQuery.where('c.subspecialty_id', subspecialty_id);
   }
   if (country) {
-    countQuery = countQuery.where('country', country);
+    countQuery = countQuery.where('c.country', 'like', `%${country}%`);
   }
   if (city) {
-    countQuery = countQuery.where('city', city);
+    countQuery = countQuery.where('c.city', 'like', `%${city}%`);
   }
   if (start_date_from) {
-    countQuery = countQuery.where('start_date', '>=', start_date_from);
+    countQuery = countQuery.where('c.start_date', '>=', start_date_from);
   }
   if (start_date_to) {
-    countQuery = countQuery.where('start_date', '<=', start_date_to);
+    countQuery = countQuery.where('c.start_date', '<=', start_date_to);
   }
   
   const countResult = await countQuery.count('* as total');
@@ -128,8 +159,15 @@ async function getCongressList(filters = {}) {
  * Kongre detayı getir
  */
 async function getCongressById(congressId) {
-  const congress = await db('congresses')
-    .where({ id: congressId })
+  const congress = await db('congresses as c')
+    .leftJoin('specialties as s', 'c.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'c.subspecialty_id', 'ss.id')
+    .select(
+      'c.*',
+      's.name as specialty_name',
+      'ss.name as subspecialty_name'
+    )
+    .where({ 'c.id': congressId })
     .first();
 
   return congress;
@@ -139,6 +177,11 @@ async function getCongressById(congressId) {
  * Yeni kongre oluştur (Admin)
  */
 async function createCongress(congressData, adminId) {
+  await assertSubspecialtyMatchesSpecialty({
+    specialty_id: congressData.specialty_id ?? null,
+    subspecialty_id: congressData.subspecialty_id ?? null,
+  });
+
   const [congressId] = await db('congresses').insert({
     ...congressData,
     created_by: adminId,
@@ -153,6 +196,20 @@ async function createCongress(congressData, adminId) {
  * Kongre güncelle (Admin)
  */
 async function updateCongress(congressId, updateData, adminId) {
+  // Partial update: if one side is missing, read current values
+  const needsRead = (updateData.subspecialty_id !== undefined) || (updateData.specialty_id !== undefined);
+  if (needsRead) {
+    const current = await db('congresses')
+      .select('specialty_id', 'subspecialty_id')
+      .where({ id: congressId })
+      .first();
+
+    await assertSubspecialtyMatchesSpecialty({
+      specialty_id: (updateData.specialty_id !== undefined ? updateData.specialty_id : current?.specialty_id) ?? null,
+      subspecialty_id: (updateData.subspecialty_id !== undefined ? updateData.subspecialty_id : current?.subspecialty_id) ?? null,
+    });
+  }
+
   await db('congresses')
     .where({ id: congressId })
     .update({
@@ -183,20 +240,25 @@ async function deleteCongress(congressId, adminId) {
  * Yaklaşan kongreler (Doktorlar için)
  */
 async function getUpcomingCongresses(limit = 10) {
-  const congresses = await db('congresses')
+  const congresses = await db('congresses as c')
+    .leftJoin('specialties as s', 'c.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'c.subspecialty_id', 'ss.id')
     .select(
-      'id',
-      'title',
-      'location',
-      'city',
-      'country',
-      'start_date',
-      'end_date',
-      'specialty'
+      'c.id',
+      'c.title',
+      'c.location',
+      'c.city',
+      'c.country',
+      'c.start_date',
+      'c.end_date',
+      'c.specialty_id',
+      'c.subspecialty_id',
+      's.name as specialty_name',
+      'ss.name as subspecialty_name'
     )
-    .where('is_active', true)
-    .where('start_date', '>=', new Date())
-    .orderBy('start_date', 'asc')
+    .where('c.is_active', true)
+    .where('c.start_date', '>=', new Date())
+    .orderBy('c.start_date', 'asc')
     .limit(limit);
 
   return congresses;
@@ -205,13 +267,23 @@ async function getUpcomingCongresses(limit = 10) {
 /**
  * Uzmanlık alanlarına göre kongreler
  */
-async function getCongressesBySpecialty(specialty) {
-  const congresses = await db('congresses')
-    .select('*')
-    .where('is_active', true)
-    .where('specialty', specialty)
-    .where('start_date', '>=', new Date())
-    .orderBy('start_date', 'asc');
+async function getCongressesBySpecialty(specialty_id) {
+  if (!specialty_id) return [];
+
+  const congresses = await db('congresses as c')
+    .leftJoin('specialties as s', 'c.specialty_id', 's.id')
+    .leftJoin('subspecialties as ss', 'c.subspecialty_id', 'ss.id')
+    .select(
+      'c.id', 'c.title', 'c.description', 'c.location', 'c.city', 'c.country',
+      'c.start_date', 'c.end_date', 'c.website_url', 'c.registration_url',
+      'c.organizer', 'c.is_active', 'c.created_at', 'c.updated_at',
+      'c.specialty_id', 'c.subspecialty_id',
+      's.name as specialty_name', 'ss.name as subspecialty_name'
+    )
+    .where('c.is_active', true)
+    .where('c.specialty_id', specialty_id)
+    .where('c.start_date', '>=', new Date())
+    .orderBy('c.start_date', 'asc');
 
   return congresses;
 }

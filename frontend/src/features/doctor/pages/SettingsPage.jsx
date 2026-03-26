@@ -126,7 +126,7 @@ const SettingsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Hero Section */}
-        <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+        <div className="relative mb-6 md:mb-8 overflow-hidden rounded-2xl md:rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-5 md:p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
@@ -149,7 +149,7 @@ const SettingsPage = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <section className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/40 p-8 space-y-6">
+          <section className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl border border-white/40 p-5 md:p-8 space-y-6">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-2xl bg-blue-100 text-blue-700">
                 <Lock className="w-6 h-6" />
@@ -189,7 +189,7 @@ const SettingsPage = () => {
             </form>
           </section>
 
-          <section className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-red-200/60 p-8 space-y-6">
+          <section className="bg-white/90 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-2xl border border-red-200/60 p-5 md:p-8 space-y-6">
             <div className="flex items-start gap-4">
               <div className="p-3 rounded-2xl bg-red-100 text-red-600">
                 <ShieldOff className="w-6 h-6" />

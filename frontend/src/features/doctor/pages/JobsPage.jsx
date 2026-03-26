@@ -477,7 +477,7 @@ const DoctorJobsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
           {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-3xl p-8 mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+        <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-2xl md:rounded-3xl p-5 md:p-8 mb-6 md:mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30"></div>
             </div>
@@ -814,56 +814,33 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
   }, [onPageChange]);
 
   return (
-                <div className="flex justify-center items-center space-x-2">
-                  <button
-        onClick={handlePrev}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Önceki
-                  </button>
-                  
-      {[...Array(totalPages)].map((_, i) => {
-                    const page = i + 1;
-                    const isCurrentPage = page === currentPage;
-                    const shouldShow = 
-                      page === 1 || 
-          page === totalPages || 
-                      Math.abs(page - currentPage) <= 2;
+    <div>
+      {/* Mobile: compact */}
+      <div className="flex md:hidden items-center justify-between gap-2">
+        <button onClick={handlePrev} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Önceki</button>
+        <span className="text-sm font-semibold text-gray-700">{currentPage} / {totalPages}</span>
+        <button onClick={handleNext} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Sonraki</button>
+      </div>
 
-                    if (!shouldShow) {
-                      if (page === 2 && currentPage > 4) {
-                        return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                      }
-          if (page === totalPages - 1 && currentPage < totalPages - 3) {
-                        return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
-                      }
-                      return null;
-                    }
-
-                    return (
-                      <button
-                        key={page}
-            onClick={() => handlePage(page)}
-                        className={`px-4 py-2 text-sm font-medium rounded-xl ${
-                          isCurrentPage
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md'
-                            : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-
-                  <button
-        onClick={handleNext}
-        disabled={currentPage === totalPages}
-                    className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Sonraki
-                  </button>
-                </div>
+      {/* Desktop: numbered */}
+      <div className="hidden md:flex justify-center items-center space-x-2">
+        <button onClick={handlePrev} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Önceki</button>
+        {[...Array(totalPages)].map((_, i) => {
+          const page = i + 1;
+          const isCurrentPage = page === currentPage;
+          const shouldShow = page === 1 || page === totalPages || Math.abs(page - currentPage) <= 2;
+          if (!shouldShow) {
+            if (page === 2 && currentPage > 4) return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+            if (page === totalPages - 1 && currentPage < totalPages - 3) return <span key={page} className="px-3 py-2 text-gray-400">...</span>;
+            return null;
+          }
+          return (
+            <button key={page} onClick={() => handlePage(page)} className={`px-4 py-2 text-sm font-medium rounded-xl ${isCurrentPage ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md' : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'}`}>{page}</button>
+          );
+        })}
+        <button onClick={handleNext} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Sonraki</button>
+      </div>
+    </div>
   );
 });
 

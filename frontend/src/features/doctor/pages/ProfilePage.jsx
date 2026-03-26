@@ -393,7 +393,7 @@ const DoctorProfile = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <SkeletonLoader className="h-12 w-80 bg-gray-200 rounded-2xl mb-8" />
+          <SkeletonLoader className="h-12 w-full max-w-xs bg-gray-200 rounded-2xl mb-8" />
           <SkeletonLoader className="h-96 bg-gray-200 rounded-2xl" />
         </div>
       </div>
@@ -422,7 +422,7 @@ const DoctorProfile = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto w-full">
           {/* Hero Section */}
-          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-3xl p-8 mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+          <div className="relative overflow-hidden bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 rounded-2xl md:rounded-3xl p-5 md:p-8 mb-6 md:mb-8 border border-cyan-200/30 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30"></div>
@@ -527,7 +527,7 @@ const DoctorProfile = () => {
               </nav>
             </div>
 
-            <div className="p-8 min-h-[600px] w-full">
+            <div className="p-4 md:p-8 min-h-[600px] w-full">
             {/* Kişisel Bilgiler Tab */}
             <div className={`w-full ${activeTab === 'personal' ? 'block animate-fadeIn' : 'hidden'}`}>
               <div className="space-y-8 w-full">

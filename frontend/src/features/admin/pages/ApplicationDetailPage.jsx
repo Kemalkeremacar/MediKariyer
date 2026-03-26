@@ -210,7 +210,7 @@ const AdminApplicationDetailPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="p-6">
-          <SkeletonLoader className="h-12 w-80 bg-gray-200 rounded-lg mb-6" />
+          <SkeletonLoader className="h-12 w-full max-w-xs bg-gray-200 rounded-lg mb-6" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <SkeletonLoader className="h-96 bg-gray-200 rounded-xl" />

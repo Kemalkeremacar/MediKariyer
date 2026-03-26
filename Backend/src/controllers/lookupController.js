@@ -300,11 +300,8 @@ const getSubspecialties = catchAsync(async (req, res) => {
   logger.info('Lookup subspecialties request received', { specialtyId });
   
   const subspecialties = await lookupService.getSubspecialties(specialtyId ? parseInt(specialtyId) : null);
-  
-  res.status(200).json(successResponse(
-    subspecialties,
-    'Yan dal alanları başarıyla getirildi'
-  ));
+
+  return sendSuccess(res, 'Yan dal alanları başarıyla getirildi', subspecialties);
 });
 
 /**

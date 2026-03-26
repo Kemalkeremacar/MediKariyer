@@ -55,7 +55,7 @@ const HospitalDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          <SkeletonLoader className="h-12 w-80 bg-white rounded-2xl" />
+          <SkeletonLoader className="h-12 w-full max-w-xs bg-white rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
               <SkeletonLoader key={i} className="h-32 bg-white rounded-2xl" />

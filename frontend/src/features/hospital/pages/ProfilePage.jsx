@@ -157,7 +157,7 @@ const HospitalProfile = () => {
     return (
       <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto space-y-8">
-          <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+          <SkeletonLoader className="h-12 w-full max-w-xs bg-white/10 rounded-2xl" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
             <SkeletonLoader className="lg:col-span-2 h-96 bg-white/10 rounded-3xl" />

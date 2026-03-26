@@ -156,7 +156,7 @@ const JobEditPage = () => {
       <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <TransitionWrapper>
           <div className="max-w-7xl mx-auto space-y-8">
-            <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+            <SkeletonLoader className="h-12 w-full max-w-xs bg-white/10 rounded-2xl" />
             <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
           </div>
         </TransitionWrapper>

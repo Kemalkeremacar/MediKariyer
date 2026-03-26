@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useUsers, useUpdateUserStatus, useUpdateUserApproval } from '../api/useAdmin';
+import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { useLookup } from '@/hooks/useLookup';
@@ -279,14 +280,8 @@ const HospitalsPage = () => {
     return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Pasif</span>;
   };
 
-  if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Yükleniyor...</p>
-      </div>
-    </div>
-  );
+  const isFirstLoad = isLoading && users.length === 0;
+
   if (error) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md shadow-lg">
@@ -414,7 +409,16 @@ const HospitalsPage = () => {
         </div>
       </div>
 
-      {/* Hospitals Table - Desktop */}
+      {/* Hospitals Table */}
+      {isFirstLoad ? (
+        <div className="space-y-4 p-4">
+          {[...Array(5)].map((_, i) => (
+            <SkeletonLoader key={i} className="h-20 bg-gray-200 rounded-xl" />
+          ))}
+        </div>
+      ) : (
+      <>
+      {/* Desktop */}
       <div className="hidden lg:block admin-table">
         <div className="overflow-x-auto">
           <table className="min-w-full">
@@ -605,6 +609,8 @@ const HospitalsPage = () => {
         )}
         </div>
       </div>
+      </>
+      )}
       </div>
     </div>
   );

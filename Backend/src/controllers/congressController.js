@@ -14,7 +14,8 @@ async function getCongressList(req, res) {
       page: parseInt(req.query.page) || 1,
       limit: parseInt(req.query.limit) || 20,
       search: req.query.search || '',
-      specialty: req.query.specialty || '',
+      specialty_id: req.query.specialty_id ? parseInt(req.query.specialty_id) : null,
+      subspecialty_id: req.query.subspecialty_id ? parseInt(req.query.subspecialty_id) : null,
       country: req.query.country || '',
       city: req.query.city || '',
       start_date_from: req.query.start_date_from || null,
@@ -25,13 +26,13 @@ async function getCongressList(req, res) {
     };
 
     const result = await congressService.getCongressList(filters);
-    
-    console.log('✅ Response gönderiliyor, data count:', result.data?.length);
-    
+
     return sendSuccess(res, 'Kongreler başarıyla getirildi', result);
   } catch (error) {
-    console.error('❌ Controller error:', error);
     logger.error('Kongre listesi getirme hatası:', error);
+    if (error?.statusCode) {
+      return sendError(res, error.message, error.details || null, error.statusCode);
+    }
     return sendError(res, 'Kongreler getirilirken bir hata oluştu', null, 500);
   }
 }
@@ -53,6 +54,9 @@ async function getCongressById(req, res) {
     return sendSuccess(res, 'Kongre detayı başarıyla getirildi', congress);
   } catch (error) {
     logger.error('Kongre detayı getirme hatası:', error);
+    if (error?.statusCode) {
+      return sendError(res, error.message, error.details || null, error.statusCode);
+    }
     return sendError(res, 'Kongre detayı getirilirken bir hata oluştu', null, 500);
   }
 }
@@ -73,6 +77,9 @@ async function createCongress(req, res) {
     return sendCreated(res, 'Kongre başarıyla oluşturuldu', newCongress);
   } catch (error) {
     logger.error('Kongre oluşturma hatası:', error);
+    if (error?.statusCode) {
+      return sendError(res, error.message, error.details || null, error.statusCode);
+    }
     return sendError(res, 'Kongre oluşturulurken bir hata oluştu', null, 500);
   }
 }
@@ -99,6 +106,9 @@ async function updateCongress(req, res) {
     return sendSuccess(res, 'Kongre başarıyla güncellendi', updatedCongress);
   } catch (error) {
     logger.error('Kongre güncelleme hatası:', error);
+    if (error?.statusCode) {
+      return sendError(res, error.message, error.details || null, error.statusCode);
+    }
     return sendError(res, 'Kongre güncellenirken bir hata oluştu', null, 500);
   }
 }
@@ -124,6 +134,9 @@ async function deleteCongress(req, res) {
     return sendSuccess(res, 'Kongre başarıyla silindi');
   } catch (error) {
     logger.error('Kongre silme hatası:', error);
+    if (error?.statusCode) {
+      return sendError(res, error.message, error.details || null, error.statusCode);
+    }
     return sendError(res, 'Kongre silinirken bir hata oluştu', null, 500);
   }
 }
@@ -141,6 +154,9 @@ async function getUpcomingCongresses(req, res) {
     return sendSuccess(res, 'Yaklaşan kongreler başarıyla getirildi', congresses);
   } catch (error) {
     logger.error('Yaklaşan kongreler getirme hatası:', error);
+    if (error?.statusCode) {
+      return sendError(res, error.message, error.details || null, error.statusCode);
+    }
     return sendError(res, 'Yaklaşan kongreler getirilirken bir hata oluştu', null, 500);
   }
 }

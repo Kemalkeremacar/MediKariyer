@@ -83,7 +83,7 @@ const AboutSection = () => {
               <span className="inline-flex items-center rounded-full bg-blue-100 px-4 py-1 text-sm font-semibold uppercase tracking-wider text-blue-700">
                 🩺 MediKariyer
               </span>
-              <h1 className="mt-6 text-5xl font-extrabold leading-tight text-blue-900 sm:text-6xl xl:text-[4rem]">Hakkımızda</h1>
+              <h1 className="mt-6 text-3xl font-extrabold leading-tight text-blue-900 sm:text-5xl md:text-6xl xl:text-[4rem]">Hakkımızda</h1>
               <div className="mt-8 space-y-6 text-lg leading-relaxed text-slate-700">
                 {introParagraphs.map((paragraph, index) => (
                   <p key={index} className="text-justify">
@@ -157,7 +157,7 @@ const AboutSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-              className="rounded-3xl border border-blue-100 bg-white p-10 shadow-[0_20px_45px_-18px_rgba(30,64,175,0.35)]"
+              className="rounded-2xl md:rounded-3xl border border-blue-100 bg-white p-5 sm:p-8 md:p-10 shadow-[0_20px_45px_-18px_rgba(30,64,175,0.35)]"
             >
               <div className="flex items-center gap-4">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
@@ -186,7 +186,7 @@ const AboutSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-              className="rounded-3xl border border-cyan-100 bg-white p-10 shadow-[0_20px_45px_-18px_rgba(8,145,178,0.35)]"
+              className="rounded-2xl md:rounded-3xl border border-cyan-100 bg-white p-5 sm:p-8 md:p-10 shadow-[0_20px_45px_-18px_rgba(8,145,178,0.35)]"
             >
               <div className="flex items-center gap-4 mb-8">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-600">

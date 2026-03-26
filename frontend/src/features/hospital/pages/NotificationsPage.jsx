@@ -426,13 +426,13 @@ const HospitalNotificationsPage = () => {
 
         {/* Bulk Actions Bar */}
         {showBulkActions && selectedNotifications.size > 0 && (
-          <div className="mb-6 rounded-2xl border border-blue-200 bg-white p-4 flex items-center justify-between shadow-sm">
+          <div className="mb-6 rounded-2xl border border-blue-200 bg-white p-3 md:p-4 flex flex-wrap items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-3">
-              <span className="text-gray-900 font-medium">
+              <span className="text-sm md:text-base text-gray-900 font-medium">
                 {selectedNotifications.size} bildirim seçildi
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleBulkMarkAsRead}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors shadow-sm"

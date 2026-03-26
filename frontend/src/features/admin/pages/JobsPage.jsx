@@ -296,19 +296,7 @@ const AdminJobsPage = () => {
     );
   };
 
-  // Loading
-  if (isLoading) {
-    return (
-      <div className="min-h-screen">
-        <div className="p-6">
-          <SkeletonLoader className="h-12 w-80 bg-gray-200 rounded-lg mb-6" />
-          {[...Array(5)].map((_, i) => (
-            <SkeletonLoader key={i} className="h-24 bg-gray-200 rounded-xl mb-4" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const isFirstLoad = isLoading && jobs.length === 0;
 
   // Error
   if (error) {
@@ -453,7 +441,13 @@ const AdminJobsPage = () => {
         </div>
 
         {/* Jobs List */}
-        {jobs.length > 0 ? (
+        {isFirstLoad ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <SkeletonLoader key={i} className="h-24 bg-gray-200 rounded-xl" />
+            ))}
+          </div>
+        ) : jobs.length > 0 ? (
           <div className="space-y-3 sm:space-y-4">
             {jobs.map((job) => (
               <div

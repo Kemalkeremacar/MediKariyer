@@ -27,8 +27,16 @@ CREATE TABLE congresses (
   registration_url NVARCHAR(500) NULL,
   organizer NVARCHAR(200) NULL,
   
-  -- Kategorizasyon
+  -- Kategorizasyon (Yeni Şema)
+  specialty_id INT NULL,
+  subspecialty_id INT NULL,
+
+  -- Eski alan (legacy). Migration/backfill için tutulabilir.
+  -- Not: Uygulama artık specialty_id/subspecialty_id kullanır.
   specialty NVARCHAR(100) NULL,
+
+  -- Kongre Görseli (Base64 data URL)
+  image_url NVARCHAR(MAX) NULL,
   
   -- Durum
   is_active BIT DEFAULT 1 NOT NULL,
@@ -47,7 +55,10 @@ CREATE TABLE congresses (
   -- Foreign Keys
   CONSTRAINT fk_congresses_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_congresses_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE NO ACTION,
-  CONSTRAINT fk_congresses_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE NO ACTION
+  CONSTRAINT fk_congresses_deleted_by FOREIGN KEY (deleted_by) REFERENCES users(id) ON DELETE NO ACTION,
+
+  CONSTRAINT fk_congresses_specialty_id FOREIGN KEY (specialty_id) REFERENCES specialties(id) ON DELETE SET NULL,
+  CONSTRAINT fk_congresses_subspecialty_id FOREIGN KEY (subspecialty_id) REFERENCES subspecialties(id) ON DELETE SET NULL
 );
 GO
 
@@ -56,12 +67,19 @@ CREATE INDEX idx_congresses_start_date ON congresses(start_date);
 CREATE INDEX idx_congresses_end_date ON congresses(end_date);
 CREATE INDEX idx_congresses_country ON congresses(country);
 CREATE INDEX idx_congresses_city ON congresses(city);
-CREATE INDEX idx_congresses_specialty ON congresses(specialty);
+CREATE INDEX idx_congresses_specialty_id ON congresses(specialty_id);
+CREATE INDEX idx_congresses_subspecialty_id ON congresses(subspecialty_id);
+CREATE INDEX idx_congresses_specialty_legacy ON congresses(specialty);
 CREATE INDEX idx_congresses_is_active ON congresses(is_active);
 CREATE INDEX idx_congresses_created_at ON congresses(created_at);
 GO
 
 -- Örnek veri ekle
+-- Not: specialties/subspecialties tabloları yoksa specialty_id/subspecialty_id NULL kalır.
+DECLARE @CardiologyId INT = (SELECT TOP 1 id FROM specialties WHERE name IN (N'Kardiyoloji', N'Cardiology') ORDER BY id);
+DECLARE @NeurologyId INT = (SELECT TOP 1 id FROM specialties WHERE name IN (N'Nöroloji', N'Neurology') ORDER BY id);
+DECLARE @OrthopedicsId INT = (SELECT TOP 1 id FROM specialties WHERE name IN (N'Ortopedi', N'Ortopedi ve Travmatoloji', N'Orthopedics') ORDER BY id);
+
 INSERT INTO congresses (
   title, 
   description, 
@@ -72,6 +90,8 @@ INSERT INTO congresses (
   end_date, 
   website_url, 
   organizer, 
+  specialty_id,
+  subspecialty_id,
   specialty,
   created_by
 ) VALUES 
@@ -85,6 +105,8 @@ INSERT INTO congresses (
   '2026-10-18',
   'https://www.tkd.org.tr',
   N'Türk Kardiyoloji Derneği',
+  @CardiologyId,
+  NULL,
   N'Kardiyoloji',
   1
 ),
@@ -98,6 +120,8 @@ INSERT INTO congresses (
   '2026-06-23',
   'https://www.ean.org',
   N'European Academy of Neurology',
+  @NeurologyId,
+  NULL,
   N'Nöroloji',
   1
 ),
@@ -111,6 +135,8 @@ INSERT INTO congresses (
   '2026-11-08',
   'https://www.totbid.org.tr',
   N'Türk Ortopedi ve Travmatoloji Birliği Derneği',
+  @OrthopedicsId,
+  NULL,
   N'Ortopedi',
   1
 );

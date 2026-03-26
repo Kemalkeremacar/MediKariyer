@@ -15,18 +15,20 @@ import {
   User
 } from 'lucide-react';
 import { useDoctorDashboard, useDoctorProfile } from '../api/useDoctor';
+import { useUpcomingCongresses } from '../../congress/api/useCongress';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { formatDate } from '@/utils/dateUtils';
 
 const DoctorDashboard = () => {
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError } = useDoctorDashboard();
   const { data: profileData, isLoading: profileLoading } = useDoctorProfile();
+  const { data: upcomingData } = useUpcomingCongresses(3);
 
   if (dashboardLoading || profileLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="mx-auto max-w-7xl">
-          <SkeletonLoader className="h-12 w-80 bg-blue-100 rounded-2xl" />
+          <SkeletonLoader className="h-12 w-full max-w-xs bg-blue-100 rounded-2xl" />
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
             <SkeletonLoader className="h-96 rounded-2xl bg-blue-100" />
             <SkeletonLoader className="h-96 rounded-2xl bg-blue-100" />
@@ -69,11 +71,19 @@ const DoctorDashboard = () => {
   const profilePhoto = profile?.profile_photo || null;
   const fullName = `${title} ${firstName} ${lastName}`.trim();
 
+  const upcomingCongresses = upcomingData?.data?.data || [];
+
+  const shortMonth = (dateStr) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('tr-TR', { month: 'short' }).replace('.', '');
+  };
+  const shortDay = (dateStr) => new Date(dateStr).getDate();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
           {/* Hero Section */}
-          <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+          <div className="relative mb-8 overflow-hidden rounded-2xl md:rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-5 md:p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
@@ -118,14 +128,80 @@ const DoctorDashboard = () => {
             </div>
           </div>
 
+          {/* Kongre Takvimi Banner */}
+          <div className="relative mb-8 overflow-hidden rounded-2xl bg-white border border-gray-200/80 shadow-sm">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-300" />
+
+            <div className="relative flex flex-col lg:flex-row lg:items-stretch">
+              {/* Sol: Tanıtım */}
+              <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 border border-blue-100">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="text-xs font-bold uppercase tracking-widest text-blue-600/70">Kongre Takvimi</span>
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 leading-snug mb-1.5">
+                  Yaklaşan Tıbbi Kongreleri Keşfedin
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed mb-5 max-w-md">
+                  Alanınızdaki kongre ve etkinlikleri takip edin, mesleki gelişiminize katkı sağlayın.
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    to="/doctor/congresses"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 active:scale-[0.98] transition-all"
+                  >
+                    Takvime Git <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  {upcomingCongresses.length > 0 && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      {upcomingCongresses.length} yaklaşan kongre
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Sağ: Mini Kongre Kartları */}
+              {upcomingCongresses.length > 0 && (
+                <div className="flex items-center px-4 pb-5 lg:px-6 lg:py-5 gap-3 flex-shrink-0 lg:max-w-sm lg:border-l border-gray-100">
+                  <div className="space-y-2 w-full">
+                    {upcomingCongresses.slice(0, 3).map((c) => (
+                      <Link
+                        key={c.id}
+                        to={`/doctor/congresses/${c.id}`}
+                        className="flex items-center gap-3 px-3.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all group"
+                      >
+                        <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-white border border-gray-200 flex flex-col items-center justify-center leading-none shadow-sm">
+                          <span className="text-[10px] font-bold text-blue-500 uppercase">{shortMonth(c.start_date)}</span>
+                          <span className="text-sm font-black text-gray-900">{shortDay(c.start_date)}</span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-semibold text-gray-800 truncate group-hover:text-blue-700 transition-colors">
+                            {c.title}
+                          </div>
+                          <div className="text-[11px] text-gray-400 truncate">
+                            {[c.city, c.country].filter(Boolean).join(', ')}
+                          </div>
+                        </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Ana İçerik */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Son Başvurular */}
-            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-              <div className="border-b border-blue-100 pb-6">
+            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-5 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="border-b border-blue-100 pb-4 md:pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
-                    <Activity className="h-6 w-6 text-blue-600" />
+                  <h2 className="flex items-center gap-2 md:gap-3 text-lg md:text-2xl font-bold text-gray-900">
+                    <Activity className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
                     Son Başvurular
                   </h2>
                   {/* Tümünü gör butonu kaldırıldı */}
@@ -180,11 +256,11 @@ const DoctorDashboard = () => {
             </div>
 
             {/* Önerilen İş İlanları */}
-            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-              <div className="border-b border-blue-100 pb-6">
+            <div className="rounded-2xl border border-blue-200 bg-white shadow-lg p-5 md:p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+              <div className="border-b border-blue-100 pb-4 md:pb-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="flex items-center gap-3 text-2xl font-bold text-gray-900">
-                    <Target className="h-6 w-6 text-blue-600" />
+                  <h2 className="flex items-center gap-2 md:gap-3 text-lg md:text-2xl font-bold text-gray-900">
+                    <Target className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
                     Önerilen İş İlanları
                   </h2>
                   {/* Tümünü gör butonu kaldırıldı */}

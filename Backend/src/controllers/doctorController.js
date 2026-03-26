@@ -921,11 +921,13 @@ const requestPhotoChange = catchAsync(async (req, res) => {
   }
   
   const request = await doctorService.requestProfilePhotoChange(req.user.id, file_url);
-  
-  sendSuccess(res, {
-    message: 'Fotoğraf değişiklik talebi oluşturuldu. Admin onayı bekleniyor.',
-    data: { request }
-  }, 201);
+
+  return sendSuccess(
+    res,
+    'Fotoğraf değişiklik talebi oluşturuldu. Admin onayı bekleniyor.',
+    { request },
+    201
+  );
 });
 
 /**
@@ -966,9 +968,7 @@ const cancelPhotoRequest = catchAsync(async (req, res) => {
     throw new AppError('İptal edilecek bekleyen talep bulunamadı', 404);
   }
   
-  sendSuccess(res, {
-    message: 'Fotoğraf talebi iptal edildi'
-  });
+  return sendSuccess(res, 'Fotoğraf talebi iptal edildi');
 });
 
 const deactivateAccount = catchAsync(async (req, res) => {

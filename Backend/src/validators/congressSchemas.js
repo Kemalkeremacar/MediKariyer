@@ -58,10 +58,15 @@ const createCongressSchema = Joi.object({
     .messages({
       'string.max': 'Organizatör en fazla 200 karakter olmalıdır'
     }),
-  specialty: Joi.string().max(100).allow('', null)
+  specialty_id: Joi.number().integer().positive().allow(null)
     .messages({
-      'string.max': 'Uzmanlık alanı en fazla 100 karakter olmalıdır'
+      'number.base': 'Uzmanlık alanı geçerli bir ID olmalıdır'
     }),
+  subspecialty_id: Joi.number().integer().positive().allow(null)
+    .messages({
+      'number.base': 'Yan dal geçerli bir ID olmalıdır'
+    }),
+  image_url: Joi.string().allow('', null),
   is_active: Joi.boolean().default(true)
 });
 
@@ -113,10 +118,9 @@ const updateCongressSchema = Joi.object({
     .messages({
       'string.max': 'Organizatör en fazla 200 karakter olmalıdır'
     }),
-  specialty: Joi.string().max(100).allow('', null)
-    .messages({
-      'string.max': 'Uzmanlık alanı en fazla 100 karakter olmalıdır'
-    }),
+  specialty_id: Joi.number().integer().positive().allow(null),
+  subspecialty_id: Joi.number().integer().positive().allow(null),
+  image_url: Joi.string().allow('', null),
   is_active: Joi.boolean()
 }).min(1);
 
@@ -127,7 +131,8 @@ const listCongressQuerySchema = Joi.object({
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
   search: Joi.string().max(200).allow(''),
-  specialty: Joi.string().max(100).allow(''),
+  specialty_id: Joi.number().integer().positive(),
+  subspecialty_id: Joi.number().integer().positive(),
   country: Joi.string().max(100).allow(''),
   city: Joi.string().max(100).allow(''),
   start_date_from: Joi.date().iso(),

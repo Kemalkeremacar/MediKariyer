@@ -138,13 +138,8 @@ const MainLayout = () => {
 
         {/* Ana içerik alanı - Sidebar + Content */}
         <div className="flex flex-1 min-h-screen">
-          {/* Admin Sidebar - Sadece desktop'ta göster */}
-          <div className="hidden lg:block">
-            <AdminSidebar 
-              isOpen={true}
-              onClose={() => setIsMobileSidebarOpen(false)}
-            />
-          </div>
+          {/* Admin Sidebar - Sidebar kendisi hidden lg:flex ile mobilden gizleniyor */}
+          <AdminSidebar />
           
           {/* İçerik alanı - Mobilde full width, desktop'ta sidebar'dan sonra */}
           <main role="main" className="flex-1 min-h-screen lg:ml-0" style={{

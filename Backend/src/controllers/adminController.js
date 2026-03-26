@@ -648,11 +648,8 @@ const reviewPhotoRequest = catchAsync(async (req, res) => {
   const message = action === 'approve' 
     ? 'Fotoğraf onaylandı ve profilde güncellendi'
     : 'Fotoğraf reddedildi';
-  
-  sendSuccess(res, {
-    message,
-    data: { request: result }
-  });
+
+  return sendSuccess(res, message, { request: result });
 });
 
 // ============================================================================

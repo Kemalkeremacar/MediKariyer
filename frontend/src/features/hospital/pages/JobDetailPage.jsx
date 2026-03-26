@@ -407,7 +407,7 @@ const allRevisionEntries = useMemo(() => {
       <div className="hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <TransitionWrapper>
           <div className="max-w-7xl mx-auto space-y-8">
-            <SkeletonLoader className="h-12 w-80 bg-white/10 rounded-2xl" />
+            <SkeletonLoader className="h-12 w-full max-w-xs bg-white/10 rounded-2xl" />
             <SkeletonLoader className="h-96 bg-white/10 rounded-3xl" />
           </div>
         </TransitionWrapper>
@@ -469,21 +469,21 @@ const allRevisionEntries = useMemo(() => {
       <TransitionWrapper>
         <div className="max-w-7xl mx-auto space-y-8 w-full min-w-0">
           {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               <button
                 type="button"
                 onClick={handleBackToJobs}
-                className="bg-white border border-blue-200 text-blue-600 p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-sm"
+                className="bg-white border border-blue-200 text-blue-600 p-2.5 md:p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-sm flex-shrink-0"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">İş İlanı Detayı</h1>
-                <p className="text-gray-700 mt-1">İş ilanı bilgilerini görüntüleyin</p>
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-3xl font-bold text-gray-900">İş İlanı Detayı</h1>
+                <p className="text-gray-700 mt-1 text-sm md:text-base">İş ilanı bilgilerini görüntüleyin</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               {/* PDF İndirme Butonu */}
               <button
                 onClick={handleExportJob}
@@ -518,7 +518,7 @@ const allRevisionEntries = useMemo(() => {
           </div>
 
           {/* Job Content */}
-          <div className="bg-white rounded-3xl border border-blue-100 shadow-lg p-8 space-y-8">
+          <div className="bg-white rounded-2xl md:rounded-3xl border border-blue-100 shadow-lg p-4 md:p-8 space-y-6 md:space-y-8">
             {/* Title and Status */}
             <div className="flex items-start justify-between">
               <div className="flex-1">

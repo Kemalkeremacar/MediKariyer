@@ -184,6 +184,7 @@ const PhotoManagementPage = lazy(() => import('@/features/doctor/pages/PhotoMana
 const DoctorSettingsPage = lazy(() => import('@/features/doctor/pages/SettingsPage'));
 const DoctorNotificationsPage = lazy(() => import('@/features/doctor/pages/NotificationsPage'));
 const DoctorCongressCalendarPage = lazy(() => import('@/features/doctor/pages/CongressCalendarPage'));
+const DoctorCongressDetailPage = lazy(() => import('@/features/doctor/pages/CongressDetailPage'));
 
 /**
  * ============================================================================
@@ -557,6 +558,25 @@ const AppRoutes = () => {
                   <RoleGuard allowedRoles={['doctor']}>
                     <ApprovalGuard>
                       <DoctorCongressCalendarPage />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          {/* 
+            Doktor Kongre Detay Sayfası - /doctor/congresses/:congressId
+            Kongrenin detaylı bilgilerini görüntüleme
+          */}
+          <Route
+            path="doctor/congresses/:congressId"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['doctor']}>
+                    <ApprovalGuard>
+                      <DoctorCongressDetailPage />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>

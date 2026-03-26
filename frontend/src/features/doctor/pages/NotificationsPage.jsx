@@ -370,7 +370,7 @@ const DoctorNotificationsPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
         <div className="max-w-7xl mx-auto flex items-center justify-center min-h-screen">
-          <div className="bg-white rounded-2xl border border-blue-100 p-8 text-center shadow-md">
+          <div className="bg-white rounded-2xl border border-blue-100 p-5 md:p-8 text-center shadow-md">
             <h2 className="text-gray-900 font-bold text-xl mb-4">Hata Oluştu</h2>
             <p className="text-gray-600 mb-6">Bildirimler yüklenirken bir hata oluştu.</p>
             <button 
@@ -389,7 +389,7 @@ const DoctorNotificationsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="relative mb-8 overflow-hidden rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
+        <div className="relative mb-6 md:mb-8 overflow-hidden rounded-2xl md:rounded-3xl border border-cyan-200/30 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-100 p-5 md:p-8 shadow-[0_20px_60px_-30px_rgba(14,165,233,0.35)]">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-200/30 to-blue-200/30" />
           </div>
@@ -533,7 +533,7 @@ const DoctorNotificationsPage = () => {
         {/* Notifications List */}
         <div className="rounded-2xl border border-blue-100 bg-white shadow-lg">
           {isLoading ? (
-            <div className="p-8">
+            <div className="p-4 md:p-8">
               <div className="space-y-4">
                 {Array.from({ length: 5 }, (_, i) => (
                   <SkeletonLoader key={i} className="h-32 rounded-2xl bg-gray-200" />

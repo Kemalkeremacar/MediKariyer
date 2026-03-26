@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApplications } from '../api/useAdmin';
 import { showToast } from '@/utils/toastUtils';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import LoadingSpinner, { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { 
   Users, 
   Search, 
@@ -298,7 +298,8 @@ const ApplicationsPage = () => {
     );
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  const isFirstLoad = isLoading && applications.length === 0;
+
   if (error) return <div className="p-6 text-red-500">Hata oluştu: {error.message}</div>;
 
   return (
@@ -385,6 +386,13 @@ const ApplicationsPage = () => {
         </div>
 
         {/* Applications Table */}
+        {isFirstLoad ? (
+          <div className="space-y-4 p-4">
+            {[...Array(5)].map((_, i) => (
+              <SkeletonLoader key={i} className="h-20 bg-gray-200 rounded-xl" />
+            ))}
+          </div>
+        ) : (
         <div className="admin-table">
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
@@ -563,6 +571,7 @@ const ApplicationsPage = () => {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );

@@ -63,7 +63,7 @@ const ContactSection = () => {
             <span className="inline-block px-4 py-2 mb-6 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full">
               Bize Ulaşın
             </span>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-blue-900 mb-6 leading-tight">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-blue-900 mb-4 sm:mb-6 leading-tight">
               İletişime Geçin
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 leading-relaxed">

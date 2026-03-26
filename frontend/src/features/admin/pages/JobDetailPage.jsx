@@ -645,7 +645,7 @@ const AdminJobDetailPage = () => {
     return (
       <div className="min-h-screen">
         <div className="p-6">
-          <SkeletonLoader className="h-12 w-80 bg-gray-200 rounded-lg mb-6" />
+          <SkeletonLoader className="h-12 w-full max-w-xs bg-gray-200 rounded-lg mb-6" />
           <SkeletonLoader className="h-96 bg-gray-200 rounded-xl" />
         </div>
       </div>
