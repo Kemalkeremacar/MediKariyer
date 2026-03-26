@@ -282,6 +282,20 @@ export const ENDPOINTS = {
     MESSAGES: '/contact', // POST - İletişim mesajı gönder (public - alias)
   },
 
+  // ==================== CONGRESS ENDPOINTS (Backend: /api/congresses/*) ====================
+  /**
+   * Kongre takvimi endpoint'leri
+   * Backend congressService.js ve congressController.js ile uyumlu
+   */
+  CONGRESS: {
+    LIST: '/congresses', // GET - Kongre listesi (doktor, admin)
+    DETAIL: '/congresses/:id', // GET - Kongre detayı (doktor, admin)
+    UPCOMING: '/congresses/upcoming', // GET - Yaklaşan kongreler (doktor, admin)
+    CREATE: '/congresses', // POST - Kongre oluştur (admin)
+    UPDATE: '/congresses/:id', // PUT - Kongre güncelle (admin)
+    DELETE: '/congresses/:id', // DELETE - Kongre sil (admin)
+  },
+
   // ==================== SYSTEM ENDPOINTS ====================
   /**
    * Sistem sağlık kontrolü ve istatistik endpoint'leri

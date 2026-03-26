@@ -47,7 +47,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope, Activity } from 'lucide-react';
+import { Menu, X, ChevronDown, User, Settings, LogOut, Bell, UserCheck, Briefcase, BarChart3, FileText, Shield, Building2, ClipboardList, Camera, Mail, Stethoscope, Activity, Calendar } from 'lucide-react';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import { APP_CONFIG } from '@config/app.js';
 import NavbarNotificationBell from './NavbarNotificationBell';
@@ -155,6 +155,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
       { to: ROUTE_CONFIG.DOCTOR.PROFILE, text: 'Profilim' },
       { to: ROUTE_CONFIG.DOCTOR.JOBS, text: 'İş İlanları' },
       { to: ROUTE_CONFIG.DOCTOR.APPLICATIONS, text: 'Başvurularım' },
+      { to: ROUTE_CONFIG.DOCTOR.CONGRESSES, text: 'Kongre Takvimi' },
     ],
     hospital: [
       { to: ROUTE_CONFIG.HOSPITAL.DASHBOARD, text: 'Ana Sayfa' },
@@ -177,6 +178,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
     { to: ROUTE_CONFIG.ADMIN.PHOTO_APPROVALS, text: 'Fotoğraf Onayları', icon: Camera },
     { to: ROUTE_CONFIG.ADMIN.NOTIFICATIONS, text: 'Bildirimler', icon: Bell },
     { to: ROUTE_CONFIG.ADMIN.CONTACT_MESSAGES, text: 'İletişim Mesajları', icon: Mail },
+    { to: ROUTE_CONFIG.ADMIN.CONGRESSES, text: 'Kongre Yönetimi', icon: Calendar },
     { to: ROUTE_CONFIG.ADMIN.LOGS, text: 'Sistem Logları', icon: Activity },
   ];
 
@@ -571,6 +573,14 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
                           >
                             <FileText size={18} className="text-gray-500" />
                             <span className="text-sm font-bold">Başvurularım</span>
+                          </Link>
+                          <Link
+                            to={ROUTE_CONFIG.DOCTOR.CONGRESSES}
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <Calendar size={18} className="text-gray-500" />
+                            <span className="text-sm font-bold">Kongre Takvimi</span>
                           </Link>
                           <Link
                             to={ROUTE_CONFIG.DOCTOR.NOTIFICATIONS}

@@ -72,6 +72,9 @@ export const ROUTE_CONFIG = {
     PHOTO_APPROVALS: '/admin/photo-approvals',
     LOGS: '/admin/logs',
     LOG_DETAIL: '/admin/logs/:type/:id',
+    CONGRESSES: '/admin/congresses',
+    CONGRESS_DETAIL: '/admin/congresses/:id',
+    CONGRESS_CREATE: '/admin/congresses/new',
   },
   
   // ============================================================================
@@ -86,6 +89,8 @@ export const ROUTE_CONFIG = {
     APPLICATION_DETAIL: '/doctor/applications/:applicationId',
     NOTIFICATIONS: '/doctor/notifications',
     SETTINGS: '/doctor/settings',
+    CONGRESSES: '/doctor/congresses',
+    CONGRESS_DETAIL: '/doctor/congresses/:congressId',
   },
   
   // ============================================================================

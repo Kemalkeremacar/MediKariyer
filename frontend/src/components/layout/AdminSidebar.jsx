@@ -153,6 +153,13 @@ const AdminSidebar = ({ isOpen, onClose }) => {
       color: 'from-teal-500 to-teal-600'
     },
     {
+      name: 'Kongre Yönetimi',
+      href: '/admin/congresses',
+      current: currentPath === '/admin/congresses',
+      icon: FiFileText,
+      color: 'from-indigo-500 to-indigo-600'
+    },
+    {
       name: 'Sistem Logları',
       href: '/admin/logs',
       current: currentPath === '/admin/logs',

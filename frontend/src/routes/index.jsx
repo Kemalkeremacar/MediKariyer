@@ -162,6 +162,7 @@ const AdminContactMessagesPage = lazy(() => import('@/features/admin/pages/Conta
 const PhotoApprovalsPage = lazy(() => import('@/features/admin/pages/PhotoApprovalsPage'));
 const AdminLogsPage = lazy(() => import('@/features/admin/pages/LogsPage'));
 const AdminLogDetailPage = lazy(() => import('@/features/admin/pages/LogDetailPage'));
+const AdminCongressManagementPage = lazy(() => import('@/features/admin/pages/CongressManagementPage'));
 
 /**
  * ============================================================================
@@ -182,6 +183,7 @@ const DoctorApplicationDetailPage = lazy(() => import('@/features/doctor/pages/A
 const PhotoManagementPage = lazy(() => import('@/features/doctor/pages/PhotoManagementPage'));
 const DoctorSettingsPage = lazy(() => import('@/features/doctor/pages/SettingsPage'));
 const DoctorNotificationsPage = lazy(() => import('@/features/doctor/pages/NotificationsPage'));
+const DoctorCongressCalendarPage = lazy(() => import('@/features/doctor/pages/CongressCalendarPage'));
 
 /**
  * ============================================================================
@@ -536,6 +538,25 @@ const AppRoutes = () => {
                   <RoleGuard allowedRoles={['doctor']}>
                     <ApprovalGuard>
                       <DoctorNotificationsPage />
+                    </ApprovalGuard>
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          {/* 
+            Doktor Kongre Takvimi Sayfası - /doctor/congresses
+            Yaklaşan tıbbi kongre ve etkinlikleri görüntüleme
+          */}
+          <Route
+            path="doctor/congresses"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['doctor']}>
+                    <ApprovalGuard>
+                      <DoctorCongressCalendarPage />
                     </ApprovalGuard>
                   </RoleGuard>
                 </AuthGuard>
@@ -1018,6 +1039,23 @@ const AppRoutes = () => {
                 <AuthGuard>
                   <RoleGuard allowedRoles={['admin']}>
                     <AdminLogDetailPage />
+                  </RoleGuard>
+                </AuthGuard>
+              </ErrorBoundary>
+            }
+          />
+
+          {/* 
+            Admin Kongre Yönetimi Sayfası - /admin/congresses
+            Kongre ve etkinlikleri yönetir
+          */}
+          <Route
+            path="admin/congresses"
+            element={
+              <ErrorBoundary>
+                <AuthGuard>
+                  <RoleGuard allowedRoles={['admin']}>
+                    <AdminCongressManagementPage />
                   </RoleGuard>
                 </AuthGuard>
               </ErrorBoundary>

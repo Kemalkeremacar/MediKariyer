@@ -10,6 +10,7 @@ const contactRoutes = require('./contactRoutes');
 const lookupRoutes = require('./lookupRoutes');
 const logRoutes = require('./logRoutes');
 const pdfRoutes = require('./pdfRoutes');
+const congressRoutes = require('./congressRoutes');
 
 const router = express.Router();
 
@@ -57,6 +58,7 @@ router.use('/contact', contactRoutes);
 router.use('/lookup', lookupRoutes);
 router.use('/logs', logRoutes);
 router.use('/pdf', pdfRoutes);
+router.use('/congresses', congressRoutes);
 router.use('/mobile/auth', require('./mobile/mobileAuthRoutes'));
 router.use('/mobile/doctor', require('./mobile/mobileDoctorRoutes'));
 router.use('/mobile/jobs', require('./mobile/mobileJobRoutes'));

@@ -14,7 +14,7 @@
 'use strict';
 
 const LogService = require('../services/logService');
-const { sendSuccess, errorResponse } = require('../utils/response');
+const { sendSuccess, sendError } = require('../utils/response');
 const logger = require('../utils/logger');
 
 /**
@@ -37,7 +37,7 @@ class LogController {
       return sendSuccess(res, 'Application logları getirildi', result, 200);
     } catch (error) {
       logger.error('Application log getirme hatası', { error: error.message, stack: error.stack });
-      return errorResponse(res, 'Log getirme işlemi başarısız', 500);
+      return sendError(res, 'Log getirme işlemi başarısız', null, 500);
     }
   }
 
@@ -57,7 +57,7 @@ class LogController {
       return sendSuccess(res, 'Audit logları getirildi', result, 200);
     } catch (error) {
       logger.error('Audit log getirme hatası', { error: error.message, stack: error.stack });
-      return errorResponse(res, 'Log getirme işlemi başarısız', 500);
+      return sendError(res, 'Log getirme işlemi başarısız', null, 500);
     }
   }
 
@@ -77,7 +77,7 @@ class LogController {
       return sendSuccess(res, 'Security logları getirildi', result, 200);
     } catch (error) {
       logger.error('Security log getirme hatası', { error: error.message, stack: error.stack });
-      return errorResponse(res, 'Log getirme işlemi başarısız', 500);
+      return sendError(res, 'Log getirme işlemi başarısız', null, 500);
     }
   }
 
@@ -97,7 +97,7 @@ class LogController {
       return sendSuccess(res, 'Log istatistikleri getirildi', statistics, 200);
     } catch (error) {
       logger.error('Log istatistik hatası', { error: error.message });
-      return errorResponse(res, 'İstatistik getirme işlemi başarısız', 500);
+      return sendError(res, 'İstatistik getirme işlemi başarısız', null, 500);
     }
   }
 
@@ -115,7 +115,7 @@ class LogController {
       
       // Log tipi validasyonu
       if (!['application', 'audit', 'security'].includes(type)) {
-        return errorResponse(res, 'Geçersiz log tipi', 400);
+        return sendError(res, 'Geçersiz log tipi', null, 400);
       }
       
       const log = await LogService.getLogById(type, parseInt(id));
@@ -123,10 +123,10 @@ class LogController {
       return sendSuccess(res, 'Log detayı getirildi', { log }, 200);
     } catch (error) {
       if (error.message === 'Log kaydı bulunamadı') {
-        return errorResponse(res, 'Log kaydı bulunamadı', 404);
+        return sendError(res, 'Log kaydı bulunamadı', null, 404);
       }
       logger.error('Log detay getirme hatası', { error: error.message, stack: error.stack });
-      return errorResponse(res, 'Log detayı getirme işlemi başarısız', 500);
+      return sendError(res, 'Log detayı getirme işlemi başarısız', null, 500);
     }
   }
 
@@ -157,7 +157,7 @@ class LogController {
       );
     } catch (error) {
       logger.error('Log temizleme hatası', { error: error.message });
-      return errorResponse(res, 'Log temizleme işlemi başarısız', 500);
+      return sendError(res, 'Log temizleme işlemi başarısız', null, 500);
     }
   }
 }

@@ -20,7 +20,7 @@
  */
 
 const lookupService = require('../services/lookupService');
-const { successResponse } = require('../utils/response');
+const { sendSuccess } = require('../utils/response');
 const { catchAsync } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
 
@@ -53,10 +53,7 @@ const getSpecialties = catchAsync(async (req, res) => {
   
   const specialties = await lookupService.getSpecialties();
   
-  res.status(200).json(successResponse(
-    specialties,
-    'Uzmanlık alanları başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'Uzmanlık alanları başarıyla getirildi', specialties);
 });
 
 /**
@@ -90,10 +87,7 @@ const getCities = catchAsync(async (req, res) => {
   
   const cities = await lookupService.getCities();
   
-  res.status(200).json(successResponse(
-    cities,
-    'Şehirler başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'Şehirler başarıyla getirildi', cities);
 });
 
 /**
@@ -127,10 +121,7 @@ const getDoctorEducationTypes = catchAsync(async (req, res) => {
   
   const educationTypes = await lookupService.getDoctorEducationTypes();
   
-  res.status(200).json(successResponse(
-    educationTypes,
-    'Doktor eğitim türleri başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'Doktor eğitim türleri başarıyla getirildi', educationTypes);
 });
 
 /**
@@ -162,10 +153,7 @@ const getLanguageLevels = catchAsync(async (req, res) => {
   
   const languageLevels = await lookupService.getLanguageLevels();
   
-  res.status(200).json(successResponse(
-    languageLevels,
-    'Dil seviyeleri başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'Dil seviyeleri başarıyla getirildi', languageLevels);
 });
 
 /**
@@ -197,10 +185,7 @@ const getLanguages = catchAsync(async (req, res) => {
   
   const languages = await lookupService.getLanguages();
   
-  res.status(200).json(successResponse(
-    languages,
-    'Diller başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'Diller başarıyla getirildi', languages);
 });
 
 /**
@@ -232,10 +217,7 @@ const getCertificateTypes = catchAsync(async (req, res) => {
   
   const certificateTypes = await lookupService.getCertificateTypes();
   
-  res.status(200).json(successResponse(
-    certificateTypes,
-    'Sertifika türleri başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'Sertifika türleri başarıyla getirildi', certificateTypes);
 });
 
 /**
@@ -268,10 +250,7 @@ const getJobStatuses = catchAsync(async (req, res) => {
   
   const jobStatuses = await lookupService.getJobStatuses();
   
-  res.status(200).json(successResponse(
-    jobStatuses,
-    'İş durumları başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'İş durumları başarıyla getirildi', jobStatuses);
 });
 
 /**
@@ -305,10 +284,7 @@ const getApplicationStatuses = catchAsync(async (req, res) => {
   
   const applicationStatuses = await lookupService.getApplicationStatuses();
   
-  res.status(200).json(successResponse(
-    applicationStatuses,
-    'Başvuru durumları başarıyla getirildi'
-  ));
+  return sendSuccess(res, 'Başvuru durumları başarıyla getirildi', applicationStatuses);
 });
 
 /**
