@@ -12,8 +12,22 @@ const path = require('path');
 // ============================
 // 🌍 ENVIRONMENT LOADING
 // ============================
+const fs = require('fs');
+
 if (process.env.NODE_ENV === 'production') {
-  require('dotenv').config({ path: path.join(__dirname, '.env.production') });
+  // Production ortamında önce .env.production'ı dene, yoksa .env'i kullan
+  const productionEnvPath = path.join(__dirname, '.env.production');
+  const fallbackEnvPath = path.join(__dirname, '.env');
+  
+  if (fs.existsSync(productionEnvPath)) {
+    require('dotenv').config({ path: productionEnvPath });
+    console.log("📦 [PROD] .env.production yüklendi");
+  } else if (fs.existsSync(fallbackEnvPath)) {
+    require('dotenv').config({ path: fallbackEnvPath });
+    console.log("📦 [PROD] .env.production bulunamadı, .env kullanılıyor");
+  } else {
+    console.error("❌ Ne .env.production ne de .env dosyası bulunamadı!");
+  }
   
   // Production ortamında console.log'ları devre dışı bırak
   // console.error ve console.warn hariç (kritik hatalar için)
