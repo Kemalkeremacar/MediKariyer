@@ -133,7 +133,8 @@ const MainLayout = () => {
         {/* Üst Navigasyon - Mobilde hamburger butonu göster */}
         <Header 
           showMobileMenuButton={true}
-          onMobileMenuClick={() => setIsMobileSidebarOpen(true)}
+          isMobileMenuOpen={isMobileSidebarOpen}
+          onMobileMenuClick={() => setIsMobileSidebarOpen((prev) => !prev)}
         />
 
         {/* Ana içerik alanı - Sidebar + Content */}

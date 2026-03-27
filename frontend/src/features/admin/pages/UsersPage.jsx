@@ -512,6 +512,7 @@ const UsersPage = () => {
             </tbody>
           </table>
         </div>
+      </div>
 
       {/* Doctors Cards - Mobile */}
       <div className="lg:hidden space-y-3 sm:space-y-4">
@@ -613,7 +614,7 @@ const UsersPage = () => {
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-slate-200">
                   Toplam <span className="font-medium">{pagination.total}</span> doktordan{' '}
                   <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
                   <span className="font-medium">
@@ -643,7 +644,6 @@ const UsersPage = () => {
           </div>
         )}
         </div>
-      </div>
       </>
       )}
       </div>

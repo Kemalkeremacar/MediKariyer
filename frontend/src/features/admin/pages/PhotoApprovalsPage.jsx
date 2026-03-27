@@ -227,10 +227,10 @@ const PhotoApprovalsPage = () => {
                   className="admin-card hover:shadow-lg transition-all duration-300"
                 >
                   <div className="admin-card-body">
-                    <div className="flex items-start gap-4">
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
                       {/* Old Photo (at time of request) */}
                       <div className="flex-shrink-0">
-                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-gray-100">
                           {request.old_photo ? (
                             <img
                               src={request.old_photo}
@@ -279,7 +279,7 @@ const PhotoApprovalsPage = () => {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto justify-end">
                             {request.status === 'pending' && (
                               <>
                                 <button
@@ -338,7 +338,7 @@ const PhotoApprovalsPage = () => {
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-slate-200">
                   Toplam <span className="font-medium">{pagination.total}</span> talepten{' '}
                   <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
                   <span className="font-medium">

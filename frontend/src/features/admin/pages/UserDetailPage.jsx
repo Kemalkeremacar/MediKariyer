@@ -452,7 +452,7 @@ const UserDetailPage = () => {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             {/* Tab Navigation */}
             <div className="border-b border-gray-200">
-              <nav className="flex space-x-4 lg:space-x-8 px-4 lg:px-6 overflow-x-auto">
+              <nav className="flex space-x-2 sm:space-x-4 lg:space-x-8 px-3 sm:px-4 lg:px-6 overflow-x-auto">
                 {[
                   { id: 'overview', label: 'Genel Bakış', icon: Eye },
                   { id: 'profile', label: 'Profil', icon: User },
@@ -463,14 +463,14 @@ const UserDetailPage = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`py-3 lg:py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 whitespace-nowrap ${
+                      className={`py-3 lg:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-2 whitespace-nowrap ${
                         activeTab === tab.id
                           ? 'border-indigo-500 text-indigo-600'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                       }`}
                     >
                       <Icon className="h-4 w-4" />
-                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span>{tab.label}</span>
                     </button>
                   );
                 })}

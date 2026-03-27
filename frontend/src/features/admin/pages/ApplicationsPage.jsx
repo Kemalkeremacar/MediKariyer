@@ -541,7 +541,7 @@ const ApplicationsPage = () => {
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-slate-200">
                     Toplam <span className="font-medium">{pagination.total}</span> başvurudan{' '}
                     <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
                     <span className="font-medium">

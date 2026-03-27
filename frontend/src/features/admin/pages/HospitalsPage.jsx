@@ -479,6 +479,7 @@ const HospitalsPage = () => {
             </tbody>
           </table>
         </div>
+      </div>
 
       {/* Hospitals Cards - Mobile */}
       <div className="lg:hidden space-y-3 sm:space-y-4">
@@ -490,12 +491,12 @@ const HospitalsPage = () => {
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 min-w-0">
                 <h3 className="text-base font-medium text-gray-900 truncate">
-                  {user.profile?.hospital_name || 'Hastane'}
+                  {user.profile?.institution_name || user.profile?.hospital_name || 'Hastane'}
                 </h3>
                 <p className="text-sm text-gray-500 truncate">{user.email}</p>
               </div>
               <button
-                onClick={() => navigate(`/admin/hospitals/${user.id}`)}
+                onClick={() => navigate(`/admin/users/${user.id}`)}
                 className="admin-btn admin-btn-sm admin-btn-primary ml-3 flex-shrink-0"
               >
                 <Eye className="h-3 w-3 mr-1" />
@@ -578,7 +579,7 @@ const HospitalsPage = () => {
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-slate-200">
                   Toplam <span className="font-medium">{pagination.total}</span> hastaneden{' '}
                   <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
                   <span className="font-medium">
@@ -608,7 +609,6 @@ const HospitalsPage = () => {
           </div>
         )}
         </div>
-      </div>
       </>
       )}
       </div>

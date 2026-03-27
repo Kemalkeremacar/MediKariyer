@@ -24,7 +24,7 @@ import {
   Clock, Target, AlertCircle, ArrowLeft, CheckCircle, Building, X,
   Hourglass, RefreshCw, XCircle, History, FileText, Settings, ChevronDown, ChevronUp, Download
 } from 'lucide-react';
-import { useJobById, useDeleteJob, useUpdateJobStatus, useApproveJob, useRequestRevision, useRejectJob, useJobHistory, QUERY_KEYS } from '../api/useAdmin';
+import { useJobById, useDeleteJob, useUpdateJob, useUpdateJobStatus, useApproveJob, useRequestRevision, useRejectJob, useJobHistory, QUERY_KEYS } from '../api/useAdmin';
 import { useQueryClient } from '@tanstack/react-query';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
@@ -32,6 +32,8 @@ import useAuthStore from '@/store/authStore';
 import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { resolveRevisionNote as resolveRevisionNoteUtil } from '@/utils/jobUtils';
+import { useLookup } from '@/hooks/useLookup';
+import { jobSchema } from '@config/validation.js';
 
 const AdminJobDetailPage = () => {
   const { id } = useParams();
@@ -42,12 +44,22 @@ const AdminJobDetailPage = () => {
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
+  const [showJobEditModal, setShowJobEditModal] = useState(false);
   const [selectedStatusId, setSelectedStatusId] = useState(null);
   const [statusChangeReason, setStatusChangeReason] = useState('');
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [revisionNote, setRevisionNote] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [jobFormData, setJobFormData] = useState({
+    title: '',
+    specialty_id: '',
+    subspecialty_id: '',
+    city_id: '',
+    employment_type: '',
+    min_experience_years: '',
+    description: ''
+  });
   const actionScrollRef = useRef(null);
 
   const captureScroll = useCallback(() => {
@@ -137,10 +149,15 @@ const AdminJobDetailPage = () => {
 
   const deleteJobMutation = useDeleteJob();
   const updateStatusMutation = useUpdateJobStatus();
+  const updateJobMutation = useUpdateJob();
   const approveJobMutation = useApproveJob();
   const requestRevisionMutation = useRequestRevision();
   const rejectJobMutation = useRejectJob();
   const { data: historyData } = useJobHistory(id);
+  const { data: lookupData } = useLookup();
+  const specialties = lookupData?.specialties || [];
+  const subspecialties = lookupData?.subspecialties || [];
+  const cities = lookupData?.cities || [];
 
   // Veri parsing - Backend response: { data: { data: { job: {...} } } }
   const job = jobData?.data?.data?.job || jobData?.data?.job || jobData?.data || null;
@@ -515,6 +532,61 @@ const AdminJobDetailPage = () => {
     }
   };
 
+  const openJobEditModal = () => {
+    if (!job) return;
+    captureScroll();
+    setJobFormData({
+      title: job.title || '',
+      specialty_id: job.specialty_id?.toString() || '',
+      subspecialty_id: job.subspecialty_id?.toString() || '',
+      city_id: job.city_id?.toString() || '',
+      employment_type: job.employment_type || '',
+      min_experience_years: job.min_experience_years?.toString() || '',
+      description: job.description || ''
+    });
+    setShowJobEditModal(true);
+  };
+
+  const closeJobEditModal = () => {
+    setShowJobEditModal(false);
+    restoreScroll();
+  };
+
+  const handleJobInputChange = (field, value) => {
+    setJobFormData((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === 'specialty_id') {
+        next.subspecialty_id = '';
+      }
+      return next;
+    });
+  };
+
+  const handleJobEditSubmit = async () => {
+    try {
+      const submitData = {
+        title: jobFormData.title,
+        specialty_id: parseInt(jobFormData.specialty_id, 10),
+        subspecialty_id: jobFormData.subspecialty_id ? parseInt(jobFormData.subspecialty_id, 10) : null,
+        city_id: parseInt(jobFormData.city_id, 10),
+        employment_type: jobFormData.employment_type,
+        min_experience_years: jobFormData.min_experience_years ? parseInt(jobFormData.min_experience_years, 10) : null,
+        description: jobFormData.description
+      };
+      const validatedData = jobSchema.parse(submitData);
+      await updateJobMutation.mutateAsync({ jobId: id, jobData: validatedData });
+      showToast.success(toastMessages.job.updateSuccess);
+      closeJobEditModal();
+      await refetchJob();
+    } catch (error) {
+      if (error?.errors?.[0]?.message) {
+        showToast.error(error.errors[0].message);
+      } else {
+        showToast.error(error, { defaultMessage: toastMessages.job.updateError });
+      }
+    }
+  };
+
   // Status badge component - Türkçe status'lar için güncellendi
   const StatusBadge = ({ status, statusId }) => {
     // Artık backend'den Türkçe geliyor, çeviri gereksiz
@@ -722,6 +794,14 @@ const AdminJobDetailPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                onClick={openJobEditModal}
+                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors shadow-md hover:shadow-lg flex-1 sm:flex-none"
+                title="İlan içeriğini düzenle"
+              >
+                <Edit3 className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Düzenle</span>
+              </button>
               <button
                 onClick={handleExportJob}
                 className="flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg flex-1 sm:flex-none"
@@ -1497,6 +1577,124 @@ const AdminJobDetailPage = () => {
 
         {/* Edit Modal */}
         <EditModal />
+
+        {showJobEditModal && (
+          <ModalContainer
+            isOpen={showJobEditModal}
+            onClose={closeJobEditModal}
+            title="İlan İçeriğini Düzenle"
+            size="large"
+            align="center"
+            maxHeight="90vh"
+            backdropClassName="bg-black/40 backdrop-blur-sm"
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">İlan Başlığı</label>
+                  <input
+                    type="text"
+                    value={jobFormData.title}
+                    onChange={(e) => handleJobInputChange('title', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">Uzmanlık Alanı</label>
+                  <select
+                    value={jobFormData.specialty_id}
+                    onChange={(e) => handleJobInputChange('specialty_id', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Uzmanlık seçin</option>
+                    {specialties.map((specialty) => (
+                      <option key={specialty.value} value={specialty.value}>{specialty.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">Yan Dal</label>
+                  <select
+                    value={jobFormData.subspecialty_id}
+                    onChange={(e) => handleJobInputChange('subspecialty_id', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    disabled={!jobFormData.specialty_id}
+                  >
+                    <option value="">Yan dal (opsiyonel)</option>
+                    {subspecialties
+                      .filter((sub) => sub.specialty_id === parseInt(jobFormData.specialty_id, 10))
+                      .map((sub) => (
+                        <option key={sub.value} value={sub.value}>{sub.label}</option>
+                      ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">Şehir</label>
+                  <select
+                    value={jobFormData.city_id}
+                    onChange={(e) => handleJobInputChange('city_id', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">Şehir seçin</option>
+                    {cities.map((city) => (
+                      <option key={city.value} value={city.value}>{city.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">İstihdam Türü</label>
+                  <select
+                    value={jobFormData.employment_type}
+                    onChange={(e) => handleJobInputChange('employment_type', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="">İstihdam türü seçin</option>
+                    <option value="Tam Zamanlı">Tam Zamanlı</option>
+                    <option value="Yarı Zamanlı">Yarı Zamanlı</option>
+                    <option value="Nöbet Usulü">Nöbet Usulü</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">Minimum Deneyim (Yıl)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="50"
+                    value={jobFormData.min_experience_years}
+                    onChange={(e) => handleJobInputChange('min_experience_years', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Opsiyonel"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">İş Tanımı</label>
+                  <textarea
+                    value={jobFormData.description}
+                    onChange={(e) => handleJobInputChange('description', e.target.value)}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={closeJobEditModal}
+                  className="px-5 py-2 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
+                  disabled={updateJobMutation.isPending}
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={handleJobEditSubmit}
+                  disabled={updateJobMutation.isPending}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold shadow-lg hover:shadow-xl hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50"
+                >
+                  {updateJobMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
+            </div>
+          </ModalContainer>
+        )}
       </div>
     </div>
   );

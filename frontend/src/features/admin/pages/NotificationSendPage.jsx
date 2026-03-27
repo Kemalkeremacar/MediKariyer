@@ -364,7 +364,7 @@ const NotificationSendPage = () => {
             </div>
             
             {/* Filtreler */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Filtreler</h2>
                 {(filters.search || filters.is_approved || filters.is_active) && (
@@ -516,7 +516,7 @@ const NotificationSendPage = () => {
             </div>
             
             {/* Kullanıcılar - Her zaman render edilir, sabit yükseklik */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Kullanıcılar {selectedRoles.size > 0 && `(${filteredUsers.length})`}
@@ -532,7 +532,7 @@ const NotificationSendPage = () => {
                 )}
               </div>
               
-              <div className="h-[400px] overflow-y-auto space-y-2">
+              <div className="h-[320px] sm:h-[400px] overflow-y-auto space-y-2">
                 {usersLoading ? (
                   <SkeletonLoader className="h-20 w-full" />
                 ) : selectedRoles.size === 0 ? (
@@ -584,7 +584,7 @@ const NotificationSendPage = () => {
         </div>
         
         {/* Alt Bölüm - Bildirim İçeriği */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Bildirim İçeriği</h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -627,7 +627,7 @@ const NotificationSendPage = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Bildirim Türü
                   </label>
-                  <div className="grid grid-cols-4 gap-3 mb-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                     {['info', 'success', 'warning', 'error'].map((type) => (
                       <button
                         key={type}

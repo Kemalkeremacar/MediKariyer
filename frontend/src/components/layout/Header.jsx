@@ -59,7 +59,7 @@ import logoImage from '../../assets/logo.png';
  * HEADER COMPONENT
  * ============================================================================
  */
-const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
+const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuOpen = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -338,26 +338,51 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
     }`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo - 4 Parametre Planına Göre */}
-          <div className="flex-shrink-0">
-            <button
-              onClick={handleLogoClick}
-              className="flex items-center space-x-3 sm:space-x-4 group cursor-pointer"
-            >
-              {/* Logo Icon - Her zaman varsayılan logo */}
-              <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden shadow-lg">
-                <img 
-                  src={logoImage} 
-                  alt="MediKariyer Logo" 
-                  className="w-full h-full object-cover rounded-xl"
-                />
-              </div>
-              {/* Logo Text - Tam Logo Stili */}
-              <div className="text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
-                <span className="font-bold text-[#2563a8]">Medikariyer</span>
-                <span className="font-normal text-[#5ba3d0]">.net</span>
-              </div>
-            </button>
+          {/* Left side: Admin sidebar toggle + Logo */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Admin Sidebar Toggle - Sadece admin sayfalarında, lg altı ekranlarda görünür */}
+            {showMobileMenuButton && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMobileMenuClick();
+                }}
+                className="lg:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-expanded={isMobileMenuOpen}
+                  aria-controls="admin-mobile-sidebar"
+                aria-label="Admin menüsünü aç"
+              >
+                  {isMobileMenuOpen ? (
+                    <X size={22} />
+                  ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
+              </button>
+            )}
+
+            {/* Logo - 4 Parametre Planına Göre */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={handleLogoClick}
+                className="flex items-center space-x-3 sm:space-x-4 group cursor-pointer"
+              >
+                {/* Logo Icon - Her zaman varsayılan logo */}
+                <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden shadow-lg">
+                  <img 
+                    src={logoImage} 
+                    alt="MediKariyer Logo" 
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                </div>
+                {/* Logo Text - Tam Logo Stili */}
+                <div className="text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+                  <span className="font-bold text-[#2563a8]">Medikariyer</span>
+                  <span className="font-normal text-[#5ba3d0]">.net</span>
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* Desktop Navigation - 4 Parametre Planına Göre (Sadece md+ ekranlarda görünür) */}
@@ -637,19 +662,6 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick }) => {
           {/* Mobile Menu Button - 4 Parametre Planına Göre (Sadece md altı ekranlarda görünür) */}
           <div className="md:hidden">
             <div className="relative flex items-center space-x-3">
-              {/* Admin Sidebar Toggle - Sadece admin sayfalarında */}
-              {showMobileMenuButton && (
-                <button
-                  onClick={onMobileMenuClick}
-                  className="flex items-center justify-center w-10 h-10 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  aria-label="Admin menüsünü aç"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                </button>
-              )}
-              
               {/* Bildirimler - Sadece giriş yapmış kullanıcılar için */}
               {user && (user.role === 'hospital' || user.role === 'doctor') && (
                 <div className="flex-shrink-0">

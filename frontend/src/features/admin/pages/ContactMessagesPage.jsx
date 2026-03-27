@@ -182,7 +182,7 @@ const ContactMessagesPage = () => {
                               </div>
                             </div>
                       {expandedMessageId === message.id && (
-                        <div className="mt-3 md:mt-0 md:absolute md:right-64 md:top-4 md:w-[42%] lg:w-[38%] z-10">
+                        <div className="mt-3 lg:absolute lg:right-6 lg:top-4 lg:w-[42%] xl:w-[38%] z-10">
                           <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 md:max-h-[60vh] overflow-auto">
                             <div className="flex items-center justify-between gap-3 mb-3">
                               <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -253,7 +253,7 @@ const ContactMessagesPage = () => {
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-slate-200">
                   Toplam <span className="font-medium">{pagination.total}</span> mesajdan{' '}
                   <span className="font-medium">{((pagination.current_page - 1) * pagination.per_page) + 1}</span> -{' '}
                   <span className="font-medium">

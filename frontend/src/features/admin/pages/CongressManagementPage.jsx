@@ -720,7 +720,7 @@ const CongressManagementPage = () => {
                 placeholder="Kongre ara..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -730,7 +730,7 @@ const CongressManagementPage = () => {
                 const value = e.target.value ? Number(e.target.value) : '';
                 setFilters((prev) => ({ ...prev, specialty_id: value, subspecialty_id: '', page: 1 }));
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={specialtiesLoading}
               title={specialtiesLoading ? 'Uzmanlıklar yükleniyor…' : undefined}
             >
@@ -743,7 +743,7 @@ const CongressManagementPage = () => {
             <select
               value={filters.subspecialty_id ?? ''}
               onChange={(e) => handleFilterChange('subspecialty_id', e.target.value ? Number(e.target.value) : '')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={!selectedSpecialtyId || subspecialtiesLoading}
               title={!selectedSpecialtyId ? 'Önce uzmanlık seçin' : undefined}
             >
@@ -760,7 +760,7 @@ const CongressManagementPage = () => {
               placeholder="Ülke"
               value={countryInput}
               onChange={(e) => setCountryInput(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
 
             <input
@@ -768,7 +768,7 @@ const CongressManagementPage = () => {
               placeholder="Şehir"
               value={cityInput}
               onChange={(e) => setCityInput(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -786,7 +786,50 @@ const CongressManagementPage = () => {
             <p className="text-gray-500 mt-2">Filtreleri değiştirerek tekrar deneyin.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
+          <>
+          <div className="lg:hidden space-y-4">
+            {congresses.map((congress) => (
+              <div key={congress.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-gray-900 line-clamp-2">{congress.title}</h3>
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-1">{congress.organizer || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="text-gray-700">
+                    <span className="font-medium text-gray-900">Tarih:</span> {formatDate(congress.start_date)}
+                  </div>
+                  <div className="text-gray-700">
+                    <span className="font-medium text-gray-900">Konum:</span> {[congress.city, congress.country].filter(Boolean).join(', ') || '-'}
+                  </div>
+                  <div className="text-gray-700">
+                    <span className="font-medium text-gray-900">Uzmanlık:</span> {congress.specialty_name || '-'}
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2">
+                  <button
+                    onClick={() => handleEdit(congress)}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                    Düzenle
+                  </button>
+                  <button
+                    onClick={() => handleDelete(congress)}
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Sil
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden lg:block bg-white rounded-lg shadow-sm overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -842,6 +885,7 @@ const CongressManagementPage = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {/* Pagination (diğer admin sayfaları gibi) */}
