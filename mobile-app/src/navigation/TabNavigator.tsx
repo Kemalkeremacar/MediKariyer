@@ -194,12 +194,12 @@ export const TabNavigator = () => {
         })}
       />
       
-      {/* JobsTab - İlanlar */}
+      {/* JobsTab - İş İlanları */}
       <Tab.Screen
         name="JobsTab"
         component={JobsStackNavigator}
         options={{
-          tabBarLabel: 'İlanlar',
+          tabBarLabel: 'İş İlanları',
           tabBarIcon: ({ focused }) => (
             <AnimatedIcon iconName={focused ? "briefcase" : "briefcase-outline"} focused={focused} />
           ),

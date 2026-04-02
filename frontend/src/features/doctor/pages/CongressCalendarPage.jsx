@@ -306,7 +306,7 @@ const CongressCalendarPage = () => {
             {activeFiltersCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="mt-6 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
+                className="mt-6 inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:text-white transition-colors text-sm font-semibold"
               >
                 Filtreleri Temizle <ArrowRight className="w-4 h-4" />
               </button>
@@ -380,7 +380,7 @@ const CongressCalendarPage = () => {
                   <div className="px-5 pb-5 pt-2 mt-auto">
                     <Link
                       to={`/doctor/congresses/${congress.id}`}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:text-white transition-colors text-sm font-semibold"
                     >
                       Detayları Gör <ArrowRight className="w-4 h-4" />
                     </Link>

@@ -127,6 +127,7 @@ const listJobs = async (userId, { page = 1, limit = 20, filters = {} } = {}) => 
       'j.subspecialty_id',
       'j.hospital_id',
       'j.employment_type',
+      'j.created_at',
       'c.name as city_name',
       's.name as specialty_name',
       'ss.name as subspecialty_name',

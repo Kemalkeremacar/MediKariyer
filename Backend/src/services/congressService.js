@@ -56,7 +56,10 @@ async function getCongressList(filters = {}) {
 
   // Filtreleri uygulayan yardımcı fonksiyon (DRY)
   const applyFilters = (q) => {
-    q = q.where('c.is_active', isActiveValue);
+    // Admin için: is_active null ise tümünü göster, değilse filtrele
+    if (is_active !== null) {
+      q = q.where('c.is_active', isActiveValue);
+    }
 
     if (search) {
       q = q.where(function() {
@@ -103,6 +106,8 @@ async function getCongressList(filters = {}) {
       'c.website_url',
       'c.registration_url',
       'c.organizer',
+      'c.image_url',
+      'c.poster_image_url',
       'c.is_active',
       'c.created_at',
       'c.updated_at',
@@ -238,6 +243,8 @@ async function getUpcomingCongresses(limit = 10) {
       'c.country',
       'c.start_date',
       'c.end_date',
+      'c.image_url',
+      'c.poster_image_url',
       'c.specialty_id',
       'c.subspecialty_id',
       's.name as specialty_name',
@@ -263,7 +270,7 @@ async function getCongressesBySpecialty(specialty_id) {
     .select(
       'c.id', 'c.title', 'c.description', 'c.location', 'c.city', 'c.country',
       'c.start_date', 'c.end_date', 'c.website_url', 'c.registration_url',
-      'c.organizer', 'c.is_active', 'c.created_at', 'c.updated_at',
+      'c.organizer', 'c.image_url', 'c.poster_image_url', 'c.is_active', 'c.created_at', 'c.updated_at',
       'c.specialty_id', 'c.subspecialty_id',
       's.name as specialty_name', 'ss.name as subspecialty_name'
     )

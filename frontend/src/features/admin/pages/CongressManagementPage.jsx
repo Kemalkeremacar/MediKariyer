@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Edit, Trash2, Search, X, MapPin, Globe, Link2, Users, Tag, CalendarDays, FileText, ToggleLeft, AlertTriangle, ImagePlus } from 'lucide-react';
-import { useAdminCongresses, useCreateCongress, useUpdateCongress, useDeleteCongress } from '../../congress/api/useCongress';
+import { Calendar, Plus, Edit, Search, X, MapPin, Globe, Link2, Users, Tag, CalendarDays, FileText, ToggleLeft, AlertTriangle, ImagePlus } from 'lucide-react';
+import { useAdminCongresses, useCreateCongress, useUpdateCongress } from '../../congress/api/useCongress';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, buildEndpoint } from '@config/api.js';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -27,83 +27,6 @@ const FieldLabel = ({ children, required }) => (
   </label>
 );
 
-function ConfirmDeleteModal({ congress, onClose, onConfirm, isPending }) {
-  useEffect(() => {
-    const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleEsc);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
-
-  if (!congress) return null;
-
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 lg:pt-24 lg:pl-64">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[calc(100vh-5rem)] lg:max-h-[calc(100vh-6rem)]">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-50">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Kongreyi Sil</h2>
-              <p className="text-xs text-gray-500">Bu işlem kongreyi pasif yapar (soft delete).</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="px-6 py-5">
-          <div className="rounded-xl border border-red-100 bg-red-50/40 p-4">
-            <div className="text-sm font-semibold text-gray-900 line-clamp-2">{congress.title}</div>
-            <div className="mt-1 text-xs text-gray-600">
-              {congress.city ? `${congress.city}, ` : ''}{congress.country}
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-gray-700">
-            Emin misiniz? Silinen kongreler doktor takviminde görünmez.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/80 rounded-b-2xl flex-shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
-          >
-            Vazgeç
-          </button>
-          <button
-            type="button"
-            onClick={() => onConfirm(congress.id)}
-            disabled={isPending}
-            className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-          >
-            {isPending && (
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            )}
-            Sil
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, onClose, isPending }) {
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
@@ -120,6 +43,7 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
   const selectedSpecialtyId = formData.specialty_id ? Number(formData.specialty_id) : null;
   const { rawData: subspecialtiesRaw = [], isLoading: subspecialtiesLoading } = useSubspecialties(selectedSpecialtyId);
   const [imageError, setImageError] = React.useState('');
+  const [posterError, setPosterError] = React.useState('');
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -131,8 +55,8 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
       e.target.value = '';
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      setImageError('Dosya boyutu en fazla 2 MB olabilir.');
+    if (file.size > 5 * 1024 * 1024) {
+      setImageError('Dosya boyutu en fazla 5 MB olabilir.');
       e.target.value = '';
       return;
     }
@@ -144,9 +68,37 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
     reader.readAsDataURL(file);
   };
 
+  const handlePosterChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPosterError('');
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setPosterError('Sadece JPEG, PNG veya WebP formatları desteklenir.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPosterError('Dosya boyutu en fazla 5 MB olabilir.');
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setFormData((prev) => ({ ...prev, poster_image_url: ev.target.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const removeImage = () => {
     setFormData((prev) => ({ ...prev, image_url: '' }));
     setImageError('');
+  };
+
+  const removePoster = () => {
+    setFormData((prev) => ({ ...prev, poster_image_url: '' }));
+    setPosterError('');
   };
 
   return (
@@ -345,47 +297,34 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
             {/* Bağlantılar */}
             <div>
               <SectionLabel icon={Globe}>Bağlantılar</SectionLabel>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <FieldLabel>Web Sitesi</FieldLabel>
-                  <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="url"
-                      maxLength={500}
-                      placeholder="https://..."
-                      value={formData.website_url}
-                      onChange={set('website_url')}
-                      className={`${inputBase} pl-9`}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <FieldLabel>Kayıt Linki</FieldLabel>
-                  <div className="relative">
-                    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="url"
-                      maxLength={500}
-                      placeholder="https://..."
-                      value={formData.registration_url}
-                      onChange={set('registration_url')}
-                      className={`${inputBase} pl-9`}
-                    />
-                  </div>
+              <div>
+                <FieldLabel>Web Sitesi</FieldLabel>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="url"
+                    maxLength={500}
+                    placeholder="https://..."
+                    value={formData.website_url}
+                    onChange={set('website_url')}
+                    className={`${inputBase} pl-9`}
+                  />
                 </div>
               </div>
             </div>
 
-            {/* Kongre Görseli */}
+            {/* Kongre Görselleri */}
             <div>
-              <SectionLabel icon={ImagePlus}>Kongre Görseli</SectionLabel>
-              <div className="space-y-3">
+              <SectionLabel icon={ImagePlus}>Kongre Görselleri</SectionLabel>
+              
+              {/* Banner Görseli (Yatay) */}
+              <div className="space-y-3 mb-5">
+                <div className="text-xs font-medium text-gray-600 mb-2">Banner Görseli (Yatay)</div>
                 {formData.image_url ? (
                   <div className="relative">
                     <img
                       src={formData.image_url}
-                      alt="Kongre görseli önizleme"
+                      alt="Banner görseli önizleme"
                       className="w-full max-h-48 object-cover rounded-xl border border-gray-200"
                     />
                     <button
@@ -399,8 +338,8 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                 ) : (
                   <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all">
                     <ImagePlus className="w-8 h-8 text-gray-400 mb-2" />
-                    <span className="text-sm text-gray-500 font-medium">Görsel yüklemek için tıklayın</span>
-                    <span className="text-xs text-gray-400 mt-1">JPEG, PNG veya WebP · Maks. 2 MB</span>
+                    <span className="text-sm text-gray-500 font-medium">Banner yüklemek için tıklayın</span>
+                    <span className="text-xs text-gray-400 mt-1">JPEG, PNG veya WebP · Maks. 5 MB</span>
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -418,11 +357,62 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                 {formData.image_url && (
                   <label className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 cursor-pointer font-medium transition-colors">
                     <ImagePlus className="w-4 h-4" />
-                    Görseli değiştir
+                    Banner'ı değiştir
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={handleImageChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Poster Görseli (Dikey) */}
+              <div className="space-y-3">
+                <div className="text-xs font-medium text-gray-600 mb-2">Poster Görseli (Dikey - Opsiyonel)</div>
+                {formData.poster_image_url ? (
+                  <div className="relative">
+                    <img
+                      src={formData.poster_image_url}
+                      alt="Poster görseli önizleme"
+                      className="w-full max-h-64 object-contain rounded-xl border border-gray-200 bg-gray-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={removePoster}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500/90 text-white rounded-lg hover:bg-red-600 transition-colors shadow-sm"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-blue-400 transition-all">
+                    <ImagePlus className="w-8 h-8 text-gray-400 mb-2" />
+                    <span className="text-sm text-gray-500 font-medium">Poster yüklemek için tıklayın</span>
+                    <span className="text-xs text-gray-400 mt-1">JPEG, PNG veya WebP · Maks. 5 MB</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handlePosterChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+                {posterError && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {posterError}
+                  </p>
+                )}
+                {formData.poster_image_url && (
+                  <label className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 cursor-pointer font-medium transition-colors">
+                    <ImagePlus className="w-4 h-4" />
+                    Poster'ı değiştir
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handlePosterChange}
                       className="hidden"
                     />
                   </label>
@@ -445,6 +435,9 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                   {formData.is_active ? 'Aktif' : 'Pasif'}
                 </span>
               </label>
+              <p className="text-xs text-gray-500 mt-2">
+                Pasif kongreler doktor takviminde görünmez.
+              </p>
             </div>
           </div>
 
@@ -460,7 +453,7 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {isPending && (
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -480,7 +473,6 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
 const CongressManagementPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingCongress, setEditingCongress] = useState(null);
-  const [congressToDelete, setCongressToDelete] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     specialty_id: '',
@@ -489,7 +481,7 @@ const CongressManagementPage = () => {
     city: '',
     page: 1,
     limit: 10,
-    is_active: true
+    is_active: null // null = tümünü göster
   });
   const [searchInput, setSearchInput] = useState('');
   const [countryInput, setCountryInput] = useState('');
@@ -507,18 +499,17 @@ const CongressManagementPage = () => {
     start_date: '',
     end_date: '',
     website_url: '',
-    registration_url: '',
     organizer: '',
     specialty_id: '',
     subspecialty_id: '',
     image_url: '',
+    poster_image_url: '',
     is_active: true
   });
 
   const { data: congressData, isLoading } = useAdminCongresses(filters);
   const createMutation = useCreateCongress();
   const updateMutation = useUpdateCongress();
-  const deleteMutation = useDeleteCongress();
 
   const payload = congressData?.data?.data;
   const congresses = payload?.data || [];
@@ -546,11 +537,11 @@ const CongressManagementPage = () => {
       start_date: '',
       end_date: '',
       website_url: '',
-      registration_url: '',
       organizer: '',
       specialty_id: '',
       subspecialty_id: '',
       image_url: '',
+      poster_image_url: '',
       is_active: true
     });
     setEditingCongress(null);
@@ -623,17 +614,13 @@ const CongressManagementPage = () => {
       start_date: fullData.start_date?.split('T')[0] || '',
       end_date: fullData.end_date?.split('T')[0] || '',
       website_url: fullData.website_url || '',
-      registration_url: fullData.registration_url || '',
       organizer: fullData.organizer || '',
       specialty_id: fullData.specialty_id || '',
       subspecialty_id: fullData.subspecialty_id || '',
       image_url: fullData.image_url || '',
+      poster_image_url: fullData.poster_image_url || '',
       is_active: fullData.is_active
     });
-  };
-
-  const handleDelete = (congress) => {
-    setCongressToDelete(congress);
   };
 
   const handleSubmit = (e) => {
@@ -643,11 +630,11 @@ const CongressManagementPage = () => {
     cleaned.specialty_id = cleaned.specialty_id ? Number(cleaned.specialty_id) : null;
     cleaned.subspecialty_id = cleaned.subspecialty_id ? Number(cleaned.subspecialty_id) : null;
     cleaned.website_url = cleaned.website_url || null;
-    cleaned.registration_url = cleaned.registration_url || null;
     cleaned.description = cleaned.description || null;
     cleaned.organizer = cleaned.organizer || null;
     cleaned.city = cleaned.city || null;
     cleaned.image_url = cleaned.image_url || null;
+    cleaned.poster_image_url = cleaned.poster_image_url || null;
 
     if (editingCongress) {
       updateMutation.mutate({ id: editingCongress.id, data: cleaned }, {
@@ -694,7 +681,7 @@ const CongressManagementPage = () => {
               resetForm();
               setShowModal(true);
             }}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:text-white transition-colors w-full sm:w-auto"
           >
             <Plus className="w-5 h-5" />
             Yeni Kongre
@@ -791,8 +778,11 @@ const CongressManagementPage = () => {
             {congresses.map((congress) => (
               <div key={congress.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="text-base font-semibold text-gray-900 line-clamp-2">{congress.title}</h3>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900 line-clamp-2">{congress.title}</h3>
+                      <div className={`flex-shrink-0 w-2 h-2 rounded-full ${congress.is_active ? 'bg-green-500' : 'bg-gray-400'}`} title={congress.is_active ? 'Aktif' : 'Pasif'} />
+                    </div>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-1">{congress.organizer || '-'}</p>
                   </div>
                 </div>
@@ -816,13 +806,6 @@ const CongressManagementPage = () => {
                   >
                     <Edit className="w-4 h-4" />
                     Düzenle
-                  </button>
-                  <button
-                    onClick={() => handleDelete(congress)}
-                    className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Sil
                   </button>
                 </div>
               </div>
@@ -854,8 +837,13 @@ const CongressManagementPage = () => {
                 {congresses.map((congress) => (
                   <tr key={congress.id}>
                     <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">{congress.title}</div>
-                      <div className="text-sm text-gray-500">{congress.organizer}</div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${congress.is_active ? 'bg-green-500' : 'bg-gray-400'}`} title={congress.is_active ? 'Aktif' : 'Pasif'} />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{congress.title}</div>
+                          <div className="text-sm text-gray-500">{congress.organizer}</div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(congress.start_date)}
@@ -869,15 +857,9 @@ const CongressManagementPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleEdit(congress)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
+                        className="text-blue-600 hover:text-blue-900"
                       >
                         <Edit className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(congress)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <Trash2 className="w-5 h-5" />
                       </button>
                     </td>
                   </tr>
@@ -978,21 +960,6 @@ const CongressManagementPage = () => {
             onSubmit={handleSubmit}
             onClose={() => { setShowModal(false); resetForm(); }}
             isPending={createMutation.isPending || updateMutation.isPending}
-          />
-        )}
-
-        {/* Delete confirm modal */}
-        {congressToDelete && (
-          <ConfirmDeleteModal
-            congress={congressToDelete}
-            onClose={() => setCongressToDelete(null)}
-            onConfirm={(id) => {
-              deleteMutation.mutate(id, {
-                onSuccess: () => setCongressToDelete(null),
-                onError: () => setCongressToDelete(null),
-              });
-            }}
-            isPending={deleteMutation.isPending}
           />
         )}
       </div>

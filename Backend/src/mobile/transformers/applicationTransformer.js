@@ -30,6 +30,7 @@ const toListItem = (application = {}) => ({
   job_id: application.job_id,
   job_title: application.job_title || null,
   hospital_name: application.hospital_name || null,
+  hospital_logo: application.hospital_logo || null,
   status: application.status_label || application.status || null,
   status_id: application.status_id || null,
   applied_at: toUTC(application.applied_at || application.created_at),

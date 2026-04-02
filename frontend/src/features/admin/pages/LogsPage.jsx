@@ -167,7 +167,7 @@ const LogsPage = () => {
           <p className="text-gray-600 mb-6">{error.message || 'Loglar yüklenirken bir hata oluştu'}</p>
           <button 
             onClick={refetch} 
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 hover:text-white transition-colors font-medium"
           >
             Tekrar Dene
           </button>

@@ -94,6 +94,7 @@ const listApplications = async (userId, { page = 1, limit = 20, status_id, keywo
       'j.status_id as job_status_id', // İş ilanı durumu ID'si (yayından kaldırılma kontrolü için)
       'j.deleted_at as job_deleted_at', // İş ilanı silinme tarihi (web ile uyumlu)
       'hp.institution_name as hospital_name',
+      'hp.logo as hospital_logo', // Hastane logosu
       'st.name as status_label',  // Include status_label (Requirement 1.3)
       'js.name as job_status', // İş ilanı durumu (web ile uyumlu)
       'c.name as city_name', // Şehir bilgisi (web ile uyumlu)

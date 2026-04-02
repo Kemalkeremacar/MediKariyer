@@ -83,7 +83,7 @@ const CongressDetailPage = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6">
           <SkeletonLoader className="h-5 w-36 bg-gray-200 rounded-lg" />
           <SkeletonLoader className="h-52 bg-gray-200 rounded-2xl" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,7 +99,7 @@ const CongressDetailPage = () => {
   if (isError || !congress) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-10 text-center">
             <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 mx-auto mb-5 flex items-center justify-center">
               <Calendar className="w-8 h-8 text-red-400" />
@@ -108,7 +108,7 @@ const CongressDetailPage = () => {
             <p className="text-gray-500 mb-6">Kongre silinmiş olabilir veya erişim izniniz yoktur.</p>
             <Link
               to="/doctor/congresses"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:text-white transition-colors text-sm font-semibold"
             >
               <ArrowLeft className="w-4 h-4" /> Kongre Takvimine Dön
             </Link>
@@ -122,7 +122,7 @@ const CongressDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-1.5 text-sm mb-6">
           <Link to="/doctor/congresses" className="font-medium text-gray-500 hover:text-blue-600 transition-colors">
@@ -137,12 +137,12 @@ const CongressDetailPage = () => {
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
 
           <div className="p-6 md:p-8 pt-8">
-            {congress.image_url && (
+            {(congress.image_url || congress.poster_image_url) && (
               <div className="mb-5">
                 <img
-                  src={congress.image_url}
+                  src={congress.image_url || congress.poster_image_url}
                   alt={congress.title}
-                  className="w-full max-h-72 md:max-h-80 object-cover rounded-xl"
+                  className={`w-full rounded-xl ${congress.image_url ? 'max-h-72 md:max-h-80 object-cover' : 'max-h-96 object-contain bg-gray-50'}`}
                 />
               </div>
             )}
@@ -215,7 +215,16 @@ const CongressDetailPage = () => {
             </div>
           </InfoCard>
 
-          {/* Konum */}
+          {/* Organizatör */}
+          {congress.organizer && (
+            <InfoCard icon={Users} label="Organizatör">
+              <div className="text-sm font-semibold text-gray-900 break-words">{congress.organizer}</div>
+            </InfoCard>
+          )}
+        </div>
+
+        {/* Konum - Full Width */}
+        <div className="mb-4">
           <InfoCard icon={MapPin} label="Konum">
             <div className="text-sm font-semibold text-gray-900 break-words">{congress.location}</div>
             {locationText && (
@@ -223,15 +232,6 @@ const CongressDetailPage = () => {
             )}
           </InfoCard>
         </div>
-
-        {/* Organizatör */}
-        {congress.organizer && (
-          <div className="mb-4">
-            <InfoCard icon={Users} label="Organizatör">
-              <div className="text-sm font-semibold text-gray-900 break-words">{congress.organizer}</div>
-            </InfoCard>
-          </div>
-        )}
 
         {/* Açıklama */}
         {congress.description && (
@@ -251,7 +251,7 @@ const CongressDetailPage = () => {
               href={congress.website_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 active:scale-[0.98] transition-all text-sm font-semibold shadow-sm shadow-blue-600/20 w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:text-white active:scale-[0.98] transition-all text-sm font-semibold shadow-sm shadow-blue-600/20 w-full sm:w-auto"
             >
               <Globe className="w-4 h-4" /> Kongre Web Sitesine Git
             </a>

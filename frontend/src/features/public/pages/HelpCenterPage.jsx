@@ -174,7 +174,7 @@ const HelpCenterPage = () => {
           </p>
           <button
             onClick={handleContactSupport}
-            className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-200 w-full sm:w-auto justify-center"
+            className="inline-flex items-center gap-3 bg-blue-600 hover:bg-blue-700 hover:text-white text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold transition-colors shadow-lg shadow-blue-200 w-full sm:w-auto justify-center"
           >
             <MessageCircle className="w-5 h-5" />
             <span>Destek Ekibiyle İletişime Geç</span>

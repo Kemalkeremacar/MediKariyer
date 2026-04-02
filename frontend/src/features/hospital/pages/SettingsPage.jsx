@@ -182,7 +182,7 @@ const HospitalSettingsPage = () => {
               <button
                 type="submit"
                 disabled={changePasswordMutation.isLoading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-white font-semibold shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-white font-semibold shadow-lg shadow-blue-600/30 transition hover:bg-blue-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {changePasswordMutation.isLoading ? 'Şifre güncelleniyor...' : 'Şifreyi Güncelle'}
               </button>

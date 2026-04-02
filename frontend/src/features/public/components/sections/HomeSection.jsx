@@ -40,7 +40,7 @@ const HomeSection = () => {
   return (
     <>
       {/* Hero Section - Modern Style */}
-<section className="relative min-h-[50vh] lg:min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-8 sm:pt-12 lg:pt-16 pb-6 sm:pb-8">
+<section className="relative min-h-[50vh] lg:min-h-[60vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-blue-50/30 pt-20 sm:pt-24 lg:pt-16 pb-8 sm:pb-12">
         {/* Subtle Background Pattern */}
         <div className="absolute inset-0 opacity-[0.03]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%232563eb' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -48,7 +48,7 @@ const HomeSection = () => {
 
         {/* Content Container */}
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center max-w-7xl mx-auto">
+          <div className="flex flex-col lg:grid lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center max-w-7xl mx-auto">
             {/* Desktop: Left Side - All Content */}
             <div className="hidden lg:block text-left space-y-6 order-1 w-full">
               {/* Main Heading */}
@@ -72,7 +72,7 @@ const HomeSection = () => {
               <div className="pt-3">
                 <button
                   onClick={handleRegisterClick}
-                  className="bg-blue-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group"
+                  className="bg-blue-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-blue-700 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group"
                 >
                   BAŞLAYALIM
                   <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
@@ -81,46 +81,46 @@ const HomeSection = () => {
             </div>
 
             {/* Mobile: Main Heading First */}
-            <div className="lg:hidden text-center space-y-3 order-1 w-full">
-              <h1 className="text-3xl sm:text-5xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+            <div className="lg:hidden text-center space-y-4 order-1 w-full px-2">
+              <h1 className="text-4xl sm:text-5xl leading-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
                 <span className="font-bold text-[#2563a8]">Medikariyer</span>
                 <span className="font-normal text-[#5ba3d0]">.net</span>
               </h1>
-              <p className="text-lg sm:text-2xl text-gray-600 leading-relaxed font-normal">
+              <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed font-normal">
                 Hekimlere Özel Kariyer Platformu
               </p>
             </div>
 
             {/* GIF - Desktop: Right Side, Mobile: Second */}
-            <div className="relative flex items-center justify-center lg:justify-end w-full order-2">
-              <div className="relative w-full max-w-[280px] sm:max-w-md lg:max-w-2xl">
+            <div className="relative flex items-center justify-center lg:justify-end w-full order-2 overflow-hidden py-4">
+              <div className="relative w-full max-w-[320px] sm:max-w-md lg:max-w-2xl mx-auto">
                 {/* Decorative Background Elements */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/30 rounded-full blur-3xl"></div>
                 
                 {/* Animated SVG Illustration */}
-                <div className="relative z-10">
+                <div className="relative z-10 w-full h-full overflow-hidden">
                   <MedicalIllustration />
                 </div>
               </div>
             </div>
 
             {/* Mobile: Rest of Content After GIF */}
-            <div className="lg:hidden text-center space-y-6 order-3 w-full">
+            <div className="lg:hidden text-center space-y-5 order-3 w-full px-4">
               {/* Description texts */}
               <div className="space-y-4">
-                <p className="text-base sm:text-lg text-gray-500 leading-relaxed font-normal px-4">
+                <p className="text-base sm:text-lg text-gray-500 leading-relaxed font-normal">
                   Medikariyer.net; yalnızca hekimlere odaklanan, iş fırsatlarını, kariyer gelişimini ve bilimsel etkinlikleri tek platformda bir araya getiren yeni nesil dijital kariyer ekosistemidir.
                 </p>
-                <p className="text-sm sm:text-base text-gray-500 leading-relaxed font-normal px-4">
+                <p className="text-sm sm:text-base text-gray-500 leading-relaxed font-normal">
                   Binlerce hekim ve sağlık kurumu MediKariyer'i tercih ediyor. Kariyerinize uygun fırsatları keşfedin, güvenle başvurun ve profesyonel yolculuğunuzu bir üst seviyeye taşıyın.
                 </p>
               </div>
 
               {/* CTA Button */}
-              <div className="pt-3 flex justify-center px-4">
+              <div className="pt-2 flex justify-center">
                 <button
                   onClick={handleRegisterClick}
-                  className="bg-blue-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto max-w-xs"
+                  className="bg-blue-600 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto max-w-xs"
                 >
                   BAŞLAYALIM
                   <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />

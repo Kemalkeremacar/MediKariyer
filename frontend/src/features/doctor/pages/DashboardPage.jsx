@@ -48,7 +48,7 @@ const DoctorDashboard = () => {
             <p className="mb-6 text-gray-600">{dashboardError.message || 'Bir hata oluştu'}</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700"
+              className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-blue-700 hover:text-white"
             >
               Sayfayı Yenile
             </button>
@@ -150,7 +150,7 @@ const DoctorDashboard = () => {
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
                     to="/doctor/congresses"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 active:scale-[0.98] transition-all"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 hover:text-white active:scale-[0.98] transition-all"
                   >
                     Takvime Git <ArrowRight className="w-4 h-4" />
                   </Link>

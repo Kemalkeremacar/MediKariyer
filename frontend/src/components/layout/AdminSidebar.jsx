@@ -164,7 +164,7 @@ const AdminSidebar = ({ isMobileOpen = false, onMobileClose }) => {
     };
 
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
+      if (window.innerWidth >= 1280) {
         onMobileClose();
       }
     };
@@ -181,22 +181,22 @@ const AdminSidebar = ({ isMobileOpen = false, onMobileClose }) => {
   return (
     <>
       {/* ============================================================
-          DESKTOP SIDEBAR - Sadece lg+ (1024px+) ekranlarda görünür
+          DESKTOP SIDEBAR - Sadece xl+ (1280px+) ekranlarda görünür
           ============================================================ */}
       <div
-        className="hidden lg:flex flex-col h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl flex-shrink-0"
+        className="hidden xl:flex flex-col h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl flex-shrink-0"
         style={{ minWidth: '256px', maxWidth: '256px' }}
       >
         <SidebarNav items={MENU_ITEMS} currentPath={currentPath} onItemClick={() => {}} />
       </div>
 
       {/* ============================================================
-          MOBILE SIDEBAR OVERLAY - Sadece lg altı ekranlarda, açıkken görünür
+          MOBILE SIDEBAR OVERLAY - Sadece xl altı ekranlarda, açıkken görünür
           ============================================================ */}
       {isMobileOpen && (
         <div 
           id="admin-mobile-sidebar"
-          className="lg:hidden fixed inset-0 z-[9998]"
+          className="xl:hidden fixed inset-0 z-[9998]"
           style={{ touchAction: 'manipulation' }}
         >
           {/* Arka plan overlay - tıklanınca sidebar kapanır */}

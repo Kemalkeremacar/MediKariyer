@@ -340,25 +340,27 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
         <div className="flex justify-between items-center py-4">
           {/* Left side: Admin sidebar toggle + Logo */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Admin Sidebar Toggle - Sadece admin sayfalarında, lg altı ekranlarda görünür */}
+            {/* Admin Sidebar Toggle - Sadece admin sayfalarında, xl altı ekranlarda görünür */}
             {showMobileMenuButton && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onMobileMenuClick();
                 }}
-                className="lg:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  aria-expanded={isMobileMenuOpen}
-                  aria-controls="admin-mobile-sidebar"
+                className="xl:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
+                aria-expanded={isMobileMenuOpen}
+                aria-controls="admin-mobile-sidebar"
                 aria-label="Admin menüsünü aç"
               >
-                  {isMobileMenuOpen ? (
-                    <X size={22} />
-                  ) : (
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  )}
+                {isMobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
               </button>
             )}
 

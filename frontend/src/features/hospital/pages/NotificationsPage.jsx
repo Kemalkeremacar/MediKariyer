@@ -413,7 +413,7 @@ const HospitalNotificationsPage = () => {
                   <button
                     onClick={handleMarkAllAsRead}
                     disabled={markAllAsReadMutation.isLoading}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 hover:text-white text-white font-medium transition-colors disabled:opacity-50"
                   >
                     <CheckCheck className="w-4 h-4" />
                     <span>{markAllAsReadMutation.isLoading ? 'İşleniyor...' : 'Tümünü Okundu İşaretle'}</span>
@@ -435,7 +435,7 @@ const HospitalNotificationsPage = () => {
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={handleBulkMarkAsRead}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 hover:text-white text-white font-medium transition-colors shadow-sm"
               >
                 <CheckCircle className="w-4 h-4" />
                 Okundu İşaretle

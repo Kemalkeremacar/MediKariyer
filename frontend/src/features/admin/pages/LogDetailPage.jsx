@@ -171,7 +171,7 @@ const LogDetailPage = () => {
           <p className="text-gray-600 mb-6 text-sm lg:text-base">{error || 'Log kaydı bulunamadı'}</p>
           <button
             onClick={() => navigate('/admin/logs')}
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm lg:text-base"
+            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 hover:text-white transition-colors font-medium text-sm lg:text-base"
           >
             Log Listesine Dön
           </button>

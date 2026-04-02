@@ -540,7 +540,7 @@ const ApplicationCard = memo(({ application, onViewClick, onWithdrawClick, isWit
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <button
             onClick={handleView}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base shadow-sm"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 hover:text-white text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm md:text-base shadow-sm"
           >
             <Eye className="w-4 h-4" />
             Başvuru Detayı

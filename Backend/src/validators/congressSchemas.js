@@ -67,6 +67,7 @@ const createCongressSchema = Joi.object({
       'number.base': 'Yan dal geçerli bir ID olmalıdır'
     }),
   image_url: Joi.string().allow('', null),
+  poster_image_url: Joi.string().allow('', null),
   is_active: Joi.boolean().default(true)
 });
 
@@ -121,6 +122,7 @@ const updateCongressSchema = Joi.object({
   specialty_id: Joi.number().integer().positive().allow(null),
   subspecialty_id: Joi.number().integer().positive().allow(null),
   image_url: Joi.string().allow('', null),
+  poster_image_url: Joi.string().allow('', null),
   is_active: Joi.boolean()
 }).min(1);
 

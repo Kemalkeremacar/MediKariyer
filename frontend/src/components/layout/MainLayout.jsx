@@ -146,7 +146,7 @@ const MainLayout = () => {
           />
           
           {/* İçerik alanı - Mobilde full width, desktop'ta sidebar'dan sonra */}
-          <main role="main" className="flex-1 min-h-screen lg:ml-0" style={{
+          <main role="main" className="flex-1 min-h-screen xl:ml-0" style={{
             background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 25%, #cbd5e1 50%, #94a3b8 75%, #64748b 100%)'
           }}>
             <div className="relative z-10">

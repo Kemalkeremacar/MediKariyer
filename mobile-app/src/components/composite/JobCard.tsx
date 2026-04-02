@@ -170,6 +170,28 @@ export const JobCard: React.FC<JobCardProps> = ({ job, onPress }) => {
           )}
         </View>
 
+        {/* İl ve İstihdam Türü Bilgileri */}
+        <View style={styles.infoRow}>
+          {/* İl bilgisi */}
+          {job.city_name && (
+            <View style={styles.infoItem}>
+              <Ionicons name="location-outline" size={14} color={colors.text.secondary} />
+              <Typography variant="caption" style={styles.infoText}>
+                {job.city_name}
+              </Typography>
+            </View>
+          )}
+          {/* İstihdam türü */}
+          {job.work_type && (
+            <View style={styles.infoItem}>
+              <Ionicons name="time-outline" size={14} color={colors.text.secondary} />
+              <Typography variant="caption" style={styles.infoText}>
+                {job.work_type}
+              </Typography>
+            </View>
+          )}
+        </View>
+
         {/* Detay Butonu - Smooth animasyon ile */}
         <View style={styles.footer}>
           <Animated.View style={animatedButtonStyle}>
@@ -257,6 +279,20 @@ const styles = StyleSheet.create({
   },
   subspecialtyChip: {
     marginTop: 0,
+  },
+  infoRow: {
+    flexDirection: 'column',
+    gap: spacing.xs,
+    marginTop: spacing.sm,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  infoText: {
+    color: colors.text.secondary,
+    fontSize: 13,
   },
   footer: {
     marginTop: spacing.md,

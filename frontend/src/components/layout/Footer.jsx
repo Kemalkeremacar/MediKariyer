@@ -54,9 +54,10 @@ const Footer = () => {
                   className="w-full h-full object-cover rounded-xl"
                 />
               </div>
-              <span className="text-2xl font-black lowercase text-white" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                {APP_CONFIG.APP_NAME.toLowerCase()}
-              </span>
+              <div className="text-2xl tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif' }}>
+                <span className="font-bold text-[#2563a8]">Medikariyer</span>
+                <span className="font-normal text-[#5ba3d0]">.net</span>
+              </div>
             </div>
             <p className="text-gray-400 mb-6 leading-relaxed max-w-md">
               {APP_CONFIG.APP_DESCRIPTION}. {APP_CONFIG.APP_TAGLINE}.

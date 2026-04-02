@@ -10,10 +10,16 @@ const logger = require('../utils/logger');
  */
 async function getCongressList(req, res) {
   try {
-    // Joi validation sonrası is_active boolean gelir (convert: true sayesinde).
-    // Eğer query'de is_active hiç yoksa undefined gelir → default true.
+    // Admin için: is_active parametresi yoksa null (tümünü göster)
+    // is_active=true → sadece aktif, is_active=false → sadece pasif
     const rawIsActive = req.query.is_active;
-    const isActive = rawIsActive === false || rawIsActive === 'false' ? false : true;
+    let isActive = null; // default: tümünü göster
+    
+    if (rawIsActive === 'true' || rawIsActive === true) {
+      isActive = true;
+    } else if (rawIsActive === 'false' || rawIsActive === false) {
+      isActive = false;
+    }
 
     const filters = {
       page: parseInt(req.query.page) || 1,

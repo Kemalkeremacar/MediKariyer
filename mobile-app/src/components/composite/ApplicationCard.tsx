@@ -30,6 +30,7 @@ import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { formatRelativeTime } from '@/utils/date';
+import { getFullImageUrl } from '@/utils/imageUrl';
 
 /**
  * ApplicationCard bileşeni props interface'i
@@ -96,7 +97,9 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
         <View style={styles.header}>
           <Avatar
             size="md"
+            source={application.hospital_logo ? getFullImageUrl(application.hospital_logo) : undefined}
             initials={application.hospital_name?.substring(0, 2).toUpperCase()}
+            contentFit="contain"
           />
           <View style={styles.headerContent}>
             <Typography variant="h3" style={isJobUnavailable ? {...styles.title, ...styles.titleUnavailable} : styles.title}>
@@ -110,15 +113,25 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
             </View>
           </View>
           <View style={styles.headerRight}>
-            {/* Dinamik Durum Rozeti */}
-            <View style={[styles.statusBadge, { backgroundColor: statusStyle.bgColor }]}>
-              <Ionicons name={statusStyle.icon} size={12} color={statusStyle.textColor} />
-              <Typography variant="caption" style={{ ...styles.statusText, color: statusStyle.textColor }}>
-                {statusLabel}
-              </Typography>
-            </View>
-            {!isJobUnavailable && (
-              <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} style={{ marginTop: 4 }} />
+            {/* İlan pasif/silinmiş ise sadece uyarı göster, durum badge'i gösterme */}
+            {isJobUnavailable ? (
+              <View style={[styles.statusBadge, { backgroundColor: colors.warning[100] }]}>
+                <Ionicons name="warning" size={12} color={colors.warning[700]} />
+                <Typography variant="caption" style={{ ...styles.statusText, color: colors.warning[700] }}>
+                  {unavailableReason}
+                </Typography>
+              </View>
+            ) : (
+              <>
+                {/* Dinamik Durum Rozeti - Sadece aktif ilanlar için */}
+                <View style={[styles.statusBadge, { backgroundColor: statusStyle.bgColor }]}>
+                  <Ionicons name={statusStyle.icon} size={12} color={statusStyle.textColor} />
+                  <Typography variant="caption" style={{ ...styles.statusText, color: statusStyle.textColor }}>
+                    {statusLabel}
+                  </Typography>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} style={{ marginTop: 4 }} />
+              </>
             )}
           </View>
         </View>
@@ -127,25 +140,7 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
         
         {/* Detaylar */}
         <View style={styles.details}>
-          {/* Uyarı: İlan yayından kaldırıldı veya hastane pasif */}
-          {isJobUnavailable && unavailableReason && (
-            <Chip
-              label={unavailableReason}
-              icon={<Ionicons name="warning" size={12} color={colors.warning[700]} />}
-              variant="soft"
-              color="warning"
-              size="sm"
-            />
-          )}
-          {application.city_name && (
-            <Chip
-              label={application.city_name}
-              icon={<Ionicons name="location" size={12} color={colors.primary[700]} />}
-              variant="soft"
-              color="primary"
-              size="sm"
-            />
-          )}
+          {/* Tarih bilgisi */}
           {timeAgo && (
             <Chip
               label={timeAgo}

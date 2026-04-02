@@ -706,7 +706,7 @@ const allRevisionEntries = useMemo(() => {
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
               <Link
                 to={`/hospital/applications?jobIds=${jobId}`}
-                className="bg-blue-600 text-white border border-blue-700 px-6 py-3 rounded-xl hover:bg-blue-700 transition-all duration-300 inline-flex items-center gap-2 font-semibold shadow-sm"
+                className="bg-blue-600 text-white border border-blue-700 px-6 py-3 rounded-xl hover:bg-blue-700 hover:text-white transition-all duration-300 inline-flex items-center gap-2 font-semibold shadow-sm"
               >
                 <Users className="w-5 h-5" />
                 Başvuruları Görüntüle ({job.application_count || 0})
