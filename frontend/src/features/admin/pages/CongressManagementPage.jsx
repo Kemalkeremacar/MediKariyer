@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, Edit, Search, X, MapPin, Globe, Link2, Users, Tag, CalendarDays, FileText, ToggleLeft, AlertTriangle, ImagePlus } from 'lucide-react';
-import { useAdminCongresses, useCreateCongress, useUpdateCongress } from '../../congress/api/useCongress';
+import { useAdminCongresses, useCreateCongress, useToggleCongressActive, useUpdateCongress } from '../../congress/api/useCongress';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, buildEndpoint } from '@config/api.js';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
@@ -473,6 +473,7 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
 const CongressManagementPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingCongress, setEditingCongress] = useState(null);
+  const [editingCongressOriginal, setEditingCongressOriginal] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     specialty_id: '',
@@ -510,6 +511,7 @@ const CongressManagementPage = () => {
   const { data: congressData, isLoading } = useAdminCongresses(filters);
   const createMutation = useCreateCongress();
   const updateMutation = useUpdateCongress();
+  const toggleActiveMutation = useToggleCongressActive();
 
   const payload = congressData?.data?.data;
   const congresses = payload?.data || [];
@@ -545,6 +547,7 @@ const CongressManagementPage = () => {
       is_active: true
     });
     setEditingCongress(null);
+    setEditingCongressOriginal(null);
   };
 
   // Search: debounce + trim
@@ -578,6 +581,14 @@ const CongressManagementPage = () => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
+  const normalizeIsActive = (v) => v === true || v === 1 || v === '1';
+
+  const handleToggleActive = (congress) => {
+    if (!congress?.id) return;
+    const next = !normalizeIsActive(congress.is_active);
+    toggleActiveMutation.mutate({ id: congress.id, is_active: next });
+  };
+
   const clearFilters = () => {
     setFilters((prev) => ({
       ...prev,
@@ -586,6 +597,7 @@ const CongressManagementPage = () => {
       subspecialty_id: '',
       country: '',
       city: '',
+      is_active: null,
       page: 1,
     }));
     setSearchInput('');
@@ -605,7 +617,7 @@ const CongressManagementPage = () => {
       // Fall back to list data if detail fetch fails
     }
 
-    setFormData({
+    const nextForm = {
       title: fullData.title,
       description: fullData.description || '',
       location: fullData.location,
@@ -620,7 +632,10 @@ const CongressManagementPage = () => {
       image_url: fullData.image_url || '',
       poster_image_url: fullData.poster_image_url || '',
       is_active: fullData.is_active
-    });
+    };
+
+    setFormData(nextForm);
+    setEditingCongressOriginal(nextForm);
   };
 
   const handleSubmit = (e) => {
@@ -637,7 +652,32 @@ const CongressManagementPage = () => {
     cleaned.poster_image_url = cleaned.poster_image_url || null;
 
     if (editingCongress) {
-      updateMutation.mutate({ id: editingCongress.id, data: cleaned }, {
+      // Performans: sadece değişen alanları gönder (özellikle base64 görseller)
+      const original = editingCongressOriginal || {};
+      const originalCleaned = {
+        ...original,
+        specialty_id: original.specialty_id ? Number(original.specialty_id) : null,
+        subspecialty_id: original.subspecialty_id ? Number(original.subspecialty_id) : null,
+        website_url: original.website_url || null,
+        description: original.description || null,
+        organizer: original.organizer || null,
+        city: original.city || null,
+        image_url: original.image_url || null,
+        poster_image_url: original.poster_image_url || null,
+      };
+
+      const patch = {};
+      Object.keys(cleaned).forEach((k) => {
+        if (cleaned[k] !== originalCleaned[k]) patch[k] = cleaned[k];
+      });
+
+      if (Object.keys(patch).length === 0) {
+        setShowModal(false);
+        resetForm();
+        return;
+      }
+
+      updateMutation.mutate({ id: editingCongress.id, data: patch }, {
         onSuccess: () => {
           setShowModal(false);
           resetForm();
@@ -692,14 +732,14 @@ const CongressManagementPage = () => {
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <div className="text-sm font-semibold text-gray-800">Filtreler</div>
-            {(filters.search || filters.specialty_id || filters.subspecialty_id || filters.country || filters.city) && (
+            {(filters.search || filters.specialty_id || filters.subspecialty_id || filters.country || filters.city || filters.is_active !== null) && (
               <button onClick={clearFilters} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
                 Temizle
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-3">
             <div className="relative lg:col-span-2">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
@@ -740,6 +780,20 @@ const CongressManagementPage = () => {
               {subspecialtiesRaw.map((ss) => (
                 <option key={ss.id} value={ss.id}>{ss.name}</option>
               ))}
+            </select>
+
+            <select
+              value={filters.is_active === null ? 'all' : (filters.is_active ? 'active' : 'passive')}
+              onChange={(e) => {
+                const v = e.target.value;
+                handleFilterChange('is_active', v === 'all' ? null : v === 'active');
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              title="Durum filtresi"
+            >
+              <option value="all">Durum (tümü)</option>
+              <option value="active">Aktif</option>
+              <option value="passive">Pasif</option>
             </select>
 
             <input
@@ -801,6 +855,19 @@ const CongressManagementPage = () => {
 
                 <div className="mt-4 flex items-center gap-2">
                   <button
+                    onClick={() => handleToggleActive(congress)}
+                    disabled={toggleActiveMutation.isPending}
+                    className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                      normalizeIsActive(congress.is_active)
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                    } disabled:opacity-60 disabled:cursor-not-allowed`}
+                    title={normalizeIsActive(congress.is_active) ? 'Pasifleştir' : 'Aktifleştir'}
+                  >
+                    <ToggleLeft className="w-4 h-4" />
+                    {normalizeIsActive(congress.is_active) ? 'Aktif' : 'Pasif'}
+                  </button>
+                  <button
                     onClick={() => handleEdit(congress)}
                     className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
                   >
@@ -818,6 +885,9 @@ const CongressManagementPage = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Kongre
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Durum
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tarih
@@ -844,6 +914,21 @@ const CongressManagementPage = () => {
                           <div className="text-sm text-gray-500">{congress.organizer}</div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <button
+                        onClick={() => handleToggleActive(congress)}
+                        disabled={toggleActiveMutation.isPending}
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
+                          normalizeIsActive(congress.is_active)
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                        } disabled:opacity-60 disabled:cursor-not-allowed`}
+                        title={normalizeIsActive(congress.is_active) ? 'Pasifleştir' : 'Aktifleştir'}
+                      >
+                        <ToggleLeft className="w-4 h-4" />
+                        {normalizeIsActive(congress.is_active) ? 'Aktif' : 'Pasif'}
+                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(congress.start_date)}

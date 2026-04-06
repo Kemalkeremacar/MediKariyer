@@ -10,15 +10,20 @@ const logger = require('../utils/logger');
  */
 async function getCongressList(req, res) {
   try {
+    const role = req.user?.role;
+
+    // Doktorlar pasif kongreleri görmemeli: default daima sadece aktif
     // Admin için: is_active parametresi yoksa null (tümünü göster)
     // is_active=true → sadece aktif, is_active=false → sadece pasif
     const rawIsActive = req.query.is_active;
-    let isActive = null; // default: tümünü göster
-    
-    if (rawIsActive === 'true' || rawIsActive === true) {
-      isActive = true;
-    } else if (rawIsActive === 'false' || rawIsActive === false) {
-      isActive = false;
+    let isActive = role === 'doctor' ? true : null;
+
+    if (role !== 'doctor') {
+      if (rawIsActive === 'true' || rawIsActive === true) {
+        isActive = true;
+      } else if (rawIsActive === 'false' || rawIsActive === false) {
+        isActive = false;
+      }
     }
 
     const filters = {
@@ -60,6 +65,14 @@ async function getCongressById(req, res) {
 
     if (!congress) {
       return sendNotFound(res, 'Kongre bulunamadı');
+    }
+
+    // Doktorlar pasif kongre detayını görmemeli
+    if (req.user?.role === 'doctor') {
+      const isActive = congress.is_active === true || congress.is_active === 1 || congress.is_active === '1';
+      if (!isActive) {
+        return sendNotFound(res, 'Kongre bulunamadı');
+      }
     }
 
     return sendSuccess(res, 'Kongre detayı başarıyla getirildi', congress);
