@@ -506,11 +506,15 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                 <div className="text-xs font-medium text-gray-600 mb-2">Banner Görseli (Yatay)</div>
                 {formData.image_url ? (
                   <div className="relative">
-                    <img
-                      src={formData.image_url}
-                      alt="Banner görseli önizleme"
-                      className="w-full max-h-48 object-cover rounded-xl border border-gray-200"
-                    />
+                    <div className="w-full rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm ring-1 ring-black/5">
+                      <div className="relative w-full aspect-[16/9] bg-gradient-to-br from-gray-50 to-white">
+                        <img
+                          src={formData.image_url}
+                          alt="Banner görseli önizleme"
+                          className="absolute inset-0 w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
                     <button
                       type="button"
                       onClick={removeImage}
@@ -562,7 +566,7 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                         <img
                           src={formData.poster_image_url}
                           alt="Poster görseli önizleme"
-                          className="absolute inset-0 w-full h-full object-cover"
+                          className="absolute inset-0 w-full h-full object-contain"
                         />
                       </div>
                     </div>
@@ -618,7 +622,7 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                   onChange={(e) => setFormData((prev) => ({ ...prev, is_active: e.target.checked }))}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-500/40 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-[var(--primary-color)]/40 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)]" />
                 <span className="ml-3 text-sm font-medium text-gray-700">
                   {formData.is_active ? 'Aktif' : 'Pasif'}
                 </span>
@@ -641,7 +645,7 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-[var(--primary-color)] rounded-xl hover:bg-[var(--primary-dark)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {isPending && (
                 <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -662,8 +666,8 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
         aspect={cropState.aspect}
         objectFit="contain"
         output={cropState.target === 'poster'
-          ? { maxHeight: 1200, quality: 0.82 }
-          : { maxWidth: 1600, quality: 0.82 }
+          ? { targetWidth: 800, targetHeight: 1200, maxHeight: 1200, quality: 0.82, background: '#ffffff' }
+          : { targetWidth: 1600, targetHeight: 900, maxWidth: 1600, quality: 0.82, background: '#ffffff' }
         }
         onCancel={() => {
           if (cropState.originalFileInput) cropState.originalFileInput.value = '';

@@ -7,6 +7,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Marka mavi paleti (Tailwind blue-* override)
+        // Projedeki mevcut bg-blue-600 / text-blue-600 / from-blue-600 vb. kullanımlarını
+        // tek noktadan tutarlı hale getirmek için.
+        blue: {
+          50: '#F3F8FF',
+          100: '#E2EFFF',
+          200: '#C2DEFF',
+          300: '#93C5FF',
+          400: '#5EA6FF',
+          500: '#2F7FE6',
+          600: '#2563A8', // Medikariyer.net yazısı ile uyumlu
+          700: '#1F4F86',
+          800: '#1B3F6B',
+          900: '#173558',
+        },
         // Modern mavi tonları (ana renk paleti)
         primary: {
           50: '#EFF6FF',   // Arka plan vurguları

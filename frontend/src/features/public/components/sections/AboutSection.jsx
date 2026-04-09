@@ -274,7 +274,7 @@ const AboutSection = () => {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.95 }}
               onClick={handleContactClick}
-              className="group inline-flex items-center justify-center gap-4 rounded-3xl bg-white text-blue-600 px-12 sm:px-16 py-5 sm:py-6 text-xl sm:text-2xl font-extrabold shadow-[0_20px_60px_-15px_rgba(255,255,255,0.5)] transition-all duration-300 hover:shadow-[0_30px_80px_-15px_rgba(255,255,255,0.8)] hover:-translate-y-2 w-full sm:w-auto"
+              className="group inline-flex items-center justify-center gap-4 rounded-3xl bg-white text-[var(--primary-color)] px-12 sm:px-16 py-5 sm:py-6 text-xl sm:text-2xl font-extrabold shadow-[0_20px_60px_-15px_rgba(255,255,255,0.5)] transition-all duration-300 hover:shadow-[0_30px_80px_-15px_rgba(255,255,255,0.8)] hover:-translate-y-2 w-full sm:w-auto"
               style={{ 
                 letterSpacing: '0.02em',
                 textShadow: '0 1px 2px rgba(0,0,0,0.1)'

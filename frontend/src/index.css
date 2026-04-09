@@ -29,8 +29,9 @@ body {
 
 /* CSS değişkenleri - Renk paleti ve tema ayarları */
 :root {
-  --primary-color: #3b82f6;
-  --primary-dark: #1d4ed8;
+  /* Marka mavi (Medikariyer.net yazısı ile uyumlu) */
+  --primary-color: #2563a8;
+  --primary-dark: #1f4f86;
   --secondary-color: #64748b;
   --success-color: #10b981;
   --warning-color: #f59e0b;
@@ -1169,12 +1170,12 @@ select:-webkit-autofill:focus {
 
 /* Admin Buton Varyantları */
 .admin-btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   @apply focus:ring-blue-500/30;
 }
 
 .admin-btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #1e3a8a 100%);
   box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
 }
 
@@ -1945,7 +1946,7 @@ select:-webkit-autofill:focus {
 
 /* Modern Buton Stilleri - Mavi ve Açık Mavi */
 .modern-btn-primary {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
@@ -1957,7 +1958,7 @@ select:-webkit-autofill:focus {
 }
 
 .modern-btn-primary:hover {
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #1e3a8a 100%);
   transform: translateY(-2px);
   box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
 }
@@ -2338,7 +2339,7 @@ body {
 video {
   /* Daha keskin görüntü için */
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  /* crisp-edges Edge'de desteklenmiyor; @supports içinde uygulanır */
   
   /* Hardware acceleration */
   -webkit-backface-visibility: hidden;
@@ -2354,8 +2355,8 @@ video {
   will-change: transform;
   
   /* Keskinlik ve netlik artırma */
-  filter: contrast(1.1) saturate(1.2) brightness(1.05) sharpen(1);
   -webkit-filter: contrast(1.1) saturate(1.2) brightness(1.05);
+  filter: contrast(1.1) saturate(1.2) brightness(1.05) sharpen(1);
 }
 
 /* Video container için optimizasyon */
@@ -2388,7 +2389,7 @@ video::-webkit-media-controls-enclosure {
 img[src$=".gif"] {
   /* Daha keskin görüntü */
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  /* crisp-edges Edge'de desteklenmiyor; gerektiğinde @supports ile uygulanır */
   
   /* Hardware acceleration */
   -webkit-backface-visibility: hidden;
@@ -2404,13 +2405,13 @@ img[src$=".gif"] {
   will-change: transform;
   
   /* Keskinlik ve netlik */
-  filter: contrast(1.15) saturate(1.25) brightness(1.1);
   -webkit-filter: contrast(1.15) saturate(1.25) brightness(1.1);
+  filter: contrast(1.15) saturate(1.25) brightness(1.1);
 }
 
 /* Hero section GIF için özel optimizasyon */
 .hero-gif {
   image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
+  /* crisp-edges Edge'de desteklenmiyor; gerektiğinde @supports ile uygulanır */
   image-rendering: pixelated;
 }

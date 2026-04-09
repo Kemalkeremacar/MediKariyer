@@ -47,3 +47,43 @@ export async function getCroppedDataUrl(
   return canvas.toDataURL(type, quality);
 }
 
+export async function getFittedDataUrl(
+  imageSrc,
+  {
+    type = 'image/jpeg',
+    quality = 0.85,
+    targetWidth,
+    targetHeight,
+    background = '#ffffff',
+    scale = 1,
+  } = {}
+) {
+  if (!targetWidth || !targetHeight) {
+    throw new Error('targetWidth and targetHeight are required');
+  }
+
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context not available');
+
+  const tw = Math.max(1, Math.round(Number(targetWidth)));
+  const th = Math.max(1, Math.round(Number(targetHeight)));
+  const safeScale = Math.max(1, Number(scale) || 1);
+
+  canvas.width = tw;
+  canvas.height = th;
+
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, tw, th);
+
+  const ratio = Math.min(tw / image.width, th / image.height);
+  const drawW = image.width * ratio * safeScale;
+  const drawH = image.height * ratio * safeScale;
+  const dx = (tw - drawW) / 2;
+  const dy = (th - drawH) / 2;
+
+  ctx.drawImage(image, dx, dy, drawW, drawH);
+  return canvas.toDataURL(type, quality);
+}
+

@@ -3,7 +3,7 @@
  * @description İletişim Mesajları Yönetimi - Kullanıcılardan gelen iletişim formlarını görüntüleme
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { 
   useContactMessages, 
   useDeleteContactMessage
@@ -18,7 +18,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
-// import { ModalContainer } from '@/components/ui/ModalContainer';
+import { ModalContainer } from '@/components/ui/ModalContainer';
 
 /**
  * ContactMessagesPage - İletişim mesajları yönetimi sayfası
@@ -26,8 +26,6 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
  */
 const ContactMessagesPage = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [detailAnchorY, setDetailAnchorY] = useState(null);
   const [expandedMessageId, setExpandedMessageId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -64,14 +62,21 @@ const ContactMessagesPage = () => {
   };
 
   const handleViewMessage = (message, e) => {
-    // Kartı ortala ve inline detay kutusunu aç/kapat
-    if (e && e.currentTarget && e.currentTarget.scrollIntoView) {
-      try {
-        e.currentTarget.scrollIntoView({ block: 'center', behavior: 'auto' });
-      } catch (_) {}
-    }
     setSelectedMessage(message);
     setExpandedMessageId(prev => prev === message.id ? null : message.id);
+  };
+
+  const isDetailOpen = Boolean(expandedMessageId && selectedMessage);
+
+  const selectedMessageForModal = useMemo(() => {
+    if (!selectedMessage) return null;
+    if (!expandedMessageId) return null;
+    if (selectedMessage.id !== expandedMessageId) return null;
+    return selectedMessage;
+  }, [expandedMessageId, selectedMessage]);
+
+  const closeDetail = () => {
+    setExpandedMessageId(null);
   };
 
   const handleDeleteMessage = async (messageId) => {
@@ -181,27 +186,6 @@ const ContactMessagesPage = () => {
                                 {message.email}
                               </div>
                             </div>
-                      {expandedMessageId === message.id && (
-                        <div className="mt-3 lg:absolute lg:right-6 lg:top-4 lg:w-[42%] xl:w-[38%] z-10">
-                          <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 md:max-h-[60vh] overflow-auto">
-                            <div className="flex items-center justify-between gap-3 mb-3">
-                              <div className="flex items-center gap-2 text-xs text-gray-500">
-                                <Calendar className="h-3 w-3" />
-                                {formatDate(message.created_at)}
-                              </div>
-                              <button
-                                onClick={(ev) => { ev.stopPropagation(); setExpandedMessageId(null); }}
-                                className="px-2 py-1 text-xs rounded-md border border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
-                              >
-                                Kapat
-                              </button>
-                            </div>
-                            <div className="text-gray-700 whitespace-pre-wrap text-sm leading-relaxed">
-                              {message.message}
-                            </div>
-                          </div>
-                        </div>
-                      )}
                           </div>
                           
                           <div className="ml-14">
@@ -231,6 +215,75 @@ const ContactMessagesPage = () => {
             )}
           </div>
         </div>
+
+        <ModalContainer
+          isOpen={isDetailOpen}
+          onClose={closeDetail}
+          title="Mesaj Detayı"
+          size="large"
+          maxHeight="85vh"
+          closeOnBackdrop={true}
+          fullScreenOnMobile
+        >
+          {selectedMessageForModal && (
+            <div className="p-5 sm:p-6">
+              <div className="flex flex-col gap-4 sm:gap-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                        <User className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
+                          {selectedMessageForModal.name}
+                        </h3>
+                        <div className="mt-1 flex items-center gap-2 text-sm text-gray-600">
+                          <Mail className="h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{selectedMessageForModal.email}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleDeleteMessage(selectedMessageForModal.id)}
+                      disabled={deleteMessage.isPending}
+                      className="admin-btn admin-btn-sm admin-btn-danger"
+                      title="Mesajı sil"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Sil</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-gray-200 bg-white p-3">
+                    <div className="text-xs font-semibold text-gray-500 mb-1">Konu</div>
+                    <div className="text-sm font-medium text-gray-900 break-words">
+                      {selectedMessageForModal.subject || '-'}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-white p-3">
+                    <div className="text-xs font-semibold text-gray-500 mb-1">Tarih</div>
+                    <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-500" />
+                      <span>{formatDate(selectedMessageForModal.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                  <div className="text-xs font-semibold text-gray-500 mb-2">Mesaj</div>
+                  <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    {selectedMessageForModal.message}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </ModalContainer>
 
         {/* Pagination */}
         {pagination.total > 0 && pagination.total_pages > 0 && (

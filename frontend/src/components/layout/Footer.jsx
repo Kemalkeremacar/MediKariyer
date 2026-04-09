@@ -164,7 +164,7 @@ const Footer = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={social.label}
-                    className="w-8 h-8 rounded-full bg-gray-700 hover:bg-blue-600 flex items-center justify-center transition-all duration-300"
+                    className="w-8 h-8 rounded-full bg-gray-700 hover:bg-[var(--primary-color)] flex items-center justify-center transition-all duration-300"
                   >
                     <Icon className="w-4 h-4 text-gray-300 group-hover:text-white transition-colors" />
                   </a>

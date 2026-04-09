@@ -272,8 +272,8 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
           onClick={handleHashClick}
           className={`group relative px-4 py-2 rounded-lg font-bold transition-all duration-300 ${
             isActive 
-              ? 'bg-blue-500/10 text-blue-600' 
-              : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              ? 'bg-[var(--primary-color)]/10 text-[var(--primary-color)]' 
+              : 'text-gray-700 hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10'
           }`}
           {...props}
         >
@@ -281,7 +281,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
             {text}
           </span>
           {isActive && (
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full"></div>
+            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-[var(--primary-color)] rounded-full"></div>
           )}
         </a>
       );
@@ -294,8 +294,8 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
         className={({ isActive }) =>
           `group relative px-4 py-2 rounded-lg font-bold transition-all duration-300 ${
             isActive 
-              ? 'bg-blue-500/10 text-blue-600' 
-              : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
+              ? 'bg-[var(--primary-color)]/10 text-[var(--primary-color)]' 
+              : 'text-gray-700 hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10'
           }`
         }
         {...props}
@@ -306,7 +306,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
               {text}
             </span>
             {isActive && (
-              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-blue-600 rounded-full"></div>
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-[var(--primary-color)] rounded-full"></div>
             )}
           </>
         )}
@@ -347,7 +347,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
                   e.stopPropagation();
                   onMobileMenuClick();
                 }}
-                className="xl:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-gray-200"
+                className="xl:hidden flex items-center justify-center w-10 h-10 text-gray-700 hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10 rounded-lg transition-colors border border-gray-200"
                 aria-expanded={isMobileMenuOpen}
                 aria-controls="admin-mobile-sidebar"
                 aria-label="Admin menüsünü aç"
@@ -409,7 +409,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
                   <div className="relative" ref={desktopMenuRef}>
                     <button
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10 rounded-lg transition-all duration-300"
                     >
                       <User size={18} />
                       <span className="text-sm font-bold">
@@ -462,7 +462,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
                     <div className="relative" ref={desktopMenuRef}>
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
+                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10 rounded-lg transition-all duration-300"
                       >
                         <Building2 size={18} />
                         <span className="text-sm font-bold">
@@ -551,7 +551,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
                     <div className="relative" ref={desktopMenuRef}>
                       <button
                         onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300"
+                        className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-[var(--primary-color)] hover:bg-[var(--primary-color)]/10 rounded-lg transition-all duration-300"
                       >
                         <User size={18} />
                         <span className="text-sm font-bold">
@@ -647,13 +647,13 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
               <>
                 <Link
                   to={ROUTE_CONFIG.PUBLIC.LOGIN}
-                  className="text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg font-bold transition-all duration-300"
+                  className="text-gray-700 hover:text-[var(--primary-color)] px-4 py-2 rounded-lg font-bold transition-all duration-300"
                 >
                   Giriş Yap
                 </Link>
                 <Link
                   to={ROUTE_CONFIG.PUBLIC.REGISTER}
-                  className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
+                  className="bg-gradient-to-r from-[var(--primary-color)] to-[var(--primary-dark)] text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:from-[var(--primary-dark)] hover:to-[#1e3a8a] transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105"
                 >
                   Kayıt Ol
                 </Link>
@@ -675,7 +675,7 @@ const Header = ({ showMobileMenuButton = false, onMobileMenuClick, isMobileMenuO
               <div className="relative" ref={mobileMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 focus:outline-none p-2"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-[var(--primary-color)] focus:outline-none p-2"
                   aria-label="Menüyü aç"
                   style={{ minWidth: '44px', minHeight: '44px' }}
                 >

@@ -203,7 +203,7 @@ const ContactSection = () => {
                 <button
                   type="submit"
                   disabled={sendMessage.isPending}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full bg-gradient-to-r from-[var(--primary-color)] to-[var(--primary-dark)] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:from-[var(--primary-dark)] hover:to-[#1e3a8a] transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {sendMessage.isPending ? (
                     <>

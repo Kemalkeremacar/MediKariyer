@@ -736,7 +736,7 @@ const AdminJobDetailPage = () => {
               <p className="text-gray-600 mb-6">{jobError.message || 'Bir hata oluştu'}</p>
               <Link
                 to="/admin/jobs"
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center gap-2"
+                className="bg-[var(--primary-color)] text-white px-6 py-3 rounded-lg hover:bg-[var(--primary-dark)] transition-colors inline-flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
                 İş İlanlarına Dön
@@ -759,7 +759,7 @@ const AdminJobDetailPage = () => {
               <p className="text-gray-600 mb-6">Aradığınız iş ilanı bulunamadı veya silinmiş olabilir.</p>
               <Link
                 to="/admin/jobs"
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center gap-2"
+                className="bg-[var(--primary-color)] text-white px-6 py-3 rounded-lg hover:bg-[var(--primary-dark)] transition-colors inline-flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
                 İş İlanlarına Dön
@@ -804,7 +804,7 @@ const AdminJobDetailPage = () => {
               </button>
               <button
                 onClick={handleExportJob}
-                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md hover:shadow-lg flex-1 sm:flex-none"
+                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-[var(--primary-color)] text-white rounded-lg hover:bg-[var(--primary-dark)] transition-colors shadow-md hover:shadow-lg flex-1 sm:flex-none"
                 title="İş ilanını indir"
               >
                 <Download className="w-4 h-4 sm:mr-2" />

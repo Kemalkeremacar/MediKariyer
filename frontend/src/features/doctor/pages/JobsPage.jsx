@@ -759,7 +759,7 @@ const JobsList = memo(({ jobs, pagination, onJobClick, currentPage, onPageChange
         <p className="text-gray-500 mb-6">Aradığınız kriterlere uygun iş ilanı bulunamadı.</p>
         <button
           onClick={onClearFilters}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-medium shadow-md"
+          className="px-6 py-3 bg-gradient-to-r from-[var(--primary-color)] to-[var(--primary-dark)] text-white rounded-xl hover:from-[var(--primary-dark)] hover:to-[#1e3a8a] transition-all duration-300 font-medium shadow-md"
         >
           Filtreleri Temizle
         </button>
@@ -817,14 +817,14 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
     <div>
       {/* Mobile: compact */}
       <div className="flex md:hidden items-center justify-between gap-2">
-        <button onClick={handlePrev} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Önceki</button>
+        <button onClick={handlePrev} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] disabled:opacity-50 disabled:cursor-not-allowed">Önceki</button>
         <span className="text-sm font-semibold text-gray-700">{currentPage} / {totalPages}</span>
-        <button onClick={handleNext} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Sonraki</button>
+        <button onClick={handleNext} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] disabled:opacity-50 disabled:cursor-not-allowed">Sonraki</button>
       </div>
 
       {/* Desktop: numbered */}
       <div className="hidden md:flex justify-center items-center space-x-2">
-        <button onClick={handlePrev} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Önceki</button>
+        <button onClick={handlePrev} disabled={currentPage === 1} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] disabled:opacity-50 disabled:cursor-not-allowed">Önceki</button>
         {[...Array(totalPages)].map((_, i) => {
           const page = i + 1;
           const isCurrentPage = page === currentPage;
@@ -835,10 +835,10 @@ const Pagination = memo(({ currentPage, totalPages, onPageChange }) => {
             return null;
           }
           return (
-            <button key={page} onClick={() => handlePage(page)} className={`px-4 py-2 text-sm font-medium rounded-xl ${isCurrentPage ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md' : 'text-gray-600 bg-white border border-gray-200 hover:border-blue-400 hover:text-blue-600'}`}>{page}</button>
+            <button key={page} onClick={() => handlePage(page)} className={`px-4 py-2 text-sm font-medium rounded-xl ${isCurrentPage ? 'bg-gradient-to-r from-[var(--primary-color)] to-[var(--primary-dark)] text-white shadow-md' : 'text-gray-600 bg-white border border-gray-200 hover:border-[var(--primary-color)] hover:text-[var(--primary-color)]'}`}>{page}</button>
           );
         })}
-        <button onClick={handleNext} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">Sonraki</button>
+        <button onClick={handleNext} disabled={currentPage === totalPages} className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-xl hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] disabled:opacity-50 disabled:cursor-not-allowed">Sonraki</button>
       </div>
     </div>
   );

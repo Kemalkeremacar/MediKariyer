@@ -179,6 +179,16 @@ export const APP_CONFIG = {
     BULK_OPERATIONS: true,
     ADVANCED_REPORTING: true
   },
+
+  // ==================== MOBILE APP STORE LINKS ====================
+  /**
+   * Mobil uygulama mağaza linkleri (doktorlar için yönlendirme)
+   * Not: Prod ortamında env ile set edilmesi önerilir.
+   */
+  MOBILE_APP: {
+    APP_STORE_URL: import.meta.env.VITE_APP_STORE_URL || 'https://apps.apple.com/tr/app/medikariyer/id6758999976?l=tr',
+    PLAY_STORE_URL: import.meta.env.VITE_PLAY_STORE_URL || 'https://play.google.com/store/apps/details?id=com.medikariyer.mobile&pcampaignid=web_share',
+  },
   
   // ==================== TEMA KONFIGÜRASYONU ====================
   /**

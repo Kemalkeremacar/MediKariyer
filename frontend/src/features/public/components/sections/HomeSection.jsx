@@ -72,7 +72,7 @@ const HomeSection = () => {
               <div className="pt-3">
                 <button
                   onClick={handleRegisterClick}
-                  className="bg-blue-600 text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-blue-700 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group"
+                  className="bg-[var(--primary-color)] text-white px-8 sm:px-10 py-3 sm:py-4 rounded-xl text-base sm:text-lg font-semibold hover:bg-[var(--primary-dark)] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group"
                 >
                   BAŞLAYALIM
                   <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
@@ -92,13 +92,13 @@ const HomeSection = () => {
             </div>
 
             {/* GIF - Desktop: Right Side, Mobile: Second */}
-            <div className="relative flex items-center justify-center lg:justify-end w-full order-2 overflow-hidden py-4">
-              <div className="relative w-full max-w-[320px] sm:max-w-md lg:max-w-2xl mx-auto">
+            <div className="relative flex items-center justify-center lg:justify-end w-full order-2 overflow-visible py-1">
+              <div className="relative w-full max-w-[420px] sm:max-w-xl lg:max-w-4xl mx-auto">
                 {/* Decorative Background Elements */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-blue-100/30 rounded-full blur-3xl"></div>
                 
                 {/* Animated SVG Illustration */}
-                <div className="relative z-10 w-full h-full overflow-hidden">
+                <div className="relative z-10 w-full overflow-visible">
                   <MedicalIllustration />
                 </div>
               </div>
@@ -120,7 +120,7 @@ const HomeSection = () => {
               <div className="pt-2 flex justify-center">
                 <button
                   onClick={handleRegisterClick}
-                  className="bg-blue-600 text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto max-w-xs"
+                  className="bg-[var(--primary-color)] text-white px-10 py-4 rounded-xl text-lg font-semibold hover:bg-[var(--primary-dark)] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto max-w-xs"
                 >
                   BAŞLAYALIM
                   <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
@@ -240,14 +240,14 @@ const HomeSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
               <button
                 onClick={handleRegisterClick}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto"
+                className="bg-gradient-to-r from-[var(--primary-color)] to-[var(--primary-dark)] text-white px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold hover:from-[var(--primary-dark)] hover:to-[#1e3a8a] transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 inline-flex items-center justify-center group w-full sm:w-auto"
               >
                 Ücretsiz Kayıt Ol
                 <FiArrowRight className="ml-3 group-hover:translate-x-1 transition-transform text-xl" />
               </button>
               <button
                 onClick={handleContactClick}
-                className="bg-white border-2 border-gray-200 text-gray-700 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold hover:border-blue-600 hover:text-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center justify-center group w-full sm:w-auto"
+                className="bg-white border-2 border-gray-200 text-gray-700 px-8 sm:px-12 py-4 sm:py-5 rounded-2xl text-lg sm:text-xl font-bold hover:border-[var(--primary-color)] hover:text-[var(--primary-color)] transition-all duration-300 shadow-lg hover:shadow-xl inline-flex items-center justify-center group w-full sm:w-auto"
               >
                 <FiHeart className="mr-3 group-hover:scale-110 transition-transform text-xl" />
                 İletişime Geç

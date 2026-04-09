@@ -3,7 +3,7 @@
  * @description Giriş Sayfası - Kullanıcı kimlik doğrulama sayfası
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FiEye, FiEyeOff, FiMail, FiLock, FiArrowLeft } from 'react-icons/fi';
 import { useLogin } from '../api/useAuth';
@@ -13,6 +13,7 @@ import { ROUTE_CONFIG } from '@config/routes.js';
 import { loginSchema } from '@config/validation.js';
 import { ButtonSpinner } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
+import { APP_CONFIG } from '@config/app.js';
 import logger from '@/utils/logger';
 
 const INITIAL_MODAL_STATE = {
@@ -27,6 +28,8 @@ const LoginPage = () => {
   const { isAuthenticated, user } = useAuthStore();
   const { showSuccess } = useUiStore();
   const loginMutation = useLogin();
+  const hasPromptedStoreRef = useRef(false);
+  const [storeModalOpen, setStoreModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -47,6 +50,21 @@ const LoginPage = () => {
       description: 'Hesabınız onaylandıktan sonra sisteme erişebilirsiniz.'
     });
   }, []);
+
+  const deviceInfo = useMemo(() => {
+    const ua = (typeof navigator !== 'undefined' ? navigator.userAgent : '') || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isMobile = isAndroid || isIOS || /Mobi/i.test(ua);
+    return { isMobile, isAndroid, isIOS };
+  }, []);
+
+  const getStoreUrl = useCallback(() => {
+    if (deviceInfo.isIOS) return APP_CONFIG.MOBILE_APP.APP_STORE_URL;
+    if (deviceInfo.isAndroid) return APP_CONFIG.MOBILE_APP.PLAY_STORE_URL;
+    return '';
+  }, [deviceInfo.isAndroid, deviceInfo.isIOS]);
+
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -69,6 +87,14 @@ const LoginPage = () => {
           openPendingApprovalModal();
         }
         // Login sayfasında kal, yönlendirme yapma
+        return;
+      }
+
+      // Mobil web'den giriş yapan doktorları mağazaya yönlendir
+      // Linkler env/config ile set edilmelidir (VITE_APP_STORE_URL / VITE_PLAY_STORE_URL)
+      if (!hasPromptedStoreRef.current && user.role === 'doctor' && deviceInfo.isMobile) {
+        hasPromptedStoreRef.current = true;
+        setStoreModalOpen(true);
         return;
       }
       
@@ -115,7 +141,18 @@ const LoginPage = () => {
         }
       }
     }
-  }, [isAuthenticated, user, navigate, location.state, openPendingApprovalModal, errorModal.show]);
+  }, [
+    isAuthenticated,
+    user,
+    navigate,
+    location.state,
+    openPendingApprovalModal,
+    errorModal.show,
+    loginMutation.isLoading,
+    loginMutation.isError,
+    deviceInfo.isMobile,
+    // no cooldown; always prompt
+  ]);
 
   // Cleanup modal when component unmounts
   useEffect(() => {
@@ -389,11 +426,53 @@ const LoginPage = () => {
           <div className="flex justify-end">
             <button
               onClick={closeModal}
-              className="px-6 py-2 rounded-lg font-semibold bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+              className="px-6 py-2 rounded-lg font-semibold bg-[var(--primary-color)] hover:bg-[var(--primary-dark)] text-white transition-colors"
             >
               Tamam
             </button>
           </div>
+        </div>
+      </ModalContainer>
+
+      <ModalContainer
+        isOpen={storeModalOpen}
+        onClose={() => setStoreModalOpen(false)}
+        title="Mobil Uygulamaya Yönlendirme"
+        size="medium"
+        maxHeight="85vh"
+        closeOnBackdrop={true}
+        fullScreenOnMobile
+      >
+        <div className="space-y-4 p-5 sm:p-6">
+          <p className="text-sm sm:text-base text-gray-700">
+            Mobil cihazdan giriş yaptınız. Daha iyi deneyim için mobil uygulamayı kullanmanızı öneriyoruz.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <a
+              href={getStoreUrl() || '#'}
+              onClick={(e) => {
+                if (!getStoreUrl()) e.preventDefault();
+              }}
+              className="flex-1 admin-btn admin-btn-primary text-center"
+            >
+              {deviceInfo.isIOS ? 'App Store\'a Git' : deviceInfo.isAndroid ? 'Google Play\'e Git' : 'Mağazaya Git'}
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setStoreModalOpen(false);
+                navigate(ROUTE_CONFIG.DOCTOR.DASHBOARD, { replace: true });
+              }}
+              className="flex-1 admin-btn admin-btn-outline"
+            >
+              Web'de Devam Et
+            </button>
+          </div>
+          {!getStoreUrl() && (
+            <p className="text-xs text-gray-500">
+              Mağaza linki yapılandırılmamış. `VITE_APP_STORE_URL` / `VITE_PLAY_STORE_URL` değerlerini ekleyin.
+            </p>
+          )}
         </div>
       </ModalContainer>
     </div>
