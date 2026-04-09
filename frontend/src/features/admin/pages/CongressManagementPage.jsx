@@ -4,12 +4,14 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Edit, Search, X, MapPin, Globe, Link2, Users, Tag, CalendarDays, FileText, ToggleLeft, AlertTriangle, ImagePlus } from 'lucide-react';
-import { useAdminCongresses, useCreateCongress, useToggleCongressActive, useUpdateCongress } from '../../congress/api/useCongress';
+import { Calendar, Plus, Edit, Search, X, MapPin, Globe, Link2, Users, Tag, CalendarDays, FileText, ToggleLeft, AlertTriangle, ImagePlus, Trash2 } from 'lucide-react';
+import { useAdminCongresses, useCreateCongress, useDeleteCongress, useUpdateCongress } from '../../congress/api/useCongress';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, buildEndpoint } from '@config/api.js';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { useSpecialties, useSubspecialties } from '@/hooks/useLookup';
+import useUiStore from '@/store/uiStore';
+import ImageCropModal from '@/components/ui/ImageCropModal';
 
 const inputBase = 'w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400 bg-white transition-all focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 outline-none';
 
@@ -26,6 +28,150 @@ const FieldLabel = ({ children, required }) => (
     {required && <span className="text-red-500 ml-0.5">*</span>}
   </label>
 );
+
+function SpecialtyMultiSelectDropdown({
+  options,
+  selectedIds,
+  onChangeSelectedIds,
+  disabled,
+  placeholder = 'Ek uzmanlık seçin',
+}) {
+  const [open, setOpen] = React.useState(false);
+  const [q, setQ] = React.useState('');
+  const rootRef = React.useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocMouseDown = (e) => {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target)) setOpen(false);
+    };
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDocMouseDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  const selected = Array.isArray(selectedIds) ? selectedIds : [];
+  const selectedSet = React.useMemo(() => new Set(selected), [selected]);
+  const selectedById = React.useMemo(() => {
+    const map = new Map();
+    (options || []).forEach((o) => map.set(Number(o.id), o));
+    return map;
+  }, [options]);
+
+  const filtered = React.useMemo(() => {
+    const query = (q || '').trim().toLowerCase();
+    const list = Array.isArray(options) ? options : [];
+    if (!query) return list;
+    return list.filter((o) => String(o?.name || '').toLowerCase().includes(query));
+  }, [options, q]);
+
+  const toggle = (id) => {
+    const n = Number(id);
+    if (!Number.isFinite(n) || n <= 0) return;
+    const next = selectedSet.has(n)
+      ? selected.filter((x) => Number(x) !== n)
+      : [...selected, n];
+    onChangeSelectedIds(next);
+  };
+
+  const clear = () => onChangeSelectedIds([]);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((v) => !v)}
+        className={`${inputBase} flex items-center justify-between gap-2 ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          {selected.length === 0 ? (
+            <span className="text-gray-400 text-sm truncate">{placeholder}</span>
+          ) : (
+            <div className="flex flex-wrap gap-1.5 min-w-0">
+              {selected.slice(0, 2).map((id) => {
+                const o = selectedById.get(Number(id));
+                const name = o?.name || String(id);
+                return (
+                  <span
+                    key={id}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100 max-w-[180px]"
+                    title={name}
+                  >
+                    <span className="truncate">{name}</span>
+                  </span>
+                );
+              })}
+              {selected.length > 2 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                  +{selected.length - 2}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {selected.length > 0 && !disabled && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); clear(); }}
+              className="text-xs font-semibold text-gray-500 hover:text-gray-700"
+              title="Temizle"
+            >
+              Temizle
+            </button>
+          )}
+          <span className={`text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
+        </div>
+      </button>
+
+      {open && !disabled && (
+        <div className="absolute z-50 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
+          <div className="p-3 border-b border-gray-100">
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Ara…"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+            />
+          </div>
+
+          <div className="max-h-64 overflow-auto p-2">
+            {filtered.length === 0 ? (
+              <div className="px-3 py-6 text-sm text-gray-500 text-center">Sonuç yok</div>
+            ) : (
+              filtered.map((o) => {
+                const id = Number(o.id);
+                const checked = selectedSet.has(id);
+                return (
+                  <label
+                    key={id}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggle(id)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-800">{o.name}</span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, onClose, isPending }) {
   useEffect(() => {
@@ -44,6 +190,13 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
   const { rawData: subspecialtiesRaw = [], isLoading: subspecialtiesLoading } = useSubspecialties(selectedSpecialtyId);
   const [imageError, setImageError] = React.useState('');
   const [posterError, setPosterError] = React.useState('');
+  const [cropState, setCropState] = React.useState({
+    open: false,
+    imageSrc: '',
+    target: null, // 'banner' | 'poster'
+    aspect: 16 / 9,
+    originalFileInput: null,
+  });
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -63,7 +216,13 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
 
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setFormData((prev) => ({ ...prev, image_url: ev.target.result }));
+      setCropState({
+        open: true,
+        imageSrc: ev.target.result,
+        target: 'banner',
+        aspect: 16 / 9,
+        originalFileInput: e.target,
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -86,7 +245,13 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
 
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setFormData((prev) => ({ ...prev, poster_image_url: ev.target.result }));
+      setCropState({
+        open: true,
+        imageSrc: ev.target.result,
+        target: 'poster',
+        aspect: 2 / 3,
+        originalFileInput: e.target,
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -183,7 +348,14 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                         value={formData.specialty_id ?? ''}
                         onChange={(e) => {
                           const value = e.target.value ? Number(e.target.value) : '';
-                          setFormData((prev) => ({ ...prev, specialty_id: value, subspecialty_id: '' }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            specialty_id: value,
+                            subspecialty_id: '',
+                            specialty_ids: Array.isArray(prev.specialty_ids)
+                              ? prev.specialty_ids.filter((id) => Number(id) !== Number(value))
+                              : [],
+                          }));
                         }}
                         className={`${inputBase} pl-9`}
                         disabled={specialtiesLoading}
@@ -214,7 +386,19 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                       ))}
                     </select>
                   </div>
-                  <div />
+                  <div>
+                    <FieldLabel>Ek Uzmanlıklar</FieldLabel>
+                    <SpecialtyMultiSelectDropdown
+                      options={specialtiesRaw.filter((s) => Number(s.id) !== (selectedSpecialtyId ?? -1))}
+                      selectedIds={Array.isArray(formData.specialty_ids) ? formData.specialty_ids : []}
+                      onChangeSelectedIds={(ids) => setFormData((prev) => ({ ...prev, specialty_ids: ids }))}
+                      disabled={specialtiesLoading}
+                      placeholder="Ek uzmanlık seçin"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Birden fazla uzmanlık alanını etkileyen kongreler için ek seçim yapabilirsiniz.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -373,11 +557,15 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
                 <div className="text-xs font-medium text-gray-600 mb-2">Poster Görseli (Dikey - Opsiyonel)</div>
                 {formData.poster_image_url ? (
                   <div className="relative">
-                    <img
-                      src={formData.poster_image_url}
-                      alt="Poster görseli önizleme"
-                      className="w-full max-h-64 object-contain rounded-xl border border-gray-200 bg-gray-50"
-                    />
+                    <div className="w-full rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-md ring-1 ring-black/5">
+                      <div className="relative w-full aspect-[2/3] bg-gradient-to-br from-gray-50 to-white">
+                        <img
+                          src={formData.poster_image_url}
+                          alt="Poster görseli önizleme"
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
                     <button
                       type="button"
                       onClick={removePoster}
@@ -466,6 +654,31 @@ function CongressFormModal({ editingCongress, formData, setFormData, onSubmit, o
           </div>
         </form>
       </div>
+
+      <ImageCropModal
+        isOpen={cropState.open}
+        title={cropState.target === 'poster' ? 'Poster Görselini Kırp' : 'Banner Görselini Kırp'}
+        imageSrc={cropState.imageSrc}
+        aspect={cropState.aspect}
+        objectFit="contain"
+        output={cropState.target === 'poster'
+          ? { maxHeight: 1200, quality: 0.82 }
+          : { maxWidth: 1600, quality: 0.82 }
+        }
+        onCancel={() => {
+          if (cropState.originalFileInput) cropState.originalFileInput.value = '';
+          setCropState((prev) => ({ ...prev, open: false, imageSrc: '', target: null, originalFileInput: null }));
+        }}
+        onConfirm={(dataUrl) => {
+          if (cropState.target === 'poster') {
+            setFormData((prev) => ({ ...prev, poster_image_url: dataUrl }));
+          } else {
+            setFormData((prev) => ({ ...prev, image_url: dataUrl }));
+          }
+          if (cropState.originalFileInput) cropState.originalFileInput.value = '';
+          setCropState((prev) => ({ ...prev, open: false, imageSrc: '', target: null, originalFileInput: null }));
+        }}
+      />
     </div>
   );
 }
@@ -482,7 +695,9 @@ const CongressManagementPage = () => {
     city: '',
     page: 1,
     limit: 10,
-    is_active: null // null = tümünü göster
+    is_active: null, // null = tümünü göster
+    sort_by: 'start_date',
+    sort_order: 'asc',
   });
   const [searchInput, setSearchInput] = useState('');
   const [countryInput, setCountryInput] = useState('');
@@ -502,6 +717,7 @@ const CongressManagementPage = () => {
     website_url: '',
     organizer: '',
     specialty_id: '',
+    specialty_ids: [],
     subspecialty_id: '',
     image_url: '',
     poster_image_url: '',
@@ -511,7 +727,8 @@ const CongressManagementPage = () => {
   const { data: congressData, isLoading } = useAdminCongresses(filters);
   const createMutation = useCreateCongress();
   const updateMutation = useUpdateCongress();
-  const toggleActiveMutation = useToggleCongressActive();
+  const deleteMutation = useDeleteCongress();
+  const openModal = useUiStore((s) => s.openModal);
 
   const payload = congressData?.data?.data;
   const congresses = payload?.data || [];
@@ -541,6 +758,7 @@ const CongressManagementPage = () => {
       website_url: '',
       organizer: '',
       specialty_id: '',
+      specialty_ids: [],
       subspecialty_id: '',
       image_url: '',
       poster_image_url: '',
@@ -581,12 +799,31 @@ const CongressManagementPage = () => {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
+  const toggleDateSort = () => {
+    setFilters((prev) => {
+      const isDate = (prev.sort_by || 'start_date') === 'start_date';
+      if (!isDate) {
+        return { ...prev, sort_by: 'start_date', sort_order: 'asc', page: 1 };
+      }
+      const nextOrder = prev.sort_order === 'asc' ? 'desc' : 'asc';
+      return { ...prev, sort_order: nextOrder, page: 1 };
+    });
+  };
+
   const normalizeIsActive = (v) => v === true || v === 1 || v === '1';
 
-  const handleToggleActive = (congress) => {
+  const handleDelete = (congress) => {
     if (!congress?.id) return;
-    const next = !normalizeIsActive(congress.is_active);
-    toggleActiveMutation.mutate({ id: congress.id, is_active: next });
+
+    openModal('confirmation', {
+      title: 'Kongre Silme Onayı',
+      message: `"${congress.title}" kongresini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+      type: 'danger',
+      destructive: true,
+      confirmText: 'Sil',
+      cancelText: 'Vazgeç',
+      onConfirm: () => deleteMutation.mutate(congress.id),
+    });
   };
 
   const clearFilters = () => {
@@ -628,6 +865,11 @@ const CongressManagementPage = () => {
       website_url: fullData.website_url || '',
       organizer: fullData.organizer || '',
       specialty_id: fullData.specialty_id || '',
+      specialty_ids: Array.isArray(fullData.specialties)
+        ? fullData.specialties
+          .map((s) => Number(s?.id))
+          .filter((id) => Number.isFinite(id) && id > 0 && id !== Number(fullData.specialty_id))
+        : [],
       subspecialty_id: fullData.subspecialty_id || '',
       image_url: fullData.image_url || '',
       poster_image_url: fullData.poster_image_url || '',
@@ -643,6 +885,11 @@ const CongressManagementPage = () => {
 
     const cleaned = { ...formData };
     cleaned.specialty_id = cleaned.specialty_id ? Number(cleaned.specialty_id) : null;
+    cleaned.specialty_ids = Array.isArray(cleaned.specialty_ids)
+      ? cleaned.specialty_ids
+        .map((v) => Number(v))
+        .filter((n) => Number.isFinite(n) && n > 0 && n !== cleaned.specialty_id)
+      : [];
     cleaned.subspecialty_id = cleaned.subspecialty_id ? Number(cleaned.subspecialty_id) : null;
     cleaned.website_url = cleaned.website_url || null;
     cleaned.description = cleaned.description || null;
@@ -657,6 +904,11 @@ const CongressManagementPage = () => {
       const originalCleaned = {
         ...original,
         specialty_id: original.specialty_id ? Number(original.specialty_id) : null,
+        specialty_ids: Array.isArray(original.specialty_ids)
+          ? original.specialty_ids
+            .map((v) => Number(v))
+            .filter((n) => Number.isFinite(n) && n > 0 && n !== (original.specialty_id ? Number(original.specialty_id) : null))
+          : [],
         subspecialty_id: original.subspecialty_id ? Number(original.subspecialty_id) : null,
         website_url: original.website_url || null,
         description: original.description || null,
@@ -668,7 +920,14 @@ const CongressManagementPage = () => {
 
       const patch = {};
       Object.keys(cleaned).forEach((k) => {
-        if (cleaned[k] !== originalCleaned[k]) patch[k] = cleaned[k];
+        const a = cleaned[k];
+        const b = originalCleaned[k];
+        const isArrayCompare = Array.isArray(a) || Array.isArray(b);
+        if (isArrayCompare) {
+          if (JSON.stringify(a || []) !== JSON.stringify(b || [])) patch[k] = a || [];
+          return;
+        }
+        if (a !== b) patch[k] = a;
       });
 
       if (Object.keys(patch).length === 0) {
@@ -703,6 +962,34 @@ const CongressManagementPage = () => {
   };
 
   const isFirstLoad = isLoading && congresses.length === 0;
+
+  const renderSpecialties = (congress) => {
+    const items = Array.isArray(congress?.specialties) ? congress.specialties : [];
+    const names = items.map((s) => s?.name).filter(Boolean);
+    if (!names.length) return <span>-</span>;
+
+    const shown = names.slice(0, 3);
+    const remaining = names.length - shown.length;
+
+    return (
+      <div className="flex flex-wrap gap-1.5 justify-end lg:justify-start">
+        {shown.map((name) => (
+          <span
+            key={name}
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100 max-w-[220px]"
+            title={name}
+          >
+            <span className="truncate">{name}</span>
+          </span>
+        ))}
+        {remaining > 0 && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-gray-50 text-gray-600 border border-gray-200">
+            +{remaining}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen p-4 sm:p-6">
@@ -834,8 +1121,11 @@ const CongressManagementPage = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
+                      <div
+                        className={`flex-shrink-0 w-2 h-2 rounded-full ${normalizeIsActive(congress.is_active) ? 'bg-green-500' : 'bg-gray-400'}`}
+                        title={normalizeIsActive(congress.is_active) ? 'Aktif' : 'Pasif'}
+                      />
                       <h3 className="text-base font-semibold text-gray-900 line-clamp-2">{congress.title}</h3>
-                      <div className={`flex-shrink-0 w-2 h-2 rounded-full ${congress.is_active ? 'bg-green-500' : 'bg-gray-400'}`} title={congress.is_active ? 'Aktif' : 'Pasif'} />
                     </div>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-1">{congress.organizer || '-'}</p>
                   </div>
@@ -849,30 +1139,26 @@ const CongressManagementPage = () => {
                     <span className="font-medium text-gray-900">Konum:</span> {[congress.city, congress.country].filter(Boolean).join(', ') || '-'}
                   </div>
                   <div className="text-gray-700">
-                    <span className="font-medium text-gray-900">Uzmanlık:</span> {congress.specialty_name || '-'}
+                    <span className="font-medium text-gray-900">Uzmanlık:</span> {renderSpecialties(congress)}
                   </div>
                 </div>
 
                 <div className="mt-4 flex items-center gap-2">
-                  <button
-                    onClick={() => handleToggleActive(congress)}
-                    disabled={toggleActiveMutation.isPending}
-                    className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                      normalizeIsActive(congress.is_active)
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                    } disabled:opacity-60 disabled:cursor-not-allowed`}
-                    title={normalizeIsActive(congress.is_active) ? 'Pasifleştir' : 'Aktifleştir'}
-                  >
-                    <ToggleLeft className="w-4 h-4" />
-                    {normalizeIsActive(congress.is_active) ? 'Aktif' : 'Pasif'}
-                  </button>
                   <button
                     onClick={() => handleEdit(congress)}
                     className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
                   >
                     <Edit className="w-4 h-4" />
                     Düzenle
+                  </button>
+                  <button
+                    onClick={() => handleDelete(congress)}
+                    disabled={deleteMutation.isPending}
+                    className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    title="Sil"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Sil
                   </button>
                 </div>
               </div>
@@ -887,10 +1173,19 @@ const CongressManagementPage = () => {
                     Kongre
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Durum
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tarih
+                    <button
+                      type="button"
+                      onClick={toggleDateSort}
+                      className="inline-flex items-center gap-1 text-left hover:text-gray-700"
+                      title="Tarihe göre sırala"
+                    >
+                      Tarih
+                      {(filters.sort_by || 'start_date') === 'start_date' && (
+                        <span className="text-[10px] text-gray-400">
+                          {filters.sort_order === 'asc' ? '▲' : '▼'}
+                        </span>
+                      )}
+                    </button>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Konum
@@ -908,27 +1203,15 @@ const CongressManagementPage = () => {
                   <tr key={congress.id}>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${congress.is_active ? 'bg-green-500' : 'bg-gray-400'}`} title={congress.is_active ? 'Aktif' : 'Pasif'} />
+                        <div
+                          className={`w-2 h-2 rounded-full flex-shrink-0 ${normalizeIsActive(congress.is_active) ? 'bg-green-500' : 'bg-gray-400'}`}
+                          title={normalizeIsActive(congress.is_active) ? 'Aktif' : 'Pasif'}
+                        />
                         <div>
                           <div className="text-sm font-medium text-gray-900">{congress.title}</div>
                           <div className="text-sm text-gray-500">{congress.organizer}</div>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      <button
-                        onClick={() => handleToggleActive(congress)}
-                        disabled={toggleActiveMutation.isPending}
-                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
-                          normalizeIsActive(congress.is_active)
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                        } disabled:opacity-60 disabled:cursor-not-allowed`}
-                        title={normalizeIsActive(congress.is_active) ? 'Pasifleştir' : 'Aktifleştir'}
-                      >
-                        <ToggleLeft className="w-4 h-4" />
-                        {normalizeIsActive(congress.is_active) ? 'Aktif' : 'Pasif'}
-                      </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {formatDate(congress.start_date)}
@@ -937,15 +1220,26 @@ const CongressManagementPage = () => {
                       {[congress.city, congress.country].filter(Boolean).join(', ') || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {congress.specialty_name || '-'}
+                      {renderSpecialties(congress)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEdit(congress)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        <Edit className="w-5 h-5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => handleEdit(congress)}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="Düzenle"
+                        >
+                          <Edit className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(congress)}
+                          disabled={deleteMutation.isPending}
+                          className="text-red-600 hover:text-red-900 disabled:opacity-60 disabled:cursor-not-allowed"
+                          title="Sil"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

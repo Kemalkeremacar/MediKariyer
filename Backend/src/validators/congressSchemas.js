@@ -62,6 +62,10 @@ const createCongressSchema = Joi.object({
     .messages({
       'number.base': 'Uzmanlık alanı geçerli bir ID olmalıdır'
     }),
+  specialty_ids: Joi.array().items(Joi.number().integer().positive()).allow(null)
+    .messages({
+      'array.base': 'Ek uzmanlık alanları liste formatında olmalıdır'
+    }),
   subspecialty_id: Joi.number().integer().positive().allow(null)
     .messages({
       'number.base': 'Yan dal geçerli bir ID olmalıdır'
@@ -120,6 +124,7 @@ const updateCongressSchema = Joi.object({
       'string.max': 'Organizatör en fazla 200 karakter olmalıdır'
     }),
   specialty_id: Joi.number().integer().positive().allow(null),
+  specialty_ids: Joi.array().items(Joi.number().integer().positive()).allow(null),
   subspecialty_id: Joi.number().integer().positive().allow(null),
   image_url: Joi.string().allow('', null),
   poster_image_url: Joi.string().allow('', null),
@@ -139,6 +144,7 @@ const listCongressQuerySchema = Joi.object({
   city: Joi.string().max(100).allow(''),
   start_date_from: Joi.date().iso(),
   start_date_to: Joi.date().iso(),
+  end_date_from: Joi.date().iso(),
   is_active: Joi.boolean(),
   sort_by: Joi.string().valid('start_date', 'end_date', 'title', 'created_at').default('start_date'),
   sort_order: Joi.string().valid('asc', 'desc').default('asc')

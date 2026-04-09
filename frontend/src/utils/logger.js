@@ -113,6 +113,46 @@ const LOG_LEVELS = {
 // ============================================================================
 
 /**
+ * Log için veri sanitize eder (büyük payload'ları kısaltır).
+ * Özellikle base64 dataURL görselleri console'u kilitleyebildiği için özetlenir.
+ */
+const sanitizeForLog = (value, { maxStringLength = 800, maxDepth = 5 } = {}, depth = 0) => {
+  if (value === null || value === undefined) return value;
+  if (depth >= maxDepth) return '[MaxDepth]';
+
+  const t = typeof value;
+  if (t === 'string') {
+    // data URL (image) özetle
+    if (value.startsWith('data:image/') && value.length > 120) {
+      const mime = value.slice(5, value.indexOf(';') > -1 ? value.indexOf(';') : 20);
+      return `[DataURL ${mime}, length=${value.length}]`;
+    }
+    if (value.length > maxStringLength) {
+      return `${value.slice(0, maxStringLength)}…[truncated ${value.length - maxStringLength} chars]`;
+    }
+    return value;
+  }
+
+  if (t === 'number' || t === 'boolean') return value;
+
+  if (Array.isArray(value)) {
+    // array'i de derinlik kontrollü sanitize et
+    return value.map((v) => sanitizeForLog(v, { maxStringLength, maxDepth }, depth + 1));
+  }
+
+  if (t === 'object') {
+    // Axios config / response gibi yapılarda circular olabilir: try/catch ile güvenli
+    const out = {};
+    for (const k of Object.keys(value)) {
+      out[k] = sanitizeForLog(value[k], { maxStringLength, maxDepth }, depth + 1);
+    }
+    return out;
+  }
+
+  return String(value);
+};
+
+/**
  * Mevcut log seviyesini döndürür
  * 
  * Environment'a göre otomatik ayarlanır veya
@@ -465,8 +505,8 @@ export const apiLog = (method, url, requestData = null, responseData = null, dur
    * Request, response ve duration bilgilerini içerir
    */
   const data = {
-    request: requestData,
-    response: responseData,
+    request: sanitizeForLog(requestData),
+    response: sanitizeForLog(responseData),
     duration
   };
   

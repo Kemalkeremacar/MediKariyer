@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Calendar, MapPin, Globe, Users, Search, ExternalLink, Filter, XCircle as XIcon, Sparkles, ArrowRight } from 'lucide-react';
+import { Calendar, MapPin, Globe, Users, Search, Filter, XCircle as XIcon, Sparkles, ArrowRight, Clock } from 'lucide-react';
 import { useCongresses } from '../../congress/api/useCongress';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { Link } from 'react-router-dom';
@@ -103,6 +103,28 @@ const CongressCalendarPage = () => {
   );
 
   const isFirstLoad = isLoading && congresses.length === 0;
+
+  const getStatusBadge = (congress) => {
+    const start = new Date(congress.start_date);
+    const end = new Date(congress.end_date);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    const diffFromNow = Math.round((start - now) / (1000 * 60 * 60 * 24));
+
+    if (diffFromNow === 0) {
+      return { label: 'Bugün başlıyor', className: 'bg-amber-50 border-amber-200 text-amber-800', icon: Clock };
+    }
+    if (diffFromNow > 0) {
+      return null;
+    }
+    if (now <= end) {
+      return { label: 'Devam ediyor', className: 'bg-blue-50 border-blue-200 text-blue-800', icon: Clock };
+    }
+    return { label: 'Sona erdi', className: 'bg-gray-50 border-gray-200 text-gray-600', icon: Clock };
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8">
@@ -320,6 +342,21 @@ const CongressCalendarPage = () => {
                   key={congress.id}
                   className="group bg-white rounded-2xl border border-gray-200/80 shadow-md hover:shadow-xl hover:border-blue-200 transition-all duration-300 overflow-hidden h-full flex flex-col"
                 >
+                  {/* Status */}
+                  <div className="px-5 pt-5 pb-0">
+                    {(() => {
+                      const badge = getStatusBadge(congress);
+                      if (!badge) return null;
+                      const Icon = badge.icon;
+                      return (
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold ${badge.className}`}>
+                          <Icon className="w-3.5 h-3.5" />
+                          {badge.label}
+                        </span>
+                      );
+                    })()}
+                  </div>
+
                   {/* Başlık */}
                   <div className="px-5 pt-5 pb-3">
                     <h3 className="text-lg font-semibold text-gray-900 leading-snug line-clamp-2 min-h-[2.6rem]">
@@ -329,7 +366,25 @@ const CongressCalendarPage = () => {
 
                   {/* Uzmanlık / Yan dal */}
                   <div className="px-5 pb-3 flex flex-wrap gap-1.5 min-h-[2rem] items-start">
-                    {congress.specialty_name ? (
+                    {Array.isArray(congress.specialties) && congress.specialties.length > 0 ? (
+                      <>
+                        {congress.specialties.slice(0, 3).map((s) => (
+                          <span
+                            key={s.id ?? s.name}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 text-[11px] font-semibold rounded-full max-w-full"
+                            title={s?.name}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                            <span className="truncate">{s?.name}</span>
+                          </span>
+                        ))}
+                        {congress.specialties.length > 3 && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] font-semibold rounded-full">
+                            +{congress.specialties.length - 3}
+                          </span>
+                        )}
+                      </>
+                    ) : congress.specialty_name ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-50 border border-blue-100 text-blue-700 text-[11px] font-semibold rounded-full max-w-full">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
                         <span className="truncate">{congress.specialty_name}</span>
@@ -352,14 +407,19 @@ const CongressCalendarPage = () => {
 
                   {/* Bilgiler */}
                   <div className="px-5 pt-3 pb-2 flex-1 flex flex-col gap-2.5">
-                    <div className="flex items-start gap-2.5 text-sm text-gray-600">
-                      <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
-                      <span className="line-clamp-2 leading-snug">
-                        {congress.location}
-                        {congress.city && <span className="text-gray-500">, {congress.city}</span>}
-                        {congress.country && <span className="text-gray-500">, {congress.country}</span>}
-                      </span>
-                    </div>
+                    {(congress.location || congress.city || congress.country) && (
+                      <div className="flex items-start gap-2.5 text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
+                        <span className="line-clamp-2 leading-snug">
+                          {congress.location || ''}
+                          {(congress.city || congress.country) && (
+                            <span className="text-gray-500">
+                              {[congress.city, congress.country].filter(Boolean).join(', ')}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
 
                     {congress.organizer && (
                       <div className="flex items-start gap-2.5 text-sm text-gray-600">

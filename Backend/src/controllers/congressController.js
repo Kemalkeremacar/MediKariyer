@@ -36,10 +36,19 @@ async function getCongressList(req, res) {
       city: req.query.city || '',
       start_date_from: req.query.start_date_from || null,
       start_date_to: req.query.start_date_to || null,
+      end_date_from: req.query.end_date_from || null,
       is_active: isActive,
       sort_by: req.query.sort_by || 'start_date',
       sort_order: req.query.sort_order || 'asc'
     };
+
+    // Doktorlar: varsayılan olarak bitmiş kongreleri görmesin (devam eden + yaklaşan görünsün)
+    // end_date >= bugün(00:00) filtresi uygula, ama kullanıcı explicit end_date_from gönderdiyse ezme.
+    if (role === 'doctor' && !filters.end_date_from) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filters.end_date_from = today.toISOString();
+    }
 
     const result = await congressService.getCongressList(filters);
 
