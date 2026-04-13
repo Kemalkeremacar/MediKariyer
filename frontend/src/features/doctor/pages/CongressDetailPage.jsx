@@ -59,26 +59,56 @@ const CongressDetailPage = () => {
     const start = new Date(congress.start_date);
     const end = new Date(congress.end_date);
     const now = new Date();
+    
+    // Gün bazında karşılaştırma için saatleri sıfırla
     now.setHours(0, 0, 0, 0);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
 
-    const duration = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    const diffFromNow = Math.round((start - now) / (1000 * 60 * 60 * 24));
+    const duration = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const daysToStart = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     let status, statusColor, statusBg, statusBorder;
-    if (diffFromNow > 0) {
+    
+    // Henüz başlamamış kongreler
+    if (daysToStart > 0) {
       status = null;
       statusColor = 'text-emerald-700';
       statusBg = 'bg-emerald-50';
       statusBorder = 'border-emerald-200';
-    } else if (now <= end) {
+    }
+    // Bugün başlayan kongreler
+    else if (daysToStart === 0) {
+      if (daysToEnd === 0) {
+        status = 'Bugün (Tek Gün)';
+        statusColor = 'text-amber-700';
+        statusBg = 'bg-amber-50';
+        statusBorder = 'border-amber-200';
+      } else {
+        status = 'Bugün başlıyor';
+        statusColor = 'text-amber-700';
+        statusBg = 'bg-amber-50';
+        statusBorder = 'border-amber-200';
+      }
+    }
+    // Devam eden kongreler
+    else if (daysToEnd > 0) {
       status = 'Devam ediyor';
       statusColor = 'text-blue-700';
       statusBg = 'bg-blue-50';
       statusBorder = 'border-blue-200';
-    } else {
-      status = 'Sona erdi';
+    }
+    // Bugün biten kongreler
+    else if (daysToEnd === 0) {
+      status = 'Son gün';
+      statusColor = 'text-amber-700';
+      statusBg = 'bg-amber-50';
+      statusBorder = 'border-amber-200';
+    }
+    // Bu duruma hiç gelmemeli çünkü backend bitmiş kongreleri filtreliyor
+    else {
+      status = null;
       statusColor = 'text-gray-500';
       statusBg = 'bg-gray-50';
       statusBorder = 'border-gray-200';

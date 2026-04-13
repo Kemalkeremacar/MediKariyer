@@ -42,8 +42,8 @@ async function getCongressList(req, res) {
       sort_order: req.query.sort_order || 'asc'
     };
 
-    // Doktorlar: varsayılan olarak bitmiş kongreleri görmesin (devam eden + yaklaşan görünsün)
-    // end_date >= bugün(00:00) filtresi uygula, ama kullanıcı explicit end_date_from gönderdiyse ezme.
+    // Doktorlar: bitmiş kongreleri hiç gösterme (profesyonel yaklaşım)
+    // end_date >= bugün filtresi (bugün dahil, geçmiş kongreler filtrelenir)
     if (role === 'doctor' && !filters.end_date_from) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);

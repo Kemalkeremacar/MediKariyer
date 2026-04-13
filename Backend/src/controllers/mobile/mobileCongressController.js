@@ -71,7 +71,8 @@ const listCongresses = catchAsync(async (req, res) => {
     sort_order: sort_order || 'asc'
   };
 
-  // Bitmiş kongreleri gösterme (devam eden + yaklaşan)
+  // Bitmiş kongreleri hiç gösterme (profesyonel yaklaşım)
+  // end_date >= bugün (bugün dahil, geçmiş kongreler filtrelenir)
   if (!filters.end_date_from) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

@@ -108,22 +108,40 @@ const CongressCalendarPage = () => {
     const start = new Date(congress.start_date);
     const end = new Date(congress.end_date);
     const now = new Date();
+    
+    // Gün bazında karşılaştırma için saatleri sıfırla
     now.setHours(0, 0, 0, 0);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
 
-    const diffFromNow = Math.round((start - now) / (1000 * 60 * 60 * 24));
+    const daysToStart = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffFromNow === 0) {
+    // Henüz başlamamış kongreler
+    if (daysToStart > 0) {
+      return null; // Status gösterme
+    }
+    
+    // Bugün başlayan kongreler
+    if (daysToStart === 0) {
+      if (daysToEnd === 0) {
+        return { label: 'Bugün (Tek Gün)', className: 'bg-amber-50 border-amber-200 text-amber-800', icon: Clock };
+      }
       return { label: 'Bugün başlıyor', className: 'bg-amber-50 border-amber-200 text-amber-800', icon: Clock };
     }
-    if (diffFromNow > 0) {
-      return null;
-    }
-    if (now <= end) {
+    
+    // Devam eden kongreler
+    if (daysToEnd > 0) {
       return { label: 'Devam ediyor', className: 'bg-blue-50 border-blue-200 text-blue-800', icon: Clock };
     }
-    return { label: 'Sona erdi', className: 'bg-gray-50 border-gray-200 text-gray-600', icon: Clock };
+    
+    // Bugün biten kongreler
+    if (daysToEnd === 0) {
+      return { label: 'Son gün', className: 'bg-amber-50 border-amber-200 text-amber-800', icon: Clock };
+    }
+    
+    // Bu duruma hiç gelmemeli çünkü backend bitmiş kongreleri filtreliyor
+    return null;
   };
 
   return (
@@ -412,6 +430,9 @@ const CongressCalendarPage = () => {
                         <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
                         <span className="line-clamp-2 leading-snug">
                           {congress.location || ''}
+                          {congress.location && (congress.city || congress.country) && (
+                            <span className="text-gray-500"> - </span>
+                          )}
                           {(congress.city || congress.country) && (
                             <span className="text-gray-500">
                               {[congress.city, congress.country].filter(Boolean).join(', ')}

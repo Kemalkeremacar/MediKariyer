@@ -61,9 +61,39 @@ export const CongressDetailScreen = ({ route, navigation }: Props) => {
     const end = new Date(congress.end_date);
     const now = new Date();
     
-    if (now < start) return null;
-    if (now >= start && now <= end) return { label: 'Devam Ediyor', color: colors.primary[600] };
-    return { label: 'Sona Erdi', color: colors.neutral[500] };
+    // Gün bazında karşılaştırma için saatleri sıfırla
+    now.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    const daysToStart = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Henüz başlamamış kongreler
+    if (daysToStart > 0) {
+      return null; // Status gösterme
+    }
+    
+    // Bugün başlayan kongreler
+    if (daysToStart === 0) {
+      if (daysToEnd === 0) {
+        return { label: 'Bugün (Tek Gün)', color: colors.warning[600] };
+      }
+      return { label: 'Bugün Başlıyor', color: colors.warning[600] };
+    }
+    
+    // Devam eden kongreler
+    if (daysToEnd > 0) {
+      return { label: 'Devam Ediyor', color: colors.primary[600] };
+    }
+    
+    // Bugün biten kongreler
+    if (daysToEnd === 0) {
+      return { label: 'Son Gün', color: colors.warning[600] };
+    }
+    
+    // Bu duruma hiç gelmemeli çünkü backend bitmiş kongreleri filtreliyor
+    return null;
   };
 
   if (isLoading) {

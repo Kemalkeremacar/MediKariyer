@@ -47,32 +47,60 @@ export const CongressCard: React.FC<CongressCardProps> = ({ congress, onPress })
     const start = new Date(congress.start_date);
     const end = new Date(congress.end_date);
     const now = new Date();
+    
+    // Gün bazında karşılaştırma için saatleri sıfırla
     now.setHours(0, 0, 0, 0);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
 
-    const diffFromNow = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysToStart = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffFromNow === 0) {
+    // Henüz başlamamış kongreler
+    if (daysToStart > 0) {
+      return null; // Status gösterme
+    }
+    
+    // Bugün başlayan kongreler
+    if (daysToStart === 0) {
+      if (daysToEnd === 0) {
+        return { label: 'Bugün (Tek Gün)', color: colors.warning[600] };
+      }
       return { label: 'Bugün Başlıyor', color: colors.warning[600] };
     }
-    if (diffFromNow > 0) {
-      return null;
-    }
-    if (now <= end) {
+    
+    // Devam eden kongreler
+    if (daysToEnd > 0) {
       return { label: 'Devam Ediyor', color: colors.primary[600] };
     }
-    return { label: 'Sona Erdi', color: colors.neutral[500] };
+    
+    // Bugün biten kongreler
+    if (daysToEnd === 0) {
+      return { label: 'Son Gün', color: colors.warning[600] };
+    }
+    
+    // Bu duruma hiç gelmemeli çünkü backend bitmiş kongreleri filtreliyor
+    return null;
   };
 
   const status = getCongressStatus();
-  const locationText = [congress.city, congress.country].filter(Boolean).join(', ');
+  
+  // Konum bilgisi - web ile uyumlu format
+  const locationParts = [];
+  if (congress.location) {
+    locationParts.push(congress.location);
+  }
+  if (congress.city || congress.country) {
+    locationParts.push([congress.city, congress.country].filter(Boolean).join(', '));
+  }
+  const locationText = locationParts.join(' - ');
   
   return (
     <View>
       <Card 
         variant="elevated" 
         padding="lg" 
+        shadow="lg"
         style={styles.card}
       >
         {/* Başlık ve Status */}
@@ -82,19 +110,27 @@ export const CongressCard: React.FC<CongressCardProps> = ({ congress, onPress })
               <Typography variant="h3" style={styles.title}>
                 {congress.title}
               </Typography>
-              {status && (
+            </View>
+            
+            {/* Status Badge - Daha belirgin */}
+            {status && (
+              <View style={styles.statusContainer}>
                 <Badge 
-                  variant={status.color === colors.primary[600] ? 'primary' : 'secondary'} 
-                  size="sm"
+                  variant={
+                    status.color === colors.primary[600] ? 'primary' : 
+                    status.color === colors.warning[600] ? 'warning' : 'secondary'
+                  } 
+                  size="md"
+                  style={styles.statusBadge}
                 >
                   {status.label}
                 </Badge>
-              )}
-            </View>
+              </View>
+            )}
             
             {congress.organizer && (
               <View style={styles.organizerRow}>
-                <Ionicons name="people" size={14} color={colors.text.secondary} />
+                <Ionicons name="people" size={16} color={colors.text.secondary} />
                 <Typography variant="body" style={styles.organizer}>
                   {congress.organizer}
                 </Typography>
@@ -148,21 +184,27 @@ export const CongressCard: React.FC<CongressCardProps> = ({ congress, onPress })
         ) : null}
 
         {/* Tarih ve Konum Bilgileri */}
-        <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
-            <Ionicons name="calendar-outline" size={14} color={colors.text.secondary} />
-            <Typography variant="caption" style={styles.infoText}>
-              {formatDate(congress.start_date)} - {formatDate(congress.end_date)}
-            </Typography>
-          </View>
-          {locationText && (
+        <View style={styles.infoSection}>
+          <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Ionicons name="location-outline" size={14} color={colors.text.secondary} />
-              <Typography variant="caption" style={styles.infoText}>
-                {locationText}
+              <View style={styles.iconContainer}>
+                <Ionicons name="calendar-outline" size={16} color={colors.primary[600]} />
+              </View>
+              <Typography variant="body" style={styles.infoText}>
+                {formatDate(congress.start_date)} - {formatDate(congress.end_date)}
               </Typography>
             </View>
-          )}
+            {locationText && (
+              <View style={styles.infoItem}>
+                <View style={styles.iconContainer}>
+                  <Ionicons name="location-outline" size={16} color={colors.primary[600]} />
+                </View>
+                <Typography variant="body" style={styles.infoText}>
+                  {locationText}
+                </Typography>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Detay Butonu */}
@@ -178,7 +220,7 @@ export const CongressCard: React.FC<CongressCardProps> = ({ congress, onPress })
               <Typography variant="caption" style={styles.detailButtonText}>
                 Detayları Gör
               </Typography>
-              <Ionicons name="arrow-forward" size={14} color={colors.primary[600]} />
+              <Ionicons name="arrow-forward" size={14} color="#2563A8" />
             </TouchableOpacity>
           </Animated.View>
         </View>
@@ -190,12 +232,23 @@ export const CongressCard: React.FC<CongressCardProps> = ({ congress, onPress })
 const styles = StyleSheet.create({
   card: {
     marginBottom: spacing.md,
+    // Daha belirgin kenarlar ve gölge
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: colors.border.light,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: spacing.md,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   headerContent: {
     flex: 1,
@@ -206,22 +259,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     flexWrap: 'wrap',
+    marginBottom: spacing.xs,
   },
   title: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
     color: colors.text.primary,
-    lineHeight: 22,
+    lineHeight: 24,
     flex: 1,
+  },
+  statusContainer: {
+    marginBottom: spacing.sm,
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
   },
   organizerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
   },
   organizer: {
     color: colors.text.secondary,
-    fontSize: 14,
+    fontSize: 15,
+    flex: 1,
   },
   details: {
     flexDirection: 'row',
@@ -235,20 +297,34 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'flex-start',
   },
+  infoSection: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+  },
   infoRow: {
     flexDirection: 'column',
-    gap: spacing.xs,
-    marginTop: spacing.sm,
+    gap: spacing.sm,
   },
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: spacing.sm,
+  },
+  iconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   infoText: {
-    color: colors.text.secondary,
-    fontSize: 13,
+    color: colors.text.primary,
+    fontSize: 15,
     flex: 1,
+    fontWeight: '500',
   },
   footer: {
     marginTop: spacing.md,
@@ -263,10 +339,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary[50],
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.primary[200],
+    borderColor: '#2563A8', // Header'daki mavi ile aynı
   },
   detailButtonText: {
-    color: colors.primary[600],
+    color: '#2563A8', // Header'daki mavi ile aynı
     fontWeight: '600',
     fontSize: 13,
   },

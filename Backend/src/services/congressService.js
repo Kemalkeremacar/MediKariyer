@@ -103,13 +103,25 @@ async function getCongressList(filters = {}) {
       });
     }
     if (specialty_id) {
-      // Any specialty link (primary included in congress_specialties by design)
-      q = q.whereExists(function() {
-        this.select(db.raw('1'))
-          .from('congress_specialties as cs')
-          .whereRaw('cs.congress_id = c.id')
-          .andWhere('cs.specialty_id', specialty_id);
-      });
+      // Çoklu specialty_id desteği: "1,2,3" formatı veya tek sayı
+      let specialtyIds;
+      if (typeof specialty_id === 'string' && specialty_id.includes(',')) {
+        // Virgülle ayrılmış string: "1,2,3"
+        specialtyIds = uniqPositiveInts(specialty_id.split(','));
+      } else {
+        // Tek sayı
+        specialtyIds = uniqPositiveInts([specialty_id]);
+      }
+      
+      if (specialtyIds.length > 0) {
+        // Any specialty link (primary included in congress_specialties by design)
+        q = q.whereExists(function() {
+          this.select(db.raw('1'))
+            .from('congress_specialties as cs')
+            .whereRaw('cs.congress_id = c.id')
+            .whereIn('cs.specialty_id', specialtyIds);
+        });
+      }
     }
     if (subspecialty_id) {
       q = q.where('c.subspecialty_id', subspecialty_id);
@@ -195,13 +207,18 @@ async function getCongressList(filters = {}) {
     congresses.forEach((c) => { c.specialties = []; });
   }
 
+  const currentPage = Number(page) || 1;
+  const totalPages = Math.ceil(total / parsedLimit) || 1;
+
   return {
     data: congresses,
     pagination: {
-      page: Number(page) || 1,
-      limit: parsedLimit,
+      current_page: currentPage,
+      per_page: parsedLimit,
       total,
-      totalPages: Math.ceil(total / parsedLimit) || 1
+      total_pages: totalPages,
+      has_next: currentPage * parsedLimit < total,
+      has_prev: currentPage > 1
     }
   };
 }

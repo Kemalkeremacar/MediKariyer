@@ -627,10 +627,11 @@ const mobileCongressesQuerySchema = paginationQuerySchema.keys({
   search: Joi.string().max(100).trim().allow('').optional().messages({
     'string.max': 'Arama terimi en fazla 100 karakter olabilir'
   }),
-  specialty_id: Joi.number().integer().positive().optional().messages({
-    'number.base': 'Branş ID sayı olmalıdır',
-    'number.integer': 'Branş ID tam sayı olmalıdır',
-    'number.positive': 'Branş ID pozitif bir sayı olmalıdır'
+  specialty_id: Joi.alternatives().try(
+    Joi.number().integer().positive(),
+    Joi.string().pattern(/^(\d+)(,\d+)*$/)
+  ).optional().messages({
+    'alternatives.match': 'Branş ID sayı veya virgülle ayrılmış sayılar olmalıdır (örn: 1 veya 1,2,3)'
   }),
   subspecialty_id: Joi.number().integer().positive().optional().messages({
     'number.base': 'Alt branş ID sayı olmalıdır',
