@@ -355,6 +355,13 @@ async function deleteCongress(congressId, adminId) {
  * Yaklaşan kongreler (Doktorlar için)
  */
 async function getUpcomingCongresses(limit = 10) {
+  // Bugünün tarihini al (sadece tarih kısmı, timezone sorununu önle)
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayDateOnly = `${year}-${month}-${day}`;
+
   const congresses = await db('congresses as c')
     .leftJoin('specialties as s', 'c.specialty_id', 's.id')
     .leftJoin('subspecialties as ss', 'c.subspecialty_id', 'ss.id')
@@ -373,7 +380,7 @@ async function getUpcomingCongresses(limit = 10) {
     )
     .where('c.is_active', 1)
     .whereNull('c.deleted_at')
-    .where('c.start_date', '>=', new Date())
+    .where('c.end_date', '>=', todayDateOnly) // ✅ DOĞRU: Bitmiş olmayan kongreler
     .orderBy('c.start_date', 'asc')
     .limit(limit);
 
@@ -407,6 +414,13 @@ async function getUpcomingCongresses(limit = 10) {
 async function getCongressesBySpecialty(specialty_id) {
   if (!specialty_id) return [];
 
+  // Bugünün tarihini al (sadece tarih kısmı, timezone sorununu önle)
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayDateOnly = `${year}-${month}-${day}`;
+
   const congresses = await db('congresses as c')
     .leftJoin('specialties as s', 'c.specialty_id', 's.id')
     .leftJoin('subspecialties as ss', 'c.subspecialty_id', 'ss.id')
@@ -425,7 +439,7 @@ async function getCongressesBySpecialty(specialty_id) {
         .whereRaw('cs.congress_id = c.id')
         .andWhere('cs.specialty_id', specialty_id);
     })
-    .where('c.start_date', '>=', new Date())
+    .where('c.end_date', '>=', todayDateOnly) // ✅ DOĞRU: Bitmiş olmayan kongreler
     .orderBy('c.start_date', 'asc');
 
   const ids = congresses.map((c) => c?.id).filter(Boolean);

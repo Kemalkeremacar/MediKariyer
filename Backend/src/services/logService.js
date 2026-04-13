@@ -15,6 +15,7 @@
 'use strict';
 
 const logger = require('../utils/logger');
+const { createPaginationResponse, calculateOffset, validatePaginationParams } = require('../utils/paginationHelper');
 
 // Lazy load db to avoid circular dependency
 let _db = null;
@@ -241,13 +242,7 @@ class LogService {
         filters 
       });
 
-      return {
-        logs,
-        total: parseInt(total),
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit)
-      };
+      return createPaginationResponse(logs, total, page, limit);
     } catch (error) {
       logger.error('Application log sorgulama hatası', { 
         error: error.message, 
@@ -318,13 +313,7 @@ class LogService {
       // Data query with pagination
       const logs = await query.limit(limit).offset(offset);
 
-      return {
-        logs,
-        total: parseInt(total),
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit)
-      };
+      return createPaginationResponse(logs, total, page, limit);
     } catch (error) {
       logger.error('Audit log sorgulama hatası', { 
         error: error.message, 
@@ -391,13 +380,7 @@ class LogService {
       // Data query with pagination
       const logs = await query.limit(limit).offset(offset);
 
-      return {
-        logs,
-        total: parseInt(total),
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit)
-      };
+      return createPaginationResponse(logs, total, page, limit);
     } catch (error) {
       logger.error('Security log sorgulama hatası', { 
         error: error.message, 

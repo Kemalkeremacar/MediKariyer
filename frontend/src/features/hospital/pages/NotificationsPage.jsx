@@ -33,6 +33,7 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ROUTE_CONFIG } from '@config/routes.js';
 import apiRequest from '@/services/http/client';
 import { formatRelativeTime } from '@/utils/dateUtils';
+import { normalizePagination } from '@/utils/paginationUtils';
 
 /**
  * Notification Card Component
@@ -211,7 +212,8 @@ const HospitalNotificationsPage = () => {
     : Array.isArray(notificationsData?.data)
     ? notificationsData.data
     : [];
-  const pagination = notificationsData?.data?.data?.pagination || notificationsData?.data?.pagination || {};
+  const rawPagination = notificationsData?.data?.data?.pagination || notificationsData?.data?.pagination || {};
+  const pagination = normalizePagination(rawPagination);
   const totalUnreadCount = unreadCountData?.data?.data?.count ?? 0;
 
   const pageUnreadCount = Array.isArray(notifications) ? notifications.filter((n) => {
@@ -569,7 +571,7 @@ const HospitalNotificationsPage = () => {
               </div>
 
               {/* Pagination */}
-              {pagination.total_pages > 1 && (
+              {pagination.totalPages > 1 && (
                 <div className="bg-blue-50 px-6 py-4 flex items-center justify-between border-t border-blue-100">
                   <button
                     onClick={() =>
@@ -585,7 +587,7 @@ const HospitalNotificationsPage = () => {
                   </button>
 
                   <div className="text-sm text-gray-700 font-medium">
-                    Sayfa {filters.page} / {pagination.total_pages}{' '}
+                    Sayfa {filters.page} / {pagination.totalPages}{' '}
                     <span className="ml-2 text-gray-600">
                       (Toplam {pagination.total || pagination.total_count || 0} bildirim)
                     </span>
@@ -595,10 +597,10 @@ const HospitalNotificationsPage = () => {
                     onClick={() =>
                       setFilters((prev) => ({
                         ...prev,
-                        page: Math.min(pagination.total_pages, prev.page + 1),
+                        page: Math.min(pagination.totalPages, prev.page + 1),
                       }))
                     }
-                    disabled={filters.page === pagination.total_pages}
+                    disabled={filters.page === pagination.totalPages}
                     className="px-4 py-2 rounded-xl text-gray-700 bg-white border border-gray-200 hover:bg-blue-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                   >
                     Sonraki

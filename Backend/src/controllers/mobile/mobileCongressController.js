@@ -55,7 +55,7 @@ const listCongresses = catchAsync(async (req, res) => {
     sort_order
   } = req.query;
 
-  // Mobile için sadece aktif kongreleri göster
+  // Mobile için güvenli filtreleme (sadece doktor kullanır)
   const filters = {
     page,
     limit,
@@ -66,18 +66,21 @@ const listCongresses = catchAsync(async (req, res) => {
     city,
     start_date_from,
     start_date_to,
-    is_active: true, // Mobile için sadece aktif kongreler
     sort_by: sort_by || 'start_date',
     sort_order: sort_order || 'asc'
   };
 
-  // Bitmiş kongreleri hiç gösterme (profesyonel yaklaşım)
-  // end_date >= bugün (bugün dahil, geçmiş kongreler filtrelenir)
-  if (!filters.end_date_from) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    filters.end_date_from = today.toISOString();
-  }
+  // Mobile: ZORUNLU güvenlik filtreleri (bypass edilemez)
+  const today = new Date();
+  
+  // Sadece tarih kısmını al (timezone sorununu önle)
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayDateOnly = `${year}-${month}-${day}`;
+  
+  filters.is_active = true; // Sadece aktif kongreler
+  filters.end_date_from = todayDateOnly; // Bugün dahil (>=)
 
   const result = await congressService.getCongressList(filters);
 

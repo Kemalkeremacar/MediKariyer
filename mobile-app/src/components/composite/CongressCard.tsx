@@ -16,7 +16,6 @@ import Animated, {
 import { Card } from '@/components/ui/Card';
 import { Typography } from '@/components/ui/Typography';
 import { Chip } from '@/components/ui/Chip';
-import { Badge } from '@/components/ui/Badge';
 import { Divider } from '@/components/ui/Divider';
 import { colors, spacing } from '@/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -55,6 +54,11 @@ export const CongressCard: React.FC<CongressCardProps> = ({ congress, onPress })
 
     const daysToStart = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Güvenlik: Bitmiş kongreler hiç gösterilmemeli (backend filtrelemeli ama yine de kontrol)
+    if (daysToEnd < 0) {
+      return null; // Bitmiş kongre - gösterme
+    }
 
     // Henüz başlamamış kongreler
     if (daysToStart > 0) {
@@ -112,19 +116,26 @@ export const CongressCard: React.FC<CongressCardProps> = ({ congress, onPress })
               </Typography>
             </View>
             
-            {/* Status Badge - Daha belirgin */}
+            {/* Status Badge - Web ile uyumlu (ikon + metin) */}
             {status && (
-              <View style={styles.statusContainer}>
-                <Badge 
-                  variant={
-                    status.color === colors.primary[600] ? 'primary' : 
-                    status.color === colors.warning[600] ? 'warning' : 'secondary'
-                  } 
-                  size="md"
-                  style={styles.statusBadge}
+              <View style={[
+                styles.statusBadge, 
+                { 
+                  backgroundColor: status.color === colors.primary[600] ? colors.primary[50] : colors.warning[50],
+                  borderColor: status.color === colors.primary[600] ? colors.primary[200] : colors.warning[200]
+                }
+              ]}>
+                <Ionicons 
+                  name="time" 
+                  size={12} 
+                  color={status.color} 
+                />
+                <Typography 
+                  variant="caption" 
+                  style={[styles.statusText, { color: status.color }] as any}
                 >
                   {status.label}
-                </Badge>
+                </Typography>
               </View>
             )}
             
@@ -268,11 +279,20 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     flex: 1,
   },
-  statusContainer: {
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignSelf: 'flex-start',
     marginBottom: spacing.sm,
   },
-  statusBadge: {
-    alignSelf: 'flex-start',
+  statusText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   organizerRow: {
     flexDirection: 'row',

@@ -25,6 +25,7 @@ import { showToast } from '@/utils/toastUtils';
 import { toastMessages } from '@/config/toast';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { ModalContainer } from '@/components/ui/ModalContainer';
+import { normalizePagination } from '@/utils/paginationUtils';
 
 const PhotoApprovalsPage = () => {
   const [searchParams] = useSearchParams();
@@ -64,13 +65,8 @@ const PhotoApprovalsPage = () => {
     : [];
   const rawPagination = photoRequestsData?.data?.pagination || {};
   
-  // Normalize pagination format to match other pages
-  const pagination = {
-    current_page: rawPagination.current_page || rawPagination.page || currentPage || 1,
-    per_page: rawPagination.per_page || rawPagination.limit || 10,
-    total: rawPagination.total || 0,
-    total_pages: rawPagination.total_pages || rawPagination.pages || Math.ceil((rawPagination.total || 0) / (rawPagination.per_page || rawPagination.limit || 10)) || 1
-  };
+  // Use normalizePagination utility instead of manual normalization
+  const pagination = normalizePagination(rawPagination);
   
   // Bekleyen taleplerin sayısı
   const pendingCount = pendingRequestsData?.data?.pagination?.total || 0;

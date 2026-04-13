@@ -36,6 +36,7 @@
 const db = require('../config/dbConfig').db;
 const { AppError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
+const { createPaginationResponse, calculateOffset, validatePaginationParams } = require('../utils/paginationHelper');
 const notificationService = require('./notificationService');
 
 // ============================================================================
@@ -378,15 +379,7 @@ const getJobs = async (userId, params = {}) => {
 
     const [{ count }] = await totalQuery.count('* as count');
 
-    return {
-      jobs,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: parseInt(count),
-        pages: Math.ceil(count / limit)
-      }
-    };
+    return createPaginationResponse(jobs, count, page, limit);
   } catch (error) {
     logger.error('Get hospital jobs error:', error);
     throw error;
@@ -989,13 +982,7 @@ const getApplications = async (userId, jobId, params = {}) => {
         title: job.title,
         hospital_id: job.hospital_id
       },
-      applications,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: parseInt(count),
-        pages: Math.ceil(count / limit)
-      }
+      ...createPaginationResponse(applications, count, page, limit)
     };
   } catch (error) {
     logger.error('Get job applications error:', error);
@@ -1207,15 +1194,7 @@ const getAllApplications = async (userId, params = {}) => {
     
     const count = countResult?.count || 0;
 
-    return {
-      applications,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total: parseInt(count),
-        pages: Math.ceil(count / limit)
-      }
-    };
+    return createPaginationResponse(applications, count, page, limit);
   } catch (error) {
     logger.error('Get all hospital applications error:', error);
     throw error;
@@ -1639,15 +1618,7 @@ const getDoctorProfiles = async (hospitalUserId, params = {}) => {
       }));
     }
 
-    return {
-      doctors,
-      pagination: {
-        page: safePage,
-        limit: safeLimit,
-        total,
-        pages: total > 0 ? Math.ceil(total / safeLimit) : 0
-      }
-    };
+    return createPaginationResponse(doctors, total, safePage, safeLimit);
   } catch (error) {
     logger.error('Get doctor profiles error:', error);
     throw error;

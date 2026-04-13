@@ -18,6 +18,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { normalizePagination } from '@/utils/paginationUtils';
 import { ModalContainer } from '@/components/ui/ModalContainer';
 
 /**
@@ -43,19 +44,8 @@ const ContactMessagesPage = () => {
   // So pagination is at messagesData?.data?.pagination
   const rawPagination = messagesData?.data?.pagination || messagesData?.pagination || {};
   
-  // Normalize pagination format to match other pages
-  const perPage = rawPagination.per_page || rawPagination.limit || 10;
-  const total = rawPagination.total !== undefined && rawPagination.total !== null ? parseInt(rawPagination.total) : 0;
-  const calculatedTotalPages = total > 0 ? Math.ceil(total / perPage) : 1;
-  
-  const pagination = {
-    current_page: rawPagination.current_page || rawPagination.page || currentPage || 1,
-    per_page: perPage,
-    total: total,
-    total_pages: (rawPagination.total_pages !== undefined && rawPagination.total_pages !== null) 
-      ? parseInt(rawPagination.total_pages) 
-      : calculatedTotalPages
-  };
+  // Use normalizePagination utility instead of manual normalization
+  const pagination = normalizePagination(rawPagination);
   
   const handlePageChange = (page) => {
     setCurrentPage(page);

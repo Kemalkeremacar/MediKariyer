@@ -13,6 +13,7 @@ import {
   Hourglass, XCircle, RefreshCw, Users
 } from 'lucide-react';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
+import { normalizePagination } from '@/utils/paginationUtils';
 
 const AdminJobsPage = () => {
   const navigate = useNavigate();
@@ -82,13 +83,8 @@ const AdminJobsPage = () => {
   const jobs = data?.data?.data?.data || data?.data?.data || [];
   const rawPagination = data?.data?.data?.pagination || data?.data?.pagination || {};
   
-  // Normalize pagination format to match other pages (UsersPage, HospitalsPage, ApplicationsPage)
-  const pagination = {
-    current_page: rawPagination.page || rawPagination.current_page || 1,
-    per_page: rawPagination.limit || rawPagination.per_page || 10,
-    total: rawPagination.total || 0,
-    total_pages: rawPagination.pages || rawPagination.total_pages || Math.ceil((rawPagination.total || 0) / (rawPagination.limit || rawPagination.per_page || 10)) || 1
-  };
+  // Use normalizePagination utility instead of manual normalization
+  const pagination = normalizePagination(rawPagination);
 
   const handleFilterChange = (key, value) => {
     const numericKeys = ['specialty_id', 'subspecialty_id', 'city_id', 'status', 'hospital_id', 'page', 'limit'];

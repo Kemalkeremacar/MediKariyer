@@ -71,8 +71,15 @@ const CongressDetailPage = () => {
 
     let status, statusColor, statusBg, statusBorder;
     
+    // Güvenlik: Bitmiş kongreler hiç gösterilmemeli (backend filtrelemeli ama yine de kontrol)
+    if (daysToEnd < 0) {
+      status = null; // Bitmiş kongre - gösterme
+      statusColor = 'text-gray-500';
+      statusBg = 'bg-gray-50';
+      statusBorder = 'border-gray-200';
+    }
     // Henüz başlamamış kongreler
-    if (daysToStart > 0) {
+    else if (daysToStart > 0) {
       status = null;
       statusColor = 'text-emerald-700';
       statusBg = 'bg-emerald-50';

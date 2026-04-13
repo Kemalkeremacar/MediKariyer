@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Plus, Edit, Search, X, MapPin, Globe, Link2, Users, Tag, CalendarDays, FileText, ToggleLeft, AlertTriangle, ImagePlus, Trash2 } from 'lucide-react';
+import { Calendar, Plus, Edit, Search, X, MapPin, Globe, Users, Tag, CalendarDays, FileText, ToggleLeft, AlertTriangle, ImagePlus, Trash2 } from 'lucide-react';
 import { useAdminCongresses, useCreateCongress, useDeleteCongress, useUpdateCongress } from '../../congress/api/useCongress';
 import { apiRequest } from '@/services/http/client';
 import { ENDPOINTS, buildEndpoint } from '@config/api.js';
@@ -12,6 +12,7 @@ import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { useSpecialties, useSubspecialties } from '@/hooks/useLookup';
 import useUiStore from '@/store/uiStore';
 import ImageCropModal from '@/components/ui/ImageCropModal';
+import { normalizePagination } from '@/utils/paginationUtils';
 
 const inputBase = 'w-full px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-400 bg-white transition-all focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 outline-none';
 
@@ -737,15 +738,12 @@ const CongressManagementPage = () => {
   const payload = congressData?.data?.data;
   const congresses = payload?.data || [];
   const rawPag = payload?.pagination || {};
-  const pagination = {
-    current_page: Number(rawPag.page || rawPag.current_page || filters.page || 1),
-    per_page: Number(rawPag.limit || rawPag.per_page || filters.limit || 10),
-    total: Number(rawPag.total ?? 0),
-    total_pages: Number(rawPag.totalPages || rawPag.total_pages || 1),
-  };
+  
+  // Use normalizePagination utility instead of manual normalization
+  const pagination = normalizePagination(rawPag);
 
   const handlePageChange = (page) => {
-    const next = Math.max(1, Math.min(pagination.total_pages || 1, Number(page) || 1));
+    const next = Math.max(1, Math.min(pagination.totalPages || 1, Number(page) || 1));
     setFilters((prev) => ({ ...prev, page: next }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -963,6 +961,22 @@ const CongressManagementPage = () => {
       month: 'long', 
       year: 'numeric' 
     });
+  };
+
+  const getCongressStatus = (congress) => {
+    const end = new Date(congress.end_date);
+    const now = new Date();
+    
+    // Gün bazında karşılaştırma için saatleri sıfırla
+    now.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    
+    const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysToEnd < 0) {
+      return { label: 'Bitmiş', className: 'bg-gray-50 border-gray-200 text-gray-600' };
+    }
+    return null; // Aktif kongreler için status gösterme
   };
 
   const isFirstLoad = isLoading && congresses.length === 0;
@@ -1218,7 +1232,18 @@ const CongressManagementPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(congress.start_date)}
+                      <div className="flex items-center gap-2">
+                        <span>{formatDate(congress.start_date)}</span>
+                        {(() => {
+                          const status = getCongressStatus(congress);
+                          if (!status) return null;
+                          return (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium ${status.className}`}>
+                              {status.label}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {[congress.city, congress.country].filter(Boolean).join(', ') || '-'}

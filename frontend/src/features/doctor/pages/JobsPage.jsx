@@ -24,6 +24,7 @@ import { showToast } from '@/utils/toastUtils';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { useLookup } from '@/hooks/useLookup';
 import { formatDate } from '@/utils/dateUtils';
+import { normalizePagination } from '@/utils/paginationUtils';
 
 const DoctorJobsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -350,7 +351,8 @@ const DoctorJobsPage = () => {
   const { data: jobsData, isLoading: jobsLoading } = useDoctorJobs(jobsParams);
 
   const jobs = jobsData?.jobs || [];
-  const pagination = jobsData?.pagination || {};
+  const rawPagination = jobsData?.pagination || {};
+  const pagination = normalizePagination(rawPagination);
 
   // Sayfa numarasını ve scroll pozisyonunu geri yükle (sadece sayfa ilk yüklendiğinde veya geri gelindiğinde)
   const hasRestoredPageRef = useRef(false);
@@ -774,11 +776,11 @@ const JobsList = memo(({ jobs, pagination, onJobClick, currentPage, onPageChange
           <JobCard key={job.id} job={job} onClick={onJobClick} />
                   ))}
               </div>
-      {pagination.total_pages > 1 && (
+      {pagination.totalPages > 1 && (
         <div className="mt-8">
           <Pagination
             currentPage={currentPage}
-            totalPages={pagination.total_pages}
+            totalPages={pagination.totalPages}
             onPageChange={onPageChange}
           />
         </div>
@@ -790,8 +792,8 @@ const JobsList = memo(({ jobs, pagination, onJobClick, currentPage, onPageChange
   const jobsSame = prevProps.jobs?.length === nextProps.jobs?.length &&
     prevProps.jobs?.every((job, i) => job?.id === nextProps.jobs?.[i]?.id);
   const paginationSame = 
-    prevProps.pagination?.total_pages === nextProps.pagination?.total_pages &&
-    prevProps.pagination?.current_page === nextProps.pagination?.current_page;
+    prevProps.pagination?.totalPages === nextProps.pagination?.totalPages &&
+    prevProps.pagination?.page === nextProps.pagination?.page;
   
   // Eğer tüm değerler aynıysa render etme (true = skip render)
   return jobsSame && paginationSame && prevProps.currentPage === nextProps.currentPage;

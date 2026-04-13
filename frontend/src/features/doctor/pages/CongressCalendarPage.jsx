@@ -4,11 +4,12 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Calendar, MapPin, Globe, Users, Search, Filter, XCircle as XIcon, Sparkles, ArrowRight, Clock } from 'lucide-react';
+import { Calendar, MapPin, Users, Search, Filter, XCircle as XIcon, Sparkles, ArrowRight, Clock } from 'lucide-react';
 import { useCongresses } from '../../congress/api/useCongress';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { Link } from 'react-router-dom';
 import { useSpecialties, useSubspecialties } from '@/hooks/useLookup';
+import { normalizePagination, createPageChangeHandler } from '@/utils/paginationUtils';
 
 const CongressCalendarPage = () => {
   const [filters, setFilters] = useState({
@@ -31,7 +32,7 @@ const CongressCalendarPage = () => {
 
   const payload = congressData?.data?.data;
   const congresses = payload?.data || [];
-  const pagination = payload?.pagination || {};
+  const pagination = normalizePagination(payload?.pagination);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -42,18 +43,11 @@ const CongressCalendarPage = () => {
     });
   };
 
-  const shortDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
-  };
-
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
   };
 
-  const handlePageChange = (newPage) => {
-    setFilters(prev => ({ ...prev, page: newPage }));
-  };
+  const handlePageChange = createPageChangeHandler(setFilters);
 
   const clearFilters = () => {
     setFilters({
@@ -116,6 +110,11 @@ const CongressCalendarPage = () => {
 
     const daysToStart = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Güvenlik: Bitmiş kongreler hiç gösterilmemeli (backend filtrelemeli ama yine de kontrol)
+    if (daysToEnd < 0) {
+      return null; // Bitmiş kongre - gösterme
+    }
 
     // Henüz başlamamış kongreler
     if (daysToStart > 0) {

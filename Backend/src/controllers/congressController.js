@@ -16,15 +16,17 @@ async function getCongressList(req, res) {
     // Admin için: is_active parametresi yoksa null (tümünü göster)
     // is_active=true → sadece aktif, is_active=false → sadece pasif
     const rawIsActive = req.query.is_active;
-    let isActive = role === 'doctor' ? true : null;
+    let isActive = null; // Admin için default
 
     if (role !== 'doctor') {
+      // Admin: Query parametresine göre filtreleme
       if (rawIsActive === 'true' || rawIsActive === true) {
         isActive = true;
       } else if (rawIsActive === 'false' || rawIsActive === false) {
         isActive = false;
       }
     }
+    // Doktor için is_active aşağıda zorunlu olarak set edilecek
 
     const filters = {
       page: parseInt(req.query.page) || 1,
@@ -42,13 +44,25 @@ async function getCongressList(req, res) {
       sort_order: req.query.sort_order || 'asc'
     };
 
-    // Doktorlar: bitmiş kongreleri hiç gösterme (profesyonel yaklaşım)
-    // end_date >= bugün filtresi (bugün dahil, geçmiş kongreler filtrelenir)
-    if (role === 'doctor' && !filters.end_date_from) {
+    // Rol bazlı kongre filtreleme (güvenlik odaklı)
+    if (role === 'doctor') {
+      // Doktorlar: Sadece aktif ve bitmiş olmayan kongreler
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      filters.end_date_from = today.toISOString();
+      
+      // Sadece tarih kısmını al (timezone sorununu önle)
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const todayDateOnly = `${year}-${month}-${day}`;
+      
+      // Doktor için ZORUNLU filtreler (bypass edilemez)
+      filters.is_active = true; // Sadece aktif kongreler
+      filters.end_date_from = todayDateOnly; // Bugün dahil (>=)
+      
+      // Doktor kendi filtresini override edemez
+      delete filters.is_active_override;
     }
+    // Admin: Tüm kongreleri görebilir (yönetim amaçlı)
 
     const result = await congressService.getCongressList(filters);
 

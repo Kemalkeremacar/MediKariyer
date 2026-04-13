@@ -39,6 +39,7 @@ import { useApplicationStatuses } from '@/hooks/useLookup';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 import { formatDate, formatDateShort } from '@/utils/dateUtils';
+import { normalizePagination } from '@/utils/paginationUtils';
 
 const HospitalApplications = () => {
   const navigate = useNavigate();
@@ -362,7 +363,8 @@ const HospitalApplications = () => {
 
   // Veri parsing
   const applications = applicationsData?.data?.applications || [];
-  const pagination = applicationsData?.data?.pagination || {};
+  const rawPagination = applicationsData?.data?.pagination || {};
+  const pagination = normalizePagination(rawPagination);
 
   const DEFAULT_STATUS_OPTIONS = useMemo(() => ([
     { value: 1, label: 'Başvuruldu', name: 'Başvuruldu' },
@@ -776,7 +778,7 @@ const HospitalApplications = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">Sayfa:</span>
               <span className="text-gray-900 font-semibold">
-                {currentPage} / {pagination.pages || 1}
+                {currentPage} / {pagination.totalPages || 1}
               </span>
             </div>
           </div>
@@ -811,11 +813,11 @@ const HospitalApplications = () => {
           )}
 
           {/* Pagination */}
-          {pagination.pages > 1 && (
+          {pagination.totalPages > 1 && (
             <div className="mt-8">
               <Pagination
                 currentPage={currentPage}
-                totalPages={pagination.pages}
+                totalPages={pagination.totalPages}
                 onPageChange={(page) => handleFilterChange('page', page)}
               />
             </div>

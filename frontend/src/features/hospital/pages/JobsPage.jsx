@@ -33,6 +33,7 @@ import { StaggeredAnimation } from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { showToast } from '@/utils/toastUtils';
 import { formatDate } from '@/utils/dateUtils';
+import { normalizePagination } from '@/utils/paginationUtils';
 
 const hospitalPageWrapper = 'hospital-light min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 p-4 md:p-8';
 
@@ -204,7 +205,8 @@ const HospitalJobs = () => {
   const updateJobMutation = useUpdateHospitalJob();
   // Veri parsing
   const jobs = jobsData?.data?.jobs || [];
-  const paginationData = jobsData?.data?.pagination || {};
+  const rawPagination = jobsData?.data?.pagination || {};
+  const paginationData = normalizePagination(rawPagination);
 
   useEffect(() => {
     if (jobsLoading) return;
@@ -454,7 +456,7 @@ const HospitalJobs = () => {
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">Sayfa:</span>
             <span className="text-gray-900 font-semibold">
-              {paginationData.page || 1} / {paginationData.pages || 1}
+              {paginationData.page || 1} / {paginationData.totalPages || 1}
             </span>
           </div>
         </div>
@@ -572,11 +574,11 @@ const HospitalJobs = () => {
         )}
 
         {/* Pagination */}
-        {paginationData.pages > 1 && (
+        {paginationData.totalPages > 1 && (
           <div className="mt-8">
             <Pagination
               currentPage={pagination.page}
-              totalPages={paginationData.pages}
+              totalPages={paginationData.totalPages}
               onPageChange={(page) => setPagination(prev => ({ ...prev, page }))}
             />
           </div>

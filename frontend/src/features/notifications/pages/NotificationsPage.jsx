@@ -17,6 +17,7 @@ import { Bell, CheckCircle, Filter, Search, Trash2 } from 'lucide-react';
 import TransitionWrapper from '../../../components/ui/TransitionWrapper';
 import { SkeletonLoader } from '@/components/ui/LoadingSpinner';
 import { formatRelativeTime } from '@/utils/dateUtils';
+import { normalizePagination, createPageChangeHandler } from '@/utils/paginationUtils';
 
 /**
  * Notification Card Component
@@ -114,6 +115,8 @@ const NotificationsPage = () => {
     limit: 20,
   });
 
+  const handlePageChange = createPageChangeHandler(setFilters);
+
   const {
     data: notificationsData,
     isLoading,
@@ -125,7 +128,7 @@ const NotificationsPage = () => {
   const deleteNotificationMutation = useDeleteNotification();
 
   const notifications = notificationsData?.data?.data || notificationsData?.data?.notifications || [];
-  const pagination = notificationsData?.data?.pagination || {};
+  const pagination = normalizePagination(notificationsData?.data?.pagination);
   const unreadCount = notifications.filter((n) => {
     // Backend'den normalize edilmiş isRead field'ını veya read_at field'ını kullan
     return n.isRead === false || (n.isRead === undefined && (n.read_at === null || n.read_at === undefined));
@@ -287,12 +290,7 @@ const NotificationsPage = () => {
                 {pagination.totalPages > 1 && (
                   <div className="bg-gray-50 px-6 py-4 flex items-center justify-between border-t">
                     <button
-                      onClick={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          page: Math.max(1, prev.page - 1),
-                        }))
-                      }
+                      onClick={() => handlePageChange(Math.max(1, filters.page - 1))}
                       disabled={filters.page === 1}
                       className="admin-btn admin-btn-outline"
                     >
@@ -302,17 +300,12 @@ const NotificationsPage = () => {
                     <div className="text-sm text-gray-600">
                       Sayfa {filters.page} / {pagination.totalPages}{' '}
                       <span className="ml-2">
-                        (Toplam {pagination.totalCount} bildirim)
+                        (Toplam {pagination.total} bildirim)
                       </span>
                     </div>
 
                     <button
-                      onClick={() =>
-                        setFilters((prev) => ({
-                          ...prev,
-                          page: Math.min(pagination.totalPages, prev.page + 1),
-                        }))
-                      }
+                      onClick={() => handlePageChange(Math.min(pagination.totalPages, filters.page + 1))}
                       disabled={filters.page === pagination.totalPages}
                       className="admin-btn admin-btn-outline"
                     >

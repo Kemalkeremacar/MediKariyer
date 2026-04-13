@@ -28,17 +28,8 @@ export const useUpcomingCongresses = (limit: number = 3) => {
     staleTime: 1000 * 60 * 5, // 5 dakika
     gcTime: 1000 * 60 * 10, // 10 dakika
     select: (data) => {
-      // Sadece gelecekteki kongreleri filtrele
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      
-      const upcomingCongresses = data.data.filter((congress) => {
-        const endDate = new Date(congress.end_date);
-        endDate.setHours(0, 0, 0, 0);
-        return endDate >= now;
-      });
-      
-      return upcomingCongresses.slice(0, limit);
+      // Backend artık doğru filtreliyor, sadece limit uygula
+      return data.data.slice(0, limit);
     },
   });
 };

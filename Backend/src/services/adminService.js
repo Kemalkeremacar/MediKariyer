@@ -27,6 +27,7 @@
 const db = require('../config/dbConfig').db;
 const bcrypt = require('bcryptjs');
 const { AppError } = require('../utils/errorHandler');
+const { createPaginationResponse, calculateOffset, validatePaginationParams } = require('../utils/paginationHelper');
 const notificationService = require('./notificationService');
 const logger = require('../utils/logger');
 
@@ -311,15 +312,7 @@ const getUsers = async (filters = {}) => {
     }
   }));
   
-  return {
-    data: usersWithProfile,
-    pagination: {
-      current_page: page,
-      per_page: limit,
-      total: parseInt(count),
-      total_pages: Math.ceil(count / limit)
-    }
-  };
+  return createPaginationResponse(usersWithProfile, count, page, limit);
 };
 
 /**
@@ -557,15 +550,7 @@ const getAllJobs = async (filters = {}) => {
     });
   }
 
-  return { 
-    data: jobs, 
-    pagination: { 
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total: parseInt(count), 
-      pages: Math.ceil(count / limit)
-    } 
-  };
+  return createPaginationResponse(jobs, count, page, limit);
 };
 
 /**
@@ -793,15 +778,7 @@ const getAllApplications = async ({ search, doctor_search, hospital_search, stat
   query.orderBy([{ column: 'a.applied_at', order: 'desc' }, { column: 'a.id', order: 'desc' }]);
   const apps = await query.limit(limit).offset(offset);
 
-  return { 
-    data: apps, 
-    pagination: { 
-      current_page: page,
-      per_page: limit,
-      total: parseInt(count), 
-      total_pages: Math.ceil(count / limit)
-    } 
-  };
+  return createPaginationResponse(apps, count, page, limit);
 };
 
 // ============================================================================
@@ -1877,17 +1854,7 @@ const getPhotoRequests = async (filters = {}) => {
       }
     }
     
-    return {
-      data: requests,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
-    };
+    return createPaginationResponse(requests, total, page, limit);
   } catch (error) {
     logger.error('getPhotoRequests error:', error);
     logger.error('Error details:', {

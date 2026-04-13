@@ -69,6 +69,11 @@ export const CongressDetailScreen = ({ route, navigation }: Props) => {
     const daysToStart = Math.round((start.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     const daysToEnd = Math.round((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
+    // Güvenlik: Bitmiş kongreler hiç gösterilmemeli (backend filtrelemeli ama yine de kontrol)
+    if (daysToEnd < 0) {
+      return null; // Bitmiş kongre - gösterme
+    }
+
     // Henüz başlamamış kongreler
     if (daysToStart > 0) {
       return null; // Status gösterme
