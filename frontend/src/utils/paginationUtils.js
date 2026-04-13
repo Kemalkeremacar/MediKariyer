@@ -9,7 +9,7 @@
  * @returns {Object} Normalize edilmiş pagination verisi
  */
 export function normalizePagination(rawPagination = {}) {
-  return {
+  const normalized = {
     // Sayfa numarası
     page: rawPagination.current_page || rawPagination.page || 1,
     
@@ -26,6 +26,13 @@ export function normalizePagination(rawPagination = {}) {
     hasNext: rawPagination.has_next || rawPagination.hasNext || false,
     hasPrev: rawPagination.has_prev || rawPagination.hasPrev || false
   };
+  
+  // Backward compatibility için eski field adlarını da ekle
+  normalized.total_pages = normalized.totalPages;
+  normalized.current_page = normalized.page;
+  normalized.per_page = normalized.perPage;
+  
+  return normalized;
 }
 
 /**

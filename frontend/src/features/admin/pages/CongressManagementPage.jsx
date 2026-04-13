@@ -743,7 +743,7 @@ const CongressManagementPage = () => {
   const pagination = normalizePagination(rawPag);
 
   const handlePageChange = (page) => {
-    const next = Math.max(1, Math.min(pagination.totalPages || 1, Number(page) || 1));
+    const next = Math.max(1, Math.min(pagination.total_pages || 1, Number(page) || 1));
     setFilters((prev) => ({ ...prev, page: next }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
