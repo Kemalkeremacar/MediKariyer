@@ -35,6 +35,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
+import { THEME_TOKENS } from '@/theme/config';
 import { useLogin } from '../hooks/useLogin';
 import { getUserFriendlyErrorMessage, isAuthError, isNetworkError, isValidationError } from '@/utils/errorHandler';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -364,7 +365,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: IS_TABLET ? theme.spacing['4xl'] : theme.spacing['3xl'],
   },
   forgotText: {
-    color: theme.colors.primary[600],
+    color: THEME_TOKENS.PRIMARY,
     fontSize: IS_TABLET ? 16 : 14,
   },
   loginButton: {
@@ -382,7 +383,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: IS_TABLET ? 16 : 14,
   },
   registerLink: {
-    color: theme.colors.primary[600],
+    color: THEME_TOKENS.PRIMARY,
     fontWeight: theme.typography.fontWeight.semibold,
     fontSize: IS_TABLET ? 16 : 14,
   },

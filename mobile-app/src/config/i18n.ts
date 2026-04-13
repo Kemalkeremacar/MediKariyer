@@ -1,15 +1,12 @@
 /**
  * @file i18n.ts
- * @description i18next konfigürasyonu - Minimal çoklu dil desteği
+ * @description i18next konfigürasyonu - Sadece Türkçe dil desteği
  * 
  * Desteklenen Diller:
- * - tr: Türkçe (varsayılan)
- * - en: İngilizce
+ * - tr: Türkçe (varsayılan ve tek dil)
  * 
- * Kapsam:
- * - Auth ekranları (Login, Register, ForgotPassword)
- * - Onboarding ekranları
- * - Error mesajları
+ * Not: Uygulama sadece Türkçe dilinde hizmet vermektedir.
+ * Cihaz dili ne olursa olsun, uygulama Türkçe görüntülenir.
  * 
  * @author MediKariyer Development Team
  * @version 1.0.0
@@ -18,50 +15,20 @@
 
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import * as Localization from 'expo-localization';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Translation dosyaları
 import tr from '../locales/tr.json';
-import en from '../locales/en.json';
-
-// Storage key
-const LANGUAGE_KEY = 'app_language';
-
-// Cihaz dilini al ve desteklenen dillere map et
-const getDeviceLanguage = (): string => {
-  const deviceLocale = Localization.getLocales()[0]?.languageCode || 'tr'; // "tr", "en"
-  
-  // Desteklenen diller
-  const supportedLanguages = ['tr', 'en'];
-  
-  // Cihaz dili destekleniyorsa kullan, yoksa Türkçe
-  return supportedLanguages.includes(deviceLocale) ? deviceLocale : 'tr';
-};
-
-// Kaydedilmiş dili al veya cihaz dilini kullan
-const getInitialLanguage = async (): Promise<string> => {
-  try {
-    const savedLanguage = await AsyncStorage.getItem(LANGUAGE_KEY);
-    return savedLanguage || getDeviceLanguage();
-  } catch {
-    return getDeviceLanguage();
-  }
-};
 
 // i18next konfigürasyonu
 const initI18n = async () => {
-  const initialLanguage = await getInitialLanguage();
-  
   await i18n
     .use(initReactI18next)
     .init({
       resources: {
         tr: { translation: tr },
-        en: { translation: en },
       },
-      lng: initialLanguage,
-      fallbackLng: 'tr',
+      lng: 'tr', // Her zaman Türkçe
+      fallbackLng: 'tr', // Fallback da Türkçe
       interpolation: {
         escapeValue: false, // React zaten XSS koruması yapıyor
       },
@@ -71,21 +38,9 @@ const initI18n = async () => {
     });
 };
 
-// Dil değiştirme fonksiyonu
-export const changeLanguage = async (language: string) => {
-  try {
-    await i18n.changeLanguage(language);
-    await AsyncStorage.setItem(LANGUAGE_KEY, language);
-  } catch (error) {
-    if (__DEV__) {
-      console.error('Failed to change language:', error);
-    }
-  }
-};
-
-// Mevcut dili al
+// Mevcut dili al (her zaman Türkçe)
 export const getCurrentLanguage = (): string => {
-  return i18n.language || 'tr';
+  return 'tr';
 };
 
 // i18n'i başlat

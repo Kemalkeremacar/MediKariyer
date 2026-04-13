@@ -1,4 +1,5 @@
 {
+  "_comment": "Bu dosya gelecekte İngilizce dil desteği eklenirse kullanılmak üzere saklanmıştır. Şu anda uygulama sadece Türkçe dilinde hizmet vermektedir.",
   "auth": {
     "login": {
       "title": "Login",
@@ -36,7 +37,16 @@
     "pendingApproval": {
       "title": "Pending Admin Approval",
       "description": "Your account is pending admin approval. You will be notified via email once approved.",
-      "logout": "Back to Login"
+      "logout": "Back to Login",
+      "infoReceived": "Information received",
+      "waitingApproval": "Waiting for admin approval",
+      "emailNotification": "Email notification after approval",
+      "messageAfterRegistration": "Once your account is approved by the admin, you will receive an email notification and be able to log in.",
+      "messageAfterLogin": "Once your account is approved by the admin, you will receive an email notification and be able to log in automatically. You will remain logged in when you close and reopen the app.",
+      "processingTime": "This process is usually completed within 24 hours.",
+      "checkStatus": "Check Status",
+      "checking": "Checking...",
+      "lastCheck": "Last check"
     },
     "accountDisabled": {
       "title": "Account Disabled",

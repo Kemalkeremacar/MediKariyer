@@ -617,6 +617,61 @@ const mobileLanguageParamsSchema = Joi.object({
   })
 });
 
+// ==================== MOBILE CONGRESS SCHEMAS ====================
+
+/**
+ * Mobile Congresses Query Schema
+ * @description Congresses listesi için query parametreleri validasyonu
+ */
+const mobileCongressesQuerySchema = paginationQuerySchema.keys({
+  search: Joi.string().max(100).trim().allow('').optional().messages({
+    'string.max': 'Arama terimi en fazla 100 karakter olabilir'
+  }),
+  specialty_id: Joi.number().integer().positive().optional().messages({
+    'number.base': 'Branş ID sayı olmalıdır',
+    'number.integer': 'Branş ID tam sayı olmalıdır',
+    'number.positive': 'Branş ID pozitif bir sayı olmalıdır'
+  }),
+  subspecialty_id: Joi.number().integer().positive().optional().messages({
+    'number.base': 'Alt branş ID sayı olmalıdır',
+    'number.integer': 'Alt branş ID tam sayı olmalıdır',
+    'number.positive': 'Alt branş ID pozitif bir sayı olmalıdır'
+  }),
+  country: Joi.string().max(100).trim().allow('').optional().messages({
+    'string.max': 'Ülke adı en fazla 100 karakter olabilir'
+  }),
+  city: Joi.string().max(100).trim().allow('').optional().messages({
+    'string.max': 'Şehir adı en fazla 100 karakter olabilir'
+  }),
+  start_date_from: Joi.date().iso().optional().messages({
+    'date.base': 'Başlangıç tarihi geçerli bir tarih olmalıdır',
+    'date.format': 'Başlangıç tarihi ISO formatında olmalıdır'
+  }),
+  start_date_to: Joi.date().iso().optional().messages({
+    'date.base': 'Bitiş tarihi geçerli bir tarih olmalıdır',
+    'date.format': 'Bitiş tarihi ISO formatında olmalıdır'
+  }),
+  sort_by: Joi.string().valid('start_date', 'end_date', 'title', 'created_at').default('start_date').optional().messages({
+    'any.only': 'Sıralama alanı start_date, end_date, title veya created_at olmalıdır'
+  }),
+  sort_order: Joi.string().valid('asc', 'desc').default('asc').optional().messages({
+    'any.only': 'Sıralama yönü asc veya desc olmalıdır'
+  })
+});
+
+/**
+ * Mobile Congress Detail Params Schema
+ * @description Congress detail için params validasyonu
+ */
+const mobileCongressDetailParamsSchema = Joi.object({
+  congressId: Joi.number().integer().positive().required().messages({
+    'number.base': 'Congress ID sayı olmalıdır',
+    'number.integer': 'Congress ID tam sayı olmalıdır',
+    'number.positive': 'Congress ID pozitif bir sayı olmalıdır',
+    'any.required': 'Congress ID zorunludur'
+  })
+});
+
 // ============================================================================
 // MODULE EXPORTS
 // ============================================================================
@@ -652,6 +707,7 @@ module.exports = {
   mobileJobsQuerySchema,
   mobileApplicationsQuerySchema,
   mobileNotificationsQuerySchema,
+  mobileCongressesQuerySchema,
   
   // Params Schemas
   mobileJobDetailParamsSchema,
@@ -659,6 +715,7 @@ module.exports = {
   mobileEducationParamsSchema,
   mobileExperienceParamsSchema,
   mobileCertificateParamsSchema,
-  mobileLanguageParamsSchema
+  mobileLanguageParamsSchema,
+  mobileCongressDetailParamsSchema
 };
 

@@ -9,7 +9,10 @@
  * - Temiz, modern görünüm için düşük opacity'li pastel gölgeler
  * - 5 farklı gölge seviyesi (none, sm, md, lg, xl)
  * - iOS ve Android için uyumlu
+ * - Merkezi config'den renk alır
  */
+
+import { SHADOW_PRESETS } from './config';
 
 // ============================================================================
 // SHADOW DEFINITIONS
@@ -26,33 +29,33 @@ export const shadows = {
   },
   /** Küçük gölge - hafif yükselme */
   sm: {
-    shadowColor: '#6366F1', // Yumuşak indigo tonu
+    shadowColor: SHADOW_PRESETS.color, // Merkezi config'den
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: SHADOW_PRESETS.opacity.sm,
     shadowRadius: 8,
     elevation: 1,
   },
   /** Orta gölge - standart kartlar için */
   md: {
-    shadowColor: '#6366F1', // Yumuşak indigo tonu
+    shadowColor: SHADOW_PRESETS.color, // Merkezi config'den
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
+    shadowOpacity: SHADOW_PRESETS.opacity.md,
     shadowRadius: 16,
     elevation: 2,
   },
   /** Büyük gölge - önemli elementler için */
   lg: {
-    shadowColor: '#6366F1', // Yumuşak indigo tonu
+    shadowColor: SHADOW_PRESETS.color, // Merkezi config'den
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.08,
+    shadowOpacity: SHADOW_PRESETS.opacity.lg,
     shadowRadius: 20,
     elevation: 3,
   },
   /** Ekstra büyük gölge - modal ve overlay'ler için */
   xl: {
-    shadowColor: '#6366F1', // Yumuşak indigo tonu
+    shadowColor: SHADOW_PRESETS.color, // Merkezi config'den
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
+    shadowOpacity: SHADOW_PRESETS.opacity.xl,
     shadowRadius: 24,
     elevation: 4,
   },

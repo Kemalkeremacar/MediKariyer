@@ -100,5 +100,10 @@ export const endpoints = {
     profilePhoto: '/upload/profile-photo', // Profil fotoğrafı yükle
     registerPhoto: '/upload/register-photo', // Kayıt fotoğrafı yükle
   },
+  // Kongre Endpoint'leri
+  congresses: {
+    list: '/congresses', // Kongre listesi
+    detail: (id: number) => `/congresses/${id}`, // Kongre detayı
+  },
 } as const;
 

@@ -45,6 +45,7 @@ import { useNotificationStream } from './features/notifications/api/useNotificat
 // Components
 import { PageLoader } from './components/ui/LoadingSpinner';
 import GlobalModalManager from './components/ui/GlobalModalManager';
+import SmartAppBanner from './components/ui/SmartAppBanner';
 
 // Store
 import useUIStore from './store/uiStore';
@@ -128,6 +129,9 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="App bg-gray-50">
+        {/* 📱 Smart App Banner - Mobil tarayıcılarda "Uygulamada Aç" */}
+        <SmartAppBanner />
+        
         {/* 🔑 Lazy componentler için Suspense fallback */}
         <Suspense fallback={<PageLoader />}>
           <AppRoutes />

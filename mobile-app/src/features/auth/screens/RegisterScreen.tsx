@@ -57,9 +57,11 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
+import { THEME_TOKENS } from '@/theme/config';
 import { useRegister } from '../hooks/useRegister';
 import { lookupService } from '@/api/services/lookup.service';
 import { uploadService } from '@/api/services/upload.service';
+import { optimizeForRegistration, formatFileSize } from '@/utils/imageOptimizer';
 import { handleApiError } from '@/utils/errorHandler';
 import { emailSchema, passwordSchema, getPasswordValidationStatus } from '@/utils/validators';
 
@@ -99,6 +101,7 @@ export const RegisterScreen = () => {
   const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>('');
   const [photoUri, setPhotoUri] = useState<string>('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>('Yükleniyor...');
   const [passwordValue, setPasswordValue] = useState<string>('');
   const [confirmPasswordValue, setConfirmPasswordValue] = useState<string>('');
   const [showPasswordRules, setShowPasswordRules] = useState(false);
@@ -213,38 +216,42 @@ export const RegisterScreen = () => {
   // Process selected image
   const processImage = async (asset: ImagePicker.ImagePickerAsset) => {
     setPhotoUri(asset.uri);
-    
-    if (!asset.base64) {
-      alert.error('Fotoğraf verisi alınamadı');
-      return;
-    }
-    
     setIsUploadingPhoto(true);
     
     try {
-      // Check size
-      const base64String = `data:image/jpeg;base64,${asset.base64}`;
-      const sizeInBytes = base64String.length * 0.75;
-      const sizeInKB = sizeInBytes / 1024;
+      // Fotoğrafı optimize et
+      setUploadProgress('Fotoğraf optimize ediliyor...');
+      const optimizedImage = await optimizeForRegistration(asset.uri);
       
-      if (sizeInKB > 500) {
-        alert.error('Fotoğraf çok büyük (max 500KB). Lütfen daha küçük bir fotoğraf seçin.');
-        setPhotoUri('');
-        return;
-      }
+      setUploadProgress(`Yükleniyor... (${formatFileSize(optimizedImage.size)})`);
       
       // Upload photo to server (base64) - Register endpoint (no auth required)
-      const uploadResult = await uploadService.uploadRegisterPhoto(asset.uri, asset.base64);
-      setProfilePhotoUrl(uploadResult.url);
-      alert.success('Fotoğraf yüklendi');
-    } catch (error: any) {
-      const message = handleApiError(
-        error,
-        '/upload/register-photo',
-        (msg) => alert.error(msg)
+      const uploadResult = await uploadService.uploadRegisterPhoto(
+        optimizedImage.uri, 
+        optimizedImage.base64
       );
-      // Ekstra olarak form üstünde de gösterebiliriz
-      setServerError(message);
+      
+      setProfilePhotoUrl(uploadResult.url);
+      setUploadProgress('Tamamlandı!');
+      alert.success('Fotoğraf başarıyla yüklendi!');
+      
+    } catch (error: any) {
+      console.error('Fotoğraf yükleme hatası:', error);
+      
+      let errorMessage = 'Fotoğraf yüklenirken bir hata oluştu.';
+      
+      if (error.message?.includes('optimize')) {
+        errorMessage = 'Fotoğraf çok büyük veya bozuk. Lütfen daha küçük bir fotoğraf seçin.';
+      } else if (error.message?.includes('timeout') || error.code === 'ECONNABORTED') {
+        errorMessage = 'Yükleme zaman aşımına uğradı. İnternet bağlantınızı kontrol edip tekrar deneyin.';
+      } else if (error.message?.includes('Network') || error.name === 'NetworkError') {
+        errorMessage = 'Ağ hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.';
+      } else if (error.message?.includes('Max upload retry')) {
+        errorMessage = 'Fotoğraf yüklenemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.';
+      }
+      
+      alert.error(errorMessage);
+      setServerError(errorMessage);
       setPhotoUri('');
     } finally {
       setIsUploadingPhoto(false);
@@ -459,7 +466,7 @@ export const RegisterScreen = () => {
               </Typography>
               {specialtiesLoading ? (
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={theme.colors.primary[600]} />
+                  <ActivityIndicator size="small" color={THEME_TOKENS.PRIMARY} />
                   <Typography variant="bodySmall" style={styles.loadingText}>Branşlar yükleniyor...</Typography>
                 </View>
               ) : (
@@ -483,7 +490,7 @@ export const RegisterScreen = () => {
                 </Typography>
                 {subspecialtiesLoading ? (
                   <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color={theme.colors.primary[600]} />
+                    <ActivityIndicator size="small" color={THEME_TOKENS.PRIMARY} />
                     <Typography variant="bodySmall" style={styles.loadingText}>Yükleniyor...</Typography>
                   </View>
                 ) : (
@@ -653,7 +660,7 @@ export const RegisterScreen = () => {
                       {isUploadingPhoto && (
                         <View style={styles.uploadingOverlay}>
                           <ActivityIndicator size="large" color={theme.colors.text.inverse} />
-                          <Typography variant="caption" style={styles.uploadingText}>Yükleniyor...</Typography>
+                          <Typography variant="caption" style={styles.uploadingText}>{uploadProgress}</Typography>
                         </View>
                       )}
                       <View style={styles.photoEditBadge}>
@@ -793,8 +800,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     elevation: 1,
   },
   chipSelected: {
-    backgroundColor: theme.colors.primary[600],
-    borderColor: theme.colors.primary[600],
+    backgroundColor: THEME_TOKENS.PRIMARY,
+    borderColor: THEME_TOKENS.PRIMARY,
     shadowOpacity: 0.15,
     elevation: 3,
   },
@@ -846,7 +853,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     height: 140,
     borderRadius: theme.borderRadius['3xl'],
     borderWidth: 4,
-    borderColor: theme.colors.primary[600],
+    borderColor: THEME_TOKENS.PRIMARY,
   },
   photoEditBadge: {
     position: 'absolute',
@@ -855,7 +862,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: theme.colors.primary[600],
+    backgroundColor: THEME_TOKENS.PRIMARY,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
@@ -867,7 +874,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderRadius: theme.borderRadius['3xl'],
     backgroundColor: theme.colors.background.tertiary,
     borderWidth: 3,
-    borderColor: theme.colors.primary[600],
+    borderColor: THEME_TOKENS.PRIMARY,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'flex-start',
@@ -919,7 +926,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   loginLink: {
-    color: theme.colors.primary[600],
+    color: THEME_TOKENS.PRIMARY,
     fontWeight: theme.typography.fontWeight.semibold,
   },
   sectionHeader: {
@@ -927,13 +934,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: theme.spacing.xl,
     paddingBottom: theme.spacing.md,
     borderBottomWidth: 2,
-    borderBottomColor: theme.colors.primary[600],
+    borderBottomColor: THEME_TOKENS.PRIMARY,
   },
   sectionHeaderFirst: {
     marginTop: 0,
   },
   sectionTitle: {
-    color: theme.colors.primary[600],
+    color: THEME_TOKENS.PRIMARY,
     fontWeight: theme.typography.fontWeight.bold,
     fontSize: theme.typography.fontSize.lg,
     letterSpacing: 0.3,

@@ -28,6 +28,8 @@ export interface ApplicationListItem {
   job_title: string | null;
   /** Hastane adı */
   hospital_name: string | null;
+  /** Hastane logosu */
+  hospital_logo: string | null;
   /** Başvuru durumu (Türkçe) */
   status: string | null;
   /** Başvuru durum ID */
@@ -44,6 +46,10 @@ export interface ApplicationListItem {
   job_status: string | null;
   /** İş ilanı silinmiş mi? */
   is_job_deleted: boolean;
+  /** İş ilanı silinme tarihi */
+  job_deleted_at: string | null;
+  /** İş ilanı durum ID'si */
+  job_status_id: number | null;
   /** Hastane aktif mi? */
   is_hospital_active: boolean;
 }

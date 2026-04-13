@@ -127,6 +127,21 @@ export type ApplicationsStackParamList = {
 };
 
 // ============================================================================
+// CONGRESSES STACK - Kongreler akışı
+// ============================================================================
+
+/**
+ * Congresses Stack - Kongre listesi ve detay
+ * CongressesTab içinde nested
+ */
+export type CongressesStackParamList = {
+  /** Kongre listesi */
+  CongressesList: undefined;
+  /** Kongre detay sayfası */
+  CongressDetail: { id: number };
+};
+
+// ============================================================================
 // SETTINGS STACK - Ayarlar akışı
 // ============================================================================
 
@@ -163,6 +178,8 @@ export type AppTabParamList = {
   JobsTab: NavigatorScreenParams<JobsStackParamList>;
   /** Başvurular tab'ı */
   ApplicationsTab: NavigatorScreenParams<ApplicationsStackParamList>;
+  /** Kongreler tab'ı */
+  CongressesTab: NavigatorScreenParams<CongressesStackParamList>;
   /** Ayarlar tab'ı */
   SettingsTab: NavigatorScreenParams<SettingsStackParamList>;
 };
@@ -180,6 +197,7 @@ export type RootNavigationParamList = RootStackParamList &
   AppTabParamList &
   JobsStackParamList &
   ProfileStackParamList &
+  CongressesStackParamList &
   SettingsStackParamList;
 
 // ============================================================================
@@ -200,6 +218,9 @@ export type JobsStackNavigationProp = NativeStackNavigationProp<JobsStackParamLi
 
 /** Profile Stack navigation prop tipi */
 export type ProfileStackNavigationProp = NativeStackNavigationProp<ProfileStackParamList>;
+
+/** Congresses Stack navigation prop tipi */
+export type CongressesStackNavigationProp = NativeStackNavigationProp<CongressesStackParamList>;
 
 /** Settings Stack navigation prop tipi */
 export type SettingsStackNavigationProp = NativeStackNavigationProp<SettingsStackParamList>;

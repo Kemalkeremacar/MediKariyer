@@ -51,8 +51,6 @@ export interface UseNotificationsParams {
  */
 export const useNotifications = (params: UseNotificationsParams = {}) => {
   const { showUnreadOnly = false, limit = 20 } = params;
-
-  const queryClient = useQueryClient();
   
   const query = useInfiniteQuery({
     queryKey: queryKeys.notifications.list({ showUnreadOnly, limit }),

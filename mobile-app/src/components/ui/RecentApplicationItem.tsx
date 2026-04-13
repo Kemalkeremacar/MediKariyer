@@ -21,11 +21,12 @@
 
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Typography } from './Typography';
+import { Avatar } from './Avatar';
 import { colors } from '@/theme';
 import { ApplicationListItem } from '@/types/application';
 import { formatDate } from '@/utils/date';
+import { getFullImageUrl } from '@/utils/imageUrl';
 
 /**
  * RecentApplicationItem bileşeni props interface'i
@@ -79,6 +80,9 @@ export const RecentApplicationItem: React.FC<RecentApplicationItemProps> = ({ ap
   };
 
   const statusColor = getStatusColor(application.status);
+  
+  // Hastane logosu URL'ini işle
+  const hospitalLogoUrl = getFullImageUrl(application.hospital_logo);
 
   return (
     <TouchableOpacity
@@ -86,9 +90,12 @@ export const RecentApplicationItem: React.FC<RecentApplicationItemProps> = ({ ap
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={styles.iconContainer}>
-        <Ionicons name="document-text" size={20} color={colors.primary[600]} />
-      </View>
+      <Avatar
+        size="sm"
+        source={hospitalLogoUrl ?? undefined}
+        initials={application.hospital_name?.substring(0, 2).toUpperCase() || '??'}
+        contentFit="contain" // Logo oranlarını koru
+      />
       
       <View style={styles.content}>
         <Typography variant="body" style={styles.title} numberOfLines={1}>
@@ -123,15 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.neutral[100],
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primary[50],
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    gap: 12,
   },
   content: {
     flex: 1,

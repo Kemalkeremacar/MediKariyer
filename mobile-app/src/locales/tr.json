@@ -36,7 +36,16 @@
     "pendingApproval": {
       "title": "Admin Onayı Bekleniyor",
       "description": "Hesabınız admin onayını bekliyor. Onaylandığında e-posta ile bilgilendirileceksiniz.",
-      "logout": "Giriş Ekranına Dön"
+      "logout": "Giriş Ekranına Dön",
+      "infoReceived": "Bilgileriniz alındı",
+      "waitingApproval": "Admin onayı bekleniyor",
+      "emailNotification": "Onay sonrası e-posta gelecek",
+      "messageAfterRegistration": "Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve giriş yapabileceksiniz.",
+      "messageAfterLogin": "Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve otomatik olarak giriş yapabileceksiniz. Uygulamayı kapatıp açtığınızda da giriş yapmış olarak kalacaksınız.",
+      "processingTime": "Bu işlem genellikle 24 saat içinde tamamlanır.",
+      "checkStatus": "Durumu Kontrol Et",
+      "checking": "Kontrol Ediliyor...",
+      "lastCheck": "Son kontrol"
     },
     "accountDisabled": {
       "title": "Hesap Pasif",

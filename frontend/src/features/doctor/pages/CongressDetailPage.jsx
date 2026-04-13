@@ -35,13 +35,13 @@ const dayName = (dateString) =>
   new Date(dateString).toLocaleDateString('tr-TR', { weekday: 'long' });
 
 const InfoCard = ({ icon: Icon, label, children, className = '' }) => (
-  <div className={`group rounded-2xl border border-gray-100 bg-white p-5 transition-all hover:shadow-md hover:border-blue-100 ${className}`}>
+  <div className={`group rounded-2xl border border-blue-100 bg-white p-5 shadow-lg transition-all hover:shadow-xl hover:border-blue-200 ${className}`}>
     <div className="flex items-start gap-4">
       <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex-shrink-0 group-hover:bg-blue-100 transition-colors">
         <Icon className="w-5 h-5 text-blue-600" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{label}</div>
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{label}</div>
         {children}
       </div>
     </div>
@@ -142,25 +142,29 @@ const CongressDetailPage = () => {
         </nav>
 
         {/* Hero */}
-        <div className="relative bg-white rounded-2xl border border-gray-200/80 shadow-lg overflow-hidden mb-6">
+        <div className="relative bg-white rounded-2xl border border-blue-100 shadow-lg overflow-hidden mb-6">
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600" />
 
           <div className="p-6 md:p-8 pt-8">
             {(congress.image_url || congress.poster_image_url) && (
               <div className="mb-5">
                 {congress.image_url ? (
-                  <img
-                    src={congress.image_url}
-                    alt={congress.title}
-                    className="w-full rounded-xl max-h-72 md:max-h-80 object-cover"
-                  />
+                  <div className="w-full rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-white border border-gray-200 shadow-sm">
+                    <div className="w-full aspect-[16/9]">
+                      <img
+                        src={congress.image_url}
+                        alt={congress.title}
+                        className="w-full h-full object-contain p-2"
+                      />
+                    </div>
+                  </div>
                 ) : (
-                  <div className="w-full rounded-xl overflow-hidden border border-gray-200 bg-white">
-                    <div className="w-full max-h-96 flex items-center justify-center p-3 md:p-4">
+                  <div className="w-full rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-white border border-gray-200 shadow-sm">
+                    <div className="w-full max-w-md mx-auto aspect-[2/3]">
                       <img
                         src={congress.poster_image_url}
                         alt={congress.title}
-                        className="max-h-96 w-auto rounded-lg object-contain shadow-lg ring-1 ring-black/5"
+                        className="w-full h-full object-contain p-3"
                       />
                     </div>
                   </div>
@@ -170,7 +174,7 @@ const CongressDetailPage = () => {
             {/* Status + Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               {daysInfo?.status && (
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${daysInfo.statusBg} border ${daysInfo.statusBorder} ${daysInfo.statusColor} text-xs font-bold rounded-full`}>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${daysInfo.statusBg} border ${daysInfo.statusBorder} ${daysInfo.statusColor} text-xs font-bold rounded-full`}>
                   <Clock className="w-3.5 h-3.5" />
                   {daysInfo.status}
                 </span>
@@ -180,20 +184,20 @@ const CongressDetailPage = () => {
                   <span
                     key={s.id ?? s.name}
                     title={s?.name}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold rounded-full max-w-full"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold rounded-full max-w-full"
                   >
                     <Tag className="w-3.5 h-3.5 flex-shrink-0" />
                     <span className="truncate">{s?.name}</span>
                   </span>
                 ))
               ) : congress.specialty_name ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold rounded-full max-w-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold rounded-full max-w-full">
                   <Tag className="w-3.5 h-3.5 flex-shrink-0" />
                   <span className="truncate">{congress.specialty_name}</span>
                 </span>
               ) : null}
               {congress.subspecialty_name && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-fuchsia-50 border border-fuchsia-100 text-fuchsia-700 text-xs font-semibold rounded-full max-w-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-fuchsia-50 border border-fuchsia-100 text-fuchsia-700 text-xs font-semibold rounded-full max-w-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-fuchsia-500 flex-shrink-0" />
                   <span className="truncate">{congress.subspecialty_name}</span>
                 </span>
@@ -201,21 +205,21 @@ const CongressDetailPage = () => {
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-3">
               {congress.title}
             </h1>
 
             {/* Quick info line */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 mt-3">
-              <span className="inline-flex items-center gap-1.5">
-                <Calendar className="w-4 h-4" />
-                {fmt(congress.start_date)} – {fmt(congress.end_date)}
-                {daysInfo && <span className="text-gray-400">({daysInfo.duration} gün)</span>}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600 mt-4">
+              <span className="inline-flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-500" />
+                <span className="font-medium">{fmt(congress.start_date)} – {fmt(congress.end_date)}</span>
+                {daysInfo && <span className="text-gray-500">({daysInfo.duration} gün)</span>}
               </span>
               {locationText && (
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="w-4 h-4" />
-                  {locationText}
+                <span className="inline-flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-gray-500" />
+                  <span className="font-medium">{locationText}</span>
                 </span>
               )}
             </div>
@@ -226,21 +230,21 @@ const CongressDetailPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Tarih */}
           <InfoCard icon={Calendar} label="Tarih Bilgileri">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div>
                 <div className="text-sm font-semibold text-gray-900">{fmt(congress.start_date)}</div>
-                <div className="text-xs text-gray-500 capitalize">{dayName(congress.start_date)}, Başlangıç</div>
+                <div className="text-xs text-gray-600 capitalize mt-0.5">{dayName(congress.start_date)}, Başlangıç</div>
               </div>
-              <div className="h-px bg-gray-100" />
+              <div className="h-px bg-gray-200" />
               <div>
                 <div className="text-sm font-semibold text-gray-900">{fmt(congress.end_date)}</div>
-                <div className="text-xs text-gray-500 capitalize">{dayName(congress.end_date)}, Bitiş</div>
+                <div className="text-xs text-gray-600 capitalize mt-0.5">{dayName(congress.end_date)}, Bitiş</div>
               </div>
               {daysInfo && (
                 <>
-                  <div className="h-px bg-gray-100" />
-                  <div className="text-xs font-medium text-gray-500">
-                    Toplam <span className="text-gray-800 font-bold">{daysInfo.duration}</span> gün
+                  <div className="h-px bg-gray-200" />
+                  <div className="text-xs font-medium text-gray-600">
+                    Toplam <span className="text-gray-900 font-bold">{daysInfo.duration}</span> gün
                   </div>
                 </>
               )}
@@ -250,7 +254,7 @@ const CongressDetailPage = () => {
           {/* Organizatör */}
           {congress.organizer && (
             <InfoCard icon={Users} label="Organizatör">
-              <div className="text-sm font-semibold text-gray-900 break-words">{congress.organizer}</div>
+              <div className="text-sm font-semibold text-gray-900 break-words leading-relaxed">{congress.organizer}</div>
             </InfoCard>
           )}
         </div>
@@ -258,17 +262,17 @@ const CongressDetailPage = () => {
         {/* Konum - Full Width */}
         <div className="mb-4">
           <InfoCard icon={MapPin} label="Konum">
-            <div className="text-sm font-semibold text-gray-900 break-words">{congress.location}</div>
+            <div className="text-sm font-semibold text-gray-900 break-words leading-relaxed">{congress.location}</div>
             {locationText && (
-              <div className="text-sm text-gray-500 mt-0.5 break-words">{locationText}</div>
+              <div className="text-sm text-gray-600 mt-1 break-words">{locationText}</div>
             )}
           </InfoCard>
         </div>
 
         {/* Açıklama */}
         {congress.description && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 mb-4 transition-all hover:shadow-md hover:border-blue-100">
-            <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Hakkında</div>
+          <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-5 md:p-6 mb-4 transition-all hover:shadow-xl hover:border-blue-200">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Hakkında</div>
             <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line break-words">
               {congress.description}
             </p>
@@ -277,13 +281,13 @@ const CongressDetailPage = () => {
 
         {/* Web Sitesi */}
         {websiteUrl && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 mb-4 transition-all hover:shadow-md hover:border-blue-100">
-            <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-4">Web Sitesi</div>
+          <div className="bg-white rounded-2xl border border-blue-100 shadow-lg p-5 md:p-6 mb-4 transition-all hover:shadow-xl hover:border-blue-200">
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">Web Sitesi</div>
             <a
               href={websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 hover:text-white active:scale-[0.98] transition-all text-sm font-semibold shadow-sm shadow-blue-600/20 w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 active:scale-[0.98] transition-all text-sm font-semibold shadow-lg w-full sm:w-auto"
             >
               <Globe className="w-4 h-4" /> Kongre Web Sitesine Git
             </a>
@@ -294,7 +298,7 @@ const CongressDetailPage = () => {
         <div className="pt-2 pb-4">
           <Link
             to="/doctor/congresses"
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Tüm Kongrelere Dön
           </Link>

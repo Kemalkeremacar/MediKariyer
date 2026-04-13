@@ -21,7 +21,8 @@
 // ============================================================================
 // API YAPILANDIRMASI
 // ============================================================================
-export const REQUEST_TIMEOUT_MS = 30000; // 30 saniye
+export const REQUEST_TIMEOUT_MS = 30000; // 30 saniye - genel API istekleri
+export const UPLOAD_TIMEOUT_MS = 120000; // 120 saniye (2 dakika) - fotoğraf yükleme için
 export const MAX_RETRY_ATTEMPTS = 2; // Maksimum yeniden deneme sayısı
 
 // ============================================================================

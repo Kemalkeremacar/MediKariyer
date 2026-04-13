@@ -15,32 +15,22 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/components/ui/Typography';
 import { spacing } from '@/theme';
+import { HEADER_PRESETS, ICON_PRESETS, THEME_TOKENS } from '@/theme/config';
 
 /**
  * Header arka plan gradient renk setleri
- * Hazır tema varyantları için kullanılır
+ * Merkezi config'den alınır - Web ile tam uyumlu
  */
-const HEADER_PRESETS = {
-  primary: ['#1D4ED8', '#2563EB', '#3B82F6'] as const,
-  profile: ['#6096B4', '#7BA8BE', '#93BFCF'] as const,
-} as const;
+const HEADER_PRESETS_LOCAL = HEADER_PRESETS;
 
 /**
  * İkon arka plan gradient renk setleri
- * İkon container'ı için hazır renk kombinasyonları
+ * Merkezi config'den alınır - Web ile tam uyumlu
  */
-const ICON_PRESETS = {
-  blue: ['#2563EB', '#1D4ED8'] as const,
-  green: ['#4CAF50', '#388E3C'] as const,
-  orange: ['#F59E0B', '#D97706'] as const,
-  purple: ['#8B5CF6', '#6D28D9'] as const,
-  cyan: ['#06B6D4', '#0891B2'] as const,
-  red: ['#EF4444', '#DC2626'] as const,
-  teal: ['#2196F3', '#1976D2'] as const,
-} as const;
+const ICON_PRESETS_LOCAL = ICON_PRESETS;
 
-export type HeaderVariant = keyof typeof HEADER_PRESETS;
-export type IconColorPreset = keyof typeof ICON_PRESETS;
+export type HeaderVariant = keyof typeof HEADER_PRESETS_LOCAL;
+export type IconColorPreset = keyof typeof ICON_PRESETS_LOCAL;
 
 /**
  * GradientHeader bileşeni için prop tipleri
@@ -115,10 +105,10 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
   onBackPress,
   showBackButton = false,
 }) => {
-  // Renk çözümlemeleri - Özel renkler varsa onları kullan, yoksa preset'leri kullan
-  const headerColors = gradientColors || HEADER_PRESETS[variant];
-  const resolvedIconColors = iconColors || ICON_PRESETS[iconColorPreset];
-  const resolvedShadowColor = shadowColor || (variant === 'primary' ? '#1D4ED8' : '#6096B4');
+  // Renk çözümlemeleri - Merkezi config'den alınır
+  const headerColors = gradientColors || HEADER_PRESETS_LOCAL[variant];
+  const resolvedIconColors = iconColors || ICON_PRESETS_LOCAL[iconColorPreset];
+  const resolvedShadowColor = shadowColor || THEME_TOKENS.PRIMARY; // Merkezi config'den
   const resolvedIconShadowColor = iconShadowColor || resolvedIconColors[0];
 
   return (
@@ -154,7 +144,7 @@ export const GradientHeader: React.FC<GradientHeaderProps> = ({
         {/* İkon Container - Gradient arka planlı */}
         <View style={styles.headerIconWrapper}>
           <LinearGradient
-            colors={[...resolvedIconColors]}
+            colors={resolvedIconColors as readonly [string, string]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[

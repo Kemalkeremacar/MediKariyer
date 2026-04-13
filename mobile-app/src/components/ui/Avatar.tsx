@@ -31,7 +31,7 @@ import { Typography } from './Typography';
  */
 export interface AvatarProps {
   /** Profil fotoğrafı URL'i veya Base64 string */
-  source?: string;
+  source?: string | null;
   /** Avatar boyutu */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Fotoğraf yoksa gösterilecek baş harfler */

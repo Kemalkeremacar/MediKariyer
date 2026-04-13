@@ -66,6 +66,7 @@ router.use('/mobile/applications', require('./mobile/mobileApplicationRoutes'));
 router.use('/mobile/notifications', require('./mobile/mobileNotificationRoutes'));
 router.use('/mobile/upload', require('./mobile/mobileUploadRoutes'));
 router.use('/mobile/lookup', require('./mobile/mobileLookupRoutes'));
+router.use('/mobile/congresses', require('./mobile/mobileCongressRoutes'));
 
 // Device Token endpoint (push notification için)
 // Not: Notification routes ile ilgili ama ayrı endpoint olarak eklendi

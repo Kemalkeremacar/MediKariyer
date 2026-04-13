@@ -279,14 +279,6 @@ export const PendingApprovalScreen = () => {
   }, [authStatus, user?.is_approved, user?.role, logoutMutation, navigation]);
 
   /**
-   * Son kontrol zamanını formatla
-   * Kullanıcıya son kontrolün ne zaman yapıldığını göster
-   */
-  const lastCheckText = lastCheckTime
-    ? `Son kontrol: ${lastCheckTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}`
-    : 'Henüz kontrol edilmedi';
-
-  /**
    * Render
    * 
    * **EKRAN YAPISI:**
@@ -331,21 +323,21 @@ export const PendingApprovalScreen = () => {
             <View style={styles.infoRow}>
               <Ionicons name="checkmark-circle" size={24} color="#10B981" />
               <Typography variant="body" style={styles.infoText}>
-                Bilgileriniz alındı
+                {t('auth.pendingApproval.infoReceived')}
               </Typography>
             </View>
 
             <View style={styles.infoRow}>
               <Ionicons name="time-outline" size={24} color="#F59E0B" />
               <Typography variant="body" style={styles.infoText}>
-                Admin onayı bekleniyor
+                {t('auth.pendingApproval.waitingApproval')}
               </Typography>
             </View>
 
             <View style={styles.infoRow}>
               <Ionicons name="mail-outline" size={24} color="#3B82F6" />
               <Typography variant="body" style={styles.infoText}>
-                Onay sonrası e-posta gelecek
+                {t('auth.pendingApproval.emailNotification')}
               </Typography>
             </View>
           </View>
@@ -353,12 +345,12 @@ export const PendingApprovalScreen = () => {
           <View style={styles.messageCard}>
             <Typography variant="body" style={styles.message}>
               {isAfterRegistration
-                ? 'Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve giriş yapabileceksiniz.'
-                : 'Hesabınız admin tarafından onaylandıktan sonra e-posta adresinize bildirim gelecek ve otomatik olarak giriş yapabileceksiniz. Uygulamayı kapatıp açtığınızda da giriş yapmış olarak kalacaksınız.'}
+                ? t('auth.pendingApproval.messageAfterRegistration')
+                : t('auth.pendingApproval.messageAfterLogin')}
             </Typography>
             
             <Typography variant="bodySmall" style={styles.note}>
-              Bu işlem genellikle 24 saat içinde tamamlanır.
+              {t('auth.pendingApproval.processingTime')}
             </Typography>
           </View>
 
@@ -372,11 +364,11 @@ export const PendingApprovalScreen = () => {
                 size="lg"
                 style={styles.checkButton}
               >
-                {isChecking ? "Kontrol Ediliyor..." : "Durumu Kontrol Et"}
+                {isChecking ? t('auth.pendingApproval.checking') : t('auth.pendingApproval.checkStatus')}
               </Button>
               {lastCheckTime && (
                 <Typography variant="caption" style={styles.lastCheckText}>
-                  {lastCheckText}
+                  {t('auth.pendingApproval.lastCheck')}: {lastCheckTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                 </Typography>
               )}
             </View>

@@ -31,6 +31,7 @@ import { AccountDisabledScreen } from '@/features/auth/screens/AccountDisabledSc
 import { useAuthStore } from '@/store/authStore';
 import { navigationRef } from './navigationRef';
 import { colors, spacing, typography } from '@/theme';
+import { THEME_TOKENS } from '@/theme/config';
 import { Typography } from '@/components/ui/Typography';
 import { devLog } from '@/utils/devLogger';
 import type { RootStackParamList } from './types';
@@ -250,7 +251,7 @@ export const RootNavigator = () => {
           </Typography>
           <ActivityIndicator 
             size="large" 
-            color={colors.primary[600]} 
+            color={THEME_TOKENS.PRIMARY} 
             style={styles.spinner}
           />
           <Typography variant="body" style={styles.loadingText}>

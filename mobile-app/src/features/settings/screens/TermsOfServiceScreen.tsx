@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/Card';
 import { BackButton } from '@/components/ui/BackButton';
 import { Screen } from '@/components/layout/Screen';
 import { lightColors, spacing } from '@/theme';
+import { THEME_TOKENS } from '@/theme/config';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '@/navigation/types';
 
@@ -36,7 +37,7 @@ export const TermsOfServiceScreen = (_props: Props) => {
 
         <View style={styles.header}>
           <View style={styles.headerIcon}>
-            <Ionicons name="document-text" size={32} color={lightColors.primary[600]} />
+            <Ionicons name="document-text" size={32} color={THEME_TOKENS.PRIMARY} />
           </View>
           <Typography variant="h2" style={styles.headerTitle}>
             Kullanım Koşulları
@@ -127,7 +128,7 @@ export const TermsOfServiceScreen = (_props: Props) => {
 
         <Card variant="outlined" padding="lg" style={styles.card}>
           <View style={styles.listItem}>
-            <Ionicons name="person-add" size={20} color={lightColors.primary[600]} />
+            <Ionicons name="person-add" size={20} color={THEME_TOKENS.PRIMARY} />
             <View style={styles.listContent}>
               <Typography variant="body" style={styles.listTitle}>
                 Hesap Oluşturma
@@ -142,7 +143,7 @@ export const TermsOfServiceScreen = (_props: Props) => {
           <View style={styles.divider} />
 
           <View style={styles.listItem}>
-            <Ionicons name="shield-checkmark" size={20} color={lightColors.primary[600]} />
+            <Ionicons name="shield-checkmark" size={20} color={THEME_TOKENS.PRIMARY} />
             <View style={styles.listContent}>
               <Typography variant="body" style={styles.listTitle}>
                 Hesap Güvenliği
@@ -157,7 +158,7 @@ export const TermsOfServiceScreen = (_props: Props) => {
           <View style={styles.divider} />
 
           <View style={styles.listItem}>
-            <Ionicons name="checkmark-circle" size={20} color={lightColors.primary[600]} />
+            <Ionicons name="checkmark-circle" size={20} color={THEME_TOKENS.PRIMARY} />
             <View style={styles.listContent}>
               <Typography variant="body" style={styles.listTitle}>
                 Hesap Onayı
@@ -335,7 +336,7 @@ export const TermsOfServiceScreen = (_props: Props) => {
         {/* İletişim */}
         <Card variant="outlined" padding="lg" style={styles.infoCard}>
           <View style={styles.infoHeader}>
-            <Ionicons name="mail" size={20} color={lightColors.primary[600]} />
+            <Ionicons name="mail" size={20} color={THEME_TOKENS.PRIMARY} />
             <Typography variant="h3" style={styles.infoTitle}>
               İletişim
             </Typography>

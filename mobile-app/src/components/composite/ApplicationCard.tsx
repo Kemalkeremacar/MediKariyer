@@ -75,9 +75,19 @@ export const ApplicationCard: React.FC<ApplicationCardProps> = ({ application, o
   const timeAgo = formatRelativeTime(dateToUse) || null;
 
   // İlan durumu kontrolleri (web ile uyumlu)
-  const isJobUnavailable = application.is_job_deleted || application.is_hospital_active === false;
-  const unavailableReason = application.is_job_deleted 
+  const jobStatus = application.job_status || '';
+  const isJobDeleted = application.is_job_deleted || Boolean(application.job_deleted_at);
+  const isJobPassive = 
+    application.job_status_id === 4 || 
+    jobStatus === 'Pasif' || 
+    jobStatus === 'Passive' ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive'));
+  const isJobUnavailable = isJobDeleted || isJobPassive || application.is_hospital_active === false;
+  const unavailableReason = isJobDeleted 
     ? 'İlan Kaldırıldı' 
+    : isJobPassive
+    ? 'İlan Pasif'
     : (application.is_hospital_active === false ? 'Hastane Pasif' : null);
 
   // Status ID'ye göre stil al

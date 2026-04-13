@@ -23,7 +23,7 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '@/theme';
+import { ICON_PRESETS } from '@/theme/config';
 
 /**
  * FAB bileşeni props interface'i
@@ -79,22 +79,23 @@ export const FAB: React.FC<FABProps> = ({
   const fabSize = sizeMap[size];
 
   /**
-   * Renk seçeneğine göre gradient renklerini döndürür
+   * Renk seçeneğine göre gradient renklerini döndürür - Merkezi config'den
    */
-  const getGradientColors = (): [string, string] => {
+  const getGradientColors = (): readonly [string, string] => {
     if (color === 'primary') {
-      return ['#6096B4', '#93BFCF'];
+      return ICON_PRESETS.primary as readonly [string, string]; // Merkezi config'den
     }
     if (color === 'secondary') {
-      return ['#f093fb', '#f5576c'];
+      return ['#f093fb', '#f5576c'] as const;
     }
     if (color === 'success') {
-      return ['#11998e', '#38ef7d'];
+      return ICON_PRESETS.green as readonly [string, string]; // Merkezi config'den
     }
     if (color === 'error') {
-      return ['#eb3349', '#f45c43'];
+      return ICON_PRESETS.red as readonly [string, string]; // Merkezi config'den
     }
-    return [colors[color][600], colors[color][700]];
+    // Fallback - primary kullan
+    return ICON_PRESETS.primary as readonly [string, string];
   };
 
   return (

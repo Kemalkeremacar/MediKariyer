@@ -6,7 +6,7 @@
  * @since 2024
  * 
  * **Özellikler:**
- * - 4 ana tab: ProfileTab (Anasayfa), JobsTab (İlanlar), ApplicationsTab (Başvurular), SettingsTab (Ayarlar)
+ * - 5 ana tab: ProfileTab (Anasayfa), JobsTab (İlanlar), ApplicationsTab (Başvurular), CongressesTab (Kongreler), SettingsTab (Ayarlar)
  * - Animasyonlu ikonlar
  * - Haptic feedback
  * - Platform-specific styling
@@ -21,8 +21,10 @@ import { JobsStackNavigator } from './JobsStackNavigator';
 import { ProfileStackNavigator } from './ProfileStackNavigator';
 import { SettingsStackNavigator } from './SettingsStackNavigator';
 import { ApplicationsStackNavigator } from './ApplicationsStackNavigator';
+import { CongressesStackNavigator } from './CongressesStackNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme';
+import { THEME_TOKENS } from '@/theme/config';
 import { devLog } from '@/utils/devLogger';
 import type { AppTabParamList } from './types';
 
@@ -64,7 +66,7 @@ const AnimatedIcon = ({ iconName, focused }: { iconName: keyof typeof Ionicons.g
       <Ionicons
         name={iconName}
         size={26}
-        color={focused ? colors.primary[600] : colors.neutral[500]}
+        color={focused ? THEME_TOKENS.PRIMARY : colors.neutral[500]}
       />
     </Animated.View>
   );
@@ -84,6 +86,7 @@ const Tab = createBottomTabNavigator<AppTabParamList>();
  * - ProfileTab: Anasayfa (Profil ana sayfa olarak)
  * - JobsTab: İlanlar (İş ilanları listesi)
  * - ApplicationsTab: Başvurular (Başvurularım)
+ * - CongressesTab: Kongreler (Kongre takvimi)
  * - SettingsTab: Ayarlar (Hesap ayarları)
  */
 export const TabNavigator = () => {
@@ -97,7 +100,7 @@ export const TabNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary[600],
+        tabBarActiveTintColor: THEME_TOKENS.PRIMARY,
         tabBarInactiveTintColor: colors.neutral[400],
         tabBarShowLabel: true,
         tabBarHideOnKeyboard: true,
@@ -237,6 +240,37 @@ export const TabNavigator = () => {
         }}
         listeners={() => ({
           tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        })}
+      />
+      
+      {/* CongressesTab - Kongreler */}
+      <Tab.Screen
+        name="CongressesTab"
+        component={CongressesStackNavigator}
+        options={{
+          tabBarLabel: 'Kongreler',
+          tabBarIcon: ({ focused }) => (
+            <AnimatedIcon iconName={focused ? "calendar" : "calendar-outline"} focused={focused} />
+          ),
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            // Haptic feedback
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            
+            try {
+              const state = navigation.getState();
+              const congressesTabRoute = state?.routes?.find(r => r.name === 'CongressesTab');
+              
+              // Eğer CongressesTab'ın içinde başka ekranlar varsa, ana ekrana dön
+              if (congressesTabRoute?.state && congressesTabRoute.state.index !== undefined && congressesTabRoute.state.index > 0) {
+                e.preventDefault();
+                navigation.navigate('CongressesTab', { screen: 'CongressesList' });
+              }
+            } catch (error) {
+              devLog.warn('Tab navigation error:', error);
+            }
+          },
         })}
       />
       

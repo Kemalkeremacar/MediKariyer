@@ -69,6 +69,7 @@ import {
   FiCamera
 } from 'react-icons/fi';
 import { Building2 } from 'lucide-react';
+import { useDeviceDetection } from '@/hooks/useDeviceDetection';
 
 /**
  * ============================================================================
@@ -131,6 +132,7 @@ const SidebarNav = ({ items, currentPath, onItemClick }) => (
 const AdminSidebar = ({ isMobileOpen = false, onMobileClose }) => {
   const location = useLocation();
   const [currentPath, setCurrentPath] = useState(location.pathname);
+  const { isMobileDevice } = useDeviceDetection();
 
   useEffect(() => {
     setCurrentPath(location.pathname);
@@ -178,63 +180,22 @@ const AdminSidebar = ({ isMobileOpen = false, onMobileClose }) => {
     };
   }, [isMobileOpen, onMobileClose]);
 
+  // Mobil cihazlarda sidebar'ı tamamen gizle
+  if (isMobileDevice) {
+    return null;
+  }
+
   return (
     <>
       {/* ============================================================
-          DESKTOP SIDEBAR - Sadece xl+ (1280px+) ekranlarda görünür
+          DESKTOP SIDEBAR - Sadece desktop'ta görünür
           ============================================================ */}
       <div
-        className="hidden xl:flex flex-col h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl flex-shrink-0"
+        className="flex flex-col h-full w-64 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 shadow-2xl flex-shrink-0"
         style={{ minWidth: '256px', maxWidth: '256px' }}
       >
         <SidebarNav items={MENU_ITEMS} currentPath={currentPath} onItemClick={() => {}} />
       </div>
-
-      {/* ============================================================
-          MOBILE SIDEBAR OVERLAY - Sadece xl altı ekranlarda, açıkken görünür
-          ============================================================ */}
-      {isMobileOpen && (
-        <div 
-          id="admin-mobile-sidebar"
-          className="xl:hidden fixed inset-0 z-[9998]"
-          style={{ touchAction: 'manipulation' }}
-        >
-          {/* Arka plan overlay - tıklanınca sidebar kapanır */}
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMobileClose();
-            }}
-            onTouchEnd={(e) => {
-              e.stopPropagation();
-              onMobileClose();
-            }}
-          />
-          {/* Sidebar paneli - soldan kayarak gelir */}
-          <div className="absolute top-0 left-0 bottom-0 z-10 flex flex-col w-72 max-w-[85vw] bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl animate-slide-in-left">
-            {/* Kapatma butonu */}
-            <div className="flex items-center justify-between px-4 py-4 border-b border-slate-700/50">
-              <span className="text-white font-bold text-base">Admin Menü</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onMobileClose();
-                }}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 transition-colors"
-                style={{ minWidth: '44px', minHeight: '44px', touchAction: 'manipulation' }}
-                aria-label="Menüyü kapat"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <SidebarNav items={MENU_ITEMS} currentPath={currentPath} onItemClick={onMobileClose} />
-          </div>
-        </div>
-      )}
     </>
   );
 };

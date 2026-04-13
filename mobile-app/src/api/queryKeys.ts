@@ -113,6 +113,13 @@ export const queryKeys = {
   dashboard: {
     all: ['dashboard'] as const, // Tüm dashboard query'leri
   },
+
+  // Kongreler
+  congresses: {
+    all: ['congresses'] as const, // Tüm kongre query'leri
+    list: (filters?: any) => [...queryKeys.congresses.all, 'list', filters] as const, // Kongre listesi
+    detail: (id: number) => [...queryKeys.congresses.all, 'detail', id] as const, // Kongre detayı
+  },
 } as const;
 
 // ============================================================================

@@ -42,6 +42,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useTheme } from '@/contexts/ThemeContext';
+import { BUTTON_PRESETS } from '@/theme/config';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -129,25 +130,19 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   /**
-   * Gradient renklerini döndürür
+   * Gradient renklerini döndürür - Merkezi config'den
    */
-  const getGradientColors = (): [string, string] => {
+  const getGradientColors = (): readonly [string, string] => {
     if (gradientColors) {
       return gradientColors;
     }
-    if (effectiveVariant === 'gradient') {
-      return ['#6096B4', '#93BFCF']; // Mavi gradient (web ile eşleşir)
+    
+    const preset = BUTTON_PRESETS[effectiveVariant as keyof typeof BUTTON_PRESETS];
+    if (preset && 'gradient' in preset) {
+      return preset.gradient as readonly [string, string];
     }
-    if (effectiveVariant === 'primary') {
-      return ['#60A5FA', '#3B82F6']; // Modern açık mavi gradient
-    }
-    if (effectiveVariant === 'secondary') {
-      return ['#38BDF8', '#0EA5E9']; // Gök mavisi gradient
-    }
-    if (effectiveVariant === 'destructive') {
-      return ['#EF4444', '#DC2626']; // Kırmızı gradient
-    }
-    return ['transparent', 'transparent'];
+    
+    return ['transparent', 'transparent'] as const;
   };
 
   const renderContent = () => (
@@ -156,9 +151,7 @@ export const Button: React.FC<ButtonProps> = ({
         <ActivityIndicator
           color={
             effectiveVariant === 'outline' || effectiveVariant === 'ghost'
-              ? theme.colors.primary[600]
-              : effectiveVariant === 'destructive'
-              ? theme.colors.text.inverse
+              ? BUTTON_PRESETS.outline.text // Merkezi config'den
               : theme.colors.text.inverse
           }
         />
@@ -262,9 +255,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     width: '100%',
   },
   primary: {
-    backgroundColor: theme.colors.primary[500], // #4F46E5
-    // Modern: Soft pastel shadow
-    shadowColor: '#3B82F6',
+    backgroundColor: BUTTON_PRESETS.primary.background, // Merkezi config'den
+    shadowColor: BUTTON_PRESETS.primary.shadow, // Merkezi config'den
     shadowOffset: {
       width: 0,
       height: 4,
@@ -334,10 +326,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text.inverse,
   },
   text_outline: {
-    color: '#4F46E5',
+    color: BUTTON_PRESETS.outline.text, // Merkezi config'den
   },
   text_ghost: {
-    color: theme.colors.primary[500],
+    color: BUTTON_PRESETS.ghost.text, // Merkezi config'den
   },
   text_gradient: {
     color: theme.colors.text.inverse,

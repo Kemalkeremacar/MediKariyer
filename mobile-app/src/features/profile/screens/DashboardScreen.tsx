@@ -68,6 +68,7 @@ import { useProfileCore, useProfileCompletion } from '../hooks/useProfileCore';
 import { useJobs } from '@/features/jobs/hooks/useJobs';
 import { useApplications } from '@/features/applications/hooks/useApplications';
 import { useUnreadCount } from '@/features/notifications/hooks/useNotifications';
+import { useUpcomingCongresses } from '@/features/congresses/hooks/useUpcomingCongresses';
 import { getFullImageUrl } from '@/utils/imageUrl';
 import { educationService } from '@/api/services/profile/education.service';
 import { experienceService } from '@/api/services/profile/experience.service';
@@ -149,7 +150,15 @@ export const DashboardScreen = () => {
     isRefetching: isRefetchingApplications
   } = useApplications({ limit: 3 });
 
-  const isRefetching = isRefetchingProfile || isRefetchingCompletion || isRefetchingJobs || isRefetchingApplications;
+  // Upcoming Congresses (Next 3 congresses)
+  const {
+    data: upcomingCongresses,
+    isLoading: isLoadingCongresses,
+    refetch: refetchCongresses,
+    isRefetching: isRefetchingCongresses
+  } = useUpcomingCongresses(3);
+
+  const isRefetching = isRefetchingProfile || isRefetchingCompletion || isRefetchingJobs || isRefetchingApplications || isRefetchingCongresses;
 
   const handleRefresh = () => {
     refetchProfile();
@@ -157,6 +166,7 @@ export const DashboardScreen = () => {
     refetchNotifications();
     refetchJobs();
     refetchApplications();
+    refetchCongresses();
   };
 
   // Prefetch profile data when user hovers/focuses on cards
@@ -234,9 +244,9 @@ export const DashboardScreen = () => {
           />
         }
       >
-        {/* Modern Header with Gradient */}
+        {/* Modern Header with Gradient - Diğer sayfalarla tutarlı */}
         <LinearGradient
-          colors={['#1D4ED8', '#2563EB', '#3B82F6']}
+          colors={['#2563A8', '#1F4F86', '#1B3F6B']} // blue.600 → blue.700 → blue.800
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.header}
@@ -470,6 +480,87 @@ export const DashboardScreen = () => {
             </View>
           )}
         </View>
+
+        {/* Upcoming Congresses Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleWithIcon}>
+              <Ionicons name="calendar" size={20} color="#1D4ED8" />
+              <Typography variant="h3" style={styles.sectionTitle}>
+                Yaklaşan Kongreler
+              </Typography>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('CongressesTab', { screen: 'CongressesList' })}>
+              <Typography variant="caption" style={styles.seeAllText}>
+                Tümünü Gör
+              </Typography>
+            </TouchableOpacity>
+          </View>
+
+          {isLoadingCongresses ? (
+            <View style={styles.skeletonList}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} width="100%" height={80} borderRadius={12} style={{ marginBottom: spacing.md }} />
+              ))}
+            </View>
+          ) : !upcomingCongresses || upcomingCongresses.length === 0 ? (
+            <View style={styles.emptyStateCard}>
+              <Ionicons name="calendar-outline" size={48} color={colors.neutral[300]} />
+              <Typography variant="body" style={styles.emptyStateText}>
+                Yaklaşan kongre bulunmamaktadır.
+              </Typography>
+              <TouchableOpacity 
+                style={styles.emptyStateButton}
+                onPress={() => navigation.navigate('CongressesTab', { screen: 'CongressesList' })}
+              >
+                <Typography variant="caption" style={styles.emptyStateButtonText}>
+                  Kongre Takvimine Git
+                </Typography>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.verticalList}>
+              {upcomingCongresses.map((congress) => {
+                const startDate = new Date(congress.start_date);
+                const month = startDate.toLocaleDateString('tr-TR', { month: 'short' }).replace('.', '');
+                const day = startDate.getDate();
+                const locationText = [congress.city, congress.country].filter(Boolean).join(', ');
+
+                return (
+                  <TouchableOpacity
+                    key={congress.id}
+                    style={styles.congressItem}
+                    onPress={() => navigation.navigate('CongressesTab', { 
+                      screen: 'CongressDetail', 
+                      params: { id: congress.id } 
+                    })}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.congressDateBadge}>
+                      <Typography variant="caption" style={styles.congressMonth}>
+                        {month.toUpperCase()}
+                      </Typography>
+                      <Typography variant="h3" style={styles.congressDay}>
+                        {day}
+                      </Typography>
+                    </View>
+                    <View style={styles.congressInfo}>
+                      <Typography variant="body" style={styles.congressTitle} numberOfLines={1}>
+                        {congress.title}
+                      </Typography>
+                      {locationText && (
+                        <Typography variant="caption" style={styles.congressLocation} numberOfLines={1}>
+                          {locationText}
+                        </Typography>
+                      )}
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.neutral[400]} />
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
       </ScrollView>
       
       {/* Side Menu */}
@@ -697,6 +788,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 16,
   },
+  sectionTitleWithIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   seeAllText: {
     color: '#1D4ED8',
     fontWeight: '600',
@@ -750,5 +846,62 @@ const styles = StyleSheet.create({
   emptyStateButtonText: {
     color: '#4B5563',
     fontWeight: '600',
+  },
+  congressItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  congressDateBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  congressMonth: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#1D4ED8',
+    letterSpacing: 0.5,
+  },
+  congressDay: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#1F2937',
+    marginTop: 2,
+  },
+  congressInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  congressTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  congressLocation: {
+    fontSize: 11,
+    color: '#9CA3AF',
   },
 });

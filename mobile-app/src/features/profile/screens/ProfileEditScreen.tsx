@@ -42,6 +42,7 @@ import { Input } from '@/components/ui/Input';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { Screen } from '@/components/layout/Screen';
 import { colors, spacing } from '@/theme';
+import { THEME_TOKENS } from '@/theme/config';
 import { useProfileCore } from '../hooks/useProfileCore';
 import { useUpdatePersonalInfo } from '../hooks/useUpdatePersonalInfo';
 import { useAndroidBackHandler } from '@/hooks/useAndroidBackHandler';
@@ -262,7 +263,7 @@ export const ProfileEditScreen = ({ navigation }: Props) => {
                   resizeMode="cover"
                 />
               ) : (
-                <Ionicons name="person" size={40} color={colors.primary[600]} />
+                <Ionicons name="person" size={40} color={THEME_TOKENS.PRIMARY} />
               )}
             </View>
             <TouchableOpacity
@@ -286,7 +287,7 @@ export const ProfileEditScreen = ({ navigation }: Props) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>
-                <Ionicons name="person" size={20} color={colors.primary[600]} />
+                <Ionicons name="person" size={20} color={THEME_TOKENS.PRIMARY} />
               </View>
               <Typography variant="h3" style={styles.sectionTitle}>
                 Kişisel Bilgiler
@@ -341,7 +342,7 @@ export const ProfileEditScreen = ({ navigation }: Props) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>
-                <Ionicons name="briefcase" size={20} color={colors.primary[600]} />
+                <Ionicons name="briefcase" size={20} color={THEME_TOKENS.PRIMARY} />
               </View>
               <Typography variant="h3" style={styles.sectionTitle}>
                 Mesleki Bilgiler
@@ -399,7 +400,7 @@ export const ProfileEditScreen = ({ navigation }: Props) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>
-                <Ionicons name="call" size={20} color={colors.primary[600]} />
+                <Ionicons name="call" size={20} color={THEME_TOKENS.PRIMARY} />
               </View>
               <Typography variant="h3" style={styles.sectionTitle}>
                 İletişim Bilgileri
@@ -435,7 +436,7 @@ export const ProfileEditScreen = ({ navigation }: Props) => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>
-                <Ionicons name="location" size={20} color={colors.primary[600]} />
+                <Ionicons name="location" size={20} color={THEME_TOKENS.PRIMARY} />
               </View>
               <Typography variant="h3" style={styles.sectionTitle}>
                 Konum ve Doğum Bilgileri
@@ -588,7 +589,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   changePhotoText: {
-    color: colors.primary[600],
+    color: THEME_TOKENS.PRIMARY,
     fontWeight: '600',
     fontSize: 14,
   },

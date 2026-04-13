@@ -11,7 +11,6 @@
 
 import { useCallback, useState } from 'react';
 import { Share, Linking, Platform, Alert } from 'react-native';
-import * as StoreReview from 'expo-store-review';
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import { useToast } from '@/providers/ToastProvider';
@@ -46,23 +45,6 @@ const APP_CONFIG = {
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
-
-/**
- * Store URL'ini platform'a göre oluşturur
- */
-const getStoreUrl = (): string => {
-  if (Platform.OS === 'ios') {
-    // iOS: App Store ID varsa App Store linki, yoksa website
-    if (APP_CONFIG.appStoreId) {
-      return `https://apps.apple.com/app/id${APP_CONFIG.appStoreId}`;
-    }
-    // App Store'da henüz yayınlanmamışsa website'e yönlendir
-    return APP_CONFIG.website;
-  }
-  
-  // Android: Play Store linki
-  return `https://play.google.com/store/apps/details?id=${APP_CONFIG.androidPackage}`;
-};
 
 /**
  * Paylaşım mesajını oluşturur
@@ -312,29 +294,6 @@ Platform: ${platformInfo}
       return false;
     } catch (error) {
       showToast('E-posta gönderilemedi', 'error');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [showToast]);
-
-  /**
-   * URL aç - genel yardımcı fonksiyon
-   */
-  const openUrl = useCallback(async (url: string, errorMessage: string): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      const canOpen = await Linking.canOpenURL(url);
-      
-      if (canOpen) {
-        await Linking.openURL(url);
-        return true;
-      }
-      
-      showToast(errorMessage, 'error');
-      return false;
-    } catch (error) {
-      showToast(errorMessage, 'error');
       return false;
     } finally {
       setIsLoading(false);

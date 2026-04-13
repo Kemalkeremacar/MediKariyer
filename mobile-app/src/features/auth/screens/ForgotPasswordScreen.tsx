@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/layout/Screen';
 import { useTheme } from '@/contexts/ThemeContext';
+import { THEME_TOKENS } from '@/theme/config';
 import { useForgotPassword } from '../hooks/useForgotPassword';
 import { handleApiError } from '@/utils/errorHandler';
 
@@ -315,7 +316,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingBottom: theme.spacing['4xl'],
   },
   loginLink: {
-    color: theme.colors.primary[600],
+    color: THEME_TOKENS.PRIMARY,
     fontWeight: theme.typography.fontWeight.semibold,
   },
 });

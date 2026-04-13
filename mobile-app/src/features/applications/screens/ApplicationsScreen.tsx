@@ -282,7 +282,15 @@ export const ApplicationsScreen = () => {
             keyExtractor={(item) => `application-${item.id}`}
             renderItem={({ item }) => {
               // İlan durumu kontrolleri (web ile uyumlu)
-              const isJobUnavailable = item.is_job_deleted || item.is_hospital_active === false;
+              const jobStatus = item.job_status || '';
+              const isJobDeleted = item.is_job_deleted || Boolean(item.job_deleted_at);
+              const isJobPassive = 
+                item.job_status_id === 4 || 
+                jobStatus === 'Pasif' || 
+                jobStatus === 'Passive' ||
+                (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
+                (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive'));
+              const isJobUnavailable = isJobDeleted || isJobPassive || item.is_hospital_active === false;
               
               return (
                 <ApplicationCard

@@ -17,6 +17,9 @@ import { typography, textVariants } from './typography';
 import { shadows } from './shadows';
 import { zIndex, getZIndex } from './zIndex';
 
+// Merkezi config'i export et
+export * from './config';
+
 // ============================================================================
 // EXPORTS
 // ============================================================================

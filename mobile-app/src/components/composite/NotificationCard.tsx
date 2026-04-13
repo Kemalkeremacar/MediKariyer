@@ -127,7 +127,7 @@ const getNotificationColor = (type: string, title?: string): keyof typeof colors
     application: 'primary',
     job: 'secondary',
     system: 'warning',
-    message: 'info',
+    message: 'primary', // 'info' yerine 'primary' kullan
   } as const;
   
   return colorMap[type as keyof typeof colorMap] || 'primary';
@@ -189,8 +189,8 @@ export const NotificationCard: React.FC<NotificationCardProps> = React.memo(({
       >
         <View style={styles.content}>
           {/* Bildirim tipi ikonu */}
-          <View style={[styles.iconContainer, { backgroundColor: colors[color][50] }]}>
-            <Ionicons name={iconName} size={20} color={colors[color][600]} />
+          <View style={[styles.iconContainer, { backgroundColor: (colors as any)[color][50] }]}>
+            <Ionicons name={iconName} size={20} color={(colors as any)[color][600]} />
           </View>
           
           {/* Bildirim içeriği */}

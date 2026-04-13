@@ -82,7 +82,9 @@
             "buildToolsVersion": "35.0.0"
           }
         }
-      ]
+      ],
+      "expo-image",
+      "expo-localization"
     ]
   }
 }

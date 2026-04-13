@@ -49,6 +49,19 @@ const useUsers = (filters = {}) => {
 };
 
 /**
+ * Uzmanlık alanlarını getir
+ */
+const useSpecialties = () => {
+  return useQuery({
+    queryKey: ['specialties'],
+    queryFn: async () => {
+      return apiRequest.get(ENDPOINTS.LOOKUP.SPECIALTIES);
+    },
+    staleTime: 1000 * 60 * 60, // 1 saat cache
+  });
+};
+
+/**
  * Bildirim gönderme mutation
  */
 const useSendNotification = () => {
@@ -72,11 +85,12 @@ const NotificationSendPage = () => {
     type: 'info',
   });
   
-  // Filtreler
+  // Filtreler - Varsayılan: Sadece aktif ve onaylı kullanıcılar (profesyonel yaklaşım)
   const [filters, setFilters] = useState({
-    is_approved: '',
-    is_active: '',
+    is_approved: 'true',  // Varsayılan: Sadece onaylı kullanıcılar
+    is_active: 'true',    // Varsayılan: Sadece aktif kullanıcılar
     search: '',
+    specialty_id: '',
   });
   
   // Seçili roller (checkbox olarak) - Başlangıçta hiçbiri seçili değil
@@ -86,20 +100,13 @@ const NotificationSendPage = () => {
   const [selectedUserIds, setSelectedUserIds] = useState(new Set());
   const [selectionMode, setSelectionMode] = useState('role'); // 'role' veya 'users'
   
-  // Backend'e gönderilecek filtreler (role dahil)
+  // Backend'e gönderilecek filtreler (role HARİÇ - her zaman tüm kullanıcıları al)
   const backendFilters = useMemo(() => {
     const backendFilterObj = { ...filters };
-    
-    // Seçili roller varsa, backend'e gönder (birden fazla rol seçiliyse her birini ayrı sorgu yapmak yerine, 
-    // backend'den tüm rolleri alıp frontend'de filtreleyeceğiz - çünkü backend tek role destekliyor)
-    // Ama şimdilik sadece bir rol seçiliyse backend'e gönderelim
-    if (selectedRoles.size === 1) {
-      backendFilterObj.role = Array.from(selectedRoles)[0];
-    }
-    // Birden fazla rol seçiliyse backend'e role göndermeyiz, tüm kullanıcıları alıp frontend'de filtreleriz
-    
+    // Role göndermiyoruz, her zaman tüm kullanıcıları alıp frontend'de filtreliyoruz
+    delete backendFilterObj.specialty_id; // Uzmanlık da frontend'de filtrelenecek
     return backendFilterObj;
-  }, [filters, selectedRoles]);
+  }, [filters]);
   
   // Kullanıcı listesi
   const { data: usersData, isLoading: usersLoading } = useUsers({
@@ -107,6 +114,10 @@ const NotificationSendPage = () => {
     limit: 100, // Backend maksimum limit: 100
     page: 1,
   });
+  
+  // Uzmanlık listesi
+  const { data: specialtiesData, isLoading: specialtiesLoading } = useSpecialties();
+  const specialties = specialtiesData?.data?.data || [];
   
   const sendNotificationMutation = useSendNotification();
   
@@ -116,26 +127,67 @@ const NotificationSendPage = () => {
     return userList;
   }, [usersData?.data?.data]);
   
-  // Backend'den gelen veriler zaten filtrelenmiş (search, is_approved, is_active, role)
-  // Frontend'de sadece rol filtresi yapıyoruz (birden fazla rol seçiliyse)
+  // TÜM filtreleri uygula (rol, uzmanlık, arama, onay, aktif)
   const filteredUsers = useMemo(() => {
-    // Hiç rol seçili değilse boş döndür
-    if (selectedRoles.size === 0) {
-      return [];
-    }
+    if (selectedRoles.size === 0) return [];
     
-    // Backend'den gelen veriler zaten filtrelenmiş
-    // Eğer birden fazla rol seçiliyse, frontend'de rol filtresi yap
-    if (selectedRoles.size > 1) {
-      return users.filter(user => selectedRoles.has(user.role));
+    return users.filter(user => {
+      // 1. Rol filtresi
+      if (!selectedRoles.has(user.role)) return false;
+      
+      // 2. Uzmanlık filtresi (sadece doktorlar için)
+      if (filters.specialty_id && user.role === 'doctor') {
+        const doctorSpecialtyId = user.specialty_id || user.profile?.specialty_id;
+        if (doctorSpecialtyId !== parseInt(filters.specialty_id)) return false;
+      }
+      
+      // 3. Arama filtresi
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase().trim();
+        if (searchLower) {
+          const firstName = (user.first_name || user.profile?.first_name || '').trim();
+          const lastName = (user.last_name || user.profile?.last_name || '').trim();
+          const fullName = `${firstName} ${lastName}`.trim().toLowerCase();
+          const email = (user.email || '').toLowerCase();
+          const institutionName = (user.institution_name || user.profile?.institution_name || '').trim().toLowerCase();
+          
+          if (!fullName.includes(searchLower) && 
+              !email.includes(searchLower) && 
+              !institutionName.includes(searchLower)) {
+            return false;
+          }
+        }
+      }
+      
+      // 4. Onay durumu filtresi
+      if (filters.is_approved !== '') {
+        const isApproved = filters.is_approved === 'true';
+        if (user.is_approved !== isApproved) return false;
+      }
+      
+      // 5. Aktif durumu filtresi
+      if (filters.is_active !== '') {
+        const isActive = filters.is_active === 'true';
+        if (user.is_active !== isActive) return false;
+      }
+      
+      return true;
+    });
+  }, [users, selectedRoles, filters]);
+
+  // Seçili kullanıcı sayısı hesapla
+  const selectedCount = useMemo(() => {
+    if (selectionMode === 'role' && selectedRoles.size > 0) {
+      return filteredUsers.length;
+    } else {
+      // Manuel modda: Sadece filtrelenmiş kullanıcılar içinden seçili olanları say
+      return Array.from(selectedUserIds).filter(id => 
+        filteredUsers.some(user => user.id === id)
+      ).length;
     }
-    
-    // Tek rol seçiliyse ve backend'e role gönderildiyse, backend'den gelen veriler zaten filtrelenmiş
-    // Direkt kullan
-    return users;
-  }, [users, selectedRoles]);
+  }, [selectionMode, selectedRoles.size, filteredUsers, selectedUserIds]);
   
-  // Rol checkbox toggle
+  // Rol seçimi/kaldırma
   const handleRoleToggle = (role) => {
     setSelectedRoles(prev => {
       const next = new Set(prev);
@@ -144,67 +196,24 @@ const NotificationSendPage = () => {
       } else {
         next.add(role);
       }
-      setSelectionMode('role');
       return next;
     });
+    setSelectionMode('role'); // Rol seçimi yapıldığında otomatik moda geç
   };
-  
-  // Seçili roller veya filtreler değiştiğinde kullanıcıları otomatik seç/güncelle
+
+  // Rol seçimi değiştiğinde otomatik seçim yap
   useEffect(() => {
     if (selectionMode === 'role') {
-      if (selectedRoles.size === 0) {
-        // Hiç rol seçili değilse kullanıcı seçimini temizle
-        setSelectedUserIds(new Set());
-      } else {
-        // Seçili rollere ve filtreleme kriterlerine uygun kullanıcıları seç
-             const roleUsers = users.filter(u => {
-               // Rol kontrolü
-               if (!selectedRoles.has(u.role)) return false;
-               
-               // Arama filtresi
-               if (filters.search) {
-                 const searchLower = filters.search.toLowerCase().trim();
-                 if (!searchLower) return true; // Boş arama, tümünü göster
-                 
-                 // İsim (hem direkt hem profile içinden)
-                 const firstName = (u.first_name || u.profile?.first_name || '').trim();
-                 const lastName = (u.last_name || u.profile?.last_name || '').trim();
-                 const fullName = `${firstName} ${lastName}`.trim().toLowerCase();
-                 
-                 // Email
-                 const email = (u.email || '').toLowerCase();
-                 
-                 // Kurum adı (hem direkt hem profile içinden)
-                 const institutionName = (u.institution_name || u.profile?.institution_name || '').trim().toLowerCase();
-                 
-                 // Arama terimini kontrol et
-                 const matchesName = fullName.includes(searchLower);
-                 const matchesEmail = email.includes(searchLower);
-                 const matchesInstitution = institutionName.includes(searchLower);
-                 
-                 if (!matchesName && !matchesEmail && !matchesInstitution) {
-                   return false;
-                 }
-               }
-          
-          // Onay durumu filtresi
-          if (filters.is_approved !== '') {
-            const isApproved = filters.is_approved === 'true';
-            if (u.is_approved !== isApproved) return false;
-          }
-          
-          // Aktif durumu filtresi
-          if (filters.is_active !== '') {
-            const isActive = filters.is_active === 'true';
-            if (u.is_active !== isActive) return false;
-          }
-          
-          return true;
-        });
-        setSelectedUserIds(new Set(roleUsers.map(u => u.id)));
-      }
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
     }
-  }, [selectedRoles, filters, users, selectionMode]);
+  }, [selectionMode]); // filteredUsers dependency'den çıkarıldı
+
+  // Rol modundayken filtreler değişirse seçimi güncelle
+  useEffect(() => {
+    if (selectionMode === 'role') {
+      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
+    }
+  }, [filteredUsers, selectionMode]);
   
   // Kullanıcı seçimi
   const handleUserToggle = (userId) => {
@@ -222,12 +231,25 @@ const NotificationSendPage = () => {
   
   // Tümünü seç/seçimi kaldır
   const handleSelectAll = () => {
-    if (selectedUserIds.size === filteredUsers.length) {
-      setSelectedUserIds(new Set());
+    // Mevcut filtrelenmiş kullanıcıların hepsi seçili mi kontrol et
+    const allCurrentlySelected = filteredUsers.every(user => selectedUserIds.has(user.id));
+    
+    if (allCurrentlySelected && filteredUsers.length > 0) {
+      // Hepsi seçiliyse, sadece filtrelenmiş olanları kaldır
+      setSelectedUserIds(prev => {
+        const next = new Set(prev);
+        filteredUsers.forEach(user => next.delete(user.id));
+        return next;
+      });
     } else {
-      setSelectedUserIds(new Set(filteredUsers.map(u => u.id)));
-      setSelectionMode('users');
+      // Hepsi seçili değilse, filtrelenmiş olanları ekle
+      setSelectedUserIds(prev => {
+        const next = new Set(prev);
+        filteredUsers.forEach(user => next.add(user.id));
+        return next;
+      });
     }
+    setSelectionMode('users'); // Manuel moda geç
   };
   
   // Form gönderme
@@ -291,10 +313,6 @@ const NotificationSendPage = () => {
     return icons[role] || <Users className="w-4 h-4" />;
   };
   
-  const selectedCount = selectionMode === 'role' && selectedRoles.size > 0
-    ? filteredUsers.length
-    : selectedUserIds.size;
-  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
@@ -327,12 +345,8 @@ const NotificationSendPage = () => {
               <div className="space-y-3">
                 {['doctor', 'hospital'].map((role) => {
                   const roleLabel = role === 'doctor' ? 'Doktorlar' : 'Hastaneler';
-                  const count = users.filter(u => {
-                    if (u.role !== role) return false;
-                    if (!u.is_approved) return false;
-                    if (!u.is_active) return false;
-                    return true;
-                  }).length;
+                  // Backend'den gelen users zaten filtrelenmiş, sadece role göre say
+                  const count = users.filter(u => u.role === role).length;
                   const isSelected = selectedRoles.has(role);
                   
                   return (
@@ -367,13 +381,14 @@ const NotificationSendPage = () => {
             <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Filtreler</h2>
-                {(filters.search || filters.is_approved || filters.is_active) && (
+                {/* Temizle butonu */}
+                {(filters.search || filters.is_approved !== 'true' || filters.is_active !== 'true' || filters.specialty_id) && (
                   <button
                     type="button"
-                    onClick={() => setFilters({ search: '', is_approved: '', is_active: '' })}
+                    onClick={() => setFilters({ search: '', is_approved: 'true', is_active: 'true', specialty_id: '' })}
                     className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                   >
-                    Temizle
+                    Varsayılana Dön
                   </button>
                 )}
               </div>
@@ -394,7 +409,7 @@ const NotificationSendPage = () => {
                   />
                   {filters.search && (
                     <p className="text-xs text-gray-500 mt-1">
-                      {usersData?.data?.pagination?.total ?? filteredUsers.length} sonuç bulundu
+                      {filteredUsers.length} sonuç bulundu
                     </p>
                   )}
                 </div>
@@ -403,6 +418,7 @@ const NotificationSendPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">
                     Onay Durumu
+                    <span className="text-xs text-gray-500 ml-2">(Varsayılan: Sadece Onaylı)</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
@@ -441,12 +457,9 @@ const NotificationSendPage = () => {
                       Beklemede
                     </button>
                   </div>
-                  {filters.is_approved !== '' && (
+                  {filters.is_approved !== 'true' && (
                     <p className="text-xs text-gray-500 mt-1">
-                      {filteredUsers.filter(u => {
-                        const isApproved = filters.is_approved === 'true';
-                        return u.is_approved === isApproved;
-                      }).length} kullanıcı
+                      {filteredUsers.length} kullanıcı
                     </p>
                   )}
                 </div>
@@ -455,6 +468,7 @@ const NotificationSendPage = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">
                     Aktif Durumu
+                    <span className="text-xs text-gray-500 ml-2">(Varsayılan: Sadece Aktif)</span>
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <button
@@ -493,22 +507,64 @@ const NotificationSendPage = () => {
                       Pasif
                     </button>
                   </div>
-                  {filters.is_active !== '' && (
+                  {filters.is_active !== 'true' && (
                     <p className="text-xs text-gray-500 mt-1">
-                      {filteredUsers.filter(u => {
-                        const isActive = filters.is_active === 'true';
-                        return u.is_active === isActive;
-                      }).length} kullanıcı
+                      {filteredUsers.length} kullanıcı
                     </p>
                   )}
                 </div>
                 
+                {/* Uzmanlık Alanı Filtresi (Sadece Doktor seçiliyse) */}
+                {selectedRoles.has('doctor') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                      <Stethoscope className="w-4 h-4 inline mr-1 text-gray-700" />
+                      Uzmanlık Alanı
+                    </label>
+                    <select
+                      value={filters.specialty_id}
+                      onChange={(e) => setFilters(prev => ({ ...prev, specialty_id: e.target.value }))}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 bg-white"
+                      disabled={specialtiesLoading}
+                    >
+                      <option value="">Tüm Uzmanlıklar</option>
+                      {specialties.map((specialty) => (
+                        <option key={specialty.id} value={specialty.id}>
+                          {specialty.name}
+                        </option>
+                      ))}
+                    </select>
+                    {filters.specialty_id && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {users.filter(u => u.role === 'doctor').length} doktordan {filteredUsers.length} seçildi
+                      </p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Güvenlik Uyarısı */}
+                {(filters.is_approved !== 'true' || filters.is_active !== 'true') && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-amber-800">Güvenlik Uyarısı</p>
+                        <p className="text-xs text-amber-700 mt-1">
+                          {filters.is_approved !== 'true' && 'Onaysız kullanıcılara bildirim gönderiyorsunuz. '}
+                          {filters.is_active !== 'true' && 'Pasif kullanıcılara bildirim gönderiyorsunuz. '}
+                          Bu kullanıcılar bildirimi alamayabilir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Filtre Özeti */}
-                {(filters.search || filters.is_approved || filters.is_active) && (
+                {(filters.search || filters.is_approved !== 'true' || filters.is_active !== 'true' || filters.specialty_id) && (
                   <div className="pt-3 border-t border-gray-200">
                     <p className="text-xs font-medium text-gray-700 mb-1">Filtrelenmiş Sonuç:</p>
                     <p className="text-sm font-semibold text-gray-900">
-                      {usersData?.data?.pagination?.total ?? filteredUsers.length} kullanıcı
+                      {filteredUsers.length} kullanıcı
                     </p>
                   </div>
                 )}

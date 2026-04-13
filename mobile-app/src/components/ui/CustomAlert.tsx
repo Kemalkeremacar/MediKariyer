@@ -162,7 +162,7 @@ const validateProps = (props: CustomAlertProps): boolean => {
  */
 const safeExecuteCallback = (
   callback: (() => void) | undefined,
-  callbackName: string
+  _callbackName: string
 ): void => {
   // Çağırmadan önce callback'in fonksiyon olduğunu doğrula (Gereksinim 9.4)
   if (typeof callback !== 'function') {

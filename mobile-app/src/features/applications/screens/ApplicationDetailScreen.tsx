@@ -98,6 +98,17 @@ export const ApplicationDetailScreen = () => {
   // Sadece "Başvuruldu" (status_id = 1) durumundaki başvurular geri çekilebilir
   const canWithdraw = data?.status_id === 1 && !withdrawMutation.isPending;
 
+  // İlan durumu kontrolleri (web ile uyumlu)
+  const jobStatus = data?.job_status || '';
+  const isJobDeleted = data?.is_job_deleted || Boolean(data?.job_deleted_at);
+  const isJobPassive = 
+    data?.job_status_id === 4 || 
+    jobStatus === 'Pasif' || 
+    jobStatus === 'Passive' ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('pasif')) ||
+    (typeof jobStatus === 'string' && jobStatus.toLowerCase().includes('passive'));
+  const isJobUnavailable = isJobDeleted || isJobPassive || data?.is_hospital_active === false;
+
   // applicationId yoksa hata göster
   if (!applicationId) {
     return (
@@ -234,38 +245,39 @@ export const ApplicationDetailScreen = () => {
         </View>
       )}
 
-      {data && (
+      {/* Pasif/Silinmiş İlan için Erişimi Engelle (Web ile uyumlu) */}
+      {data && isJobUnavailable && (
+        <View style={styles.blockedContainer}>
+          <View style={styles.blockedIcon}>
+            <Ionicons name="close-circle" size={64} color={colors.warning[600]} />
+          </View>
+          <Typography variant="h2" style={styles.blockedTitle}>
+            Yayından Kaldırıldı
+          </Typography>
+          <Typography variant="body" style={styles.blockedText}>
+            {isJobDeleted 
+              ? 'Bu iş ilanı yayından kaldırıldığı için başvuru detayları görüntülenemez.'
+              : isJobPassive
+              ? 'Bu iş ilanı pasif durumda olduğu için başvuru detayları görüntülenemez.'
+              : 'Bu hastane pasif durumda olduğu için başvuru detayları görüntülenemez.'}
+          </Typography>
+          <Button
+            label="Başvurulara Dön"
+            onPress={() => navigation.goBack()}
+            variant="primary"
+            size="lg"
+            icon={<Ionicons name="arrow-back" size={20} color="#ffffff" />}
+          />
+        </View>
+      )}
+
+      {data && !isJobUnavailable && (
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={true}
           bounces={true}
         >
-          {/* İlan Durumu Uyarısı */}
-          {(data.is_job_deleted || data.is_hospital_active === false) && (
-            <Card variant="outlined" padding="lg" style={styles.warningCard}>
-              <View style={styles.warningContent}>
-                <View style={styles.warningIconContainer}>
-                  <Ionicons 
-                    name="warning" 
-                    size={24} 
-                    color={colors.warning[600]} 
-                  />
-                </View>
-                <View style={styles.warningTextContainer}>
-                  <Typography variant="h3" style={styles.warningTitle}>
-                    {data.is_job_deleted ? 'İlan Yayından Kaldırıldı' : 'Hastane Pasif'}
-                  </Typography>
-                  <Typography variant="body" style={styles.warningText}>
-                    {data.is_job_deleted 
-                      ? 'Bu iş ilanı yayından kaldırılmıştır. Başvurunuz hala geçerlidir ve durumunu takip edebilirsiniz.'
-                      : 'Bu hastane şu anda pasif durumdadır. Başvurunuz hala geçerlidir ve durumunu takip edebilirsiniz.'}
-                  </Typography>
-                </View>
-              </View>
-            </Card>
-          )}
-
           {/* Başvuru Bilgileri */}
           <Card variant="elevated" padding="lg" style={styles.infoCard}>
             <View style={styles.cardHeader}>
@@ -488,8 +500,8 @@ export const ApplicationDetailScreen = () => {
         </ScrollView>
       )}
 
-      {/* Alt Butonlar */}
-      {data && canWithdraw && (
+      {/* Alt Butonlar - Sadece aktif ilanlarda göster */}
+      {data && !isJobUnavailable && canWithdraw && (
         <View style={styles.bottomButtons}>
           <Button
             label={withdrawMutation.isPending ? 'İşleniyor...' : 'Başvuruyu Geri Çek'}
@@ -739,6 +751,28 @@ const styles = StyleSheet.create({
     color: colors.warning[800],
     fontSize: 13,
     lineHeight: 18,
+  },
+  blockedContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing['3xl'],
+    gap: spacing.lg,
+  },
+  blockedIcon: {
+    marginBottom: spacing.md,
+  },
+  blockedTitle: {
+    color: colors.text.primary,
+    textAlign: 'center',
+    fontWeight: '700',
+    fontSize: 24,
+  },
+  blockedText: {
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+    lineHeight: 22,
   },
   bottomButtons: {
     paddingHorizontal: spacing.md,

@@ -4,7 +4,7 @@
  * 
  * Özellikler:
  * - Light ve dark tema desteği
- * - Frontend ile uyumlu renk paleti (#3B82F6 - blue-600)
+ * - Web ile tam uyumlu renk paleti (#2563a8 - primary-color)
  * - Tailwind CSS benzeri renk skalası (50-900)
  * - Gradient renkleri (header, button, vb. için)
  * 
@@ -21,19 +21,34 @@
  * @since 2024
  */
 
+/**
+ * @file colors.ts
+ * @description Renk Paleti - Modern, sağlık odaklı renk sistemi
+ * 
+ * Özellikler:
+ * - Light ve dark tema desteği
+ * - Web ile tam uyumlu renk paleti (merkezi config'den)
+ * - Tailwind CSS benzeri renk skalası (50-900)
+ * - Gradient renkleri (header, button, vb. için)
+ * 
+ * Kullanım:
+ * ```typescript
+ * import { colors } from '@/theme';
+ * 
+ * <View style={{ backgroundColor: colors.primary[600] }} />
+ * <Text style={{ color: colors.text.primary }} />
+ * ```
+ * 
+ * @author MediKariyer Development Team
+ * @version 1.0.0
+ * @since 2024
+ */
+
+import { BRAND_COLORS, THEME_TOKENS } from './config';
+
 export const lightColors = {
-  primary: {
-    50: '#eff6ff',
-    100: '#dbeafe',
-    200: '#bfdbfe',
-    300: '#93c5fd',
-    400: '#60a5fa',
-    500: '#3B82F6', // Modern blue (frontend ile aynı)
-    600: '#2563eb', // blue-600 (frontend'de kullanılan ana renk)
-    700: '#1d4ed8',
-    800: '#1e40af',
-    900: '#1e3a8a',
-  },
+  // Merkezi config'den alınan renkler - Web ile tam uyumlu
+  primary: BRAND_COLORS.blue, // Web'deki blue paleti
   secondary: {
     50: '#f5f3ff',
     100: '#ede9fe',
@@ -58,72 +73,28 @@ export const lightColors = {
     800: '#6b21a8',
     900: '#581c87',
   },
-  success: {
-    50: '#ecfdf5',
-    100: '#d1fae5',
-    200: '#a7f3d0',
-    300: '#6ee7b7',
-    400: '#34d399',
-    500: '#10B981',
-    600: '#059669',
-    700: '#047857',
-    800: '#065f46',
-    900: '#064e3b',
-  },
-  warning: {
-    50: '#fffbeb',
-    100: '#fef3c7',
-    200: '#fde68a',
-    300: '#fcd34d',
-    400: '#fbbf24',
-    500: '#f59e0b',
-    600: '#d97706',
-    700: '#b45309',
-    800: '#92400e',
-    900: '#78350f',
-  },
-  error: {
-    50: '#fef2f2',
-    100: '#fee2e2',
-    200: '#fecaca',
-    300: '#fca5a5',
-    400: '#f87171',
-    500: '#ef4444',
-    600: '#DC2626',
-    700: '#b91c1c',
-    800: '#991b1b',
-    900: '#7f1d1d',
-  },
-  neutral: {
-    50: '#ffffff',
-    100: '#f9fafb',
-    200: '#f3f4f6',
-    300: '#e5e7eb',
-    400: '#d1d5db',
-    500: '#9ca3af',
-    600: '#6b7280',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
-  },
+  success: BRAND_COLORS.success,
+  warning: BRAND_COLORS.warning,
+  error: BRAND_COLORS.error,
+  neutral: BRAND_COLORS.gray,
   background: {
-    primary: '#F8F9FE',
+    primary: THEME_TOKENS.BACKGROUND,
     secondary: '#ffffff',
-    tertiary: '#f9fafb',
+    tertiary: THEME_TOKENS.SURFACE,
     overlay: 'rgba(0, 0, 0, 0.5)',
     card: '#ffffff',
     gradient: 'linear-gradient(135deg, #6096B4 0%, #93BFCF 100%)',
   },
   // Brand gradient colors (used in headers, buttons)
-  // Frontend'deki mavi renklerle uyumlu (#3B82F6 - blue-600)
+  // Merkezi config'den alınır - Web ile tam uyumlu
   gradient: {
-    primary: ['#3B82F6', '#2563eb'], // blue-500 to blue-600 (frontend ile aynı)
-    secondary: ['#60a5fa', '#3B82F6'], // blue-400 to blue-500
-    header: ['#3B82F6', '#2563eb', '#1d4ed8'], // blue-500 to blue-600 to blue-700 (frontend ile uyumlu)
+    primary: THEME_TOKENS.PRIMARY_GRADIENT,
+    secondary: [BRAND_COLORS.blue[400], THEME_TOKENS.PRIMARY] as const,
+    header: THEME_TOKENS.HEADER_GRADIENT,
   },
   text: {
-    primary: '#1F2937',
-    secondary: '#6B7280',
+    primary: THEME_TOKENS.TEXT_PRIMARY,
+    secondary: THEME_TOKENS.TEXT_SECONDARY,
     tertiary: '#9ca3af',
     inverse: '#ffffff',
     disabled: '#d1d5db',
@@ -131,7 +102,7 @@ export const lightColors = {
   },
   border: {
     light: '#f3f4f6',
-    medium: '#e5e7eb',
+    medium: THEME_TOKENS.BORDER,
     dark: '#d1d5db',
   },
 } as const;

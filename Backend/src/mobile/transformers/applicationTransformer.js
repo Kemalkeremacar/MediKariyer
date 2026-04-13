@@ -41,6 +41,7 @@ const toListItem = (application = {}) => ({
   // İş ilanı durumu bilgileri (web ile uyumlu)
   job_status: application.job_status || null,
   job_status_id: application.job_status_id || null, // İş ilanı durumu ID'si
+  job_deleted_at: application.job_deleted_at || null, // İş ilanı silinme tarihi
   is_job_deleted: Boolean(application.job_deleted_at),
   is_hospital_active: application.hospital_is_active !== false && application.hospital_is_active !== 0
 });

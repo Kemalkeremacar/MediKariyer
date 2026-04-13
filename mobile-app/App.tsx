@@ -35,7 +35,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { PortalProvider, PortalHost } from '@gorhom/portal';
-import { BottomSheetModalProvider, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Linking from 'expo-linking';
 import { AppProviders } from '@/providers/AppProviders';
